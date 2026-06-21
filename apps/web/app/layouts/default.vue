@@ -1,33 +1,20 @@
 <script setup lang="ts">
-import { Toaster } from '@/components/ui/sonner';
-
-// Props
-// Emits
-
-// Refs
-
-// Composables
-
-// Computed
-// Functions
-
-// Hooks
+import { Toaster } from '~/components/ui/sonner';
 </script>
 
 <template>
-  <Html :lang="'en'" :dir="'ltr'" class="light">
-    <Body class="bg-white">
-      <!-- Main -->
-      <main id="main" class="flex min-h-screen">
-        <div class="sticky top-0 h-full">
-          <SidebarMenu />
-        </div>
-        <div class="w-full">
-          <!-- slot -->
+  <Html lang="en" dir="ltr" class="light">
+    <Body class="bg-stone-50">
+      <NavTopBar />
+      <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+        <NavSidebar />
+        <main
+          id="main"
+          class="relative max-w-[calc(100vw-4.5rem)] grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-sm"
+        >
           <slot />
-        </div>
-      </main>
-      <!-- Toast -->
+        </main>
+      </div>
       <Toaster position="top-right" rich-colors />
     </Body>
   </Html>

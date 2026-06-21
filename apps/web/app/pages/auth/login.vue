@@ -4,6 +4,7 @@ import { authClient } from '@repo/auth/client';
 import { toast } from 'vue-sonner';
 
 definePageMeta({ layout: 'auth' });
+useHead({ title: 'Login' });
 
 const signingIn = ref(false);
 

@@ -33,6 +33,7 @@ Write code the next person can read and change without asking you. Assume that p
 ## Vue / Nuxt
 
 1. **`<script setup lang="ts">` + Composition API.** No Options API in new code. Order the block using the section comments in `reference.vue` (Imports → Props → Emits → Refs → Composables → Computed → Functions → Hooks). Keep those comment headers in the file.
+2. **Use `~` for imports, not `@`.** `~` is Nuxt's alias for the `app/` srcDir (components, composables, pages, assets). Use `~/components/Foo.vue`, not `@/components/Foo.vue`. Use `~~` only to escape `app/` and reach the project root (e.g. `~/server/` would be wrong; `~~/server/` is correct for server-side files).
 2. **Type props and emits.** Use `defineProps<...>()` / `defineEmits<...>()` with a named type, with `withDefaults` for optional props. No untyped props.
 3. **Build small, reusable components.** If markup repeats or a template grows past one screen, extract a focused child component. One component, one responsibility.
 4. **Extract logic into composables.** Reusable or stateful logic goes in `useX()` composables, not copied between components. Keep templates thin.

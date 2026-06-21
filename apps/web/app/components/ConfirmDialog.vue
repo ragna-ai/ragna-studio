@@ -25,7 +25,10 @@ const { state, onConfirm, onCancel } = useConfirmDialog();
         <Button variant="outline" @click="onCancel">
           {{ state.options.cancelLabel ?? 'Cancel' }}
         </Button>
-        <Button :variant="state.options.variant ?? 'default'" @click="onConfirm">
+        <Button
+          :variant="state.options.variant ?? 'default'"
+          @click="onConfirm"
+        >
           {{ state.options.confirmLabel ?? 'Confirm' }}
         </Button>
       </AlertDialogFooter>

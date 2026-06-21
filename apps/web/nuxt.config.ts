@@ -22,6 +22,10 @@ export default defineNuxtConfig({
   },
   // CSS
   css: ['~/assets/css/main.css'],
+  shadcn: {
+    prefix: '',
+    componentDir: '~/components/ui',
+  },
   // IMAGE
   image: {
     provider: 'cloudflare',
@@ -39,6 +43,20 @@ export default defineNuxtConfig({
         provider: 'google',
       },
     ],
+  },
+  // META
+  app: {
+    head: {
+      titleTemplate: '%s | RAGNA Studio',
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.png' }],
+      meta: [
+        { charset: 'utf-8' },
+        {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1',
+        },
+      ],
+    },
   },
   // VITE
   vite: {

@@ -111,6 +111,10 @@
   --sidebar-ring: oklch(0.553 0.013 58.071);
 }
 
+@utility stroke-1\.5 {
+  stroke-width: 1.5;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -118,7 +122,8 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
-  button, [role="button"] {
+  button,
+  [role='button'] {
     cursor: pointer;
   }
 }
