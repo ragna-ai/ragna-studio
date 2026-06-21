@@ -13,20 +13,25 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "maizzle:dev": "maizzle serve --config maizzle.config.ts",
+    "maizzle:build": "maizzle build --config maizzle.config.ts"
   },
   "dependencies": {
+    "@maizzle/framework": "latest",
     "@repo/config": "workspace:*",
-    "mjml": "^5.3.0",
     "nodemailer": "^9.0.1",
     "nodemailer-brevo-transport": "^2.2.1"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
-    "@types/mjml": "^5.0.0",
     "@types/node": "catalog:",
     "@types/nodemailer": "^8.0.1",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vue": "^3.5.38"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
   }
 }

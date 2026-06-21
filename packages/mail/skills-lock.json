@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "maizzle": {
+      "source": "maizzle/framework",
+      "sourceType": "github",
+      "skillPath": "skills/maizzle/SKILL.md",
+      "computedHash": "9aff30312144bb6619009d3d9f0dba1d1dbf55aee4b80911efb30ed34f2ecd3d"
+    }
+  }
+}

@@ -17,6 +17,7 @@
     "@nuxt/image": "2.0.0",
     "@repo/auth": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/mail": "workspace:*",
     "@tanstack/vue-form": "^1.33.0",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "14.3.0",
