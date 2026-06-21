@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { Toaster } from '@/components/ui/sonner';
-import 'vue-sonner/style.css';
 </script>
 
 <template>
   <Html lang="en">
     <Head>
-      <Title>RAGNA</Title>
+      <Title>RAGNA Studio</Title>
     </Head>
 
     <Body class="bg-background">

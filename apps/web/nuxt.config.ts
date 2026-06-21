@@ -13,9 +13,33 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/fonts',
     '@nuxt/image',
+    '@pinia/nuxt',
+    'pinia-plugin-unstorage/nuxt',
   ],
+  // CONFIG
+  runtimeConfig: {
+    public: {},
+  },
   // CSS
   css: ['~/assets/css/main.css'],
+  // IMAGE
+  image: {
+    provider: 'cloudflare',
+    format: ['avif', 'webp'],
+    quality: 80,
+    cloudflare: {
+      baseURL: 'https://static.ragna.io',
+    },
+  },
+  // FONTS
+  fonts: {
+    families: [
+      {
+        name: 'Inter',
+        provider: 'google',
+      },
+    ],
+  },
   // VITE
   vite: {
     plugins: [tailwindcss()],
