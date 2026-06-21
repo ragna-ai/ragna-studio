@@ -1,0 +1,34 @@
+{
+  "name": "@repo/database",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull"
+  },
+  "dependencies": {
+    "@repo/config": "workspace:*",
+    "better-sqlite3": "^12.11.1",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@repo/ts-config": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "catalog:",
+    "drizzle-kit": "^0.31.10",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

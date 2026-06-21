@@ -1,0 +1,25 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  '@parcel/watcher': false
+  better-sqlite3: true
+  esbuild: false
+  msgpackr-extract: true
+  sharp: true
+  vue-demi: true
+
+catalog:
+  '@tailwindcss/postcss': ^4.3.0
+  '@types/node': 24.1.0
+  tailwindcss: ^4.3.1
+  tsdown: ^0.22.3
+  typescript: 6.0.3
+  zod: 4.4.3
+  oxfmt: ^0.55.0
+  oxlint: ^1.70.0
+
+updateConfig:
+  ignoreDependencies:
+    - '@types/node'
