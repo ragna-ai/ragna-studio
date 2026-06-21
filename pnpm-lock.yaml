@@ -391,7 +391,7 @@ importers:
     dependencies:
       '@maizzle/framework':
         specifier: latest
-        version: 6.0.1(@nuxt/kit@4.4.8(magicast@0.5.2))(@types/node@24.1.0)(@vue/compiler-sfc@3.5.38)(crossws@0.4.5(srvx@0.11.15))(esbuild@0.28.0)(lightningcss@1.32.0)(rolldown@1.1.2)(shiki@4.2.0)(tailwind-merge@3.6.0)(terser@5.47.1)(tsx@4.21.0)(vue@3.5.38(typescript@6.0.3))(yaml@2.9.0)
+        version: 6.0.2(@nuxt/kit@4.4.8(magicast@0.5.2))(@types/node@24.1.0)(@vue/compiler-sfc@3.5.38)(crossws@0.4.5(srvx@0.11.15))(esbuild@0.28.0)(lightningcss@1.32.0)(rolldown@1.1.2)(shiki@4.2.0)(tailwind-merge@3.6.0)(terser@5.47.1)(tsx@4.21.0)(vue@3.5.38(typescript@6.0.3))(yaml@2.9.0)
       '@repo/config':
         specifier: workspace:*
         version: link:../config
@@ -1829,8 +1829,8 @@ packages:
     peerDependencies:
       vue: '>=3.0.1'
 
-  '@maizzle/framework@6.0.1':
-    resolution: {integrity: sha512-p+GmUXtV0qDfqHmuCLa385IM2PUd96Bkd9KqQfcJ5yuPQ4humDv4p6wEPzPn1cim5Ny9+X9zr/AC1JD7jY1TRg==}
+  '@maizzle/framework@6.0.2':
+    resolution: {integrity: sha512-4eqvMv9En9QxP+VNthP2NEkDgensj9R2KnnY3ywzp4S0PSWv+Lz9KynJ+pdh5gJRtFw52JUx6RgnuDdBynwfng==}
     hasBin: true
     peerDependencies:
       shiki: ^1 || ^2 || ^3 || ^4
@@ -8800,7 +8800,7 @@ snapshots:
     dependencies:
       vue: 3.5.38(typescript@6.0.3)
 
-  '@maizzle/framework@6.0.1(@nuxt/kit@4.4.8(magicast@0.5.2))(@types/node@24.1.0)(@vue/compiler-sfc@3.5.38)(crossws@0.4.5(srvx@0.11.15))(esbuild@0.28.0)(lightningcss@1.32.0)(rolldown@1.1.2)(shiki@4.2.0)(tailwind-merge@3.6.0)(terser@5.47.1)(tsx@4.21.0)(vue@3.5.38(typescript@6.0.3))(yaml@2.9.0)':
+  '@maizzle/framework@6.0.2(@nuxt/kit@4.4.8(magicast@0.5.2))(@types/node@24.1.0)(@vue/compiler-sfc@3.5.38)(crossws@0.4.5(srvx@0.11.15))(esbuild@0.28.0)(lightningcss@1.32.0)(rolldown@1.1.2)(shiki@4.2.0)(tailwind-merge@3.6.0)(terser@5.47.1)(tsx@4.21.0)(vue@3.5.38(typescript@6.0.3))(yaml@2.9.0)':
     dependencies:
       '@lucide/vue': 1.21.0(vue@3.5.38(typescript@6.0.3))
       '@maizzle/tailwindcss': 1.5.5

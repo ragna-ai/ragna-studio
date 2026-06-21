@@ -2,6 +2,8 @@
   <!--
   <NuxtPwaManifest />
   -->
+  <ErrorAlert />
+  <ConfirmDialog />
   <NuxtRouteAnnouncer />
   <NuxtLoadingIndicator />
   <NuxtLayout>
