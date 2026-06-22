@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import { Toaster } from '@/components/ui/sonner';
-</script>
-
 <template>
   <Html lang="en">
     <Head>
@@ -12,7 +8,6 @@ import { Toaster } from '@/components/ui/sonner';
       <div class="h-screen lg:grid lg:grid-cols-2">
         <slot />
       </div>
-      <Toaster position="top-right" rich-colors />
     </Body>
   </Html>
 </template>

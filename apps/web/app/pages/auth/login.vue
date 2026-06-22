@@ -1,19 +1,25 @@
 <script setup lang="ts">
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@repo/auth/client';
-import { toast } from 'vue-sonner';
 
 definePageMeta({ layout: 'auth' });
 useHead({ title: 'Login' });
 
+const errorMessage = ref<string | null>(null);
 const signingIn = ref<'google' | 'microsoft' | 'apple' | null>(null);
 
 async function signIn(provider: 'google' | 'microsoft' | 'apple') {
+  errorMessage.value = null;
   signingIn.value = provider;
   try {
-    await authClient.signIn.social({ provider });
+    const { error } = await authClient.signIn.social({ provider });
+    if (error) {
+      errorMessage.value = error.message ?? 'Sign in failed. Please try again.';
+      signingIn.value = null;
+    }
   } catch {
-    toast.error('Sign in failed. Please try again.');
+    errorMessage.value = 'Sign in failed. Please try again.';
     signingIn.value = null;
   }
 }
@@ -30,6 +36,24 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
       <p class="mt-2 text-sm text-muted-foreground">
         Sign in to your account to continue
       </p>
+
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 -translate-y-1"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-1"
+      >
+        <Alert
+          v-if="errorMessage"
+          variant="destructive"
+          class="mt-6 flex items-center space-x-2"
+        >
+          <Icon name="lucide:triangle-alert" class="size-4" />
+          <AlertDescription>{{ errorMessage }}</AlertDescription>
+        </Alert>
+      </Transition>
 
       <div class="mt-8 space-y-4">
         <Button
