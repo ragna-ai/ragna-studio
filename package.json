@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:web": "turbo run dev --filter=web",
+    "dev:web": "turbo run dev --filter=@repo/web",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "gen": "turbo gen",

@@ -2,10 +2,10 @@
 import {
   BotIcon,
   DatabaseIcon,
-  FileTextIcon,
   FolderIcon,
   ImageIcon,
   LayoutGridIcon,
+  ListTodoIcon,
   MessagesSquareIcon,
   PieChartIcon,
   WorkflowIcon,
@@ -21,10 +21,10 @@ const quickAccessItems = [
   },
   {
     id: 3,
-    icon: FileTextIcon,
+    icon: ListTodoIcon,
     class: 'bg-amber-200/50',
-    label: 'Documents',
-    route: '/document',
+    label: 'Cowork',
+    route: '/cowork',
   },
   {
     id: 6,
@@ -44,14 +44,14 @@ const quickAccessItems = [
     id: 8,
     icon: ImageIcon,
     class: 'bg-fuchsia-200/50',
-    label: 'Text to Image',
+    label: 'Image Generator',
     route: '/text-to-image',
   },
   {
     id: 10,
     icon: DatabaseIcon,
     class: 'bg-lime-200/50',
-    label: 'Collections',
+    label: 'Knowledge',
     route: '/collection',
   },
   {
@@ -65,8 +65,8 @@ const quickAccessItems = [
     id: 12,
     icon: FolderIcon,
     class: 'bg-slate-200/50',
-    label: 'Media',
-    route: '/media',
+    label: 'Files',
+    route: '/storage',
   },
 ];
 </script>
@@ -74,7 +74,7 @@ const quickAccessItems = [
 <template>
   <div class="pt-5">
     <div class="flex items-center space-x-2 pb-5">
-      <LayoutGridIcon class="stroke-1.5 size-5" />
+      <LayoutGridIcon class="size-5 stroke-1.5" />
       <h2 class="text-2xl font-semibold">Quick Access</h2>
     </div>
     <div class="flex flex-wrap gap-4">
@@ -89,7 +89,7 @@ const quickAccessItems = [
         >
           <component
             :is="item.icon"
-            class="stroke-1.5 size-6 group-hover:stroke-2"
+            class="size-6 stroke-1.5 group-hover:stroke-2"
           />
           <p class="text-xs font-medium group-hover:font-semibold">
             {{ item.label }}

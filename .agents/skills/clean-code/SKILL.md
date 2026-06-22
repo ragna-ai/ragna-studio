@@ -51,6 +51,10 @@ Write code the next person can read and change without asking you. Assume that p
 4. **Compose, don't fork.** Build app-specific components by wrapping shadcn primitives. Don't edit the generated `ui/` files except to add shared variants.
 5. **Style with `cn()` + Tailwind tokens.** Merge classes via the `cn()` helper and use the theme tokens (stone base), not hard-coded colors.
 
+## Looking up library details
+
+When you need to understand how a library or package works, prefer official documentation (docs site, README, JSDoc comments in source headers) over reading deeply into `node_modules/` internals. Use `WebFetch` or `WebSearch` to find the relevant docs page. Only read `node_modules/` code if the docs don't cover the specific detail you need.
+
 ## Before finishing
 
 - Would a junior understand this without you in the room?

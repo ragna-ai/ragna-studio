@@ -1,17 +1,11 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config as dotenvConfig } from 'dotenv';
 import { ConfigService } from './services/config.service';
 
-dotenvConfig({ path: '../../.env' });
-
-const globalForConfig = globalThis as unknown as {
-  configSrv: ConfigService | undefined;
-};
-
-export function getConfigService() {
-  if (!globalForConfig.configSrv) {
-    globalForConfig.configSrv = new ConfigService();
-  }
-  return globalForConfig.configSrv;
+// In production, env vars are injected by the container runtime — skip .env loading.
+if (process.env.NODE_ENV !== 'production') {
+  dotenvConfig({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 }
 
-export const config = getConfigService();
+export const config = new ConfigService();

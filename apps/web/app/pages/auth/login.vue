@@ -6,15 +6,15 @@ import { toast } from 'vue-sonner';
 definePageMeta({ layout: 'auth' });
 useHead({ title: 'Login' });
 
-const signingIn = ref(false);
+const signingIn = ref<'google' | 'microsoft' | 'apple' | null>(null);
 
-async function signInWithGoogle() {
-  signingIn.value = true;
+async function signIn(provider: 'google' | 'microsoft' | 'apple') {
+  signingIn.value = provider;
   try {
-    await authClient.signIn.social({ provider: 'google' });
+    await authClient.signIn.social({ provider });
   } catch {
     toast.error('Sign in failed. Please try again.');
-    signingIn.value = false;
+    signingIn.value = null;
   }
 }
 </script>
@@ -35,16 +35,58 @@ async function signInWithGoogle() {
         <Button
           variant="outline"
           class="w-full"
-          :disabled="signingIn"
-          @click="signInWithGoogle"
+          :disabled="signingIn !== null"
+          @click="signIn('google')"
         >
-          <Icon v-if="!signingIn" name="logos:google-icon" class="h-4 w-4" />
+          <Icon
+            v-if="signingIn !== 'google'"
+            name="logos:google-icon"
+            class="h-4 w-4"
+          />
           <Icon
             v-else
             name="lucide:loader-circle"
             class="h-4 w-4 animate-spin"
           />
           Continue with Google
+        </Button>
+
+        <Button
+          variant="outline"
+          class="w-full"
+          :disabled="signingIn !== null"
+          @click="signIn('microsoft')"
+        >
+          <Icon
+            v-if="signingIn !== 'microsoft'"
+            name="logos:microsoft-icon"
+            class="h-4 w-4"
+          />
+          <Icon
+            v-else
+            name="lucide:loader-circle"
+            class="h-4 w-4 animate-spin"
+          />
+          Continue with Microsoft
+        </Button>
+
+        <Button
+          variant="outline"
+          class="w-full"
+          :disabled="signingIn !== null"
+          @click="signIn('apple')"
+        >
+          <Icon
+            v-if="signingIn !== 'apple'"
+            name="logos:apple"
+            class="h-4 w-4"
+          />
+          <Icon
+            v-else
+            name="lucide:loader-circle"
+            class="h-4 w-4 animate-spin"
+          />
+          Continue with Apple
         </Button>
       </div>
 

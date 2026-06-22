@@ -7,6 +7,12 @@
       "skillPath": "skills/maizzle/SKILL.md",
       "computedHash": "9aff30312144bb6619009d3d9f0dba1d1dbf55aee4b80911efb30ed34f2ecd3d"
     },
+    "multi-stage-dockerfile": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/multi-stage-dockerfile/SKILL.md",
+      "computedHash": "698bf93a84dae18fd7bd0b1d35c21427307fde78fbdf4624be9726f5f98189ca"
+    },
     "nuxt": {
       "source": "antfu/skills",
       "sourceType": "github",

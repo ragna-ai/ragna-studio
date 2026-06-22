@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
-const supportedMailTransports = ['smtp', 'brevo'];
-type MailTransport = (typeof supportedMailTransports)[number];
+const MailTransportSchema = z.enum(['smtp', 'brevo']);
+type MailTransport = z.infer<typeof MailTransportSchema>;
 
 // Environment-specific schema
 const NodeEnvSchema = z.enum(['development', 'production', 'test']).default('development');
@@ -12,9 +12,6 @@ const PortSchema = z
   .regex(/^\d+$/)
   .transform(Number)
   .pipe(z.number().int().min(1).max(65535));
-const UrlSchema = z.url();
-const EmailSchema = z.email();
-const NonEmptyStringSchema = z.string().trim().min(1);
 
 // Define which variables are required vs optional based on environment
 const ConfigSchema = z.object({
@@ -25,11 +22,9 @@ const ConfigSchema = z.object({
     .string()
     .trim()
     .default('')
-    .transform((val, ctx) => {
-      if (val) {
-        return val;
-      }
-      const port = ctx.value.includes('APP_PORT') ? '3000' : process.env.APP_PORT || '3000';
+    .transform((val) => {
+      if (val) return val;
+      const port = process.env.APP_PORT || '3000';
       return `http://localhost:${port}`;
     }),
   API_BASE_URL: z.string().optional(),
@@ -96,7 +91,7 @@ const ConfigSchema = z.object({
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASSWORD: z.string().optional().default(''),
   MAIL_FROM: z.string().optional().default(''),
-  MAIL_TRANSPORT: z.enum(supportedMailTransports).default('smtp'),
+  MAIL_TRANSPORT: MailTransportSchema.default('smtp'),
 
   // Email service
   BREVO_API_KEY: z.string().optional().default(''),
@@ -160,9 +155,17 @@ const ConfigSchema = z.object({
   LINKEDIN_SCOPES: z.array(z.string()).default([]),
   LINKEDIN_CLIENT_ID: z.string().optional().default(''),
   LINKEDIN_CLIENT_SECRET: z.string().optional().default(''),
+
+  MICROSOFT_CLIENT_ID: z.string().optional().default(''),
+  MICROSOFT_CLIENT_SECRET: z.string().optional().default(''),
+  MICROSOFT_TENANT_ID: z.string().optional().default('common'),
+
+  APPLE_CLIENT_ID: z.string().optional().default(''),
+  APPLE_TEAM_ID: z.string().optional().default(''),
+  APPLE_KEY_ID: z.string().optional().default(''),
+  APPLE_PRIVATE_KEY: z.string().optional().default(''),
 });
 
-type ConfigEnv = z.infer<typeof ConfigSchema>;
 type ParsedConfig = z.output<typeof ConfigSchema>;
 
 export class ConfigService {
@@ -192,14 +195,13 @@ export class ConfigService {
         'GOOGLE_GENAI_API_KEY',
         'GOOGLE_CLIENT_SECRET',
         'LINKEDIN_CLIENT_SECRET',
+        'MICROSOFT_CLIENT_SECRET',
+        'APPLE_PRIVATE_KEY',
       ]);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('❌ Invalid environment configuration:');
         console.error(JSON.stringify(error.issues, null, 2));
-        // for (const issue of error.issues) {
-        //   console.error(`- ${issue.path.join('.')}: ${issue.message}`);
-        // }
         throw new Error('Environment validation failed');
       }
       throw error;
@@ -336,6 +338,26 @@ export class ConfigService {
     return this._config.LINKEDIN_CLIENT_ID;
   }
 
+  get microsoftClientId(): string {
+    return this._config.MICROSOFT_CLIENT_ID;
+  }
+
+  get microsoftTenantId(): string {
+    return this._config.MICROSOFT_TENANT_ID;
+  }
+
+  get appleClientId(): string {
+    return this._config.APPLE_CLIENT_ID;
+  }
+
+  get appleTeamId(): string {
+    return this._config.APPLE_TEAM_ID;
+  }
+
+  get appleKeyId(): string {
+    return this._config.APPLE_KEY_ID;
+  }
+
   // Secret getters - use carefully, never log these
   getSecret(key: 'ENCRYPTION_PASSWORD'): string;
   getSecret(key: 'DATABASE_URL'): string;
@@ -353,6 +375,8 @@ export class ConfigService {
   getSecret(key: 'GOOGLE_GENAI_API_KEY'): string;
   getSecret(key: 'GOOGLE_CLIENT_SECRET'): string;
   getSecret(key: 'LINKEDIN_CLIENT_SECRET'): string;
+  getSecret(key: 'MICROSOFT_CLIENT_SECRET'): string;
+  getSecret(key: 'APPLE_PRIVATE_KEY'): string;
   getSecret(key: keyof ParsedConfig): string {
     return this._config[key] as string;
   }
