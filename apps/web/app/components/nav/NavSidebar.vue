@@ -36,12 +36,9 @@ const { homeItem, defaultItems, moreItems } = useNavItems();
           <span class="text-[10px] leading-none font-medium">More</span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="start" class="w-44">
-        <DropdownMenuItem v-for="item in moreItems" :key="item.id" as-child>
-          <NuxtLink :to="item.path" class="flex items-center gap-2">
-            <component :is="item.icon" class="stroke-1.5 size-4" />
-            {{ item.label }}
-          </NuxtLink>
+      <DropdownMenuContent side="right" align="start" class="w-[5.5rem] min-w-0 p-2">
+        <DropdownMenuItem v-for="item in moreItems" :key="item.id" as-child class="focus:bg-transparent gap-0 cursor-pointer p-0">
+          <NavLink :to="item.path" :icon="item.icon" :label="item.label" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

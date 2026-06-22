@@ -73,3 +73,4 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 - **SQLite** (dev): `DATABASE_URL` points to `sqlite.db` at repo root.
 - **Redis** (localhost:6381): required for BullMQ worker queues.
 - **SMTP** (localhost:2525): Mailpit or similar for local email testing.
+- **Web dev server**: runs on port **3004** (`http://localhost:3004`).

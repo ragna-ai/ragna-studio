@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { LogOutIcon, SettingsIcon, UserIcon } from '@lucide/vue';
+// Imports
+import { BellIcon, ChartColumnIcon, LogOutIcon, SettingsIcon, SparklesIcon, UserIcon } from '@lucide/vue';
 import { authClient } from '@repo/auth/client';
 
+// Composables
 const { data: session } = await authClient.useSession(useFetch);
 
+// Computed
 const initials = computed(() => {
   const name = session.value?.user?.name ?? '';
   return name
@@ -14,32 +17,28 @@ const initials = computed(() => {
     .slice(0, 2);
 });
 
-const open = ref(false);
-
-async function handleNavigate(path: string) {
-  open.value = false;
-  await navigateTo(path);
-}
-
-async function handleSignOut() {
-  open.value = false;
+// Functions
+async function signOut() {
   await authClient.signOut();
   await navigateTo('/auth/login');
 }
 </script>
 
 <template>
-  <Popover v-model:open="open">
-    <PopoverTrigger as-child>
+  <DropdownMenu>
+    <DropdownMenuTrigger as-child>
       <button
         class="flex size-8 items-center justify-center rounded-full bg-stone-200 text-xs font-semibold text-stone-700 hover:bg-stone-300"
       >
         {{ initials || '?' }}
       </button>
-    </PopoverTrigger>
-    <PopoverContent class="w-64 p-0" side="bottom" align="end">
-      <Command>
-        <div class="flex flex-col gap-0.5 border-b px-3 py-2.5">
+    </DropdownMenuTrigger>
+    <DropdownMenuContent class="w-[15.6rem] overflow-hidden rounded-2xl p-0" side="bottom" align="end">
+      <div class="flex items-center gap-3 p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-stone-200 text-sm font-semibold text-stone-700">
+          {{ initials || '?' }}
+        </div>
+        <div class="flex min-w-0 flex-col">
           <p class="truncate text-sm font-semibold">
             {{ session?.user?.name ?? 'User' }}
           </p>
@@ -47,26 +46,48 @@ async function handleSignOut() {
             {{ session?.user?.email ?? '' }}
           </p>
         </div>
-        <CommandList>
-          <CommandGroup>
-            <CommandItem value="account" @select="handleNavigate('/account')">
-              <UserIcon class="stroke-1.5 mr-2 size-4" />
-              Account
-            </CommandItem>
-            <CommandItem value="settings" @select="handleNavigate('/account/settings')">
-              <SettingsIcon class="stroke-1.5 mr-2 size-4" />
-              Settings
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup>
-            <CommandItem value="sign-out" @select="handleSignOut">
-              <LogOutIcon class="stroke-1.5 mr-2 size-4" />
-              Sign out
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </Command>
-    </PopoverContent>
-  </Popover>
+      </div>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem class="cursor-pointer px-4 py-2">
+          <SparklesIcon class="stroke-1.5 size-4" />
+          Upgrade to Pro
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
+          <NuxtLink prefetch to="/account">
+            <UserIcon class="stroke-1.5 size-4" />
+            Account
+          </NuxtLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
+          <NuxtLink prefetch to="/account/statistics">
+            <ChartColumnIcon class="stroke-1.5 size-4" />
+            Statistics
+          </NuxtLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
+          <NuxtLink prefetch to="/account/settings">
+            <SettingsIcon class="stroke-1.5 size-4" />
+            Settings
+          </NuxtLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
+          <NuxtLink prefetch to="/account/notifications">
+            <BellIcon class="stroke-1.5 size-4" />
+            Notifications
+          </NuxtLink>
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem class="cursor-pointer px-4 py-2" @click="signOut">
+          <LogOutIcon class="stroke-1.5 size-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+    </DropdownMenuContent>
+  </DropdownMenu>
 </template>

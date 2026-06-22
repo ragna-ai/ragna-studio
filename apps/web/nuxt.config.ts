@@ -65,4 +65,6 @@ export default defineNuxtConfig({
       include: ['@lucide/vue', 'clsx', 'tailwind-merge', 'vue-sonner'],
     },
   },
+  // DEV SERVER
+  devServer: { port: 3000 },
 });
