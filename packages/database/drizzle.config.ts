@@ -2,7 +2,7 @@ import { config } from '@repo/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  dialect: 'sqlite',
+  dialect: 'turso',
   schema: './src/schema',
   out: './drizzle',
   casing: 'snake_case',

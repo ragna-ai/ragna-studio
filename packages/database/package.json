@@ -19,13 +19,13 @@
     "db:pull": "drizzle-kit pull"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "@repo/config": "workspace:*",
-    "better-sqlite3": "^12.11.1",
+    "@tursodatabase/database": "^0.6.1",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "catalog:",
     "drizzle-kit": "^0.31.10",
     "tsdown": "catalog:",
