@@ -1,6 +1,11 @@
+<script setup lang="ts">
+const { textVisible = true } = defineProps<{ textVisible?: boolean }>();
+</script>
+
 <template>
   <NuxtLink to="/" class="flex items-center gap-2 px-1">
-    <!-- TODO: Brand Icon -->
-    <span class="text-sm font-bold tracking-wide">RAGNA Studio</span>
+    <span v-if="textVisible" class="text-sm font-bold tracking-wide">
+      RAGNA Studio
+    </span>
   </NuxtLink>
 </template>

@@ -44,19 +44,19 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Shared Packages (`packages/`)
 
-| Package | Purpose |
-|---|---|
-| `@repo/config` | Singleton `ConfigService` wrapping env vars; loaded via `dotenv` pointing to root `.env`. All other packages use `config.getSecret(...)` or direct properties. |
-| `@repo/database` | Drizzle ORM + better-sqlite3. Schema lives in `src/schema/`. Migrations in `drizzle/`. Uses `snake_case` column naming. |
-| `@repo/auth` | better-auth with Drizzle adapter. Has **two export paths**: `@repo/auth/server` (auth instance, event handler) and `@repo/auth/client` (browser auth client). Google OAuth + admin plugin. |
-| `@repo/queue` | BullMQ wrapper. Defines queue/worker/cron factories in `src/services/bullmq.service.ts`. Queue names and job constants in `src/constants/`. Job DTOs in `src/dtos/`. |
-| `@repo/mail` | Nodemailer + MJML + Brevo transport. Template-based `sendEmail()` with `templateId` and `variables`. |
-| `@repo/ai` | Vercel AI SDK configured for Anthropic, OpenAI, Google, and Black Forest Labs models. Exports factories and tool definitions. |
-| `@repo/storage` | AWS S3 SDK pointed at Cloudflare R2 (`BucketService`). |
-| `@repo/editor` | Tiptap v3 rich-text editor (Vue 3 extensions). |
-| `@repo/logger` | Consola-based structured logger. Log level controlled by `config.logLevel`. |
-| `@repo/utils` | Tiny utilities: `tryCatch` (async error handling) and `retryExpoBackoff`. |
-| `@repo/ts-config` | Shared `tsconfig/base.json` extended by all packages. |
+| Package           | Purpose                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@repo/config`    | Singleton `ConfigService` wrapping env vars; loaded via `dotenv` pointing to root `.env`. All other packages use `config.getSecret(...)` or direct properties.                             |
+| `@repo/database`  | Drizzle ORM + better-sqlite3. Schema lives in `src/schema/`. Migrations in `drizzle/`. Uses `snake_case` column naming.                                                                    |
+| `@repo/auth`      | better-auth with Drizzle adapter. Has **two export paths**: `@repo/auth/server` (auth instance, event handler) and `@repo/auth/client` (browser auth client). Google OAuth + admin plugin. |
+| `@repo/queue`     | BullMQ wrapper. Defines queue/worker/cron factories in `src/services/bullmq.service.ts`. Queue names and job constants in `src/constants/`. Job DTOs in `src/dtos/`.                       |
+| `@repo/mail`      | Nodemailer + MJML + Brevo transport. Template-based `sendEmail()` with `templateId` and `variables`.                                                                                       |
+| `@repo/ai`        | Vercel AI SDK configured for Anthropic, OpenAI, Google, and Black Forest Labs models. Exports factories and tool definitions.                                                              |
+| `@repo/storage`   | AWS S3 SDK pointed at Cloudflare R2 (`BucketService`).                                                                                                                                     |
+| `@repo/editor`    | Tiptap v3 rich-text editor (Vue 3 extensions).                                                                                                                                             |
+| `@repo/logger`    | Consola-based structured logger. Log level controlled by `config.logLevel`.                                                                                                                |
+| `@repo/utils`     | Tiny utilities: `tryCatch` (async error handling) and `retryExpoBackoff`.                                                                                                                  |
+| `@repo/ts-config` | Shared `tsconfig/base.json` extended by all packages.                                                                                                                                      |
 
 ### Key patterns
 
@@ -74,3 +74,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 - **Redis** (localhost:6381): required for BullMQ worker queues.
 - **SMTP** (localhost:2525): Mailpit or similar for local email testing.
 - **Web dev server**: runs on port **3004** (`http://localhost:3004`).
+
+### Coding
+
+Spawn a sonnet agent for coding tasks

@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@repo/ai": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
+    "hono": "^4.12.27",
     "http-status-codes": "^2.3.0"
   },
   "devDependencies": {

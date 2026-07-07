@@ -2,31 +2,41 @@
 import { GripIcon } from '@lucide/vue';
 import { useNavItems } from '~/composables/useNavItems';
 
-// --- Composables
-const { homeItem, defaultItems, moreItems } = useNavItems();
-
-// --- Computed
-const allItems = computed(() => [homeItem, ...defaultItems, ...moreItems]);
+const open = ref(false);
+const { getAllItems } = useNavItems();
+const setClose = () => (open.value = false);
 </script>
 
 <template>
-  <Popover>
-    <PopoverTrigger as-child>
-      <Button variant="ghost" size="icon-sm" class="rounded-lg text-stone-600">
-        <GripIcon class="stroke-1.5 size-4" />
-      </Button>
+  <Popover v-model:open="open">
+    <PopoverTrigger class="h-full group">
+      <GripIcon
+        class="nav-icon stroke-1.5 group-hover:stroke-2 group-hover:scale-105 transition-transform"
+      />
     </PopoverTrigger>
-    <PopoverContent class="w-64 p-3" side="right" align="start">
-      <div class="grid grid-cols-3 gap-1">
-        <NavLink
-          v-for="item in allItems"
-          :key="item.id"
-          :to="item.path"
-          :icon="item.icon"
-          :label="item.label"
-          :exact="item.id === 'home'"
-        />
+    <PopoverContent align="start" class="size-96 p-5">
+      <div class="grid grid-cols-3 gap-5">
+        <template v-for="item in getAllItems()" :key="item.path">
+          <NuxtLink
+            v-if="item.path"
+            :to="item.path"
+            class="size-20 border-0 flex flex-col items-center justify-center space-y-2"
+            @click="setClose"
+          >
+            <div class="size-12 border rounded-sm flex flex-col items-center justify-center">
+              <component :is="item.icon" class="stroke-1.5 size-5" />
+            </div>
+            <span class="text-xs">{{ item.label }}</span>
+          </NuxtLink>
+        </template>
       </div>
     </PopoverContent>
   </Popover>
 </template>
+
+<style scoped>
+.nav-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+</style>

@@ -5,18 +5,22 @@ defineProps<{
   to: string;
   icon: Component;
   label: string;
-  exact?: boolean;
+  labelVisible?: boolean;
 }>();
 </script>
 
 <template>
   <NuxtLink
     :to="to"
-    :exact-active-class="'bg-stone-100'"
-    :active-class="exact ? '' : 'bg-stone-100'"
-    class="flex w-full flex-col items-center justify-center gap-1 rounded-lg py-2 text-stone-600 transition-colors hover:bg-stone-100"
+    class="group flex flex-col items-center rounded-lg border border-transparent px-4 py-0 transition-colors"
+    :activeClass="undefined"
+    exactActiveClass="nav-link-active"
   >
-    <component :is="icon" class="stroke-1.5 size-5" />
-    <span class="text-[10px] font-medium leading-none">{{ label }}</span>
+    <div class="nav-icon-wrapper">
+      <component :is="icon" class="nav-icon stroke-1.5" />
+    </div>
+    <span class="nav-icon-text truncate px-4 pt-0 text-foreground">
+      {{ label }}
+    </span>
   </NuxtLink>
 </template>

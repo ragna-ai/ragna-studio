@@ -1,31 +1,53 @@
 <script setup lang="ts">
 import { BellIcon, MaximizeIcon } from '@lucide/vue';
 
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
-  } else {
+const onExpandClick = () => {
+  const rootNode = document.documentElement;
+  if (document.fullscreenElement) {
     document.exitFullscreen();
+  } else {
+    rootNode.requestFullscreen();
   }
-}
+};
 </script>
 
 <template>
-  <header class="flex h-14 items-center justify-between px-3">
-    <div class="flex items-center gap-2">
-      <NavTopPopover />
-      <BrandLogo />
-      <NavBarTeam />
+  <div class="flex h-14 items-center justify-between border-0">
+    <div class="flex">
+      <div class="ml-[0.1rem] px-6 mt-1">
+        <NavTopPopover />
+      </div>
+      <div class="pl-2 flex items-center space-x-2 text-sm">
+        <div class="">
+          <BrandLogo :text-visible="true" />
+        </div>
+        <div></div>
+        <div>
+          <NavBarTeam />
+        </div>
+        <div></div>
+      </div>
     </div>
-    <div class="flex items-center gap-1">
-      <Button variant="ghost" size="icon-sm" class="rounded-lg text-stone-600">
-        <BellIcon class="stroke-1.5 size-4" />
-      </Button>
-      <NavHelpMenu />
-      <Button variant="ghost" size="icon-sm" class="rounded-lg text-stone-600" @click="toggleFullscreen">
-        <MaximizeIcon class="stroke-1.5 size-4" />
-      </Button>
-      <NavUserMenu />
+    <div class="flex h-full items-center space-x-5">
+      <button>
+        <BellIcon class="size-5 stroke-1 hover:stroke-1.5" />
+      </button>
+      <div>
+        <NavHelpMenu />
+      </div>
+      <button @click="onExpandClick">
+        <MaximizeIcon class="size-5 stroke-1 hover:stroke-1.5" />
+      </button>
+      <div class="pr-5">
+        <NavUserMenu :size-full="false" />
+      </div>
     </div>
-  </header>
+  </div>
 </template>
+
+<style scoped>
+.nav-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+</style>

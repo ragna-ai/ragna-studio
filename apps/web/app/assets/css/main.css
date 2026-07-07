@@ -127,3 +127,33 @@
     cursor: pointer;
   }
 }
+
+.nav-icon-text {
+  font-size: 0.6rem;
+  line-height: 1rem;
+  opacity: 75%;
+}
+
+.nav-icon-wrapper {
+  @apply px-3 py-2 rounded-lg group-hover:bg-stone-200/60 group-hover:scale-105 transition-transform;
+}
+
+.nav-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.nav-link-active {
+  @apply font-semibold;
+  .nav-icon-wrapper {
+    @apply bg-stone-200/60;
+  }
+}
+
+.nav-item {
+  @apply flex min-h-8 flex-col justify-center border-0 px-2 py-0 text-sm;
+}
+
+.nav-item-child {
+  @apply pl-4 pt-0;
+}
