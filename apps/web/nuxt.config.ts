@@ -64,7 +64,14 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ['@lucide/vue', 'clsx', 'tailwind-merge', 'vue-sonner'],
+      include: [
+        '@lucide/vue',
+        'class-variance-authority',
+        'clsx',
+        'reka-ui',
+        'tailwind-merge',
+        'vue-sonner',
+      ],
     },
   },
   // DEV SERVER

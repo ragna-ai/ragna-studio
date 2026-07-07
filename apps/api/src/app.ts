@@ -5,7 +5,10 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { userController } from './controllers/user.controller';
+import { HTTPException as AppHTTPException } from './exceptions';
 
 // Origins allowed to call the API with credentials (cookies).
 // Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
@@ -33,10 +36,19 @@ export const app = new Hono()
   // Health check
   .get('/health', (c) => c.json({ status: 'ok' }))
   // Controllers
-  // tbd
+  .route('/', userController)
   // .route('/', chatController)
   // Error
   .onError((err, c) => {
+    if (err instanceof AppHTTPException) {
+      return c.json(
+        {
+          code: err.statusCode,
+          error: err.message,
+        },
+        err.statusCode as ContentfulStatusCode,
+      );
+    }
     if (err instanceof HTTPException) {
       return c.json(
         {
@@ -46,6 +58,8 @@ export const app = new Hono()
         err.status,
       );
     }
+
+    logger.error('Unhandled error in API', err);
 
     return c.json(
       {

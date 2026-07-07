@@ -16,14 +16,17 @@
     "dev": "bun --watch src/index.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.8.0",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
+    "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "hono": "^4.12.28",
-    "http-status-codes": "^2.3.0"
+    "http-status-codes": "^2.3.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
