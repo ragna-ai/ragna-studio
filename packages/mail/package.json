@@ -20,7 +20,7 @@
   "dependencies": {
     "@maizzle/framework": "latest",
     "@repo/config": "workspace:*",
-    "nodemailer": "^9.0.1",
+    "nodemailer": "^9.0.3",
     "nodemailer-brevo-transport": "^2.2.1"
   },
   "devDependencies": {
@@ -29,7 +29,7 @@
     "@types/nodemailer": "^8.0.1",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vue": "^3.5.38"
+    "vue": "^3.5.39"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

@@ -5,14 +5,11 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
-import { timeout } from 'hono/timeout';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
 // Origins allowed to call the API with credentials (cookies).
 // Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
-const allowedOrigins = [
-  ...new Set([config.appUrl, ...config.trustedOrigins]),
-];
+const allowedOrigins = [config.appUrl, ...config.trustedOrigins];
 
 export const app = new Hono()
   .basePath('/api')
@@ -30,7 +27,7 @@ export const app = new Hono()
     }),
   )
   // Timeout middleware (15 minutes)
-  .use('*', timeout(15 * 60 * 1000))
+  // .use('*', timeout(15 * 60 * 1000))
   // Auth handler
   .on(['POST', 'GET'], '/auth/*', ({ req }) => auth.handler(req.raw))
   // Health check

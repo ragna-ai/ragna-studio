@@ -13,12 +13,22 @@ allowBuilds:
 catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.1.0
-  tailwindcss: ^4.3.1
+  tailwindcss: ^4.3.2
   tsdown: ^0.22.3
   typescript: 6.0.3
   zod: 4.4.3
-  oxfmt: ^0.55.0
-  oxlint: ^1.70.0
+  oxfmt: ^0.57.0
+  oxlint: ^1.72.0
+
+minimumReleaseAgeExclude:
+  - '@turbo/darwin-64@2.10.4'
+  - '@turbo/darwin-arm64@2.10.4'
+  - '@turbo/gen@2.10.4'
+  - '@turbo/linux-64@2.10.4'
+  - '@turbo/linux-arm64@2.10.4'
+  - '@turbo/windows-64@2.10.4'
+  - '@turbo/windows-arm64@2.10.4'
+  - turbo@2.10.4
 
 updateConfig:
   ignoreDependencies:
