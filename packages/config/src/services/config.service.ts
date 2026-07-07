@@ -18,6 +18,7 @@ const ConfigSchema = z.object({
   // App configuration
   NODE_ENV: NodeEnvSchema,
   APP_PORT: PortSchema.default(3000),
+  API_PORT: PortSchema.default(3010),
   APP_URL: z
     .string()
     .trim()
@@ -211,6 +212,10 @@ export class ConfigService {
   // Public getters for non-sensitive data
   get appPort(): string {
     return this._config.APP_PORT.toString();
+  }
+
+  get apiPort(): number {
+    return this._config.API_PORT;
   }
 
   get appUrl(): string {

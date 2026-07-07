@@ -18,7 +18,9 @@ export default defineNuxtConfig({
   ],
   // CONFIG
   runtimeConfig: {
-    public: {},
+    public: {
+      apiBaseUrl: 'http://localhost:3010', // default value for dev
+    },
   },
   // CSS
   css: ['~/assets/css/main.css'],

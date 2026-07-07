@@ -1,19 +1,26 @@
 <script setup lang="ts">
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { authClient } from '@repo/auth/client';
 
 definePageMeta({ layout: 'auth' });
 useHead({ title: 'Login' });
 
+const authClient = useAuth();
 const errorMessage = ref<string | null>(null);
 const signingIn = ref<'google' | 'microsoft' | 'apple' | null>(null);
 
 async function signIn(provider: 'google' | 'microsoft' | 'apple') {
   errorMessage.value = null;
   signingIn.value = provider;
+  // Absolute URLs back to this web app. A relative path would resolve against
+  // the API origin (baseURL) and land the user on the API, not the app.
+  const appOrigin = window.location.origin;
   try {
-    const { error } = await authClient.signIn.social({ provider });
+    const { error } = await authClient.signIn.social({
+      provider,
+      callbackURL: `${appOrigin}/`,
+      errorCallbackURL: `${appOrigin}/auth/login`,
+    });
     if (error) {
       errorMessage.value = error.message ?? 'Sign in failed. Please try again.';
       signingIn.value = null;

@@ -20,8 +20,12 @@ async function generateAppleClientSecret() {
 
 export const auth = betterAuth({
   plugins: [admin()],
-  baseURL: config.appUrl,
-  trustedOrigins: [...config.trustedOrigins, 'https://appleid.apple.com'],
+  baseURL: config.apiBaseUrl.replace(/\/$/, ''),
+  trustedOrigins: [
+    ...config.trustedOrigins,
+    config.appUrl,
+    'https://appleid.apple.com',
+  ],
   database: drizzleAdapter(db, {
     provider: 'sqlite',
   }),

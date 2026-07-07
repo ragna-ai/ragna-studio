@@ -2,28 +2,33 @@ import { auth } from '@repo/auth/server';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
-const baseUrl = config.apiBaseUrl;
+// Origins allowed to call the API with credentials (cookies).
+// Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
+const allowedOrigins = [
+  ...new Set([config.appUrl, ...config.trustedOrigins]),
+];
 
 export const app = new Hono()
   .basePath('/api')
   // Logger middleware
   .use(honoLogger((message, ...rest) => logger.log(message, ...rest)))
   // Cors middleware
-  // .use(
-  //   cors({
-  //     origin: baseUrl,
-  //     allowHeaders: ['Content-Type', 'Authorization'],
-  //     allowMethods: ['POST', 'GET', 'OPTIONS'],
-  //     exposeHeaders: ['Content-Length'],
-  //     maxAge: 600,
-  //     credentials: true,
-  //   }),
-  // )
+  .use(
+    cors({
+      origin: allowedOrigins,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['POST', 'GET', 'OPTIONS'],
+      exposeHeaders: ['Content-Length'],
+      maxAge: 600,
+      credentials: true,
+    }),
+  )
   // Timeout middleware (15 minutes)
   .use('*', timeout(15 * 60 * 1000))
   // Auth handler
