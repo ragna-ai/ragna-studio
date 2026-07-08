@@ -1,11 +1,11 @@
-import type { AuthSession } from '@repo/auth/server';
 import { auth } from '@repo/auth/server';
 import { createMiddleware } from 'hono/factory';
 import { UnauthorizedException } from '../exceptions';
 
 export type AuthEnv = {
   Variables: {
-    session: AuthSession;
+    user: typeof auth.$Infer.Session.user | null;
+    session: typeof auth.$Infer.Session.session | null;
   };
 };
 
@@ -15,10 +15,12 @@ export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   });
 
   if (!session || !session.user) {
+    c.set('user', null);
+    c.set('session', null);
     throw new UnauthorizedException();
   }
 
-  c.set('session', session);
-  // c.set('user', session.user);
+  c.set('user', session.user);
+  c.set('session', session.session);
   await next();
 });

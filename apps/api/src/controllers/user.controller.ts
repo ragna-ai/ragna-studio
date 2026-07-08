@@ -11,7 +11,7 @@ export const userController = new Hono()
    * Get User Profile
    */
   .get('/profile', (c) => {
-    const { user } = c.get('session');
+    const user = c.get('user');
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -24,7 +24,7 @@ export const userController = new Hono()
  * Update User Profile
  */
 // .patch('/profile', validUpdateUserProfileJson, async (c) => {
-//   const { user } = c.get('session');
+//   const user = c.get('user');
 //   const { name } = c.req.valid('json');
 
 //   if (!user) {

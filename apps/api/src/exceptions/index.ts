@@ -1,15 +1,7 @@
+import { HTTPException } from 'hono/http-exception';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 
-export class HTTPException extends Error {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, options?: { message?: string }) {
-    super(options?.message ?? 'HTTP Exception');
-    this.statusCode = statusCode;
-    this.name = 'HTTPException';
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
+export { HTTPException };
 
 // Unauthorized (401) Exception
 export class UnauthorizedException extends HTTPException {
