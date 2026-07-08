@@ -504,6 +504,10 @@ importers:
   packages/ts-config: {}
 
   packages/utils:
+    dependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
