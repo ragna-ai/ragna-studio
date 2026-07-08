@@ -6,6 +6,7 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { chatController } from './controllers/chat.controller';
 import { userController } from './controllers/user.controller';
 
 // Origins allowed to call the API with credentials (cookies).
@@ -35,7 +36,7 @@ export const app = new Hono()
   .get('/health', (c) => c.json({ status: 'ok' }))
   // Controllers
   .route('/', userController)
-  // .route('/', chatController)
+  .route('/', chatController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

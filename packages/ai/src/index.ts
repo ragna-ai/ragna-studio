@@ -7,8 +7,11 @@ export {
   generateImage,
   generateText,
   safeValidateUIMessages,
+  smoothStream,
   stepCountIs,
   streamText,
+  toUIMessageStream,
 } from 'ai';
+export * from './client';
 export * from './factories';
 export * from './tools';

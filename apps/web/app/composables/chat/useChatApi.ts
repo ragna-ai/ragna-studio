@@ -1,7 +1,7 @@
 import type { AsyncDataOptions } from '#app';
 import { useDebounceFn } from '@vueuse/core';
 
-export default function useChat() {
+export default function useChatApi() {
   const ac = new AbortController();
   const api = useApi();
 
