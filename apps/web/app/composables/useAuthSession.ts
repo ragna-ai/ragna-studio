@@ -1,3 +1,5 @@
+import type { AsyncDataOptions } from '#app';
+
 const AUTH_SESSION_ASYNC_KEY = 'auth-session';
 
 type AuthClient = ReturnType<typeof useAuth>;
@@ -26,10 +28,10 @@ export function clearAuthSession() {
   data.value = null;
 }
 
-export function useAuthSession() {
+export function useAuthSession(options: AsyncDataOptions<AuthSession> = {}) {
   return useAsyncData<AuthSession>(
     AUTH_SESSION_ASYNC_KEY,
     () => getAuthSession(),
-    { default: () => null },
+    { default: () => null, lazy: true, ...options },
   );
 }

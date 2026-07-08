@@ -29,8 +29,8 @@ const initials = computed(() =>
 
 async function signOut() {
   await useAuth().signOut();
-  clearAuthSession();
   await navigateTo('/auth/login');
+  // info: clearAuthSession cache causes flash of UI so we skip and rely on server side invalidation
 }
 </script>
 
