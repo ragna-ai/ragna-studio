@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "bun --watch src/index.ts"
+    "dev": "bun --watch src/index.ts",
+    "preview": "bun dist/index.mjs"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",

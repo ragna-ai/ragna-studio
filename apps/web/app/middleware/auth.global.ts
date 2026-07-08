@@ -1,10 +1,11 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path.startsWith('/auth')) {
+  const isAuthRoute = to.path === '/auth' || to.path.startsWith('/auth/');
+  if (isAuthRoute) {
     return;
   }
 
-  const authClient = useAuth();
-  const { data: session } = await authClient.getSession();
+  const session = await refreshAuthSession();
+
   if (!session) {
     return navigateTo('/auth/login');
   }

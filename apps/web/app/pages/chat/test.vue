@@ -10,10 +10,9 @@ useHead({
 const input = ref('');
 
 // Composables
-const config = useRuntimeConfig();
 const { messages, sendMessage, status, error } = useChat({
   transport: new DefaultChatTransport({
-    api: config.public.apiBaseUrl + '/chat/test',
+    api: `${useRuntimeConfig().public.apiBaseUrl}/chat/test`,
     credentials: 'include',
   }),
 });

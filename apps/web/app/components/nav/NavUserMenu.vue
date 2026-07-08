@@ -13,8 +13,7 @@ defineProps<{
   sizeFull: boolean;
 }>();
 
-const authClient = useAuth();
-const { data: session } = await authClient.getSession();
+const { data: session } = await useAuthSession();
 
 function createInitials(name: string) {
   if (!name) return '?';
@@ -24,10 +23,13 @@ function createInitials(name: string) {
     .join('');
 }
 
-const initials = computed(() => createInitials(session?.user?.name ?? '?'));
+const initials = computed(() =>
+  createInitials(session.value?.user?.name ?? '?'),
+);
 
 async function signOut() {
-  await authClient.signOut();
+  await useAuth().signOut();
+  clearAuthSession();
   await navigateTo('/auth/login');
 }
 </script>
