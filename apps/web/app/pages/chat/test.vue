@@ -13,7 +13,7 @@ const input = ref('');
 const config = useRuntimeConfig();
 const { messages, sendMessage, status, error } = useChat({
   transport: new DefaultChatTransport({
-    api: config.public.apiBaseUrl + '/api/chat/test',
+    api: config.public.apiBaseUrl + '/chat/test',
     credentials: 'include',
   }),
 });

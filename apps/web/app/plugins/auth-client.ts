@@ -7,6 +7,7 @@ export default defineNuxtPlugin(() => {
 
   const authClient = createAppAuthClient({
     baseURL: apiBaseUrl,
+    basePath: '/auth',
     fetchOptions: { credentials: 'include' },
   });
 

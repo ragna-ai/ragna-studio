@@ -21,6 +21,7 @@ async function generateAppleClientSecret() {
 export const auth = betterAuth({
   plugins: [admin()],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
+  basePath: '/auth',
   trustedOrigins: [
     ...config.trustedOrigins,
     config.appUrl,

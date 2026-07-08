@@ -14,7 +14,7 @@ import { userController } from './controllers/user.controller';
 const allowedOrigins = [config.appUrl, ...config.trustedOrigins];
 
 export const app = new Hono()
-  .basePath('/api')
+  .basePath('/')
   // Logger middleware
   .use(honoLogger((message, ...rest) => logger.log(message, ...rest)))
   // Cors middleware

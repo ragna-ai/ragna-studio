@@ -60,8 +60,6 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Key patterns
 
-**Auth flow**: The global middleware `apps/web/app/middleware/auth.global.ts` redirects unauthenticated users to `/auth/login`. The auth API catch-all at `apps/web/server/api/auth/[...all].ts` delegates to `@repo/auth/server`. The `useAuth()` composable creates a better-auth client that works on both server and client.
-
 **Queue/Worker pattern**: To add a new background job — (1) add a queue name constant in `@repo/queue/src/constants/`, (2) add a DTO in `@repo/queue/src/dtos/`, (3) add a processor in `apps/worker/src/processors/`, (4) register it in `apps/worker/src/processors/index.ts`.
 
 **Config/secrets**: All env vars route through `@repo/config`. Sensitive values use `config.getSecret('KEY')` (encrypted at rest); non-sensitive ones are direct properties.
