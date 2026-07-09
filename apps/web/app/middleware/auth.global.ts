@@ -4,9 +4,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return;
   }
 
-  const session = await refreshAuthSession();
+  const result = await refreshAuthSession();
 
-  if (!session) {
+  // Fail open: an infra error is not authoritative, keep the last-known-good
+  // session state and let navigation proceed.
+  if (result.ok && !result.session) {
     return navigateTo('/auth/login');
   }
 });

@@ -13,7 +13,7 @@ defineProps<{
   sizeFull: boolean;
 }>();
 
-const { data: session } = await useAuthSession();
+const session = useAuthSession();
 
 function createInitials(name: string) {
   if (!name) return '?';
@@ -30,7 +30,8 @@ const initials = computed(() =>
 async function signOut() {
   await useAuth().signOut();
   await navigateTo('/auth/login');
-  // info: clearAuthSession cache causes flash of UI so we skip and rely on server side invalidation
+  // info: we don't clear the session state here to avoid a UI flash. The
+  // global middleware will refresh it on the next navigation.
 }
 </script>
 

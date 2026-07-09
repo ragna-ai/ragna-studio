@@ -26,7 +26,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'sqlite',
   }),
-  session: { cookieCache: { enabled: true } },
+  // session: { cookieCache: { enabled: true } },
   socialProviders: {
     google: {
       clientId: config.googleClientId,
