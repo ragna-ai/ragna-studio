@@ -141,6 +141,9 @@ importers:
       '@tanstack/vue-form':
         specifier: ^1.33.0
         version: 1.33.0(vue@3.5.39(typescript@6.0.3))
+      '@tanstack/vue-query':
+        specifier: ^5.101.2
+        version: 5.101.2(vue@3.5.39(typescript@6.0.3))
       '@vueuse/core':
         specifier: ^14.3.0
         version: 14.3.0(vue@3.5.39(typescript@6.0.3))
@@ -3881,9 +3884,16 @@ packages:
   '@tanstack/form-core@1.33.0':
     resolution: {integrity: sha512-AV4Pw9Dk4orFsuPBcDssfWMJFs+yMYBae7zZ4oTqrCf4ftNGQKxvrQRZeqKHG6A4TkiLeSvf2kzIjcVkrW7E6w==}
 
+  '@tanstack/match-sorter-utils@8.19.4':
+    resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
+    engines: {node: '>=12'}
+
   '@tanstack/pacer-lite@0.1.1':
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
+
+  '@tanstack/query-core@5.101.2':
+    resolution: {integrity: sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw==}
 
   '@tanstack/store@0.11.0':
     resolution: {integrity: sha512-WlzzCt3xi0G6pCAJu1U+2jiECwabETDpQDi3hfkFZvJii9AuZqEKbOiVarX1/bWhTNjU486yQtJCCasi/0q+Cw==}
@@ -3895,6 +3905,15 @@ packages:
     resolution: {integrity: sha512-ZdVDo4W2ohL27bCjsuNy/eQ8PHm9mOzCFNfI7d6GfhS5KHqehZ8TiR/y1eRJR/c1y3nucgSi6RfY6iLHBMVhAQ==}
     peerDependencies:
       vue: ^3.4.0
+
+  '@tanstack/vue-query@5.101.2':
+    resolution: {integrity: sha512-nFXKNK4dI/PnKNejyIkQmmobBsJWWXTPcpjPvkgFLkpFPz9DcmqIiKIAF2Pa7MZCipH62/+bt2sxEIA0wNEeOg==}
+    peerDependencies:
+      '@vue/composition-api': ^1.1.2
+      vue: ^2.6.0 || ^3.3.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
 
   '@tanstack/vue-store@0.11.0':
     resolution: {integrity: sha512-w1lE4D7oo6nIUhTQvL/RoTgcvoYJw+KvttWPNJd/Xu+MvNxMnjxFF/LgFp9vwmbNbiGhGCg3ZoPJptwjrfwNYw==}
@@ -4423,6 +4442,9 @@ packages:
 
   '@vue/compiler-ssr@3.5.39':
     resolution: {integrity: sha512-Ce7/wvwMHai74bdszfXExdazFigYnlF9zgCmEQUcM1j0fOymlouZ7XilTYNo8oUjhlnjYOZbGrcYKuqjz89Ucw==}
+
+  '@vue/devtools-api@6.6.4':
+    resolution: {integrity: sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g==}
 
   '@vue/devtools-api@7.7.10':
     resolution: {integrity: sha512-KxtEpUOOpFz/qOGRrAwA36QF7DqIA+FXgCYit9mk9wjbaZt0sXOFz81ElOZtKA4HbWHUdwNjZHBFsFFyp5BZiA==}
@@ -7408,6 +7430,9 @@ packages:
     resolution: {integrity: sha512-drcOQ4rQtDYAcGCsyQBqQg8QQ+H3B+zDaMJU0h8KPEPMa7g9BHu3zcOi4OB39XJSWizceFoNO0Z9tctSGLOXqg==}
     peerDependencies:
       vue: '>= 3.4.0'
+
+  remove-accents@0.5.0:
+    resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
 
   resolve-from@5.0.0:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
@@ -11312,7 +11337,13 @@ snapshots:
       '@tanstack/pacer-lite': 0.1.1
       '@tanstack/store': 0.11.0
 
+  '@tanstack/match-sorter-utils@8.19.4':
+    dependencies:
+      remove-accents: 0.5.0
+
   '@tanstack/pacer-lite@0.1.1': {}
+
+  '@tanstack/query-core@5.101.2': {}
 
   '@tanstack/store@0.11.0': {}
 
@@ -11325,6 +11356,14 @@ snapshots:
       vue: 3.5.39(typescript@6.0.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
+
+  '@tanstack/vue-query@5.101.2(vue@3.5.39(typescript@6.0.3))':
+    dependencies:
+      '@tanstack/match-sorter-utils': 8.19.4
+      '@tanstack/query-core': 5.101.2
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.39(typescript@6.0.3)
+      vue-demi: 0.14.10(vue@3.5.39(typescript@6.0.3))
 
   '@tanstack/vue-store@0.11.0(vue@3.5.39(typescript@6.0.3))':
     dependencies:
@@ -11967,6 +12006,8 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.39
       '@vue/shared': 3.5.39
+
+  '@vue/devtools-api@6.6.4': {}
 
   '@vue/devtools-api@7.7.10':
     dependencies:
@@ -15659,6 +15700,8 @@ snapshots:
       vue: 3.5.39(typescript@6.0.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
+
+  remove-accents@0.5.0: {}
 
   resolve-from@5.0.0: {}
 
