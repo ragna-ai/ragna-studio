@@ -28,6 +28,16 @@ export default defineNuxtConfig({
     prefix: '',
     componentDir: '~/components/ui',
   },
+  // COMPONENTS
+  // ai-elements are imported explicitly via their barrel files, not auto-imported
+  components: {
+    dirs: [
+      {
+        path: '~/components',
+        ignore: ['ai-elements/**'],
+      },
+    ],
+  },
   // IMAGE
   image: {
     provider: 'cloudflare',
