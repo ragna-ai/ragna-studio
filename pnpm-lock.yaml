@@ -71,6 +71,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@repo/mail':
+        specifier: workspace:*
+        version: link:../../packages/mail
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
