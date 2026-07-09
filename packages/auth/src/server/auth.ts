@@ -22,14 +22,11 @@ export const auth = betterAuth({
   plugins: [admin()],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
-  trustedOrigins: [
-    ...config.trustedOrigins,
-    config.appUrl,
-    'https://appleid.apple.com',
-  ],
+  trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
   database: drizzleAdapter(db, {
     provider: 'sqlite',
   }),
+  session: { cookieCache: { enabled: true } },
   socialProviders: {
     google: {
       clientId: config.googleClientId,
