@@ -45,7 +45,7 @@ export const chatController = new Hono()
       instructions: 'You are a helpful assistant.',
       messages: await convertToModelMessages(messages),
       temperature: 0.8,
-      maxOutputTokens: 500,
+      maxOutputTokens: 2000,
       experimental_transform: smoothStream({
         delayInMs: 20,
         chunking: 'word',

@@ -30,7 +30,7 @@ const chatId = ref('test');
 
 // Composables
 const { getChat } = useChatApi();
-const { data: chat, error: chatError } = getChat(chatId);
+const { data: chat, error: chatError } = getChat(chatId, { enabled: false });
 
 const { messages, sendMessage, status, error } = useChat({
   messages: chat.value?.messages ?? [],
