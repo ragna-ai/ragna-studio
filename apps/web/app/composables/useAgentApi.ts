@@ -22,8 +22,11 @@ interface NewAgent {
 
 export const agentKeys = {
   all: ['agents'] as const,
-  list: (page: MaybeRefOrGetter<number>, search: MaybeRefOrGetter<string>) =>
-    ['agents', 'list', page, search] as const,
+  list: (
+    page: MaybeRefOrGetter<number>,
+    limit: MaybeRefOrGetter<number>,
+    search: MaybeRefOrGetter<string>,
+  ) => ['agents', 'list', page, limit, search] as const,
   detail: (agentId: MaybeRefOrGetter<string>) =>
     ['agents', 'detail', agentId] as const,
 };
@@ -35,6 +38,7 @@ export default function useAgentApi() {
   const queryClient = useQueryClient();
 
   const page = ref<number>(1);
+  const limit = ref<number>(10);
   const searchQuery = ref<string>('');
 
   const setSearchQuery = useDebounceFn((newSearchQuery: string) => {
@@ -46,15 +50,19 @@ export default function useAgentApi() {
   }
 
   function getAllAgents(options: QueryOpts = {}) {
-    return useQuery({
-      queryKey: agentKeys.list(page, searchQuery),
+    return useQuery<Agent[]>({
+      queryKey: agentKeys.list(page, limit, searchQuery),
       queryFn: ({ signal }) =>
-        api<Agent[]>('/agent', {
+        api('/agent', {
           method: 'GET',
-          query: { page: page.value, searchQuery: searchQuery.value },
+          query: {
+            page: page.value,
+            limit: limit.value,
+            searchQuery: searchQuery.value,
+          },
           signal,
         }),
-      placeholderData: (prev: unknown) => prev, // keep previous results while refetching
+      placeholderData: (prev: Agent[] | undefined) => prev, // keep previous results while refetching
       ...options,
     });
   }
@@ -63,17 +71,17 @@ export default function useAgentApi() {
     agentId: MaybeRefOrGetter<string>,
     options: QueryOpts = {},
   ) {
-    return useQuery({
+    return useQuery<Agent>({
       queryKey: agentKeys.detail(agentId),
       queryFn: ({ signal }) =>
-        api<Agent>(`/agent/${toValue(agentId)}`, { method: 'GET', signal }),
+        api(`/agent/${toValue(agentId)}`, { method: 'GET', signal }),
       enabled: () => !!toValue(agentId),
       ...options,
     });
   }
 
   function createAgent() {
-    return useMutation({
+    return useMutation<Agent, unknown, NewAgent>({
       mutationFn: (body: NewAgent) => api('/agent', { method: 'POST', body }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: agentKeys.all });
@@ -86,7 +94,7 @@ export default function useAgentApi() {
   }
 
   function deleteAgent() {
-    return useMutation({
+    return useMutation<void, unknown, string>({
       mutationFn: (agentId: string) =>
         api(`/agent/${agentId}`, { method: 'DELETE' }),
       onSuccess: () => {

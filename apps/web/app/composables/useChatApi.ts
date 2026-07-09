@@ -10,8 +10,11 @@ import { toast } from 'vue-sonner';
 
 export const chatKeys = {
   all: ['chats'] as const,
-  list: (page: MaybeRefOrGetter<number>, search: MaybeRefOrGetter<string>) =>
-    ['chats', 'list', page, search] as const,
+  list: (
+    page: MaybeRefOrGetter<number>,
+    limit: MaybeRefOrGetter<number>,
+    search: MaybeRefOrGetter<string>,
+  ) => ['chats', 'list', page, limit, search] as const,
   detail: (chatId: MaybeRefOrGetter<string>) =>
     ['chats', 'detail', chatId] as const,
   recent: () => ['chats', 'recent'] as const,
@@ -36,6 +39,7 @@ export default function useChatApi() {
   const queryClient = useQueryClient();
 
   const page = ref<number>(1);
+  const limit = ref<number>(10);
   const searchQuery = ref<string>('');
 
   const setSearchQuery = useDebounceFn((newSearchQuery: string) => {
@@ -48,11 +52,15 @@ export default function useChatApi() {
 
   function getAllChats(options: QueryOpts = {}) {
     return useQuery<Chat[]>({
-      queryKey: chatKeys.list(page, searchQuery),
+      queryKey: chatKeys.list(page, limit, searchQuery),
       queryFn: ({ signal }) =>
         api('/chat', {
           method: 'GET',
-          query: { page: page.value, searchQuery: searchQuery.value },
+          query: {
+            page: page.value,
+            limit: limit.value,
+            searchQuery: searchQuery.value,
+          },
           signal,
         }),
       placeholderData: (prev: Chat[] | undefined) => prev, // keep previous results while refetching
