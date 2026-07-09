@@ -22,7 +22,8 @@
     "@libsql/client": "^0.17.4",
     "@repo/config": "workspace:*",
     "@tursodatabase/database": "^0.6.1",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "1.0.0-rc.4",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

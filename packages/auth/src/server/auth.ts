@@ -1,5 +1,5 @@
 import { config } from '@repo/config';
-import { db } from '@repo/database';
+import { db, schema } from '@repo/database';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
@@ -25,6 +25,7 @@ export const auth = betterAuth({
   trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
   database: drizzleAdapter(db, {
     provider: 'sqlite',
+    schema,
   }),
   // session: { cookieCache: { enabled: true } },
   socialProviders: {

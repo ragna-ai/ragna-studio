@@ -1,11 +1,10 @@
-import * as t from 'drizzle-orm/sqlite-core';
-import { sqliteTable } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const verification = sqliteTable('verification', {
-  id: t.text('id').primaryKey(),
-  identifier: t.text('identifier').notNull(),
-  value: t.text('value').notNull(),
-  expiresAt: t.integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  createdAt: t.integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: t.integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 });

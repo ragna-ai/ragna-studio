@@ -1,7 +1,7 @@
 import { config } from '@repo/config';
 import { drizzle } from 'drizzle-orm/libsql';
-import * as schema from './schema';
+import { relations } from './schema/relations';
 
-const db = drizzle({ connection: { url: config.getSecret('DATABASE_URL') }, schema });
+const db = drizzle(config.getSecret('DATABASE_URL'), { relations });
 
 export { db };
