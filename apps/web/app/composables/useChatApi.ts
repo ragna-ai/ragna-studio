@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
+import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
 
 export const chatKeys = {
@@ -21,6 +22,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 interface Chat {
   id: string;
   assistantId: string;
+  messages: UIMessage[];
   createdAt: string;
   updatedAt: string;
 }
@@ -45,42 +47,40 @@ export default function useChatApi() {
   }
 
   function getAllChats(options: QueryOpts = {}) {
-    return useQuery({
+    return useQuery<Chat[]>({
       queryKey: chatKeys.list(page, searchQuery),
       queryFn: ({ signal }) =>
-        api<Chat[]>('/chat', {
+        api('/chat', {
           method: 'GET',
           query: { page: page.value, searchQuery: searchQuery.value },
           signal,
         }),
-      placeholderData: (prev: unknown) => prev, // keep previous results while refetching
+      placeholderData: (prev: Chat[] | undefined) => prev, // keep previous results while refetching
       ...options,
     });
   }
 
   function getChat(chatId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
-    return useQuery({
+    return useQuery<Chat>({
       queryKey: chatKeys.detail(chatId),
       queryFn: ({ signal }) =>
-        api<Chat>(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
+        api(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
       enabled: () => !!toValue(chatId),
       ...options,
     });
   }
 
   function getRecentChat(options: QueryOpts = {}) {
-    return useQuery({
+    return useQuery<Chat>({
       queryKey: chatKeys.recent(),
-      queryFn: ({ signal }) =>
-        api<Chat>('/chat/recent', { method: 'GET', signal }),
+      queryFn: ({ signal }) => api('/chat/recent', { method: 'GET', signal }),
       ...options,
     });
   }
 
   function createChat() {
-    return useMutation({
-      mutationFn: (body: NewChat) =>
-        api<Chat>('/chat', { method: 'POST', body }),
+    return useMutation<Chat, unknown, NewChat>({
+      mutationFn: (body: NewChat) => api('/chat', { method: 'POST', body }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: chatKeys.all });
         toast.success('Chat created');
@@ -92,7 +92,7 @@ export default function useChatApi() {
   }
 
   function deleteChat() {
-    return useMutation({
+    return useMutation<void, unknown, string>({
       mutationFn: (chatId: string) =>
         api(`/chat/${chatId}`, { method: 'DELETE' }),
       onSuccess: () => {

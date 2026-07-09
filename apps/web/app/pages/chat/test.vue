@@ -26,10 +26,16 @@ useHead({
   title: 'Chat Test',
 });
 
+const chatId = ref('test');
+
 // Composables
+const { getChat } = useChatApi();
+const { data: chat, error: chatError } = getChat(chatId);
+
 const { messages, sendMessage, status, error } = useChat({
+  messages: chat.value?.messages ?? [],
   transport: new DefaultChatTransport({
-    api: `${useRuntimeConfig().public.apiBaseUrl}/chat/test`,
+    api: `${useRuntimeConfig().public.apiBaseUrl}/chat/${chatId.value}`,
     credentials: 'include',
   }),
 });
@@ -80,6 +86,9 @@ function handleSubmit(message: PromptInputMessage) {
           Thinking...
         </Shimmer>
         <p v-if="error" class="text-sm text-destructive">{{ error.message }}</p>
+        <p v-if="chatError" class="text-sm text-destructive">
+          {{ chatError.message }}
+        </p>
       </ConversationContent>
 
       <ConversationScrollButton />
