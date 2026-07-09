@@ -2,6 +2,14 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# drizzle-kit resolves `drizzle-orm/_relations` from its own subtree but declares
+# no drizzle-orm dependency, so pnpm otherwise links the hoisted 0.45.2 (pulled in
+# by db0/nuxt/better-auth) which lacks that subpath. Pin the matching RC here.
+packageExtensions:
+  drizzle-kit:
+    dependencies:
+      drizzle-orm: 1.0.0-rc.4
+
 allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true

@@ -28,7 +28,7 @@
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
     "@types/node": "catalog:",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "1.0.0-rc.4",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   }

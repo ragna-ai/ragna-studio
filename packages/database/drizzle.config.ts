@@ -3,9 +3,8 @@ import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   dialect: 'turso',
-  schema: './src/schema',
+  schema: './src/schema/index.ts',
   out: './drizzle',
-  casing: 'snake_case',
   dbCredentials: {
     url: config.getSecret('DATABASE_URL'),
     // ssl: config.dbSSL ? { rejectUnauthorized: false } : undefined,
