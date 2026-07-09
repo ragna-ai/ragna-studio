@@ -1,7 +1,5 @@
-export const useApi = () => {
-  const config = useRuntimeConfig();
-  return $fetch.create({
-    baseURL: config.public.apiBaseUrl || '',
+export const useApi = () =>
+  $fetch.create({
+    baseURL: useRuntimeConfig().public.apiBaseUrl,
     credentials: 'include',
   });
-};
