@@ -135,7 +135,7 @@
 }
 
 .nav-icon-wrapper {
-  @apply px-3 py-2 rounded-lg group-hover:bg-stone-200/60 group-hover:scale-105 transition-transform;
+  @apply rounded-lg px-3 py-2 transition-transform group-hover:scale-105 group-hover:bg-stone-200/60;
 }
 
 .nav-icon {
@@ -155,5 +155,5 @@
 }
 
 .nav-item-child {
-  @apply pl-4 pt-0;
+  @apply pt-0 pl-4;
 }
