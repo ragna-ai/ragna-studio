@@ -174,6 +174,9 @@ importers:
       shadcn-nuxt:
         specifier: 2.7.4
         version: 2.7.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(magicast@0.5.3)
+      shiki:
+        specifier: ^4.3.1
+        version: 4.3.1
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
