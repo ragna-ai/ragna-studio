@@ -10,7 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.15",
+    "@ai-sdk/vue": "^4.0.17",
     "@lucide/vue": "^1.23.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/icon": "2.3.1",

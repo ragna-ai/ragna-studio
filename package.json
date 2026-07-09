@@ -1,5 +1,5 @@
 {
-  "name": "ragna-studio",
+  "name": "ragna-studio-7",
   "private": true,
   "scripts": {
     "build": "turbo run build",
