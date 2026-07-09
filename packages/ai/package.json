@@ -28,7 +28,7 @@
     "@ai-sdk/openai": "^4.0.8",
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
-    "ai": "^7.0.17",
+    "ai": "catalog:",
     "serpapi": "^2.2.1",
     "zod": "catalog:"
   },
