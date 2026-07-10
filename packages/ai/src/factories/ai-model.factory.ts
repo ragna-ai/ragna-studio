@@ -13,6 +13,24 @@ import type { ImageModel, LanguageModel } from 'ai';
 
 type VideoModel = ReturnType<ReturnType<typeof createVertex>['videoModel']>;
 
+interface GetLanguageModelPayload {
+  provider: string;
+  model: string;
+  credentials?: any;
+}
+
+interface GetImageModelPayload {
+  provider: string;
+  model: string;
+  credentials?: any;
+}
+
+interface GetVideoModelPayload {
+  provider: string;
+  model: string;
+  credentials?: any;
+}
+
 const bflAuthOptions: BlackForestLabsProviderSettings = {
   baseURL: config.bflApiBaseUrl,
   apiKey: config.getSecret('BFL_API_KEY'),
@@ -40,12 +58,8 @@ const googleGenAiAuthOptions: GoogleGenerativeAIProviderSettings = {
   apiKey: config.getSecret('GOOGLE_GENAI_API_KEY'),
 };
 
-export function getLanguageModel(payload: {
-  provider: string;
-  model: string;
-  credentials?: any;
-}): LanguageModel {
-  const { provider = 'anthropic', model = 'claude-sonnet-4-6' } = payload;
+export function getLanguageModel(payload: GetLanguageModelPayload): LanguageModel {
+  const { provider = 'anthropic', model = 'claude-sonnet-5' } = payload;
 
   switch (provider) {
     case 'anthropic': {
@@ -69,11 +83,7 @@ export function getLanguageModel(payload: {
   }
 }
 
-export function getImageModel(payload: {
-  provider: string;
-  model: string;
-  credentials?: any;
-}): ImageModel {
+export function getImageModel(payload: GetImageModelPayload): ImageModel {
   const { provider = 'bfl', model = 'flux-2-pro' } = payload;
 
   switch (provider) {
@@ -94,11 +104,7 @@ export function getImageModel(payload: {
   }
 }
 
-export function getVideoModel(payload: {
-  provider: string;
-  model: string;
-  credentials?: any;
-}): VideoModel {
+export function getVideoModel(payload: GetVideoModelPayload): VideoModel {
   const { provider = 'google-vertex', model = 'veo-3.1-generate-001' } = payload;
 
   switch (provider) {

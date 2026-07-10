@@ -33,11 +33,11 @@ export const chatController = new Hono()
    */
   .get('/', validPaginationQuery, async (c) => {
     const user = c.get('user');
-    const validated = c.req.valid('query');
+    const query = c.req.valid('query');
 
-    const page = validated.page ? Number(validated.page) : 1;
-    const limit = validated.limit ? Number(validated.limit) : 10;
-    const sort = validated.sort || 'desc';
+    const page = query.page ? Number(query.page) : 1;
+    const limit = query.limit ? Number(query.limit) : 10;
+    const sort = query.sort || 'desc';
 
     // Calculate offset for pagination ((page number - 1) * page size)
     const offset = page && limit ? (page - 1) * limit : undefined;
@@ -130,17 +130,17 @@ export const chatController = new Hono()
    */
   .get('/:chatId', validChatIdParam, async (c) => {
     const user = c.get('user');
-    const { chatId } = c.req.valid('param');
+    const param = c.req.valid('param');
 
     const { error, data: userChat } = await tryCatch(() =>
       getChatByIdForUser({
-        chatId,
+        chatId: param.chatId,
         userId: user.id,
       }),
     );
 
     if (error !== null) {
-      logger.error(`Error fetching chat ${chatId} for user ${user.id}`, error);
+      logger.error(`Error fetching chat ${param.chatId} for user ${user.id}`, error);
       throw new InternalServerErrorException('Failed to fetch chat');
     }
 
@@ -165,19 +165,19 @@ export const chatController = new Hono()
    */
   .post('/:chatId', validChatIdParam, async (c) => {
     const user = c.get('user');
-    const { chatId } = c.req.valid('param');
+    const param = c.req.valid('param');
     const body = await c.req.json();
 
     // Get chat for user
-    const { error: chatError, data: chat } = await tryCatch(() =>
-      getChatByIdForUser({ chatId, userId: user.id }),
+    const { error: userChatError, data: userChat } = await tryCatch(() =>
+      getChatByIdForUser({ chatId: param.chatId, userId: user.id }),
     );
 
-    if (chatError !== null) {
+    if (userChatError !== null) {
       throw new InternalServerErrorException('Failed to fetch chat');
     }
 
-    if (!chat) {
+    if (!userChat) {
       throw new NotFoundException('Chat not found');
     }
 
@@ -185,61 +185,17 @@ export const chatController = new Hono()
       throw new InternalServerErrorException('Invalid messages format');
     }
 
-    logger.debug(`Processing messages for chat ${chatId}`, { messages: body.messages });
+    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: body.messages });
+
+    const { assistant } = userChat;
 
     const result = streamText({
       model: getLanguageModel({
-        provider: chat.assistant.aiModel.provider,
-        model: chat.assistant.aiModel.model,
+        provider: assistant.aiModel.provider,
+        model: assistant.aiModel.model,
       }),
-      instructions: chat.assistant.systemPrompt,
+      instructions: assistant.systemPrompt,
       messages: await convertToModelMessages(body.messages),
-      temperature: 0.8,
-      maxOutputTokens: 2000,
-      experimental_transform: smoothStream({
-        delayInMs: 20,
-        chunking: 'word',
-      }),
-      onStart({ callId, modelId, runtimeContext }) {
-        logger.debug('Request started', {
-          callId,
-          modelId,
-          runtimeContext,
-        });
-      },
-      onEnd({ callId, usage, finishReason }) {
-        logger.debug('Request finished', {
-          callId,
-          finishReason,
-          usage,
-        });
-      },
-      onError(error) {
-        logger.error('Error in chat stream', error);
-      },
-    });
-
-    return createUIMessageStreamResponse({
-      stream: toUIMessageStream({ stream: result.stream }),
-    });
-  })
-  /**
-   * [POST] /chat/test
-   * Test endpoint for chat functionality
-   */
-  .post('/test', async (c) => {
-    const user = c.get('user');
-    const { messages } = await c.req.json();
-
-    const languageModel = getLanguageModel({
-      provider: 'anthropic',
-      model: 'claude-haiku-4-5',
-    });
-
-    const result = streamText({
-      model: languageModel,
-      instructions: 'You are a helpful assistant.',
-      messages: await convertToModelMessages(messages),
       temperature: 0.8,
       maxOutputTokens: 2000,
       experimental_transform: smoothStream({
