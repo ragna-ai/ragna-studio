@@ -11,7 +11,7 @@ import {
   getAllChatsByUserId,
   getChatByIdForUser,
   getChatCountByUserId,
-  getOrCreateDefaultAssistantForUser,
+  getOrCreateDefaultAgentForUser,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
@@ -70,13 +70,13 @@ export const chatController = new Hono()
         title: chat.title,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
-        assistant: {
-          id: chat.assistant.id,
-          name: chat.assistant.name,
+        agent: {
+          id: chat.agent.id,
+          name: chat.agent.name,
           aiModel: {
-            id: chat.assistant.aiModel.id,
-            provider: chat.assistant.aiModel.provider,
-            displayName: chat.assistant.aiModel.displayName,
+            id: chat.agent.aiModel.id,
+            provider: chat.agent.aiModel.provider,
+            displayName: chat.agent.aiModel.displayName,
           },
         },
       };
@@ -96,25 +96,25 @@ export const chatController = new Hono()
     const user = c.get('user');
     const body = c.req.valid('json');
 
-    let assistantId: string;
+    let agentId: string;
 
-    if (!body.assistantId) {
-      const { error, data: assistant } = await tryCatch(() =>
-        getOrCreateDefaultAssistantForUser({ userId: user.id }),
+    if (!body.agentId) {
+      const { error, data: agent } = await tryCatch(() =>
+        getOrCreateDefaultAgentForUser({ userId: user.id }),
       );
 
-      if (error !== null || !assistant) {
-        logger.error(`Error fetching default assistant for user ${user.id}`, error);
-        throw new InternalServerErrorException('Failed to fetch default assistant');
+      if (error !== null || !agent) {
+        logger.error(`Error fetching default agent for user ${user.id}`, error);
+        throw new InternalServerErrorException('Failed to fetch default agent');
       }
 
-      assistantId = assistant.id;
+      agentId = agent.id;
     } else {
-      assistantId = body.assistantId;
+      agentId = body.agentId;
     }
 
     const { error, data: chat } = await tryCatch(() =>
-      createChat({ userId: user.id, assistantId, title: 'New Chat' }),
+      createChat({ userId: user.id, agentId, title: 'New Chat' }),
     );
 
     if (error !== null || !chat) {
@@ -150,7 +150,7 @@ export const chatController = new Hono()
 
     const chatDto = {
       id: userChat.id,
-      assistantId: userChat.assistantId,
+      agentId: userChat.agentId,
       title: userChat.title,
       createdAt: userChat.createdAt,
       updatedAt: userChat.updatedAt,
@@ -187,14 +187,14 @@ export const chatController = new Hono()
 
     logger.debug(`Processing messages for chat ${param.chatId}`, { messages: body.messages });
 
-    const { assistant } = userChat;
+    const { agent } = userChat;
 
     const result = streamText({
       model: getLanguageModel({
-        provider: assistant.aiModel.provider,
-        model: assistant.aiModel.model,
+        provider: agent.aiModel.provider,
+        model: agent.aiModel.model,
       }),
-      instructions: assistant.systemPrompt,
+      instructions: agent.systemPrompt,
       messages: await convertToModelMessages(body.messages),
       temperature: 0.8,
       maxOutputTokens: 2000,

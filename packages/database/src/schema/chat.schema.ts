@@ -1,6 +1,6 @@
 import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createId } from '../utils/create-id';
-import { assistant, type Assistant } from './assistant.schema';
+import { agent, type Agent } from './agent.schema';
 import { timestamps } from './common.schema';
 import { user } from './user.schema';
 
@@ -11,15 +11,15 @@ export const chat = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    assistantId: text('assistant_id')
+    agentId: text('agent_id')
       .notNull()
-      .references(() => assistant.id, { onDelete: 'cascade' }),
+      .references(() => agent.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     ...timestamps,
   },
   (table) => [
     index('chat_userId_idx').on(table.userId),
-    index('chat_assistantId_idx').on(table.assistantId),
+    index('chat_agentId_idx').on(table.agentId),
   ],
 );
 
@@ -49,11 +49,11 @@ export type ChatWithMessages = Chat & {
   messages: ChatMessage[];
 };
 
-export type ChatWithAssistant = Chat & {
-  assistant: Assistant;
+export type ChatWithAgent = Chat & {
+  agent: Agent;
 };
 
-export type ChatWithMessagesAssistant = Chat & {
-  assistant: Assistant;
+export type ChatWithMessagesAgent = Chat & {
+  agent: Agent;
   messages: ChatMessage[];
 };

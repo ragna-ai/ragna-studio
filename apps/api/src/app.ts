@@ -6,6 +6,7 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { agentController } from './controllers/agent.controller';
 import { chatController } from './controllers/chat.controller';
 import { userController } from './controllers/user.controller';
 
@@ -37,6 +38,7 @@ export const app = new Hono()
   // Controllers
   .route('/', userController)
   .route('/', chatController)
+  .route('/', agentController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

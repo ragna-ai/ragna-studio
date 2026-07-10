@@ -1,6 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod';
 import type z from 'zod';
-import { aiModel, assistant, chat, chatMessage } from '../schema';
+import { agent, aiModel, chat, chatMessage } from '../schema';
 import { user } from '../schema/user.schema';
 
 // USER
@@ -15,16 +15,16 @@ export const userUpdateSchema = createUpdateSchema(user, {
 export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
 export type IUpdateUser = Partial<UserUpdateSchema>;
 
-// ASSISTANT
-export const assistantSelectSchema = createSelectSchema(assistant);
-export type AssistantSelectSchema = z.infer<typeof assistantSelectSchema>;
-export const assistantCreateSchema = createInsertSchema(assistant);
-export type AssistantCreateSchema = z.infer<typeof assistantCreateSchema>;
-export type ICreateAssistant = Omit<AssistantCreateSchema, 'id' | 'createdAt' | 'updatedAt'>;
-export const assistantUpdateSchema = createUpdateSchema(assistant);
-export type AssistantUpdateSchema = z.infer<typeof assistantUpdateSchema>;
-export type IUpdateAssistant = Partial<AssistantUpdateSchema>;
-// export const assistantToolsSchema = z.enum(assistantTools);
+// AGENT
+export const agentSelectSchema = createSelectSchema(agent);
+export type AgentSelectSchema = z.infer<typeof agentSelectSchema>;
+export const agentCreateSchema = createInsertSchema(agent);
+export type AgentCreateSchema = z.infer<typeof agentCreateSchema>;
+export type ICreateAgent = Omit<AgentCreateSchema, 'id' | 'createdAt' | 'updatedAt'>;
+export const agentUpdateSchema = createUpdateSchema(agent);
+export type AgentUpdateSchema = z.infer<typeof agentUpdateSchema>;
+export type IUpdateAgent = Partial<AgentUpdateSchema>;
+// export const agentToolsSchema = z.enum(agentTools);
 
 // AI MODEL
 export const aiModelSelectSchema = createSelectSchema(aiModel);

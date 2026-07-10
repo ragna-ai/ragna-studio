@@ -25,18 +25,16 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 interface ChatResponse {
   chat: {
     id: string;
-    assistantId: string;
+    agentId: string;
     title: string;
-    // Undefined when the chat has no messages yet (never an empty array), so
-    // consumers can hand it straight to useChat, which rejects an empty array.
-    messages?: UIMessage[];
+    messages?: UIMessage[] | null;
     createdAt: string;
     updatedAt: string;
   };
 }
 
 interface NewChatBody {
-  assistantId?: string;
+  agentId?: string;
 }
 
 export default function useChatApi() {
@@ -79,7 +77,7 @@ export default function useChatApi() {
       queryFn: ({ signal }) =>
         api(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
       enabled: () => !!toValue(chatId),
-      // Collapse an empty message list to undefined at the boundary.
+      // Collapse an empty message list to null at the boundary.
       select: (data: ChatResponse) => ({
         ...data,
         chat: {

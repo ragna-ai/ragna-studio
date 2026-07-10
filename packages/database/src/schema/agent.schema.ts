@@ -4,9 +4,9 @@ import { aiModel, type AiModel } from './aimodel.schema';
 import { timestamps } from './common.schema';
 import { user } from './user.schema';
 
-// ASSISTANT
-export const assistant = sqliteTable(
-  'assistants',
+// AGENT
+export const agent = sqliteTable(
+  'agents',
   {
     id: text('id').primaryKey().$defaultFn(createId),
     userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
@@ -17,23 +17,23 @@ export const assistant = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools').notNull().default('[]'), //.$type<AssistantTools>(),
-    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AssistantSettings>(),
+    tools: text('tools').notNull().default('[]'), //.$type<AgentTools>(),
+    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AgentSettings>(),
     ...timestamps,
   },
   (table) => [
-    index('assistant_userId_idx').on(table.userId),
-    index('assistant_aiModelId_idx').on(table.aiModelId),
+    index('agent_userId_idx').on(table.userId),
+    index('agent_aiModelId_idx').on(table.aiModelId),
   ],
 );
 
-export type Assistant = typeof assistant.$inferSelect;
-export type NewAssistant = typeof assistant.$inferInsert;
+export type Agent = typeof agent.$inferSelect;
+export type NewAgent = typeof agent.$inferInsert;
 
-export type AssistantWithAiModel = Assistant & { aiModel: AiModel };
+export type AgentWithAiModel = Agent & { aiModel: AiModel };
 
-export const defaultAssistant = sqliteTable(
-  'default_assistants',
+export const defaultAgent = sqliteTable(
+  'default_agents',
   {
     id: text('id').primaryKey().$defaultFn(createId),
     aiModelId: text('ai_model_id')
@@ -42,11 +42,11 @@ export const defaultAssistant = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools').notNull().default('[]'), //.$type<AssistantTools>(),
-    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AssistantSettings>(),
+    tools: text('tools').notNull().default('[]'), //.$type<AgentTools>(),
+    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AgentSettings>(),
     ...timestamps,
   },
-  (table) => [index('default_assistant_aiModelId_idx').on(table.aiModelId)],
+  (table) => [index('default_agent_aiModelId_idx').on(table.aiModelId)],
 );
 
-export type DefaultAssistant = typeof defaultAssistant.$inferSelect;
+export type DefaultAgent = typeof defaultAgent.$inferSelect;

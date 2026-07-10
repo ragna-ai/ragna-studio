@@ -38,7 +38,7 @@ const quickAccessItems = [
     icon: BotIcon,
     class: 'bg-violet-200/50',
     label: 'Agents',
-    route: '/assistant',
+    route: '/agent',
   },
   {
     id: 8,

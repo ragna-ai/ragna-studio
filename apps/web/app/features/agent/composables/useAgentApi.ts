@@ -6,19 +6,11 @@ import {
 } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface NewAgent {
-  name: string;
-  description: string;
-}
+import type {
+  AgentManyResponse,
+  AgentResponse,
+  UpsertAgentRequest,
+} from '~/features/agent/types';
 
 export const agentKeys = {
   all: ['agents'] as const,
@@ -50,7 +42,7 @@ export default function useAgentApi() {
   }
 
   function getAllAgents(options: QueryOpts = {}) {
-    return useQuery<Agent[]>({
+    return useQuery<AgentManyResponse>({
       queryKey: agentKeys.list(page, limit, searchQuery),
       queryFn: ({ signal }) =>
         api('/agent', {
@@ -62,7 +54,7 @@ export default function useAgentApi() {
           },
           signal,
         }),
-      placeholderData: (prev: Agent[] | undefined) => prev, // keep previous results while refetching
+      placeholderData: (prev: AgentManyResponse | undefined) => prev, // keep previous results while refetching
       ...options,
     });
   }
@@ -71,7 +63,7 @@ export default function useAgentApi() {
     agentId: MaybeRefOrGetter<string>,
     options: QueryOpts = {},
   ) {
-    return useQuery<Agent>({
+    return useQuery<AgentResponse>({
       queryKey: agentKeys.detail(agentId),
       queryFn: ({ signal }) =>
         api(`/agent/${toValue(agentId)}`, { method: 'GET', signal }),
@@ -80,15 +72,15 @@ export default function useAgentApi() {
     });
   }
 
-  function createAgent() {
-    return useMutation<Agent, unknown, NewAgent>({
-      mutationFn: (body: NewAgent) => api('/agent', { method: 'POST', body }),
+  function upsertAgent() {
+    return useMutation<AgentResponse, unknown, UpsertAgentRequest>({
+      mutationFn: (body) => api('/agent', { method: 'POST', body }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: agentKeys.all });
-        toast.success('Agent created');
+        toast.success('Agent updated');
       },
       onError: () => {
-        toast.error('Failed to create agent');
+        toast.error('Failed to update agent');
       },
     });
   }
@@ -114,7 +106,7 @@ export default function useAgentApi() {
     setSearchQuery,
     getAllAgents,
     getAgent,
-    createAgent,
+    upsertAgent,
     deleteAgent,
   };
 }

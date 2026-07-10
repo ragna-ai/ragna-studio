@@ -9,7 +9,7 @@ export async function createChat(payload: ICreateChat): Promise<Chat> {
     .insert(chat)
     .values({
       userId: payload.userId,
-      assistantId: payload.assistantId,
+      agentId: payload.agentId,
       title: payload.title,
     })
     .returning();
@@ -41,14 +41,14 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
     columns: {
       id: true,
       userId: true,
-      assistantId: true,
+      agentId: true,
       title: true,
       createdAt: true,
       updatedAt: true,
     },
     where: { id: payload.chatId, userId: payload.userId },
     with: {
-      assistant: {
+      agent: {
         with: {
           aiModel: true,
         },
@@ -89,13 +89,13 @@ export async function getAllChatsByUserId({
     columns: {
       id: true,
       userId: true,
-      assistantId: true,
+      agentId: true,
       title: true,
       createdAt: true,
       updatedAt: true,
     },
     with: {
-      assistant: {
+      agent: {
         columns: {
           id: true,
           name: true,

@@ -19,7 +19,7 @@ async function seedAiModels() {
   ]);
 }
 
-async function seedDefaultAssistant() {
+async function seedDefaultAgent() {
   // find the claude-haiku-4-5 model
   const defaultModel = await db.query.aiModel.findFirst({
     where: { model: 'claude-haiku-4-5', provider: 'anthropic' },
@@ -28,7 +28,7 @@ async function seedDefaultAssistant() {
   if (!defaultModel) {
     throw new Error('Default AI model not found. Please seed AI models first.');
   }
-  await db.insert(schema.defaultAssistant).values({
+  await db.insert(schema.defaultAgent).values({
     aiModelId: defaultModel.id,
     name: 'RAGNA Agent',
     description: 'Your personal AI agent.',
@@ -41,7 +41,7 @@ async function seedDefaultAssistant() {
 async function main() {
   await reset(db, schema);
   await seedAiModels();
-  await seedDefaultAssistant();
+  await seedDefaultAgent();
 }
 
 main().catch((error) => {

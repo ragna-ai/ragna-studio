@@ -12,7 +12,7 @@ export const validUpdateUserProfileBody = myzValidator('json', userUpdateSchema)
 export const validCreateChatBody = myzValidator(
   'json',
   z.object({
-    assistantId: primaryId.optional(),
+    agentId: primaryId.optional(),
   }),
 );
 
@@ -20,5 +20,24 @@ export const validChatIdParam = myzValidator(
   'param',
   z.object({
     chatId: primaryId,
+  }),
+);
+
+export const validUpsertAgentBody = myzValidator(
+  'json',
+  z.object({
+    id: primaryId.optional(),
+    name: z.string().min(1).max(255),
+    description: z.string().optional(),
+    aiModelId: primaryId,
+    systemPrompt: z.string(),
+    tools: z.array(z.string()),
+  }),
+);
+
+export const validAgentIdParam = myzValidator(
+  'param',
+  z.object({
+    agentId: primaryId,
   }),
 );

@@ -1,7 +1,7 @@
 import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
+import { agent, defaultAgent } from './agent.schema';
 import { aiModel } from './aimodel.schema';
-import { assistant, defaultAssistant } from './assistant.schema';
 import { chat, chatMessage } from './chat.schema';
 import { session } from './session.schema';
 import { user } from './user.schema';
@@ -13,8 +13,8 @@ const schema = {
   session,
   verification,
   aiModel,
-  assistant,
-  defaultAssistant,
+  agent,
+  defaultAgent,
   chat,
   chatMessage,
 };
@@ -23,7 +23,7 @@ export const relations = defineRelations(schema, (r) => ({
   user: {
     accounts: r.many.account(),
     sessions: r.many.session(),
-    assistants: r.many.assistant(),
+    agents: r.many.agent(),
     chats: r.many.chat(),
   },
   account: {
@@ -41,24 +41,24 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   aiModel: {
-    assistants: r.many.assistant(),
-    defaultAssistants: r.many.defaultAssistant(),
+    agents: r.many.agent(),
+    defaultAgents: r.many.defaultAgent(),
   },
-  assistant: {
+  agent: {
     user: r.one.user({
-      from: r.assistant.userId,
+      from: r.agent.userId,
       to: r.user.id,
     }),
     aiModel: r.one.aiModel({
-      from: r.assistant.aiModelId,
+      from: r.agent.aiModelId,
       to: r.aiModel.id,
       optional: false,
     }),
     chats: r.many.chat(),
   },
-  defaultAssistant: {
+  defaultAgent: {
     aiModel: r.one.aiModel({
-      from: r.defaultAssistant.aiModelId,
+      from: r.defaultAgent.aiModelId,
       to: r.aiModel.id,
       optional: false,
     }),
@@ -69,9 +69,9 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
       optional: false,
     }),
-    assistant: r.one.assistant({
-      from: r.chat.assistantId,
-      to: r.assistant.id,
+    agent: r.one.agent({
+      from: r.chat.agentId,
+      to: r.agent.id,
       optional: false,
     }),
     messages: r.many.chatMessage(),

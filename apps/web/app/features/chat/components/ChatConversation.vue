@@ -62,7 +62,7 @@ async function handleSubmit(message: PromptInputMessage) {
 
   if (!chatId.value) {
     try {
-      const { chat } = await createNewChat({ assistantId: undefined });
+      const { chat } = await createNewChat({ agentId: undefined });
       if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
       chatId.value = chat.id;
     } catch {
