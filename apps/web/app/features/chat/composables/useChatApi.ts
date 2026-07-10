@@ -22,16 +22,21 @@ export const chatKeys = {
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
-interface Chat {
-  id: string;
-  assistantId: string;
-  messages: UIMessage[];
-  createdAt: string;
-  updatedAt: string;
+interface ChatResponse {
+  chat: {
+    id: string;
+    assistantId: string;
+    title: string;
+    // Undefined when the chat has no messages yet (never an empty array), so
+    // consumers can hand it straight to useChat, which rejects an empty array.
+    messages?: UIMessage[];
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
-interface NewChat {
-  assistantId: string;
+interface NewChatBody {
+  assistantId?: string;
 }
 
 export default function useChatApi() {
@@ -51,7 +56,7 @@ export default function useChatApi() {
   }
 
   function getAllChats(options: QueryOpts = {}) {
-    return useQuery<Chat[]>({
+    return useQuery<ChatResponse[]>({
       queryKey: chatKeys.list(page, limit, searchQuery),
       queryFn: ({ signal }) =>
         api('/chat', {
@@ -63,23 +68,31 @@ export default function useChatApi() {
           },
           signal,
         }),
-      placeholderData: (prev: Chat[] | undefined) => prev, // keep previous results while refetching
+      placeholderData: (prev: ChatResponse[] | undefined) => prev, // keep previous results while refetching
       ...options,
     });
   }
 
   function getChat(chatId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
-    return useQuery<Chat>({
+    return useQuery<ChatResponse>({
       queryKey: chatKeys.detail(chatId),
       queryFn: ({ signal }) =>
         api(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
       enabled: () => !!toValue(chatId),
+      // Collapse an empty message list to undefined at the boundary.
+      select: (data: ChatResponse) => ({
+        ...data,
+        chat: {
+          ...data.chat,
+          messages: data.chat.messages?.length ? data.chat.messages : undefined,
+        },
+      }),
       ...options,
     });
   }
 
   function getRecentChat(options: QueryOpts = {}) {
-    return useQuery<Chat>({
+    return useQuery<ChatResponse>({
       queryKey: chatKeys.recent(),
       queryFn: ({ signal }) => api('/chat/recent', { method: 'GET', signal }),
       ...options,
@@ -87,8 +100,8 @@ export default function useChatApi() {
   }
 
   function createChat() {
-    return useMutation<Chat, unknown, NewChat>({
-      mutationFn: (body: NewChat) => api('/chat', { method: 'POST', body }),
+    return useMutation<ChatResponse, unknown, NewChatBody>({
+      mutationFn: (body) => api('/chat', { method: 'POST', body }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: chatKeys.all });
         toast.success('Chat created');

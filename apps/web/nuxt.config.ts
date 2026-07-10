@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   ssr: false,
   // MODULES
   modules: [
+    'nuxt-typed-router',
     'shadcn-nuxt',
     '@vueuse/nuxt',
     '@nuxt/icon',

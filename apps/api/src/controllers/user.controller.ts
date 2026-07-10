@@ -2,7 +2,7 @@ import { updateUser } from '@repo/database';
 import { logError } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import { InternalServerErrorException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { validUpdateUserProfileBody } from '../middlewares/validationMiddlewares';
 
@@ -16,10 +16,6 @@ export const userController = new Hono()
   .get('/profile', (c) => {
     const user = c.get('user');
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
     return c.json({ user });
   })
   /**
@@ -29,10 +25,6 @@ export const userController = new Hono()
   .patch('/profile', validUpdateUserProfileBody, async (c) => {
     const user = c.get('user');
     const { name } = c.req.valid('json');
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
 
     const { error, data } = await tryCatch(() => updateUser({ id: user.id, name }));
 

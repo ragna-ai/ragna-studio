@@ -3,17 +3,28 @@ import { db } from '../db';
 import type { Assistant } from '../schema';
 import { assistant } from '../schema';
 import type { ICreateAssistant, IUpdateAssistant } from '../zod';
+import { getDefaultAssistant } from './default-assistant.repo';
 
 export async function upsertAssistant(
   values: ICreateAssistant & { id?: string },
 ): Promise<Assistant> {
-  const { id: assistantId, userId, name, description, aiModelId, systemPrompt, tools } = values;
+  const {
+    id: assistantId,
+    userId,
+    name,
+    description,
+    aiModelId,
+    isDefault,
+    systemPrompt,
+    tools,
+  } = values;
   const [createdAssistant] = await db
     .insert(assistant)
     .values({
       id: assistantId,
       userId,
       aiModelId,
+      isDefault,
       name,
       description,
       systemPrompt,
@@ -36,6 +47,33 @@ export async function upsertAssistant(
   }
 
   return createdAssistant;
+}
+
+// Get the user's personal clone of the default assistant, creating it on first use
+export async function getOrCreateDefaultAssistantForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<Assistant> {
+  const existingAssistant = await db.query.assistant.findFirst({
+    where: { userId, isDefault: true },
+  });
+
+  if (existingAssistant) {
+    return existingAssistant;
+  }
+
+  const defaultAssistant = await getDefaultAssistant();
+
+  return upsertAssistant({
+    userId,
+    aiModelId: defaultAssistant.aiModelId,
+    isDefault: true,
+    name: defaultAssistant.name,
+    description: defaultAssistant.description,
+    systemPrompt: defaultAssistant.systemPrompt,
+    tools: defaultAssistant.tools,
+  });
 }
 
 export async function getAssistantCountByUserId({ userId }: { userId: string }): Promise<number> {

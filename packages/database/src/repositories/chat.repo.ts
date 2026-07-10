@@ -4,14 +4,13 @@ import type { Chat, ChatMessage, ChatWithMessages } from '../schema';
 import { chat, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage } from '../zod';
 
-export async function createChat(values: ICreateChat): Promise<Chat> {
-  const { userId, assistantId, title } = values;
+export async function createChat(payload: ICreateChat): Promise<Chat> {
   const [createdChat] = await db
     .insert(chat)
     .values({
-      userId,
-      assistantId,
-      title,
+      userId: payload.userId,
+      assistantId: payload.assistantId,
+      title: payload.title,
     })
     .returning();
 
@@ -37,7 +36,7 @@ export async function getChatById({
   return chatRecord || null;
 }
 
-export async function getChatByIdForUser({ chatId, userId }: { chatId: string; userId: string }) {
+export async function getChatByIdForUser(payload: { chatId: string; userId: string }) {
   const chatRecord = await db.query.chat.findFirst({
     columns: {
       id: true,
@@ -47,7 +46,7 @@ export async function getChatByIdForUser({ chatId, userId }: { chatId: string; u
       createdAt: true,
       updatedAt: true,
     },
-    where: { id: chatId, userId },
+    where: { id: payload.chatId, userId: payload.userId },
     with: {
       assistant: {
         with: {
@@ -71,8 +70,8 @@ export async function getChatByIdForUser({ chatId, userId }: { chatId: string; u
   return chatRecord || null;
 }
 
-export async function getChatCountByUserId({ userId }: { userId: string }): Promise<number> {
-  return db.$count(chat, eq(chat.userId, userId));
+export async function getChatCountByUserId(payload: { userId: string }): Promise<number> {
+  return db.$count(chat, eq(chat.userId, payload.userId));
 }
 
 export async function getAllChatsByUserId({
@@ -133,14 +132,8 @@ export async function updateChatTitleById({
   return updatedChat;
 }
 
-export async function deleteChatById({
-  userId,
-  chatId,
-}: {
-  userId: string;
-  chatId: string;
-}): Promise<void> {
-  await db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.userId, userId)));
+export async function deleteChatById({ userId, chatId }: { userId: string; chatId: string }) {
+  return db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.userId, userId)));
 }
 
 // CHAT MESSAGES
@@ -157,8 +150,8 @@ export async function getChatMessagesByChatId({
   return chatMessages;
 }
 
-export async function createChatMessage(values: ICreateChatMessage): Promise<ChatMessage> {
-  const { chatId, role, content } = values;
+export async function createChatMessage(payload: ICreateChatMessage): Promise<ChatMessage> {
+  const { chatId, role, content } = payload;
   const [createdChatMessage] = await db
     .insert(chatMessage)
     .values({
@@ -175,8 +168,8 @@ export async function createChatMessage(values: ICreateChatMessage): Promise<Cha
   return createdChatMessage;
 }
 
-export async function createChatMessages(messages: ICreateChatMessage[]): Promise<ChatMessage[]> {
-  const createdChatMessages = await db.insert(chatMessage).values(messages).returning();
+export async function createChatMessages(payload: ICreateChatMessage[]): Promise<ChatMessage[]> {
+  const createdChatMessages = await db.insert(chatMessage).values(payload).returning();
 
   if (!createdChatMessages || createdChatMessages.length === 0) {
     throw new Error('Failed to create chat messages');

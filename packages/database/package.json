@@ -16,13 +16,15 @@
     "dev": "tsdown --watch",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:pull": "drizzle-kit pull"
+    "db:pull": "drizzle-kit pull",
+    "db:seed": "tsx src/seed/index.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
     "@repo/config": "workspace:*",
     "@tursodatabase/database": "^0.6.1",
     "drizzle-orm": "1.0.0-rc.4",
+    "drizzle-seed": "1.0.0-rc.4",
     "uuid": "^14.0.1",
     "zod": "catalog:"
   },

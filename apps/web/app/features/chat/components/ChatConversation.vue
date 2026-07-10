@@ -21,23 +21,30 @@ import {
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import { DefaultChatTransport } from '@repo/ai/client';
+import type { UIMessage } from 'ai';
 import useChatApi from '~/features/chat/composables/useChatApi';
 
-useHead({
-  title: 'Chat Test',
-});
+interface Props {
+  chatId?: string;
+  initialMessages?: UIMessage[];
+}
 
-const chatId = ref('test');
+const props = defineProps<Props>();
+const chatId = ref(props.chatId ?? null);
 
 // Composables
-const { getChat } = useChatApi();
-const { data: chat, error: chatError } = getChat(chatId, { enabled: false });
+const { createChat } = useChatApi();
+const { mutateAsync: createNewChat } = createChat();
 
 const { messages, sendMessage, status, error } = useChat({
-  messages: chat.value?.messages ?? [],
+  messages: props.initialMessages,
   transport: new DefaultChatTransport({
-    api: `${useRuntimeConfig().public.apiBaseUrl}/chat/${chatId.value}`,
     credentials: 'include',
+    prepareSendMessagesRequest: ({ messages, body, trigger, messageId }) => ({
+      api: `${useRuntimeConfig().public.apiBaseUrl}/chat/${chatId.value}`,
+      body: { ...body, messages, trigger, messageId },
+      credentials: 'include',
+    }),
   }),
 });
 
@@ -47,19 +54,28 @@ const isBusy = computed(
 );
 
 // Functions
-function handleSubmit(message: PromptInputMessage) {
+async function handleSubmit(message: PromptInputMessage) {
   const text = message.text.trim();
   if (!text || isBusy.value) {
     return;
   }
+
+  if (!chatId.value) {
+    try {
+      const { chat } = await createNewChat({ assistantId: undefined });
+      if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
+      chatId.value = chat.id;
+    } catch {
+      return;
+    }
+  }
+
   sendMessage({ text });
 }
 </script>
 
 <template>
   <div class="mx-auto flex h-full w-full max-w-4xl flex-col gap-4 p-4">
-    <h1 class="text-lg font-semibold">Chat Test</h1>
-
     <Conversation class="rounded-md border">
       <ConversationContent>
         <ConversationEmptyState
@@ -87,9 +103,6 @@ function handleSubmit(message: PromptInputMessage) {
           Thinking...
         </Shimmer>
         <p v-if="error" class="text-sm text-destructive">{{ error.message }}</p>
-        <p v-if="chatError" class="text-sm text-destructive">
-          {{ chatError.message }}
-        </p>
       </ConversationContent>
 
       <ConversationScrollButton />

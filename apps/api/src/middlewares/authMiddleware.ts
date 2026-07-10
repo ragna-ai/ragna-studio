@@ -4,8 +4,8 @@ import { UnauthorizedException } from '../exceptions';
 
 export type AuthEnv = {
   Variables: {
-    user: typeof auth.$Infer.Session.user | null;
-    session: typeof auth.$Infer.Session.session | null;
+    user: typeof auth.$Infer.Session.user;
+    session: typeof auth.$Infer.Session.session;
   };
 };
 
@@ -15,8 +15,6 @@ export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   });
 
   if (!session || !session.user) {
-    c.set('user', null);
-    c.set('session', null);
     throw new UnauthorizedException();
   }
 

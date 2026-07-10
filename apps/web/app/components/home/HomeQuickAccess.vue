@@ -17,7 +17,7 @@ const quickAccessItems = [
     icon: MessagesSquareIcon,
     class: 'bg-indigo-200/50',
     label: 'Chat',
-    route: '/chat/recent',
+    route: '/chat',
   },
   {
     id: 3,
