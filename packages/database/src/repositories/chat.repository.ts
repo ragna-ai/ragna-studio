@@ -28,7 +28,7 @@ export async function getChatById({
   chatId: string;
 }): Promise<ChatWithMessages | null> {
   const chatRecord = await db.query.chat.findFirst({
-    where: eq(chat.id, chatId),
+    where: { id: chatId },
     with: {
       messages: true,
     },
@@ -47,7 +47,7 @@ export async function getChatByIdForUser({ chatId, userId }: { chatId: string; u
       createdAt: true,
       updatedAt: true,
     },
-    where: and(eq(chat.id, chatId), eq(chat.userId, userId)),
+    where: { id: chatId, userId },
     with: {
       assistant: {
         with: {
@@ -108,7 +108,7 @@ export async function getAllChatsByUserId({
         },
       },
     },
-    where: eq(chat.userId, userId),
+    where: { userId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),
@@ -150,7 +150,7 @@ export async function getChatMessagesByChatId({
   chatId: string;
 }): Promise<ChatMessage[]> {
   const chatMessages = await db.query.chatMessage.findMany({
-    where: eq(chatMessage.chatId, chatId),
+    where: { chatId },
     // orderBy: (cm) => [cm.createdAt.asc()],
   });
 

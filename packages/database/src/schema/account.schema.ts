@@ -1,8 +1,9 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { createId } from '../utils/create-id';
 import { user } from './user.schema';
 
 export const account = sqliteTable('account', {
-  id: text('id').primaryKey(),
+  id: text('id').primaryKey().$defaultFn(createId),
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),

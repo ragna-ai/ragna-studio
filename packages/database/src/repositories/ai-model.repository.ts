@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { aiModel, type AiModel } from '../schema';
-import type { ICreateAiModel, IUpdateAiModel } from '../zod';
+import type { AiModelCreateSchema, AiModelUpdateSchema } from '../zod';
 
-export async function createAiModel(values: ICreateAiModel): Promise<AiModel> {
-  const [createdAiModel] = await db.insert(aiModel).values(values).returning();
+export async function createAiModel(payload: AiModelCreateSchema): Promise<AiModel> {
+  const [createdAiModel] = await db.insert(aiModel).values(payload).returning();
 
   if (!createdAiModel) {
     throw new Error('Failed to create AI model');
@@ -19,7 +19,7 @@ export async function getAiModelById({
   aiModelId: string;
 }): Promise<AiModel | null> {
   const aiModelRecord = await db.query.aiModel.findFirst({
-    where: eq(aiModel.id, aiModelId),
+    where: { id: aiModelId },
   });
 
   return aiModelRecord || null;
@@ -30,7 +30,7 @@ export async function getAllAiModels(): Promise<AiModel[]> {
   return aiModels;
 }
 
-export async function updateAiModel(params: IUpdateAiModel): Promise<AiModel> {
+export async function updateAiModel(params: AiModelUpdateSchema): Promise<AiModel> {
   const { id: aiModelId, ...updateData } = params;
 
   if (!aiModelId) {

@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
-import type { Assistant, AssistantWithAiModel } from '../schema';
+import type { Assistant } from '../schema';
 import { assistant } from '../schema';
 import type { ICreateAssistant, IUpdateAssistant } from '../zod';
 
@@ -48,9 +48,9 @@ export async function getAssistantById({
 }: {
   assistantId: string;
   userId: string;
-}): Promise<AssistantWithAiModel | null> {
+}): Promise<Assistant | null> {
   const assistantRecord = await db.query.assistant.findFirst({
-    where: and(eq(assistant.id, assistantId), eq(assistant.userId, userId)),
+    where: { id: assistantId, userId: userId },
     with: {
       aiModel: true,
     },
@@ -78,7 +78,7 @@ export async function getAllAssistantsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: eq(assistant.userId, userId),
+    where: { userId: userId },
     with: {
       aiModel: {
         columns: {

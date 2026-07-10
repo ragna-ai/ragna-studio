@@ -1,5 +1,6 @@
 import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { aiModel } from './aimodel.schema';
+import { createId } from '../utils/create-id';
+import { aiModel, type AiModel } from './aimodel.schema';
 import { timestamps } from './common.schema';
 import { user } from './user.schema';
 
@@ -7,7 +8,7 @@ import { user } from './user.schema';
 export const assistant = sqliteTable(
   'assistants',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(createId),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -29,3 +30,5 @@ export const assistant = sqliteTable(
 
 export type Assistant = typeof assistant.$inferSelect;
 export type NewAssistant = typeof assistant.$inferInsert;
+
+export type AssistantWithAiModel = Assistant & { aiModel: AiModel };

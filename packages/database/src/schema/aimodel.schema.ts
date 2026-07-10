@@ -1,11 +1,12 @@
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { createId } from '../utils/create-id';
 import { timestamps } from './common.schema';
 
 // AI MODEL
 // export const aiModelType = pgEnum('ai_model_type', ['llm', 'image', 'video', 'audio']);
 
 export const aiModel = sqliteTable('ai_models', {
-  id: text('id').primaryKey(),
+  id: text('id').primaryKey().$defaultFn(createId),
   provider: text('provider').notNull(),
   model: text('model').notNull(),
   displayName: text('display_name').notNull(),

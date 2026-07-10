@@ -1,7 +1,8 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { createId } from '../utils/create-id';
 
 export const user = sqliteTable('user', {
-  id: text('id').primaryKey(),
+  id: text('id').primaryKey().$defaultFn(createId),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).notNull(),

@@ -1,12 +1,13 @@
 import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { assistant } from './assistant.schema';
+import { createId } from '../utils/create-id';
+import { assistant, type Assistant } from './assistant.schema';
 import { timestamps } from './common.schema';
 import { user } from './user.schema';
 
 export const chat = sqliteTable(
   'chats',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(createId),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -29,7 +30,7 @@ export type NewChat = typeof chat.$inferInsert;
 export const chatMessage = sqliteTable(
   'chat_messages',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(createId),
     chatId: text('chat_id')
       .notNull()
       .references(() => chat.id, { onDelete: 'cascade' }),
@@ -43,3 +44,16 @@ export const chatMessage = sqliteTable(
 
 export type ChatMessage = typeof chatMessage.$inferSelect;
 export type NewChatMessage = typeof chatMessage.$inferInsert;
+
+export type ChatWithMessages = Chat & {
+  messages: ChatMessage[];
+};
+
+export type ChatWithAssistant = Chat & {
+  assistant: Assistant;
+};
+
+export type ChatWithMessagesAssistant = Chat & {
+  assistant: Assistant;
+  messages: ChatMessage[];
+};
