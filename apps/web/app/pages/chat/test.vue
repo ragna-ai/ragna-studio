@@ -21,6 +21,7 @@ import {
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import { DefaultChatTransport } from '@repo/ai/client';
+import useChatApi from '~/features/chat/composables/useChatApi';
 
 useHead({
   title: 'Chat Test',
