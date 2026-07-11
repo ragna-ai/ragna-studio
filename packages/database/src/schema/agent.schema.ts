@@ -1,8 +1,13 @@
+import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createId } from '../utils/create-id';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { timestamps } from './common.schema';
 import { user } from './user.schema';
+
+export interface AgentSettings {
+  someSetting?: string;
+}
 
 // AGENT
 export const agent = sqliteTable(
@@ -17,8 +22,14 @@ export const agent = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools').notNull().default('[]'), //.$type<AgentTools>(),
-    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AgentSettings>(),
+    tools: text('tools', { mode: 'json' })
+      .notNull()
+      .$type<string[]>()
+      .default(sql`'[]'`),
+    settings: text('settings', { mode: 'json' })
+      .notNull()
+      .$type<AgentSettings>()
+      .default(sql`'{}'`),
     ...timestamps,
   },
   (table) => [
@@ -42,8 +53,14 @@ export const defaultAgent = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools').notNull().default('[]'), //.$type<AgentTools>(),
-    settings: text('settings', { mode: 'json' }).notNull().default('{}'), //.$type<AgentSettings>(),
+    tools: text('tools', { mode: 'json' })
+      .notNull()
+      .$type<string[]>()
+      .default(sql`'[]'`),
+    settings: text('settings', { mode: 'json' })
+      .notNull()
+      .$type<AgentSettings>()
+      .default(sql`'{}'`),
     ...timestamps,
   },
   (table) => [index('default_agent_aiModelId_idx').on(table.aiModelId)],

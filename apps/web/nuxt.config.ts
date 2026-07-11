@@ -41,7 +41,7 @@ export default defineNuxtConfig({
   },
   // IMAGE
   image: {
-    provider: 'cloudflare',
+    // provider: 'cloudflare',
     format: ['avif', 'webp'],
     quality: 80,
     cloudflare: {

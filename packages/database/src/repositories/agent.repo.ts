@@ -33,6 +33,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
       target: agent.id,
       set: {
         aiModelId,
+        isDefault,
         name,
         description,
         systemPrompt,

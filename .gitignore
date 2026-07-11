@@ -39,3 +39,9 @@ yarn-error.log*
 
 # Local database
 *.db
+
+# Any kind of images
+*.png
+*.jpg
+*.jpeg
+*.gif

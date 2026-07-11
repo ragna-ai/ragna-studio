@@ -21,6 +21,6 @@ export interface AgentManyResponse {
 }
 
 export type UpsertAgentRequest = Omit<Agent, 'id' | 'userId'> & {
-  id?: string;
-  userId?: string;
+  id: string | null;
+  userId: string | null;
 };

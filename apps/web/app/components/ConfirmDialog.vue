@@ -17,8 +17,11 @@ const { state, onConfirm, onCancel } = useConfirmDialog();
     <AlertDialogContent>
       <AlertDialogHeader>
         <AlertDialogTitle>{{ state.options.title }}</AlertDialogTitle>
-        <AlertDialogDescription v-if="state.options.description">
-          {{ state.options.description }}
+        <AlertDialogDescription
+          class="text-sm text-stone-800"
+          v-if="state.options.message"
+        >
+          {{ state.options.message }}
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>

@@ -69,6 +69,7 @@ export const agentController = new Hono()
         aiModelId: body.aiModelId,
         systemPrompt: body.systemPrompt,
         tools: body.tools,
+        isDefault: body.isDefault,
       }),
     );
 

@@ -14,12 +14,23 @@ import useAgentList from '~/features/agent/composables/useAgentList';
 const { page, limit, useGetAllAgents } = useAgentList();
 const { data, error: agentsError } = useGetAllAgents();
 const { mutateAsync: deleteAgent } = useDeleteAgent();
+const { confirm } = useConfirmDialog();
 
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
 
 // Functions
 const handleDeleteAgent = async (agentId: string) => {
+  const confirmed = await confirm({
+    title: 'Delete Agent',
+    message: 'Are you sure you want to delete this agent?',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+    variant: 'destructive',
+  });
+  if (!confirmed) {
+    return;
+  }
   await deleteAgent(agentId);
 };
 
@@ -27,8 +38,16 @@ const handleDeleteAgent = async (agentId: string) => {
 </script>
 
 <template>
-  <div class="p-10">
-    <div>Agent index List</div>
+  <div class="p-5">
+    <Heading bg-position="bottom">
+      <template #top>
+        <HeadingTitle
+          :title="$t('assistant.list.title')"
+          :subtitle="$t('assistant.list.subtitle')"
+        />
+      </template>
+      <template #bottom> </template>
+    </Heading>
     <div v-if="data?.agents">
       <AgentManyTable
         :agents="data.agents"

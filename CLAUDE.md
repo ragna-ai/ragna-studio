@@ -75,4 +75,12 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Coding
 
-Spawn a sonnet agent for coding tasks
+Skip self-verification of changes unless explicitly asked:
+
+- no type check
+- no visual confirmation
+- no git status/diff check
+- no git commit
+- no browser verification
+
+The user handles verification and commits.

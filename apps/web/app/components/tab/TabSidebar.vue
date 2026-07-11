@@ -29,6 +29,7 @@ const activeTab = computed({
       <ul class="space-y-2">
         <li v-for="tab in tabs" :key="tab.id">
           <button
+            type="button"
             role="tab"
             :aria-selected="activeTab === tab.id"
             :aria-controls="`panel-${tab.id}`"

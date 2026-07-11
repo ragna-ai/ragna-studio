@@ -1,6 +1,6 @@
 export interface ConfirmDialogOptions {
   title: string;
-  description?: string;
+  message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'default' | 'destructive';

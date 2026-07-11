@@ -51,7 +51,7 @@ export const auth = betterAuth({
   // ADVANCED
   advanced: {
     database: {
-      generateId: 'uuid',
+      generateId: false,
     },
     ipAddress: {
       // TODO: check ip-conf for cf & reverse proxy

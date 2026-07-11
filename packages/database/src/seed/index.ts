@@ -33,8 +33,8 @@ async function seedDefaultAgent() {
     name: 'RAGNA Agent',
     description: 'Your personal AI agent.',
     systemPrompt: 'You are a helpful assistant.',
-    tools: '[]', // No tools by default
-    settings: '{}', // Default settings
+    // tools: [], // No tools by default
+    // settings: {}, // Default settings
   });
 }
 

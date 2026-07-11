@@ -28,8 +28,16 @@ const { data, error: agentError } = useGetAgent(agentId);
 </script>
 
 <template>
-  <div class="p-10">
-    {{ data?.agent }}
+  <div class="p-5">
+    <Heading bg-position="bottom">
+      <template #top>
+        <HeadingTitle
+          :title="$t('assistant.upsert.title')"
+          :subtitle="$t('assistant.upsert.subtitle')"
+        />
+      </template>
+      <template #bottom> </template>
+    </Heading>
     <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />
   </div>
 </template>

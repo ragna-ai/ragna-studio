@@ -32,6 +32,7 @@ export const validUpsertAgentBody = myzValidator(
     aiModelId: primaryId,
     systemPrompt: z.string(),
     tools: z.array(z.string()),
+    isDefault: z.boolean().optional(),
   }),
 );
 
