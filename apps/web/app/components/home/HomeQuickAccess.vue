@@ -78,7 +78,7 @@ const quickAccessItems = [
       <h2 class="text-2xl font-semibold">Quick Access</h2>
     </div>
     <div class="flex flex-wrap gap-4">
-      <NuxtLink
+      <NuxtLinkLocale
         v-for="item in quickAccessItems"
         :key="item.id"
         :to="item.route"
@@ -95,7 +95,7 @@ const quickAccessItems = [
             {{ item.label }}
           </p>
         </div>
-      </NuxtLink>
+      </NuxtLinkLocale>
     </div>
   </div>
 </template>

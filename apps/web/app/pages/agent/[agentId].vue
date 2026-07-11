@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
-import useAgentApi from '~/features/agent/composables/useAgentApi';
+import { useGetAgent } from '~/features/agent/composables/useAgentApi';
 
 // Imports
 
@@ -19,8 +19,7 @@ const agentId = computed(() => route.params.agentId as string);
 
 // Composables
 
-const { getAgent } = useAgentApi();
-const { data, error: agentError } = getAgent(agentId);
+const { data, error: agentError } = useGetAgent(agentId);
 
 // Computed
 // Functions
@@ -29,7 +28,8 @@ const { data, error: agentError } = getAgent(agentId);
 </script>
 
 <template>
-  <div>
+  <div class="p-10">
+    {{ data?.agent }}
     <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />
   </div>
 </template>

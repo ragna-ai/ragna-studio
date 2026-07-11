@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <NuxtLink
+  <NuxtLinkLocale
     :to="to"
     class="group flex flex-col items-center rounded-lg border border-transparent px-4 py-0 transition-colors"
     :activeClass="undefined"
@@ -22,5 +22,5 @@ defineProps<{
     <span class="nav-icon-text truncate px-4 pt-0 text-foreground">
       {{ label }}
     </span>
-  </NuxtLink>
+  </NuxtLinkLocale>
 </template>

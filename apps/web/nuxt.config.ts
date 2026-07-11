@@ -15,6 +15,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@pinia/nuxt',
     'pinia-plugin-unstorage/nuxt',
+    '@nuxtjs/i18n',
   ],
   // CONFIG
   runtimeConfig: {
@@ -56,6 +57,25 @@ export default defineNuxtConfig({
       },
     ],
   },
+  // i18n
+  i18n: {
+    locales: [
+      {
+        code: 'en',
+        iso: 'en-UK',
+        name: 'English',
+        file: 'en-UK.json',
+      },
+      {
+        code: 'de',
+        iso: 'de-DE',
+        name: 'Deutsch',
+        file: 'de-DE.json',
+      },
+    ],
+    defaultLocale: 'de',
+    strategy: 'no_prefix',
+  },
   // META
   app: {
     head: {
@@ -82,6 +102,18 @@ export default defineNuxtConfig({
         'tailwind-merge',
         'vue-sonner',
       ],
+    },
+    // Pre-transform pages/components at dev startup so navigation doesn't
+    // stall on first-visit compilation.
+    server: {
+      warmup: {
+        clientFiles: [
+          './app/pages/**/*.vue',
+          './app/features/**/*.vue',
+          './app/components/**/*.vue',
+          './app/layouts/**/*.vue',
+        ],
+      },
     },
   },
   // DEV SERVER

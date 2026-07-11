@@ -8,7 +8,7 @@ import {
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
-import useAgentApi from '~/features/agent/composables/useAgentApi';
+import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
 
 type UpsertAgentProps = {
   id?: string;
@@ -42,8 +42,7 @@ const props = defineProps<UpsertAgentProps>();
 const currentTab = ref('title');
 
 // Composables
-const { upsertAgent } = useAgentApi();
-const { isPending, mutate } = upsertAgent();
+const { isPending, mutate } = useUpsertAgent();
 
 const form = useForm({
   defaultValues: {
@@ -64,7 +63,7 @@ const form = useForm({
 
 // Computed
 const tabsWithErrors = computed<string[]>(() => {
-  const errors = form.state.errors.value;
+  const errors = form.state.errors;
   return Object.keys(errors);
 });
 // Functions

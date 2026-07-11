@@ -38,6 +38,7 @@ minimumReleaseAgeExclude:
   - '@turbo/windows-64@2.10.4'
   - '@turbo/windows-arm64@2.10.4'
   - turbo@2.10.4
+  - '@nuxtjs/i18n@10.4.1'
 
 updateConfig:
   ignoreDependencies:

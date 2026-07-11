@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
-import useChatApi from '~/features/chat/composables/useChatApi';
+import { useGetChat } from '~/features/chat/composables/useChatApi';
 
 useHead({
   title: 'Chat Conversation',
@@ -16,8 +16,7 @@ const route = useRoute();
 const chatId = computed(() => route.params.chatId as string);
 
 // Composables
-const { getChat } = useChatApi();
-const { data, error: chatError } = getChat(chatId);
+const { data, error: chatError } = useGetChat(chatId);
 </script>
 
 <template>

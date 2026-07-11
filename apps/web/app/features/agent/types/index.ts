@@ -15,6 +15,9 @@ export interface AgentResponse {
 
 export interface AgentManyResponse {
   agents: Agent[];
+  meta: {
+    totalCount: number;
+  };
 }
 
 export type UpsertAgentRequest = Omit<Agent, 'id' | 'userId'> & {

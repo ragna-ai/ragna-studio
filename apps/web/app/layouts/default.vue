@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Toaster } from '~/components/ui/sonner';
+
+const head = useLocaleHead();
 </script>
 
 <template>
-  <Html lang="en" dir="ltr" class="light">
+  <Html :lang="head.htmlAttrs.lang" :dir="head.htmlAttrs.dir" class="light">
     <Body class="bg-stone-50">
       <NavTopBar />
       <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">

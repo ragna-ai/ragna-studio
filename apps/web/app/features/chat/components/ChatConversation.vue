@@ -22,7 +22,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import { DefaultChatTransport } from '@repo/ai/client';
 import type { UIMessage } from 'ai';
-import useChatApi from '~/features/chat/composables/useChatApi';
+import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
 interface Props {
   chatId?: string;
@@ -33,8 +33,7 @@ const props = defineProps<Props>();
 const chatId = ref(props.chatId ?? null);
 
 // Composables
-const { createChat } = useChatApi();
-const { mutateAsync: createNewChat } = createChat();
+const { mutateAsync: createNewChat } = useCreateChat();
 
 const { messages, sendMessage, status, error } = useChat({
   messages: props.initialMessages,
