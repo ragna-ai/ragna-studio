@@ -17,7 +17,16 @@ import UserProfileSettings from '~/features/user/components/UserProfileSettings.
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <SectionWrapper>
+    <Heading bg-position="bottom">
+      <template #top>
+        <HeadingTitle
+          :title="$t('user.profile.title')"
+          :subtitle="$t('user.profile.subtitle')"
+        />
+      </template>
+      <template #bottom> </template>
+    </Heading>
     <UserProfileSettings />
-  </div>
+  </SectionWrapper>
 </template>

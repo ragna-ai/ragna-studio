@@ -28,7 +28,7 @@ const { data, error: agentError } = useGetAgent(agentId);
 </script>
 
 <template>
-  <div class="p-5">
+  <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
@@ -38,6 +38,8 @@ const { data, error: agentError } = useGetAgent(agentId);
       </template>
       <template #bottom> </template>
     </Heading>
-    <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />
-  </div>
+    <div class="px-10">
+      <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />
+    </div>
+  </SectionWrapper>
 </template>

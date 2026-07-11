@@ -38,7 +38,7 @@ const handleDeleteAgent = async (agentId: string) => {
 </script>
 
 <template>
-  <div class="p-5">
+  <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
@@ -48,7 +48,7 @@ const handleDeleteAgent = async (agentId: string) => {
       </template>
       <template #bottom> </template>
     </Heading>
-    <div v-if="data?.agents">
+    <div v-if="data?.agents" class="px-5">
       <AgentManyTable
         :agents="data.agents"
         :favorites="data?.agentFavorites"
@@ -74,5 +74,5 @@ const handleDeleteAgent = async (agentId: string) => {
     <div v-else>
       <p class="text-sm text-stone-500">Loading agents...</p>
     </div>
-  </div>
+  </SectionWrapper>
 </template>

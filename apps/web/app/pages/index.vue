@@ -3,7 +3,7 @@ useHead({ title: 'Home' });
 </script>
 
 <template>
-  <div class="h-full p-5">
+  <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
@@ -19,5 +19,5 @@ useHead({ title: 'Home' });
         <HomeFavorites />
       </div>
     </div>
-  </div>
+  </SectionWrapper>
 </template>

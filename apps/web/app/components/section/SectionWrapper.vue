@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
-
 // Imports
 
 // Props
@@ -17,7 +15,7 @@ import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 </script>
 
 <template>
-  <SectionWrapper>
-    <AgentUpsertForm />
-  </SectionWrapper>
+  <section class="flex flex-col gap-2">
+    <slot />
+  </section>
 </template>

@@ -99,9 +99,6 @@ const siderBarTabs = [
 </script>
 
 <template>
-  <div>
-    {{ formErrorMap }}
-  </div>
   <form @submit.prevent.stop="form.handleSubmit">
     <div class="mb-4 flex w-full justify-end space-x-4">
       <Button as-child variant="secondary">
