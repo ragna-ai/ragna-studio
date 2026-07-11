@@ -2,6 +2,7 @@
 import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
 import { reactiveOmit } from '@vueuse/core'
+import { computed, useTemplateRef } from 'vue'
 import { StickToBottom } from 'vue-stick-to-bottom'
 
 interface Props {
@@ -24,6 +25,11 @@ const props = withDefaults(defineProps<Props>(), {
   anchor: 'none',
 })
 const delegatedProps = reactiveOmit(props, 'class')
+
+// Expose the internal scroll container so parents can measure/scroll it.
+const stick = useTemplateRef('stick')
+const scrollRef = computed<HTMLElement | null>(() => stick.value?.scrollRef ?? null)
+defineExpose({ scrollRef })
 </script>
 
 <template>

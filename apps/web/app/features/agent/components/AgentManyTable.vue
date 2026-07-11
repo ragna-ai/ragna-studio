@@ -122,13 +122,16 @@ const handleDeleteFavorite = (agentId: string) => {
                 class="ml-2 size-4 shrink-0 stroke-1.5 text-primary"
               />
             </Button>
-            <NuxtLinkLocale
-              :to="`/agent/${agent.id}`"
-              variant="outline"
-              size="icon"
-            >
-              <SettingsIcon class="size-4 stroke-1.5 text-primary" />
-            </NuxtLinkLocale>
+            <Button as-child variant="outline" size="icon">
+              <NuxtLinkLocale
+                :to="`/agent/${agent.id}`"
+                variant="outline"
+                size="icon"
+              >
+                <SettingsIcon class="size-4 stroke-1.5 text-primary" />
+              </NuxtLinkLocale>
+            </Button>
+
             <Button
               variant="outline"
               size="icon"

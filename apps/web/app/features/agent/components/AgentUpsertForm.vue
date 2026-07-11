@@ -44,7 +44,6 @@ const props = defineProps<UpsertAgentProps>();
 const currentTab = ref('settings');
 
 // Composables
-const session = useAuthSession();
 const { isPending, mutate } = useUpsertAgent();
 
 const form = useForm({
@@ -63,6 +62,10 @@ const form = useForm({
   },
   onSubmit: ({ value }) => mutate(value),
 });
+
+// Subscribe to the form's error map so that updates to it will render
+// alternately, you can use `form.Subscribe`
+const formErrorMap = form.useStore((state) => state.errorMap);
 
 // Computed
 const tabsWithErrors = computed<string[]>(() => {
@@ -96,12 +99,10 @@ const siderBarTabs = [
 </script>
 
 <template>
+  <div>
+    {{ formErrorMap }}
+  </div>
   <form @submit.prevent.stop="form.handleSubmit">
-    <pre
-      class="mb-4 rounded-lg border border-destructive p-4 text-xs text-destructive"
-    >
-      {{ form.state.errors }}
-    </pre>
     <div class="mb-4 flex w-full justify-end space-x-4">
       <Button as-child variant="secondary">
         <NuxtLinkLocale to="/agent">Cancel</NuxtLinkLocale>
@@ -179,6 +180,7 @@ const siderBarTabs = [
                   (v: string | number) => field.handleChange(String(v))
                 "
                 @blur="field.handleBlur"
+                class="min-h-100"
               />
               <FormFieldInfo :state="state" />
             </div>

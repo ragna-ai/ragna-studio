@@ -74,8 +74,8 @@ async function handleSubmit(message: PromptInputMessage) {
 </script>
 
 <template>
-  <div class="mx-auto flex h-full w-full max-w-4xl flex-col gap-4 p-4">
-    <Conversation class="rounded-md border">
+  <div class="mx-auto flex h-full w-full max-w-4xl flex-col gap-8 p-4">
+    <Conversation class="rounded-md border-0">
       <ConversationContent>
         <ConversationEmptyState
           v-if="messages.length === 0"
