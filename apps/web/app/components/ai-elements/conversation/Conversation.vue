@@ -26,14 +26,20 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const delegatedProps = reactiveOmit(props, 'class')
 
-// Expose the internal scroll container so parents can measure/scroll it.
+// Expose the internal scroll container so parents can measure/scroll it, and
+// stopScroll so parents can release the stick-to-bottom lock before scrolling
+// the container themselves.
 const stick = useTemplateRef('stick')
 const scrollRef = computed<HTMLElement | null>(() => stick.value?.scrollRef ?? null)
-defineExpose({ scrollRef })
+function stopScroll() {
+  stick.value?.stopScroll()
+}
+defineExpose({ scrollRef, stopScroll })
 </script>
 
 <template>
   <StickToBottom
+    ref="stick"
     v-bind="delegatedProps"
     :class="cn('relative flex-1 overflow-y-hidden', props.class)"
     role="log"
