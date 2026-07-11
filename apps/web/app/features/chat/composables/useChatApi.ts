@@ -74,7 +74,7 @@ export function useCreateChat() {
     mutationFn: (body) => api('/chat', { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all });
-      toast.success('Chat created');
+      // toast.success('Chat created');
     },
     onError: () => {
       toast.error('Failed to create chat');

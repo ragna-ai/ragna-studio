@@ -2,7 +2,6 @@ import {
   convertToModelMessages,
   createUIMessageStreamResponse,
   getLanguageModel,
-  smoothStream,
   streamText,
   toUIMessageStream,
 } from '@repo/ai';
@@ -198,10 +197,10 @@ export const chatController = new Hono()
       messages: await convertToModelMessages(body.messages),
       temperature: 0.8,
       maxOutputTokens: 2000,
-      experimental_transform: smoothStream({
-        delayInMs: 20,
-        chunking: 'word',
-      }),
+      // experimental_transform: smoothStream({
+      //   delayInMs: 20,
+      //   chunking: 'word',
+      // }),
       onStart({ callId, modelId, runtimeContext }) {
         logger.debug('Request started', {
           callId,
