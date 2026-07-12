@@ -35,7 +35,9 @@ export const chatMessage = sqliteTable(
       .notNull()
       .references(() => chat.id, { onDelete: 'cascade' }),
     role: text('role', { enum: ['system', 'user', 'assistant'] }).notNull(),
-    content: text('content').notNull(),
+    // UIMessage parts stored 1:1 (text, reasoning, tool calls, files, ...)
+    parts: text('parts', { mode: 'json' }).$type<unknown[]>().notNull(),
+    metadata: text('metadata', { mode: 'json' }),
     // embedding: vector('embedding', { dimensions: 1024 }),
     ...timestamps,
   },

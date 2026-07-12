@@ -35,8 +35,15 @@ const chatId = ref(props.chatId ?? null);
 // Composables
 const { mutateAsync: createNewChat } = useCreateChat();
 
+// initialMessages comes from the vue-query cache, which is a readonly proxy.
+// Chat mutates its messages array in place, so hand it its own mutable copy
+// instead of the cached array.
+const initialMessages = props.initialMessages
+  ? structuredClone(toRaw(props.initialMessages))
+  : undefined;
+
 const { messages, sendMessage, status, error } = useChat({
-  messages: props.initialMessages,
+  messages: initialMessages,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: new DefaultChatTransport({
     credentials: 'include',

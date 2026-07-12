@@ -52,3 +52,5 @@ export type ICreateChatMessage = Omit<
   ChatMessageCreateSchema,
   'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
 >;
+// Upserts carry the client-generated UIMessage id so retries replace instead of duplicate.
+export type IUpsertChatMessage = ICreateChatMessage & { id: string };

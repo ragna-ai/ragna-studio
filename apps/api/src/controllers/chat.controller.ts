@@ -3,6 +3,7 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
   getLanguageModel,
+  safeValidateUIMessages,
   stepCountIs,
   streamText,
   tools,
@@ -14,11 +15,16 @@ import {
   getChatByIdForUser,
   getChatCountByUserId,
   getOrCreateDefaultAgentForUser,
+  upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validChatIdParam,
@@ -150,13 +156,22 @@ export const chatController = new Hono()
       throw new NotFoundException('Chat not found');
     }
 
+    // Return stored messages strictly UIMessage-shaped ({ id, role, parts, metadata? })
+    // so the client can feed them into useChat as-is.
+    const messagesDto = userChat.messages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      parts: message.parts,
+      metadata: message.metadata ?? undefined,
+    }));
+
     const chatDto = {
       id: userChat.id,
       agentId: userChat.agentId,
       title: userChat.title,
       createdAt: userChat.createdAt,
       updatedAt: userChat.updatedAt,
-      messages: userChat.messages.length ? userChat.messages : null,
+      messages: messagesDto.length ? messagesDto : null,
     };
 
     return c.json({ chat: chatDto });
@@ -183,17 +198,23 @@ export const chatController = new Hono()
       throw new NotFoundException('Chat not found');
     }
 
-    if (!body.messages || !Array.isArray(body.messages)) {
-      throw new InternalServerErrorException('Invalid messages format');
+    const validated = await safeValidateUIMessages({ messages: body.messages });
+
+    if (!validated.success) {
+      logger.warn(`Invalid messages for chat ${param.chatId}`, validated.error);
+      throw new BadRequestException('Invalid messages format');
     }
 
-    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: body.messages });
+    const uiMessages = validated.data;
+
+    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: uiMessages });
 
     const { agent } = userChat;
 
-    const modelMessages = await convertToModelMessages(body.messages);
+    const modelMessages = await convertToModelMessages(uiMessages);
 
     const stream = createUIMessageStream({
+      originalMessages: uiMessages,
       execute: ({ writer: dataStream }) => {
         // Stream the response from the language model
         const result = streamText({
@@ -217,15 +238,14 @@ export const chatController = new Hono()
             });
           },
           onEnd(res) {
-            const responseMessages = res.responseMessages;
-            const finalResponseMessages = res.finalStep.response.messages;
             logger.debug('Request finished', {
               callId: res.callId,
               finishReason: res.finishReason,
               usage: res.usage,
-              responseMessages,
-              finalResponseMessages,
             });
+          },
+          onAbort() {
+            logger.warn('Request aborted by user');
           },
           onError(error) {
             logger.error('Error in chat stream', error);
@@ -240,6 +260,34 @@ export const chatController = new Hono()
             sendReasoning: true,
           }),
         );
+      },
+      async onEnd({ responseMessage, isAborted, finishReason }) {
+        if (isAborted || finishReason === 'error') {
+          return;
+        }
+
+        // Persist the new user message and the assistant response as UIMessages.
+        // Upsert by message id so retries and regenerations replace instead of duplicate.
+        const lastMessage = uiMessages.at(-1);
+        const messagesToSave = lastMessage?.role === 'user'
+          ? [lastMessage, responseMessage]
+          : [responseMessage];
+
+        const { error } = await tryCatch(() =>
+          upsertChatMessages(
+            messagesToSave.map((message) => ({
+              id: message.id,
+              chatId: userChat.id,
+              role: message.role,
+              parts: message.parts,
+              metadata: message.metadata ?? null,
+            })),
+          ),
+        );
+
+        if (error !== null) {
+          logger.error(`Failed to persist messages for chat ${userChat.id}`, error);
+        }
       },
     });
 

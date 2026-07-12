@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Chat, ChatMessage, ChatWithMessages } from '../schema';
 import { chat, chatMessage } from '../schema';
-import type { ICreateChat, ICreateChatMessage } from '../zod';
+import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
 
 export async function createChat(payload: ICreateChat): Promise<Chat> {
   const [createdChat] = await db
@@ -56,11 +56,10 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
       messages: {
         columns: {
           id: true,
-          chatId: true,
           role: true,
-          content: true,
+          parts: true,
+          metadata: true,
           createdAt: true,
-          updatedAt: true,
         },
         orderBy: (c, { asc }) => asc(c.createdAt),
       },
@@ -151,13 +150,14 @@ export async function getChatMessagesByChatId({
 }
 
 export async function createChatMessage(payload: ICreateChatMessage): Promise<ChatMessage> {
-  const { chatId, role, content } = payload;
+  const { chatId, role, parts, metadata } = payload;
   const [createdChatMessage] = await db
     .insert(chatMessage)
     .values({
       chatId,
       role,
-      content,
+      parts,
+      metadata,
     })
     .returning();
 
@@ -176,4 +176,25 @@ export async function createChatMessages(payload: ICreateChatMessage[]): Promise
   }
 
   return createdChatMessages;
+}
+
+export async function upsertChatMessages(payload: IUpsertChatMessage[]): Promise<ChatMessage[]> {
+  const upsertedChatMessages = await db
+    .insert(chatMessage)
+    .values(payload)
+    .onConflictDoUpdate({
+      target: chatMessage.id,
+      set: {
+        parts: sql`excluded.parts`,
+        metadata: sql`excluded.metadata`,
+        updatedAt: sql`(CURRENT_TIMESTAMP)`,
+      },
+    })
+    .returning();
+
+  if (!upsertedChatMessages || upsertedChatMessages.length === 0) {
+    throw new Error('Failed to upsert chat messages');
+  }
+
+  return upsertedChatMessages;
 }
