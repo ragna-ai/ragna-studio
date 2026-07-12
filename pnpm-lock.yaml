@@ -140,9 +140,6 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@repo/mail':
-        specifier: workspace:*
-        version: link:../../packages/mail
       '@tanstack/vue-form':
         specifier: ^1.33.0
         version: 1.33.0(vue@3.5.39(typescript@6.0.3))

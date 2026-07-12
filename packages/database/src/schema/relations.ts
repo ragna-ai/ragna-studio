@@ -1,6 +1,6 @@
 import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
-import { agent, defaultAgent } from './agent.schema';
+import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { session } from './session.schema';
@@ -14,7 +14,7 @@ const schema = {
   verification,
   aiModel,
   agent,
-  defaultAgent,
+  agentTemplate,
   chat,
   chatMessage,
 };
@@ -42,12 +42,13 @@ export const relations = defineRelations(schema, (r) => ({
   },
   aiModel: {
     agents: r.many.agent(),
-    defaultAgents: r.many.defaultAgent(),
+    agentTemplates: r.many.agentTemplate(),
   },
   agent: {
     user: r.one.user({
       from: r.agent.userId,
       to: r.user.id,
+      optional: false,
     }),
     aiModel: r.one.aiModel({
       from: r.agent.aiModelId,
@@ -56,9 +57,9 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     chats: r.many.chat(),
   },
-  defaultAgent: {
+  agentTemplate: {
     aiModel: r.one.aiModel({
-      from: r.defaultAgent.aiModelId,
+      from: r.agentTemplate.aiModelId,
       to: r.aiModel.id,
       optional: false,
     }),

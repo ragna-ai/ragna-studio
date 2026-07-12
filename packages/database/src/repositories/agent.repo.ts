@@ -3,7 +3,7 @@ import { db } from '../db';
 import type { Agent } from '../schema';
 import { agent } from '../schema';
 import type { ICreateAgent, IUpdateAgent } from '../zod';
-import { getDefaultAgent } from './default-agent.repo';
+import { getDefaultAgent } from './agent-template.repo';
 
 export async function upsertAgent(values: ICreateAgent & { id?: string }): Promise<Agent> {
   const {

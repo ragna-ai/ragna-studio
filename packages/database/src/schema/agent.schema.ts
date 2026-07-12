@@ -43,8 +43,8 @@ export type NewAgent = typeof agent.$inferInsert;
 
 export type AgentWithAiModel = Agent & { aiModel: AiModel };
 
-export const defaultAgent = sqliteTable(
-  'default_agents',
+export const agentTemplate = sqliteTable(
+  'agent_templates',
   {
     id: text('id').primaryKey().$defaultFn(createId),
     aiModelId: text('ai_model_id')
@@ -63,7 +63,7 @@ export const defaultAgent = sqliteTable(
       .default(sql`'{}'`),
     ...timestamps,
   },
-  (table) => [index('default_agent_aiModelId_idx').on(table.aiModelId)],
+  (table) => [index('agent_template_aiModelId_idx').on(table.aiModelId)],
 );
 
-export type DefaultAgent = typeof defaultAgent.$inferSelect;
+export type AgentTemplate = typeof agentTemplate.$inferSelect;

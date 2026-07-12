@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import {
   BookIcon,
+  BrainIcon,
   BriefcaseBusinessIcon,
-  CircleUserRoundIcon,
-  SettingsIcon,
   ShieldCheckIcon,
-  StarsIcon,
   UserIcon,
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
@@ -41,7 +39,7 @@ const props = defineProps<UpsertAgentProps>();
 // Emits
 
 // Refs
-const currentTab = ref('settings');
+const currentTab = ref('persona');
 
 // Composables
 const { isPending, mutate } = useUpsertAgent();
@@ -77,13 +75,13 @@ const tabsWithErrors = computed<string[]>(() => {
 // Hooks
 
 const siderBarTabs = [
-  { id: 'settings', icon: SettingsIcon, label: 'Settings' },
-  {
-    id: 'systemPrompt',
-    icon: CircleUserRoundIcon,
-    label: 'System Prompt',
-  },
-  { id: 'llmId', icon: StarsIcon, label: 'GenAI' },
+  { id: 'persona', icon: UserIcon, label: 'Persona' },
+  // {
+  //   id: 'systemPrompt',
+  //   icon: CircleUserRoundIcon,
+  //   label: 'System Prompt',
+  // },
+  { id: 'aimodel', icon: BrainIcon, label: 'Intelligence' },
   {
     id: 'tools',
     icon: BriefcaseBusinessIcon,
@@ -114,8 +112,8 @@ const siderBarTabs = [
       :tabs="siderBarTabs"
       :error-tabs="tabsWithErrors"
     >
-      <!-- TAB 1: Settings -->
-      <template #settings>
+      <!-- TAB 1: Persona -->
+      <template #persona>
         <div class="space-y-8">
           <form.Field name="name">
             <template v-slot="{ field, state }">
@@ -140,9 +138,10 @@ const siderBarTabs = [
               </div>
             </template>
           </form.Field>
+          <!-- Description -->
           <form.Field name="description">
             <template v-slot="{ field, state }">
-              <div>
+              <div class="hidden">
                 <Label class="mb-2 block text-sm font-medium" :for="field.name">
                   Description
                 </Label>
@@ -159,10 +158,30 @@ const siderBarTabs = [
               </div>
             </template>
           </form.Field>
+          <form.Field name="systemPrompt">
+            <template v-slot="{ field, state }">
+              <div>
+                <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  Behavior / Instructions
+                </Label>
+                <Textarea
+                  :id="field.name"
+                  rows="10"
+                  :model-value="state.value"
+                  @update:model-value="
+                    (v: string | number) => field.handleChange(String(v))
+                  "
+                  @blur="field.handleBlur"
+                  class="min-h-100"
+                />
+                <FormFieldInfo :state="state" />
+              </div>
+            </template>
+          </form.Field>
         </div>
       </template>
-      <!-- TAB 2: System Prompt -->
-      <template #systemPrompt>
+      <!-- TAB 2: Instructions -->
+      <template #instructions>
         <form.Field name="systemPrompt">
           <template v-slot="{ field, state }">
             <div>
@@ -184,8 +203,8 @@ const siderBarTabs = [
           </template>
         </form.Field>
       </template>
-      <!-- TAB 3: GenAI -->
-      <template #llmId>
+      <!-- TAB 3: AI Model -->
+      <template #aimodel>
         <div class="rounded-lg border p-4 text-sm text-muted-foreground">
           Model selection isn't available yet.
         </div>

@@ -6,29 +6,70 @@ async function seedAiModels() {
   await db.insert(schema.aiModel).values([
     {
       provider: 'openai',
-      model: 'gpt-5-nano',
-      displayName: 'GPT-5 Nano',
-      description: 'A fast and efficient AI model by OpenAI.',
+      model: 'gpt-5.6-luna',
+      modality: 'text',
+      family: 'llm',
+      size: 'small',
+      displayName: 'GPT Small (Luna)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
+    },
+    {
+      provider: 'openai',
+      model: 'gpt-5.6-terra',
+      modality: 'text',
+      family: 'llm',
+      size: 'medium',
+      displayName: 'GPT Medium (Terra)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
+    },
+    {
+      provider: 'openai',
+      model: 'gpt-5.6-sol',
+      modality: 'text',
+      family: 'llm',
+      size: 'large',
+      displayName: 'GPT Large (Sol)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
     },
     {
       provider: 'anthropic',
       model: 'claude-haiku-4-5',
-      displayName: 'Claude Haiku 4.5',
-      description: 'An advanced AI model by Anthropic focused on creativity.',
+      modality: 'text',
+      family: 'llm',
+      size: 'small',
+      displayName: 'Claude Small (Haiku)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
+    },
+    {
+      provider: 'anthropic',
+      model: 'claude-sonnet-5',
+      modality: 'text',
+      family: 'llm',
+      size: 'medium',
+      displayName: 'Claude Medium (Sonnet)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
+    },
+    {
+      provider: 'anthropic',
+      model: 'claude-opus-5',
+      modality: 'text',
+      family: 'llm',
+      size: 'large',
+      displayName: 'Claude Large (Opus)',
+      description: 'A fast and efficient intelligence layer for simple tasks.',
     },
   ]);
 }
 
 async function seedDefaultAgent() {
-  // find the claude-haiku-4-5 model
   const defaultModel = await db.query.aiModel.findFirst({
-    where: { model: 'claude-haiku-4-5', provider: 'anthropic' },
+    where: { provider: 'anthropic', size: 'small' },
   });
 
   if (!defaultModel) {
     throw new Error('Default AI model not found. Please seed AI models first.');
   }
-  await db.insert(schema.defaultAgent).values({
+  await db.insert(schema.agentTemplate).values({
     aiModelId: defaultModel.id,
     name: 'RAGNA Agent',
     description: 'Your personal AI agent.',

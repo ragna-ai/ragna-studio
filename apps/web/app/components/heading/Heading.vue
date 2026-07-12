@@ -37,7 +37,7 @@ const bgPositionClass = computed(() => {
 <template>
   <div class="overflow-hidden rounded-b-xl">
     <div
-      class="flex min-h-40 overflow-hidden rounded-lg bg-cover bg-no-repeat p-8 pt-14 text-white"
+      class="flex min-h-20 overflow-hidden rounded-lg bg-cover bg-no-repeat p-8 pt-14 text-white"
       :class="bgPositionClass"
       :style="backgroundStyles"
     >

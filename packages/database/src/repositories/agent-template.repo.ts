@@ -1,8 +1,7 @@
 import { db } from '../db';
 
 export async function getDefaultAgent() {
-  const defaultAgent = await db.query.defaultAgent.findFirst({
-    // where: { name: 'RAGNA Agent' },
+  const defaultAgent = await db.query.agentTemplate.findFirst({
     with: {
       aiModel: true,
     },

@@ -18,6 +18,17 @@ import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 
 <template>
   <SectionWrapper>
-    <AgentUpsertForm />
+    <Heading bg-position="bottom">
+      <template #top>
+        <HeadingTitle
+          :title="$t('assistant.upsert.title')"
+          :subtitle="$t('assistant.upsert.subtitle')"
+        />
+      </template>
+      <template #bottom> </template>
+    </Heading>
+    <div class="px-10">
+      <AgentUpsertForm />
+    </div>
   </SectionWrapper>
 </template>

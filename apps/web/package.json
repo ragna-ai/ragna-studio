@@ -20,7 +20,6 @@
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/logger": "workspace:*",
-    "@repo/mail": "workspace:*",
     "@tanstack/vue-form": "^1.33.0",
     "@tanstack/vue-query": "^5.101.2",
     "@tanstack/vue-table": "^8.21.3",
