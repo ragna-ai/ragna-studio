@@ -9,6 +9,8 @@ export interface AgentSettings {
   someSetting?: string;
 }
 
+export type AgentTools = ['think', 'webSearch', 'webBrowser'];
+
 // AGENT
 export const agent = sqliteTable(
   'agents',
@@ -24,7 +26,7 @@ export const agent = sqliteTable(
     systemPrompt: text('system_prompt').notNull(),
     tools: text('tools', { mode: 'json' })
       .notNull()
-      .$type<string[]>()
+      .$type<AgentTools>()
       .default(sql`'[]'`),
     settings: text('settings', { mode: 'json' })
       .notNull()
@@ -55,7 +57,7 @@ export const agentTemplate = sqliteTable(
     systemPrompt: text('system_prompt').notNull(),
     tools: text('tools', { mode: 'json' })
       .notNull()
-      .$type<string[]>()
+      .$type<AgentTools>()
       .default(sql`'[]'`),
     settings: text('settings', { mode: 'json' })
       .notNull()

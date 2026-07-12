@@ -4,6 +4,7 @@ import type {
   InferToolInput,
   InferToolOutput,
   InferUITool,
+  Tool,
   UIMessage,
   UIMessageStreamWriter,
 } from 'ai';
@@ -15,6 +16,9 @@ import * as z from 'zod';
 const webSearchInputSchema = z.object({
   query: z.string().min(3).max(1000).describe('The query to search the web for'),
 });
+
+type WebSearchInput = z.infer<typeof webSearchInputSchema>;
+type WebSearchOutput = BaseResponse | { error: string };
 
 async function getSearchResults(query: string): Promise<BaseResponse> {
   const response = await getJson({
@@ -35,7 +39,9 @@ async function getSearchResults(query: string): Promise<BaseResponse> {
   return response;
 }
 
-export const getWebSearchResults = (writer: UIMessageStreamWriter<UIMessage<never, any>>) =>
+export const getWebSearchResults = (
+  writer: UIMessageStreamWriter<UIMessage<never, any>>,
+): Tool<WebSearchInput, WebSearchOutput> =>
   tool({
     description:
       'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need.',
@@ -52,7 +58,7 @@ export const getWebSearchResults = (writer: UIMessageStreamWriter<UIMessage<neve
         retryOnFailure: false,
       });
 
-      if (error !== null) {
+      if (error !== null || responseObject === null) {
         return { error: 'Web search failed. Service currently unavailable.' };
       }
 

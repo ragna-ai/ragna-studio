@@ -15,3 +15,4 @@ export {
 export * from './client';
 export * from './factories';
 export * from './tools';
+export * from './types';

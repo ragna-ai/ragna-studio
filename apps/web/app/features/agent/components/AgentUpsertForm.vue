@@ -8,7 +8,9 @@ import {
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
+import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
+import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
 type UpsertAgentProps = {
   id?: string;
@@ -205,15 +207,22 @@ const siderBarTabs = [
       </template>
       <!-- TAB 3: AI Model -->
       <template #aimodel>
-        <div class="rounded-lg border p-4 text-sm text-muted-foreground">
-          Model selection isn't available yet.
-        </div>
+        <AiModelSelector v-model="form.state.values.aiModelId" />
       </template>
       <!-- TAB 4: Tools -->
       <template #tools>
-        <div class="rounded-lg border p-4 text-sm text-muted-foreground">
-          Tool selection isn't available yet.
-        </div>
+        <form.Field name="tools">
+          <template v-slot="{ field, state }">
+            <div class="space-y-6">
+              <AgentToolList
+                :model-value="state.value"
+                :invalid="state.meta.errors.length > 0"
+                @update:model-value="field.handleChange"
+              />
+              <FormFieldInfo :state="state" />
+            </div>
+          </template>
+        </form.Field>
       </template>
       <!-- TAB 5: Knowledge -->
       <template #knowledge>

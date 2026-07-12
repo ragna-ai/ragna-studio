@@ -7,7 +7,9 @@ import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { agentController } from './controllers/agent.controller';
+import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
+import { imageGenerateController } from './controllers/imagegen.controller';
 import { userController } from './controllers/user.controller';
 
 // Origins allowed to call the API with credentials (cookies).
@@ -39,6 +41,8 @@ export const app = new Hono()
   .route('/', userController)
   .route('/', chatController)
   .route('/', agentController)
+  .route('/', aiModelController)
+  .route('/', imageGenerateController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

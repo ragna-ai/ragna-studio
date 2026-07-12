@@ -1,8 +1,10 @@
 import {
   convertToModelMessages,
+  createUIMessageStream,
   createUIMessageStreamResponse,
   getLanguageModel,
   streamText,
+  tools,
   toUIMessageStream,
 } from '@repo/ai';
 import {
@@ -188,39 +190,56 @@ export const chatController = new Hono()
 
     const { agent } = userChat;
 
-    const result = streamText({
-      model: getLanguageModel({
-        provider: agent.aiModel.provider,
-        model: agent.aiModel.model,
-      }),
-      instructions: agent.systemPrompt,
-      messages: await convertToModelMessages(body.messages),
-      temperature: 0.8,
-      maxOutputTokens: 2000,
-      // experimental_transform: smoothStream({
-      //   delayInMs: 20,
-      //   chunking: 'word',
-      // }),
-      onStart({ callId, modelId, runtimeContext }) {
-        logger.debug('Request started', {
-          callId,
-          modelId,
-          runtimeContext,
+    const modelMessages = await convertToModelMessages(body.messages);
+
+    const stream = createUIMessageStream({
+      execute: ({ writer: dataStream }) => {
+        // Stream the response from the language model
+        const result = streamText({
+          timeout: 120_000, // 2 minutes timeout
+          model: getLanguageModel({
+            provider: agent.aiModel.provider,
+            model: agent.aiModel.model,
+          }),
+          instructions: agent.systemPrompt,
+          messages: modelMessages,
+          tools: tools(dataStream),
+          activeTools: agent.tools,
+          temperature: 0.8,
+          maxOutputTokens: 2000,
+          onStart({ callId, modelId, runtimeContext }) {
+            logger.debug('Request started', {
+              callId,
+              modelId,
+              runtimeContext,
+            });
+          },
+          onEnd(res) {
+            const responseMessages = res.responseMessages;
+            const finalResponseMessages = res.finalStep.response.messages;
+            logger.debug('Request finished', {
+              callId: res.callId,
+              finishReason: res.finishReason,
+              usage: res.usage,
+              responseMessages,
+              finalResponseMessages,
+            });
+          },
+          onError(error) {
+            logger.error('Error in chat stream', error);
+          },
         });
-      },
-      onEnd({ callId, usage, finishReason }) {
-        logger.debug('Request finished', {
-          callId,
-          finishReason,
-          usage,
-        });
-      },
-      onError(error) {
-        logger.error('Error in chat stream', error);
+
+        // result.consumeStream(); // consume stream even if user has disconnected/aborted
+
+        dataStream.merge(
+          toUIMessageStream({
+            stream: result.stream,
+            sendReasoning: true,
+          }),
+        );
       },
     });
 
-    return createUIMessageStreamResponse({
-      stream: toUIMessageStream({ stream: result.stream }),
-    });
+    return createUIMessageStreamResponse({ stream });
   });
