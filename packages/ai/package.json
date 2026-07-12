@@ -20,12 +20,12 @@
     "dev": "tsdown --watch"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.9",
-    "@ai-sdk/black-forest-labs": "^2.0.5",
-    "@ai-sdk/google": "^4.0.9",
-    "@ai-sdk/google-vertex": "^5.0.12",
-    "@ai-sdk/mcp": "^2.0.8",
-    "@ai-sdk/openai": "^4.0.8",
+    "@ai-sdk/anthropic": "^4.0.12",
+    "@ai-sdk/black-forest-labs": "^2.0.7",
+    "@ai-sdk/google": "^4.0.12",
+    "@ai-sdk/google-vertex": "^5.0.16",
+    "@ai-sdk/mcp": "^2.0.10",
+    "@ai-sdk/openai": "^4.0.11",
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
     "ai": "catalog:",

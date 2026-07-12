@@ -8,7 +8,8 @@
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "gen": "turbo gen",
-    "preview": "turbo run preview"
+    "preview": "turbo run preview",
+    "pkg:update": "pnpm update -i -r -L"
   },
   "devDependencies": {
     "@turbo/gen": "^2.10.4",

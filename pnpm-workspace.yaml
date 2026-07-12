@@ -22,12 +22,12 @@ catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.1.0
   tailwindcss: ^4.3.2
-  tsdown: ^0.22.4
+  tsdown: ^0.22.5
   typescript: 6.0.3
   zod: 4.4.3
   oxfmt: ^0.58.0
   oxlint: ^1.73.0
-  ai: ^7.0.17
+  ai: ^7.0.22
 
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.10.4'
