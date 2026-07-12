@@ -24,11 +24,13 @@ interface Props {
 }
 
 defineProps<Props>();
+
+// group-[.is-assistant]:w-full
 </script>
 
 <template>
   <Message :from="message.role" class="max-w-full">
-    <MessageContent class="group-[.is-assistant]:w-full">
+    <MessageContent class="">
       <template v-for="(part, index) in message.parts" :key="index">
         <MessageResponse v-if="part.type === 'text'" :content="part.text" />
 
