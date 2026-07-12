@@ -62,7 +62,7 @@ export const agentController = new Hono()
 
     const { error: upsertAgentError, data: upsertedAgent } = await tryCatch(() =>
       upsertAgent({
-        id: body.id,
+        id: body.id ?? undefined,
         userId: user.id,
         name: body.name,
         description: body.description,

@@ -75,6 +75,8 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Coding
 
+Always use the clean-code skill.
+
 Skip self-verification of changes unless explicitly asked:
 
 - no type check

@@ -60,7 +60,12 @@ const form = useForm({
   validators: {
     onChange: agentUpsertSchema,
   },
-  onSubmit: ({ value }) => mutate(value),
+  onSubmit: ({ value }) =>
+    mutate(value, {
+      onSuccess: () => {
+        if (!props.id) navigateTo('/agent');
+      },
+    }),
 });
 
 // Subscribe to the form's error map so that updates to it will render

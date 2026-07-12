@@ -33,6 +33,7 @@ const props = defineProps<Props>();
 const chatId = ref(props.chatId ?? null);
 
 // Composables
+const config = useRuntimeConfig();
 const { mutateAsync: createNewChat } = useCreateChat();
 
 // initialMessages comes from the vue-query cache, which is a readonly proxy.
@@ -48,7 +49,7 @@ const { messages, sendMessage, status, error } = useChat({
   transport: new DefaultChatTransport({
     credentials: 'include',
     prepareSendMessagesRequest: ({ messages, body, trigger, messageId }) => ({
-      api: `${useRuntimeConfig().public.apiBaseUrl}/chat/${chatId.value}`,
+      api: `${config.public.apiBaseUrl}/chat/${chatId.value}`,
       body: { ...body, messages, trigger, messageId },
       credentials: 'include',
     }),

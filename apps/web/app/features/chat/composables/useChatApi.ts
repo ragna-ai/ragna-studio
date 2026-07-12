@@ -36,6 +36,27 @@ interface NewChatBody {
   agentId?: string;
 }
 
+export interface ChatHistoryItem {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  agent: {
+    id: string;
+    name: string;
+    aiModel: {
+      id: string;
+      provider: string;
+      displayName: string;
+    };
+  };
+}
+
+export interface ChatHistoryResponse {
+  chats: ChatHistoryItem[];
+  meta: { totalCount: number };
+}
+
 export function useGetChat(
   chatId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},

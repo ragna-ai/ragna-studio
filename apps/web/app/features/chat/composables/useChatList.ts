@@ -2,7 +2,7 @@ import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
 import {
   chatKeys,
-  type ChatResponse,
+  type ChatHistoryResponse,
 } from '~/features/chat/composables/useChatApi';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -27,7 +27,7 @@ export default function useChatList() {
   }
 
   function useGetAllChats(options: QueryOpts = {}) {
-    return useQuery<ChatResponse[]>({
+    return useQuery<ChatHistoryResponse>({
       queryKey: chatKeys.list(page, limit, searchQuery),
       queryFn: ({ signal }) =>
         api('/chat', {
@@ -39,7 +39,7 @@ export default function useChatList() {
           },
           signal,
         }),
-      placeholderData: (prev: ChatResponse[] | undefined) => prev, // keep previous results while refetching
+      placeholderData: (prev: ChatHistoryResponse | undefined) => prev, // keep previous results while refetching
       ...options,
     });
   }

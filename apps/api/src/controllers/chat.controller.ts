@@ -11,6 +11,7 @@ import {
 } from '@repo/ai';
 import {
   createChat,
+  deleteChatById,
   getAllChatsByUserId,
   getChatByIdForUser,
   getChatCountByUserId,
@@ -175,6 +176,25 @@ export const chatController = new Hono()
     };
 
     return c.json({ chat: chatDto });
+  })
+  /**
+   * [DELETE] /chat/:chatId
+   * Delete a specific chat (and its messages via cascade) for the authenticated user
+   */
+  .delete('/:chatId', validChatIdParam, async (c) => {
+    const user = c.get('user');
+    const param = c.req.valid('param');
+
+    const { error } = await tryCatch(() =>
+      deleteChatById({ chatId: param.chatId, userId: user.id }),
+    );
+
+    if (error !== null) {
+      logger.error(`Error deleting chat ${param.chatId} for user ${user.id}`, error);
+      throw new InternalServerErrorException('Failed to delete chat');
+    }
+
+    return c.json({ message: 'Chat deleted successfully' });
   })
   /**
    * [POST] /chat/:chatId

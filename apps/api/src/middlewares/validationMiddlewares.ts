@@ -26,7 +26,7 @@ export const validChatIdParam = myzValidator(
 export const validUpsertAgentBody = myzValidator(
   'json',
   z.object({
-    id: primaryId.optional(),
+    id: primaryId.nullish(),
     name: z.string().min(1).max(255),
     description: z.string().optional(),
     aiModelId: primaryId,
