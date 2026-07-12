@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { validGenerateImagesBody } from '../middlewares/validationMiddlewares';
 import { createGenImages, getGenImagesForUser } from '../services/imagen.service';
 
 export const imageGenerateController = new Hono()
@@ -20,21 +21,11 @@ export const imageGenerateController = new Hono()
    * [POST] /image/generate
    * Generate new image(s) based on the provided prompt and options for the authenticated user.
    */
-  .post('/', async (c) => {
+  .post('/', validGenerateImagesBody, async (c) => {
     const user = c.get('user');
-    const body = await c.req.json();
+    const body = c.req.valid('json');
 
-    const { images } = await createGenImages({
-      userId: user.id,
-      prompt: body.prompt,
-      provider: body.provider,
-      model: body.model,
-      resolution: body.resolution,
-      aspectRatio: body.aspectRatio,
-      n: body.n,
-      seed: body.seed,
-      negativePrompt: body.negativePrompt,
-    });
+    const { images } = await createGenImages({ userId: user.id, ...body });
 
     return c.json({ images });
   });

@@ -1,26 +1,22 @@
+import type {
+  BlackForestLabsImageProviderOptions,
+  GoogleVertexImageProviderOptions,
+  OpenAIImageModelGenerationOptions,
+} from '@repo/ai';
 import { generateImage, getImageModel } from '@repo/ai';
+import type { GenImage } from '@repo/database';
+import { createGenImageRecords, getGenImagesByUserId } from '@repo/database';
 import { logger } from '@repo/logger';
-import { listObjects, uploadObjectBuffer } from '@repo/storage';
+import { uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { InternalServerErrorException } from '../exceptions';
+import type { GenerateImagesInput } from '../validation';
 
-type ImageProvider = 'bfl' | 'google-vertex' | 'openai';
-// type ImageOutputFormat = 'png' | 'jpeg';
-type AspectRatio = '1:1' | '4:3' | '16:9';
-type ImageResolution = '1K' | '2K';
+type AspectRatio = NonNullable<GenerateImagesInput['aspectRatio']>;
+type ImageResolution = NonNullable<GenerateImagesInput['resolution']>;
 
-interface CreateImageParams {
-  userId: string;
-  prompt: string;
-  provider: ImageProvider;
-  model: string;
-  resolution?: ImageResolution;
-  aspectRatio?: AspectRatio;
-  n?: number;
-  seed?: number;
-  negativePrompt?: string;
-}
+type CreateImageParams = GenerateImagesInput & { userId: string };
 
 type OpenAIImageSize = '1024x1024' | '1024x1536' | '1536x1024';
 
@@ -61,30 +57,13 @@ function getDimensionsFromResolutionAndAspectRatio(
 }
 
 export async function getGenImagesForUser({ userId }: { userId: string }) {
-  const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
+  const { error, data: records } = await tryCatch(() => getGenImagesByUserId({ userId }));
 
-  const { error, data } = await tryCatch(() => listObjects(bucketName, prefix));
-
-  if (error !== null) {
+  if (error !== null || !records) {
     throw new InternalServerErrorException('Failed to list generated images');
   }
 
-  const userImagesDto = data?.objects.map((obj) => ({
-    ...buildImageUrls({ userId, key: obj.key }),
-    key: obj.key,
-    lastModified: obj.lastModified,
-    size: obj.size,
-  }));
-
-  // sort by last modified date descending
-  userImagesDto?.sort((a, b) => {
-    if (a.lastModified && b.lastModified) {
-      return b.lastModified.getTime() - a.lastModified.getTime();
-    }
-    return 0;
-  });
-
-  return userImagesDto;
+  return records.map(toGenImageDto);
 }
 
 /**
@@ -202,9 +181,38 @@ export async function createGenImages({
     throw new InternalServerErrorException('Failed to upload generated images');
   }
 
-  const genImagesResponseDto = uploadData.map(({ key }) => buildImageUrls({ userId, key }));
+  // persist the generation so prompt and settings can be shown later
+  const { error: recordError, data: records } = await tryCatch(() =>
+    createGenImageRecords(
+      uploadData.map(({ key }) => ({
+        userId,
+        storageKey: key,
+        prompt,
+        provider,
+        model,
+        aspectRatio,
+        resolution,
+        seed,
+        negativePrompt,
+      })),
+    ),
+  );
 
-  return { images: genImagesResponseDto };
+  if (recordError !== null || !records) {
+    logger.error('Failed to save generated image records', { recordError });
+    throw new InternalServerErrorException('Failed to save generated images');
+  }
+
+  return { images: records.map(toGenImageDto) };
+}
+
+function toGenImageDto(record: GenImage) {
+  return {
+    id: record.id,
+    prompt: record.prompt,
+    createdAt: record.createdAt,
+    ...buildImageUrls({ userId: record.userId, key: record.storageKey }),
+  };
 }
 
 function getImgGenBucketNameForUser(userId: string): {

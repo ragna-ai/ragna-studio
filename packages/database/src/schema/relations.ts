@@ -3,6 +3,7 @@ import { account } from './account.schema';
 import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
+import { genImage } from './genimage.schema';
 import { session } from './session.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
@@ -17,6 +18,7 @@ const schema = {
   agentTemplate,
   chat,
   chatMessage,
+  genImage,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -25,6 +27,7 @@ export const relations = defineRelations(schema, (r) => ({
     sessions: r.many.session(),
     agents: r.many.agent(),
     chats: r.many.chat(),
+    genImages: r.many.genImage(),
   },
   account: {
     user: r.one.user({
@@ -81,6 +84,13 @@ export const relations = defineRelations(schema, (r) => ({
     chat: r.one.chat({
       from: r.chatMessage.chatId,
       to: r.chat.id,
+      optional: false,
+    }),
+  },
+  genImage: {
+    user: r.one.user({
+      from: r.genImage.userId,
+      to: r.user.id,
       optional: false,
     }),
   },

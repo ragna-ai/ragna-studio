@@ -1,31 +1,56 @@
 <script setup lang="ts">
+// Imports
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
 
+interface AiModelOption {
+  id: string;
+  provider: string;
+  model: string;
+  modality: string;
+  displayName: string;
+}
+
+interface Props {
+  /** Only models with this modality are listed. */
+  modality?: string;
+}
+
 // Props
-const modelValue = defineModel();
+const props = withDefaults(defineProps<Props>(), {
+  modality: 'text',
+});
 
-// Emits
-
-// Refs
+const modelValue = defineModel<string>();
 
 // Composables
 const { data, isLoading, isError } = useGetAllAiModels();
 
 // Computed
-
-// Functions
-
-// Hooks
+const models = computed<AiModelOption[]>(
+  () =>
+    data.value?.models.filter(
+      (model: AiModelOption) => model.modality === props.modality,
+    ) ?? [],
+);
 </script>
 
 <template>
   <div>
-    <select v-if="data?.models" v-model="modelValue">
-      <option v-for="model in data.models" :key="model.id" :value="model.id">
-        {{ model.displayName }}
-      </option>
-    </select>
-    <div v-else-if="isLoading">Loading AI models...</div>
-    <div v-else-if="isError">Error loading AI models.</div>
+    <p v-if="isLoading" class="text-sm text-muted-foreground">
+      Loading AI models...
+    </p>
+    <p v-else-if="isError" class="text-sm text-destructive">
+      Error loading AI models.
+    </p>
+    <Select v-else v-model="modelValue">
+      <SelectTrigger class="w-64">
+        <SelectValue placeholder="Select an AI model" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="model in models" :key="model.id" :value="model.id">
+          {{ model.displayName }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
   </div>
 </template>

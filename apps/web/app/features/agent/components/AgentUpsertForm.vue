@@ -212,7 +212,10 @@ const siderBarTabs = [
       </template>
       <!-- TAB 3: AI Model -->
       <template #aimodel>
-        <AiModelSelector v-model="form.state.values.aiModelId" />
+        <AiModelSelector
+          v-model="form.state.values.aiModelId"
+          modality="text"
+        />
       </template>
       <!-- TAB 4: Tools -->
       <template #tools>

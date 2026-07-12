@@ -58,6 +58,33 @@ async function seedAiModels() {
       displayName: 'Claude Large (Opus)',
       description: 'A fast and efficient intelligence layer for simple tasks.',
     },
+    {
+      provider: 'bfl',
+      model: 'flux-2-pro',
+      modality: 'image',
+      family: 'diffusion',
+      size: 'medium',
+      displayName: 'FLUX 2 Pro',
+      description: 'High-quality image generation by Black Forest Labs.',
+    },
+    {
+      provider: 'google-vertex',
+      model: 'imagen-4.0-generate-001',
+      modality: 'image',
+      family: 'diffusion',
+      size: 'medium',
+      displayName: 'Imagen 4',
+      description: 'Photorealistic image generation by Google.',
+    },
+    {
+      provider: 'openai',
+      model: 'gpt-image-1',
+      modality: 'image',
+      family: 'diffusion',
+      size: 'medium',
+      displayName: 'GPT Image 1',
+      description: 'Versatile image generation by OpenAI.',
+    },
   ]);
 }
 

@@ -1,7 +1,7 @@
 import { userUpdateSchema } from '@repo/database';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
-import { paginationSchema } from '../validation';
+import { generateImagesSchema, paginationSchema } from '../validation';
 
 const primaryId = z.uuidv7();
 
@@ -42,3 +42,5 @@ export const validAgentIdParam = myzValidator(
     agentId: primaryId,
   }),
 );
+
+export const validGenerateImagesBody = myzValidator('json', generateImagesSchema);
