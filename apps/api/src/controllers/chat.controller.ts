@@ -3,6 +3,7 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
   getLanguageModel,
+  stepCountIs,
   streamText,
   tools,
   toUIMessageStream,
@@ -205,6 +206,7 @@ export const chatController = new Hono()
           messages: modelMessages,
           tools: tools(dataStream),
           activeTools: agent.tools,
+          stopWhen: stepCountIs(5),
           temperature: 0.8,
           maxOutputTokens: 2000,
           onStart({ callId, modelId, runtimeContext }) {

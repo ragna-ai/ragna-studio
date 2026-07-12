@@ -84,3 +84,10 @@ Skip self-verification of changes unless explicitly asked:
 - no browser verification
 
 The user handles verification and commits.
+
+### Server
+
+Both webapp and api are usually running in dev.
+
+Webapp Port 3000
+API Port 3010
