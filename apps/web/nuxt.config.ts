@@ -96,11 +96,13 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include: [
         '@lucide/vue',
+        '@tanstack/vue-query',
         'class-variance-authority',
         'clsx',
         'reka-ui',
         'tailwind-merge',
         'vue-sonner',
+        'zod',
       ],
     },
     // Pre-transform pages/components at dev startup so navigation doesn't
