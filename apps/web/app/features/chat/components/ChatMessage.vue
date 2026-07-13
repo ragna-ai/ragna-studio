@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai';
 import type { UIMessage } from 'ai';
 import { isStaticToolUIPart } from 'ai';
 import {
@@ -25,6 +26,18 @@ interface Props {
 
 defineProps<Props>();
 
+// Functions
+type ToolPart = { type: string; state: string; output?: unknown };
+
+function generatedImages(part: ToolPart): GeneratedAgentImage[] {
+  if (part.type !== 'tool-imageGen' || part.state !== 'output-available') {
+    return [];
+  }
+  // The generic UIMessage type erases per-tool output types.
+  const output = part.output as getGeneratedImagesOutput;
+  return 'images' in output ? output.images : [];
+}
+
 // group-[.is-assistant]:w-full
 </script>
 
@@ -42,13 +55,28 @@ defineProps<Props>();
           <ReasoningContent :content="part.text" />
         </Reasoning>
 
-        <Tool v-else-if="isStaticToolUIPart(part)">
-          <ToolHeader :type="part.type" :state="part.state" />
-          <ToolContent>
-            <ToolInput :input="part.input" />
-            <ToolOutput :output="part.output" :error-text="part.errorText" />
-          </ToolContent>
-        </Tool>
+        <template v-else-if="isStaticToolUIPart(part)">
+          <Tool>
+            <ToolHeader :type="part.type" :state="part.state" />
+            <ToolContent>
+              <ToolInput :input="part.input" />
+              <ToolOutput :output="part.output" :error-text="part.errorText" />
+            </ToolContent>
+          </Tool>
+
+          <div
+            v-if="generatedImages(part).length > 0"
+            class="grid grid-cols-2 gap-2"
+          >
+            <img
+              v-for="image in generatedImages(part)"
+              :key="image.id"
+              :src="image.imgUrl"
+              alt="Generated image"
+              class="w-full rounded-lg"
+            />
+          </div>
+        </template>
       </template>
     </MessageContent>
   </Message>

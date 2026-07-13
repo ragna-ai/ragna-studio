@@ -1,7 +1,8 @@
+import { generateImagesSchema } from '@repo/ai';
 import { userUpdateSchema } from '@repo/database';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
-import { generateImagesSchema, paginationSchema } from '../validation';
+import { paginationSchema } from '../validation';
 
 const primaryId = z.uuidv7();
 

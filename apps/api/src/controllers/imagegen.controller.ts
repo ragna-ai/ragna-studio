@@ -1,7 +1,9 @@
+import { createGenImages, getGenImagesForUser } from '@repo/ai';
+import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
+import { InternalServerErrorException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { validGenerateImagesBody } from '../middlewares/validationMiddlewares';
-import { createGenImages, getGenImagesForUser } from '../services/imagen.service';
 
 export const imageGenerateController = new Hono()
   .basePath('/image/generate')
@@ -13,7 +15,11 @@ export const imageGenerateController = new Hono()
   .get('/', async (c) => {
     const user = c.get('user');
 
-    const images = await getGenImagesForUser({ userId: user.id });
+    const { error, data: images } = await tryCatch(() => getGenImagesForUser({ userId: user.id }));
+
+    if (error !== null || !images) {
+      throw new InternalServerErrorException('Failed to list generated images');
+    }
 
     return c.json({ images });
   })
@@ -25,7 +31,13 @@ export const imageGenerateController = new Hono()
     const user = c.get('user');
     const body = c.req.valid('json');
 
-    const { images } = await createGenImages({ userId: user.id, ...body });
+    const { error, data: generated } = await tryCatch(() =>
+      createGenImages({ userId: user.id, ...body }),
+    );
 
-    return c.json({ images });
+    if (error !== null || !generated) {
+      throw new InternalServerErrorException('Image generation failed');
+    }
+
+    return c.json({ images: generated.images });
   });

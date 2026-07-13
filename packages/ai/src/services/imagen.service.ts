@@ -1,17 +1,36 @@
-import type {
-  BlackForestLabsImageProviderOptions,
-  GoogleVertexImageProviderOptions,
-  OpenAIImageModelGenerationOptions,
-} from '@repo/ai';
-import { generateImage, getImageModel } from '@repo/ai';
+import type { BlackForestLabsImageProviderOptions } from '@ai-sdk/black-forest-labs';
+import type { GoogleVertexImageProviderOptions } from '@ai-sdk/google-vertex';
+import type { OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
 import type { GenImage } from '@repo/database';
-import { createGenImageRecords, getGenImagesByUserId } from '@repo/database';
+import {
+  createGenImageRecords,
+  getDefaultAiModelByModality,
+  getGenImagesByUserId,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import { uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
+import { generateImage } from 'ai';
 import { randomUUID } from 'node:crypto';
-import { InternalServerErrorException } from '../exceptions';
-import type { GenerateImagesInput } from '../validation';
+import * as z from 'zod';
+import { getImageModel } from '../factories';
+
+export const imageGenProviders = ['bfl', 'google-vertex', 'openai'] as const;
+export const imageGenAspectRatios = ['1:1', '4:3', '16:9'] as const;
+export const imageGenResolutions = ['1K', '2K'] as const;
+
+export const generateImagesSchema = z.object({
+  prompt: z.string().min(1).max(5000),
+  provider: z.enum(imageGenProviders),
+  model: z.string().min(1).max(255),
+  resolution: z.enum(imageGenResolutions).optional(),
+  aspectRatio: z.enum(imageGenAspectRatios).optional(),
+  n: z.number().int().min(1).max(4).optional(),
+  seed: z.number().int().optional(),
+  negativePrompt: z.string().max(5000).optional(),
+});
+
+export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
 
 type AspectRatio = NonNullable<GenerateImagesInput['aspectRatio']>;
 type ImageResolution = NonNullable<GenerateImagesInput['resolution']>;
@@ -60,7 +79,7 @@ export async function getGenImagesForUser({ userId }: { userId: string }) {
   const { error, data: records } = await tryCatch(() => getGenImagesByUserId({ userId }));
 
   if (error !== null || !records) {
-    throw new InternalServerErrorException('Failed to list generated images');
+    throw new Error('Failed to list generated images');
   }
 
   return records.map(toGenImageDto);
@@ -155,7 +174,7 @@ export async function createGenImages({
 
   if (imageGenError !== null || !imageGenResult) {
     logger.error('Image generation failed', { imageGenError });
-    throw new InternalServerErrorException('Image generation failed');
+    throw new Error('Image generation failed');
   }
 
   const { images: genImages } = imageGenResult;
@@ -178,7 +197,7 @@ export async function createGenImages({
 
   if (uploadError !== null || !uploadData) {
     logger.error('Failed to upload generated images', { uploadError });
-    throw new InternalServerErrorException('Failed to upload generated images');
+    throw new Error('Failed to upload generated images');
   }
 
   // persist the generation so prompt and settings can be shown later
@@ -200,10 +219,50 @@ export async function createGenImages({
 
   if (recordError !== null || !records) {
     logger.error('Failed to save generated image records', { recordError });
-    throw new InternalServerErrorException('Failed to save generated images');
+    throw new Error('Failed to save generated images');
   }
 
   return { images: records.map(toGenImageDto) };
+}
+
+type CreateImagesWithDefaultModelParams = {
+  userId: string;
+  prompt: string;
+  aspectRatio?: AspectRatio;
+  n?: number;
+};
+
+/**
+ * Create images with the first configured image model.
+ * Used by the chat agent's image generation tool, where the user picks no model.
+ */
+export async function createGenImagesWithDefaultModel({
+  userId,
+  prompt,
+  aspectRatio,
+  n,
+}: CreateImagesWithDefaultModelParams) {
+  const { error, data: imageModel } = await tryCatch(() =>
+    getDefaultAiModelByModality({ modality: 'image' }),
+  );
+
+  if (error !== null || !imageModel || !isImageGenProvider(imageModel.provider)) {
+    logger.error('No image generation model available', { error });
+    throw new Error('No image generation model available');
+  }
+
+  return createGenImages({
+    userId,
+    prompt,
+    aspectRatio,
+    n,
+    provider: imageModel.provider,
+    model: imageModel.model,
+  });
+}
+
+function isImageGenProvider(provider: string): provider is GenerateImagesInput['provider'] {
+  return (imageGenProviders as readonly string[]).includes(provider);
 }
 
 function toGenImageDto(record: GenImage) {

@@ -6,10 +6,24 @@ import { timestamps } from './common.schema';
 import { user } from './user.schema';
 
 export interface AgentSettings {
-  someSetting?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
 }
 
-export type AgentTools = ['think', 'webSearch', 'webBrowser'];
+export type AgentTools = ['think', 'webSearch', 'webBrowser', 'imageGen'];
+
+const defaultAgentSettings: AgentSettings = {
+  temperature: 0.7,
+  maxOutputTokens: undefined,
+};
+
+export const getDefaultAgentSettings = (): AgentSettings => {
+  return { ...defaultAgentSettings };
+};
+
+export const getDefaultAgentSettingsJson = (): string => {
+  return JSON.stringify(getDefaultAgentSettings());
+};
 
 // AGENT
 export const agent = sqliteTable(
@@ -31,7 +45,7 @@ export const agent = sqliteTable(
     settings: text('settings', { mode: 'json' })
       .notNull()
       .$type<AgentSettings>()
-      .default(sql`'{}'`),
+      .default(sql`'${getDefaultAgentSettingsJson()}'`),
     ...timestamps,
   },
   (table) => [
@@ -62,7 +76,7 @@ export const agentTemplate = sqliteTable(
     settings: text('settings', { mode: 'json' })
       .notNull()
       .$type<AgentSettings>()
-      .default(sql`'{}'`),
+      .default(sql`'${getDefaultAgentSettingsJson()}'`),
     ...timestamps,
   },
   (table) => [index('agent_template_aiModelId_idx').on(table.aiModelId)],

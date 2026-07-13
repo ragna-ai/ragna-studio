@@ -19,8 +19,12 @@ build
 .pnpm-store
 
 # Development
-.env*.local
+.env
+.env.*
+!.env.example
 .vercel
+sqlite.db
+*.db-journal
 
 # Version control
 .git

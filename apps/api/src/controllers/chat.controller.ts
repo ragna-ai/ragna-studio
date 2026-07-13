@@ -16,6 +16,7 @@ import {
   getChatByIdForUser,
   getChatCountByUserId,
   getOrCreateDefaultAgentForUser,
+  updateChatTitleById,
   upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -32,6 +33,7 @@ import {
   validCreateChatBody,
   validPaginationQuery,
 } from '../middlewares/validationMiddlewares';
+import { generateChatTitle } from '../services/chat.service';
 
 export const chatController = new Hono()
   .basePath('/chat')
@@ -225,17 +227,37 @@ export const chatController = new Hono()
       throw new BadRequestException('Invalid messages format');
     }
 
-    const uiMessages = validated.data;
+    let titlePromise: Promise<string> | null = null;
 
-    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: uiMessages });
-
+    const validUiMessages = validated.data;
+    const modelMessages = await convertToModelMessages(validUiMessages);
     const { agent } = userChat;
 
-    const modelMessages = await convertToModelMessages(uiMessages);
+    const lastUiMessage = validUiMessages.at(-1);
+
+    if (userChat.messages.length === 0 && lastUiMessage?.role === 'user') {
+      titlePromise = generateChatTitle({
+        uiMessage: lastUiMessage,
+      });
+    }
+
+    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: validUiMessages });
 
     const stream = createUIMessageStream({
-      originalMessages: uiMessages,
+      originalMessages: validUiMessages,
       execute: ({ writer: dataStream }) => {
+        // Handle title generation in parallel
+        if (titlePromise) {
+          titlePromise.then((title) => {
+            updateChatTitleById({ chatId: userChat.id, title });
+            dataStream.write({
+              type: 'data-chat-title',
+              data: { title },
+              transient: true, // no history
+            });
+          });
+        }
+
         // Stream the response from the language model
         const result = streamText({
           timeout: 120_000, // 2 minutes timeout
@@ -245,11 +267,11 @@ export const chatController = new Hono()
           }),
           instructions: agent.systemPrompt,
           messages: modelMessages,
-          tools: tools(dataStream),
+          tools: tools(dataStream, { userId: user.id }),
           activeTools: agent.tools,
           stopWhen: stepCountIs(5),
-          temperature: 0.8,
-          maxOutputTokens: 2000,
+          temperature: agent.settings?.temperature ?? 0.7,
+          maxOutputTokens: agent.settings?.maxOutputTokens,
           onStart({ callId, modelId, runtimeContext }) {
             logger.debug('Request started', {
               callId,
@@ -288,10 +310,9 @@ export const chatController = new Hono()
 
         // Persist the new user message and the assistant response as UIMessages.
         // Upsert by message id so retries and regenerations replace instead of duplicate.
-        const lastMessage = uiMessages.at(-1);
-        const messagesToSave = lastMessage?.role === 'user'
-          ? [lastMessage, responseMessage]
-          : [responseMessage];
+
+        const messagesToSave =
+          lastUiMessage?.role === 'user' ? [lastUiMessage, responseMessage] : [responseMessage];
 
         const { error } = await tryCatch(() =>
           upsertChatMessages(

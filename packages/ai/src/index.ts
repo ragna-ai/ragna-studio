@@ -14,5 +14,6 @@ export {
 } from 'ai';
 export * from './client';
 export * from './factories';
+export * from './services';
 export * from './tools';
 export * from './types';

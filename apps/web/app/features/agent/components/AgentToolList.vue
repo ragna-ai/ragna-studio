@@ -3,6 +3,7 @@ import {
   AppWindowIcon,
   CheckIcon,
   GlobeIcon,
+  ImageIcon,
   PencilLineIcon,
   type LucideIcon,
 } from '@lucide/vue';
@@ -60,6 +61,12 @@ const availableTools: UiAgentTool[] = [
     icon: AppWindowIcon,
     title: 'Web Browser',
     description: 'Open pages and interact with websites.',
+  },
+  {
+    id: 'imageGen',
+    icon: ImageIcon,
+    title: 'Image Generation',
+    description: 'Create images from text prompts.',
   },
 ];
 

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { aiModel, type AiModel } from '../schema';
+import { aiModel, type AiModel, type AiModelModality } from '../schema';
 import type { AiModelCreateSchema, AiModelUpdateSchema } from '../zod';
 
 export async function createAiModel(payload: AiModelCreateSchema): Promise<AiModel> {
@@ -20,6 +20,18 @@ export async function getAiModelById({
 }): Promise<AiModel | null> {
   const aiModelRecord = await db.query.aiModel.findFirst({
     where: { id: aiModelId },
+  });
+
+  return aiModelRecord || null;
+}
+
+export async function getDefaultAiModelByModality({
+  modality,
+}: {
+  modality: AiModelModality;
+}): Promise<AiModel | null> {
+  const aiModelRecord = await db.query.aiModel.findFirst({
+    where: { modality },
   });
 
   return aiModelRecord || null;
