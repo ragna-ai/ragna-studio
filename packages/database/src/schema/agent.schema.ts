@@ -1,6 +1,4 @@
-import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { createId } from '../utils/create-id';
+import { boolean, index, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
@@ -10,7 +8,8 @@ export interface AgentSettings {
   maxOutputTokens?: number;
 }
 
-export type AgentTools = ['think', 'webSearch', 'webBrowser', 'imageGen'];
+export type AgentTool = 'think' | 'webSearch' | 'webBrowser' | 'imageGen';
+export type AgentTools = AgentTool[];
 
 const defaultAgentSettings: AgentSettings = {
   temperature: 0.7,
@@ -26,23 +25,20 @@ export const getDefaultAgentSettingsJson = (): string => {
 };
 
 // AGENT
-export const agent = sqliteTable(
+export const agent = pgTable(
   'agents',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
     aiModelId: text('ai_model_id')
       .notNull()
       .references(() => aiModel.id, { onDelete: 'cascade' }),
-    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+    isDefault: boolean('is_default').notNull().default(false),
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools', { mode: 'json' })
-      .notNull()
-      .$type<AgentTools>()
-      .default(sql`'[]'`),
-    settings: text('settings', { mode: 'json' })
+    tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
+    settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()
       .$defaultFn(() => getDefaultAgentSettings()),
@@ -59,7 +55,7 @@ export type NewAgent = typeof agent.$inferInsert;
 
 export type AgentWithAiModel = Agent & { aiModel: AiModel };
 
-export const agentTemplate = sqliteTable(
+export const agentTemplate = pgTable(
   'agent_templates',
   {
     id: primaryIdColumn,
@@ -69,11 +65,8 @@ export const agentTemplate = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: text('tools', { mode: 'json' })
-      .notNull()
-      .$type<AgentTools>()
-      .default(sql`'[]'`),
-    settings: text('settings', { mode: 'json' })
+    tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
+    settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()
       .$defaultFn(() => getDefaultAgentSettings()),

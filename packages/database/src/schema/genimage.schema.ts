@@ -1,9 +1,9 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
 // GENERATED IMAGE
-export const genImage = sqliteTable(
+export const genImage = pgTable(
   'gen_images',
   {
     id: primaryIdColumn,

@@ -1,5 +1,4 @@
-import { sql } from 'drizzle-orm';
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 
 export interface AiModelCapabilities {
@@ -29,21 +28,21 @@ export type AiModelFamily = (typeof aiModelFamilies)[number];
 export const aiModelSizes = ['small', 'medium', 'large', 'xlarge'] as const;
 export type AiModelSize = (typeof aiModelSizes)[number];
 
-export const aiModel = sqliteTable('ai_models', {
+export const pgModalityEnum = pgEnum('modality', aiModelModalities);
+export const pgFamilyEnum = pgEnum('family', aiModelFamilies);
+export const pgSizeEnum = pgEnum('size', aiModelSizes);
+
+export const aiModel = pgTable('ai_models', {
   id: primaryIdColumn,
   provider: text('provider').notNull(),
   model: text('model').notNull(),
-  modality: text('modality', { enum: aiModelModalities }).notNull(),
-  family: text('family', { enum: aiModelFamilies }).notNull(),
-  size: text('size', { enum: aiModelSizes }).notNull(),
+  modality: pgModalityEnum().notNull(),
+  family: pgFamilyEnum().notNull(),
+  size: pgSizeEnum().notNull(),
   displayName: text('display_name').notNull(),
   description: text('description').notNull(),
-  capabilities: text('capabilities', { mode: 'json' })
-    .$type<AiModelCapabilities>()
-    .default(sql`'{}'`),
-  meta: text('meta', { mode: 'json' })
-    .$type<AiModelMeta>()
-    .default(sql`'{}'`),
+  capabilities: jsonb('capabilities').default('{}').$type<AiModelCapabilities>(),
+  meta: jsonb('meta').default('{}').$type<AiModelMeta>(),
   ...timestamps,
 });
 

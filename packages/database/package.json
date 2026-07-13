@@ -20,18 +20,18 @@
     "db:seed": "tsx src/seed/index.ts"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.4",
     "@repo/config": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "@tursodatabase/database": "^0.6.1",
     "drizzle-orm": "1.0.0-rc.4",
     "drizzle-seed": "1.0.0-rc.4",
+    "pg": "^8.22.0",
     "uuid": "^14.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/pg": "^8.20.0",
     "drizzle-kit": "1.0.0-rc.4",
     "tsdown": "catalog:",
     "typescript": "catalog:"

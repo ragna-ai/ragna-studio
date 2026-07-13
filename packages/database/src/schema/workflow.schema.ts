@@ -1,13 +1,13 @@
 import type { WorkflowDefinition, WorkflowRunStatus, WorkflowStepStatus } from '@repo/workflow';
-import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { uniqueIndex } from 'drizzle-orm/singlestore-core/indexes';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
-const emptyWorkflowDefinition = sql`'{"nodes":[],"edges":[]}'`;
+const emptyWorkflowDefinition = { nodes: [], edges: [] };
 
 // WORKFLOW
-export const workflow = sqliteTable(
+export const workflow = pgTable(
   'workflows',
   {
     id: primaryIdColumn,
@@ -17,12 +17,12 @@ export const workflow = sqliteTable(
     name: text('name').notNull(),
     description: text('description'),
     // Draft graph, edited on the canvas.
-    definition: text('definition', { mode: 'json' })
+    definition: jsonb('definition')
       .notNull()
       .$type<WorkflowDefinition>()
       .default(emptyWorkflowDefinition),
     // Snapshot used for execution. Null until the workflow is published.
-    publishedDefinition: text('published_definition', { mode: 'json' }).$type<WorkflowDefinition>(),
+    publishedDefinition: jsonb('published_definition').$type<WorkflowDefinition>(),
     ...timestamps,
   },
   (table) => [index('workflow_userId_idx').on(table.userId)],
@@ -32,7 +32,7 @@ export type Workflow = typeof workflow.$inferSelect;
 export type NewWorkflow = typeof workflow.$inferInsert;
 
 // WORKFLOW RUN
-export const workflowRun = sqliteTable(
+export const workflowRun = pgTable(
   'workflow_runs',
   {
     id: primaryIdColumn,
@@ -42,12 +42,12 @@ export const workflowRun = sqliteTable(
     status: text('status').notNull().$type<WorkflowRunStatus>().default('pending'),
     // Snapshot of the published definition at enqueue time, so later edits
     // to the workflow don't change how a past run is displayed or replayed.
-    definition: text('definition', { mode: 'json' }).notNull().$type<WorkflowDefinition>(),
+    definition: jsonb('definition').notNull().$type<WorkflowDefinition>(),
     input: text('input'),
     output: text('output'),
     error: text('error'),
-    startedAt: integer('started_at', { mode: 'timestamp_ms' }),
-    finishedAt: integer('finished_at', { mode: 'timestamp_ms' }),
+    startedAt: timestamp('started_at'),
+    finishedAt: timestamp('finished_at'),
     ...timestamps,
   },
   (table) => [index('workflowRun_workflowId_idx').on(table.workflowId)],
@@ -57,7 +57,7 @@ export type WorkflowRun = typeof workflowRun.$inferSelect;
 export type NewWorkflowRun = typeof workflowRun.$inferInsert;
 
 // WORKFLOW RUN STEP
-export const workflowRunStep = sqliteTable(
+export const workflowRunStep = pgTable(
   'workflow_run_steps',
   {
     id: primaryIdColumn,
@@ -69,8 +69,8 @@ export const workflowRunStep = sqliteTable(
     input: text('input'),
     output: text('output'),
     error: text('error'),
-    startedAt: integer('started_at', { mode: 'timestamp_ms' }),
-    finishedAt: integer('finished_at', { mode: 'timestamp_ms' }),
+    startedAt: timestamp('started_at'),
+    finishedAt: timestamp('finished_at'),
     ...timestamps,
   },
   (table) => [

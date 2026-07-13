@@ -1,9 +1,9 @@
-import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
 import { agent, type Agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
-export const chat = sqliteTable(
+export const chat = pgTable(
   'chats',
   {
     id: primaryIdColumn,
@@ -25,18 +25,23 @@ export const chat = sqliteTable(
 export type Chat = typeof chat.$inferSelect;
 export type NewChat = typeof chat.$inferInsert;
 
+export const chatMessageRoles = ['system', 'user', 'assistant'] as const;
+export type ChatMessageRole = (typeof chatMessageRoles)[number];
+
+export const pgRoleEnum = pgEnum('role', chatMessageRoles);
+
 // CHAT MESSAGE
-export const chatMessage = sqliteTable(
+export const chatMessage = pgTable(
   'chat_messages',
   {
     id: primaryIdColumn,
     chatId: text('chat_id')
       .notNull()
       .references(() => chat.id, { onDelete: 'cascade' }),
-    role: text('role', { enum: ['system', 'user', 'assistant'] }).notNull(),
+    role: pgRoleEnum().notNull(),
     // UIMessage parts stored 1:1 (text, reasoning, tool calls, files, ...)
-    parts: text('parts', { mode: 'json' }).$type<unknown[]>().notNull(),
-    metadata: text('metadata', { mode: 'json' }),
+    parts: jsonb('parts').notNull().$type<unknown[]>(),
+    metadata: jsonb('metadata').default('{}').$type<Record<string, any>>(),
     // embedding: vector('embedding', { dimensions: 1024 }),
     ...timestamps,
   },
