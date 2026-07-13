@@ -42,8 +42,8 @@ const handleDeleteAgent = async (agentId: string) => {
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
-          :title="$t('assistant.list.title')"
-          :subtitle="$t('assistant.list.subtitle')"
+          :title="$t('agent.list.title')"
+          :subtitle="$t('agent.list.subtitle')"
         />
       </template>
       <template #bottom> </template>

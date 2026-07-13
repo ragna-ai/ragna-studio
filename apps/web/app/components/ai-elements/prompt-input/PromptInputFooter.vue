@@ -16,7 +16,7 @@ const props = defineProps<Props>();
 <template>
   <InputGroupAddon
     align="block-end"
-    :class="cn('justify-between gap-1 border', props.class)"
+    :class="cn('justify-between gap-1', props.class)"
     v-bind="props"
   >
     <slot />

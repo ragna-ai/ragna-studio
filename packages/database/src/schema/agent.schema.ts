@@ -45,7 +45,7 @@ export const agent = sqliteTable(
     settings: text('settings', { mode: 'json' })
       .notNull()
       .$type<AgentSettings>()
-      .default(sql`'${getDefaultAgentSettingsJson()}'`),
+      .$defaultFn(() => getDefaultAgentSettings()),
     ...timestamps,
   },
   (table) => [
@@ -76,7 +76,7 @@ export const agentTemplate = sqliteTable(
     settings: text('settings', { mode: 'json' })
       .notNull()
       .$type<AgentSettings>()
-      .default(sql`'${getDefaultAgentSettingsJson()}'`),
+      .$defaultFn(() => getDefaultAgentSettings()),
     ...timestamps,
   },
   (table) => [index('agent_template_aiModelId_idx').on(table.aiModelId)],

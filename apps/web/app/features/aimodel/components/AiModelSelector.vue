@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Imports
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
+import { firstToUpperCase } from '~/lib/utils';
 
 interface AiModelOption {
   id: string;
@@ -48,7 +49,7 @@ const models = computed<AiModelOption[]>(
       </SelectTrigger>
       <SelectContent>
         <SelectItem v-for="model in models" :key="model.id" :value="model.id">
-          {{ model.displayName }}
+          {{ firstToUpperCase(model.provider) }} - {{ model.displayName }}
         </SelectItem>
       </SelectContent>
     </Select>

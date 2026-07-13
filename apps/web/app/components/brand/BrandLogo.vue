@@ -4,7 +4,7 @@ const { textVisible = true } = defineProps<{ textVisible?: boolean }>();
 
 <template>
   <NuxtLink to="/" class="flex items-center gap-2 px-1">
-    <span v-if="textVisible" class="text-sm font-bold tracking-wide">
+    <span v-if="textVisible" class="text-sm font-medium tracking-wide">
       RAGNA Studio
     </span>
   </NuxtLink>

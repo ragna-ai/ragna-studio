@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import {
   PromptInput,
@@ -33,7 +32,7 @@ interface ImageModel {
 
 // Composables
 const { data: aiModelData } = useGetAllAiModels();
-const { mutateAsync: generateImages, isPending } = useGenerateImages();
+const { mutate: generateImages, isPending } = useGenerateImages();
 const { modelId, aspectRatio, resolution, count } = useImageGenSettings();
 
 // Computed
@@ -66,7 +65,7 @@ function handleSubmit(message: PromptInputMessage) {
     aspectRatio: aspectRatio.value,
     resolution: resolution.value,
     n: count.value,
-  }).catch(() => {});
+  });
 }
 
 // Hooks
@@ -85,7 +84,8 @@ watch(
   <PromptInput @submit="handleSubmit">
     <PromptInputBody>
       <PromptInputTextarea
-        placeholder="Describe the image you want to generate..."
+        class="p-6"
+        :placeholder="$t('imagen.input.placeholder')"
         autofocus
       />
     </PromptInputBody>
@@ -93,7 +93,7 @@ watch(
       <PromptInputTools>
         <PromptInputSelect v-model="modelId">
           <PromptInputSelectTrigger>
-            <PromptInputSelectValue placeholder="Model" />
+            <PromptInputSelectValue :placeholder="$t('imagen.model.title')" />
           </PromptInputSelectTrigger>
           <PromptInputSelectContent>
             <PromptInputSelectItem
@@ -108,7 +108,9 @@ watch(
 
         <PromptInputSelect v-model="aspectRatio">
           <PromptInputSelectTrigger>
-            <PromptInputSelectValue placeholder="Aspect ratio" />
+            <PromptInputSelectValue
+              :placeholder="$t('imagen.aspectRatio.title')"
+            />
           </PromptInputSelectTrigger>
           <PromptInputSelectContent>
             <PromptInputSelectItem
@@ -123,7 +125,9 @@ watch(
 
         <PromptInputSelect v-model="resolution">
           <PromptInputSelectTrigger>
-            <PromptInputSelectValue placeholder="Resolution" />
+            <PromptInputSelectValue
+              :placeholder="$t('imagen.resolution.title')"
+            />
           </PromptInputSelectTrigger>
           <PromptInputSelectContent>
             <PromptInputSelectItem
@@ -138,11 +142,16 @@ watch(
 
         <PromptInputSelect v-model="count">
           <PromptInputSelectTrigger>
-            <PromptInputSelectValue placeholder="Count" />
+            <PromptInputSelectValue :placeholder="$t('imagen.count.title')" />
           </PromptInputSelectTrigger>
           <PromptInputSelectContent>
             <PromptInputSelectItem v-for="n in 4" :key="n" :value="n">
-              {{ n }} {{ n === 1 ? 'image' : 'images' }}
+              {{ n }}
+              {{
+                n === 1
+                  ? $t('imagen.count.singular')
+                  : $t('imagen.count.plural')
+              }}
             </PromptInputSelectItem>
           </PromptInputSelectContent>
         </PromptInputSelect>

@@ -32,8 +32,8 @@ const { data, error: agentError } = useGetAgent(agentId);
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
-          :title="$t('assistant.upsert.title')"
-          :subtitle="$t('assistant.upsert.subtitle')"
+          :title="$t('agent.upsert.title')"
+          :subtitle="$t('agent.upsert.subtitle')"
         />
       </template>
       <template #bottom> </template>

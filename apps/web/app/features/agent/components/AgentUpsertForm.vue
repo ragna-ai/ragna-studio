@@ -52,7 +52,7 @@ const form = useForm({
     userId: props.userId ?? null,
     aiModelId: props.aiModelId ?? '',
     name: props.name ?? '',
-    systemPrompt: props.systemPrompt ?? '',
+    systemPrompt: props.systemPrompt ?? 'You are a helpful assistant.',
     description: props.description ?? '',
     tools: props.tools ?? [],
     isDefault: props.isDefault ?? false,
@@ -67,10 +67,6 @@ const form = useForm({
       },
     }),
 });
-
-// Subscribe to the form's error map so that updates to it will render
-// alternately, you can use `form.Subscribe`
-const formErrorMap = form.useStore((state) => state.errorMap);
 
 // Computed
 const tabsWithErrors = computed<string[]>(() => {
@@ -139,6 +135,7 @@ const siderBarTabs = [
                       (v: string | number) => field.handleChange(String(v))
                     "
                     @blur="field.handleBlur"
+                    autocomplete="off"
                   />
                 </InputGroup>
                 <FormFieldInfo :state="state" />
@@ -160,6 +157,7 @@ const siderBarTabs = [
                     (v: string | number) => field.handleChange(String(v))
                   "
                   @blur="field.handleBlur"
+                  autocomplete="off"
                 />
                 <FormFieldInfo :state="state" />
               </div>
@@ -180,6 +178,7 @@ const siderBarTabs = [
                   "
                   @blur="field.handleBlur"
                   class="min-h-100"
+                  autocomplete="off"
                 />
                 <FormFieldInfo :state="state" />
               </div>
@@ -204,6 +203,7 @@ const siderBarTabs = [
                 "
                 @blur="field.handleBlur"
                 class="min-h-100"
+                autocomplete="off"
               />
               <FormFieldInfo :state="state" />
             </div>
@@ -212,10 +212,18 @@ const siderBarTabs = [
       </template>
       <!-- TAB 3: AI Model -->
       <template #aimodel>
-        <AiModelSelector
-          v-model="form.state.values.aiModelId"
-          modality="text"
-        />
+        <form.Field name="aiModelId">
+          <template v-slot="{ field, state }">
+            <div class="space-y-2">
+              <AiModelSelector
+                :model-value="state.value"
+                modality="text"
+                @update:model-value="(value) => field.handleChange(value ?? '')"
+              />
+              <FormFieldInfo :state="state" />
+            </div>
+          </template>
+        </form.Field>
       </template>
       <!-- TAB 4: Tools -->
       <template #tools>

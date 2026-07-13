@@ -68,7 +68,7 @@ const handleDeleteFavorite = (agentId: string) => {
         <TableRow>
           <TableHead>{{ $t('table.favorit') }}</TableHead>
           <TableHead>{{ $t('table.avatar') }}</TableHead>
-          <TableHead>{{ $t('table.title') }}</TableHead>
+          <TableHead>{{ $t('table.name') }}</TableHead>
           <TableHead class="whitespace-nowrap">
             {{ $t('table.ai_model') }}
           </TableHead>
@@ -95,7 +95,7 @@ const handleDeleteFavorite = (agentId: string) => {
                 size="icon"
                 @click="() => handleAddFavorite(agent.id)"
               >
-                <StarIcon class="!size-5 stroke-stone-400 stroke-1.5" />
+                <StarIcon class="size-5! stroke-stone-400 stroke-1.5" />
               </Button>
             </div>
           </TableCell>
@@ -104,7 +104,12 @@ const handleDeleteFavorite = (agentId: string) => {
           </TableCell>
           <TableCell class="">
             <div class="text-sm font-semibold">
-              {{ agent.name }}
+              <NuxtLinkLocale
+                :to="`/agent/${agent.id}`"
+                class="hover:text-primary hover:underline"
+              >
+                {{ agent.name }}
+              </NuxtLinkLocale>
             </div>
           </TableCell>
           <TableCell class="whitespace-nowrap">

@@ -1,1 +1,49 @@
-{}
+{
+  "home": {
+    "title": "RAGNA Studio",
+    "subtitle": "Willkommen bei RAGNA Studio."
+  },
+  "agent": {
+    "list": {
+      "title": "KI-Agenten",
+      "subtitle": "Liste aller KI-Agenten, die du erstellt hast."
+    },
+    "upsert": {
+      "title": "KI-Agent erstellen",
+      "subtitle": "Erstelle einen neuen KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
+    }
+  },
+  "chat": {
+    "history": {
+      "title": "Chat-Verlauf",
+      "subtitle": "Verlauf deiner Unterhaltungen."
+    }
+  },
+  "imagen": {
+    "input": {
+      "placeholder": "Beschreibe das Bild, das du generieren möchtest..."
+    },
+    "model": {
+      "title": "Modell"
+    },
+    "aspectRatio": {
+      "title": "Seitenverhältnis"
+    },
+    "resolution": {
+      "title": "Auflösung"
+    },
+    "count": {
+      "title": "Anzahl der Bilder",
+      "singular": "Bild",
+      "plural": "Bilder"
+    }
+  },
+  "table": {
+    "favorit": "Favorit",
+    "avatar": "Avatar",
+    "title": "Titel",
+    "name": "Name",
+    "ai_model": "Künstliche Intelligenz",
+    "actions": "Aktionen"
+  }
+}
