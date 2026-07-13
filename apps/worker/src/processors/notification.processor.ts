@@ -1,10 +1,10 @@
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, NOTIFICATION_QUEUE, NOTIFY_USER_JOB } from '@repo/queue';
+import { createWorker, NOTIFICATIONS_QUEUE, NOTIFY_USER_JOB } from '@repo/queue';
 
 export function registerNotificationJobProcessor(): Worker<any, any, string> {
   const notificationWorker = createWorker({
-    name: NOTIFICATION_QUEUE,
+    name: NOTIFICATIONS_QUEUE,
     processor: async (job) => {
       const data = job.data;
       logger.info(`Processing notification jobId: ${job.id} name: ${job.name}`);
@@ -12,9 +12,7 @@ export function registerNotificationJobProcessor(): Worker<any, any, string> {
       switch (job.name) {
         case NOTIFY_USER_JOB: {
           const { userId, message } = data;
-          logger.debug(
-            `Sending notification to userId: ${userId} with message: ${message}`,
-          );
+          logger.debug(`Sending notification to userId: ${userId} with message: ${message}`);
 
           // Simulate sending notification
           await new Promise((resolve) => setTimeout(resolve, 1000));

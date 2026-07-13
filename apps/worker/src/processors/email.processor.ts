@@ -1,11 +1,11 @@
 import { logger } from '@repo/logger';
 import { sendEmail } from '@repo/mail';
 import type { VerifyEmailJobDto, WelcomeEmailJobDto, Worker } from '@repo/queue';
-import { createWorker, EMAIL_QUEUE, VERIFY_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
+import { createWorker, EMAILS_QUEUE, VERIFY_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
 
 export function registerEmailJobProcessor(): Worker<any, any, string> {
   const emailWorker = createWorker({
-    name: EMAIL_QUEUE,
+    name: EMAILS_QUEUE,
     processor: async (job) => {
       logger.info(`Processing email jobId: ${job.id} name: ${job.name}`);
 
