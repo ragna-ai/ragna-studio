@@ -6,7 +6,8 @@
   "agent": {
     "list": {
       "title": "KI-Agenten",
-      "subtitle": "Liste aller KI-Agenten, die du erstellt hast."
+      "subtitle": "Liste aller KI-Agenten, die du erstellt hast.",
+      "newAgent": "KI-Agent erstellen"
     },
     "upsert": {
       "title": "KI-Agent erstellen",

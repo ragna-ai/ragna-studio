@@ -76,7 +76,12 @@ const handleDeleteFavorite = (agentId: string) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="agent in agents || []" :key="agent.id">
+        <TableRow
+          v-for="agent in agents || []"
+          :key="agent.id"
+          class="cursor-pointer"
+          @click="navigateTo(`/agent/${agent.id}`)"
+        >
           <TableCell class="w-12">
             <div class="border-0">
               <Button
@@ -104,12 +109,7 @@ const handleDeleteFavorite = (agentId: string) => {
           </TableCell>
           <TableCell class="">
             <div class="text-sm font-semibold">
-              <NuxtLinkLocale
-                :to="`/agent/${agent.id}`"
-                class="hover:text-primary hover:underline"
-              >
-                {{ agent.name }}
-              </NuxtLinkLocale>
+              {{ agent.name }}
             </div>
           </TableCell>
           <TableCell class="whitespace-nowrap">

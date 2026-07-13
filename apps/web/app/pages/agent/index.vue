@@ -44,7 +44,15 @@ const handleDeleteAgent = async (agentId: string) => {
         <HeadingTitle
           :title="$t('agent.list.title')"
           :subtitle="$t('agent.list.subtitle')"
-        />
+        >
+          <template #button>
+            <Button as-child variant="secondary">
+              <NuxtLinkLocale to="/agent/create">
+                {{ $t('agent.list.newAgent') }}
+              </NuxtLinkLocale>
+            </Button>
+          </template>
+        </HeadingTitle>
       </template>
       <template #bottom> </template>
     </Heading>
