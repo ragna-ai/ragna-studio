@@ -1,4 +1,8 @@
+# This is a development override file for docker-compose.
+
 services:
+  postgres:
+    cpus: 1
+
   redis:
-    ports:
-      - ${REDIS_PORT:-6379}:6379
+    cpus: 1

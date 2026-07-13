@@ -3,9 +3,6 @@ import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createId } from '../utils/create-id';
 import { timestamps } from './common.schema';
 
-// AI MODEL
-// export const aiModelType = pgEnum('ai_model_type', ['llm', 'image', 'video', 'audio']);
-
 export interface AiModelCapabilities {
   canGenerateText?: boolean;
   canGenerateImage?: boolean;

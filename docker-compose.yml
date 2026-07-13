@@ -1,19 +1,39 @@
 name: ragna_studio
 
 volumes:
+  postgres_data:
   redis_data:
 
 services:
+  postgres:
+    image: postgres:18.4-alpine3.24
+    container_name: ragna_studio_postgresql
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - ${DB_PORT:-5432}:5432
+    networks:
+      - app_net
+
   redis:
-    cpus: 1
     image: redis:8.8.0-alpine3.23
-    container_name: ragna_redis
+    container_name: ragna_studio_redis
     restart: always
     command: "redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
     security_opt:
       - no-new-privileges:true
+    ports:
+      - ${REDIS_PORT:-6379}:6379
     networks:
       - app_net
 
