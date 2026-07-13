@@ -38,17 +38,14 @@ RUN pnpm turbo build --filter=@repo/worker
 # ============================================================
 # Runner — dist/index.mjs is fully self-contained
 # ============================================================
-FROM node:24-alpine AS runner
-
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 worker
+FROM oven/bun:1-alpine AS runner
 
 WORKDIR /app
 
-COPY --from=builder --chown=worker:nodejs /app/apps/worker/dist ./dist
+COPY --from=builder --chown=bun:bun /app/apps/worker/dist ./dist
 
-USER worker
+USER bun
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/index.mjs"]
+CMD ["bun", "dist/index.mjs"]

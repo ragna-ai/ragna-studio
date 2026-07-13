@@ -3,6 +3,7 @@ import { registerAgentJobProcessor } from './agent.processor';
 import { registerEmailJobProcessor } from './email.processor';
 import { registerNotificationJobProcessor } from './notification.processor';
 import { registerPostsJobProcessor } from './posts.processor';
+import { registerWorkflowJobProcessor } from './workflow.processor';
 
 export function registerJobProcessors() {
   logger.info('Registering job processors...');
@@ -11,4 +12,5 @@ export function registerJobProcessors() {
   registerEmailJobProcessor();
   registerPostsJobProcessor();
   registerAgentJobProcessor();
+  registerWorkflowJobProcessor();
 }

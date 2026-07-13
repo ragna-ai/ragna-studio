@@ -5,6 +5,7 @@ import {
   ONBOARDING_QUEUE,
   POSTS_QUEUE,
   SOCIAL_ACCOUNT_QUEUE,
+  WORKFLOWS_QUEUE,
 } from '../constants';
 import { getOrCreateQueue } from '../services/bullmq.service';
 
@@ -15,4 +16,5 @@ export const queue = {
   post: () => getOrCreateQueue({ name: POSTS_QUEUE }),
   agent: () => getOrCreateQueue({ name: AGENTS_QUEUE }),
   socialAccount: () => getOrCreateQueue({ name: SOCIAL_ACCOUNT_QUEUE }),
+  workflow: () => getOrCreateQueue({ name: WORKFLOWS_QUEUE }),
 } as const;

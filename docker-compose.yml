@@ -1,0 +1,23 @@
+name: ragna_studio
+
+volumes:
+  redis_data:
+
+services:
+  redis:
+    cpus: 1
+    image: redis:8.8.0-alpine3.23
+    container_name: ragna_redis
+    restart: always
+    command: "redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}"
+    volumes:
+      - redis_data:/data
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    name: ragna_studio_network
+    driver: bridge

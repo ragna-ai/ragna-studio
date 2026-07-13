@@ -11,6 +11,7 @@ import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
 import { imageGenerateController } from './controllers/imagegen.controller';
 import { userController } from './controllers/user.controller';
+import { workflowController } from './controllers/workflow.controller';
 
 // Origins allowed to call the API with credentials (cookies).
 // Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
@@ -43,6 +44,7 @@ export const app = new Hono()
   .route('/', agentController)
   .route('/', aiModelController)
   .route('/', imageGenerateController)
+  .route('/', workflowController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

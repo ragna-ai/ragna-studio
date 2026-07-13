@@ -7,6 +7,7 @@ import { genImage } from './genimage.schema';
 import { session } from './session.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
+import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
 
 const schema = {
   user,
@@ -19,6 +20,9 @@ const schema = {
   chat,
   chatMessage,
   genImage,
+  workflow,
+  workflowRun,
+  workflowRunStep,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -28,6 +32,7 @@ export const relations = defineRelations(schema, (r) => ({
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
+    workflows: r.many.workflow(),
   },
   account: {
     user: r.one.user({
@@ -91,6 +96,29 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.genImage.userId,
       to: r.user.id,
+      optional: false,
+    }),
+  },
+  workflow: {
+    user: r.one.user({
+      from: r.workflow.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    runs: r.many.workflowRun(),
+  },
+  workflowRun: {
+    workflow: r.one.workflow({
+      from: r.workflowRun.workflowId,
+      to: r.workflow.id,
+      optional: false,
+    }),
+    steps: r.many.workflowRunStep(),
+  },
+  workflowRunStep: {
+    run: r.one.workflowRun({
+      from: r.workflowRunStep.runId,
+      to: r.workflowRun.id,
       optional: false,
     }),
   },

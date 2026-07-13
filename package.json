@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --filter=@repo/web --filter=@repo/api",
+    "dev": "turbo run dev --filter=@repo/web --filter=@repo/api --filter=@repo/worker",
     "dev:all": "turbo run dev",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",

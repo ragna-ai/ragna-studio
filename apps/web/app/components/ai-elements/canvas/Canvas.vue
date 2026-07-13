@@ -24,14 +24,14 @@ const forwarded = useForwardPropsEmits(props, emits)
   <VueFlow data-slot="canvas" v-bind="forwarded">
     <Background />
 
-    <template v-if="slots['connection-line']" #connection-line="connectionLineProps">
-      <slot name="connection-line" v-bind="connectionLineProps" />
+    <!--
+      Forward every slot passed to Canvas (default, connection-line, zoom-pane,
+      and the dynamic `node-<type>` / `edge-<type>` slots VueFlow looks up by
+      name) straight through to VueFlow. A static list would need editing
+      every time a new node/edge type is added.
+    -->
+    <template v-for="(_, slotName) in slots" :key="slotName" #[slotName]="slotProps">
+      <slot :name="slotName" v-bind="slotProps ?? {}" />
     </template>
-
-    <template v-if="slots['zoom-pane']" #zoom-pane>
-      <slot name="zoom-pane" />
-    </template>
-
-    <slot />
   </VueFlow>
 </template>

@@ -7,3 +7,4 @@ export * from './relations';
 export * from './session.schema';
 export * from './user.schema';
 export * from './verification.schema';
+export * from './workflow.schema';

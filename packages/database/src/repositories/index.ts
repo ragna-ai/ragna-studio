@@ -4,3 +4,5 @@ export * from './ai-model.repo';
 export * from './chat.repo';
 export * from './gen-image.repo';
 export * from './user.repo';
+export * from './workflow-run.repo';
+export * from './workflow.repo';

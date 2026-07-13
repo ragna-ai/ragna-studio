@@ -34,6 +34,17 @@ export function useGetAgent(
   });
 }
 
+/** Unpaginated agent list for pickers (e.g. the workflow agent-node config). */
+export function useGetAllAgents(options: QueryOpts = {}) {
+  const api = useApi();
+  return useQuery<AgentManyResponse>({
+    queryKey: [...agentKeys.all, 'picker'],
+    queryFn: ({ signal }) =>
+      api('/agent', { method: 'GET', query: { page: 1, limit: 100 }, signal }),
+    ...options,
+  });
+}
+
 export function useUpsertAgent() {
   const api = useApi();
   const queryClient = useQueryClient();

@@ -13,14 +13,18 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch --onSuccess \"node dist/index.mjs\""
+    "dev": "bun --watch src/index.ts",
+    "start": "bun dist/index.mjs"
   },
   "dependencies": {
+    "@repo/ai": "workspace:*",
     "@repo/config": "workspace:*",
+    "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",
     "@repo/queue": "workspace:*",
-    "@repo/utils": "workspace:*"
+    "@repo/utils": "workspace:*",
+    "@repo/workflow": "workspace:*"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

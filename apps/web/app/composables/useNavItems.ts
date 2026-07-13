@@ -136,12 +136,30 @@ const agentItems: NavItem[] = [
   },
 ];
 
+const workflowItems: NavItem[] = [
+  {
+    id: 'workflow-create',
+    path: '/workflow/create',
+    icon: PlusCircleIcon,
+    label: 'Create',
+    children: [],
+  },
+  {
+    id: 'workflow',
+    path: '/workflow',
+    icon: WorkflowIcon,
+    label: 'Workflows',
+    children: [],
+  },
+];
+
 export function useNavItems() {
   const route = useRoute();
 
   const dynamicNavItems = computed<NavItem[]>(() => {
     if (route.path.startsWith('/chat')) return [homeItem, ...chatItems];
     if (route.path.startsWith('/agent')) return [homeItem, ...agentItems];
+    if (route.path.startsWith('/workflow')) return [homeItem, ...workflowItems];
     return [homeItem, ...defaultItems];
   });
 

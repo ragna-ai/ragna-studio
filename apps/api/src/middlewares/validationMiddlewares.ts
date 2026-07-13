@@ -1,5 +1,6 @@
 import { generateImagesSchema } from '@repo/ai';
 import { userUpdateSchema } from '@repo/database';
+import { workflowDefinitionSchema } from '@repo/workflow';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 import { paginationSchema } from '../validation';
@@ -45,3 +46,34 @@ export const validAgentIdParam = myzValidator(
 );
 
 export const validGenerateImagesBody = myzValidator('json', generateImagesSchema);
+
+export const validWorkflowIdParam = myzValidator(
+  'param',
+  z.object({
+    workflowId: primaryId,
+  }),
+);
+
+export const validUpsertWorkflowBody = myzValidator(
+  'json',
+  z.object({
+    id: primaryId.nullish(),
+    name: z.string().min(1).max(255),
+    description: z.string().optional(),
+    definition: workflowDefinitionSchema,
+  }),
+);
+
+export const validRunIdParam = myzValidator(
+  'param',
+  z.object({
+    runId: primaryId,
+  }),
+);
+
+export const validRunWorkflowBody = myzValidator(
+  'json',
+  z.object({
+    input: z.string().optional(),
+  }),
+);

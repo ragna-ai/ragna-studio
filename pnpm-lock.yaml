@@ -76,12 +76,18 @@ importers:
       '@repo/mail':
         specifier: workspace:*
         version: link:../../packages/mail
+      '@repo/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
       '@repo/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@repo/workflow':
+        specifier: workspace:*
+        version: link:../../packages/workflow
       hono:
         specifier: ^4.12.29
         version: 4.12.29
@@ -143,6 +149,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@repo/workflow':
+        specifier: workspace:*
+        version: link:../../packages/workflow
       '@tanstack/vue-form':
         specifier: ^1.33.1
         version: 1.33.1(vue@3.5.39(typescript@6.0.3))
@@ -243,9 +252,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@repo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@repo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -258,6 +273,9 @@ importers:
       '@repo/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@repo/workflow':
+        specifier: workspace:*
+        version: link:../../packages/workflow
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
@@ -388,6 +406,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+      '@repo/workflow':
+        specifier: workspace:*
+        version: link:../workflow
       '@tursodatabase/database':
         specifier: ^0.6.1
         version: 0.6.1
@@ -585,6 +606,25 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+    devDependencies:
+      '@repo/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.1.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.5(tsx@4.23.0)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/workflow:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
