@@ -3,10 +3,6 @@ import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
 
-useHead({
-  title: 'Chat Conversation',
-});
-
 definePageMeta({
   title: 'Chat Conversation',
   validate: (route) => hasValidChatId(route.params),
@@ -17,6 +13,11 @@ const chatId = computed(() => route.params.chatId as string);
 
 // Composables
 const { data, error: chatError } = useGetChat(chatId);
+const { t } = useI18n();
+
+useHead({
+  title: t('chat.conversation.title'),
+});
 </script>
 
 <template>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 
-useHead({
-  title: 'New Chat',
-});
-
 // Composables
+const { t } = useI18n();
+
+useHead({
+  title: t('chat.conversation.title'),
+});
 
 // Computed
 

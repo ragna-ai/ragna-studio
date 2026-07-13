@@ -3,12 +3,6 @@ import ChatHistoryTable from '~/features/chat/components/ChatHistoryTable.vue';
 import { useDeleteChat } from '~/features/chat/composables/useChatApi';
 import useChatList from '~/features/chat/composables/useChatList';
 
-// Imports
-
-useHead({
-  title: 'Chat History',
-});
-
 // Props
 // Emits
 
@@ -19,6 +13,11 @@ const { page, limit, useGetAllChats } = useChatList();
 const { data, error: chatsError } = useGetAllChats();
 const { mutateAsync: deleteChat } = useDeleteChat();
 const { confirm } = useConfirmDialog();
+const { t } = useI18n();
+
+useHead({
+  title: t('chat.history.title'),
+});
 
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });

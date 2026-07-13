@@ -15,6 +15,11 @@ const { page, limit, useGetAllWorkflows } = useWorkflowList();
 const { data, error: workflowsError } = useGetAllWorkflows();
 const { mutateAsync: deleteWorkflow } = useDeleteWorkflow();
 const { confirm } = useConfirmDialog();
+const { t } = useI18n();
+
+useHead({
+  title: t('workflow.list.title'),
+});
 
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
@@ -47,7 +52,9 @@ const handleDeleteWorkflow = async (workflowId: string) => {
         >
           <template #button>
             <Button as-child variant="secondary">
-              <NuxtLinkLocale to="/workflow/create">New workflow</NuxtLinkLocale>
+              <NuxtLinkLocale to="/workflow/create"
+                >New workflow</NuxtLinkLocale
+              >
             </Button>
           </template>
         </HeadingTitle>

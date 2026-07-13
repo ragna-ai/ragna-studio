@@ -18,8 +18,12 @@ const agentId = computed(() => route.params.agentId as string);
 // Refs
 
 // Composables
-
 const { data, error: agentError } = useGetAgent(agentId);
+const { t } = useI18n();
+
+useHead({
+  title: t('agent.upsert.title'),
+});
 
 // Computed
 // Functions

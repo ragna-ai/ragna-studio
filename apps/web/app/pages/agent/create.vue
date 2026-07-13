@@ -9,6 +9,11 @@ import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 // Refs
 
 // Composables
+const { t } = useI18n();
+
+useHead({
+  title: t('agent.upsert.title'),
+});
 
 // Computed
 // Functions

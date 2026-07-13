@@ -10,6 +10,12 @@ definePageMeta({
 
 const route = useRoute();
 const runId = computed(() => route.params.runId as string);
+
+const { t } = useI18n();
+
+useHead({
+  title: t('workflow.run.title'),
+});
 </script>
 
 <template>

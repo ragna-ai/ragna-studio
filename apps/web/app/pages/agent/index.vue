@@ -3,8 +3,6 @@ import AgentManyTable from '~/features/agent/components/AgentManyTable.vue';
 import { useDeleteAgent } from '~/features/agent/composables/useAgentApi';
 import useAgentList from '~/features/agent/composables/useAgentList';
 
-// Imports
-
 // Props
 // Emits
 
@@ -15,6 +13,11 @@ const { page, limit, useGetAllAgents } = useAgentList();
 const { data, error: agentsError } = useGetAllAgents();
 const { mutateAsync: deleteAgent } = useDeleteAgent();
 const { confirm } = useConfirmDialog();
+const { t } = useI18n();
+
+useHead({
+  title: t('agent.list.title'),
+});
 
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });

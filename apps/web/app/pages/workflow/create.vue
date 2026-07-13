@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
-import { createWorkflowNode } from '~/features/workflow/lib/default-node';
 import { useUpsertWorkflow } from '~/features/workflow/composables/useWorkflowApi';
+import { createWorkflowNode } from '~/features/workflow/lib/default-node';
 
 // Imports
 
@@ -13,6 +13,11 @@ const workflowCreateSchema = z.object({
 
 // Composables
 const { isPending, mutateAsync } = useUpsertWorkflow();
+const { t } = useI18n();
+
+useHead({
+  title: t('workflow.create.title'),
+});
 
 const form = useForm({
   defaultValues: {
@@ -41,8 +46,8 @@ const form = useForm({
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
-          title="New workflow"
-          subtitle="Give it a name, then build it on the canvas."
+          :title="t('workflow.create.title')"
+          :subtitle="t('workflow.create.subtitle')"
         />
       </template>
       <template #bottom> </template>

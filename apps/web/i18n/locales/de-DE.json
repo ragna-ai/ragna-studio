@@ -10,11 +10,15 @@
       "newAgent": "KI-Agent erstellen"
     },
     "upsert": {
-      "title": "KI-Agent erstellen",
-      "subtitle": "Erstelle einen neuen KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
+      "title": "KI-Agent bearbeiten",
+      "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
     }
   },
   "chat": {
+    "conversation": {
+      "title": "Chat-Konversation",
+      "subtitle": "Unterhalte dich mit deinem KI-Agenten."
+    },
     "history": {
       "title": "Chat-Verlauf",
       "subtitle": "Verlauf deiner Unterhaltungen."
