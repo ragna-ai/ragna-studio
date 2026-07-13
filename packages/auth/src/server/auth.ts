@@ -1,5 +1,6 @@
 import { config } from '@repo/config';
 import { db, schema } from '@repo/database';
+import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
@@ -47,7 +48,21 @@ export const auth = betterAuth({
   hooks: {},
   user: {},
   // DATABASE
-  databaseHooks: {},
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await queue.email().add(
+            WELCOME_EMAIL_JOB,
+            WelcomeEmailJobDto.fromJSON({
+              email: user.email,
+              name: user.name,
+            }),
+          );
+        },
+      },
+    },
+  },
   // ADVANCED
   advanced: {
     database: {

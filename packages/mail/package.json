@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@maizzle/framework": "6.0.6",
+    "@maizzle/tailwindcss": "1.5.5",
     "@repo/config": "workspace:*",
     "nodemailer": "^9.0.3",
     "nodemailer-brevo-transport": "^2.2.1"
