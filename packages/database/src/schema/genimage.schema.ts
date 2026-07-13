@@ -1,13 +1,12 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { createId } from '../utils/create-id';
-import { timestamps } from './common.schema';
+import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
 // GENERATED IMAGE
 export const genImage = sqliteTable(
   'gen_images',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),

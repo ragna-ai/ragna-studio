@@ -1,7 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { createId } from '../utils/create-id';
-import { timestamps } from './common.schema';
+import { primaryIdColumn, timestamps } from './common.schema';
 
 export interface AiModelCapabilities {
   canGenerateText?: boolean;
@@ -31,7 +30,7 @@ export const aiModelSizes = ['small', 'medium', 'large', 'xlarge'] as const;
 export type AiModelSize = (typeof aiModelSizes)[number];
 
 export const aiModel = sqliteTable('ai_models', {
-  id: text('id').primaryKey().$defaultFn(createId),
+  id: primaryIdColumn,
   provider: text('provider').notNull(),
   model: text('model').notNull(),
   modality: text('modality', { enum: aiModelModalities }).notNull(),

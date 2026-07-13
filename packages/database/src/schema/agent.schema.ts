@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createId } from '../utils/create-id';
 import { aiModel, type AiModel } from './aimodel.schema';
-import { timestamps } from './common.schema';
+import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
 export interface AgentSettings {
@@ -62,7 +62,7 @@ export type AgentWithAiModel = Agent & { aiModel: AiModel };
 export const agentTemplate = sqliteTable(
   'agent_templates',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     aiModelId: text('ai_model_id')
       .notNull()
       .references(() => aiModel.id, { onDelete: 'cascade' }),

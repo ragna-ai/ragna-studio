@@ -1,5 +1,8 @@
 import { sql } from 'drizzle-orm';
-import { integer } from 'drizzle-orm/sqlite-core';
+import { integer, text } from 'drizzle-orm/sqlite-core';
+import { createId } from '../utils/create-id';
+
+export const primaryIdColumn = text('id').$defaultFn(createId).primaryKey();
 
 export const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp_ms' })

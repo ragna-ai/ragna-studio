@@ -1,8 +1,7 @@
 import type { WorkflowDefinition, WorkflowRunStatus, WorkflowStepStatus } from '@repo/workflow';
 import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
-import { createId } from '../utils/create-id';
-import { timestamps } from './common.schema';
+import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
 const emptyWorkflowDefinition = sql`'{"nodes":[],"edges":[]}'`;
@@ -11,7 +10,7 @@ const emptyWorkflowDefinition = sql`'{"nodes":[],"edges":[]}'`;
 export const workflow = sqliteTable(
   'workflows',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -36,7 +35,7 @@ export type NewWorkflow = typeof workflow.$inferInsert;
 export const workflowRun = sqliteTable(
   'workflow_runs',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     workflowId: text('workflow_id')
       .notNull()
       .references(() => workflow.id, { onDelete: 'cascade' }),
@@ -61,7 +60,7 @@ export type NewWorkflowRun = typeof workflowRun.$inferInsert;
 export const workflowRunStep = sqliteTable(
   'workflow_run_steps',
   {
-    id: text('id').primaryKey().$defaultFn(createId),
+    id: primaryIdColumn,
     runId: text('run_id')
       .notNull()
       .references(() => workflowRun.id, { onDelete: 'cascade' }),
