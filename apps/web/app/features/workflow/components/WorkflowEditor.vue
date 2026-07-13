@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import type { WorkflowEdge, WorkflowNode, WorkflowNodeType } from '@repo/workflow';
 import { PlayIcon } from '@lucide/vue';
+import type {
+  WorkflowEdge,
+  WorkflowNode,
+  WorkflowNodeType,
+} from '@repo/workflow';
+import { isExecutionEquivalent } from '@repo/workflow';
+import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
+import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
+import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
+import WorkflowRecentRuns from '~/features/workflow/components/WorkflowRecentRuns.vue';
+import WorkflowRunDialog from '~/features/workflow/components/WorkflowRunDialog.vue';
+import WorkflowRunsList from '~/features/workflow/components/WorkflowRunsList.vue';
 import {
   usePublishWorkflow,
   useUpsertWorkflow,
 } from '~/features/workflow/composables/useWorkflowApi';
-import { createWorkflowNode, nextFreePosition } from '~/features/workflow/lib/default-node';
+import {
+  createWorkflowNode,
+  nextFreePosition,
+} from '~/features/workflow/lib/default-node';
 import { toWorkflowDefinition } from '~/features/workflow/lib/serialize-definition';
 import type { Workflow } from '~/features/workflow/types';
-import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
-import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
-import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
-import WorkflowRunDialog from '~/features/workflow/components/WorkflowRunDialog.vue';
-import WorkflowRunsList from '~/features/workflow/components/WorkflowRunsList.vue';
 
 // Imports
 
@@ -39,16 +48,26 @@ const isRunsListOpen = ref(false);
 
 // Composables
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpsertWorkflow();
-const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
+const { mutateAsync: publishWorkflow, isPending: isPublishing } =
+  usePublishWorkflow();
 
 // Computed
 const selectedNode = computed(
   () => nodes.value.find((node) => node.id === selectedNodeId.value) ?? null,
 );
+// The live canvas, serialized the same way Save/Publish send it, so it can
+// be compared against what was last published.
+const draftDefinition = computed(() =>
+  toWorkflowDefinition(nodes.value, edges.value),
+);
+const hasUnpublishedChanges = computed(
+  () =>
+    !isExecutionEquivalent(draftDefinition.value, props.workflow.publishedDefinition),
+);
 
 // Functions
 function addNode(type: WorkflowNodeType) {
-  const node = createWorkflowNode(type, nextFreePosition(nodes.value.length));
+  const node = createWorkflowNode(type, nextFreePosition(nodes.value));
   nodes.value.push(node);
   selectedNodeId.value = node.id;
 }
@@ -70,7 +89,7 @@ async function handleSave() {
     id: props.workflow.id,
     name: props.workflow.name,
     description: props.workflow.description ?? undefined,
-    definition: toWorkflowDefinition(nodes.value, edges.value),
+    definition: draftDefinition.value,
   });
 }
 
@@ -94,14 +113,28 @@ async function handlePublish() {
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <Button variant="outline" size="sm" @click="isRunsListOpen = true">
-          Runs
-        </Button>
-        <Button variant="outline" size="sm" :disabled="isSaving" @click="handleSave">
+        <Badge
+          v-if="hasUnpublishedChanges"
+          variant="outline"
+          class="border-amber-500 text-amber-600"
+        >
+          Unpublished changes
+        </Badge>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="isSaving"
+          @click="handleSave"
+        >
           <Spinner v-if="isSaving" class="mr-2" />
           Save
         </Button>
-        <Button variant="outline" size="sm" :disabled="isPublishing" @click="handlePublish">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="isPublishing"
+          @click="handlePublish"
+        >
           <Spinner v-if="isPublishing" class="mr-2" />
           Publish
         </Button>
@@ -113,8 +146,17 @@ async function handlePublish() {
     </header>
 
     <div class="flex min-h-0 flex-1">
-      <div class="w-56 shrink-0 overflow-y-auto border-r p-3">
+      <div
+        class="flex w-56 shrink-0 flex-col justify-between gap-3 overflow-y-auto border-r p-3"
+      >
         <WorkflowNodePalette @add-node="addNode" />
+        <div class="flex flex-col gap-3">
+          <Separator />
+          <WorkflowRecentRuns
+            :workflow-id="workflow.id"
+            @show-all-runs="isRunsListOpen = true"
+          />
+        </div>
       </div>
 
       <div class="min-w-0 flex-1">
@@ -134,7 +176,14 @@ async function handlePublish() {
       />
     </div>
 
-    <WorkflowRunDialog v-model:open="isRunDialogOpen" :workflow-id="workflow.id" />
-    <WorkflowRunsList v-model:open="isRunsListOpen" :workflow-id="workflow.id" />
+    <WorkflowRunDialog
+      v-model:open="isRunDialogOpen"
+      :workflow="workflow"
+      :draft-definition="draftDefinition"
+    />
+    <WorkflowRunsList
+      v-model:open="isRunsListOpen"
+      :workflow-id="workflow.id"
+    />
   </div>
 </template>

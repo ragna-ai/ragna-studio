@@ -37,17 +37,22 @@ export function createWorkflowNode(
   }
 }
 
-const GRID_COLUMNS = 4;
-const GRID_SPACING_X = 280;
-const GRID_SPACING_Y = 180;
-const GRID_ORIGIN = { x: 80, y: 80 };
+const VERTICAL_SPACING = 180;
+const ORIGIN = { x: 80, y: 80 };
 
-/** Lays out new nodes left-to-right, top-to-bottom so they never stack. */
-export function nextFreePosition(existingNodeCount: number): { x: number; y: number } {
-  const column = existingNodeCount % GRID_COLUMNS;
-  const row = Math.floor(existingNodeCount / GRID_COLUMNS);
+/**
+ * Places a new node directly below the most recently added one, keeping all
+ * nodes stacked along the left side of the canvas. This avoids the grid
+ * layout's wide columns, which used to land new nodes underneath the
+ * right-side config panel. Falls back to the origin when the canvas is empty.
+ */
+export function nextFreePosition(existingNodes: WorkflowNode[]): { x: number; y: number } {
+  const lastNode = existingNodes.at(-1);
+  if (!lastNode) {
+    return { ...ORIGIN };
+  }
   return {
-    x: GRID_ORIGIN.x + column * GRID_SPACING_X,
-    y: GRID_ORIGIN.y + row * GRID_SPACING_Y,
+    x: lastNode.position.x,
+    y: lastNode.position.y + VERTICAL_SPACING,
   };
 }

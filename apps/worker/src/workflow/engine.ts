@@ -1,5 +1,6 @@
 import {
   getRunForExecution,
+  getRunStatus,
   getStepsByRunId,
   updateRunStatus,
   upsertRunStep,
@@ -18,7 +19,7 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
     throw new Error(`Workflow run "${runId}" not found`);
   }
 
-  if (run.status === 'completed' || run.status === 'failed') {
+  if (run.status === 'completed' || run.status === 'failed' || run.status === 'cancelled') {
     logger.info(`Workflow run ${runId} is already ${run.status}, ignoring stale retry`);
     return;
   }
@@ -31,6 +32,7 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
 
   const { nodes, edges } = run.definition;
   const incomingEdgesByTarget = groupIncomingEdges(nodes, edges);
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
 
   // Idempotent retry: completed/skipped steps from a previous attempt are
   // reused instead of re-executed.
@@ -71,7 +73,14 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
         continue;
       }
 
-      await runNode({ runId, run, node, outputs });
+      // Re-check for a mid-flight cancel before starting the next node. Stop
+      // without overwriting the 'cancelled' status set by the cancel endpoint.
+      if ((await getRunStatus({ runId })) === 'cancelled') {
+        logger.info(`Workflow run ${runId} was cancelled, stopping execution`);
+        return;
+      }
+
+      await runNode({ runId, run, node, nodeById, incomingEdgesByTarget, nodeState, outputs });
       nodeState.set(node.id, 'done');
       progressed = true;
     }
@@ -99,16 +108,21 @@ async function runNode({
   runId,
   run,
   node,
+  nodeById,
+  incomingEdgesByTarget,
+  nodeState,
   outputs,
 }: {
   runId: string;
   run: NonNullable<Awaited<ReturnType<typeof getRunForExecution>>>;
   node: WorkflowNode;
+  nodeById: Map<string, WorkflowNode>;
+  incomingEdgesByTarget: Map<string, WorkflowEdge[]>;
+  nodeState: Map<string, NodeState>;
   outputs: Map<string, string>;
 }): Promise<void> {
   const ctx: ExecutorContext = {
-    input: run.input ?? '',
-    nodes: Object.fromEntries(outputs),
+    input: resolveNodeInput({ node, nodeById, incomingEdgesByTarget, nodeState, outputs, run }),
     userId: run.workflow.userId,
   };
 
@@ -116,28 +130,32 @@ async function runNode({
     runId,
     nodeId: node.id,
     status: 'running',
-    input: JSON.stringify({ input: ctx.input, nodes: ctx.nodes }),
+    input: ctx.input,
     startedAt: new Date(),
   });
 
   try {
-    const output = await nodeExecutors[node.type](node, ctx);
+    const result = await nodeExecutors[node.type](node, ctx);
 
     await upsertRunStep({
       runId,
       nodeId: node.id,
       status: 'completed',
-      output,
+      output: result.output,
+      toolCalls: result.toolCalls,
       finishedAt: new Date(),
     });
 
-    outputs.set(node.id, output);
+    outputs.set(node.id, result.output);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const finishedAt = new Date();
 
+    // Only the step is marked failed here. The run itself stays 'running' so
+    // a BullMQ retry can resume it (completed/skipped steps are reused
+    // idempotently, this step gets retried). The processor marks the run
+    // 'failed' if this turns out to be the job's last attempt.
     await upsertRunStep({ runId, nodeId: node.id, status: 'failed', error: message, finishedAt });
-    await updateRunStatus({ runId, status: 'failed', error: message, finishedAt });
 
     throw error;
   }
@@ -169,6 +187,80 @@ function edgeDelivers(
     return true;
   }
   return outputs.get(edge.source) === edge.sourceHandle;
+}
+
+// A node's input is its upstream node(s)' output(s), joined with a blank
+// line ({{input}} resolves to this). The trigger has no incoming edges, so
+// it falls back to the run input; that's also the correct value for the
+// trigger's own output, which is what the first real node then receives.
+function resolveNodeInput({
+  node,
+  nodeById,
+  incomingEdgesByTarget,
+  nodeState,
+  outputs,
+  run,
+}: {
+  node: WorkflowNode;
+  nodeById: Map<string, WorkflowNode>;
+  incomingEdgesByTarget: Map<string, WorkflowEdge[]>;
+  nodeState: Map<string, NodeState>;
+  outputs: Map<string, string>;
+  run: NonNullable<Awaited<ReturnType<typeof getRunForExecution>>>;
+}): string {
+  const delivered = collectDeliveredOutputs({
+    nodeId: node.id,
+    nodeById,
+    incomingEdgesByTarget,
+    nodeState,
+    outputs,
+  });
+  return delivered.length > 0 ? delivered.join('\n\n') : (run.input ?? '');
+}
+
+// Walks a node's delivering incoming edges and collects the source outputs.
+// A condition node's own output is just the 'true'/'false' branch token,
+// which is useless as chained content, so condition sources are looked
+// through recursively to their own delivering upstream outputs instead.
+function collectDeliveredOutputs({
+  nodeId,
+  nodeById,
+  incomingEdgesByTarget,
+  nodeState,
+  outputs,
+}: {
+  nodeId: string;
+  nodeById: Map<string, WorkflowNode>;
+  incomingEdgesByTarget: Map<string, WorkflowEdge[]>;
+  nodeState: Map<string, NodeState>;
+  outputs: Map<string, string>;
+}): string[] {
+  const incoming = incomingEdgesByTarget.get(nodeId) ?? [];
+  const delivered: string[] = [];
+
+  for (const edge of incoming) {
+    if (!edgeDelivers(edge, nodeState, outputs)) {
+      continue;
+    }
+
+    const sourceNode = nodeById.get(edge.source);
+    if (sourceNode?.type === 'condition') {
+      delivered.push(
+        ...collectDeliveredOutputs({
+          nodeId: edge.source,
+          nodeById,
+          incomingEdgesByTarget,
+          nodeState,
+          outputs,
+        }),
+      );
+      continue;
+    }
+
+    delivered.push(outputs.get(edge.source) ?? '');
+  }
+
+  return delivered;
 }
 
 function buildRunOutput(terminalNodes: WorkflowNode[], outputs: Map<string, string>): string {

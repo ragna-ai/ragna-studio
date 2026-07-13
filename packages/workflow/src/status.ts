@@ -4,6 +4,7 @@ export const WORKFLOW_RUN_STATUSES = [
   'suspended',
   'completed',
   'failed',
+  'cancelled',
 ] as const;
 export type WorkflowRunStatus = (typeof WORKFLOW_RUN_STATUSES)[number];
 

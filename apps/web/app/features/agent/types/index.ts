@@ -1,3 +1,9 @@
+export interface AgentAiModelRef {
+  provider: string;
+  model: string;
+  displayName: string;
+}
+
 export interface Agent {
   id: string;
   userId: string;
@@ -7,6 +13,7 @@ export interface Agent {
   description?: string;
   tools?: string[];
   isDefault: boolean;
+  aiModel?: AgentAiModelRef;
 }
 
 export interface AgentResponse {

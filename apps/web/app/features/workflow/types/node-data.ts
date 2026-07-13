@@ -17,22 +17,27 @@ export type WorkflowNodeConfig =
   | TransformConfig;
 
 /**
- * Vue Flow's node `data` payload for a workflow node. `stepStatus` is only
- * ever set on the read-only run view, where nodes are tinted by their run
- * step outcome; the editor never sets it.
+ * Vue Flow's node `data` payload for a workflow node. `stepStatus` and
+ * `stepToolCallCount` are only ever set on the read-only run view, where
+ * nodes are tinted by their run step outcome and show how many tool calls
+ * that step made; the editor never sets either.
  */
 export interface WorkflowNodeData {
   label: string;
   config: WorkflowNodeConfig;
   stepStatus?: WorkflowStepStatus;
+  stepToolCallCount?: number;
 }
 
 /**
- * A WorkflowNode with the run view's optional step-status tint mixed into
- * `data`. The API's WorkflowNode type has no such field; this is purely a
- * canvas rendering concern, so it stays out of `@repo/workflow`.
+ * A WorkflowNode with the run view's optional step-status tint (and tool
+ * call count) mixed into `data`. The API's WorkflowNode type has no such
+ * field; this is purely a canvas rendering concern, so it stays out of
+ * `@repo/workflow`.
  */
-export type RenderableWorkflowNode = WorkflowNode & { data: { stepStatus?: WorkflowStepStatus } };
+export type RenderableWorkflowNode = WorkflowNode & {
+  data: { stepStatus?: WorkflowStepStatus; stepToolCallCount?: number };
+};
 
 export const NODE_TYPE_LABELS: Record<WorkflowNodeType, string> = {
   trigger: 'Trigger',

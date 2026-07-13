@@ -1,4 +1,9 @@
-import type { WorkflowDefinition, WorkflowRunStatus, WorkflowStepStatus } from '@repo/workflow';
+import type {
+  WorkflowDefinition,
+  WorkflowRunStatus,
+  WorkflowStepStatus,
+  WorkflowToolCall,
+} from '@repo/workflow';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import type {
@@ -83,6 +88,21 @@ export async function getRunForExecution({
   return runRecord || null;
 }
 
+// Cheap status-only read, used by the engine to detect a mid-flight cancel
+// between node executions without paying for the full run + workflow join.
+export async function getRunStatus({
+  runId,
+}: {
+  runId: string;
+}): Promise<WorkflowRunStatus | null> {
+  const runRecord = await db.query.workflowRun.findFirst({
+    where: { id: runId },
+    columns: { status: true },
+  });
+
+  return runRecord?.status ?? null;
+}
+
 export async function updateRunStatus({
   runId,
   status,
@@ -117,6 +137,7 @@ export async function upsertRunStep({
   status,
   input,
   output,
+  toolCalls,
   error,
   startedAt,
   finishedAt,
@@ -126,6 +147,7 @@ export async function upsertRunStep({
   status: WorkflowStepStatus;
   input?: string;
   output?: string;
+  toolCalls?: WorkflowToolCall[];
   error?: string;
   startedAt?: Date;
   finishedAt?: Date;
@@ -138,6 +160,7 @@ export async function upsertRunStep({
       status,
       input,
       output,
+      toolCalls,
       error,
       startedAt,
       finishedAt,
@@ -148,6 +171,7 @@ export async function upsertRunStep({
         status,
         input,
         output,
+        toolCalls,
         error,
         startedAt,
         finishedAt,

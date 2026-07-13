@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import type { WorkflowEdge } from '@repo/workflow';
-import { useGetWorkflowRun } from '~/features/workflow/composables/useWorkflowApi';
+import { CheckIcon, CopyIcon, Maximize2Icon } from '@lucide/vue';
+import {
+  useCancelWorkflowRun,
+  useGetWorkflowRun,
+} from '~/features/workflow/composables/useWorkflowApi';
 import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunStatusBadge.vue';
 import WorkflowRunStepPanel from '~/features/workflow/components/WorkflowRunStepPanel.vue';
 import { Shimmer } from '~/components/ai-elements/shimmer';
+import { MessageResponse } from '~/components/ai-elements/message';
 
 // Imports
 
-const TERMINAL_STATUSES = new Set(['completed', 'failed']);
+// A run only keeps polling while it can still change; every other status
+// (completed, failed, cancelled, suspended) is final for the run view.
+const ACTIVE_STATUSES = new Set(['pending', 'running']);
 const POLL_INTERVAL_MS = 1500;
 
 interface Props {
@@ -21,14 +28,19 @@ const props = defineProps<Props>();
 
 // Refs
 const selectedNodeId = ref<string | null>(null);
+const isOutputDialogOpen = ref(false);
 
 // Composables
 const { data, error: runError } = useGetWorkflowRun(() => props.runId, {
   refetchInterval: (query) => {
     const status = query.state.data?.run.status;
-    return status && !TERMINAL_STATUSES.has(status) ? POLL_INTERVAL_MS : false;
+    return status && ACTIVE_STATUSES.has(status) ? POLL_INTERVAL_MS : false;
   },
 });
+const { mutate: cancelRun, isPending: isCancelling } = useCancelWorkflowRun(() => props.runId);
+// No `source` option: this copies the raw run output on demand via
+// `copy()`, not a value that's continuously reactive-copied.
+const { copy: copyOutput, copied: isOutputCopied } = useClipboard();
 
 // Computed
 const run = computed(() => data.value?.run ?? null);
@@ -44,10 +56,17 @@ const stepByNodeId = computed(() => {
 // step data is the only source of truth.
 const nodes = computed<RenderableWorkflowNode[]>({
   get: () =>
-    (run.value?.definition.nodes ?? []).map((node) => ({
-      ...node,
-      data: { ...node.data, stepStatus: stepByNodeId.value.get(node.id)?.status },
-    })),
+    (run.value?.definition.nodes ?? []).map((node) => {
+      const step = stepByNodeId.value.get(node.id);
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          stepStatus: step?.status,
+          stepToolCallCount: step?.toolCalls?.length,
+        },
+      };
+    }),
   set: () => {},
 });
 const edges = computed<WorkflowEdge[]>({
@@ -61,6 +80,22 @@ const selectedNode = computed(
 const selectedStep = computed(() =>
   selectedNodeId.value ? stepByNodeId.value.get(selectedNodeId.value) : undefined,
 );
+
+const isCancellable = computed(() => !!run.value && ACTIVE_STATUSES.has(run.value.status));
+
+// A run with multiple terminal nodes stores its output as a JSON object
+// string (keyed by node id, see buildRunOutput in the worker's engine.ts),
+// not markdown prose. Detect that case and pretty-print it as code instead
+// of trying to render it as markdown.
+const multiTerminalOutput = computed(() => {
+  if (!run.value?.output) return null;
+  try {
+    const parsed = JSON.parse(run.value.output);
+    return parsed !== null && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+});
 
 // Functions
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -81,7 +116,18 @@ function formatDateTime(isoDate: string) {
           <h1 class="text-sm font-semibold">Run</h1>
           <p class="text-xs text-muted-foreground">{{ formatDateTime(run.createdAt) }}</p>
         </div>
-        <WorkflowRunStatusBadge :status="run.status" />
+        <div class="flex items-center gap-2">
+          <WorkflowRunStatusBadge :status="run.status" />
+          <Button
+            v-if="isCancellable"
+            variant="outline"
+            size="sm"
+            :disabled="isCancelling"
+            @click="cancelRun()"
+          >
+            Cancel run
+          </Button>
+        </div>
       </div>
       <div v-if="run.input || run.output || run.error" class="grid gap-3 text-xs sm:grid-cols-3">
         <div v-if="run.input" class="min-w-0">
@@ -90,7 +136,14 @@ function formatDateTime(isoDate: string) {
         </div>
         <div v-if="run.output" class="min-w-0">
           <p class="font-medium text-muted-foreground">Output</p>
-          <p class="truncate">{{ run.output }}</p>
+          <button
+            type="button"
+            class="flex w-full min-w-0 items-center gap-1 rounded-sm text-left text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            @click="isOutputDialogOpen = true"
+          >
+            <span class="truncate">{{ run.output }}</span>
+            <Maximize2Icon class="size-3 shrink-0 text-muted-foreground" />
+          </button>
         </div>
         <div v-if="run.error" class="min-w-0">
           <p class="font-medium text-destructive">Error</p>
@@ -98,6 +151,37 @@ function formatDateTime(isoDate: string) {
         </div>
       </div>
     </header>
+
+    <Dialog v-model:open="isOutputDialogOpen">
+      <DialogContent class="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Run output</DialogTitle>
+        </DialogHeader>
+        <div class="relative">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            class="absolute top-2 right-2 z-10"
+            aria-label="Copy output"
+            @click="copyOutput(run.output ?? '')"
+          >
+            <component :is="isOutputCopied ? CheckIcon : CopyIcon" class="size-3.5 stroke-1.5" />
+          </Button>
+          <div class="max-h-[70vh] overflow-y-auto rounded-md border bg-muted p-3 text-sm">
+            <pre
+              v-if="multiTerminalOutput"
+              class="text-xs whitespace-pre-wrap"
+            >{{ JSON.stringify(multiTerminalOutput, null, 2) }}</pre>
+            <MessageResponse
+              v-else
+              :content="run.output ?? ''"
+              class="text-sm [&_:is(h1,h2,h3,h4,h5,h6)]:mt-3 [&_:is(h1,h2,h3,h4,h5,h6)]:text-sm!"
+            />
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
     <div class="flex min-h-0 flex-1">
       <div class="min-w-0 flex-1">

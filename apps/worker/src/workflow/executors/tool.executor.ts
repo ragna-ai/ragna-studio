@@ -1,17 +1,8 @@
 import { tools as buildAgentTools } from '@repo/ai';
 import type { ToolConfig, WorkflowTool } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
-import type { UIMessageStreamWriter } from 'ai';
+import { noopWriter } from './noop-writer';
 import type { Executor } from './types';
-
-// The tool implementations only use their writer to emit transient UI
-// events (chat "tool is running" chips). Workflow runs have no chat UI to
-// stream to, so a no-op writer is enough to invoke them standalone.
-const noopWriter = {
-  write: () => {},
-  merge: () => {},
-  onError: undefined,
-} as unknown as UIMessageStreamWriter;
 
 // Required by the ai SDK's ToolExecuteFunction signature, but unused by any
 // of our tool implementations (they don't read toolCallId/messages/context).
@@ -43,5 +34,5 @@ export const executeTool: Executor = async (node, ctx) => {
 
   const result = await tool.execute(buildToolInput(config.tool, input) as any, toolCallOptions);
 
-  return typeof result === 'string' ? result : JSON.stringify(result);
+  return { output: typeof result === 'string' ? result : JSON.stringify(result) };
 };

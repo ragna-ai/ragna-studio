@@ -2,6 +2,7 @@ import type {
   WorkflowDefinition,
   WorkflowRunStatus,
   WorkflowStepStatus,
+  WorkflowToolCall,
 } from '@repo/workflow';
 
 export interface Workflow {
@@ -37,6 +38,9 @@ export interface WorkflowRunStep {
   status: WorkflowStepStatus;
   input: string | null;
   output: string | null;
+  // Only populated for agent nodes that ran a referenced agent with tools
+  // (see the worker's agent executor); every other step leaves it null.
+  toolCalls: WorkflowToolCall[] | null;
   error: string | null;
   startedAt: string | null;
   finishedAt: string | null;

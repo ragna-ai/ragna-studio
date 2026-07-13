@@ -1,13 +1,12 @@
 <script setup lang="ts">
-// Vue interpolation ends at the first '}}', so the raw placeholders
-// cannot be written inline in the template.
+// Vue interpolation ends at the first '}}', so the raw placeholder cannot
+// be written inline in the template.
 const inputPlaceholder = '{{input}}';
-const nodePlaceholder = '{{nodes.<nodeId>}}';
 </script>
 
 <template>
   <p class="text-xs text-muted-foreground">
-    Supports <code class="rounded bg-muted px-1">{{ inputPlaceholder }}</code> (run input) and
-    <code class="rounded bg-muted px-1">{{ nodePlaceholder }}</code> (an upstream node's output).
+    <code class="rounded bg-muted px-1">{{ inputPlaceholder }}</code> is this node's input, i.e.
+    the previous node's output (the run input for the first node).
   </p>
 </template>

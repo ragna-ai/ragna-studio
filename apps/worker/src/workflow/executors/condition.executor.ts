@@ -24,5 +24,5 @@ export const executeCondition: Executor = async (node, ctx) => {
   const left = resolveTemplate(config.left, ctx);
   const right = config.right !== undefined ? resolveTemplate(config.right, ctx) : '';
 
-  return applyOperator(left, config.operator, right) ? 'true' : 'false';
+  return { output: applyOperator(left, config.operator, right) ? 'true' : 'false' };
 };

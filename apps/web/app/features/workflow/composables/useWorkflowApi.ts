@@ -151,6 +151,24 @@ export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
   });
 }
 
+export function useCancelWorkflowRun(runId: MaybeRefOrGetter<string>) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<WorkflowRunResponse, unknown, void>({
+    mutationFn: () => api(`/workflow/run/${toValue(runId)}/cancel`, { method: 'POST' }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.run(runId) });
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.runs(response.run.workflowId),
+      });
+      toast.success('Run cancelled');
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, 'Failed to cancel run'));
+    },
+  });
+}
+
 export function useGetWorkflowRuns(
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},

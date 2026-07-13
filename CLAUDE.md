@@ -66,12 +66,15 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 **shadcn-vue components**: Add new UI components via `npx shadcn-vue@latest add <component>` from `apps/web/`. Components land in `app/components/ui/`.
 
+**migrations**: Push schema directly to DB. Do not write sql migrations yourself.
+
 ### Infrastructure dependencies
 
-- **SQLite** (dev): `DATABASE_URL` points to `sqlite.db` at repo root.
-- **Redis** (localhost:6381): required for BullMQ worker queues.
+- **PostgreSQL** (localhost:5437): database runs in a docker container.
+- **Redis** (localhost:6381): required for BullMQ worker queues and runs in a docker container.
 - **SMTP** (localhost:2525): Mailpit or similar for local email testing.
-- **Web dev server**: runs on port **3004** (`http://localhost:3004`).
+- **Web dev server**: runs on port **3000** (`http://localhost:3000`).
+- **API dev server**: runs on port **3010** (`http://localhost:3010`).
 
 ### Coding
 
@@ -86,10 +89,3 @@ Skip self-verification of changes unless explicitly asked:
 - no browser verification
 
 The user handles verification and commits.
-
-### Server
-
-Both webapp and api are usually running in dev.
-
-Webapp Port 3000
-API Port 3010

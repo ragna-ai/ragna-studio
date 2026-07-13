@@ -14,4 +14,4 @@ export const nodeExecutors: Record<WorkflowNodeType, Executor> = {
   transform: executeTransform,
 };
 
-export type { Executor, ExecutorContext } from './types';
+export type { Executor, ExecutorContext, ExecutorResult } from './types';

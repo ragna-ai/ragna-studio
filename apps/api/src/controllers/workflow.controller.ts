@@ -7,6 +7,7 @@ import {
   getWorkflowById,
   getWorkflowCountByUserId,
   publishWorkflow,
+  updateRunStatus,
   upsertWorkflow,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -113,6 +114,52 @@ export const workflowController = new Hono()
     }
 
     return c.json({ run });
+  })
+  /**
+   * [POST] /workflow/run/:runId/cancel
+   * Cancel a pending or running workflow run
+   */
+  .post('/run/:runId/cancel', validRunIdParam, async (c) => {
+    const user = c.get('user');
+    const param = c.req.valid('param');
+
+    const { error, data: run } = await tryCatch(() =>
+      getRunById({ runId: param.runId, userId: user.id }),
+    );
+
+    if (error !== null) {
+      logger.error('Failed to get workflow run by ID', error);
+      throw new InternalServerErrorException('Failed to get workflow run by ID');
+    }
+
+    if (!run) {
+      throw new NotFoundException('Workflow run not found');
+    }
+
+    if (run.status !== 'pending' && run.status !== 'running') {
+      throw new BadRequestException(`Workflow run cannot be cancelled while ${run.status}`);
+    }
+
+    const { error: cancelError } = await tryCatch(() =>
+      updateRunStatus({ runId: param.runId, status: 'cancelled', finishedAt: new Date() }),
+    );
+
+    if (cancelError !== null) {
+      logger.error('Failed to cancel workflow run', cancelError);
+      throw new InternalServerErrorException('Failed to cancel workflow run');
+    }
+
+    // Re-fetch with steps so the response shape matches GET /workflow/run/:runId.
+    const { error: reloadError, data: cancelledRun } = await tryCatch(() =>
+      getRunById({ runId: param.runId, userId: user.id }),
+    );
+
+    if (reloadError !== null) {
+      logger.error('Failed to reload cancelled workflow run', reloadError);
+      throw new InternalServerErrorException('Failed to reload cancelled workflow run');
+    }
+
+    return c.json({ run: cancelledRun });
   })
   /**
    * [GET] /workflow/:workflowId
@@ -238,11 +285,31 @@ export const workflowController = new Hono()
       throw new InternalServerErrorException('Failed to create workflow run');
     }
 
-    await queueAddJob({
-      queueName: WORKFLOWS_QUEUE,
-      jobName: WORKFLOW_RUN_JOB,
-      data: new WorkflowRunJobDto({ runId: run.id }).toJSON(),
-    });
+    const { error: enqueueError } = await tryCatch(() =>
+      queueAddJob({
+        queueName: WORKFLOWS_QUEUE,
+        jobName: WORKFLOW_RUN_JOB,
+        data: new WorkflowRunJobDto({ runId: run.id }).toJSON(),
+        opts: { attempts: 3 },
+      }),
+    );
+
+    if (enqueueError !== null) {
+      logger.error('Failed to enqueue workflow run', enqueueError);
+
+      // Best-effort: the run row would otherwise stay 'pending' forever
+      // with no job behind it (e.g. Redis is down).
+      await tryCatch(() =>
+        updateRunStatus({
+          runId: run.id,
+          status: 'failed',
+          error: 'Failed to enqueue workflow run',
+          finishedAt: new Date(),
+        }),
+      );
+
+      throw new InternalServerErrorException('Failed to enqueue workflow run');
+    }
 
     return c.json({ run });
   })

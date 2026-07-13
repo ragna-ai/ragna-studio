@@ -113,6 +113,7 @@ export async function getAllAgentsByUserId({
       id: true,
       name: true,
       description: true,
+      tools: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -121,6 +122,7 @@ export async function getAllAgentsByUserId({
       aiModel: {
         columns: {
           provider: true,
+          model: true,
           displayName: true,
         },
       },

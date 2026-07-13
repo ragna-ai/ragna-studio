@@ -4,5 +4,5 @@ import type { Executor } from './types';
 
 export const executeTransform: Executor = async (node, ctx) => {
   const config = node.data.config as TransformConfig;
-  return resolveTemplate(config.template, ctx);
+  return { output: resolveTemplate(config.template, ctx) };
 };

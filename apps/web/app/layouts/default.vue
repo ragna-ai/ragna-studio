@@ -17,7 +17,7 @@ const head = useLocaleHead();
           <slot />
         </main>
       </div>
-      <Toaster position="top-right" rich-colors />
+      <Toaster position="top-center" rich-colors />
     </Body>
   </Html>
 </template>

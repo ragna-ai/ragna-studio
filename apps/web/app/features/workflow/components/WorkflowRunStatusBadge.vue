@@ -19,6 +19,7 @@ const variantByStatus: Record<Status, BadgeVariants['variant']> = {
   suspended: 'outline',
   completed: 'outline',
   failed: 'destructive',
+  cancelled: 'secondary',
   skipped: 'outline',
 };
 

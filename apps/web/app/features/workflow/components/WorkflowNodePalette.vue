@@ -17,8 +17,6 @@ const emit = defineEmits<{
   (e: 'add-node', type: WorkflowNodeType): void;
 }>();
 
-// Composables
-
 // Computed
 const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
   trigger: ZapIcon,

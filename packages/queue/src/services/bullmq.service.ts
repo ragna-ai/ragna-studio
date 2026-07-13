@@ -84,7 +84,7 @@ export function queueAddJob<T>({
   queueName: string;
   jobName: string;
   data: T;
-  opts?: { delay?: number };
+  opts?: { delay?: number; attempts?: number };
 }) {
   const queue = getOrCreateQueue({ name: queueName });
   return queue.add(jobName, data, { ...defaultJobOptions, ...opts });

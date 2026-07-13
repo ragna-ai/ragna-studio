@@ -1,9 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "WebFetch(domain:maizzle.com)",
-      "Read(//Users/sven/var/ragna/ragna-cloud-mono/frontend/src/composables/nav/**)"
-    ]
+    "allow": ["WebFetch", "Read(//Users/sven/var/ragna/ragna-cloud-mono/**)"]
   },
   "model": "claude-fable-5"
 }

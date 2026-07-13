@@ -4,6 +4,7 @@ import {
   BotIcon,
   GitBranchIcon,
   ShuffleIcon,
+  SparklesIcon,
   WrenchIcon,
   ZapIcon,
 } from '@lucide/vue';
@@ -16,8 +17,9 @@ import {
   NodeTitle,
 } from '~/components/ai-elements/node';
 import { Badge } from '~/components/ui/badge';
+import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { NODE_TYPE_LABELS, type WorkflowNodeData } from '~/features/workflow/types/node-data';
-import { cn } from '~/lib/utils';
+import { cn, firstToUpperCase } from '~/lib/utils';
 
 // Imports
 
@@ -27,8 +29,20 @@ type Props = NodeProps<WorkflowNodeData, object, WorkflowNodeType>;
 const props = defineProps<Props>();
 
 // Composables
+// Every agent node calls this; TanStack vue-query dedupes by query key, so
+// this is one shared fetch (or cache hit) for the whole canvas, not one per
+// node, and no prop plumbing through Vue Flow is needed.
+const { data: agentsData } = useGetAllAgents();
 
 // Computed
+// The referenced agent, once loaded. Only agent-type nodes with an
+// `agentId` resolve to anything; renders nothing until the list is in.
+const selectedAgent = computed(() => {
+  if (props.type !== 'agent') return undefined;
+  const config = props.data.config;
+  const agentId = 'agentId' in config ? config.agentId : undefined;
+  return agentsData.value?.agents.find((agent) => agent.id === agentId);
+});
 const typeIcon = computed(
   () =>
     ({
@@ -92,19 +106,57 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
           <component :is="typeIcon" class="size-4 shrink-0 stroke-1.5 text-primary" />
           <span class="truncate">{{ props.data.label }}</span>
         </span>
-        <Badge variant="outline">{{ NODE_TYPE_LABELS[props.type] }}</Badge>
+        <span class="flex shrink-0 items-center gap-1.5">
+          <span
+            v-if="props.data.stepToolCallCount"
+            class="flex items-center gap-0.5 text-xs font-normal text-muted-foreground"
+            :title="`${props.data.stepToolCallCount} tool call(s) in this run`"
+          >
+            <SparklesIcon class="size-3 stroke-1.5" />
+            {{ props.data.stepToolCallCount }}
+          </span>
+          <Badge variant="outline">{{ NODE_TYPE_LABELS[props.type] }}</Badge>
+        </span>
       </NodeTitle>
     </NodeHeader>
 
-    <NodeContent v-if="summary" class="truncate text-xs text-muted-foreground">
-      {{ summary }}
+    <NodeContent
+      v-if="summary || selectedAgent"
+      class="flex flex-col gap-1.5 text-xs text-muted-foreground"
+    >
+      <p v-if="summary" class="truncate">{{ summary }}</p>
+
+      <div v-if="selectedAgent" class="flex flex-col gap-1">
+        <span v-if="selectedAgent.aiModel" class="truncate">
+          {{ firstToUpperCase(selectedAgent.aiModel.provider) }} - {{ selectedAgent.aiModel.displayName }}
+        </span>
+        <span class="flex flex-wrap gap-1">
+          <Badge
+            v-for="tool in selectedAgent.tools"
+            :key="tool"
+            variant="secondary"
+            class="px-1.5 py-0 text-[10px] font-normal"
+          >
+            {{ tool }}
+          </Badge>
+          <span v-if="!selectedAgent.tools?.length">No tools</span>
+        </span>
+      </div>
     </NodeContent>
 
-    <template v-if="isCondition">
-      <div class="flex justify-between px-3 pb-2 text-xs text-muted-foreground">
+    <!-- Labels the handles below: "input" on the left for every node but
+         the trigger (it has no target handle), "output" on the right, or
+         "true"/"false" for a condition's two branch handles. -->
+    <div class="flex items-center justify-between px-3 pb-2 text-xs text-muted-foreground">
+      <span>{{ props.type === 'trigger' ? '' : 'input' }}</span>
+      <span v-if="isCondition" class="flex gap-3">
         <span>true</span>
         <span>false</span>
-      </div>
+      </span>
+      <span v-else>output</span>
+    </div>
+
+    <template v-if="isCondition">
       <Handle type="source" :position="Position.Right" id="true" style="top: 55%" />
       <Handle type="source" :position="Position.Right" id="false" style="top: 80%" />
     </template>

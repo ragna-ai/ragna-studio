@@ -58,7 +58,7 @@ The graph is stored exactly as the canvas produces it: `nodes[]` with position a
 | `id`, `workflow_id`          | Identity.                                                |
 | `status`                     | `pending` / `running` / `suspended` / `completed` / `failed`. |
 | `definition`                 | Snapshot of the published definition at enqueue time. Makes runs debuggable after later edits. |
-| `input`, `output`, `error`   | Run payloads as JSON.                                    |
+| `input`, `output`, `error`   | Run payloads as plain text. Output is the terminal node's output (JSON object keyed by node id when there are several terminals). |
 | `started_at`, `finished_at`  | Timing.                                                  |
 
 **`workflow_run_steps`**
@@ -67,7 +67,7 @@ The graph is stored exactly as the canvas produces it: `nodes[]` with position a
 | --------------------------- | ------------------------------------ |
 | `run_id`, `node_id`         | Which node of which run.             |
 | `status`                    | Same enum as runs.                   |
-| `input`, `output`, `error`  | Per-node payloads as JSON.           |
+| `input`, `output`, `error`  | Per-node payloads as plain text. `input` is the node's resolved `{{input}}` value (the upstream output, or the run input for trigger-fed nodes). |
 | `started_at`, `finished_at` | Timing.                              |
 
 Step rows serve two purposes: live run visualization on the canvas, and cheap resume. On retry or resume, nodes with a completed step row are skipped.
@@ -105,3 +105,5 @@ Built on the ai-elements-vue workflow canvas, a thin wrapper over Vue Flow. Its 
 
 - Trigger scope for v1: manual-only, or cron from the start. The worker already runs cron jobs, so cron is cheap.
 - Versioning beyond draft/published. Per-run definition snapshots cover debugging; full version history can come later if clients need rollback.
+- Stale-run sweeper cron (deferred 2026-07-13): a worker cron that marks runs stuck in `pending`/`running` beyond a timeout as `failed`. Fail-fast enqueue handling, job retries, and manual cancel are implemented; the sweeper is the remaining safety net for hard worker crashes.
+- Agent skills (idea, not confirmed): reusable instruction blocks a user attaches to agents (agent-level, statically appended to the system prompt). Would flow into workflow agent nodes for free since the executor resolves the agent row at run time. Discussed 2026-07-13, scope not yet decided.
