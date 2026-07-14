@@ -16,7 +16,9 @@ const imageGenInputSchema = z.object({
     .string()
     .min(1)
     .max(5000)
-    .describe('A detailed description of the image to generate'),
+    .describe(
+      'A detailed description of the image to generate. Prefer fluent english language using your own words.',
+    ),
   aspectRatio: z
     .enum(imageGenAspectRatios)
     .optional()
