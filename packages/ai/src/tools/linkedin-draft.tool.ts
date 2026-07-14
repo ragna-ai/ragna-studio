@@ -8,7 +8,7 @@ import type {
 } from 'ai';
 import { tool } from 'ai';
 import * as z from 'zod';
-import { draftLinkedInPost } from '../services/social-post.service';
+import { draftLinkedInPost, type DraftLinkedInPostResult } from '../services/social-post.service';
 
 const linkedinDraftInputSchema = z.object({
   text: z
@@ -32,8 +32,7 @@ const linkedinDraftInputSchema = z.object({
 });
 
 type LinkedinDraftInput = z.infer<typeof linkedinDraftInputSchema>;
-
-type LinkedinDraftOutput = { id: string; status: string } | { error: string };
+type LinkedinDraftOutput = DraftLinkedInPostResult;
 
 export const getLinkedinDraft = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,

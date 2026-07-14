@@ -181,7 +181,7 @@ async function deleteUploadedMediaObjects(media: SocialPostMedia[]): Promise<voi
     return;
   }
 
-  if (data.errors.length > 0) {
+  if (data && data.errors.length > 0) {
     logger.error('Failed to delete some LinkedIn draft image objects from R2', {
       keys: data.errors,
     });

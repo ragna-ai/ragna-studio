@@ -1,3 +1,3 @@
 // packages/linkedin/src/index.ts
 
-export * from './client';
+export * from './api-client';
