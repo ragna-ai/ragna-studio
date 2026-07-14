@@ -8,7 +8,7 @@ export interface AgentSettings {
   maxOutputTokens?: number;
 }
 
-export type AgentTool = 'think' | 'webSearch' | 'webBrowser' | 'imageGen';
+export type AgentTool = 'think' | 'webSearch' | 'webBrowser' | 'imageGen' | 'linkedinDraft';
 export type AgentTools = AgentTool[];
 
 const defaultAgentSettings: AgentSettings = {

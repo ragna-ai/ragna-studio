@@ -22,6 +22,7 @@
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/linkedin": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",

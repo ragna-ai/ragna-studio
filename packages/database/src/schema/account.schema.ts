@@ -23,3 +23,5 @@ export const account = pgTable(
   },
   (table) => [index('account_userId_idx').on(table.userId)],
 );
+
+export type Account = typeof account.$inferSelect;

@@ -9,6 +9,7 @@ import {
   MessagesSquareIcon,
   PieChartIcon,
   PlusCircleIcon,
+  Share2Icon,
   WorkflowIcon,
 } from '@lucide/vue';
 import type { Component } from 'vue';
@@ -64,6 +65,13 @@ const defaultItems: NavItem[] = [
     path: '/text-to-image',
     icon: ImageIcon,
     label: 'Image',
+    children: [],
+  },
+  {
+    id: 'social',
+    path: '/social',
+    icon: Share2Icon,
+    label: 'Social',
     children: [],
   },
   { id: 'sep-1', children: [] },

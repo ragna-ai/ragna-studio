@@ -70,6 +70,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/linkedin':
+        specifier: workspace:*
+        version: link:../../packages/linkedin
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -482,6 +485,21 @@ importers:
       '@tiptap/vue-3':
         specifier: ^3.27.3
         version: 3.27.3(@floating-ui/dom@1.7.6)(@tiptap/core@3.27.3(@tiptap/pm@3.27.3))(@tiptap/pm@3.27.3)(vue@3.5.39(typescript@6.0.3))
+    devDependencies:
+      '@repo/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.1.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.5(tsx@4.23.0)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/linkedin:
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import UserProfileSettings from '~/features/user/components/UserProfileSettings.vue';
+import UserSocialSettings from '~/features/user/components/UserSocialSettings.vue';
 
 // Imports
 
@@ -28,5 +29,6 @@ import UserProfileSettings from '~/features/user/components/UserProfileSettings.
       <template #bottom> </template>
     </Heading>
     <UserProfileSettings />
+    <UserSocialSettings />
   </SectionWrapper>
 </template>

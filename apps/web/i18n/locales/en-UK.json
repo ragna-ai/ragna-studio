@@ -1,1 +1,85 @@
-{}
+{
+  "agent": {
+    "tools": {
+      "think": {
+        "title": "Think",
+        "description": "Enable deeper reasoning before responding."
+      },
+      "webSearch": {
+        "title": "Web Search",
+        "description": "Find up-to-date information from the web."
+      },
+      "webBrowser": {
+        "title": "Web Browser",
+        "description": "Open pages and interact with websites."
+      },
+      "imageGen": {
+        "title": "Image Generation",
+        "description": "Create images from text prompts."
+      },
+      "linkedinDraft": {
+        "title": "LinkedIn Draft",
+        "description": "Draft LinkedIn posts. You publish them yourself."
+      }
+    }
+  },
+  "user": {
+    "social": {
+      "title": "Connected accounts",
+      "loadError": "Failed to load connected accounts.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connectError": "Failed to start the connection. Please try again.",
+      "disconnectSuccess": "Account disconnected.",
+      "disconnectError": "Failed to disconnect the account. Please try again.",
+      "providers": {
+        "google": "Google",
+        "microsoft": "Microsoft",
+        "linkedin": "LinkedIn"
+      }
+    }
+  },
+  "social": {
+    "list": {
+      "title": "Social posts",
+      "subtitle": "Review, edit, and publish drafts to LinkedIn."
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "failed": "Failed"
+    },
+    "actions": {
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "publish": "Publish",
+      "delete": "Delete"
+    },
+    "viewOnLinkedIn": "View on LinkedIn",
+    "loadError": "Failed to load posts.",
+    "empty": "No posts yet. Ask your agent to draft a LinkedIn post.",
+    "deleteConfirm": {
+      "title": "Delete post",
+      "message": "Are you sure you want to delete this post?",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "linkedinHint": {
+      "title": "LinkedIn not connected",
+      "message": "Connect your LinkedIn account to publish posts.",
+      "link": "Go to account settings"
+    },
+    "toast": {
+      "updateSuccess": "Draft saved.",
+      "updateError": "Failed to save the draft.",
+      "deleteSuccess": "Post deleted.",
+      "deleteError": "Failed to delete the post.",
+      "publishSuccess": "Post published.",
+      "publishError": "Failed to publish the post.",
+      "linkedinNotConnected": "No LinkedIn account connected. Please connect one first."
+    }
+  }
+}

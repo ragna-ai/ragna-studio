@@ -5,6 +5,7 @@ import {
   GlobeIcon,
   ImageIcon,
   PencilLineIcon,
+  Share2Icon,
   type LucideIcon,
 } from '@lucide/vue';
 
@@ -39,34 +40,40 @@ const emit = defineEmits<AgentToolListEmit>();
 interface UiAgentTool {
   id: string;
   icon: LucideIcon;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
 }
 
 const availableTools: UiAgentTool[] = [
   {
     id: 'think',
     icon: PencilLineIcon,
-    title: 'Think',
-    description: 'Enable deeper reasoning before responding.',
+    titleKey: 'agent.tools.think.title',
+    descriptionKey: 'agent.tools.think.description',
   },
   {
     id: 'webSearch',
     icon: GlobeIcon,
-    title: 'Web Search',
-    description: 'Find up-to-date information from the web.',
+    titleKey: 'agent.tools.webSearch.title',
+    descriptionKey: 'agent.tools.webSearch.description',
   },
   {
     id: 'webBrowser',
     icon: AppWindowIcon,
-    title: 'Web Browser',
-    description: 'Open pages and interact with websites.',
+    titleKey: 'agent.tools.webBrowser.title',
+    descriptionKey: 'agent.tools.webBrowser.description',
   },
   {
     id: 'imageGen',
     icon: ImageIcon,
-    title: 'Image Generation',
-    description: 'Create images from text prompts.',
+    titleKey: 'agent.tools.imageGen.title',
+    descriptionKey: 'agent.tools.imageGen.description',
+  },
+  {
+    id: 'linkedinDraft',
+    icon: Share2Icon,
+    titleKey: 'agent.tools.linkedinDraft.title',
+    descriptionKey: 'agent.tools.linkedinDraft.description',
   },
 ];
 
@@ -110,8 +117,8 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
         <component :is="tool.icon" class="size-5 stroke-1.5" />
       </div>
       <div class="space-y-1">
-        <p class="text-sm">{{ tool.title }}</p>
-        <p class="text-xs opacity-75">{{ tool.description }}</p>
+        <p class="text-sm">{{ $t(tool.titleKey) }}</p>
+        <p class="text-xs opacity-75">{{ $t(tool.descriptionKey) }}</p>
       </div>
     </Label>
   </div>

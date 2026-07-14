@@ -14,7 +14,13 @@ export const agentConfigSchema = z.object({
 });
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
 
-export const WORKFLOW_TOOLS = ['think', 'webSearch', 'webBrowser', 'imageGen'] as const;
+export const WORKFLOW_TOOLS = [
+  'think',
+  'webSearch',
+  'webBrowser',
+  'imageGen',
+  'linkedinDraft',
+] as const;
 export type WorkflowTool = (typeof WORKFLOW_TOOLS)[number];
 
 export const toolConfigSchema = z.object({

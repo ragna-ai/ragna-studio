@@ -5,6 +5,7 @@ import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { genImage } from './genimage.schema';
 import { session } from './session.schema';
+import { socialPost } from './social-post.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -20,6 +21,7 @@ const schema = {
   chat,
   chatMessage,
   genImage,
+  socialPost,
   workflow,
   workflowRun,
   workflowRunStep,
@@ -32,6 +34,7 @@ export const relations = defineRelations(schema, (r) => ({
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
+    socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
   },
   account: {
@@ -95,6 +98,13 @@ export const relations = defineRelations(schema, (r) => ({
   genImage: {
     user: r.one.user({
       from: r.genImage.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  socialPost: {
+    user: r.one.user({
+      from: r.socialPost.userId,
       to: r.user.id,
       optional: false,
     }),

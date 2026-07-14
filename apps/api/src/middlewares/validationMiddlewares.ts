@@ -77,3 +77,17 @@ export const validRunWorkflowBody = myzValidator(
     input: z.string().optional(),
   }),
 );
+
+export const validSocialPostIdParam = myzValidator(
+  'param',
+  z.object({
+    id: primaryId,
+  }),
+);
+
+export const validUpdateSocialPostBody = myzValidator(
+  'json',
+  z.object({
+    content: z.string().min(1).max(3000),
+  }),
+);

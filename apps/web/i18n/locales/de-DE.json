@@ -12,6 +12,28 @@
     "upsert": {
       "title": "KI-Agent bearbeiten",
       "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
+    },
+    "tools": {
+      "think": {
+        "title": "Denken",
+        "description": "Aktiviert tieferes Nachdenken vor der Antwort."
+      },
+      "webSearch": {
+        "title": "Websuche",
+        "description": "Findet aktuelle Informationen im Web."
+      },
+      "webBrowser": {
+        "title": "Webbrowser",
+        "description": "Öffnet Seiten und interagiert mit Websites."
+      },
+      "imageGen": {
+        "title": "Bildgenerierung",
+        "description": "Erstellt Bilder aus Textbeschreibungen."
+      },
+      "linkedinDraft": {
+        "title": "LinkedIn-Entwurf",
+        "description": "Entwirft LinkedIn-Beiträge. Du veröffentlichst sie selbst."
+      }
     }
   },
   "chat": {
@@ -22,6 +44,19 @@
     "history": {
       "title": "Chat-Verlauf",
       "subtitle": "Verlauf deiner Unterhaltungen."
+    }
+  },
+  "workflow": {
+    "list": {
+      "title": "Workflows",
+      "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
+      "newWorkflow": "Workflow erstellen"
+    },
+    "editor": {
+      "title": "Workflow-Editor"
+    },
+    "run": {
+      "title": "Workflow ansehen"
     }
   },
   "imagen": {
@@ -50,5 +85,64 @@
     "name": "Name",
     "ai_model": "Künstliche Intelligenz",
     "actions": "Aktionen"
+  },
+  "user": {
+    "social": {
+      "title": "Verbundene Konten",
+      "loadError": "Verbundene Konten konnten nicht geladen werden.",
+      "connected": "Verbunden",
+      "notConnected": "Nicht verbunden",
+      "connect": "Verbinden",
+      "disconnect": "Trennen",
+      "connectError": "Verbindung konnte nicht gestartet werden. Bitte versuche es erneut.",
+      "disconnectSuccess": "Konto getrennt.",
+      "disconnectError": "Konto konnte nicht getrennt werden. Bitte versuche es erneut.",
+      "providers": {
+        "google": "Google",
+        "microsoft": "Microsoft",
+        "linkedin": "LinkedIn"
+      }
+    }
+  },
+  "social": {
+    "list": {
+      "title": "Social Posts",
+      "subtitle": "Entwürfe ansehen, bearbeiten und auf LinkedIn veröffentlichen."
+    },
+    "status": {
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "failed": "Fehlgeschlagen"
+    },
+    "actions": {
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "publish": "Veröffentlichen",
+      "delete": "Löschen"
+    },
+    "viewOnLinkedIn": "Auf LinkedIn ansehen",
+    "loadError": "Posts konnten nicht geladen werden.",
+    "empty": "Noch keine Posts. Bitte den Agenten, einen LinkedIn-Entwurf zu schreiben.",
+    "deleteConfirm": {
+      "title": "Post löschen",
+      "message": "Möchtest du diesen Post wirklich löschen?",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "linkedinHint": {
+      "title": "LinkedIn nicht verbunden",
+      "message": "Verbinde dein LinkedIn-Konto, um Posts veröffentlichen zu können.",
+      "link": "Zu den Kontoeinstellungen"
+    },
+    "toast": {
+      "updateSuccess": "Entwurf gespeichert.",
+      "updateError": "Entwurf konnte nicht gespeichert werden.",
+      "deleteSuccess": "Post gelöscht.",
+      "deleteError": "Post konnte nicht gelöscht werden.",
+      "publishSuccess": "Post veröffentlicht.",
+      "publishError": "Veröffentlichung fehlgeschlagen.",
+      "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Bitte zuerst verbinden."
+    }
   }
 }

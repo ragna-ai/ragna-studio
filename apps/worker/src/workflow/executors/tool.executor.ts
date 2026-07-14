@@ -18,6 +18,9 @@ function buildToolInput(tool: WorkflowTool, input: string) {
       return { url: input };
     case 'imageGen':
       return { prompt: input };
+    case 'linkedinDraft':
+      // No draftId in workflow context: a tool node always creates a new draft.
+      return { text: input };
   }
 }
 

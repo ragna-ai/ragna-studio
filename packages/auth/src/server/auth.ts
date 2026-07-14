@@ -6,6 +6,11 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { importPKCS8, SignJWT } from 'jose';
 
+// LinkedIn requires these scopes for sign-in (openid/profile/email) and
+// posting on the user's behalf (w_member_social). Used unless an operator
+// overrides them via the LINKEDIN_SCOPES env var.
+const DEFAULT_LINKEDIN_SCOPES = ['openid', 'profile', 'email', 'w_member_social'];
+
 async function generateAppleClientSecret() {
   const privateKey = await importPKCS8(config.getSecret('APPLE_PRIVATE_KEY'), 'ES256');
   const now = Math.floor(Date.now() / 1000);
@@ -39,6 +44,12 @@ export const auth = betterAuth({
       clientSecret: config.getSecret('MICROSOFT_CLIENT_SECRET'),
       tenantId: config.microsoftTenantId,
     },
+    linkedin: {
+      clientId: config.linkedInClientId,
+      clientSecret: config.getSecret('LINKEDIN_CLIENT_SECRET'),
+      disableDefaultScope: true,
+      scope: config.linkedInScopes.length > 0 ? config.linkedInScopes : DEFAULT_LINKEDIN_SCOPES,
+    },
     // apple: async () => ({
     //   clientId: config.appleClientId,
     //   clientSecret: await generateAppleClientSecret(),
@@ -47,6 +58,14 @@ export const auth = betterAuth({
   // MIDDLEWARE
   hooks: {},
   user: {},
+  account: {
+    accountLinking: {
+      enabled: true,
+      // The LinkedIn email may differ from the user's sign-in email, so we
+      // can't require a match to link the account.
+      allowDifferentEmails: true,
+    },
+  },
   // DATABASE
   databaseHooks: {
     user: {
