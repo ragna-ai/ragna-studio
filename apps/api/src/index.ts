@@ -6,7 +6,8 @@ function main() {
   logger.info('Starting API server...');
 
   const port = config.apiPort;
-  const server = Bun.serve({ port, fetch: app.fetch });
+  // idleTimeout: 0 disables Bun's default 10s idle timeout, since we have streaming AI/tool responses
+  const server = Bun.serve({ port, fetch: app.fetch, idleTimeout: 0 });
 
   logger.info(`API server listening on http://localhost:${port}`);
 
@@ -15,7 +16,9 @@ function main() {
 
 async function gracefulShutdown(signal: string) {
   logger.info(`Received ${signal}, shutting down gracefully...`);
-  await server.stop();
+  if (server) {
+    await server.stop();
+  }
   process.exit(0);
 }
 

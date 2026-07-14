@@ -49,6 +49,7 @@ export const getWebBrowserResults = (
           headers: {
             'Content-Type': 'application/json',
           },
+          signal: AbortSignal.timeout(30_000),
         });
 
         if (response.ok !== true || !response.body) {

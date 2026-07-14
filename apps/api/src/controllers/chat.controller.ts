@@ -260,7 +260,10 @@ export const chatController = new Hono()
 
         // Stream the response from the language model
         const result = streamText({
-          timeout: 120_000, // 2 minutes timeout
+          timeout: {
+            totalMs: 600_000, // whole multi-step run; image tools can take minutes
+            toolMs: 180_000, // single tool call (e.g. generating up to 4 images)
+          },
           model: getLanguageModel({
             provider: agent.aiModel.provider,
             model: agent.aiModel.model,

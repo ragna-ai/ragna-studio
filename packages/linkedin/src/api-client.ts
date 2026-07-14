@@ -13,6 +13,10 @@ const LINKEDIN_API_BASE_URL = 'https://api.linkedin.com/rest';
 const IMAGE_POLL_INTERVAL_MS = 1500;
 const DEFAULT_IMAGE_WAIT_TIMEOUT_MS = 30_000;
 
+const REQUEST_TIMEOUT_MS = 30_000;
+// Binary uploads are larger and slower than the JSON endpoints above.
+const UPLOAD_TIMEOUT_MS = 120_000;
+
 export interface CreatePostImageInput {
   /** e.g. `urn:li:image:C123...`, as returned by `initializeImageUpload`. */
   urn: string;
@@ -110,6 +114,7 @@ export class LinkedinClient {
         isReshareDisabledByAuthor: false,
         ...buildPostContent(imageUrns),
       }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -145,6 +150,7 @@ export class LinkedinClient {
           owner: `urn:li:person:${authorId}`,
         },
       }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -168,6 +174,7 @@ export class LinkedinClient {
         'Content-Type': mimeType,
       },
       body: data,
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -218,6 +225,7 @@ export class LinkedinClient {
           Authorization: `Bearer ${this.accessToken}`,
           'LinkedIn-Version': LINKEDIN_API_VERSION,
         },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       },
     );
 
