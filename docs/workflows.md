@@ -28,7 +28,7 @@ Web renders node config forms from the Zod schemas (VeeValidate) and validates b
 
 | Node type   | Config                                                              |
 | ----------- | ------------------------------------------------------------------- |
-| `trigger`   | Manual or cron. Webhook later.                                      |
+| `trigger`   | Manual or cron (see [workflows-scheduling.md](./workflows-scheduling.md)). Webhook later. |
 | `agent`     | References an `agents` row, or inline model + prompt. Runs via `@repo/ai`. |
 | `tool`      | One of the existing tools: think, webSearch, webBrowser, imageGen.  |
 | `condition` | Branch on an expression or an LLM classification.                   |
@@ -103,7 +103,7 @@ Built on the ai-elements-vue workflow canvas, a thin wrapper over Vue Flow. Its 
 
 ## Open points
 
-- Trigger scope for v1: manual-only, or cron from the start. The worker already runs cron jobs, so cron is cheap.
+- ~~Trigger scope for v1~~: resolved 2026-07-14. v1 shipped manual-only; scheduled (cron) triggers are specified in [workflows-scheduling.md](./workflows-scheduling.md).
 - Versioning beyond draft/published. Per-run definition snapshots cover debugging; full version history can come later if clients need rollback.
-- Stale-run sweeper cron (deferred 2026-07-13): a worker cron that marks runs stuck in `pending`/`running` beyond a timeout as `failed`. Fail-fast enqueue handling, job retries, and manual cancel are implemented; the sweeper is the remaining safety net for hard worker crashes.
+- Stale-run sweeper cron (deferred 2026-07-13): a worker cron that marks runs stuck in `pending`/`running` beyond a timeout as `failed`. Fail-fast enqueue handling, job retries, and manual cancel are implemented. Bundled into the scheduled-triggers scope (see [workflows-scheduling.md](./workflows-scheduling.md)), since unattended scheduled runs make it necessary.
 - Agent skills (idea, not confirmed): reusable instruction blocks a user attaches to agents (agent-level, statically appended to the system prompt). Would flow into workflow agent nodes for free since the executor resolves the agent row at run time. Discussed 2026-07-13, scope not yet decided.
