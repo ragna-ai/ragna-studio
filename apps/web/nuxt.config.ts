@@ -39,6 +39,13 @@ export default defineNuxtConfig({
       },
     ],
   },
+  // ICONS
+  icon: {
+    provider: 'none',
+    clientBundle: {
+      scan: true,
+    },
+  },
   // IMAGE
   image: {
     // provider: 'cloudflare',

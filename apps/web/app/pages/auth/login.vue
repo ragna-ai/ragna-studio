@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { LoaderCircleIcon, TriangleAlertIcon } from '@lucide/vue';
 
 definePageMeta({ layout: 'auth' });
 useHead({ title: 'Login' });
@@ -57,7 +58,7 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
           variant="destructive"
           class="mt-6 flex items-center space-x-2"
         >
-          <Icon name="lucide:triangle-alert" class="size-4" />
+          <TriangleAlertIcon class="size-4" />
           <AlertDescription>{{ errorMessage }}</AlertDescription>
         </Alert>
       </Transition>
@@ -74,11 +75,7 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
             name="logos:google-icon"
             class="h-4 w-4"
           />
-          <Icon
-            v-else
-            name="lucide:loader-circle"
-            class="h-4 w-4 animate-spin"
-          />
+          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
           Continue with Google
         </Button>
 
@@ -93,11 +90,7 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
             name="logos:microsoft-icon"
             class="h-4 w-4"
           />
-          <Icon
-            v-else
-            name="lucide:loader-circle"
-            class="h-4 w-4 animate-spin"
-          />
+          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
           Continue with Microsoft
         </Button>
 
@@ -112,11 +105,7 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
             name="logos:apple"
             class="h-4 w-4"
           />
-          <Icon
-            v-else
-            name="lucide:loader-circle"
-            class="h-4 w-4 animate-spin"
-          />
+          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
           Continue with Apple
         </Button>
       </div>

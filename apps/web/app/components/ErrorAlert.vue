@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { TriangleAlertIcon, XIcon } from '@lucide/vue';
 
 const { error, clearError } = useErrorAlert();
 </script>
@@ -18,7 +19,7 @@ const { error, clearError } = useErrorAlert();
       class="fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-4 border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
     >
       <div class="flex items-center gap-2">
-        <Icon name="lucide:triangle-alert" class="size-4 shrink-0" />
+        <TriangleAlertIcon class="size-4 shrink-0" />
         <span>{{ error }}</span>
       </div>
       <Button
@@ -28,7 +29,7 @@ const { error, clearError } = useErrorAlert();
         aria-label="Dismiss error"
         @click="clearError"
       >
-        <Icon name="lucide:x" class="size-4" />
+        <XIcon class="size-4" />
       </Button>
     </div>
   </Transition>
