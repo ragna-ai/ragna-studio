@@ -67,6 +67,10 @@ export function useGetChat(
     queryFn: ({ signal }) =>
       api(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
     enabled: () => !!toValue(chatId),
+    // Messages change outside vue-query via the AI SDK stream, and the
+    // consumer renders the first snapshot only, so never serve cached data.
+    staleTime: 0,
+    gcTime: 0,
     // Collapse an empty message list to null at the boundary.
     select: (data: ChatResponse) => ({
       ...data,
