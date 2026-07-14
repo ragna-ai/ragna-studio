@@ -1,10 +1,7 @@
 <script setup lang="ts">
 // Imports
 import SocialPostManyTable from '~/features/social/components/SocialPostManyTable.vue';
-import {
-  useCreateSocialPost,
-  useDeleteSocialPost,
-} from '~/features/social/composables/useSocialPostApi';
+import { useDeleteSocialPost } from '~/features/social/composables/useSocialPostApi';
 import useSocialPostList from '~/features/social/composables/useSocialPostList';
 
 // Props
@@ -16,8 +13,6 @@ import useSocialPostList from '~/features/social/composables/useSocialPostList';
 const { page, limit, useGetAllSocialPosts } = useSocialPostList();
 const { data, error: postsError } = useGetAllSocialPosts();
 const { mutateAsync: deleteSocialPost } = useDeleteSocialPost();
-const { mutateAsync: createSocialPost, isPending: isCreating } =
-  useCreateSocialPost();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
@@ -29,11 +24,6 @@ useHead({
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
 
 // Functions
-async function handleNewPost() {
-  const response = await createSocialPost();
-  await navigateTo(`/social/${response.post.id}`);
-}
-
 async function handleDeletePost(postId: string) {
   const confirmed = await confirm({
     title: t('social.deleteConfirm.title'),
@@ -60,13 +50,10 @@ async function handleDeletePost(postId: string) {
           :subtitle="t('social.list.subtitle')"
         >
           <template #button>
-            <Button
-              variant="secondary"
-              :disabled="isCreating"
-              @click="handleNewPost"
-            >
-              <Spinner v-if="isCreating" class="mr-2" />
-              {{ t('social.list.newPost') }}
+            <Button variant="secondary" as-child>
+              <NuxtLinkLocale to="/social/create">
+                {{ t('social.list.newPost') }}
+              </NuxtLinkLocale>
             </Button>
           </template>
         </HeadingTitle>

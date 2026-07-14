@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import useUserSocialAccounts from '~/features/user/composables/useUserSocialAccounts';
 import SocialPostContentForm from '~/features/social/components/SocialPostContentForm.vue';
 import SocialPostMediaList from '~/features/social/components/SocialPostMediaList.vue';
 import SocialPostPublishPanel from '~/features/social/components/SocialPostPublishPanel.vue';
@@ -10,6 +9,7 @@ import {
   usePublishSocialPost,
   useUpdateSocialPost,
 } from '~/features/social/composables/useSocialPostApi';
+import useUserSocialAccounts from '~/features/user/composables/useUserSocialAccounts';
 
 // Props
 const props = defineProps<{
@@ -55,9 +55,9 @@ function handlePublish() {
   <div class="max-w-2xl space-y-6">
     <div class="flex items-center justify-between gap-3">
       <SocialPostStatusBadge :status="post.status" />
-      <span class="text-xs text-muted-foreground">{{
-        formatDateTime(post.createdAt)
-      }}</span>
+      <span class="text-xs text-muted-foreground">
+        {{ formatDateTime(post.createdAt) }}
+      </span>
     </div>
 
     <SocialPostContentForm
