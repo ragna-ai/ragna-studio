@@ -8,9 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Configuration
-IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-webapp"
+IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-api"
 TAG="latest"
-DOCKERFILE="$PROJECT_ROOT/apps/web/Dockerfile"
+DOCKERFILE="$PROJECT_ROOT/apps/api/Dockerfile"
 
 # Get version from package.json
 VERSION=$(node -p "require('$PROJECT_ROOT/package.json').version" 2>/dev/null || echo "0.0.0")
@@ -51,7 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "========================================"
-echo "Building Ragna Studio Docker Image"
+echo "Building Ragna Studio API Docker Image"
 echo "========================================"
 echo "Image:    $IMAGE_NAME"
 echo "Tag:      $TAG"

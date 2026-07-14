@@ -1,8 +1,39 @@
 # This is a development override file for docker-compose.
 
 services:
+  webapp:
+    cpus: 1
+    restart: no
+    profiles:
+      - prod
+    ports:
+      - ${APP_PORT:-3000}:3000
+
+  api:
+    cpus: 1
+    restart: no
+    profiles:
+      - prod
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    ports:
+      - ${API_PORT:-3010}:3010
+
+  worker:
+    cpus: 1
+    restart: no
+    profiles:
+      - prod
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SMTP_HOST=host.docker.internal
+
   postgres:
     cpus: 1
+    restart: no
 
   redis:
     cpus: 1
+    restart: no

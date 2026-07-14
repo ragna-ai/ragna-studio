@@ -45,7 +45,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # ============================================================
 # Runner — minimal image with the deployed worker
 # ============================================================
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:alpine AS runner
 
 WORKDIR /app
 

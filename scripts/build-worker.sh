@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Configuration
-IMAGE_NAME="ghcr.io/hopkins385/ragna-studio-worker"
+IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-worker"
 TAG="latest"
 DOCKERFILE="$PROJECT_ROOT/apps/worker/Dockerfile"
 

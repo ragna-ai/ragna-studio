@@ -41,7 +41,8 @@ ENV NODE_ENV=production
 RUN pnpm turbo build --filter=@repo/api
 
 # Remove dev dependencies, keeping the built dist folders
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  pnpm --filter @repo/api deploy --prod --legacy /prod/api
 
 # ============================================================
 # Runner: Bun runtime (src/index.ts uses Bun.serve)
@@ -53,7 +54,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV API_PORT=3010
 
-COPY --from=builder --chown=bun:bun /app .
+COPY --from=builder --chown=bun:bun /prod/api .
 
 USER bun
 
@@ -62,4 +63,4 @@ EXPOSE 3010
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- "http://localhost:${API_PORT}/health" || exit 1
 
-CMD ["bun", "apps/api/dist/index.mjs"]
+CMD ["bun", "dist/index.mjs"]

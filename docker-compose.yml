@@ -5,6 +5,43 @@ volumes:
   redis_data:
 
 services:
+  webapp:
+    image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
+    container_name: ragna_studio_webapp
+    restart: always
+    depends_on:
+      - api
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+
+  worker:
+    image: ghcr.io/ragna-ai/ragna-studio-worker:latest
+    container_name: ragna_studio_worker
+    restart: always
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+
+  api:
+    image: ghcr.io/ragna-ai/ragna-studio-api:latest
+    container_name: ragna_studio_api
+    restart: always
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+
   postgres:
     image: postgres:18.4-alpine3.24
     container_name: ragna_studio_postgresql
