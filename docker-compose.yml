@@ -23,6 +23,7 @@ services:
     container_name: ragna_studio_worker
     restart: always
     depends_on:
+      - postgres
       - redis
     env_file:
       - .env
@@ -35,6 +36,9 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-api:latest
     container_name: ragna_studio_api
     restart: always
+    depends_on:
+      - postgres
+      - redis
     env_file:
       - .env
     security_opt:
