@@ -51,7 +51,12 @@ const { formatDateTime } = useDateTimeFormat();
       <TableEmpty v-if="chats.length === 0" :colspan="6">
         {{ $t('chat.history.empty') }}
       </TableEmpty>
-      <TableRow v-for="chat in chats" :key="chat.id">
+      <TableRow
+        v-for="chat in chats"
+        :key="chat.id"
+        class="cursor-pointer"
+        @click="navigateTo(`/chat/${chat.id}`)"
+      >
         <TableCell class="w-12">
           <MessagesSquareIcon class="size-4 stroke-1.5" />
         </TableCell>

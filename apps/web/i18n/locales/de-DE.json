@@ -27,7 +27,7 @@
         "description": "Öffnet Seiten und interagiert mit Websites."
       },
       "imageGen": {
-        "label": "Bildgenerierung",
+        "label": "Bild generieren",
         "description": "Erstellt Bilder aus Textbeschreibungen."
       },
       "linkedinDraft": {
@@ -121,6 +121,8 @@
     "title": "Titel",
     "name": "Name",
     "ai_model": "Künstliche Intelligenz",
+    "ai_agent": "Agent",
+    "updated_at": "Aktualisiert am",
     "actions": "Aktionen"
   },
   "user": {

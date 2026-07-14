@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import {
+  FileTextIcon,
+  ImageIcon,
+  PencilLineIcon,
+  SearchIcon,
+} from '@lucide/vue';
 import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai';
 import type { UIMessage } from 'ai';
 import { isStaticToolUIPart } from 'ai';
@@ -50,8 +56,24 @@ const toolNames: Record<string, string> = {
 };
 
 const getToolTitle = (part: ToolPart): string => {
-  // Implement your logic to determine the tool title based on the part
   return toolNames[part.type] ?? part.type.split('-').slice(1).join('-');
+};
+
+const getToolIcon = (part: ToolPart) => {
+  switch (part.type) {
+    case 'tool-think':
+      return PencilLineIcon;
+    case 'tool-linkedinDraft':
+      return FileTextIcon;
+    case 'tool-imageGen':
+      return ImageIcon;
+    case 'tool-webSearch':
+      return SearchIcon;
+    case 'tool-webBrowser':
+      return SearchIcon;
+    default:
+      return undefined;
+  }
 };
 
 // group-[.is-assistant]:w-full
@@ -77,6 +99,7 @@ const getToolTitle = (part: ToolPart): string => {
               :type="part.type"
               :state="part.state"
               :title="getToolTitle(part)"
+              :icon="getToolIcon(part)"
             />
             <ToolContent>
               <ToolInput :input="part.input" />
