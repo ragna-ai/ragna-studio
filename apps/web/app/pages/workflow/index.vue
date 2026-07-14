@@ -47,14 +47,14 @@ const handleDeleteWorkflow = async (workflowId: string) => {
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
-          title="Workflows"
-          subtitle="Automate multi-step tasks with agents, tools, and conditions."
+          :title="t('workflow.list.title')"
+          :subtitle="t('workflow.list.subtitle')"
         >
           <template #button>
             <Button as-child variant="secondary">
-              <NuxtLinkLocale to="/workflow/create"
-                >New workflow</NuxtLinkLocale
-              >
+              <NuxtLinkLocale to="/workflow/create">
+                {{ t('workflow.list.newWorkflow') }}
+              </NuxtLinkLocale>
             </Button>
           </template>
         </HeadingTitle>
