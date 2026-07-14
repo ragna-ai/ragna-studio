@@ -5,7 +5,7 @@ import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { genImage } from './genimage.schema';
 import { session } from './session.schema';
-import { socialPost } from './social-post.schema';
+import { socialPost, socialPostMedia } from './social-post.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -22,6 +22,7 @@ const schema = {
   chatMessage,
   genImage,
   socialPost,
+  socialPostMedia,
   workflow,
   workflowRun,
   workflowRunStep,
@@ -106,6 +107,14 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.socialPost.userId,
       to: r.user.id,
+      optional: false,
+    }),
+    media: r.many.socialPostMedia(),
+  },
+  socialPostMedia: {
+    post: r.one.socialPost({
+      from: r.socialPostMedia.socialPostId,
+      to: r.socialPost.id,
       optional: false,
     }),
   },

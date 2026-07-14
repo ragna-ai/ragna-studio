@@ -22,6 +22,13 @@ const linkedinDraftInputSchema = z.object({
     .describe(
       'ID of an existing draft to revise instead of creating a new one. Omit to create a new draft.',
     ),
+  imageIds: z
+    .array(z.string())
+    .max(9)
+    .optional()
+    .describe(
+      "IDs of images generated earlier in this conversation with the imageGen tool, to attach to the post. Max 9 images, LinkedIn's limit. When revising a draft, this replaces its current images; omit it to leave them unchanged.",
+    ),
 });
 
 type LinkedinDraftInput = z.infer<typeof linkedinDraftInputSchema>;
@@ -34,18 +41,18 @@ export const getLinkedinDraft = (
 ): Tool<LinkedinDraftInput, LinkedinDraftOutput> =>
   tool({
     description:
-      'Use this tool to create or revise a LinkedIn post draft for the user. It only saves the draft; it never publishes to LinkedIn. The user reviews and publishes drafts themselves.',
+      'Use this tool to create or revise a LinkedIn post draft for the user. It only saves the draft; it never publishes to LinkedIn. The user reviews and publishes drafts themselves. Pass imageIds to attach up to 9 images that were generated earlier with the imageGen tool.',
     inputSchema: linkedinDraftInputSchema,
-    execute: async ({ text, draftId }) => {
+    execute: async ({ text, draftId, imageIds }) => {
       // emit tool usage message
       writer.write({
         type: 'data-linkedinDraft',
-        data: { text, draftId },
+        data: { text, draftId, imageIds },
         transient: true,
       });
 
       // only id and status go back into the model context; the full record stays in the DB
-      return draftLinkedInPost({ userId, text, draftId });
+      return draftLinkedInPost({ userId, text, draftId, imageIds });
     },
   });
 

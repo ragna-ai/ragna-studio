@@ -18,6 +18,10 @@ const workflowRunIdSchema = z.object({
   runId: primaryIdSchema,
 });
 
+const socialPostIdSchema = z.object({
+  postId: primaryIdSchema,
+});
+
 export const hasValidChatId = (params: any) =>
   hasValidSchema(chatIdSchema, params);
 
@@ -29,6 +33,9 @@ export const hasValidWorkflowId = (params: any) =>
 
 export const hasValidWorkflowRunId = (params: any) =>
   hasValidSchema(workflowRunIdSchema, params);
+
+export const hasValidSocialPostId = (params: any) =>
+  hasValidSchema(socialPostIdSchema, params);
 
 export function hasValidPage(params: any) {
   const regexScheme = /^[1-9]\d{0,4}$/;

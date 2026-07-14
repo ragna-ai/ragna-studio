@@ -44,7 +44,23 @@
   "social": {
     "list": {
       "title": "Social posts",
-      "subtitle": "Review, edit, and publish drafts to LinkedIn."
+      "subtitle": "Review and publish drafts to LinkedIn.",
+      "newPost": "New post",
+      "emptyContent": "Empty draft",
+      "loading": "Loading posts...",
+      "table": {
+        "status": "Status",
+        "content": "Content",
+        "created": "Created",
+        "actions": "Actions"
+      }
+    },
+    "editor": {
+      "title": "Edit post",
+      "subtitle": "Write your post, attach images, and publish to LinkedIn.",
+      "contentPlaceholder": "What do you want to share?",
+      "loading": "Loading post...",
+      "notFound": "Post not found."
     },
     "status": {
       "draft": "Draft",
@@ -52,9 +68,7 @@
       "failed": "Failed"
     },
     "actions": {
-      "edit": "Edit",
       "save": "Save",
-      "cancel": "Cancel",
       "publish": "Publish",
       "delete": "Delete"
     },
@@ -72,6 +86,17 @@
       "message": "Connect your LinkedIn account to publish posts.",
       "link": "Go to account settings"
     },
+    "media": {
+      "attach": "Attach image",
+      "editAltText": "Edit alt text",
+      "altTextLabel": "Alt text",
+      "remove": "Remove image",
+      "errors": {
+        "unsupportedType": "Only JPEG, PNG, or GIF images are supported.",
+        "tooLarge": "Images must be 10 MB or smaller.",
+        "tooMany": "A post can have at most {max} images."
+      }
+    },
     "toast": {
       "updateSuccess": "Draft saved.",
       "updateError": "Failed to save the draft.",
@@ -79,7 +104,11 @@
       "deleteError": "Failed to delete the post.",
       "publishSuccess": "Post published.",
       "publishError": "Failed to publish the post.",
-      "linkedinNotConnected": "No LinkedIn account connected. Please connect one first."
+      "linkedinNotConnected": "No LinkedIn account connected. Please connect one first.",
+      "createError": "Failed to create the post.",
+      "mediaUploadError": "Failed to upload the image.",
+      "mediaAltTextError": "Failed to save the alt text.",
+      "mediaDeleteError": "Failed to remove the image."
     }
   }
 }

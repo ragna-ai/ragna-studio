@@ -1,13 +1,9 @@
 import {
   BotIcon,
-  DatabaseIcon,
-  FileTextIcon,
   FolderClockIcon,
-  FolderIcon,
   HomeIcon,
   ImageIcon,
   MessagesSquareIcon,
-  PieChartIcon,
   PlusCircleIcon,
   Share2Icon,
   WorkflowIcon,
@@ -53,13 +49,13 @@ const defaultItems: NavItem[] = [
     label: 'Chat',
     children: [],
   },
-  {
-    id: 'document',
-    path: '/document',
-    icon: FileTextIcon,
-    label: 'Docs',
-    children: [],
-  },
+  // {
+  //   id: 'document',
+  //   path: '/document',
+  //   icon: FileTextIcon,
+  //   label: 'Docs',
+  //   children: [],
+  // },
   {
     id: 'text-to-image',
     path: '/text-to-image',
@@ -74,33 +70,33 @@ const defaultItems: NavItem[] = [
     label: 'Social',
     children: [],
   },
-  { id: 'sep-1', children: [] },
-  {
-    id: 'more',
-    children: [
-      {
-        id: 'collection',
-        path: '/collection',
-        icon: DatabaseIcon,
-        label: 'Collections',
-        children: [],
-      },
-      {
-        id: 'media',
-        path: '/media',
-        icon: FolderIcon,
-        label: 'Media',
-        children: [],
-      },
-      {
-        id: 'analytics',
-        path: '/account/statistics',
-        icon: PieChartIcon,
-        label: 'Analytics',
-        children: [],
-      },
-    ],
-  },
+  // { id: 'sep-1', children: [] },
+  // {
+  //   id: 'more',
+  //   children: [
+  //     {
+  //       id: 'collection',
+  //       path: '/collection',
+  //       icon: DatabaseIcon,
+  //       label: 'Collections',
+  //       children: [],
+  //     },
+  //     {
+  //       id: 'media',
+  //       path: '/media',
+  //       icon: FolderIcon,
+  //       label: 'Media',
+  //       children: [],
+  //     },
+  //     {
+  //       id: 'analytics',
+  //       path: '/account/statistics',
+  //       icon: PieChartIcon,
+  //       label: 'Analytics',
+  //       children: [],
+  //     },
+  //   ],
+  // },
 ];
 
 const chatItems: NavItem[] = [

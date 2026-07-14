@@ -23,7 +23,9 @@ The only part of the old v2 package worth keeping is the API client (`linkedin-a
 
 ## Roadmap
 
-### Phase 0: Account connection (current)
+All phases below shipped on 2026-07-14. Only the open points at the bottom remain.
+
+### Phase 0: Account connection
 
 - Add `linkedin` to `socialProviders` in `packages/auth/src/server/auth.ts`. Credentials come from `@repo/config` (`LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_SCOPES`).
 - Enable account linking with `allowDifferentEmails`, since the LinkedIn email may differ from the sign-in email.
@@ -74,11 +76,56 @@ Design agreed 2026-07-14. Text-only posts. Media support comes in a later phase.
 - "LinkedIn not connected" hint linking to `/account` when no LinkedIn account is linked.
 - The v2 editor will grow into this page.
 
-### Phase 2: Manual drafting (v2)
+### Phase 2: Image attachments
 
-- UI to list, create, and edit drafts by hand. Same table, same publish path.
+Design agreed 2026-07-14. Images only. Video and documents use different LinkedIn APIs (chunked uploads) and are deferred. Cap: 9 images per post.
+
+**LinkedIn image flow** (versioned API):
+
+- `POST /rest/images?action=initializeUpload` with the owner person URN → returns `uploadUrl` and `urn:li:image`.
+- `PUT` the binary to `uploadUrl`.
+- Poll `GET /rest/images/{urn}` until status is `AVAILABLE`, then create the post. One image goes in `content.media`, several in `content.multiImage`.
+- Uploading needs a valid token. So LinkedIn upload happens at publish time. Draft media lives in R2.
+
+**Schema** (`social_post_media` table):
+
+- `id`, `socialPostId` (FK, cascade delete), `storageKey`, `mimeType`, `altText`, `sortOrder`, `origin` (`upload | genImage`), timestamps.
+- Separate table instead of a jsonb column: ordering, per-image alt text, and single-image deletion stay clean.
+- Deleting media also deletes the R2 object, but only for `origin: upload`. Gen-image media only removes the row, because the object belongs to the `gen_images` record. Applies everywhere media rows die: media delete, post delete, and media-set replacement on draft revise.
+
+**Agent path**:
+
+- `linkedinDraft` tool gets an optional `imageIds` input: ids returned by the `imageGen` tool earlier in the conversation.
+- The service verifies the `gen_images` rows belong to the user, then stores their `storageKey` in `social_post_media`. No file copy, both records point at the same R2 object.
+- Lifecycle caveat: if gen images become deletable later, switch to a server-side R2 copy.
+
+**User path**:
+
+- `POST /social-posts/:id/media`: multipart upload. Validate mime (jpeg, png, gif) and size. Store under a `social/{userId}/` prefix in R2.
+- `DELETE /social-posts/:id/media/:mediaId`.
+- UI on the draft card: attach button, thumbnail strip, per-image alt text input, remove button.
+
+**Publish flow extension**:
+
+- Load media rows → per image: fetch from R2 → `initializeUpload` → `PUT` → wait for `AVAILABLE` (poll with timeout) → build post with `media` or `multiImage`.
+- Stays synchronous in the request. Move to a worker job only when scheduling arrives.
+
+**`@repo/linkedin` additions**:
+
+- `initializeImageUpload`, `uploadImageBinary`, `waitForImageAvailable`.
+- `createTextPost` grows into `createPost({ text, imageUrns })`.
+
+### Phase 3: Manual drafting and page structure
+
+Design agreed 2026-07-14.
+
+- `/social` mirrors the workflow/chat page pattern: the root page is the list only, as a paginated table like the workflow list (`GET /social-posts` takes page/limit and returns `meta.totalCount`; the editor uses a dedicated `GET /social-posts/:id`).
+- An upsert page reached from the list handles new posts and editing: content textarea, media management, save, publish. Inline editing on the list cards goes away.
+- "New post" creates a draft with `source: 'user'` via a new `POST /social-posts` endpoint, then navigates to the upsert page (same flow as creating a workflow).
+- New drafts may start empty. Publish rejects empty content.
 
 ## Open points
 
-- Media (image) posts: port `registerImageUpload` / `uploadImage` from v2 to the versioned Images API.
+- Video and document posts.
 - Scheduling posts (would move publishing into a worker job).
+- Per-tool labels and icons in the workflow editor (currently raw tool ids).

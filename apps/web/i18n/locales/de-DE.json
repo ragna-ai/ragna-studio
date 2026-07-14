@@ -107,7 +107,23 @@
   "social": {
     "list": {
       "title": "Social Posts",
-      "subtitle": "Entwürfe ansehen, bearbeiten und auf LinkedIn veröffentlichen."
+      "subtitle": "Entwürfe ansehen und auf LinkedIn veröffentlichen.",
+      "newPost": "Neuer Post",
+      "emptyContent": "Leerer Entwurf",
+      "loading": "Posts werden geladen...",
+      "table": {
+        "status": "Status",
+        "content": "Inhalt",
+        "created": "Erstellt",
+        "actions": "Aktionen"
+      }
+    },
+    "editor": {
+      "title": "Post bearbeiten",
+      "subtitle": "Schreibe deinen Post, hänge Bilder an und veröffentliche auf LinkedIn.",
+      "contentPlaceholder": "Was möchtest du teilen?",
+      "loading": "Post wird geladen...",
+      "notFound": "Post nicht gefunden."
     },
     "status": {
       "draft": "Entwurf",
@@ -115,9 +131,7 @@
       "failed": "Fehlgeschlagen"
     },
     "actions": {
-      "edit": "Bearbeiten",
       "save": "Speichern",
-      "cancel": "Abbrechen",
       "publish": "Veröffentlichen",
       "delete": "Löschen"
     },
@@ -135,6 +149,17 @@
       "message": "Verbinde dein LinkedIn-Konto, um Posts veröffentlichen zu können.",
       "link": "Zu den Kontoeinstellungen"
     },
+    "media": {
+      "attach": "Bild anhängen",
+      "editAltText": "Alt-Text bearbeiten",
+      "altTextLabel": "Alt-Text",
+      "remove": "Bild entfernen",
+      "errors": {
+        "unsupportedType": "Nur JPEG-, PNG- oder GIF-Bilder werden unterstützt.",
+        "tooLarge": "Bilder dürfen höchstens 10 MB groß sein.",
+        "tooMany": "Ein Post kann höchstens {max} Bilder enthalten."
+      }
+    },
     "toast": {
       "updateSuccess": "Entwurf gespeichert.",
       "updateError": "Entwurf konnte nicht gespeichert werden.",
@@ -142,7 +167,11 @@
       "deleteError": "Post konnte nicht gelöscht werden.",
       "publishSuccess": "Post veröffentlicht.",
       "publishError": "Veröffentlichung fehlgeschlagen.",
-      "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Bitte zuerst verbinden."
+      "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Bitte zuerst verbinden.",
+      "createError": "Post konnte nicht erstellt werden.",
+      "mediaUploadError": "Bild konnte nicht hochgeladen werden.",
+      "mediaAltTextError": "Alt-Text konnte nicht gespeichert werden.",
+      "mediaDeleteError": "Bild konnte nicht entfernt werden."
     }
   }
 }

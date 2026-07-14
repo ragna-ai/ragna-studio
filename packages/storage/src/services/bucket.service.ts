@@ -161,3 +161,29 @@ export async function downloadObject(bucketName: string, key: string) {
     throw new Error('Failed to download object');
   }
 }
+
+// Same as downloadObject, but returns the raw bytes instead of a base64
+// string. Base64 doubles the payload size in memory, which is wasted work
+// for callers that just re-upload the bytes elsewhere (e.g. LinkedIn media
+// publishing) instead of putting them in a JSON response.
+export async function downloadObjectBuffer(bucketName: string, key: string) {
+  if (!bucketName) throw new Error('Bucket name is required');
+  if (!key) throw new Error('Object key is required');
+
+  try {
+    const s3 = createS3Client(bucketName);
+    const response = await s3.getObjectResponse(key);
+
+    if (!response) throw new Error('Object not found');
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    return {
+      buffer: Buffer.from(arrayBuffer),
+      contentType: response.headers.get('content-type') || 'application/octet-stream',
+    };
+  } catch (error) {
+    console.error('Error downloading object buffer:', error);
+    throw new Error('Failed to download object buffer');
+  }
+}

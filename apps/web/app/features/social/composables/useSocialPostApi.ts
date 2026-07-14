@@ -1,19 +1,40 @@
 import {
   useMutation,
+  useMutationState,
   useQuery,
   useQueryClient,
-  type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 
 export const socialPostKeys = {
   all: ['social-posts'] as const,
-  list: () => ['social-posts', 'list'] as const,
+  list: (page: MaybeRefOrGetter<number>, limit: MaybeRefOrGetter<number>) =>
+    ['social-posts', 'list', page, limit] as const,
+  detail: (postId: MaybeRefOrGetter<string>) =>
+    ['social-posts', 'detail', postId] as const,
+  mediaUpload: () => ['social-posts', 'media', 'upload'] as const,
 };
 
-type QueryOpts = Partial<UseQueryOptions<any>>;
-
 export type SocialPostStatus = 'draft' | 'published' | 'failed';
+
+// Client-side mirror of the API's limits (apps/api/src/controllers/social-post.controller.ts),
+// so invalid attachments are rejected before a request is even sent.
+export const SOCIAL_POST_MAX_MEDIA = 9;
+export const SOCIAL_POST_MAX_MEDIA_BYTES = 10 * 1024 * 1024; // 10 MB
+export const SOCIAL_POST_ALLOWED_MEDIA_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+] as const;
+
+export interface SocialPostMedia {
+  id: string;
+  storageKey: string;
+  mimeType: string;
+  altText: string | null;
+  sortOrder: number;
+  imageUrl: string;
+}
 
 export interface SocialPost {
   id: string;
@@ -27,14 +48,22 @@ export interface SocialPost {
   publishError: string | null;
   createdAt: string;
   updatedAt: string;
+  media: SocialPostMedia[];
 }
 
 export interface SocialPostManyResponse {
   posts: SocialPost[];
+  meta: {
+    totalCount: number;
+  };
 }
 
 export interface SocialPostResponse {
   post: SocialPost;
+}
+
+export interface SocialPostMediaResponse {
+  media: SocialPostMedia;
 }
 
 /** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
@@ -46,19 +75,49 @@ type FetchErrorWithData = { data?: { error?: string; errorCode?: string } };
 export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
 
 export function isLinkedInNotConnectedError(error: unknown): boolean {
-  return (error as FetchErrorWithData | undefined)?.data?.errorCode === LINKEDIN_NOT_CONNECTED_ERROR_CODE;
+  return (
+    (error as FetchErrorWithData | undefined)?.data?.errorCode ===
+    LINKEDIN_NOT_CONNECTED_ERROR_CODE
+  );
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
-export function useGetSocialPosts(options: QueryOpts = {}) {
+/**
+ * A single post, fetched from its own detail endpoint. Its query key sits
+ * under the same `social-posts` root as the list query (see
+ * `socialPostKeys`), so mutations that invalidate `socialPostKeys.all`
+ * refresh both together.
+ */
+export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
   const api = useApi();
-  return useQuery<SocialPostManyResponse>({
-    queryKey: socialPostKeys.list(),
-    queryFn: ({ signal }) => api('/social-posts', { method: 'GET', signal }),
-    ...options,
+  const { data, isLoading, isError } = useQuery<SocialPostResponse>({
+    queryKey: socialPostKeys.detail(postId),
+    queryFn: ({ signal }) =>
+      api(`/social-posts/${toValue(postId)}`, { method: 'GET', signal }),
+    enabled: () => !!toValue(postId),
+  });
+
+  const post = computed(() => data.value?.post ?? null);
+
+  return { post, isLoading, isError };
+}
+
+export function useCreateSocialPost() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  return useMutation<SocialPostResponse, unknown, void>({
+    mutationFn: () =>
+      api('/social-posts', { method: 'POST', body: { content: '' } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.createError'))),
   });
 }
 
@@ -67,14 +126,19 @@ export function useUpdateSocialPost() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
-  return useMutation<SocialPostResponse, unknown, { id: string; content: string }>({
+  return useMutation<
+    SocialPostResponse,
+    unknown,
+    { id: string; content: string }
+  >({
     mutationFn: ({ id, content }) =>
       api(`/social-posts/${id}`, { method: 'PATCH', body: { content } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
       toast.success(t('social.toast.updateSuccess'));
     },
-    onError: (error) => toast.error(getErrorMessage(error, t('social.toast.updateError'))),
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.updateError'))),
   });
 }
 
@@ -89,7 +153,8 @@ export function useDeleteSocialPost() {
       queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
       toast.success(t('social.toast.deleteSuccess'));
     },
-    onError: (error) => toast.error(getErrorMessage(error, t('social.toast.deleteError'))),
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.deleteError'))),
   });
 }
 
@@ -115,5 +180,94 @@ export function usePublishSocialPost() {
       }
       toast.error(getErrorMessage(error, t('social.toast.publishError')));
     },
+  });
+}
+
+export interface UploadSocialPostMediaVariables {
+  postId: string;
+  file: File;
+}
+
+export function useUploadSocialPostMedia() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  return useMutation<
+    SocialPostMediaResponse,
+    unknown,
+    UploadSocialPostMediaVariables
+  >({
+    mutationKey: socialPostKeys.mediaUpload(),
+    mutationFn: ({ postId, file }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api(`/social-posts/${postId}/media`, {
+        method: 'POST',
+        body: formData,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.mediaUploadError'))),
+  });
+}
+
+/**
+ * Files currently uploading for a given post. Reads the shared mutation
+ * cache (like usePendingGenImageCount does for image generation) instead of
+ * local state, so it stays correct even if several files are attached at
+ * once from `SocialPostMediaList.vue`.
+ */
+export function usePendingSocialPostMediaUploads(postId: string) {
+  const pending = useMutationState({
+    filters: { mutationKey: socialPostKeys.mediaUpload(), status: 'pending' },
+    select: (mutation) =>
+      mutation.state.variables as UploadSocialPostMediaVariables | undefined,
+  });
+
+  return computed(() =>
+    pending.value.filter((variables) => variables?.postId === postId),
+  );
+}
+
+export function useUpdateSocialPostMediaAltText() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  return useMutation<
+    SocialPostMediaResponse,
+    unknown,
+    { postId: string; mediaId: string; altText: string }
+  >({
+    mutationFn: ({ postId, mediaId, altText }) =>
+      api(`/social-posts/${postId}/media/${mediaId}`, {
+        method: 'PATCH',
+        body: { altText },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.mediaAltTextError'))),
+  });
+}
+
+export function useDeleteSocialPostMedia() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  return useMutation<void, unknown, { postId: string; mediaId: string }>({
+    mutationFn: ({ postId, mediaId }) =>
+      api(`/social-posts/${postId}/media/${mediaId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('social.toast.mediaDeleteError'))),
   });
 }

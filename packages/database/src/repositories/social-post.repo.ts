@@ -1,9 +1,15 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
-import type { NewSocialPost, SocialPost } from '../schema';
-import { socialPost } from '../schema';
+import type {
+  NewSocialPost,
+  NewSocialPostMedia,
+  SocialPost,
+  SocialPostMedia,
+  SocialPostWithMedia,
+} from '../schema';
+import { socialPost, socialPostMedia } from '../schema';
 
-export type { SocialPost } from '../schema';
+export type { SocialPost, SocialPostMedia, SocialPostWithMedia } from '../schema';
 
 export async function createSocialPost(values: NewSocialPost): Promise<SocialPost> {
   const [created] = await db.insert(socialPost).values(values).returning();
@@ -21,22 +27,40 @@ export async function getSocialPostById({
 }: {
   id: string;
   userId: string;
-}): Promise<SocialPost | null> {
+}): Promise<SocialPostWithMedia | null> {
   const post = await db.query.socialPost.findFirst({
     where: { id, userId },
+    with: {
+      media: { orderBy: (t, { asc }) => asc(t.sortOrder) },
+    },
   });
 
   return post ?? null;
 }
 
+export async function getSocialPostCountByUserId({ userId }: { userId: string }): Promise<number> {
+  return db.$count(socialPost, eq(socialPost.userId, userId));
+}
+
 export async function getAllSocialPostsByUserId({
   userId,
+  limit,
+  sort = 'desc',
+  offset,
 }: {
   userId: string;
-}): Promise<SocialPost[]> {
+  limit?: number;
+  sort?: 'asc' | 'desc';
+  offset?: number;
+}): Promise<SocialPostWithMedia[]> {
   return db.query.socialPost.findMany({
     where: { userId },
-    orderBy: (t, { desc }) => desc(t.createdAt),
+    limit,
+    offset,
+    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
+    with: {
+      media: { orderBy: (t, { asc }) => asc(t.sortOrder) },
+    },
   });
 }
 
@@ -113,4 +137,62 @@ export async function markSocialPostFailed({
     .returning();
 
   return updated ?? null;
+}
+
+// SOCIAL POST MEDIA
+//
+// None of these take a userId: callers must first load the owning post with
+// `getSocialPostById({ id: socialPostId, userId })` to confirm ownership,
+// then scope every media operation to that postId. This mirrors how the API
+// controller and the agent's social-post.service.ts already have to load the
+// post anyway (to check its `draft` status) before touching its media.
+
+export async function createSocialPostMediaRecords(
+  records: NewSocialPostMedia[],
+): Promise<SocialPostMedia[]> {
+  if (records.length === 0) {
+    return [];
+  }
+
+  return db.insert(socialPostMedia).values(records).returning();
+}
+
+export async function updateSocialPostMediaAltText({
+  id,
+  socialPostId,
+  altText,
+}: {
+  id: string;
+  socialPostId: string;
+  altText: string;
+}): Promise<SocialPostMedia | null> {
+  const [updated] = await db
+    .update(socialPostMedia)
+    .set({ altText })
+    .where(and(eq(socialPostMedia.id, id), eq(socialPostMedia.socialPostId, socialPostId)))
+    .returning();
+
+  return updated ?? null;
+}
+
+export async function deleteSocialPostMediaById({
+  id,
+  socialPostId,
+}: {
+  id: string;
+  socialPostId: string;
+}): Promise<void> {
+  await db
+    .delete(socialPostMedia)
+    .where(and(eq(socialPostMedia.id, id), eq(socialPostMedia.socialPostId, socialPostId)));
+}
+
+// Used to replace a draft's whole media set in one go, e.g. when the agent
+// tool revises a draft with a new imageIds list.
+export async function deleteSocialPostMediaByPostId({
+  socialPostId,
+}: {
+  socialPostId: string;
+}): Promise<void> {
+  await db.delete(socialPostMedia).where(eq(socialPostMedia.socialPostId, socialPostId));
 }
