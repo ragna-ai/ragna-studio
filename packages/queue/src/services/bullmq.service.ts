@@ -13,16 +13,15 @@ import type {
   WorkerOptions,
 } from 'bullmq';
 import { FlowProducer, Queue, Worker } from 'bullmq';
+import { CRON_QUEUE_NAME } from '../constants';
 
 const queues: Queue[] = [];
 const workers: Worker[] = [];
-let flowProducer: FlowProducer | null = null;
 const cronJobs: {
   name: string;
   processor: () => Promise<void>;
   schedule: RepeatOptions;
 }[] = [];
-const CRON_QUEUE_NAME = '__cron__';
 
 const connectionOptions: ConnectionOptions = {
   host: config.redisHost,
@@ -199,7 +198,7 @@ export function addCronJob({
 }
 
 /**
- * Starts all registered cron jobs by adding them as repeatable jobs
+ * Starts all registered cron jobs by upserting a job scheduler per cron
  * and creating a worker to process them
  */
 export async function startCronJobs() {
@@ -208,26 +207,44 @@ export async function startCronJobs() {
     return;
   }
 
-  const cronQueue = createQueue({ name: CRON_QUEUE_NAME });
-
   // Create a map of processors for the worker
   const processorMap = new Map<string, () => Promise<void>>();
   for (const cronJob of cronJobs) {
     processorMap.set(cronJob.name, cronJob.processor);
   }
 
-  // Add repeatable jobs to the queue
+  // Upsert a job scheduler per registered cron, keyed by cron name. Unlike
+  // the legacy repeatable job add (queue.add(..., { repeat })), a scheduler
+  // upsert is keyed by this id and updates the schedule in place, so editing
+  // a cron's pattern no longer leaves the previous repeat entry behind.
   for (const cronJob of cronJobs) {
-    await cronQueue.add(
-      cronJob.name,
-      {},
-      {
-        repeat: cronJob.schedule,
-        removeOnComplete: true,
-        removeOnFail: { age: 24 * 3600 },
+    await upsertQueueJobScheduler({
+      queueName: CRON_QUEUE_NAME,
+      schedulerId: cronJob.name,
+      repeat: cronJob.schedule,
+      job: {
+        name: cronJob.name,
+        data: {},
+        opts: { removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
       },
-    );
+    });
     logger.info(`Cron job ${cronJob.name} scheduled`);
+  }
+
+  // Reconcile: remove any scheduler whose id isn't a currently registered
+  // cron name. This clears entries left behind by renamed/removed crons, and
+  // also legacy repeatable jobs from before this migration to job schedulers,
+  // since those are keyed by a generated `name:...:pattern` string that never
+  // matches a plain registered cron name.
+  const registeredCronNames = new Set(cronJobs.map((cronJob) => cronJob.name));
+  const existingSchedulers = await getQueueJobSchedulers({ queueName: CRON_QUEUE_NAME });
+  const orphanedSchedulerIds = existingSchedulers
+    .map((scheduler) => scheduler.key)
+    .filter((schedulerId) => !registeredCronNames.has(schedulerId));
+
+  for (const schedulerId of orphanedSchedulerIds) {
+    await removeQueueJobScheduler({ queueName: CRON_QUEUE_NAME, schedulerId });
+    logger.info(`Removed orphaned cron scheduler ${schedulerId}`);
   }
 
   // Create worker to process cron jobs
@@ -268,6 +285,8 @@ export function getOrCreateQueue({ name }: { name: string }) {
 export function getCronJob({ name }: { name: string }) {
   return cronJobs.find((cronJob) => cronJob.name === name);
 }
+
+let flowProducer: FlowProducer | null = null;
 
 /**
  * Returns singleton FlowProducer instance

@@ -1,3 +1,4 @@
+export const CRON_QUEUE_NAME = '__cron__';
 export const ONBOARDINGS_QUEUE = 'onboardings-queue';
 export const EMAILS_QUEUE = 'emails-queue';
 export const NOTIFICATIONS_QUEUE = 'notifications-queue';
