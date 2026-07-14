@@ -24,18 +24,11 @@ const emit = defineEmits<{
 // Refs
 
 // Composables
+const { formatDateTime } = useDateTimeFormat();
 
 // Computed
 
 // Functions
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDateTime(isoDate: string) {
-  return dateTimeFormatter.format(new Date(isoDate));
-}
 
 // Hooks
 </script>

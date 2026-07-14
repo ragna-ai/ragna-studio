@@ -26,17 +26,33 @@ interface Props {
 
 defineProps<Props>();
 
+// Composables
+const { t } = useI18n();
+
 // Functions
 type ToolPart = { type: string; state: string; output?: unknown };
 
-function generatedImages(part: ToolPart): GeneratedAgentImage[] {
+const generatedImages = (part: ToolPart): GeneratedAgentImage[] => {
   if (part.type !== 'tool-imageGen' || part.state !== 'output-available') {
     return [];
   }
   // The generic UIMessage type erases per-tool output types.
   const output = part.output as getGeneratedImagesOutput;
   return 'images' in output ? output.images : [];
-}
+};
+
+const toolNames: Record<string, string> = {
+  'tool-think': t('agent.tool.think.label'),
+  'tool-linkedinDraft': t('agent.tool.linkedinDraft.label'),
+  'tool-imageGen': t('agent.tool.imageGen.label'),
+  'tool-webSearch': t('agent.tool.webSearch.label'),
+  'tool-webBrowser': t('agent.tool.webBrowser.label'),
+};
+
+const getToolTitle = (part: ToolPart): string => {
+  // Implement your logic to determine the tool title based on the part
+  return toolNames[part.type] ?? part.type.split('-').slice(1).join('-');
+};
 
 // group-[.is-assistant]:w-full
 </script>
@@ -57,7 +73,11 @@ function generatedImages(part: ToolPart): GeneratedAgentImage[] {
 
         <template v-else-if="isStaticToolUIPart(part)">
           <Tool>
-            <ToolHeader :type="part.type" :state="part.state" />
+            <ToolHeader
+              :type="part.type"
+              :state="part.state"
+              :title="getToolTitle(part)"
+            />
             <ToolContent>
               <ToolInput :input="part.input" />
               <ToolOutput :output="part.output" :error-text="part.errorText" />

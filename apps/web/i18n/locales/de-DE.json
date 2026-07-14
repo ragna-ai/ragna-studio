@@ -13,26 +13,26 @@
       "title": "KI-Agent bearbeiten",
       "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
     },
-    "tools": {
+    "tool": {
       "think": {
-        "title": "Denken",
+        "label": "Gedanken aufschreiben",
         "description": "Aktiviert tieferes Nachdenken vor der Antwort."
       },
       "webSearch": {
-        "title": "Websuche",
+        "label": "Websuche",
         "description": "Findet aktuelle Informationen im Web."
       },
       "webBrowser": {
-        "title": "Webbrowser",
+        "label": "Webbrowser",
         "description": "Öffnet Seiten und interagiert mit Websites."
       },
       "imageGen": {
-        "title": "Bildgenerierung",
+        "label": "Bildgenerierung",
         "description": "Erstellt Bilder aus Textbeschreibungen."
       },
       "linkedinDraft": {
-        "title": "LinkedIn-Entwurf",
-        "description": "Entwirft LinkedIn-Beiträge. Du veröffentlichst sie selbst."
+        "label": "LinkedIn-Beitrag",
+        "description": "Speichert LinkedIn-Beiträge. Du veröffentlichst sie selbst."
       }
     }
   },

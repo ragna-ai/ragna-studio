@@ -48,32 +48,32 @@ const availableTools: UiAgentTool[] = [
   {
     id: 'think',
     icon: PencilLineIcon,
-    titleKey: 'agent.tools.think.title',
-    descriptionKey: 'agent.tools.think.description',
+    titleKey: 'agent.tool.think.label',
+    descriptionKey: 'agent.tool.think.description',
   },
   {
     id: 'webSearch',
     icon: GlobeIcon,
-    titleKey: 'agent.tools.webSearch.title',
-    descriptionKey: 'agent.tools.webSearch.description',
+    titleKey: 'agent.tool.webSearch.label',
+    descriptionKey: 'agent.tool.webSearch.description',
   },
   {
     id: 'webBrowser',
     icon: AppWindowIcon,
-    titleKey: 'agent.tools.webBrowser.title',
-    descriptionKey: 'agent.tools.webBrowser.description',
+    titleKey: 'agent.tool.webBrowser.label',
+    descriptionKey: 'agent.tool.webBrowser.description',
   },
   {
     id: 'imageGen',
     icon: ImageIcon,
-    titleKey: 'agent.tools.imageGen.title',
-    descriptionKey: 'agent.tools.imageGen.description',
+    titleKey: 'agent.tool.imageGen.label',
+    descriptionKey: 'agent.tool.imageGen.description',
   },
   {
     id: 'linkedinDraft',
     icon: Share2Icon,
-    titleKey: 'agent.tools.linkedinDraft.title',
-    descriptionKey: 'agent.tools.linkedinDraft.description',
+    titleKey: 'agent.tool.linkedinDraft.label',
+    descriptionKey: 'agent.tool.linkedinDraft.description',
   },
 ];
 

@@ -37,7 +37,9 @@ const derivedName = computed(() =>
   >
     <div class="flex items-center gap-2">
       <SparklesIcon class="size-4 stroke-1.5 text-muted-foreground" />
-      <span class="text-sm font-medium">{{ props.title ?? derivedName }}</span>
+      <span class="text-sm font-medium">
+        {{ props.title ?? derivedName }}
+      </span>
       <StatusBadge :state="props.state" />
       <ChevronDownIcon
         class="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"

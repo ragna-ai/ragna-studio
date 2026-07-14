@@ -28,6 +28,7 @@ const { t } = useI18n();
 const { accounts, isLoading: isLoadingAccounts } = useUserSocialAccounts();
 const { mutate: updatePost, isPending: isUpdating } = useUpdateSocialPost();
 const { mutate: publishPost, isPending: isPublishing } = usePublishSocialPost();
+const { formatDateTime } = useDateTimeFormat();
 
 const form = useForm({
   defaultValues: {
@@ -47,15 +48,6 @@ const hasLinkedInConnected = computed(() =>
 );
 
 // Functions
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDateTime(isoDate: string) {
-  return dateTimeFormatter.format(new Date(isoDate));
-}
-
 function handlePublish() {
   publishPost(props.post.id);
 }

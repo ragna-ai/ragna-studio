@@ -42,6 +42,7 @@ const { mutate: cancelRun, isPending: isCancelling } = useCancelWorkflowRun(() =
 // No `source` option: this copies the raw run output on demand via
 // `copy()`, not a value that's continuously reactive-copied.
 const { copy: copyOutput, copied: isOutputCopied } = useClipboard();
+const { formatDateTime } = useDateTimeFormat();
 
 // Computed
 const run = computed(() => data.value?.run ?? null);
@@ -97,16 +98,6 @@ const multiTerminalOutput = computed(() => {
     return null;
   }
 });
-
-// Functions
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDateTime(isoDate: string) {
-  return dateTimeFormatter.format(new Date(isoDate));
-}
 </script>
 
 <template>

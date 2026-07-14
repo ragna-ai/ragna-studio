@@ -18,19 +18,10 @@ const { data, isLoading } = useGetWorkflowRuns(
   () => props.workflowId,
   { enabled: () => open.value },
 );
+const { formatDateTime } = useDateTimeFormat();
 
 // Computed
 const runs = computed(() => data.value?.runs ?? []);
-
-// Functions
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
-function formatDateTime(isoDate: string) {
-  return dateTimeFormatter.format(new Date(isoDate));
-}
 </script>
 
 <template>
