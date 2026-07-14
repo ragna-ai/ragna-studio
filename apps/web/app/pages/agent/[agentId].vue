@@ -5,7 +5,6 @@ import { useGetAgent } from '~/features/agent/composables/useAgentApi';
 // Imports
 
 definePageMeta({
-  title: 'Chat Conversation',
   validate: (route) => hasValidAgentId(route.params),
 });
 

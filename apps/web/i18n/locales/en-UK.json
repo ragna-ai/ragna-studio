@@ -55,6 +55,11 @@
         "actions": "Actions"
       }
     },
+    "create": {
+      "title": "New post",
+      "subtitle": "Draft a new LinkedIn post.",
+      "creating": "Creating draft..."
+    },
     "editor": {
       "title": "Edit post",
       "subtitle": "Write your post, attach images, and publish to LinkedIn.",
@@ -70,7 +75,8 @@
     "actions": {
       "save": "Save",
       "publish": "Publish",
-      "delete": "Delete"
+      "delete": "Delete",
+      "cancel": "Cancel"
     },
     "viewOnLinkedIn": "View on LinkedIn",
     "loadError": "Failed to load posts.",

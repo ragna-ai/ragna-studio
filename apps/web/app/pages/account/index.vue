@@ -2,8 +2,6 @@
 import UserProfileSettings from '~/features/user/components/UserProfileSettings.vue';
 import UserSocialSettings from '~/features/user/components/UserSocialSettings.vue';
 
-// Imports
-
 // Props
 // Emits
 

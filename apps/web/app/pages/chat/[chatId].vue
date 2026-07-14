@@ -4,7 +4,6 @@ import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
 
 definePageMeta({
-  title: 'Chat Conversation',
   validate: (route) => hasValidChatId(route.params),
 });
 
@@ -25,7 +24,7 @@ useHead({
     v-if="data?.chat"
     :key="data.chat.id"
     :chatId="data.chat.id"
-    :initialMessages="data.chat.messages"
+    :initialMessages="data.chat.messages ?? []"
   />
   <div
     v-else-if="chatError"

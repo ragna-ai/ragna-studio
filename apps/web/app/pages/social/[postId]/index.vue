@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// Imports
 import { Shimmer } from '~/components/ai-elements/shimmer';
-import SocialPostEditor from '~/features/social/components/SocialPostEditor.vue';
+import SocialPostUpsertForm from '~/features/social/components/SocialPostUpsertForm.vue';
 import { useGetSocialPost } from '~/features/social/composables/useSocialPostApi';
 
 definePageMeta({
-  title: 'Social Post',
   validate: (route) => hasValidSocialPostId(route.params),
 });
 
@@ -41,7 +39,7 @@ useHead({
       <template #bottom> </template>
     </Heading>
     <div class="px-5 pb-10">
-      <SocialPostEditor v-if="post" :key="post.id" :post="post" />
+      <SocialPostUpsertForm v-if="post" :key="post.id" :post="post" />
       <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
         {{ t('social.loadError') }}
       </p>

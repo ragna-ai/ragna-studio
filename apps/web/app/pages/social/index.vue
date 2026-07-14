@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import SocialPostManyTable from '~/features/social/components/SocialPostManyTable.vue';
 import { useDeleteSocialPost } from '~/features/social/composables/useSocialPostApi';
 import useSocialPostList from '~/features/social/composables/useSocialPostList';

@@ -110,9 +110,9 @@ export function useCreateSocialPost() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
-  return useMutation<SocialPostResponse, unknown, void>({
-    mutationFn: () =>
-      api('/social-posts', { method: 'POST', body: { content: '' } }),
+  return useMutation<SocialPostResponse, unknown, string>({
+    mutationFn: (content) =>
+      api('/social-posts', { method: 'POST', body: { content } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
     },

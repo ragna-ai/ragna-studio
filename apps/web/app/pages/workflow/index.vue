@@ -3,8 +3,6 @@ import WorkflowManyTable from '~/features/workflow/components/WorkflowManyTable.
 import { useDeleteWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 import useWorkflowList from '~/features/workflow/composables/useWorkflowList';
 
-// Imports
-
 // Props
 // Emits
 

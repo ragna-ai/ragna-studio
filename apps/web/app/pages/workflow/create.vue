@@ -4,8 +4,6 @@ import { z } from 'zod';
 import { useUpsertWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 import { createWorkflowNode } from '~/features/workflow/lib/default-node';
 
-// Imports
-
 const workflowCreateSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
   description: z.string(),

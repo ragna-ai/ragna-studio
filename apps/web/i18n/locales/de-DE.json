@@ -118,6 +118,11 @@
         "actions": "Aktionen"
       }
     },
+    "create": {
+      "title": "Neuer Post",
+      "subtitle": "Entwirf einen neuen LinkedIn-Post.",
+      "creating": "Entwurf wird erstellt..."
+    },
     "editor": {
       "title": "Post bearbeiten",
       "subtitle": "Schreibe deinen Post, hänge Bilder an und veröffentliche auf LinkedIn.",
@@ -133,7 +138,8 @@
     "actions": {
       "save": "Speichern",
       "publish": "Veröffentlichen",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "cancel": "Abbrechen"
     },
     "viewOnLinkedIn": "Auf LinkedIn ansehen",
     "loadError": "Posts konnten nicht geladen werden.",

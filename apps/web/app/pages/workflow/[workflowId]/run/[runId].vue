@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import WorkflowRunView from '~/features/workflow/components/WorkflowRunView.vue';
 
-// Imports
-
 definePageMeta({
-  title: 'Workflow Run',
   validate: (route) => hasValidWorkflowRunId(route.params),
 });
 

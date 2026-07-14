@@ -3,10 +3,7 @@ import { Shimmer } from '~/components/ai-elements/shimmer';
 import WorkflowEditor from '~/features/workflow/components/WorkflowEditor.vue';
 import { useGetWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 
-// Imports
-
 definePageMeta({
-  title: 'Workflow Editor',
   validate: (route) => hasValidWorkflowId(route.params),
 });
 
