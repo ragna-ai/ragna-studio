@@ -1,4 +1,4 @@
-import { parseExpression } from 'cron-parser';
+import { CronExpressionParser } from 'cron-parser';
 
 const CRON_FIELD_COUNT = 5;
 
@@ -11,7 +11,7 @@ export function isValidCronExpression(cron: string): boolean {
   }
 
   try {
-    parseExpression(cron);
+    CronExpressionParser.parse(cron);
     return true;
   } catch {
     return false;
@@ -19,7 +19,7 @@ export function isValidCronExpression(cron: string): boolean {
 }
 
 export function getNextCronOccurrences(cron: string, timezone: string, count: number): Date[] {
-  const interval = parseExpression(cron, { tz: timezone });
+  const interval = CronExpressionParser.parse(cron, { tz: timezone });
 
   return Array.from({ length: count }, () => interval.next().toDate());
 }

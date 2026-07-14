@@ -12,15 +12,15 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
-  WORKFLOW_RUN_JOB,
-  WORKFLOW_SCHEDULE_TICK_JOB,
-  WORKFLOW_SCHEDULES_QUEUE,
-  WORKFLOWS_QUEUE,
-  WorkflowRunJobDto,
-  WorkflowScheduleTickJobDto,
   queueAddJob,
   removeQueueJobScheduler,
   upsertQueueJobScheduler,
+  WORKFLOW_RUN_JOB,
+  WORKFLOW_SCHEDULE_TICK_JOB,
+  WORKFLOW_SCHEDULES_QUEUE,
+  WorkflowRunJobDto,
+  WORKFLOWS_QUEUE,
+  WorkflowScheduleTickJobDto,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 import { getScheduleFromDefinition, validateWorkflowDefinition } from '@repo/workflow';
@@ -271,23 +271,25 @@ export const workflowController = new Hono()
     // client believing publish succeeded while the schedule silently didn't
     // apply. Publish is idempotent and retryable, and worker-side
     // reconciliation heals any residual drift, so there is no DB rollback.
-    const { error: schedulerError } = await tryCatch(() =>
-      schedule
-        ? upsertQueueJobScheduler({
-            queueName: WORKFLOW_SCHEDULES_QUEUE,
-            schedulerId: param.workflowId,
-            repeat: { pattern: schedule.cron, tz: schedule.timezone },
-            job: {
-              name: WORKFLOW_SCHEDULE_TICK_JOB,
-              data: new WorkflowScheduleTickJobDto({ workflowId: param.workflowId }).toJSON(),
-              opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
-            },
-          })
-        : removeQueueJobScheduler({
-            queueName: WORKFLOW_SCHEDULES_QUEUE,
-            schedulerId: param.workflowId,
-          }),
-    );
+    const { error: schedulerError } = await tryCatch(async () => {
+      if (!schedule) {
+        return removeQueueJobScheduler({
+          queueName: WORKFLOW_SCHEDULES_QUEUE,
+          schedulerId: param.workflowId,
+        });
+      }
+
+      return upsertQueueJobScheduler({
+        queueName: WORKFLOW_SCHEDULES_QUEUE,
+        schedulerId: param.workflowId,
+        repeat: { pattern: schedule.cron, tz: schedule.timezone },
+        job: {
+          name: WORKFLOW_SCHEDULE_TICK_JOB,
+          data: new WorkflowScheduleTickJobDto({ workflowId: param.workflowId }).toJSON(),
+          opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
+        },
+      });
+    });
 
     if (schedulerError !== null) {
       logger.error('Failed to sync workflow schedule after publish', schedulerError);
@@ -339,7 +341,7 @@ export const workflowController = new Hono()
       }),
     );
 
-    if (createRunError !== null) {
+    if (createRunError !== null || !run) {
       logger.error('Failed to create workflow run', createRunError);
       throw new InternalServerErrorException('Failed to create workflow run');
     }
