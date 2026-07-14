@@ -1,10 +1,11 @@
 import type {
   WorkflowDefinition,
   WorkflowRunStatus,
+  WorkflowRunTrigger,
   WorkflowStepStatus,
   WorkflowToolCall,
 } from '@repo/workflow';
-import { eq } from 'drizzle-orm';
+import { and, eq, lt, or } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   WorkflowRun,
@@ -18,10 +19,12 @@ export async function createWorkflowRun({
   workflowId,
   definition,
   input,
+  triggeredBy,
 }: {
   workflowId: string;
   definition: WorkflowDefinition;
   input?: string;
+  triggeredBy?: WorkflowRunTrigger;
 }): Promise<WorkflowRun> {
   const [createdRun] = await db
     .insert(workflowRun)
@@ -29,6 +32,7 @@ export async function createWorkflowRun({
       workflowId,
       definition,
       input,
+      triggeredBy,
     })
     .returning();
 
@@ -37,6 +41,17 @@ export async function createWorkflowRun({
   }
 
   return createdRun;
+}
+
+// Overlap guard for the schedule tick processor: a workflow with an
+// unfinished run (pending or running) skips this tick rather than stacking.
+export async function hasActiveRun({ workflowId }: { workflowId: string }): Promise<boolean> {
+  const activeRun = await db.query.workflowRun.findFirst({
+    where: { workflowId, status: { in: ['pending', 'running'] } },
+    columns: { id: true },
+  });
+
+  return activeRun !== undefined;
 }
 
 export async function getRunById({
@@ -184,6 +199,32 @@ export async function upsertRunStep({
   }
 
   return upsertedStep;
+}
+
+// Sweeper for runs a crashed/dropped job left stuck: 'pending' past
+// `pendingBefore` or 'running' past `runningBefore` are marked 'failed'. The
+// status check lives in the where-clause (not read-then-write), so a run
+// that reached a terminal status between the sweep query and this update is
+// never overwritten. Returns the number of runs marked, for logging.
+export async function failStaleRuns({
+  pendingBefore,
+  runningBefore,
+}: {
+  pendingBefore: Date;
+  runningBefore: Date;
+}): Promise<number> {
+  const staleRuns = await db
+    .update(workflowRun)
+    .set({ status: 'failed', error: 'timed out', finishedAt: new Date() })
+    .where(
+      or(
+        and(eq(workflowRun.status, 'pending'), lt(workflowRun.createdAt, pendingBefore)),
+        and(eq(workflowRun.status, 'running'), lt(workflowRun.startedAt, runningBefore)),
+      ),
+    )
+    .returning({ id: workflowRun.id });
+
+  return staleRuns.length;
 }
 
 export async function getStepsByRunId({ runId }: { runId: string }): Promise<WorkflowRunStep[]> {

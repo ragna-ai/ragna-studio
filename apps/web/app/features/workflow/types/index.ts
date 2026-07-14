@@ -1,6 +1,7 @@
 import type {
   WorkflowDefinition,
   WorkflowRunStatus,
+  WorkflowRunTrigger,
   WorkflowStepStatus,
   WorkflowToolCall,
 } from '@repo/workflow';
@@ -11,6 +12,10 @@ export interface Workflow {
   description?: string | null;
   definition: WorkflowDefinition;
   publishedDefinition: WorkflowDefinition | null;
+  // Denormalized from the published trigger config; null when unpublished or
+  // manual-triggered. See @repo/workflow's getScheduleFromDefinition.
+  scheduleCron: string | null;
+  scheduleTimezone: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,6 +55,7 @@ export interface WorkflowRun {
   id: string;
   workflowId: string;
   status: WorkflowRunStatus;
+  triggeredBy: WorkflowRunTrigger;
   definition: WorkflowDefinition;
   input: string | null;
   output: string | null;

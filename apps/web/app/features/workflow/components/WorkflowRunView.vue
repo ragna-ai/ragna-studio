@@ -9,6 +9,7 @@ import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunStatusBadge.vue';
 import WorkflowRunStepPanel from '~/features/workflow/components/WorkflowRunStepPanel.vue';
+import WorkflowRunTriggerBadge from '~/features/workflow/components/WorkflowRunTriggerBadge.vue';
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import { MessageResponse } from '~/components/ai-elements/message';
 
@@ -117,6 +118,7 @@ function formatDateTime(isoDate: string) {
           <p class="text-xs text-muted-foreground">{{ formatDateTime(run.createdAt) }}</p>
         </div>
         <div class="flex items-center gap-2">
+          <WorkflowRunTriggerBadge :trigger="run.triggeredBy" />
           <WorkflowRunStatusBadge :status="run.status" />
           <Button
             v-if="isCancellable"

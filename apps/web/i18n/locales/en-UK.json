@@ -23,6 +23,56 @@
       }
     }
   },
+  "workflow": {
+    "list": {
+      "title": "Workflows",
+      "subtitle": "Automate multi-step tasks with agents, tools, and conditions.",
+      "newWorkflow": "New workflow",
+      "scheduled": "Scheduled: {cron} ({timezone})"
+    },
+    "editor": {
+      "title": "Workflow editor"
+    },
+    "run": {
+      "title": "View workflow run",
+      "trigger": {
+        "manual": "Manual",
+        "schedule": "Scheduled"
+      }
+    },
+    "trigger": {
+      "kind": {
+        "label": "Trigger type",
+        "manual": "Manual",
+        "schedule": "Schedule"
+      },
+      "manualDescription": "Manual trigger. The workflow starts when you click Run; no configuration needed.",
+      "preset": {
+        "label": "Frequency",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "custom": "Custom"
+      },
+      "time": "Time",
+      "weekday": {
+        "label": "Day of week",
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "cron": {
+        "label": "Cron expression",
+        "invalid": "Invalid cron expression"
+      },
+      "timezone": "Timezone",
+      "nextRuns": "Next runs"
+    }
+  },
   "user": {
     "social": {
       "title": "Connected accounts",

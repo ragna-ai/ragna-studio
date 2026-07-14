@@ -3,6 +3,8 @@ import { logger } from '@repo/logger';
 import type {
   ConnectionOptions,
   FlowChildJob,
+  JobSchedulerJson,
+  JobSchedulerTemplateOptions,
   JobsOptions,
   Processor,
   QueueOptions,
@@ -88,6 +90,47 @@ export function queueAddJob<T>({
 }) {
   const queue = getOrCreateQueue({ name: queueName });
   return queue.add(jobName, data, { ...defaultJobOptions, ...opts });
+}
+
+/**
+ * Creates or updates a repeatable job scheduler. Unlike `queueAddJob`, this
+ * is keyed by a caller-chosen `schedulerId` (e.g. a workflow id) rather than
+ * producing a new job each call, so re-publishing a schedule just updates
+ * its pattern instead of stacking schedulers.
+ */
+export function upsertQueueJobScheduler<T>({
+  queueName,
+  schedulerId,
+  repeat,
+  job,
+}: {
+  queueName: string;
+  schedulerId: string;
+  repeat: Pick<RepeatOptions, 'pattern' | 'tz'>;
+  job: { name: string; data: T; opts?: JobSchedulerTemplateOptions };
+}) {
+  const queue = getOrCreateQueue({ name: queueName });
+  return queue.upsertJobScheduler(schedulerId, repeat, job);
+}
+
+export function removeQueueJobScheduler({
+  queueName,
+  schedulerId,
+}: {
+  queueName: string;
+  schedulerId: string;
+}) {
+  const queue = getOrCreateQueue({ name: queueName });
+  return queue.removeJobScheduler(schedulerId);
+}
+
+export function getQueueJobSchedulers({
+  queueName,
+}: {
+  queueName: string;
+}): Promise<JobSchedulerJson[]> {
+  const queue = getOrCreateQueue({ name: queueName });
+  return queue.getJobSchedulers();
 }
 
 export function createWorker({

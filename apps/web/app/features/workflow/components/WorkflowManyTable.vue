@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SettingsIcon, Trash2Icon, WorkflowIcon } from '@lucide/vue';
+import { ClockIcon, SettingsIcon, Trash2Icon, WorkflowIcon } from '@lucide/vue';
 import type { Workflow } from '~/features/workflow/types';
 
 // Imports
@@ -20,6 +20,7 @@ const emit = defineEmits<{
 // Refs
 
 // Composables
+const { t } = useI18n();
 
 // Computed
 
@@ -70,9 +71,31 @@ function formatDateTime(isoDate: string) {
           {{ workflow.description || '—' }}
         </TableCell>
         <TableCell>
-          <Badge :variant="workflow.publishedDefinition ? 'default' : 'secondary'">
-            {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
-          </Badge>
+          <div class="flex items-center gap-1.5">
+            <Badge :variant="workflow.publishedDefinition ? 'default' : 'secondary'">
+              {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
+            </Badge>
+            <TooltipProvider v-if="workflow.scheduleCron">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Badge variant="outline" class="gap-1">
+                    <ClockIcon class="size-3" />
+                    {{ workflow.scheduleCron }}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {{
+                      t('workflow.list.scheduled', {
+                        cron: workflow.scheduleCron,
+                        timezone: workflow.scheduleTimezone,
+                      })
+                    }}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </TableCell>
         <TableCell class="whitespace-nowrap">
           {{ formatDateTime(workflow.updatedAt) }}

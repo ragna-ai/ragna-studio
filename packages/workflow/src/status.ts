@@ -16,3 +16,6 @@ export const WORKFLOW_STEP_STATUSES = [
   'skipped',
 ] as const;
 export type WorkflowStepStatus = (typeof WORKFLOW_STEP_STATUSES)[number];
+
+export const WORKFLOW_RUN_TRIGGERS = ['manual', 'schedule'] as const;
+export type WorkflowRunTrigger = (typeof WORKFLOW_RUN_TRIGGERS)[number];

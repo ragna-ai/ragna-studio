@@ -1,6 +1,7 @@
 import type {
   WorkflowDefinition,
   WorkflowRunStatus,
+  WorkflowRunTrigger,
   WorkflowStepStatus,
   WorkflowToolCall,
 } from '@repo/workflow';
@@ -27,6 +28,11 @@ export const workflow = pgTable(
       .default(emptyWorkflowDefinition),
     // Snapshot used for execution. Null until the workflow is published.
     publishedDefinition: jsonb('published_definition').$type<WorkflowDefinition>(),
+    // Denormalized from the published trigger config for reconciliation
+    // queries and list-view display. Null when unpublished or manual-triggered;
+    // `published_definition` stays the semantic source of truth.
+    scheduleCron: text('schedule_cron'),
+    scheduleTimezone: text('schedule_timezone'),
     ...timestamps,
   },
   (table) => [index('workflow_userId_idx').on(table.userId)],
@@ -44,6 +50,8 @@ export const workflowRun = pgTable(
       .notNull()
       .references(() => workflow.id, { onDelete: 'cascade' }),
     status: text('status').notNull().$type<WorkflowRunStatus>().default('pending'),
+    // Origin of the run: a manual run-endpoint call or a schedule tick.
+    triggeredBy: text('triggered_by').notNull().$type<WorkflowRunTrigger>().default('manual'),
     // Snapshot of the published definition at enqueue time, so later edits
     // to the workflow don't change how a past run is displayed or replayed.
     definition: jsonb('definition').notNull().$type<WorkflowDefinition>(),

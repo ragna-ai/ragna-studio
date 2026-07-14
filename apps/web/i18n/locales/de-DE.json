@@ -50,13 +50,50 @@
     "list": {
       "title": "Workflows",
       "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
-      "newWorkflow": "Workflow erstellen"
+      "newWorkflow": "Workflow erstellen",
+      "scheduled": "Geplant: {cron} ({timezone})"
     },
     "editor": {
       "title": "Workflow-Editor"
     },
     "run": {
-      "title": "Workflow ansehen"
+      "title": "Workflow ansehen",
+      "trigger": {
+        "manual": "Manuell",
+        "schedule": "Geplant"
+      }
+    },
+    "trigger": {
+      "kind": {
+        "label": "Auslöser-Typ",
+        "manual": "Manuell",
+        "schedule": "Zeitplan"
+      },
+      "manualDescription": "Manueller Auslöser. Der Workflow startet, wenn du auf Ausführen klickst; keine Konfiguration nötig.",
+      "preset": {
+        "label": "Häufigkeit",
+        "hourly": "Stündlich",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "custom": "Benutzerdefiniert"
+      },
+      "time": "Uhrzeit",
+      "weekday": {
+        "label": "Wochentag",
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "cron": {
+        "label": "Cron-Ausdruck",
+        "invalid": "Ungültiger Cron-Ausdruck"
+      },
+      "timezone": "Zeitzone",
+      "nextRuns": "Nächste Ausführungen"
     }
   },
   "imagen": {

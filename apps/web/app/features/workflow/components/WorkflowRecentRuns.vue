@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useGetWorkflowRuns } from '~/features/workflow/composables/useWorkflowApi';
 import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunStatusBadge.vue';
+import WorkflowRunTriggerBadge from '~/features/workflow/components/WorkflowRunTriggerBadge.vue';
 
 // Imports
 
@@ -62,7 +63,10 @@ function formatDateTime(isoDate: string) {
           class="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs hover:bg-secondary"
         >
           <span class="text-muted-foreground">{{ formatDateTime(run.createdAt) }}</span>
-          <WorkflowRunStatusBadge :status="run.status" />
+          <span class="flex items-center gap-1.5">
+            <WorkflowRunTriggerBadge :trigger="run.triggeredBy" />
+            <WorkflowRunStatusBadge :status="run.status" />
+          </span>
         </NuxtLinkLocale>
       </li>
     </ul>

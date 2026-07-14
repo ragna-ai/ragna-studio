@@ -1,5 +1,6 @@
 import { logger } from '@repo/logger';
 import { registerEmailJobProcessor } from './email.processor';
+import { registerWorkflowScheduleJobProcessor } from './workflow-schedule.processor';
 import { registerWorkflowJobProcessor } from './workflow.processor';
 
 export function registerJobProcessors() {
@@ -8,4 +9,5 @@ export function registerJobProcessors() {
   // registerNotificationJobProcessor();
   registerEmailJobProcessor();
   registerWorkflowJobProcessor();
+  registerWorkflowScheduleJobProcessor();
 }

@@ -51,7 +51,7 @@ const emit = defineEmits<{
 
     <Separator />
 
-    <WorkflowTriggerConfigForm v-if="node.type === 'trigger'" />
+    <WorkflowTriggerConfigForm v-if="node.type === 'trigger'" :node="node" />
     <WorkflowAgentConfigForm v-else-if="node.type === 'agent'" :node="node" />
     <WorkflowToolConfigForm v-else-if="node.type === 'tool'" :node="node" />
     <WorkflowConditionConfigForm v-else-if="node.type === 'condition'" :node="node" />

@@ -1,6 +1,8 @@
 import { logger } from '@repo/logger';
-import { queueHealthCheck, shutdown } from '@repo/queue';
+import { queueHealthCheck, shutdown, startCronJobs } from '@repo/queue';
+import { registerCronJobs } from './crons';
 import { registerJobProcessors } from './processors';
+import { reconcileSchedules } from './workflow/reconcile-schedules';
 
 async function main() {
   logger.info('Starting worker process...');
@@ -15,11 +17,15 @@ async function main() {
   // Register job processors
   registerJobProcessors();
 
-  // // Register and start cron jobs
-  // registerCronJobs();
-  // await startCronJobs();
+  // Reconcile per-workflow schedule job schedulers against the DB. Must run
+  // after processors are registered so the schedule worker/queue exist.
+  await reconcileSchedules();
 
-  // logger.info('Worker ready and processing jobs');
+  // Register and start cron jobs
+  registerCronJobs();
+  await startCronJobs();
+
+  logger.info('Worker ready and processing jobs');
 }
 
 async function gracefulShutdown(signal: string) {

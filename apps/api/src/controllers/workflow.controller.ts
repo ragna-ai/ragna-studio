@@ -11,9 +11,19 @@ import {
   upsertWorkflow,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { WORKFLOW_RUN_JOB, WORKFLOWS_QUEUE, WorkflowRunJobDto, queueAddJob } from '@repo/queue';
+import {
+  WORKFLOW_RUN_JOB,
+  WORKFLOW_SCHEDULE_TICK_JOB,
+  WORKFLOW_SCHEDULES_QUEUE,
+  WORKFLOWS_QUEUE,
+  WorkflowRunJobDto,
+  WorkflowScheduleTickJobDto,
+  queueAddJob,
+  removeQueueJobScheduler,
+  upsertQueueJobScheduler,
+} from '@repo/queue';
 import { tryCatch } from '@repo/utils';
-import { validateWorkflowDefinition } from '@repo/workflow';
+import { getScheduleFromDefinition, validateWorkflowDefinition } from '@repo/workflow';
 import { Hono } from 'hono';
 import {
   BadRequestException,
@@ -194,6 +204,19 @@ export const workflowController = new Hono()
 
     await deleteWorkflowById({ workflowId: param.workflowId, userId: user.id });
 
+    // Best-effort: an orphaned scheduler is otherwise cleaned up by the
+    // worker's tick orphan guard, so a failure here must not fail the delete.
+    const { error: schedulerError } = await tryCatch(() =>
+      removeQueueJobScheduler({
+        queueName: WORKFLOW_SCHEDULES_QUEUE,
+        schedulerId: param.workflowId,
+      }),
+    );
+
+    if (schedulerError !== null) {
+      logger.error('Failed to remove workflow schedule after delete', schedulerError);
+    }
+
     return c.json({ message: 'Workflow deleted successfully' });
   })
   /**
@@ -226,13 +249,49 @@ export const workflowController = new Hono()
       );
     }
 
+    const schedule = getScheduleFromDefinition(workflow.definition);
+
     const { error: publishError, data: publishedWorkflow } = await tryCatch(() =>
-      publishWorkflow({ workflowId: param.workflowId, userId: user.id }),
+      publishWorkflow({
+        workflowId: param.workflowId,
+        userId: user.id,
+        scheduleCron: schedule?.cron ?? null,
+        scheduleTimezone: schedule?.timezone ?? null,
+      }),
     );
 
     if (publishError !== null) {
       logger.error('Failed to publish workflow', publishError);
       throw new InternalServerErrorException('Failed to publish workflow');
+    }
+
+    // The DB write above is the source of truth; this syncs the Redis
+    // scheduler to match it. Queues are fail-fast (enableOfflineQueue:
+    // false), so a sync failure surfaces as a 500 rather than leaving the
+    // client believing publish succeeded while the schedule silently didn't
+    // apply. Publish is idempotent and retryable, and worker-side
+    // reconciliation heals any residual drift, so there is no DB rollback.
+    const { error: schedulerError } = await tryCatch(() =>
+      schedule
+        ? upsertQueueJobScheduler({
+            queueName: WORKFLOW_SCHEDULES_QUEUE,
+            schedulerId: param.workflowId,
+            repeat: { pattern: schedule.cron, tz: schedule.timezone },
+            job: {
+              name: WORKFLOW_SCHEDULE_TICK_JOB,
+              data: new WorkflowScheduleTickJobDto({ workflowId: param.workflowId }).toJSON(),
+              opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
+            },
+          })
+        : removeQueueJobScheduler({
+            queueName: WORKFLOW_SCHEDULES_QUEUE,
+            schedulerId: param.workflowId,
+          }),
+    );
+
+    if (schedulerError !== null) {
+      logger.error('Failed to sync workflow schedule after publish', schedulerError);
+      throw new InternalServerErrorException('Failed to sync workflow schedule');
     }
 
     return c.json({ workflow: publishedWorkflow });

@@ -74,6 +74,8 @@ export async function getAllWorkflowsByUserId({
       name: true,
       description: true,
       publishedDefinition: true,
+      scheduleCron: true,
+      scheduleTimezone: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -99,9 +101,13 @@ export async function deleteWorkflowById({
 export async function publishWorkflow({
   workflowId,
   userId,
+  scheduleCron,
+  scheduleTimezone,
 }: {
   workflowId: string;
   userId: string;
+  scheduleCron?: string | null;
+  scheduleTimezone?: string | null;
 }): Promise<Workflow> {
   const existingWorkflow = await getWorkflowById({ workflowId, userId });
 
@@ -111,7 +117,11 @@ export async function publishWorkflow({
 
   const [publishedWorkflow] = await db
     .update(workflow)
-    .set({ publishedDefinition: existingWorkflow.definition })
+    .set({
+      publishedDefinition: existingWorkflow.definition,
+      scheduleCron: scheduleCron ?? null,
+      scheduleTimezone: scheduleTimezone ?? null,
+    })
     .where(and(eq(workflow.id, workflowId), eq(workflow.userId, userId)))
     .returning();
 
@@ -120,4 +130,51 @@ export async function publishWorkflow({
   }
 
   return publishedWorkflow;
+}
+
+export type ScheduledWorkflow = {
+  id: string;
+  scheduleCron: string;
+  scheduleTimezone: string | null;
+};
+
+// Used by worker startup reconciliation to upsert a BullMQ job scheduler for
+// every schedule the DB knows about.
+export async function getScheduledWorkflows(): Promise<ScheduledWorkflow[]> {
+  const workflows = await db.query.workflow.findMany({
+    columns: {
+      id: true,
+      scheduleCron: true,
+      scheduleTimezone: true,
+    },
+    where: { scheduleCron: { isNotNull: true } },
+  });
+
+  // The `isNotNull` filter guarantees `scheduleCron` at runtime, but drizzle's
+  // column type stays nullable, so narrow it explicitly instead of casting.
+  return workflows.flatMap((workflowRow) =>
+    workflowRow.scheduleCron
+      ? [
+          {
+            id: workflowRow.id,
+            scheduleCron: workflowRow.scheduleCron,
+            scheduleTimezone: workflowRow.scheduleTimezone,
+          },
+        ]
+      : [],
+  );
+}
+
+// No ownership check: called by the schedule tick processor, which only has
+// the workflow id from the queue job's scheduler id.
+export async function getWorkflowForScheduledRun({
+  workflowId,
+}: {
+  workflowId: string;
+}): Promise<Workflow | null> {
+  const workflowRecord = await db.query.workflow.findFirst({
+    where: { id: workflowId },
+  });
+
+  return workflowRecord || null;
 }

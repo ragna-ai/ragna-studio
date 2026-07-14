@@ -1,10 +1,27 @@
 import { z } from 'zod';
+import { isValidCronExpression } from './cron';
 
-// Trigger keeps a `kind` discriminator so cron/webhook can be added later
-// without a schema migration. Manual is the only kind supported in v1.
-export const triggerConfigSchema = z.object({
+// Trigger keeps a `kind` discriminator so further kinds (e.g. webhook) can be
+// added later without a schema migration: the definition lives in jsonb.
+const manualTriggerConfigSchema = z.object({
   kind: z.literal('manual'),
 });
+
+const scheduleTriggerConfigSchema = z.object({
+  kind: z.literal('schedule'),
+  // 5-field (minute granularity) cron expression, no seconds field.
+  cron: z.string().refine(isValidCronExpression, { message: 'Invalid cron expression' }),
+  // Required IANA name (e.g. `Europe/Berlin`) so the schedule has no
+  // server-local-time ambiguity. The web form defaults it to the browser timezone.
+  timezone: z.string().refine((timezone) => Intl.supportedValuesOf('timeZone').includes(timezone), {
+    message: 'Invalid timezone',
+  }),
+});
+
+export const triggerConfigSchema = z.discriminatedUnion('kind', [
+  manualTriggerConfigSchema,
+  scheduleTriggerConfigSchema,
+]);
 export type TriggerConfig = z.infer<typeof triggerConfigSchema>;
 
 export const agentConfigSchema = z.object({
