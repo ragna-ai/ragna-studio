@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ChatHistoryTable from '~/features/chat/components/ChatHistoryTable.vue';
+import ChatManyTable from '~/features/chat/components/ChatManyTable.vue';
 import { useDeleteChat } from '~/features/chat/composables/useChatApi';
 import useChatList from '~/features/chat/composables/useChatList';
 
@@ -52,7 +52,7 @@ const handleDeleteChat = async (chatId: string) => {
       <template #bottom> </template>
     </Heading>
     <div v-if="data?.chats" class="px-5">
-      <ChatHistoryTable
+      <ChatManyTable
         :chats="data.chats"
         :meta="meta"
         @delete-chat="handleDeleteChat"

@@ -118,8 +118,10 @@ const handleDeleteFavorite = (agentId: string) => {
               <span>{{ agent.aiModel.displayName }}</span>
             </div>
           </TableCell>
+          <!-- Actions -->
           <TableCell
             class="flex justify-end space-x-2 text-right whitespace-nowrap"
+            @click.stop
           >
             <Button variant="outline" @click="() => handleNewChat(agent.id)">
               Chat

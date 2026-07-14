@@ -65,7 +65,9 @@ const { formatDateTime } = useDateTimeFormat();
         </TableCell>
         <TableCell>
           <div class="flex items-center gap-1.5">
-            <Badge :variant="workflow.publishedDefinition ? 'default' : 'secondary'">
+            <Badge
+              :variant="workflow.publishedDefinition ? 'default' : 'secondary'"
+            >
               {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
             </Badge>
             <TooltipProvider v-if="workflow.scheduleCron">
@@ -93,8 +95,9 @@ const { formatDateTime } = useDateTimeFormat();
         <TableCell class="whitespace-nowrap">
           {{ formatDateTime(workflow.updatedAt) }}
         </TableCell>
+        <!-- Actions -->
         <TableCell
-          class="space-x-2 text-right whitespace-nowrap"
+          class="flex justify-end space-x-2 text-right whitespace-nowrap"
           @click.stop
         >
           <Button as-child variant="outline" size="icon">

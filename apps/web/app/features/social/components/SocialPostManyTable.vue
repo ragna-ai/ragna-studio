@@ -62,7 +62,11 @@ const { formatDateTime } = useDateTimeFormat();
         <TableCell class="whitespace-nowrap">
           {{ formatDateTime(post.createdAt) }}
         </TableCell>
-        <TableCell class="text-right whitespace-nowrap" @click.stop>
+        <!-- Actions -->
+        <TableCell
+          class="flex justify-end space-x-2 text-right whitespace-nowrap"
+          @click.stop
+        >
           <Button
             variant="outline"
             size="icon"

@@ -74,7 +74,11 @@ const { formatDateTime } = useDateTimeFormat();
         <TableCell class="whitespace-nowrap">
           {{ formatDateTime(chat.updatedAt) }}
         </TableCell>
-        <TableCell class="space-x-2 text-right whitespace-nowrap">
+        <!-- Actions -->
+        <TableCell
+          class="flex justify-end space-x-2 text-right whitespace-nowrap"
+          @click.stop
+        >
           <Button as-child variant="outline" size="icon">
             <NuxtLinkLocale :to="`/chat/${chat.id}`">
               <MessageCircleMoreIcon class="size-4 stroke-1.5 text-primary" />
