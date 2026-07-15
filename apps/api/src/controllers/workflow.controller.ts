@@ -52,19 +52,21 @@ export const workflowController = new Hono()
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
     const sort = query.sort || 'desc';
+    const unassigned = query.unassigned === 'true';
 
     // Calculate offset for pagination ((page number - 1) * page size)
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all workflow count and fail gracefully
     const { data: workflowsCount } = await tryCatch(() =>
-      getWorkflowCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+      getWorkflowCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
     );
 
     const { error, data: allUserWorkflows } = await tryCatch(() =>
       getAllWorkflowsByUserId({
         userId: user.id,
         workspaceId: query.workspaceId,
+        unassigned,
         limit,
         sort,
         offset,

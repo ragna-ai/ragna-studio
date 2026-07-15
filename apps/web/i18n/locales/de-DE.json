@@ -244,6 +244,7 @@
   "workspace": {
     "switcher": {
       "allItems": "Alle Elemente",
+      "unassigned": "Nicht zugeordnet",
       "manage": "Arbeitsbereiche verwalten"
     },
     "manage": {

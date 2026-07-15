@@ -1,5 +1,5 @@
 import type { WorkflowDefinition } from '@repo/workflow';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import type { Workflow } from '../schema';
 import { workflow } from '../schema';
@@ -59,25 +59,36 @@ export async function getWorkflowById({
 export async function getWorkflowCountByUserId({
   userId,
   workspaceId,
+  unassigned,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }): Promise<number> {
   return db.$count(
     workflow,
-    and(eq(workflow.userId, userId), workspaceId ? eq(workflow.workspaceId, workspaceId) : undefined),
+    and(
+      eq(workflow.userId, userId),
+      unassigned
+        ? isNull(workflow.workspaceId)
+        : workspaceId
+          ? eq(workflow.workspaceId, workspaceId)
+          : undefined,
+    ),
   );
 }
 
 export async function getAllWorkflowsByUserId({
   userId,
   workspaceId,
+  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -93,7 +104,7 @@ export async function getAllWorkflowsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId, workspaceId },
+    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),

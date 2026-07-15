@@ -18,8 +18,8 @@ export const agentKeys = {
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
     search: MaybeRefOrGetter<string>,
-    workspaceId: MaybeRefOrGetter<string | null>,
-  ) => ['agents', 'list', page, limit, search, workspaceId] as const,
+    scopeKey: MaybeRefOrGetter<string>,
+  ) => ['agents', 'list', page, limit, search, scopeKey] as const,
   detail: (agentId: MaybeRefOrGetter<string>) =>
     ['agents', 'detail', agentId] as const,
   memory: (agentId: MaybeRefOrGetter<string>) =>
@@ -56,16 +56,19 @@ export function useGetAllAgents(options: QueryOpts = {}) {
 export function useUpsertAgent() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { createWorkspaceId } = useActiveWorkspace();
   return useMutation<AgentResponse, unknown, UpsertAgentRequest>({
-    mutationFn: (body) =>
-      api('/agent', {
+    mutationFn: (body) => {
+      // Stamp the active workspace only when creating (no id yet) and a
+      // specific workspace is active. Editing must not silently move an
+      // agent; All and Unassigned both mean "no workspace" and send nothing
+      // (docs/workspaces.md).
+      const workspaceId = body.id ? null : createWorkspaceId.value;
+      return api('/agent', {
         method: 'POST',
-        // Stamp the active workspace only when creating (no id yet).
-        // Editing an existing agent must not silently move it: moving items
-        // between workspaces is out of scope for v1 (docs/workspaces.md).
-        body: body.id ? body : { ...body, workspaceId: activeWorkspaceId.value },
-      }),
+        body: workspaceId ? { ...body, workspaceId } : body,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all });
       toast.success('Agent updated');

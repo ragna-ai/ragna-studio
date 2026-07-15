@@ -19,8 +19,8 @@ export const workflowKeys = {
   list: (
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    workspaceId: MaybeRefOrGetter<string | null>,
-  ) => ['workflows', 'list', page, limit, workspaceId] as const,
+    scopeKey: MaybeRefOrGetter<string>,
+  ) => ['workflows', 'list', page, limit, scopeKey] as const,
   detail: (workflowId: MaybeRefOrGetter<string>) =>
     ['workflows', 'detail', workflowId] as const,
   runs: (workflowId: MaybeRefOrGetter<string>) =>
@@ -86,16 +86,19 @@ export function useGetWorkflow(
 export function useUpsertWorkflow() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { createWorkspaceId } = useActiveWorkspace();
   return useMutation<WorkflowResponse, unknown, UpsertWorkflowRequest>({
-    mutationFn: (body) =>
-      api('/workflow', {
+    mutationFn: (body) => {
+      // Stamp the active workspace only when creating (no id yet) and a
+      // specific workspace is active. Editing must not silently move a
+      // workflow; All and Unassigned both mean "no workspace" and send
+      // nothing (docs/workspaces.md).
+      const workspaceId = body.id ? null : createWorkspaceId.value;
+      return api('/workflow', {
         method: 'POST',
-        // Stamp the active workspace only when creating (no id yet).
-        // Editing an existing workflow must not silently move it: moving
-        // items between workspaces is out of scope for v1 (docs/workspaces.md).
-        body: body.id ? body : { ...body, workspaceId: activeWorkspaceId.value },
-      }),
+        body: workspaceId ? { ...body, workspaceId } : body,
+      });
+    },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       queryClient.invalidateQueries({

@@ -9,8 +9,11 @@ const primaryId = z.uuidv7();
 
 // Client-driven view filter shared by every workspace-scoped list endpoint.
 // See docs/workspaces.md: absent means "All items", never a security boundary.
+// `unassigned=true` takes precedence over `workspaceId` and filters to rows
+// with no workspace at all.
 const workspaceIdQuerySchema = z.object({
   workspaceId: primaryId.optional(),
+  unassigned: z.literal('true').optional(),
 });
 
 export const validPaginationQuery = myzValidator('query', paginationSchema);

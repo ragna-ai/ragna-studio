@@ -50,13 +50,14 @@ export const chatController = new Hono()
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
     const sort = query.sort || 'desc';
+    const unassigned = query.unassigned === 'true';
 
     // Calculate offset for pagination ((page number - 1) * page size)
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all chat count and fail gracefully
     const { data: chatsCount } = await tryCatch(() =>
-      getChatCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+      getChatCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
     );
 
     // Get chat history for user
@@ -64,6 +65,7 @@ export const chatController = new Hono()
       getAllChatsByUserId({
         userId: user.id,
         workspaceId: query.workspaceId,
+        unassigned,
         limit,
         offset,
         sort,

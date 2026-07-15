@@ -14,8 +14,8 @@ export const chatKeys = {
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
     search: MaybeRefOrGetter<string>,
-    workspaceId: MaybeRefOrGetter<string | null>,
-  ) => ['chats', 'list', page, limit, search, workspaceId] as const,
+    scopeKey: MaybeRefOrGetter<string>,
+  ) => ['chats', 'list', page, limit, search, scopeKey] as const,
   detail: (chatId: MaybeRefOrGetter<string>) =>
     ['chats', 'detail', chatId] as const,
   recent: () => ['chats', 'recent'] as const,
@@ -38,7 +38,7 @@ interface NewChatBody {
   agentId?: string;
   // Set internally from the active workspace in useCreateChat; callers never
   // pass this themselves.
-  workspaceId?: string | null;
+  workspaceId?: string;
 }
 
 export interface ChatHistoryItem {
@@ -100,13 +100,17 @@ export function useGetRecentChat(options: QueryOpts = {}) {
 export function useCreateChat() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { createWorkspaceId } = useActiveWorkspace();
   return useMutation<ChatResponse, unknown, NewChatBody>({
-    mutationFn: (body) =>
-      api('/chat', {
+    mutationFn: (body) => {
+      // Only a specific active workspace assigns one; All and Unassigned
+      // both send nothing (docs/workspaces.md).
+      const workspaceId = createWorkspaceId.value;
+      return api('/chat', {
         method: 'POST',
-        body: { ...body, workspaceId: activeWorkspaceId.value },
-      }),
+        body: workspaceId ? { ...body, workspaceId } : body,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all });
       // toast.success('Chat created');

@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   NewSocialPost,
@@ -41,15 +41,21 @@ export async function getSocialPostById({
 export async function getSocialPostCountByUserId({
   userId,
   workspaceId,
+  unassigned,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }): Promise<number> {
   return db.$count(
     socialPost,
     and(
       eq(socialPost.userId, userId),
-      workspaceId ? eq(socialPost.workspaceId, workspaceId) : undefined,
+      unassigned
+        ? isNull(socialPost.workspaceId)
+        : workspaceId
+          ? eq(socialPost.workspaceId, workspaceId)
+          : undefined,
     ),
   );
 }
@@ -57,18 +63,20 @@ export async function getSocialPostCountByUserId({
 export async function getAllSocialPostsByUserId({
   userId,
   workspaceId,
+  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
 }): Promise<SocialPostWithMedia[]> {
   return db.query.socialPost.findMany({
-    where: { userId, workspaceId },
+    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),

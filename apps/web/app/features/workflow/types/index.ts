@@ -38,7 +38,7 @@ export type UpsertWorkflowRequest = {
   definition: WorkflowDefinition;
   // Set internally from the active workspace in useUpsertWorkflow when
   // creating (no id yet); callers never pass this themselves.
-  workspaceId?: string | null;
+  workspaceId?: string;
 };
 
 export interface WorkflowRunStep {

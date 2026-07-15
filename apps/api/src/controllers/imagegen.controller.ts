@@ -20,8 +20,10 @@ export const imageGenerateController = new Hono()
     const user = c.get('user');
     const query = c.req.valid('query');
 
+    const unassigned = query.unassigned === 'true';
+
     const { error, data: images } = await tryCatch(() =>
-      getGenImagesForUser({ userId: user.id, workspaceId: query.workspaceId }),
+      getGenImagesForUser({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
     );
 
     if (error !== null || !images) {

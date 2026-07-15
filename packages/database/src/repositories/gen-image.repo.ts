@@ -11,12 +11,14 @@ export async function createGenImageRecords(records: NewGenImage[]): Promise<Gen
 export async function getGenImagesByUserId({
   userId,
   workspaceId,
+  unassigned,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }): Promise<GenImage[]> {
   return db.query.genImage.findMany({
-    where: { userId, workspaceId },
+    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
     orderBy: (t, { desc }) => desc(t.createdAt),
   });
 }

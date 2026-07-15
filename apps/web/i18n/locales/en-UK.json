@@ -190,6 +190,7 @@
   "workspace": {
     "switcher": {
       "allItems": "All items",
+      "unassigned": "Unassigned",
       "manage": "Manage workspaces"
     },
     "manage": {

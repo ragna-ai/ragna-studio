@@ -91,19 +91,21 @@ export const socialPostController = new Hono()
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
     const sort = query.sort || 'desc';
+    const unassigned = query.unassigned === 'true';
 
     // Calculate offset for pagination ((page number - 1) * page size)
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all posts count and fail gracefully
     const { data: postsCount } = await tryCatch(() =>
-      getSocialPostCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+      getSocialPostCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
     );
 
     const { error, data: posts } = await tryCatch(() =>
       getAllSocialPostsByUserId({
         userId: user.id,
         workspaceId: query.workspaceId,
+        unassigned,
         limit,
         sort,
         offset,

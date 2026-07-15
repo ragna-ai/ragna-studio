@@ -9,14 +9,24 @@ const isManageDialogOpen = ref(false);
 
 // Composables
 const { data } = useGetWorkspaces();
-const { activeWorkspaceId, setActiveWorkspace } = useActiveWorkspace();
+const {
+  selectAllItems,
+  selectUnassigned,
+  selectWorkspace,
+  isAllItemsActive,
+  isUnassignedActive,
+  isWorkspaceActive,
+} = useActiveWorkspace();
 const { t } = useI18n();
 
 // Computed
 const workspaces = computed(() => data.value?.workspaces ?? []);
-const activeWorkspaceName = computed(() => {
-  const active = workspaces.value.find(
-    (workspace) => workspace.id === activeWorkspaceId.value,
+const activeLabel = computed(() => {
+  if (isUnassignedActive.value) {
+    return t('workspace.switcher.unassigned');
+  }
+  const active = workspaces.value.find((workspace) =>
+    isWorkspaceActive(workspace.id),
   );
   return active?.name ?? t('workspace.switcher.allItems');
 });
@@ -29,29 +39,36 @@ const activeWorkspaceName = computed(() => {
         type="button"
         class="flex h-7 items-center gap-1 rounded-md border px-2 text-xs text-stone-600 hover:bg-stone-100"
       >
-        <span class="max-w-28 truncate">{{ activeWorkspaceName }}</span>
+        <span class="max-w-28 truncate">{{ activeLabel }}</span>
         <ChevronsUpDownIcon class="size-3 shrink-0 opacity-50" />
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start" class="w-56">
-      <DropdownMenuItem @click="setActiveWorkspace(null)">
+      <DropdownMenuItem @click="selectAllItems()">
         <CheckIcon
           class="mr-2 size-4"
-          :class="activeWorkspaceId === null ? 'opacity-100' : 'opacity-0'"
+          :class="isAllItemsActive ? 'opacity-100' : 'opacity-0'"
         />
         {{ t('workspace.switcher.allItems') }}
+      </DropdownMenuItem>
+      <DropdownMenuItem @click="selectUnassigned()">
+        <CheckIcon
+          class="mr-2 size-4"
+          :class="isUnassignedActive ? 'opacity-100' : 'opacity-0'"
+        />
+        {{ t('workspace.switcher.unassigned') }}
       </DropdownMenuItem>
       <template v-if="workspaces.length > 0">
         <DropdownMenuSeparator />
         <DropdownMenuItem
           v-for="workspace in workspaces"
           :key="workspace.id"
-          @click="setActiveWorkspace(workspace.id)"
+          @click="selectWorkspace(workspace.id)"
         >
           <CheckIcon
             class="mr-2 size-4"
             :class="
-              activeWorkspaceId === workspace.id ? 'opacity-100' : 'opacity-0'
+              isWorkspaceActive(workspace.id) ? 'opacity-100' : 'opacity-0'
             "
           />
           <span class="truncate">{{ workspace.name }}</span>
