@@ -4,11 +4,13 @@ import {
   chatKeys,
   type ChatHistoryResponse,
 } from '~/features/chat/composables/useChatApi';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useChatList() {
   const api = useApi();
+  const { activeWorkspaceId } = useActiveWorkspace();
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each
@@ -28,7 +30,7 @@ export default function useChatList() {
 
   function useGetAllChats(options: QueryOpts = {}) {
     return useQuery<ChatHistoryResponse>({
-      queryKey: chatKeys.list(page, limit, searchQuery),
+      queryKey: chatKeys.list(page, limit, searchQuery, activeWorkspaceId),
       queryFn: ({ signal }) =>
         api('/chat', {
           method: 'GET',
@@ -36,6 +38,7 @@ export default function useChatList() {
             page: page.value,
             limit: limit.value,
             searchQuery: searchQuery.value,
+            workspaceId: activeWorkspaceId.value ?? undefined,
           },
           signal,
         }),

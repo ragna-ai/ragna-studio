@@ -7,7 +7,20 @@ import { paginationSchema } from '../validation';
 
 const primaryId = z.uuidv7();
 
+// Client-driven view filter shared by every workspace-scoped list endpoint.
+// See docs/workspaces.md: absent means "All items", never a security boundary.
+const workspaceIdQuerySchema = z.object({
+  workspaceId: primaryId.optional(),
+});
+
 export const validPaginationQuery = myzValidator('query', paginationSchema);
+
+export const validWorkspaceScopedListQuery = myzValidator(
+  'query',
+  paginationSchema.extend(workspaceIdQuerySchema.shape),
+);
+
+export const validWorkspaceIdQuery = myzValidator('query', workspaceIdQuerySchema);
 
 export const validUpdateUserProfileBody = myzValidator('json', userUpdateSchema);
 
@@ -15,6 +28,7 @@ export const validCreateChatBody = myzValidator(
   'json',
   z.object({
     agentId: primaryId.optional(),
+    workspaceId: primaryId.optional(),
   }),
 );
 
@@ -35,6 +49,7 @@ export const validUpsertAgentBody = myzValidator(
     systemPrompt: z.string(),
     tools: z.array(z.string()),
     isDefault: z.boolean().optional(),
+    workspaceId: primaryId.optional(),
   }),
 );
 
@@ -68,6 +83,7 @@ export const validUpsertWorkflowBody = myzValidator(
     name: z.string().min(1).max(255),
     description: z.string().optional(),
     definition: workflowDefinitionSchema,
+    workspaceId: primaryId.optional(),
   }),
 );
 
@@ -98,6 +114,7 @@ export const validCreateSocialPostBody = myzValidator(
   'json',
   z.object({
     content: z.string().max(3000),
+    workspaceId: primaryId.optional(),
   }),
 );
 
@@ -130,3 +147,18 @@ export const validNotificationIdParam = myzValidator(
     id: primaryId,
   }),
 );
+
+export const validWorkspaceIdParam = myzValidator(
+  'param',
+  z.object({
+    workspaceId: primaryId,
+  }),
+);
+
+const workspaceNameBodySchema = z.object({
+  name: z.string().min(1).max(255),
+});
+
+export const validCreateWorkspaceBody = myzValidator('json', workspaceNameBodySchema);
+
+export const validRenameWorkspaceBody = myzValidator('json', workspaceNameBodySchema);

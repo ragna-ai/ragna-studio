@@ -240,5 +240,34 @@
       "mediaAltTextError": "Alt-Text konnte nicht gespeichert werden.",
       "mediaDeleteError": "Bild konnte nicht entfernt werden."
     }
+  },
+  "workspace": {
+    "switcher": {
+      "allItems": "Alle Elemente",
+      "manage": "Arbeitsbereiche verwalten"
+    },
+    "manage": {
+      "title": "Arbeitsbereiche verwalten",
+      "description": "Organisiere deine Agenten, Chats, Workflows, Bilder und Beiträge in benannten Arbeitsbereichen.",
+      "namePlaceholder": "Name des neuen Arbeitsbereichs",
+      "empty": "Noch keine Arbeitsbereiche. Erstelle einen, um deine Elemente zu organisieren.",
+      "rename": "Arbeitsbereich umbenennen",
+      "delete": "Arbeitsbereich löschen",
+      "saveRename": "Namen speichern",
+      "cancelRename": "Umbenennen abbrechen",
+      "deleteTitle": "Arbeitsbereich löschen",
+      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei nicht gelöscht, sondern nur nicht mehr zugeordnet.",
+      "deleteConfirm": "Löschen",
+      "deleteCancel": "Abbrechen",
+      "close": "Schließen"
+    },
+    "toast": {
+      "createSuccess": "Arbeitsbereich erstellt.",
+      "createError": "Arbeitsbereich konnte nicht erstellt werden.",
+      "renameSuccess": "Arbeitsbereich umbenannt.",
+      "renameError": "Arbeitsbereich konnte nicht umbenannt werden.",
+      "deleteSuccess": "Arbeitsbereich gelöscht.",
+      "deleteError": "Arbeitsbereich konnte nicht gelöscht werden."
+    }
   }
 }

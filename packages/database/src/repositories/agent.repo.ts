@@ -9,6 +9,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
   const {
     id: agentId,
     userId,
+    workspaceId,
     name,
     description,
     aiModelId,
@@ -22,6 +23,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
     .values({
       id: agentId,
       userId,
+      workspaceId,
       aiModelId,
       isDefault,
       name,
@@ -32,6 +34,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
     .onConflictDoUpdate({
       target: agent.id,
       set: {
+        workspaceId,
         aiModelId,
         isDefault,
         name,
@@ -76,8 +79,17 @@ export async function getOrCreateDefaultAgentForUser({
   });
 }
 
-export async function getAgentCountByUserId({ userId }: { userId: string }): Promise<number> {
-  return db.$count(agent, eq(agent.userId, userId));
+export async function getAgentCountByUserId({
+  userId,
+  workspaceId,
+}: {
+  userId: string;
+  workspaceId?: string;
+}): Promise<number> {
+  return db.$count(
+    agent,
+    and(eq(agent.userId, userId), workspaceId ? eq(agent.workspaceId, workspaceId) : undefined),
+  );
 }
 
 export async function getAgentById({
@@ -99,11 +111,13 @@ export async function getAgentById({
 
 export async function getAllAgentsByUserId({
   userId,
+  workspaceId,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
+  workspaceId?: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -117,7 +131,7 @@ export async function getAllAgentsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId: userId },
+    where: { userId, workspaceId },
     with: {
       aiModel: {
         columns: {

@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 import type {
   UpsertWorkflowRequest,
   WorkflowManyResponse,
@@ -15,8 +16,11 @@ import type {
 
 export const workflowKeys = {
   all: ['workflows'] as const,
-  list: (page: MaybeRefOrGetter<number>, limit: MaybeRefOrGetter<number>) =>
-    ['workflows', 'list', page, limit] as const,
+  list: (
+    page: MaybeRefOrGetter<number>,
+    limit: MaybeRefOrGetter<number>,
+    workspaceId: MaybeRefOrGetter<string | null>,
+  ) => ['workflows', 'list', page, limit, workspaceId] as const,
   detail: (workflowId: MaybeRefOrGetter<string>) =>
     ['workflows', 'detail', workflowId] as const,
   runs: (workflowId: MaybeRefOrGetter<string>) =>
@@ -82,8 +86,16 @@ export function useGetWorkflow(
 export function useUpsertWorkflow() {
   const api = useApi();
   const queryClient = useQueryClient();
+  const { activeWorkspaceId } = useActiveWorkspace();
   return useMutation<WorkflowResponse, unknown, UpsertWorkflowRequest>({
-    mutationFn: (body) => api('/workflow', { method: 'POST', body }),
+    mutationFn: (body) =>
+      api('/workflow', {
+        method: 'POST',
+        // Stamp the active workspace only when creating (no id yet).
+        // Editing an existing workflow must not silently move it: moving
+        // items between workspaces is out of scope for v1 (docs/workspaces.md).
+        body: body.id ? body : { ...body, workspaceId: activeWorkspaceId.value },
+      }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       queryClient.invalidateQueries({

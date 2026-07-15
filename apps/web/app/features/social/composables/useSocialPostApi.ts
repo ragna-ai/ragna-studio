@@ -5,11 +5,15 @@ import {
   useQueryClient,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 export const socialPostKeys = {
   all: ['social-posts'] as const,
-  list: (page: MaybeRefOrGetter<number>, limit: MaybeRefOrGetter<number>) =>
-    ['social-posts', 'list', page, limit] as const,
+  list: (
+    page: MaybeRefOrGetter<number>,
+    limit: MaybeRefOrGetter<number>,
+    workspaceId: MaybeRefOrGetter<string | null>,
+  ) => ['social-posts', 'list', page, limit, workspaceId] as const,
   detail: (postId: MaybeRefOrGetter<string>) =>
     ['social-posts', 'detail', postId] as const,
   mediaUpload: () => ['social-posts', 'media', 'upload'] as const,
@@ -109,10 +113,14 @@ export function useCreateSocialPost() {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
+  const { activeWorkspaceId } = useActiveWorkspace();
 
   return useMutation<SocialPostResponse, unknown, string>({
     mutationFn: (content) =>
-      api('/social-posts', { method: 'POST', body: { content } }),
+      api('/social-posts', {
+        method: 'POST',
+        body: { content, workspaceId: activeWorkspaceId.value },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
     },

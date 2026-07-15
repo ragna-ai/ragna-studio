@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { MaximizeIcon } from '@lucide/vue';
+import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
 
 const onExpandClick = () => {
   const rootNode = document.documentElement;
@@ -23,7 +24,7 @@ const onExpandClick = () => {
         </div>
         <div></div>
         <div>
-          <NavBarTeam />
+          <WorkspaceSwitcher />
         </div>
         <div></div>
       </div>

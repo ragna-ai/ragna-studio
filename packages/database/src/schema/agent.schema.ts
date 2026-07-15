@@ -2,6 +2,7 @@ import { boolean, index, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
+import { workspace } from './workspace.schema';
 
 export interface AgentSettings {
   temperature?: number;
@@ -36,6 +37,7 @@ export const agent = pgTable(
   {
     id: primaryIdColumn,
     userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
     aiModelId: text('ai_model_id')
       .notNull()
       .references(() => aiModel.id, { onDelete: 'cascade' }),
@@ -53,6 +55,7 @@ export const agent = pgTable(
   (table) => [
     index('agent_userId_idx').on(table.userId),
     index('agent_aiModelId_idx').on(table.aiModelId),
+    index('agent_workspaceId_idx').on(table.workspaceId),
   ],
 );
 

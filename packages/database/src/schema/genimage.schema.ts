@@ -1,6 +1,7 @@
 import { index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
+import { workspace } from './workspace.schema';
 
 // GENERATED IMAGE
 export const genImage = pgTable(
@@ -10,6 +11,7 @@ export const genImage = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
     // Object key in the image bucket
     storageKey: text('storage_key').notNull(),
     prompt: text('prompt').notNull(),
@@ -21,7 +23,10 @@ export const genImage = pgTable(
     negativePrompt: text('negative_prompt'),
     ...timestamps,
   },
-  (table) => [index('genImage_userId_idx').on(table.userId)],
+  (table) => [
+    index('genImage_userId_idx').on(table.userId),
+    index('genImage_workspaceId_idx').on(table.workspaceId),
+  ],
 );
 
 export type GenImage = typeof genImage.$inferSelect;

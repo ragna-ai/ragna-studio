@@ -8,9 +8,15 @@ export async function createGenImageRecords(records: NewGenImage[]): Promise<Gen
   return db.insert(genImage).values(records).returning();
 }
 
-export async function getGenImagesByUserId({ userId }: { userId: string }): Promise<GenImage[]> {
+export async function getGenImagesByUserId({
+  userId,
+  workspaceId,
+}: {
+  userId: string;
+  workspaceId?: string;
+}): Promise<GenImage[]> {
   return db.query.genImage.findMany({
-    where: { userId },
+    where: { userId, workspaceId },
     orderBy: (t, { desc }) => desc(t.createdAt),
   });
 }

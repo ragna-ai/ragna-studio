@@ -11,6 +11,7 @@ import { socialPost, socialPostMedia } from './social-post.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
+import { workspace } from './workspace.schema';
 
 const schema = {
   user,
@@ -30,6 +31,7 @@ const schema = {
   workflowRun,
   workflowRunStep,
   notification,
+  workspace,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -42,6 +44,7 @@ export const relations = defineRelations(schema, (r) => ({
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
+    workspaces: r.many.workspace(),
   },
   account: {
     user: r.one.user({
@@ -66,6 +69,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.agent.userId,
       to: r.user.id,
       optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.agent.workspaceId,
+      to: r.workspace.id,
+      optional: true,
     }),
     aiModel: r.one.aiModel({
       from: r.agent.aiModelId,
@@ -95,6 +103,11 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
       optional: false,
     }),
+    workspace: r.one.workspace({
+      from: r.chat.workspaceId,
+      to: r.workspace.id,
+      optional: true,
+    }),
     agent: r.one.agent({
       from: r.chat.agentId,
       to: r.agent.id,
@@ -115,12 +128,22 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
       optional: false,
     }),
+    workspace: r.one.workspace({
+      from: r.genImage.workspaceId,
+      to: r.workspace.id,
+      optional: true,
+    }),
   },
   socialPost: {
     user: r.one.user({
       from: r.socialPost.userId,
       to: r.user.id,
       optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.socialPost.workspaceId,
+      to: r.workspace.id,
+      optional: true,
     }),
     media: r.many.socialPostMedia(),
   },
@@ -136,6 +159,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.workflow.userId,
       to: r.user.id,
       optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.workflow.workspaceId,
+      to: r.workspace.id,
+      optional: true,
     }),
     runs: r.many.workflowRun(),
   },
@@ -160,5 +188,17 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
       optional: false,
     }),
+  },
+  workspace: {
+    owner: r.one.user({
+      from: r.workspace.ownerId,
+      to: r.user.id,
+      optional: false,
+    }),
+    agents: r.many.agent(),
+    chats: r.many.chat(),
+    genImages: r.many.genImage(),
+    socialPosts: r.many.socialPost(),
+    workflows: r.many.workflow(),
   },
 }));

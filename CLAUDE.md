@@ -39,7 +39,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Apps
 
-- **`apps/web`** — Nuxt 4 SPA (`ssr: false`). Uses shadcn-vue (New York style, stone base, Tailwind v4), VeeValidate + Zod for forms, `@vueuse/nuxt`, `vue-sonner` for toasts, and `@nuxt/icon` / `@nuxt/fonts` / `@nuxt/image`.
+- **`apps/web`** — Nuxt 4 SPA (`ssr: false`). Uses shadcn-vue (New York style, stone base, Tailwind v4), `@tanstack/vue-form` + Zod for forms, `@vueuse/nuxt`, `vue-sonner` for toasts, and `@nuxt/icon` / `@nuxt/fonts` / `@nuxt/image`.
 - **`apps/worker`** — standalone Node.js process (compiled via tsdown). Consumes BullMQ queues and runs cron jobs. Entry point: `src/index.ts` → connects to Redis, registers processors from `src/processors/`, optionally starts cron jobs from `src/crons/`.
 
 ### Shared Packages (`packages/`)

@@ -15,8 +15,8 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validAgentIdParam,
   validAgentMemoryBody,
-  validPaginationQuery,
   validUpsertAgentBody,
+  validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
 
 export const agentController = new Hono()
@@ -26,7 +26,7 @@ export const agentController = new Hono()
    * [GET] /agent
    * Get all agents for the authenticated user
    */
-  .get('/', validPaginationQuery, async (c) => {
+  .get('/', validWorkspaceScopedListQuery, async (c) => {
     const user = c.get('user');
     const query = c.req.valid('query');
 
@@ -38,10 +38,18 @@ export const agentController = new Hono()
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all agent count and fail gracefully
-    const { data: agentsCount } = await tryCatch(() => getAgentCountByUserId({ userId: user.id }));
+    const { data: agentsCount } = await tryCatch(() =>
+      getAgentCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+    );
 
     const { error, data: allUserAgents } = await tryCatch(() =>
-      getAllAgentsByUserId({ userId: user.id, limit, sort, offset }),
+      getAllAgentsByUserId({
+        userId: user.id,
+        workspaceId: query.workspaceId,
+        limit,
+        sort,
+        offset,
+      }),
     );
 
     if (error !== null) {
@@ -73,6 +81,7 @@ export const agentController = new Hono()
         systemPrompt: body.systemPrompt,
         tools: body.tools,
         isDefault: body.isDefault,
+        workspaceId: body.workspaceId,
       }),
     );
 

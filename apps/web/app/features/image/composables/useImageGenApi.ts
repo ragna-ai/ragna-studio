@@ -6,10 +6,12 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 export const genImageKeys = {
   all: ['gen-images'] as const,
-  list: () => ['gen-images', 'list'] as const,
+  list: (workspaceId: MaybeRefOrGetter<string | null>) =>
+    ['gen-images', 'list', workspaceId] as const,
   create: () => ['gen-images', 'create'] as const,
 };
 
@@ -42,13 +44,22 @@ export interface GenerateImagesBody {
   n?: number;
   seed?: number;
   negativePrompt?: string;
+  // Set internally from the active workspace in useGenerateImages; callers
+  // never pass this themselves.
+  workspaceId?: string | null;
 }
 
 export function useGetGenImages(options: QueryOpts = {}) {
   const api = useApi();
+  const { activeWorkspaceId } = useActiveWorkspace();
   return useQuery<GenImagesResponse>({
-    queryKey: genImageKeys.list(),
-    queryFn: ({ signal }) => api('/image/generate', { method: 'GET', signal }),
+    queryKey: genImageKeys.list(activeWorkspaceId),
+    queryFn: ({ signal }) =>
+      api('/image/generate', {
+        method: 'GET',
+        query: { workspaceId: activeWorkspaceId.value ?? undefined },
+        signal,
+      }),
     ...options,
   });
 }
@@ -56,9 +67,14 @@ export function useGetGenImages(options: QueryOpts = {}) {
 export function useGenerateImages() {
   const api = useApi();
   const queryClient = useQueryClient();
+  const { activeWorkspaceId } = useActiveWorkspace();
   return useMutation<GenImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),
-    mutationFn: (body) => api('/image/generate', { method: 'POST', body }),
+    mutationFn: (body) =>
+      api('/image/generate', {
+        method: 'POST',
+        body: { ...body, workspaceId: activeWorkspaceId.value },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: genImageKeys.all });
     },

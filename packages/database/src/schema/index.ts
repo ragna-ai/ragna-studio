@@ -11,3 +11,4 @@ export * from './social-post.schema';
 export * from './user.schema';
 export * from './verification.schema';
 export * from './workflow.schema';
+export * from './workspace.schema';

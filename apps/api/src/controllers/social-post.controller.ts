@@ -28,11 +28,11 @@ import {
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validCreateSocialPostBody,
-  validPaginationQuery,
   validSocialPostIdParam,
   validSocialPostMediaParams,
   validUpdateSocialPostBody,
   validUpdateSocialPostMediaBody,
+  validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
 import {
   deleteUploadedMediaObjects,
@@ -84,7 +84,7 @@ export const socialPostController = new Hono()
    * [GET] /social-posts
    * List the authenticated user's posts, newest first, with their media.
    */
-  .get('/', validPaginationQuery, async (c) => {
+  .get('/', validWorkspaceScopedListQuery, async (c) => {
     const user = c.get('user');
     const query = c.req.valid('query');
 
@@ -97,14 +97,20 @@ export const socialPostController = new Hono()
 
     // Get all posts count and fail gracefully
     const { data: postsCount } = await tryCatch(() =>
-      getSocialPostCountByUserId({ userId: user.id }),
+      getSocialPostCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
     );
 
     const { error, data: posts } = await tryCatch(() =>
-      getAllSocialPostsByUserId({ userId: user.id, limit, sort, offset }),
+      getAllSocialPostsByUserId({
+        userId: user.id,
+        workspaceId: query.workspaceId,
+        limit,
+        sort,
+        offset,
+      }),
     );
 
-    if (error !== null) {
+    if (error !== null || !posts) {
       logger.error('Failed to list social posts', error);
       throw new InternalServerErrorException('Failed to list social posts');
     }
@@ -130,6 +136,7 @@ export const socialPostController = new Hono()
         platform: 'linkedin',
         content: body.content,
         source: 'user',
+        workspaceId: body.workspaceId ?? null,
       }),
     );
 

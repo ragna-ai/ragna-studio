@@ -31,11 +31,11 @@ import {
 } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
-  validPaginationQuery,
   validRunIdParam,
   validRunWorkflowBody,
   validUpsertWorkflowBody,
   validWorkflowIdParam,
+  validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
 
 export const workflowController = new Hono()
@@ -45,7 +45,7 @@ export const workflowController = new Hono()
    * [GET] /workflow
    * Get all workflows for the authenticated user
    */
-  .get('/', validPaginationQuery, async (c) => {
+  .get('/', validWorkspaceScopedListQuery, async (c) => {
     const user = c.get('user');
     const query = c.req.valid('query');
 
@@ -58,11 +58,17 @@ export const workflowController = new Hono()
 
     // Get all workflow count and fail gracefully
     const { data: workflowsCount } = await tryCatch(() =>
-      getWorkflowCountByUserId({ userId: user.id }),
+      getWorkflowCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
     );
 
     const { error, data: allUserWorkflows } = await tryCatch(() =>
-      getAllWorkflowsByUserId({ userId: user.id, limit, sort, offset }),
+      getAllWorkflowsByUserId({
+        userId: user.id,
+        workspaceId: query.workspaceId,
+        limit,
+        sort,
+        offset,
+      }),
     );
 
     if (error !== null) {
@@ -91,6 +97,7 @@ export const workflowController = new Hono()
         name: body.name,
         description: body.description,
         definition: body.definition,
+        workspaceId: body.workspaceId,
       }),
     );
 

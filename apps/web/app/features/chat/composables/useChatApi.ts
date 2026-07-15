@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 export const chatKeys = {
   all: ['chats'] as const,
@@ -13,7 +14,8 @@ export const chatKeys = {
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
     search: MaybeRefOrGetter<string>,
-  ) => ['chats', 'list', page, limit, search] as const,
+    workspaceId: MaybeRefOrGetter<string | null>,
+  ) => ['chats', 'list', page, limit, search, workspaceId] as const,
   detail: (chatId: MaybeRefOrGetter<string>) =>
     ['chats', 'detail', chatId] as const,
   recent: () => ['chats', 'recent'] as const,
@@ -34,6 +36,9 @@ export interface ChatResponse {
 
 interface NewChatBody {
   agentId?: string;
+  // Set internally from the active workspace in useCreateChat; callers never
+  // pass this themselves.
+  workspaceId?: string | null;
 }
 
 export interface ChatHistoryItem {
@@ -95,8 +100,13 @@ export function useGetRecentChat(options: QueryOpts = {}) {
 export function useCreateChat() {
   const api = useApi();
   const queryClient = useQueryClient();
+  const { activeWorkspaceId } = useActiveWorkspace();
   return useMutation<ChatResponse, unknown, NewChatBody>({
-    mutationFn: (body) => api('/chat', { method: 'POST', body }),
+    mutationFn: (body) =>
+      api('/chat', {
+        method: 'POST',
+        body: { ...body, workspaceId: activeWorkspaceId.value },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all });
       // toast.success('Chat created');

@@ -186,5 +186,34 @@
       "mediaAltTextError": "Failed to save the alt text.",
       "mediaDeleteError": "Failed to remove the image."
     }
+  },
+  "workspace": {
+    "switcher": {
+      "allItems": "All items",
+      "manage": "Manage workspaces"
+    },
+    "manage": {
+      "title": "Manage workspaces",
+      "description": "Organize your agents, chats, workflows, images, and posts into named workspaces.",
+      "namePlaceholder": "New workspace name",
+      "empty": "No workspaces yet. Create one to start organizing your items.",
+      "rename": "Rename workspace",
+      "delete": "Delete workspace",
+      "saveRename": "Save name",
+      "cancelRename": "Cancel rename",
+      "deleteTitle": "Delete workspace",
+      "deleteMessage": "Delete \"{name}\"? Items in this workspace are not deleted, they just become unassigned.",
+      "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
+      "close": "Close"
+    },
+    "toast": {
+      "createSuccess": "Workspace created.",
+      "createError": "Failed to create the workspace.",
+      "renameSuccess": "Workspace renamed.",
+      "renameError": "Failed to rename the workspace.",
+      "deleteSuccess": "Workspace deleted.",
+      "deleteError": "Failed to delete the workspace."
+    }
   }
 }

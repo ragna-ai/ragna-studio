@@ -10,6 +10,7 @@ import type {
   AgentResponse,
   UpsertAgentRequest,
 } from '~/features/agent/types';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 export const agentKeys = {
   all: ['agents'] as const,
@@ -17,7 +18,8 @@ export const agentKeys = {
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
     search: MaybeRefOrGetter<string>,
-  ) => ['agents', 'list', page, limit, search] as const,
+    workspaceId: MaybeRefOrGetter<string | null>,
+  ) => ['agents', 'list', page, limit, search, workspaceId] as const,
   detail: (agentId: MaybeRefOrGetter<string>) =>
     ['agents', 'detail', agentId] as const,
   memory: (agentId: MaybeRefOrGetter<string>) =>
@@ -54,8 +56,16 @@ export function useGetAllAgents(options: QueryOpts = {}) {
 export function useUpsertAgent() {
   const api = useApi();
   const queryClient = useQueryClient();
+  const { activeWorkspaceId } = useActiveWorkspace();
   return useMutation<AgentResponse, unknown, UpsertAgentRequest>({
-    mutationFn: (body) => api('/agent', { method: 'POST', body }),
+    mutationFn: (body) =>
+      api('/agent', {
+        method: 'POST',
+        // Stamp the active workspace only when creating (no id yet).
+        // Editing an existing agent must not silently move it: moving items
+        // between workspaces is out of scope for v1 (docs/workspaces.md).
+        body: body.id ? body : { ...body, workspaceId: activeWorkspaceId.value },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all });
       toast.success('Agent updated');

@@ -2,13 +2,9 @@ import type { BlackForestLabsImageProviderOptions } from '@ai-sdk/black-forest-l
 import type { GoogleVertexImageProviderOptions } from '@ai-sdk/google-vertex';
 import type { OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
 import type { GenImage } from '@repo/database';
-import {
-  createGenImageRecords,
-  getDefaultAiModelByModality,
-  getGenImagesByUserId,
-} from '@repo/database';
+import { createGenImageRecords, getDefaultAiModelByModality } from '@repo/database';
 import { logger } from '@repo/logger';
-import { uploadObjectBuffer } from '@repo/storage';
+import { buildImageUrls, getImgGenBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { generateImage } from 'ai';
 import { randomUUID } from 'node:crypto';
@@ -28,6 +24,8 @@ export const generateImagesSchema = z.object({
   n: z.number().int().min(1).max(4).optional(),
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
+  // Client-driven view filter; unassigned (null) when omitted. See docs/workspaces.md.
+  workspaceId: z.uuidv7().optional(),
 });
 
 export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
@@ -75,21 +73,12 @@ function getDimensionsFromResolutionAndAspectRatio(
   return { width, height };
 }
 
-export async function getGenImagesForUser({ userId }: { userId: string }) {
-  const { error, data: records } = await tryCatch(() => getGenImagesByUserId({ userId }));
-
-  if (error !== null || !records) {
-    throw new Error('Failed to list generated images');
-  }
-
-  return records.map(toGenImageDto);
-}
-
 /**
  * Create an image using the specified AI model and provider
  */
 export async function createGenImages({
   userId,
+  workspaceId,
   prompt,
   provider,
   model,
@@ -205,6 +194,7 @@ export async function createGenImages({
     createGenImageRecords(
       uploadData.map(({ key }) => ({
         userId,
+        workspaceId: workspaceId ?? null,
         storageKey: key,
         prompt,
         provider,
@@ -271,21 +261,5 @@ function toGenImageDto(record: GenImage) {
     prompt: record.prompt,
     createdAt: record.createdAt,
     ...buildImageUrls({ userId: record.userId, key: record.storageKey }),
-  };
-}
-
-function getImgGenBucketNameForUser(userId: string): {
-  bucketName: string;
-  prefix: string;
-} {
-  const bucketName = 'ragna-cloud-images';
-  const prefix = `${userId}/images/generated`;
-  return { bucketName, prefix };
-}
-
-function buildImageUrls({ userId, key }: { userId: string; key: string }) {
-  return {
-    rawUrl: `https://ragna-cloud-images.${userId}.r2.cloudflarestorage.com/${key}`,
-    imgUrl: `https://images.ragna.app/${key}`,
   };
 }

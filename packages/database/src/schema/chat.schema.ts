@@ -2,6 +2,7 @@ import { index, jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
 import { agent, type Agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
+import { workspace } from './workspace.schema';
 
 export const chat = pgTable(
   'chats',
@@ -10,6 +11,7 @@ export const chat = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
     agentId: text('agent_id')
       .notNull()
       .references(() => agent.id, { onDelete: 'cascade' }),
@@ -19,6 +21,7 @@ export const chat = pgTable(
   (table) => [
     index('chat_userId_idx').on(table.userId),
     index('chat_agentId_idx').on(table.agentId),
+    index('chat_workspaceId_idx').on(table.workspaceId),
   ],
 );
 

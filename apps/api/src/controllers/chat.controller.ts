@@ -32,7 +32,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validChatIdParam,
   validCreateChatBody,
-  validPaginationQuery,
+  validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
 import { generateChatTitle } from '../services/chat.service';
 
@@ -43,7 +43,7 @@ export const chatController = new Hono()
    * [GET] /chat
    * Get all chats for the authenticated user
    */
-  .get('/', validPaginationQuery, async (c) => {
+  .get('/', validWorkspaceScopedListQuery, async (c) => {
     const user = c.get('user');
     const query = c.req.valid('query');
 
@@ -55,12 +55,15 @@ export const chatController = new Hono()
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all chat count and fail gracefully
-    const { data: chatsCount } = await tryCatch(() => getChatCountByUserId({ userId: user.id }));
+    const { data: chatsCount } = await tryCatch(() =>
+      getChatCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+    );
 
     // Get chat history for user
     const { error, data: userChats } = await tryCatch(() =>
       getAllChatsByUserId({
         userId: user.id,
+        workspaceId: query.workspaceId,
         limit,
         offset,
         sort,
@@ -126,7 +129,12 @@ export const chatController = new Hono()
     }
 
     const { error, data: chat } = await tryCatch(() =>
-      createChat({ userId: user.id, agentId, title: 'New Chat' }),
+      createChat({
+        userId: user.id,
+        agentId,
+        title: 'New Chat',
+        workspaceId: body.workspaceId,
+      }),
     );
 
     if (error !== null || !chat) {

@@ -12,3 +12,4 @@ export * from './user.repo';
 export * from './verification.repo';
 export * from './workflow-run.repo';
 export * from './workflow.repo';
+export * from './workspace.repo';

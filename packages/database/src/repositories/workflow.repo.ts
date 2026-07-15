@@ -7,17 +7,19 @@ import { workflow } from '../schema';
 export async function upsertWorkflow(values: {
   id?: string;
   userId: string;
+  workspaceId?: string | null;
   name: string;
   description?: string;
   definition: WorkflowDefinition;
 }): Promise<Workflow> {
-  const { id: workflowId, userId, name, description, definition } = values;
+  const { id: workflowId, userId, workspaceId, name, description, definition } = values;
 
   const [upsertedWorkflow] = await db
     .insert(workflow)
     .values({
       id: workflowId,
       userId,
+      workspaceId,
       name,
       description,
       definition,
@@ -25,6 +27,7 @@ export async function upsertWorkflow(values: {
     .onConflictDoUpdate({
       target: workflow.id,
       set: {
+        workspaceId,
         name,
         description,
         definition,
@@ -53,17 +56,28 @@ export async function getWorkflowById({
   return workflowRecord || null;
 }
 
-export async function getWorkflowCountByUserId({ userId }: { userId: string }): Promise<number> {
-  return db.$count(workflow, eq(workflow.userId, userId));
+export async function getWorkflowCountByUserId({
+  userId,
+  workspaceId,
+}: {
+  userId: string;
+  workspaceId?: string;
+}): Promise<number> {
+  return db.$count(
+    workflow,
+    and(eq(workflow.userId, userId), workspaceId ? eq(workflow.workspaceId, workspaceId) : undefined),
+  );
 }
 
 export async function getAllWorkflowsByUserId({
   userId,
+  workspaceId,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
+  workspaceId?: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -79,7 +93,7 @@ export async function getAllWorkflowsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId },
+    where: { userId, workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),

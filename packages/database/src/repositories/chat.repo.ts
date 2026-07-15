@@ -9,6 +9,7 @@ export async function createChat(payload: ICreateChat): Promise<Chat> {
     .insert(chat)
     .values({
       userId: payload.userId,
+      workspaceId: payload.workspaceId,
       agentId: payload.agentId,
       title: payload.title,
     })
@@ -69,17 +70,28 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
   return chatRecord || null;
 }
 
-export async function getChatCountByUserId(payload: { userId: string }): Promise<number> {
-  return db.$count(chat, eq(chat.userId, payload.userId));
+export async function getChatCountByUserId(payload: {
+  userId: string;
+  workspaceId?: string;
+}): Promise<number> {
+  return db.$count(
+    chat,
+    and(
+      eq(chat.userId, payload.userId),
+      payload.workspaceId ? eq(chat.workspaceId, payload.workspaceId) : undefined,
+    ),
+  );
 }
 
 export async function getAllChatsByUserId({
   userId,
+  workspaceId,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
+  workspaceId?: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -106,7 +118,7 @@ export async function getAllChatsByUserId({
         },
       },
     },
-    where: { userId },
+    where: { userId, workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),

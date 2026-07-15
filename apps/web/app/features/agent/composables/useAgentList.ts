@@ -2,11 +2,13 @@ import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
 import { agentKeys } from '~/features/agent/composables/useAgentApi';
 import type { AgentManyResponse } from '~/features/agent/types';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useAgentList() {
   const api = useApi();
+  const { activeWorkspaceId } = useActiveWorkspace();
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each
@@ -26,7 +28,7 @@ export default function useAgentList() {
 
   function useGetAllAgents(options: QueryOpts = {}) {
     return useQuery<AgentManyResponse>({
-      queryKey: agentKeys.list(page, limit, searchQuery),
+      queryKey: agentKeys.list(page, limit, searchQuery, activeWorkspaceId),
       queryFn: ({ signal }) =>
         api('/agent', {
           method: 'GET',
@@ -34,6 +36,7 @@ export default function useAgentList() {
             page: page.value,
             limit: limit.value,
             searchQuery: searchQuery.value,
+            workspaceId: activeWorkspaceId.value ?? undefined,
           },
           signal,
         }),

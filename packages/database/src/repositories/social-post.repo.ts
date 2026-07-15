@@ -38,23 +38,37 @@ export async function getSocialPostById({
   return post ?? null;
 }
 
-export async function getSocialPostCountByUserId({ userId }: { userId: string }): Promise<number> {
-  return db.$count(socialPost, eq(socialPost.userId, userId));
+export async function getSocialPostCountByUserId({
+  userId,
+  workspaceId,
+}: {
+  userId: string;
+  workspaceId?: string;
+}): Promise<number> {
+  return db.$count(
+    socialPost,
+    and(
+      eq(socialPost.userId, userId),
+      workspaceId ? eq(socialPost.workspaceId, workspaceId) : undefined,
+    ),
+  );
 }
 
 export async function getAllSocialPostsByUserId({
   userId,
+  workspaceId,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
+  workspaceId?: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
 }): Promise<SocialPostWithMedia[]> {
   return db.query.socialPost.findMany({
-    where: { userId },
+    where: { userId, workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),

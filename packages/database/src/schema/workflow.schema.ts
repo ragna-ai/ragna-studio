@@ -8,6 +8,7 @@ import type {
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
+import { workspace } from './workspace.schema';
 
 const emptyWorkflowDefinition = { nodes: [], edges: [] };
 
@@ -19,6 +20,7 @@ export const workflow = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     description: text('description'),
     // Draft graph, edited on the canvas.
@@ -35,7 +37,10 @@ export const workflow = pgTable(
     scheduleTimezone: text('schedule_timezone'),
     ...timestamps,
   },
-  (table) => [index('workflow_userId_idx').on(table.userId)],
+  (table) => [
+    index('workflow_userId_idx').on(table.userId),
+    index('workflow_workspaceId_idx').on(table.workspaceId),
+  ],
 );
 
 export type Workflow = typeof workflow.$inferSelect;

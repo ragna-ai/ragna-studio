@@ -14,6 +14,7 @@ import { notificationController } from './controllers/notification.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { userController } from './controllers/user.controller';
 import { workflowController } from './controllers/workflow.controller';
+import { workspaceController } from './controllers/workspace.controller';
 
 // Origins allowed to call the API with credentials (cookies).
 // Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
@@ -49,6 +50,7 @@ export const app = new Hono()
   .route('/', workflowController)
   .route('/', socialPostController)
   .route('/', notificationController)
+  .route('/', workspaceController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

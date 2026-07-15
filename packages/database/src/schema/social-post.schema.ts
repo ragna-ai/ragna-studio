@@ -1,6 +1,7 @@
 import { index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
+import { workspace } from './workspace.schema';
 
 export type SocialPlatform = 'linkedin';
 export type SocialPostStatus = 'draft' | 'published' | 'failed';
@@ -15,6 +16,7 @@ export const socialPost = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
     platform: text('platform').notNull().$type<SocialPlatform>().default('linkedin'),
     content: text('content').notNull(),
     status: text('status').notNull().$type<SocialPostStatus>().default('draft'),
@@ -28,7 +30,10 @@ export const socialPost = pgTable(
     publishError: text('publish_error'),
     ...timestamps,
   },
-  (table) => [index('socialPost_userId_idx').on(table.userId)],
+  (table) => [
+    index('socialPost_userId_idx').on(table.userId),
+    index('socialPost_workspaceId_idx').on(table.workspaceId),
+  ],
 );
 
 export type SocialPost = typeof socialPost.$inferSelect;

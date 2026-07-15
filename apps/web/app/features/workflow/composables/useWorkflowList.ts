@@ -1,11 +1,13 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { workflowKeys } from '~/features/workflow/composables/useWorkflowApi';
 import type { WorkflowManyResponse } from '~/features/workflow/types';
+import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useWorkflowList() {
   const api = useApi();
+  const { activeWorkspaceId } = useActiveWorkspace();
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
@@ -18,11 +20,15 @@ export default function useWorkflowList() {
 
   function useGetAllWorkflows(options: QueryOpts = {}) {
     return useQuery<WorkflowManyResponse>({
-      queryKey: workflowKeys.list(page, limit),
+      queryKey: workflowKeys.list(page, limit, activeWorkspaceId),
       queryFn: ({ signal }) =>
         api('/workflow', {
           method: 'GET',
-          query: { page: page.value, limit: limit.value },
+          query: {
+            page: page.value,
+            limit: limit.value,
+            workspaceId: activeWorkspaceId.value ?? undefined,
+          },
           signal,
         }),
       placeholderData: (prev: WorkflowManyResponse | undefined) => prev,

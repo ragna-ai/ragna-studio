@@ -7,6 +7,7 @@ export interface AgentAiModelRef {
 export interface Agent {
   id: string;
   userId: string;
+  workspaceId?: string | null;
   aiModelId: string;
   name: string;
   systemPrompt: string;
