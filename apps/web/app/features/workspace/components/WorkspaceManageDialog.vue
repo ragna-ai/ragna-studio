@@ -28,7 +28,7 @@ const { mutateAsync: createWorkspace, isPending: isCreating } =
 const { mutateAsync: renameWorkspace, isPending: isRenaming } =
   useRenameWorkspace();
 const { mutateAsync: deleteWorkspace } = useDeleteWorkspace();
-const { activeWorkspaceId, setActiveWorkspace } = useActiveWorkspace();
+const { isWorkspaceActive, selectAllItems } = useActiveWorkspace();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
@@ -74,11 +74,13 @@ async function handleDelete(workspace: Workspace) {
     return;
   }
 
+  // Capture before the delete: the row is about to disappear.
+  const wasActive = isWorkspaceActive(workspace.id);
   await deleteWorkspace(workspace.id);
   // The deleted workspace can no longer be the active filter; fall back to
   // "All items" so the UI doesn't keep filtering by a workspace that's gone.
-  if (activeWorkspaceId.value === workspace.id) {
-    setActiveWorkspace(null);
+  if (wasActive) {
+    selectAllItems();
   }
 }
 </script>

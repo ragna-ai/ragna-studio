@@ -7,7 +7,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useWorkflowList() {
   const api = useApi();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { scopeKey, listQuery } = useActiveWorkspace();
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
@@ -20,14 +20,14 @@ export default function useWorkflowList() {
 
   function useGetAllWorkflows(options: QueryOpts = {}) {
     return useQuery<WorkflowManyResponse>({
-      queryKey: workflowKeys.list(page, limit, activeWorkspaceId),
+      queryKey: workflowKeys.list(page, limit, scopeKey),
       queryFn: ({ signal }) =>
         api('/workflow', {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
-            workspaceId: activeWorkspaceId.value ?? undefined,
+            ...listQuery.value,
           },
           signal,
         }),

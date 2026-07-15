@@ -12,8 +12,8 @@ export const socialPostKeys = {
   list: (
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    workspaceId: MaybeRefOrGetter<string | null>,
-  ) => ['social-posts', 'list', page, limit, workspaceId] as const,
+    scopeKey: MaybeRefOrGetter<string>,
+  ) => ['social-posts', 'list', page, limit, scopeKey] as const,
   detail: (postId: MaybeRefOrGetter<string>) =>
     ['social-posts', 'detail', postId] as const,
   mediaUpload: () => ['social-posts', 'media', 'upload'] as const,
@@ -113,14 +113,18 @@ export function useCreateSocialPost() {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { createWorkspaceId } = useActiveWorkspace();
 
   return useMutation<SocialPostResponse, unknown, string>({
-    mutationFn: (content) =>
-      api('/social-posts', {
+    mutationFn: (content) => {
+      // Only a specific active workspace assigns one; All and Unassigned
+      // both send nothing (docs/workspaces.md).
+      const workspaceId = createWorkspaceId.value;
+      return api('/social-posts', {
         method: 'POST',
-        body: { content, workspaceId: activeWorkspaceId.value },
-      }),
+        body: workspaceId ? { content, workspaceId } : { content },
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
     },

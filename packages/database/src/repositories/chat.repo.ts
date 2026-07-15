@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Chat, ChatMessage, ChatWithMessages } from '../schema';
 import { chat, chatMessage } from '../schema';
@@ -73,12 +73,17 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
 export async function getChatCountByUserId(payload: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }): Promise<number> {
   return db.$count(
     chat,
     and(
       eq(chat.userId, payload.userId),
-      payload.workspaceId ? eq(chat.workspaceId, payload.workspaceId) : undefined,
+      payload.unassigned
+        ? isNull(chat.workspaceId)
+        : payload.workspaceId
+          ? eq(chat.workspaceId, payload.workspaceId)
+          : undefined,
     ),
   );
 }
@@ -86,12 +91,14 @@ export async function getChatCountByUserId(payload: {
 export async function getAllChatsByUserId({
   userId,
   workspaceId,
+  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -118,7 +125,7 @@ export async function getAllChatsByUserId({
         },
       },
     },
-    where: { userId, workspaceId },
+    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),

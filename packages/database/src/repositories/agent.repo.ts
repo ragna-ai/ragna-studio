@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import type { Agent } from '../schema';
 import { agent } from '../schema';
@@ -82,13 +82,18 @@ export async function getOrCreateDefaultAgentForUser({
 export async function getAgentCountByUserId({
   userId,
   workspaceId,
+  unassigned,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }): Promise<number> {
   return db.$count(
     agent,
-    and(eq(agent.userId, userId), workspaceId ? eq(agent.workspaceId, workspaceId) : undefined),
+    and(
+      eq(agent.userId, userId),
+      unassigned ? isNull(agent.workspaceId) : workspaceId ? eq(agent.workspaceId, workspaceId) : undefined,
+    ),
   );
 }
 
@@ -112,12 +117,14 @@ export async function getAgentById({
 export async function getAllAgentsByUserId({
   userId,
   workspaceId,
+  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -131,7 +138,7 @@ export async function getAllAgentsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId, workspaceId },
+    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
     with: {
       aiModel: {
         columns: {

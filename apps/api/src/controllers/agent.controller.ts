@@ -33,19 +33,21 @@ export const agentController = new Hono()
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
     const sort = query.sort || 'desc';
+    const unassigned = query.unassigned === 'true';
 
     // Calculate offset for pagination ((page number - 1) * page size)
     const offset = page && limit ? (page - 1) * limit : undefined;
 
     // Get all agent count and fail gracefully
     const { data: agentsCount } = await tryCatch(() =>
-      getAgentCountByUserId({ userId: user.id, workspaceId: query.workspaceId }),
+      getAgentCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
     );
 
     const { error, data: allUserAgents } = await tryCatch(() =>
       getAllAgentsByUserId({
         userId: user.id,
         workspaceId: query.workspaceId,
+        unassigned,
         limit,
         sort,
         offset,

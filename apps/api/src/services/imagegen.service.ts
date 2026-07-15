@@ -6,12 +6,14 @@ import { tryCatch } from '@repo/utils';
 export async function getGenImagesForUser({
   userId,
   workspaceId,
+  unassigned,
 }: {
   userId: string;
   workspaceId?: string;
+  unassigned?: boolean;
 }) {
   const { error, data: records } = await tryCatch(() =>
-    getGenImagesByUserId({ userId, workspaceId }),
+    getGenImagesByUserId({ userId, workspaceId, unassigned }),
   );
 
   if (error !== null || !records) {

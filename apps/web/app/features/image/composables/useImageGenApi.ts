@@ -10,8 +10,8 @@ import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWo
 
 export const genImageKeys = {
   all: ['gen-images'] as const,
-  list: (workspaceId: MaybeRefOrGetter<string | null>) =>
-    ['gen-images', 'list', workspaceId] as const,
+  list: (scopeKey: MaybeRefOrGetter<string>) =>
+    ['gen-images', 'list', scopeKey] as const,
   create: () => ['gen-images', 'create'] as const,
 };
 
@@ -46,18 +46,18 @@ export interface GenerateImagesBody {
   negativePrompt?: string;
   // Set internally from the active workspace in useGenerateImages; callers
   // never pass this themselves.
-  workspaceId?: string | null;
+  workspaceId?: string;
 }
 
 export function useGetGenImages(options: QueryOpts = {}) {
   const api = useApi();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { scopeKey, listQuery } = useActiveWorkspace();
   return useQuery<GenImagesResponse>({
-    queryKey: genImageKeys.list(activeWorkspaceId),
+    queryKey: genImageKeys.list(scopeKey),
     queryFn: ({ signal }) =>
       api('/image/generate', {
         method: 'GET',
-        query: { workspaceId: activeWorkspaceId.value ?? undefined },
+        query: { ...listQuery.value },
         signal,
       }),
     ...options,
@@ -67,14 +67,18 @@ export function useGetGenImages(options: QueryOpts = {}) {
 export function useGenerateImages() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { activeWorkspaceId } = useActiveWorkspace();
+  const { createWorkspaceId } = useActiveWorkspace();
   return useMutation<GenImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),
-    mutationFn: (body) =>
-      api('/image/generate', {
+    mutationFn: (body) => {
+      // Only a specific active workspace assigns one; All and Unassigned
+      // both send nothing (docs/workspaces.md).
+      const workspaceId = createWorkspaceId.value;
+      return api('/image/generate', {
         method: 'POST',
-        body: { ...body, workspaceId: activeWorkspaceId.value },
-      }),
+        body: workspaceId ? { ...body, workspaceId } : body,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: genImageKeys.all });
     },

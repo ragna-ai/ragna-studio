@@ -26,7 +26,8 @@ These are settled. Do not re-open them.
 | **Security boundary**     | Stays `userId`. `workspaceId` is never a substitute for `userId` in any query.                                                                    |
 | **`workspaceId` nullability** | **Nullable.** `null` means "unassigned". Workspaces are purely optional buckets on top of a user's data.                                       |
 | **Default workspace**     | None auto-created. The baseline is "All items" (the unfiltered `userId` view). Workspaces are opt-in.                                             |
-| **Active workspace**      | **Client state.** Stored in the frontend, passed as an optional `workspaceId` query param on list endpoints. Not persisted in the session.        |
+| **List views**            | **Three states.** *All items* = everything (no filter, the default). *A workspace* = that workspace's items. *Unassigned* = only `workspaceId IS NULL`. All + Unassigned are distinct: "All items" is the union view (like Gmail's "All Mail"), "Unassigned" is the unfiled bucket. |
+| **Active workspace**      | **Client state.** Modeled as a discriminated union `{ kind: 'all' \| 'unassigned' \| 'workspace', workspaceId? }`. Translated to query params per the states above. Not persisted in the session.        |
 | **Moving items**          | **Out of scope for v1.** Items are stamped with the active `workspaceId` at creation time only. A "move to workspace" action may come later.      |
 | **Notifications**         | **Stay user-global.** Not workspace-scoped.                                                                                                        |
 | **Worker / DTOs**         | **Untouched.** Jobs run on `userId`; workspace is irrelevant to execution.                                                                        |
@@ -125,7 +126,7 @@ Passing no `workspaceId` returns the full "All items" view. Affected list repos:
 ## API layer
 
 - New workspace controller/routes: `list`, `create`, `rename`, `delete`. All scoped to the authenticated `userId`.
-- Existing list endpoints for scoped resources accept an **optional** `workspaceId` query param and pass it through to the repo. Absent param = All items.
+- Existing list endpoints for scoped resources accept two optional query params that resolve to three states: neither = **All items**; `workspaceId=<uuid>` = **that workspace**; `unassigned=true` = **only `workspaceId IS NULL`**. `unassigned` takes precedence if both are sent. In repos, "unassigned" uses the relational filter `{ workspaceId: { isNull: true } }` (or `isNull(table.workspaceId)` in count/SQL-builder queries). Both the list and the pagination-count query must apply the same state.
 - Existing create endpoints accept an **optional** `workspaceId` in the body and stamp it onto the new row. Absent = `null` (unassigned).
 
 No endpoint changes its authorization logic. `userId` still gates everything.
@@ -140,9 +141,9 @@ Generated images did not follow the other resources' controller → `@repo/datab
 
 ## Frontend
 
-- **Workspace switcher**: a control (e.g. in the sidebar/header) listing the user's workspaces plus an "All items" option. Selection is stored in client state (the active workspace).
-- **List views**: when a workspace is active, its `workspaceId` is sent as a query param so lists show only that workspace's items. "All items" sends nothing.
-- **Create flows**: new agents/chats/images/posts/workflows inherit the active `workspaceId` automatically. Creating under "All items" leaves them unassigned.
+- **Workspace switcher**: lists "All items" and "Unassigned" (the two global views, grouped at the top), then the user's workspaces, then "Manage workspaces". Selection is stored in client state as a discriminated union.
+- **List views**: the active selection resolves to query params, All → none, a workspace → `workspaceId`, Unassigned → `unassigned=true`. The selection key is folded into the query keys so switching refetches.
+- **Create flows**: new items inherit the active `workspaceId` only when a specific workspace is active. Both "All items" and "Unassigned" create as unassigned (no `workspaceId` sent). Upsert-based resources stamp the workspace on create only, never on edit.
 - **Workspace management UI**: create, rename, delete a workspace. Deleting warns that contained items become unassigned (not deleted).
 
 ## Out of scope for v1
