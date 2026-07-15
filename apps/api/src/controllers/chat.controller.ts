@@ -117,7 +117,7 @@ export const chatController = new Hono()
 
     if (!body.agentId) {
       const { error, data: agent } = await tryCatch(() =>
-        getOrCreateDefaultAgentForUser({ userId: user.id }),
+        getOrCreateDefaultAgentForUser({ userId: user.id, workspaceId: body.workspaceId }),
       );
 
       if (error !== null || !agent) {

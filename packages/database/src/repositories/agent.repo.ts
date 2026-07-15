@@ -55,11 +55,13 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
 // Get the user's personal clone of the default agent, creating it on first use
 export async function getOrCreateDefaultAgentForUser({
   userId,
+  workspaceId,
 }: {
   userId: string;
+  workspaceId?: string;
 }): Promise<Agent> {
   const existingAgent = await db.query.agent.findFirst({
-    where: { userId, isDefault: true },
+    where: { userId, workspaceId, isDefault: true },
   });
 
   if (existingAgent) {
@@ -71,6 +73,7 @@ export async function getOrCreateDefaultAgentForUser({
   return upsertAgent({
     userId,
     aiModelId: defaultAgent.aiModelId,
+    workspaceId,
     isDefault: true,
     name: defaultAgent.name,
     description: defaultAgent.description,
@@ -92,7 +95,11 @@ export async function getAgentCountByUserId({
     agent,
     and(
       eq(agent.userId, userId),
-      unassigned ? isNull(agent.workspaceId) : workspaceId ? eq(agent.workspaceId, workspaceId) : undefined,
+      unassigned
+        ? isNull(agent.workspaceId)
+        : workspaceId
+          ? eq(agent.workspaceId, workspaceId)
+          : undefined,
     ),
   );
 }
