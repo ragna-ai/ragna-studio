@@ -17,6 +17,8 @@ services:
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     ports:
       - ${API_PORT:-3010}:3010
 
@@ -35,7 +37,11 @@ services:
   postgres:
     cpus: 1
     restart: no
+    ports:
+      - ${DB_PORT:-5432}:5432
 
   redis:
     cpus: 1
     restart: no
+    ports:
+      - ${REDIS_PORT:-6379}:6379

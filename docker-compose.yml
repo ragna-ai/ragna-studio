@@ -9,42 +9,42 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
     container_name: ragna_studio_webapp
     restart: always
-    depends_on:
-      - api
     env_file:
       - .env
     security_opt:
       - no-new-privileges:true
     networks:
       - app_net
+    depends_on:
+      - api
 
   worker:
     image: ghcr.io/ragna-ai/ragna-studio-worker:latest
     container_name: ragna_studio_worker
     restart: always
-    depends_on:
-      - postgres
-      - redis
     env_file:
       - .env
     security_opt:
       - no-new-privileges:true
     networks:
       - app_net
+    depends_on:
+      - postgres
+      - redis
 
   api:
     image: ghcr.io/ragna-ai/ragna-studio-api:latest
     container_name: ragna_studio_api
     restart: always
-    depends_on:
-      - postgres
-      - redis
     env_file:
       - .env
     security_opt:
       - no-new-privileges:true
     networks:
       - app_net
+    depends_on:
+      - postgres
+      - redis
 
   postgres:
     image: postgres:18.4-alpine3.24
@@ -59,8 +59,6 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     security_opt:
       - no-new-privileges:true
-    ports:
-      - ${DB_PORT:-5432}:5432
     networks:
       - app_net
 
@@ -73,8 +71,6 @@ services:
       - redis_data:/data
     security_opt:
       - no-new-privileges:true
-    ports:
-      - ${REDIS_PORT:-6379}:6379
     networks:
       - app_net
 
