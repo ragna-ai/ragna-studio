@@ -76,6 +76,10 @@ export function createQueue({
   return queue;
 }
 
+/**
+ * Adds a job to the specified queue.
+ * @deprecated Use queue factory queue.name().add(...) instead
+ */
 export function queueAddJob<T>({
   queueName,
   jobName,

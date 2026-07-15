@@ -4,6 +4,7 @@ import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { genImage } from './genimage.schema';
+import { notification } from './notification.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { user } from './user.schema';
@@ -26,6 +27,7 @@ const schema = {
   workflow,
   workflowRun,
   workflowRunStep,
+  notification,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -37,6 +39,7 @@ export const relations = defineRelations(schema, (r) => ({
     genImages: r.many.genImage(),
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
+    notifications: r.many.notification(),
   },
   account: {
     user: r.one.user({
@@ -138,6 +141,13 @@ export const relations = defineRelations(schema, (r) => ({
     run: r.one.workflowRun({
       from: r.workflowRunStep.runId,
       to: r.workflowRun.id,
+      optional: false,
+    }),
+  },
+  notification: {
+    user: r.one.user({
+      from: r.notification.userId,
+      to: r.user.id,
       optional: false,
     }),
   },

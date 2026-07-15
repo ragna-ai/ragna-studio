@@ -1,4 +1,22 @@
 {
+  "notification": {
+    "workflowRunSucceeded": {
+      "title": "Workflow abgeschlossen",
+      "message": "„{name}“ wurde erfolgreich ausgeführt."
+    },
+    "workflowRunFailed": {
+      "title": "Workflow fehlgeschlagen",
+      "message": "„{name}“ wurde nicht erfolgreich abgeschlossen."
+    },
+    "unknown": {
+      "title": "Benachrichtigung",
+      "message": "Sie haben eine neue Benachrichtigung."
+    },
+    "title": "Benachrichtigungen",
+    "emptyList": "Keine Benachrichtigungen",
+    "delete": "Benachrichtigung löschen",
+    "clearAll": "Alle löschen"
+  },
   "home": {
     "title": "RAGNA Studio",
     "subtitle": "Willkommen bei RAGNA Studio."

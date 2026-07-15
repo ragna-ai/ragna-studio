@@ -116,3 +116,10 @@ export const validUpdateSocialPostMediaBody = myzValidator(
     altText: z.string().max(4086),
   }),
 );
+
+export const validNotificationIdParam = myzValidator(
+  'param',
+  z.object({
+    id: primaryId,
+  }),
+);

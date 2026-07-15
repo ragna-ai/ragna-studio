@@ -6,6 +6,10 @@ import {
 } from '../constants';
 import { getOrCreateQueue } from '../services/bullmq.service';
 
+/**
+ * Factory for creating or retrieving queues. Use the returned queue to add jobs, e.g.:
+ *   queue.workflow().add('my-job', { foo: 'bar' });
+ */
 export const queue = {
   email: () => getOrCreateQueue({ name: EMAILS_QUEUE }),
   onboarding: () => getOrCreateQueue({ name: ONBOARDINGS_QUEUE }),

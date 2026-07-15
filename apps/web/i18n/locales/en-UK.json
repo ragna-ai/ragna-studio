@@ -1,4 +1,20 @@
 {
+  "notification": {
+    "workflowRunSucceeded": {
+      "title": "Workflow completed",
+      "message": "\"{name}\" finished successfully."
+    },
+    "workflowRunFailed": {
+      "title": "Workflow failed",
+      "message": "\"{name}\" did not complete successfully."
+    },
+    "unknown": {
+      "title": "Notification",
+      "message": "You have a new notification."
+    },
+    "delete": "Delete notification",
+    "clearAll": "Clear all"
+  },
   "agent": {
     "tools": {
       "think": {

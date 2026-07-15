@@ -4,6 +4,7 @@ export * from './agent.repo';
 export * from './ai-model.repo';
 export * from './chat.repo';
 export * from './gen-image.repo';
+export * from './notification.repo';
 export * from './session.repo';
 export * from './social-post.repo';
 export * from './user.repo';

@@ -1,7 +1,13 @@
-import { getRunStatus, updateRunStatus } from '@repo/database';
+import { getRunForExecution, getRunStatus, updateRunStatus } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, WORKFLOW_RUN_JOB, WorkflowRunJobDto, WORKFLOWS_QUEUE } from '@repo/queue';
+import {
+  createWorker,
+  enqueueNotification,
+  WORKFLOW_RUN_JOB,
+  WorkflowRunJobDto,
+  WORKFLOWS_QUEUE,
+} from '@repo/queue';
 import type { WorkflowRunStatus } from '@repo/workflow';
 import { executeWorkflowRun } from '../workflow/engine';
 
@@ -31,12 +37,16 @@ export function registerWorkflowJobProcessor(): Worker<any, any, string> {
           // (mirrors BullMQ's own `shouldRetryJob` check).
           try {
             await executeWorkflowRun({ runId });
+            await notifyRunFinished({ runId });
           } catch (error) {
             const attempts = job.opts.attempts ?? 1;
             const isFinalAttempt = job.attemptsMade + 1 >= attempts;
 
             if (isFinalAttempt) {
+              // Mark failed first so notifyRunFinished reads status 'failed'
+              // and sends 'workflow_run_failed'.
               await markRunFailedBestEffort({ runId, error });
+              await notifyRunFinished({ runId });
             }
 
             throw error;
@@ -80,5 +90,33 @@ async function markRunFailedBestEffort({
     await updateRunStatus({ runId, status: 'failed', error: message, finishedAt: new Date() });
   } catch (markError) {
     logger.error(`Failed to mark workflow run ${runId} as failed after final attempt:`, markError);
+  }
+}
+
+async function notifyRunFinished({ runId }: { runId: string }): Promise<void> {
+  try {
+    const run = await getRunForExecution({ runId });
+    if (!run) {
+      logger.error(`Workflow run ${runId} not found, skipping notification`);
+      return;
+    }
+
+    const { userId } = run.workflow;
+    const data = { workflowId: run.workflowId, runId: run.id, workflowName: run.workflow.name };
+
+    switch (run.status) {
+      case 'completed':
+        await enqueueNotification({ userId, type: 'workflow_run_succeeded', data });
+        break;
+      case 'failed':
+        await enqueueNotification({ userId, type: 'workflow_run_failed', data });
+        break;
+      default:
+        // 'cancelled' (and any other non-notifying status): a user who
+        // cancelled a run already knows, so nothing to send.
+        logger.info(`Workflow run ${runId} has no notification type, skipping notification`);
+    }
+  } catch (error) {
+    logger.error(`Failed to enqueue notification for workflow run ${runId}:`, error);
   }
 }

@@ -8,14 +8,13 @@ import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
 import {
   createWorker,
-  queueAddJob,
+  queue,
   removeQueueJobScheduler,
   WORKFLOW_RUN_JOB,
   WORKFLOW_SCHEDULE_TICK_JOB,
   WORKFLOW_SCHEDULES_QUEUE,
   WorkflowRunJobDto,
   WorkflowScheduleTickJobDto,
-  WORKFLOWS_QUEUE,
 } from '@repo/queue';
 
 export function registerWorkflowScheduleJobProcessor(): Worker<any, any, string> {
@@ -80,12 +79,11 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
   });
 
   try {
-    await queueAddJob({
-      queueName: WORKFLOWS_QUEUE,
-      jobName: WORKFLOW_RUN_JOB,
-      data: new WorkflowRunJobDto({ runId: run.id }).toJSON(),
-      opts: { attempts: 3 },
-    });
+    await queue
+      .workflow()
+      .add(WORKFLOW_RUN_JOB, new WorkflowRunJobDto({ runId: run.id }).toJSON(), {
+        attempts: 3,
+      });
   } catch (error) {
     logger.error(`Failed to enqueue scheduled workflow run ${run.id}:`, error);
 

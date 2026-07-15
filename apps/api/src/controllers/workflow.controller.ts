@@ -12,14 +12,13 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
-  queueAddJob,
+  queue,
   removeQueueJobScheduler,
   upsertQueueJobScheduler,
   WORKFLOW_RUN_JOB,
   WORKFLOW_SCHEDULE_TICK_JOB,
   WORKFLOW_SCHEDULES_QUEUE,
   WorkflowRunJobDto,
-  WORKFLOWS_QUEUE,
   WorkflowScheduleTickJobDto,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
@@ -347,11 +346,8 @@ export const workflowController = new Hono()
     }
 
     const { error: enqueueError } = await tryCatch(() =>
-      queueAddJob({
-        queueName: WORKFLOWS_QUEUE,
-        jobName: WORKFLOW_RUN_JOB,
-        data: new WorkflowRunJobDto({ runId: run.id }).toJSON(),
-        opts: { attempts: 3 },
+      queue.workflow().add(WORKFLOW_RUN_JOB, new WorkflowRunJobDto({ runId: run.id }).toJSON(), {
+        attempts: 3,
       }),
     );
 

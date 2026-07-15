@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BellIcon, MaximizeIcon } from '@lucide/vue';
+import { MaximizeIcon } from '@lucide/vue';
 
 const onExpandClick = () => {
   const rootNode = document.documentElement;
@@ -29,9 +29,7 @@ const onExpandClick = () => {
       </div>
     </div>
     <div class="flex h-full items-center space-x-5">
-      <button>
-        <BellIcon class="size-5 stroke-1 hover:stroke-1.5" />
-      </button>
+      <NavNotifications />
       <div>
         <NavHelpMenu />
       </div>
