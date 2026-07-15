@@ -33,7 +33,7 @@
     },
     "tool": {
       "think": {
-        "label": "Gedanken aufschreiben",
+        "label": "Gedanken machen",
         "description": "Aktiviert tieferes Nachdenken vor der Antwort."
       },
       "webSearch": {
@@ -51,6 +51,10 @@
       "linkedinDraft": {
         "label": "LinkedIn-Beitrag",
         "description": "Speichert LinkedIn-Beiträge. Du veröffentlichst sie selbst."
+      },
+      "memory": {
+        "label": "Gedächtnis",
+        "description": "Merkt sich Notizen über dich und deine Arbeit für zukünftige Unterhaltungen."
       }
     }
   },

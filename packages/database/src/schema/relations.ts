@@ -4,6 +4,7 @@ import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { genImage } from './genimage.schema';
+import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
@@ -19,6 +20,7 @@ const schema = {
   aiModel,
   agent,
   agentTemplate,
+  agentMemory,
   chat,
   chatMessage,
   genImage,
@@ -71,6 +73,14 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
     chats: r.many.chat(),
+    memory: r.one.agentMemory(),
+  },
+  agentMemory: {
+    agent: r.one.agent({
+      from: r.agentMemory.agentId,
+      to: r.agent.id,
+      optional: false,
+    }),
   },
   agentTemplate: {
     aiModel: r.one.aiModel({

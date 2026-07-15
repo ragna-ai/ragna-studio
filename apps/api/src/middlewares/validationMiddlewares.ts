@@ -45,6 +45,13 @@ export const validAgentIdParam = myzValidator(
   }),
 );
 
+export const validAgentMemoryBody = myzValidator(
+  'json',
+  z.object({
+    content: z.string(),
+  }),
+);
+
 export const validGenerateImagesBody = myzValidator('json', generateImagesSchema);
 
 export const validWorkflowIdParam = myzValidator(

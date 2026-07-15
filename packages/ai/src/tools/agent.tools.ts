@@ -1,6 +1,7 @@
 import type { UIMessageStreamWriter } from 'ai';
 import { getGeneratedImages } from './image-gen.tool';
 import { getLinkedinDraft } from './linkedin-draft.tool';
+import { getMemoryTool } from './memory.tool';
 import { getThoughts } from './think.tool';
 import { getWebBrowserResults } from './web-browser.tool';
 import { getWebSearchResults } from './web-search.tool';
@@ -11,10 +12,12 @@ export type AgentTools = {
   webBrowser: ReturnType<typeof getWebBrowserResults>;
   imageGen: ReturnType<typeof getGeneratedImages>;
   linkedinDraft: ReturnType<typeof getLinkedinDraft>;
+  memory: ReturnType<typeof getMemoryTool>;
 };
 
 export type AgentToolDeps = {
   userId: string;
+  agentId: string;
 };
 
 /*
@@ -30,6 +33,7 @@ export const tools = (writer: UIMessageStreamWriter, deps: AgentToolDeps): Agent
   webBrowser: getWebBrowserResults(writer),
   imageGen: getGeneratedImages(writer, deps.userId),
   linkedinDraft: getLinkedinDraft(writer, deps.userId),
+  memory: getMemoryTool(writer, deps.agentId),
   // knowledge: getKnowledgeData(writer),
   // createDocument: () => {
   //   /* ... */

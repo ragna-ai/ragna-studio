@@ -31,3 +31,13 @@ export type UpsertAgentRequest = Omit<Agent, 'id' | 'userId'> & {
   id: string | null;
   userId: string | null;
 };
+
+export interface AgentMemory {
+  content: string;
+}
+
+export interface AgentMemoryResponse {
+  memory: AgentMemory;
+}
+
+export type UpdateAgentMemoryRequest = AgentMemory;

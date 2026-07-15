@@ -12,10 +12,10 @@
     "pkg:update": "pnpm update -i -r -L"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.10.4",
+    "@turbo/gen": "^2.10.5",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "^2.10.4",
+    "turbo": "^2.10.5",
     "typescript": "catalog:"
   },
   "engines": {

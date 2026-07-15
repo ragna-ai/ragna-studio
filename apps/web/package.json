@@ -11,7 +11,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.22",
+    "@ai-sdk/vue": "^4.0.26",
     "@lucide/vue": "^1.24.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/icon": "2.3.1",
@@ -49,7 +49,7 @@
     "vue-router": "^5.1.0",
     "vue-sonner": "^2.0.9",
     "vue-stick-to-bottom": "^1.0.0",
-    "vue-stream-markdown": "1.0.1-beta.1",
+    "vue-stream-markdown": "1.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {

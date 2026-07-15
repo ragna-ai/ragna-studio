@@ -68,6 +68,8 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 **migrations**: Push schema directly to DB. Do not write sql migrations yourself.
 
+**new DB tables**: Register every new table in `packages/database/src/schema/relations.ts` (add it to the `defineRelations` `schema` object plus its FK relations), not just export it from `schema/index.ts`. The `db` instance is built with `drizzle({ relations })`, so a table missing from that graph throws a runtime "database relation is missing" error, even for plain query-builder calls.
+
 ### Infrastructure dependencies
 
 - **PostgreSQL** (localhost:5437): database runs in a docker container.

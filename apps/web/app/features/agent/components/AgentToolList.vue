@@ -4,6 +4,7 @@ import {
   CheckIcon,
   GlobeIcon,
   ImageIcon,
+  NotebookPenIcon,
   PencilLineIcon,
   Share2Icon,
   type LucideIcon,
@@ -50,6 +51,12 @@ const availableTools: UiAgentTool[] = [
     icon: PencilLineIcon,
     titleKey: 'agent.tool.think.label',
     descriptionKey: 'agent.tool.think.description',
+  },
+  {
+    id: 'memory',
+    icon: NotebookPenIcon,
+    titleKey: 'agent.tool.memory.label',
+    descriptionKey: 'agent.tool.memory.description',
   },
   {
     id: 'webSearch',

@@ -36,6 +36,10 @@
       "linkedinDraft": {
         "title": "LinkedIn Draft",
         "description": "Draft LinkedIn posts. You publish them yourself."
+      },
+      "memory": {
+        "title": "Memory",
+        "description": "Save and recall notes about you and your work across conversations."
       }
     }
   },

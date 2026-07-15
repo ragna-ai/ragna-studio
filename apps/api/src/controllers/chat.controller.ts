@@ -1,4 +1,5 @@
 import {
+  buildAgentInstructions,
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -229,9 +230,15 @@ export const chatController = new Hono()
 
     let titlePromise: Promise<string> | null = null;
 
+    const { agent } = userChat;
+
     const validUiMessages = validated.data;
     const modelMessages = await convertToModelMessages(validUiMessages);
-    const { agent } = userChat;
+    const instructions = await buildAgentInstructions({
+      agentId: agent.id,
+      tools: agent.tools,
+      systemPrompt: agent.systemPrompt,
+    });
 
     const lastUiMessage = validUiMessages.at(-1);
 
@@ -268,9 +275,9 @@ export const chatController = new Hono()
             provider: agent.aiModel.provider,
             model: agent.aiModel.model,
           }),
-          instructions: agent.systemPrompt,
+          instructions,
           messages: modelMessages,
-          tools: tools(dataStream, { userId: user.id }),
+          tools: tools(dataStream, { userId: user.id, agentId: agent.id }),
           activeTools: agent.tools,
           stopWhen: stepCountIs(5),
           temperature: agent.settings?.temperature ?? 0.7,

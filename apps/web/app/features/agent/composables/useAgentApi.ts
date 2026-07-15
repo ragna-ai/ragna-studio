@@ -5,7 +5,11 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import type { AgentResponse, UpsertAgentRequest } from '~/features/agent/types';
+import type {
+  AgentMemoryResponse,
+  AgentResponse,
+  UpsertAgentRequest,
+} from '~/features/agent/types';
 
 export const agentKeys = {
   all: ['agents'] as const,
@@ -16,6 +20,8 @@ export const agentKeys = {
   ) => ['agents', 'list', page, limit, search] as const,
   detail: (agentId: MaybeRefOrGetter<string>) =>
     ['agents', 'detail', agentId] as const,
+  memory: (agentId: MaybeRefOrGetter<string>) =>
+    ['agents', 'memory', agentId] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -56,6 +62,38 @@ export function useUpsertAgent() {
     },
     onError: () => {
       toast.error('Failed to update agent');
+    },
+  });
+}
+
+export function useGetAgentMemory(
+  agentId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
+  const api = useApi();
+  return useQuery<AgentMemoryResponse>({
+    queryKey: agentKeys.memory(agentId),
+    queryFn: ({ signal }) =>
+      api(`/agent/${toValue(agentId)}/memory`, { method: 'GET', signal }),
+    enabled: () => !!toValue(agentId),
+    ...options,
+  });
+}
+
+type UpdateAgentMemoryVariables = { agentId: string; content: string };
+
+export function useUpdateAgentMemory() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
+    mutationFn: ({ agentId, content }) =>
+      api(`/agent/${agentId}/memory`, { method: 'PUT', body: { content } }),
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.memory(agentId) });
+      toast.success('Memory updated');
+    },
+    onError: () => {
+      toast.error('Failed to update memory');
     },
   });
 }

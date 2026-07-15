@@ -3,11 +3,13 @@ import {
   BookIcon,
   BrainIcon,
   BriefcaseBusinessIcon,
+  NotebookPenIcon,
   ShieldCheckIcon,
   UserIcon,
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
+import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
@@ -91,6 +93,7 @@ const siderBarTabs = [
     label: 'Tools',
   },
   { id: 'knowledge', icon: BookIcon, label: 'Knowledge' },
+  { id: 'memory', icon: NotebookPenIcon, label: 'Memory' },
   {
     id: 'privacy',
     icon: ShieldCheckIcon,
@@ -246,7 +249,14 @@ const siderBarTabs = [
           Save the agent first to configure its knowledge base.
         </div>
       </template>
-      <!-- TAB 6: Privacy -->
+      <!-- TAB 6: Memory -->
+      <template #memory>
+        <AgentMemoryPanel v-if="props.id" :agent-id="props.id" />
+        <div v-else class="rounded-lg border p-4 text-sm text-muted-foreground">
+          Save the agent first to view and edit its memory.
+        </div>
+      </template>
+      <!-- TAB 7: Privacy -->
       <template #privacy>
         <form.Field name="isDefault">
           <template v-slot="{ field, state }">

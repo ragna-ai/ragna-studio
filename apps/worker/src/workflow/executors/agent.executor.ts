@@ -1,4 +1,10 @@
-import { generateText, getLanguageModel, stepCountIs, tools } from '@repo/ai';
+import {
+  buildAgentInstructions,
+  generateText,
+  getLanguageModel,
+  stepCountIs,
+  tools,
+} from '@repo/ai';
 import { getAgentById, getDefaultAgent } from '@repo/database';
 import type { AgentConfig, WorkflowToolCall } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
@@ -78,12 +84,17 @@ export const executeAgent: Executor = async (node, ctx) => {
       throw new Error(`Agent "${config.agentId}" not found for this user`);
     }
     const agent = withAgentConfig(agentRecord);
+    const instructions = await buildAgentInstructions({
+      agentId: config.agentId,
+      tools: agent.tools,
+      systemPrompt: agent.systemPrompt,
+    });
 
     const result = await generateText({
       model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
-      instructions: agent.systemPrompt,
+      instructions,
       prompt,
-      tools: tools(noopWriter, { userId: ctx.userId }),
+      tools: tools(noopWriter, { userId: ctx.userId, agentId: config.agentId }),
       activeTools: agent.tools,
       stopWhen: stepCountIs(5),
       temperature: agent.settings?.temperature ?? 0.7,

@@ -25,9 +25,9 @@ catalog:
   tsdown: ^0.22.7
   typescript: 6.0.3
   zod: 4.4.3
-  oxfmt: ^0.58.0
-  oxlint: ^1.73.0
-  ai: ^7.0.22
+  oxfmt: ^0.59.0
+  oxlint: ^1.74.0
+  ai: ^7.0.26
 
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.10.4'
