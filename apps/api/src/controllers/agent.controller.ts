@@ -185,7 +185,7 @@ export const agentController = new Hono()
       upsertMemory({ agentId: param.agentId, content: body.content }),
     );
 
-    if (upsertMemoryError !== null) {
+    if (upsertMemoryError !== null || !memory) {
       logger.error('Failed to update agent memory', upsertMemoryError);
       throw new InternalServerErrorException('Failed to update agent memory');
     }
