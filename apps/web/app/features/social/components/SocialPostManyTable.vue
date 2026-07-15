@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trash2Icon } from '@lucide/vue';
+import { Share2Icon, Trash2Icon } from '@lucide/vue';
 import SocialPostStatusBadge from '~/features/social/components/SocialPostStatusBadge.vue';
 import type { SocialPost } from '~/features/social/composables/useSocialPostApi';
 
@@ -35,6 +35,7 @@ const { formatDateTime } = useDateTimeFormat();
   <Table>
     <TableHeader>
       <TableRow>
+        <TableHead>&nbsp;</TableHead>
         <TableHead>{{ t('social.list.table.status') }}</TableHead>
         <TableHead>{{ t('social.list.table.content') }}</TableHead>
         <TableHead>{{ t('social.list.table.created') }}</TableHead>
@@ -53,6 +54,9 @@ const { formatDateTime } = useDateTimeFormat();
         class="cursor-pointer"
         @click="navigateTo(`/social/${post.id}`)"
       >
+        <TableCell class="w-12">
+          <Share2Icon class="size-4 stroke-1.5" />
+        </TableCell>
         <TableCell class="w-32">
           <SocialPostStatusBadge :status="post.status" />
         </TableCell>

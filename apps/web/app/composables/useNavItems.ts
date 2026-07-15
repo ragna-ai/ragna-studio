@@ -161,9 +161,9 @@ export function useNavItems() {
   const route = useRoute();
 
   const dynamicNavItems = computed<NavItem[]>(() => {
-    if (route.path.startsWith('/chat')) return [homeItem, ...chatItems];
-    if (route.path.startsWith('/agent')) return [homeItem, ...agentItems];
-    if (route.path.startsWith('/workflow')) return [homeItem, ...workflowItems];
+    // if (route.path.startsWith('/chat')) return [homeItem, ...chatItems];
+    // if (route.path.startsWith('/agent')) return [homeItem, ...agentItems];
+    // if (route.path.startsWith('/workflow')) return [homeItem, ...workflowItems];
     return [homeItem, ...defaultItems];
   });
 

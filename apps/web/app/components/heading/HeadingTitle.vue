@@ -8,10 +8,10 @@ defineProps<{
 <template>
   <div class="flex w-full items-center justify-between">
     <div class="">
-      <h1 class="max-w-lg text-2xl font-bold truncate">
+      <h1 class="max-w-lg truncate text-xl font-bold">
         {{ title ?? '' }}
       </h1>
-      <p class="max-w-2xl text-sm opacity-90 truncate">
+      <p class="max-w-2xl truncate text-sm opacity-90">
         {{ subtitle ?? '' }}
       </p>
     </div>
