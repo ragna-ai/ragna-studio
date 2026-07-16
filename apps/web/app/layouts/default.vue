@@ -10,9 +10,10 @@ const head = useLocaleHead();
       <NavTopBar />
       <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
         <NavSidebar />
+        <SidePanelHost />
         <main
           id="main"
-          class="relative max-w-[calc(100vw-4.5rem)] grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-sm"
+          class="relative min-w-0 grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-sm"
         >
           <slot />
         </main>

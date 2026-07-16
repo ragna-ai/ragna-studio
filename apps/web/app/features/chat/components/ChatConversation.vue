@@ -101,7 +101,7 @@ async function handleSubmit(message: { text: string }) {
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col bg-neutral-50 p-4">
+  <div class="flex h-full w-full flex-col p-4">
     <MessageScrollerProvider auto-scroll default-scroll-position="last-anchor">
       <MessageScroller>
         <MessageScrollerViewport>

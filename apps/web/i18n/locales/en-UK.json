@@ -43,6 +43,15 @@
       }
     }
   },
+  "chat": {
+    "history": {
+      "title": "Chat history",
+      "toggle": "Toggle chat history",
+      "groupBy": "Change grouping",
+      "close": "Close",
+      "empty": "No chats yet"
+    }
+  },
   "workflow": {
     "list": {
       "title": "Workflows",

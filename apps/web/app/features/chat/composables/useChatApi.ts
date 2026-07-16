@@ -5,10 +5,14 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
+import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const chatKeys = {
+  // Prefix is 'chats' (not a separate top-level key) so the existing
+  // invalidateQueries({ queryKey: chatKeys.all }) on create/delete also
+  // refreshes this query.
   all: ['chats'] as const,
   list: (
     page: MaybeRefOrGetter<number>,
@@ -19,6 +23,8 @@ export const chatKeys = {
   detail: (chatId: MaybeRefOrGetter<string>) =>
     ['chats', 'detail', chatId] as const,
   recent: () => ['chats', 'recent'] as const,
+  history: (scopeKey: MaybeRefOrGetter<string>) =>
+    ['chats', 'history', scopeKey] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -93,6 +99,22 @@ export function useGetRecentChat(options: QueryOpts = {}) {
   return useQuery<ChatResponse>({
     queryKey: chatKeys.recent(),
     queryFn: ({ signal }) => api('/chat/recent', { method: 'GET', signal }),
+    ...options,
+  });
+}
+
+export function useGetChatHistory(options: QueryOpts = {}) {
+  const api = useApi();
+  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
+  return useQuery<ChatHistoryResponse>({
+    queryKey: chatKeys.history(scopeKey),
+    queryFn: ({ signal }) =>
+      api('/chat', {
+        method: 'GET',
+        query: { page: 1, limit: 60, ...listQuery.value },
+        signal,
+      }),
+    placeholderData: (prev: ChatHistoryResponse | undefined) => prev, // keep previous results while refetching
     ...options,
   });
 }

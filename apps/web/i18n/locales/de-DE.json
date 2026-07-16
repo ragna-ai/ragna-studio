@@ -65,7 +65,11 @@
     },
     "history": {
       "title": "Chat-Verlauf",
-      "subtitle": "Verlauf deiner Unterhaltungen."
+      "subtitle": "Verlauf deiner Unterhaltungen.",
+      "toggle": "Chatverlauf ein-/ausblenden",
+      "groupBy": "Gruppierung ändern",
+      "close": "Schließen",
+      "empty": "Noch keine Chats"
     }
   },
   "workflow": {

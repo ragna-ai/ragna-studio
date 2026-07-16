@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
+import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
 
 definePageMeta({
@@ -20,6 +21,7 @@ useHead({
 </script>
 
 <template>
+  <ChatHistoryToggle class="absolute left-2 top-2 z-10" />
   <ChatConversation
     v-if="data?.chat"
     :key="data.chat.id"
