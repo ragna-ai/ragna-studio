@@ -45,6 +45,9 @@ export const agent = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
+    // Background knowledge the agent should always have, kept separate from
+    // `systemPrompt` (behavior). Null/empty both mean "no context".
+    context: text('context'),
     tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
     settings: jsonb('settings')
       .notNull()

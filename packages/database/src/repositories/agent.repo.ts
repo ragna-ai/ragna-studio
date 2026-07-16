@@ -15,6 +15,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
     aiModelId,
     isDefault,
     systemPrompt,
+    context,
     tools,
   } = values;
 
@@ -29,6 +30,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
       name,
       description,
       systemPrompt,
+      context,
       tools,
     })
     .onConflictDoUpdate({
@@ -40,6 +42,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
         name,
         description,
         systemPrompt,
+        context,
         tools,
       },
     })

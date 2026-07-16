@@ -12,6 +12,7 @@ export interface Agent {
   name: string;
   systemPrompt: string;
   description?: string;
+  context?: string | null;
   tools?: string[];
   isDefault: boolean;
   aiModel?: AgentAiModelRef;

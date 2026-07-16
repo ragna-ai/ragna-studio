@@ -248,6 +248,7 @@ export const chatController = new Hono()
       agentId: agent.id,
       tools: agent.tools,
       systemPrompt: agent.systemPrompt,
+      context: agent.context,
     });
 
     const lastUiMessage = validUiMessages.at(-1);

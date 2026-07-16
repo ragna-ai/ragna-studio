@@ -50,6 +50,7 @@ export const validUpsertAgentBody = myzValidator(
     description: z.string().optional(),
     aiModelId: primaryId,
     systemPrompt: z.string(),
+    context: z.string().max(30_000).nullish(),
     tools: z.array(z.string()),
     isDefault: z.boolean().optional(),
     workspaceId: primaryId.optional(),

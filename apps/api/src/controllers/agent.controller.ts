@@ -1,3 +1,4 @@
+import { normalizeAgentContext } from '@repo/ai';
 import {
   deleteAgentById,
   getAgentById,
@@ -81,6 +82,7 @@ export const agentController = new Hono()
         description: body.description,
         aiModelId: body.aiModelId,
         systemPrompt: body.systemPrompt,
+        context: normalizeAgentContext(body.context),
         tools: body.tools,
         isDefault: body.isDefault,
         workspaceId: body.workspaceId,

@@ -4,7 +4,7 @@ import {
   BrainIcon,
   BriefcaseBusinessIcon,
   NotebookPenIcon,
-  ShieldCheckIcon,
+  SettingsIcon,
   UserIcon,
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
@@ -21,6 +21,7 @@ type UpsertAgentProps = {
   name?: string;
   systemPrompt?: string;
   description?: string;
+  context?: string | null;
   tools?: string[];
   isDefault?: boolean;
 };
@@ -34,6 +35,7 @@ const agentUpsertSchema = z.object({
   }),
   systemPrompt: z.string(),
   description: z.string(),
+  context: z.string().max(30_000),
   tools: z.array(z.string()),
   isDefault: z.boolean(),
 });
@@ -56,6 +58,7 @@ const form = useForm({
     name: props.name ?? '',
     systemPrompt: props.systemPrompt ?? 'You are a helpful assistant.',
     description: props.description ?? '',
+    context: props.context ?? '',
     tools: props.tools ?? [],
     isDefault: props.isDefault ?? false,
   },
@@ -92,12 +95,12 @@ const siderBarTabs = [
     icon: BriefcaseBusinessIcon,
     label: 'Tools',
   },
-  { id: 'knowledge', icon: BookIcon, label: 'Knowledge' },
+  { id: 'context', icon: BookIcon, label: 'Context' },
   { id: 'memory', icon: NotebookPenIcon, label: 'Memory' },
   {
-    id: 'privacy',
-    icon: ShieldCheckIcon,
-    label: 'Privacy',
+    id: 'settings',
+    icon: SettingsIcon,
+    label: 'Settings',
   },
 ];
 </script>
@@ -243,11 +246,33 @@ const siderBarTabs = [
           </template>
         </form.Field>
       </template>
-      <!-- TAB 5: Knowledge -->
-      <template #knowledge>
-        <div class="rounded-lg border p-4 text-sm text-muted-foreground">
-          Save the agent first to configure its knowledge base.
-        </div>
+      <!-- TAB 5: Context -->
+      <template #context>
+        <form.Field name="context">
+          <template v-slot="{ field, state }">
+            <div>
+              <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                Context
+              </Label>
+              <p class="mb-2 text-sm text-muted-foreground">
+                Background knowledge this agent should always have. For behavior
+                and rules, use Persona.
+              </p>
+              <Textarea
+                :id="field.name"
+                rows="10"
+                :model-value="state.value"
+                @update:model-value="
+                  (v: string | number) => field.handleChange(String(v))
+                "
+                @blur="field.handleBlur"
+                class="min-h-100"
+                autocomplete="off"
+              />
+              <FormFieldInfo :state="state" />
+            </div>
+          </template>
+        </form.Field>
       </template>
       <!-- TAB 6: Memory -->
       <template #memory>
@@ -256,8 +281,8 @@ const siderBarTabs = [
           Save the agent first to view and edit its memory.
         </div>
       </template>
-      <!-- TAB 7: Privacy -->
-      <template #privacy>
+      <!-- TAB 7: Settings -->
+      <template #settings>
         <form.Field name="isDefault">
           <template v-slot="{ field, state }">
             <div class="flex items-center space-x-3">

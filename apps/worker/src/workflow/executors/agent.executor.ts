@@ -102,6 +102,7 @@ export const executeAgent: Executor = async (node, ctx) => {
     agentId: config.agentId,
     tools: agent.tools,
     systemPrompt: agent.systemPrompt,
+    context: agent.context,
   });
 
   const result = await generateText({
