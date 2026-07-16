@@ -91,3 +91,5 @@ Skip self-verification of changes unless explicitly asked:
 - no browser verification
 
 The user handles verification and commits.
+
+`as any` types are **strictly prohibited**. never use them.

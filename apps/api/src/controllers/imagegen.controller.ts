@@ -41,7 +41,18 @@ export const imageGenerateController = new Hono()
     const body = c.req.valid('json');
 
     const { error, data: generated } = await tryCatch(() =>
-      createGenImages({ userId: user.id, ...body }),
+      createGenImages({
+        userId: user.id,
+        prompt: body.prompt,
+        provider: body.provider,
+        model: body.model,
+        resolution: body.resolution,
+        aspectRatio: body.aspectRatio,
+        n: body.n,
+        seed: body.seed,
+        negativePrompt: body.negativePrompt,
+        workspaceId: body.workspaceId,
+      }),
     );
 
     if (error !== null || !generated) {

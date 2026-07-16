@@ -15,9 +15,10 @@ export type AgentTools = {
   memory: ReturnType<typeof getMemoryTool>;
 };
 
-export type AgentToolDeps = {
+export type AgentToolContext = {
   userId: string;
   agentId: string;
+  workspaceId: string | null;
 };
 
 /*
@@ -27,13 +28,13 @@ export type AgentToolDeps = {
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
 */
 
-export const tools = (writer: UIMessageStreamWriter, deps: AgentToolDeps): AgentTools => ({
+export const tools = (writer: UIMessageStreamWriter, ctx: AgentToolContext): AgentTools => ({
   think: getThoughts(writer),
   webSearch: getWebSearchResults(writer),
   webBrowser: getWebBrowserResults(writer),
-  imageGen: getGeneratedImages(writer, deps.userId),
-  linkedinDraft: getLinkedinDraft(writer, deps.userId),
-  memory: getMemoryTool(writer, deps.agentId),
+  imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId),
+  linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),
+  memory: getMemoryTool(writer, ctx.agentId),
   // knowledge: getKnowledgeData(writer),
   // createDocument: () => {
   //   /* ... */

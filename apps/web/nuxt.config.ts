@@ -111,6 +111,12 @@ export default defineNuxtConfig({
         'tailwind-merge',
         'vue-sonner',
         'zod',
+        '@ai-sdk/vue',
+        'ai',
+        'nanoid',
+        'motion-v',
+        'vue-stream-markdown',
+        'shiki',
       ],
     },
     // Pre-transform pages/components at dev startup so navigation doesn't

@@ -37,6 +37,7 @@ type LinkedinDraftOutput = DraftLinkedInPostResult;
 export const getLinkedinDraft = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
+  workspaceId: string | null,
 ): Tool<LinkedinDraftInput, LinkedinDraftOutput> =>
   tool({
     description:
@@ -51,7 +52,7 @@ export const getLinkedinDraft = (
       });
 
       // only id and status go back into the model context; the full record stays in the DB
-      return draftLinkedInPost({ userId, text, draftId, imageIds });
+      return draftLinkedInPost({ userId, text, draftId, imageIds, workspaceId });
     },
   });
 

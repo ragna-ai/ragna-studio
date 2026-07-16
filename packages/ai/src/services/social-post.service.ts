@@ -16,6 +16,7 @@ export type DraftLinkedInPostInput = {
   text: string;
   /** Revise this existing draft instead of creating a new one. */
   draftId?: string;
+  workspaceId: string | null;
   /**
    * gen_images ids to attach, in display order. Omit to leave a revised
    * draft's images untouched; pass `[]` to clear them. New drafts with no
@@ -66,6 +67,7 @@ export async function draftLinkedInPost({
   text,
   draftId,
   imageIds,
+  workspaceId,
 }: DraftLinkedInPostInput): Promise<DraftLinkedInPostResult> {
   const validationError = validatePostText(text);
   if (validationError) {
@@ -81,7 +83,7 @@ export async function draftLinkedInPost({
   }
 
   const { error, data: created } = await tryCatch(() =>
-    createSocialPost({ userId, platform: 'linkedin', content: text, source: 'agent' }),
+    createSocialPost({ userId, platform: 'linkedin', content: text, source: 'agent', workspaceId }),
   );
 
   if (error !== null || !created) {

@@ -24,7 +24,6 @@ export const generateImagesSchema = z.object({
   n: z.number().int().min(1).max(4).optional(),
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
-  // Client-driven view filter; unassigned (null) when omitted. See docs/workspaces.md.
   workspaceId: z.uuidv7().optional(),
 });
 
@@ -220,6 +219,7 @@ type CreateImagesWithDefaultModelParams = {
   prompt: string;
   aspectRatio?: AspectRatio;
   n?: number;
+  workspaceId: string | null;
 };
 
 /**
@@ -231,6 +231,7 @@ export async function createGenImagesWithDefaultModel({
   prompt,
   aspectRatio,
   n,
+  workspaceId,
 }: CreateImagesWithDefaultModelParams) {
   const { error, data: imageModel } = await tryCatch(() =>
     getDefaultAiModelByModality({ modality: 'image' }),
@@ -248,6 +249,10 @@ export async function createGenImagesWithDefaultModel({
     n,
     provider: imageModel.provider,
     model: imageModel.model,
+    // createGenImages is shared with the direct HTTP endpoint, whose request
+    // body (generateImagesSchema) treats workspaceId as optional/absent
+    // rather than nullable.
+    workspaceId: workspaceId ?? undefined,
   });
 }
 

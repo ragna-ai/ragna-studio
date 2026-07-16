@@ -146,6 +146,10 @@ Generated images did not follow the other resources' controller → `@repo/datab
 - **Create flows**: new items inherit the active `workspaceId` only when a specific workspace is active. Both "All items" and "Unassigned" create as unassigned (no `workspaceId` sent). Upsert-based resources stamp the workspace on create only, never on edit.
 - **Workspace management UI**: create, rename, delete a workspace. Deleting warns that contained items become unassigned (not deleted).
 
+## Known issues
+
+See [workspaces-known-issues.md](./workspaces-known-issues.md): agent-tool-created resources (e.g. LinkedIn drafts from the chat agent) never get a `workspaceId` and silently land as "unassigned".
+
 ## Out of scope for v1
 
 - Sharing workspaces / multi-user membership, roles, invitations.

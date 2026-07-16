@@ -287,7 +287,11 @@ export const chatController = new Hono()
           }),
           instructions,
           messages: modelMessages,
-          tools: tools(dataStream, { userId: user.id, agentId: agent.id }),
+          tools: tools(dataStream, {
+            userId: user.id,
+            agentId: agent.id,
+            workspaceId: userChat.workspaceId,
+          }),
           activeTools: agent.tools,
           stopWhen: stepCountIs(5),
           temperature: agent.settings?.temperature ?? 0.7,

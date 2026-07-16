@@ -42,6 +42,7 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
     columns: {
       id: true,
       userId: true,
+      workspaceId: true,
       agentId: true,
       title: true,
       createdAt: true,
