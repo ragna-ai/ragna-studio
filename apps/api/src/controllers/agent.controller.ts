@@ -7,6 +7,7 @@ import {
   getMemoryByAgentId,
   upsertAgent,
   upsertMemory,
+  type AgentSettings,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
@@ -19,6 +20,31 @@ import {
   validUpsertAgentBody,
   validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
+
+type AgentSettingsInput = {
+  temperature?: number | null;
+  maxOutputTokens?: number | null;
+} | undefined;
+
+/**
+ * Normalizes the agent settings sent by the client before they're persisted.
+ * `null` means "cleared" in the UI; `temperature === 0` means "disabled" (the
+ * slider's leftmost position, since Anthropic is deprecating the parameter).
+ * Both, along with an absent value, normalize to `undefined` so the stored
+ * JSONB only ever holds a real value or nothing. An entirely absent
+ * `settings` object leaves the previously stored settings untouched (see
+ * upsertAgent).
+ */
+function normalizeAgentSettings(settings: AgentSettingsInput): AgentSettings | undefined {
+  if (!settings) {
+    return undefined;
+  }
+
+  return {
+    temperature: settings.temperature || undefined,
+    maxOutputTokens: settings.maxOutputTokens ?? undefined,
+  };
+}
 
 export const agentController = new Hono()
   .basePath('/agent')
@@ -86,6 +112,7 @@ export const agentController = new Hono()
         tools: body.tools,
         isDefault: body.isDefault,
         workspaceId: body.workspaceId,
+        settings: normalizeAgentSettings(body.settings),
       }),
     );
 

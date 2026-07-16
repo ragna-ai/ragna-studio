@@ -295,8 +295,8 @@ export const chatController = new Hono()
           }),
           activeTools: agent.tools,
           stopWhen: stepCountIs(5),
-          temperature: agent.settings?.temperature,
-          maxOutputTokens: agent.settings?.maxOutputTokens,
+          temperature: agent.settings?.temperature ?? undefined,
+          maxOutputTokens: agent.settings?.maxOutputTokens ?? undefined,
           onStart({ callId, modelId, runtimeContext }) {
             logger.debug('Request started', {
               callId,

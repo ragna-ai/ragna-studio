@@ -1,12 +1,13 @@
-import { boolean, index, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, index, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 export interface AgentSettings {
-  temperature?: number;
-  maxOutputTokens?: number;
+  temperature?: number | null;
+  maxOutputTokens?: number | null;
 }
 
 export type AgentTool =
@@ -18,8 +19,12 @@ export type AgentTool =
   | 'memory';
 export type AgentTools = AgentTool[];
 
+// No default temperature: Anthropic is deprecating the parameter, so new
+// agents send nothing to the provider unless a user explicitly sets one via
+// the Settings tab slider (0 there means "disabled" and is normalized away
+// before it's ever persisted, see agent.controller.ts).
 const defaultAgentSettings: AgentSettings = {
-  temperature: 0.7,
+  temperature: undefined,
   maxOutputTokens: undefined,
 };
 
@@ -59,6 +64,16 @@ export const agent = pgTable(
     index('agent_userId_idx').on(table.userId),
     index('agent_aiModelId_idx').on(table.aiModelId),
     index('agent_workspaceId_idx').on(table.workspaceId),
+    // isDefault is unique per scope: a workspace-scoped agent's scope is its
+    // own workspaceId, an unassigned agent's scope is "no workspace". Two
+    // partial indexes because a single unique index would treat every NULL
+    // workspaceId as distinct, allowing unlimited unassigned defaults.
+    uniqueIndex('agent_default_per_workspace_idx')
+      .on(table.userId, table.workspaceId)
+      .where(sql`${table.isDefault} AND ${table.workspaceId} IS NOT NULL`),
+    uniqueIndex('agent_default_unassigned_idx')
+      .on(table.userId)
+      .where(sql`${table.isDefault} AND ${table.workspaceId} IS NULL`),
   ],
 );
 

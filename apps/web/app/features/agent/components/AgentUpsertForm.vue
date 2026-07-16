@@ -12,6 +12,7 @@ import { z } from 'zod';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
+import type { AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
 type UpsertAgentProps = {
@@ -24,7 +25,18 @@ type UpsertAgentProps = {
   context?: string | null;
   tools?: string[];
   isDefault?: boolean;
+  settings?: AgentSettings | null;
 };
+
+// Slider position when temperature is unset. 0 doubles as the "disabled"
+// position: Anthropic is deprecating the parameter, so an agent with no
+// stored temperature (or one dragged back to 0) sends nothing to the model.
+const DISABLED_TEMPERATURE = 0;
+
+const agentSettingsSchema = z.object({
+  temperature: z.number().min(0).max(1).nullable(),
+  maxOutputTokens: z.number().int().min(1).max(64_000).nullable(),
+});
 
 const agentUpsertSchema = z.object({
   id: z.uuidv7().nullable(),
@@ -38,6 +50,7 @@ const agentUpsertSchema = z.object({
   context: z.string().max(30_000),
   tools: z.array(z.string()),
   isDefault: z.boolean(),
+  settings: agentSettingsSchema,
 });
 
 // Props
@@ -61,6 +74,10 @@ const form = useForm({
     context: props.context ?? '',
     tools: props.tools ?? [],
     isDefault: props.isDefault ?? false,
+    settings: {
+      temperature: props.settings?.temperature ?? null,
+      maxOutputTokens: props.settings?.maxOutputTokens ?? null,
+    },
   },
   validators: {
     onChange: agentUpsertSchema,
@@ -283,18 +300,72 @@ const siderBarTabs = [
       </template>
       <!-- TAB 7: Settings -->
       <template #settings>
-        <form.Field name="isDefault">
-          <template v-slot="{ field, state }">
-            <div class="flex items-center space-x-3">
-              <Switch
-                :id="field.name"
-                :model-value="state.value"
-                @update:model-value="field.handleChange"
-              />
-              <Label :for="field.name">Make this the default agent</Label>
-            </div>
-          </template>
-        </form.Field>
+        <div class="space-y-8">
+          <form.Field name="isDefault">
+            <template v-slot="{ field, state }">
+              <div class="flex items-center space-x-3">
+                <Switch
+                  :id="field.name"
+                  :model-value="state.value"
+                  @update:model-value="field.handleChange"
+                />
+                <Label :for="field.name">Make this the default agent</Label>
+              </div>
+            </template>
+          </form.Field>
+          <div class="space-y-6">
+            <form.Field name="settings.temperature">
+              <template v-slot="{ field, state }">
+                <div>
+                  <div class="mb-2 flex items-center justify-between">
+                    <Label :for="field.name">Temperature</Label>
+                    <span class="text-sm text-muted-foreground">
+                      {{ state.value ? state.value : 'Disabled' }}
+                    </span>
+                  </div>
+                  <Slider
+                    :id="field.name"
+                    :model-value="[state.value ?? DISABLED_TEMPERATURE]"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    @update:model-value="
+                      (v) => field.handleChange(v?.[0] ? v[0] : null)
+                    "
+                  />
+                  <FormFieldInfo :state="state" />
+                </div>
+              </template>
+            </form.Field>
+            <form.Field name="settings.maxOutputTokens">
+              <template v-slot="{ field, state }">
+                <div>
+                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                    Max output tokens
+                  </Label>
+                  <Input
+                    :id="field.name"
+                    type="number"
+                    min="1"
+                    max="64000"
+                    :model-value="state.value ?? ''"
+                    @update:model-value="
+                      (v: string | number) =>
+                        field.handleChange(v === '' ? null : Number(v))
+                    "
+                    @blur="field.handleBlur"
+                    autocomplete="off"
+                  />
+                  <FormFieldInfo :state="state" />
+                </div>
+              </template>
+            </form.Field>
+            <p class="text-sm text-muted-foreground">
+              Set temperature to 0 to disable it. Leave max output tokens
+              empty to use the model's default.
+            </p>
+          </div>
+        </div>
       </template>
     </TabSidebar>
   </form>

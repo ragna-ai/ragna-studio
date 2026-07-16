@@ -54,6 +54,12 @@ export const validUpsertAgentBody = myzValidator(
     tools: z.array(z.string()),
     isDefault: z.boolean().optional(),
     workspaceId: primaryId.optional(),
+    settings: z
+      .object({
+        temperature: z.number().min(0).max(1).nullish(),
+        maxOutputTokens: z.number().int().min(1).max(64_000).nullish(),
+      })
+      .optional(),
   }),
 );
 

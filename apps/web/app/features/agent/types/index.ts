@@ -4,6 +4,11 @@ export interface AgentAiModelRef {
   displayName: string;
 }
 
+export interface AgentSettings {
+  temperature?: number | null;
+  maxOutputTokens?: number | null;
+}
+
 export interface Agent {
   id: string;
   userId: string;
@@ -15,6 +20,7 @@ export interface Agent {
   context?: string | null;
   tools?: string[];
   isDefault: boolean;
+  settings?: AgentSettings | null;
   aiModel?: AgentAiModelRef;
 }
 
