@@ -81,6 +81,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: 'de',
     strategy: 'no_prefix',
+    baseUrl: 'https://ragna.io',
   },
   // META
   app: {

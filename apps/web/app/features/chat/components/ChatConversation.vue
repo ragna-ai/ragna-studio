@@ -17,9 +17,9 @@ import {
   type UIMessagePart,
   type UITools,
 } from 'ai';
-import { uuidv7 } from 'uuidv7';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
+import { createPrimaryId } from '~/lib/utils';
 
 // Props
 interface Props {
@@ -45,7 +45,7 @@ const initialMessages = props.initialMessages
 
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
-  generateId: () => uuidv7(),
+  generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: new DefaultChatTransport({
     credentials: 'include',
