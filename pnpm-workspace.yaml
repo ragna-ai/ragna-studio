@@ -22,25 +22,14 @@ catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.1.0
   tailwindcss: ^4.3.2
-  tsdown: ^0.22.7
+  tsdown: ^0.22.8
   typescript: 6.0.3
   zod: 4.4.3
   oxfmt: ^0.59.0
   oxlint: ^1.74.0
-  ai: ^7.0.26
-
-minimumReleaseAgeExclude:
-  - '@turbo/darwin-64@2.10.4'
-  - '@turbo/darwin-arm64@2.10.4'
-  - '@turbo/gen@2.10.4'
-  - '@turbo/linux-64@2.10.4'
-  - '@turbo/linux-arm64@2.10.4'
-  - '@turbo/windows-64@2.10.4'
-  - '@turbo/windows-arm64@2.10.4'
-  - turbo@2.10.4
-  - '@nuxtjs/i18n@10.4.1'
-  - '@maizzle/framework@6.0.6'
+  ai: ^7.0.28
 
 updateConfig:
   ignoreDependencies:
     - '@types/node'
+    - 'typescript'
