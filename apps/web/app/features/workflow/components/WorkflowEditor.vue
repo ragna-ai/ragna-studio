@@ -7,6 +7,7 @@ import type {
 } from '@repo/workflow';
 import { isExecutionEquivalent } from '@repo/workflow';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
+import WorkflowNameField from '~/features/workflow/components/WorkflowNameField.vue';
 import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
 import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
 import WorkflowRecentRuns from '~/features/workflow/components/WorkflowRecentRuns.vue';
@@ -42,6 +43,7 @@ const nodes = ref<WorkflowNode[]>(
 const edges = ref<WorkflowEdge[]>(
   structuredClone(toRaw(props.workflow.definition.edges)),
 );
+const name = ref(props.workflow.name);
 const selectedNodeId = ref<string | null>(null);
 const isRunDialogOpen = ref(false);
 const isRunsListOpen = ref(false);
@@ -87,7 +89,7 @@ function deleteSelectedNode() {
 async function handleSave() {
   await saveWorkflow({
     id: props.workflow.id,
-    name: props.workflow.name,
+    name: name.value,
     description: props.workflow.description ?? undefined,
     definition: draftDefinition.value,
   });
@@ -107,7 +109,7 @@ async function handlePublish() {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <h1 class="truncate text-sm font-semibold">{{ workflow.name }}</h1>
+        <WorkflowNameField v-model:name="name" @save="handleSave" />
         <p class="text-xs text-muted-foreground">
           {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
         </p>
