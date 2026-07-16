@@ -5,8 +5,9 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from '@tanstack/vue-query';
+import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const genImageKeys = {
   all: ['gen-images'] as const,
@@ -51,7 +52,7 @@ export interface GenerateImagesBody {
 
 export function useGetGenImages(options: QueryOpts = {}) {
   const api = useApi();
-  const { scopeKey, listQuery } = useActiveWorkspace();
+  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
   return useQuery<GenImagesResponse>({
     queryKey: genImageKeys.list(scopeKey),
     queryFn: ({ signal }) =>
@@ -67,13 +68,13 @@ export function useGetGenImages(options: QueryOpts = {}) {
 export function useGenerateImages() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { createWorkspaceId } = useActiveWorkspace();
+  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<GenImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),
     mutationFn: (body) => {
       // Only a specific active workspace assigns one; All and Unassigned
       // both send nothing (docs/workspaces.md).
-      const workspaceId = createWorkspaceId.value;
+      const workspaceId = workspaceScopeStore.createWorkspaceId;
       return api('/image/generate', {
         method: 'POST',
         body: workspaceId ? { ...body, workspaceId } : body,

@@ -1,15 +1,16 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
+import { storeToRefs } from 'pinia';
 import {
   socialPostKeys,
   type SocialPostManyResponse,
 } from '~/features/social/composables/useSocialPostApi';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useSocialPostList() {
   const api = useApi();
-  const { scopeKey, listQuery } = useActiveWorkspace();
+  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.

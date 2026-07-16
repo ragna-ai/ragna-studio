@@ -10,7 +10,7 @@ import type {
   AgentResponse,
   UpsertAgentRequest,
 } from '~/features/agent/types';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const agentKeys = {
   all: ['agents'] as const,
@@ -56,14 +56,16 @@ export function useGetAllAgents(options: QueryOpts = {}) {
 export function useUpsertAgent() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { createWorkspaceId } = useActiveWorkspace();
+  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<AgentResponse, unknown, UpsertAgentRequest>({
     mutationFn: (body) => {
       // Stamp the active workspace only when creating (no id yet) and a
       // specific workspace is active. Editing must not silently move an
       // agent; All and Unassigned both mean "no workspace" and send nothing
       // (docs/workspaces.md).
-      const workspaceId = body.id ? null : createWorkspaceId.value;
+      const workspaceId = body.id
+        ? null
+        : workspaceScopeStore.createWorkspaceId;
       return api('/agent', {
         method: 'POST',
         body: workspaceId ? { ...body, workspaceId } : body,

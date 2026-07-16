@@ -1,28 +1,23 @@
 <script setup lang="ts">
 import { CheckIcon, ChevronsUpDownIcon, SettingsIcon } from '@lucide/vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Refs
 const isManageDialogOpen = ref(false);
 
 // Composables
 const { data } = useGetWorkspaces();
-const {
-  selectAllItems,
-  selectUnassigned,
-  selectWorkspace,
-  isAllItemsActive,
-  isUnassignedActive,
-  isWorkspaceActive,
-} = useActiveWorkspace();
+const workspaceScopeStore = useWorkspaceScopeStore();
+const { selectAllItems, selectUnassigned, selectWorkspace, isWorkspaceActive } =
+  workspaceScopeStore;
 const { t } = useI18n();
 
 // Computed
 const workspaces = computed(() => data.value?.workspaces ?? []);
 const activeLabel = computed(() => {
-  if (isUnassignedActive.value) {
+  if (workspaceScopeStore.isUnassignedActive) {
     return t('workspace.switcher.unassigned');
   }
   const active = workspaces.value.find((workspace) =>
@@ -47,14 +42,18 @@ const activeLabel = computed(() => {
       <DropdownMenuItem @click="selectAllItems()">
         <CheckIcon
           class="mr-2 size-4"
-          :class="isAllItemsActive ? 'opacity-100' : 'opacity-0'"
+          :class="
+            workspaceScopeStore.isAllItemsActive ? 'opacity-100' : 'opacity-0'
+          "
         />
         {{ t('workspace.switcher.allItems') }}
       </DropdownMenuItem>
       <DropdownMenuItem @click="selectUnassigned()">
         <CheckIcon
           class="mr-2 size-4"
-          :class="isUnassignedActive ? 'opacity-100' : 'opacity-0'"
+          :class="
+            workspaceScopeStore.isUnassignedActive ? 'opacity-100' : 'opacity-0'
+          "
         />
         {{ t('workspace.switcher.unassigned') }}
       </DropdownMenuItem>

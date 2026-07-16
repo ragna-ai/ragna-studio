@@ -5,14 +5,13 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 import type {
   UpsertWorkflowRequest,
-  WorkflowManyResponse,
   WorkflowResponse,
   WorkflowRunManyResponse,
   WorkflowRunResponse,
 } from '~/features/workflow/types';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const workflowKeys = {
   all: ['workflows'] as const,
@@ -86,14 +85,16 @@ export function useGetWorkflow(
 export function useUpsertWorkflow() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { createWorkspaceId } = useActiveWorkspace();
+  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<WorkflowResponse, unknown, UpsertWorkflowRequest>({
     mutationFn: (body) => {
       // Stamp the active workspace only when creating (no id yet) and a
       // specific workspace is active. Editing must not silently move a
       // workflow; All and Unassigned both mean "no workspace" and send
       // nothing (docs/workspaces.md).
-      const workspaceId = body.id ? null : createWorkspaceId.value;
+      const workspaceId = body.id
+        ? null
+        : workspaceScopeStore.createWorkspaceId;
       return api('/workflow', {
         method: 'POST',
         body: workspaceId ? { ...body, workspaceId } : body,
@@ -170,7 +171,8 @@ export function useCancelWorkflowRun(runId: MaybeRefOrGetter<string>) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
-    mutationFn: () => api(`/workflow/run/${toValue(runId)}/cancel`, { method: 'POST' }),
+    mutationFn: () =>
+      api(`/workflow/run/${toValue(runId)}/cancel`, { method: 'POST' }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: workflowKeys.run(runId) });
       queryClient.invalidateQueries({

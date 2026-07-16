@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'vue-sonner/style.css';
 </script>
 
@@ -13,4 +14,5 @@ import 'vue-sonner/style.css';
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <VueQueryDevtools />
 </template>

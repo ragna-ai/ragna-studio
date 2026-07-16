@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const socialPostKeys = {
   all: ['social-posts'] as const,
@@ -113,13 +113,13 @@ export function useCreateSocialPost() {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
-  const { createWorkspaceId } = useActiveWorkspace();
+  const workspaceScopeStore = useWorkspaceScopeStore();
 
   return useMutation<SocialPostResponse, unknown, string>({
     mutationFn: (content) => {
       // Only a specific active workspace assigns one; All and Unassigned
       // both send nothing (docs/workspaces.md).
-      const workspaceId = createWorkspaceId.value;
+      const workspaceId = workspaceScopeStore.createWorkspaceId;
       return api('/social-posts', {
         method: 'POST',
         body: workspaceId ? { content, workspaceId } : { content },

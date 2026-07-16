@@ -8,12 +8,12 @@ import {
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
 import {
   useCreateWorkspace,
   useDeleteWorkspace,
   useRenameWorkspace,
 } from '~/features/workspace/composables/useWorkspaceApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import type { Workspace } from '~/features/workspace/types';
 
 const createWorkspaceSchema = z.object({
@@ -34,7 +34,7 @@ const { mutateAsync: createWorkspace, isPending: isCreating } =
 const { mutateAsync: renameWorkspace, isPending: isRenaming } =
   useRenameWorkspace();
 const { mutateAsync: deleteWorkspace } = useDeleteWorkspace();
-const { isWorkspaceActive, selectAllItems } = useActiveWorkspace();
+const { isWorkspaceActive, selectAllItems } = useWorkspaceScopeStore();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

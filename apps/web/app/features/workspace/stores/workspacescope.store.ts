@@ -1,3 +1,5 @@
+import { defineStore } from 'pinia';
+
 /**
  * The selection currently active in the workspace switcher.
  *
@@ -10,10 +12,6 @@
  * never a security boundary: it only ever shapes the optional `workspaceId` /
  * `unassigned` filter on list requests and the `workspaceId` stamped on newly
  * created items.
- *
- * Uses `useState` -> single shared instance keyed by name, matching the
- * pattern already used for pagination/search state in the list composables
- * (see e.g. useAgentList.ts), so every caller reads and writes the same value.
  */
 export type WorkspaceScope =
   | { kind: 'all' }
@@ -26,10 +24,8 @@ export interface WorkspaceListQuery {
   unassigned?: true;
 }
 
-export function useActiveWorkspace() {
-  const scope = useState<WorkspaceScope>('workspace:scope', () => ({
-    kind: 'all',
-  }));
+export const useWorkspaceScopeStore = defineStore('workspace-scope', () => {
+  const scope = ref<WorkspaceScope>({ kind: 'all' });
 
   function selectAllItems() {
     scope.value = { kind: 'all' };
@@ -58,7 +54,9 @@ export function useActiveWorkspace() {
    * keys so switching selection refetches: `'all'`, `'unassigned'`, or the id.
    */
   const scopeKey = computed<string>(() =>
-    scope.value.kind === 'workspace' ? scope.value.workspaceId : scope.value.kind,
+    scope.value.kind === 'workspace'
+      ? scope.value.workspaceId
+      : scope.value.kind,
   );
 
   /**
@@ -96,4 +94,4 @@ export function useActiveWorkspace() {
     createWorkspaceId,
     listQuery,
   };
-}
+});

@@ -6,7 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
-import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 export const chatKeys = {
   all: ['chats'] as const,
@@ -100,12 +100,12 @@ export function useGetRecentChat(options: QueryOpts = {}) {
 export function useCreateChat() {
   const api = useApi();
   const queryClient = useQueryClient();
-  const { createWorkspaceId } = useActiveWorkspace();
+  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<ChatResponse, unknown, NewChatBody>({
     mutationFn: (body) => {
       // Only a specific active workspace assigns one; All and Unassigned
       // both send nothing (docs/workspaces.md).
-      const workspaceId = createWorkspaceId.value;
+      const workspaceId = workspaceScopeStore.createWorkspaceId;
       return api('/chat', {
         method: 'POST',
         body: workspaceId ? { ...body, workspaceId } : body,
