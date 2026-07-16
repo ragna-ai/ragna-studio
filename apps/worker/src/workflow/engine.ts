@@ -124,6 +124,7 @@ async function runNode({
   const ctx: ExecutorContext = {
     input: resolveNodeInput({ node, nodeById, incomingEdgesByTarget, nodeState, outputs, run }),
     userId: run.workflow.userId,
+    workspaceId: run.workflow.workspaceId,
   };
 
   await upsertRunStep({

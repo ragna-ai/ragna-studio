@@ -5,6 +5,7 @@ import type { WorkflowNode, WorkflowToolCall } from '@repo/workflow';
 export type ExecutorContext = {
   input: string;
   userId: string;
+  workspaceId: string | null;
 };
 
 // `toolCalls` is only ever set by the agent executor's agentId path (an

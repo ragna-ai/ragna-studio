@@ -78,44 +78,48 @@ export const executeAgent: Executor = async (node, ctx) => {
   // A referenced agent runs exactly like it does in chat: same tool loop,
   // temperature, and step budget (see chat.controller.ts). Inline nodes
   // (no agentId) have no tools/settings to run with, so they stay plain.
-  if (config.agentId) {
-    const agentRecord = await getAgentById({ agentId: config.agentId, userId: ctx.userId });
-    if (!agentRecord) {
-      throw new Error(`Agent "${config.agentId}" not found for this user`);
-    }
-    const agent = withAgentConfig(agentRecord);
-    const instructions = await buildAgentInstructions({
-      agentId: config.agentId,
-      tools: agent.tools,
-      systemPrompt: agent.systemPrompt,
-    });
+  if (!config.agentId) {
+    const defaultAgent = withAiModel(await getDefaultAgent());
 
-    const result = await generateText({
-      model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
-      instructions,
+    const { text } = await generateText({
+      model: getLanguageModel({
+        provider: defaultAgent.aiModel.provider,
+        model: defaultAgent.aiModel.model,
+      }),
+      instructions: config.systemPrompt,
       prompt,
-      tools: tools(noopWriter, { userId: ctx.userId, agentId: config.agentId }),
-      activeTools: agent.tools,
-      stopWhen: stepCountIs(5),
-      temperature: agent.settings?.temperature ?? 0.7,
-      maxOutputTokens: agent.settings?.maxOutputTokens,
     });
 
-    const toolCalls = collectToolCalls(result.steps);
-
-    return { output: result.text, toolCalls: toolCalls.length > 0 ? toolCalls : undefined };
+    return { output: text };
   }
 
-  const defaultAgent = withAiModel(await getDefaultAgent());
-
-  const { text } = await generateText({
-    model: getLanguageModel({
-      provider: defaultAgent.aiModel.provider,
-      model: defaultAgent.aiModel.model,
-    }),
-    instructions: config.systemPrompt,
-    prompt,
+  const agentRecord = await getAgentById({ agentId: config.agentId, userId: ctx.userId });
+  if (!agentRecord) {
+    throw new Error(`Agent "${config.agentId}" not found for this user`);
+  }
+  const agent = withAgentConfig(agentRecord);
+  const instructions = await buildAgentInstructions({
+    agentId: config.agentId,
+    tools: agent.tools,
+    systemPrompt: agent.systemPrompt,
   });
 
-  return { output: text };
+  const result = await generateText({
+    model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
+    instructions,
+    prompt,
+    tools: tools(noopWriter, {
+      userId: ctx.userId,
+      agentId: config.agentId,
+      workspaceId: ctx.workspaceId,
+    }),
+    activeTools: agent.tools,
+    stopWhen: stepCountIs(5),
+    temperature: agent.settings?.temperature,
+    maxOutputTokens: agent.settings?.maxOutputTokens,
+  });
+
+  const toolCalls = collectToolCalls(result.steps);
+
+  return { output: result.text, toolCalls: toolCalls.length > 0 ? toolCalls : undefined };
 };
