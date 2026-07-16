@@ -21,7 +21,7 @@ import {
   upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { tryCatch } from '@repo/utils';
+import { createPrimaryId, tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
 import {
   BadRequestException,
@@ -323,6 +323,7 @@ export const chatController = new Hono()
         dataStream.merge(
           toUIMessageStream({
             stream: result.stream,
+            generateMessageId: createPrimaryId,
             sendReasoning: true,
           }),
         );

@@ -17,6 +17,7 @@ import {
   type UIMessagePart,
   type UITools,
 } from 'ai';
+import { uuidv7 } from 'uuidv7';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
@@ -44,7 +45,7 @@ const initialMessages = props.initialMessages
 
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
-  // generateId: createPrimaryId,
+  generateId: () => uuidv7(),
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: new DefaultChatTransport({
     credentials: 'include',
@@ -100,7 +101,7 @@ async function handleSubmit(message: { text: string }) {
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col p-4">
+  <div class="flex h-full w-full flex-col bg-neutral-50 p-4">
     <MessageScrollerProvider auto-scroll default-scroll-position="last-anchor">
       <MessageScroller>
         <MessageScrollerViewport>
