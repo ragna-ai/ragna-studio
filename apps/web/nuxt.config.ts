@@ -104,6 +104,7 @@ export default defineNuxtConfig({
       include: [
         '@lucide/vue',
         '@tanstack/vue-query',
+        '@tanstack/vue-form',
         'class-variance-authority',
         'clsx',
         'reka-ui',
