@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "@repo/config": "workspace:*",
+    "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
     "drizzle-seed": "1.0.0-rc.4",
     "pg": "^8.22.0",
-    "uuid": "^14.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {

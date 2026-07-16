@@ -149,6 +149,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@repo/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
@@ -406,6 +409,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@repo/workflow':
         specifier: workspace:*
         version: link:../workflow
@@ -418,9 +424,6 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.22.0
-      uuid:
-        specifier: ^14.0.1
-        version: 14.0.1
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -627,6 +630,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+      uuid:
+        specifier: ^14.0.1
+        version: 14.0.1
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*

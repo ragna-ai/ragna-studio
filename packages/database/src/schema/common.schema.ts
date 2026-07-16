@@ -1,7 +1,7 @@
+import { createPrimaryId } from '@repo/utils';
 import { text, timestamp } from 'drizzle-orm/pg-core';
-import { createId } from '../utils/create-id';
 
-export const primaryIdColumn = text('id').$defaultFn(createId).primaryKey();
+export const primaryIdColumn = text('id').$defaultFn(createPrimaryId).primaryKey();
 
 export const timestamps = {
   createdAt: timestamp('created_at').defaultNow().notNull(),

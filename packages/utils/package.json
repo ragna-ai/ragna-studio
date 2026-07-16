@@ -16,7 +16,8 @@
     "dev": "tsdown --watch"
   },
   "dependencies": {
-    "@repo/config": "workspace:*"
+    "@repo/config": "workspace:*",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

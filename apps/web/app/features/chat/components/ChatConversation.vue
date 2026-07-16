@@ -44,6 +44,7 @@ const initialMessages = props.initialMessages
 
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
+  // generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: new DefaultChatTransport({
     credentials: 'include',
