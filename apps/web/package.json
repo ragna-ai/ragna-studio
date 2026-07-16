@@ -40,7 +40,6 @@
     "nanoid": "^6.0.0",
     "nuxt": "^4.4.8",
     "pinia": "^4.0.2",
-    "pinia-plugin-unstorage": "1.0.0-beta.1",
     "prettier": "^3.9.5",
     "reka-ui": "^2.10.1",
     "shadcn-nuxt": "2.7.4",

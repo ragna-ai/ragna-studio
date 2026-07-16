@@ -6,4 +6,5 @@ export * from './resolve-template';
 export * from './schedule';
 export * from './status';
 export * from './tool-call';
+export * from './tools';
 export * from './validate-definition';

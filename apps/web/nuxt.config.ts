@@ -14,7 +14,6 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/image',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }],
-    'pinia-plugin-unstorage/nuxt',
     '@nuxtjs/i18n',
   ],
   // CONFIG

@@ -9,6 +9,6 @@
   },
   "model": "claude-fable-5",
   "sandbox": {
-    "enabled": true
+    "enabled": false
   }
 }

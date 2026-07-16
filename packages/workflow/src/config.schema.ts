@@ -32,11 +32,7 @@ export const agentConfigSchema = z.object({
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
 
 export const WORKFLOW_TOOLS = [
-  'think',
-  'webSearch',
-  'webBrowser',
-  'imageGen',
-  'linkedinDraft',
+  'placeholder', // Placeholder for future tools
 ] as const;
 export type WorkflowTool = (typeof WORKFLOW_TOOLS)[number];
 
