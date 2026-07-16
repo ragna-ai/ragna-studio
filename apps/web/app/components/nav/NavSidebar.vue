@@ -30,7 +30,6 @@ const { dynamicNavItems } = useNavItems();
                 :to="item.path"
                 :icon="item.icon!"
                 :label="item.label!"
-                :label-visible="true"
               />
             </li>
             <li v-else-if="item.children.length > 0" class="nav-item">

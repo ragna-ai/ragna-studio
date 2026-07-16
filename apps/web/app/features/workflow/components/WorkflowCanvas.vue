@@ -47,10 +47,18 @@ const isDraggingCycleConnection = ref(false);
 
 // Computed
 
+// Clicking a node opens a side panel on the right (w-80 in the editor,
+// w-96 in the run view), which shrinks the canvas by that much. Shifting
+// the initial view left by half a panel width keeps the graph centered in
+// the space that remains once the panel is open.
+const SIDE_PANEL_WIDTH = 320;
+
 // Functions
 // Default fitViewOnInit zooms small graphs all the way in; cap the zoom instead.
-function onPaneReady(instance: VueFlowStore) {
-  instance.fitView({ padding: 0.2, maxZoom: 0.9 });
+async function onPaneReady(instance: VueFlowStore) {
+  await instance.fitView({ padding: 0.2, maxZoom: 0.9 });
+  const { x, y, zoom } = instance.getViewport();
+  instance.setViewport({ x: x - SIDE_PANEL_WIDTH / 2, y, zoom });
 }
 
 // True if `targetId` can already reach `sourceId` by following existing
