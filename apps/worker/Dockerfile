@@ -49,10 +49,10 @@ FROM oven/bun:alpine AS runner
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 COPY --from=builder --chown=bun:bun /prod/worker .
 
 USER bun
-
-ENV NODE_ENV=production
 
 CMD ["bun", "dist/index.mjs"]

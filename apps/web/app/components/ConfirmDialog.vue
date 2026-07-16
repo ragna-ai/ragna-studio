@@ -14,7 +14,7 @@ const { state, onConfirm, onCancel } = useConfirmDialog();
 
 <template>
   <AlertDialog :open="state.open" @update:open="(v) => !v && onCancel()">
-    <AlertDialogContent>
+    <AlertDialogContent class="z-51">
       <AlertDialogHeader>
         <AlertDialogTitle>{{ state.options.title }}</AlertDialogTitle>
         <AlertDialogDescription

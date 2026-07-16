@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from '@lucide/vue';
+import {
+  CheckIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 import { useActiveWorkspace } from '~/features/workspace/composables/useActiveWorkspace';
