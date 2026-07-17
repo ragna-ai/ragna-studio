@@ -30,7 +30,7 @@
     "@types/nodemailer": "^8.0.1",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vue": "^3.5.39"
+    "vue": "^3.5.40"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
