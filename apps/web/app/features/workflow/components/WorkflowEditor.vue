@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlayIcon } from '@lucide/vue';
+import { PlayIcon, SettingsIcon } from '@lucide/vue';
 import type {
   WorkflowEdge,
   WorkflowNode,
@@ -43,9 +43,19 @@ const edges = ref<WorkflowEdge[]>(
   structuredClone(toRaw(props.workflow.definition.edges)),
 );
 const name = ref(props.workflow.name);
+const description = ref(props.workflow.description ?? '');
 const selectedNodeId = ref<string | null>(null);
 const isRunDialogOpen = ref(false);
 const isRunsListOpen = ref(false);
+const isSettingsOpen = ref(false);
+
+// The settings aside and the node config panel share the right-hand slot;
+// selecting a node replaces the settings panel.
+watch(selectedNodeId, (nodeId) => {
+  if (nodeId) {
+    isSettingsOpen.value = false;
+  }
+});
 
 // Composables
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpsertWorkflow();
@@ -85,11 +95,24 @@ function deleteSelectedNode() {
   selectedNodeId.value = null;
 }
 
+function toggleSettings() {
+  isSettingsOpen.value = !isSettingsOpen.value;
+  if (isSettingsOpen.value) {
+    selectedNodeId.value = null;
+  }
+}
+
+async function handleSaveSettings(value: { name: string; description: string }) {
+  name.value = value.name;
+  description.value = value.description;
+  await handleSave();
+}
+
 async function handleSave() {
   await saveWorkflow({
     id: props.workflow.id,
     name: name.value,
-    description: props.workflow.description ?? undefined,
+    description: description.value || undefined,
     definition: draftDefinition.value,
   });
 }
@@ -125,6 +148,14 @@ async function handlePublish() {
         >
           Unpublished changes
         </Badge>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Workflow settings"
+          @click="toggleSettings"
+        >
+          <SettingsIcon class="size-4 stroke-1.5" />
+        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -172,8 +203,16 @@ async function handlePublish() {
         />
       </div>
 
+      <SettingsAside
+        v-if="isSettingsOpen"
+        :name="name"
+        :description="description"
+        title="Workflow settings"
+        @save="handleSaveSettings"
+        @close="isSettingsOpen = false"
+      />
       <WorkflowNodeConfigPanel
-        v-if="selectedNode"
+        v-else-if="selectedNode"
         :key="selectedNode.id"
         :node="selectedNode"
         @delete="deleteSelectedNode"

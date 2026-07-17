@@ -17,10 +17,11 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// The "Columns" toggle button lives in the page's own header, alongside the
-// breadcrumb (which has to render before `dataset` has loaded), so its open
-// state is owned by the page and passed down here.
+// The "Columns" and settings toggle buttons live in the page's own header,
+// alongside the breadcrumb (which has to render before `dataset` has
+// loaded), so their open state is owned by the page and passed down here.
 const columnManagerOpen = defineModel<boolean>('columnManagerOpen', { required: true });
+const settingsOpen = defineModel<boolean>('settingsOpen', { required: true });
 
 // The row panel, by contrast, is only ever opened from inside the grid (the
 // expand button on a row), so its selection lives here, next to the grid it
@@ -30,11 +31,19 @@ const selectedRow = computed(
   () => props.rows.find((row) => row.id === selectedRowId.value) ?? null,
 );
 
-// The column manager and the row panel are both asides on this page; only
-// one shows at a time. Opening the column manager (from the page's header
-// button) closes the row panel...
+// The settings panel, the column manager, and the row panel are all asides
+// on this page; only one shows at a time. Opening one (from the page's
+// header buttons) closes the others...
 watch(columnManagerOpen, (isOpen) => {
   if (isOpen) {
+    settingsOpen.value = false;
+    selectedRowId.value = null;
+  }
+});
+
+watch(settingsOpen, (isOpen) => {
+  if (isOpen) {
+    columnManagerOpen.value = false;
     selectedRowId.value = null;
   }
 });
@@ -68,6 +77,15 @@ async function handleSaveColumns(columns: DatasetColumn[]) {
   columnManagerOpen.value = false;
 }
 
+// A cleared description is persisted as null, not an empty string.
+async function handleSaveSettings(value: { name: string; description: string }) {
+  await updateDataset({
+    datasetId: props.dataset.id,
+    name: value.name,
+    description: value.description || null,
+  });
+}
+
 async function handleAddRow() {
   await createRow({});
 }
@@ -86,8 +104,9 @@ function handleExpandRow(rowId: string) {
     return;
   }
   selectedRowId.value = rowId;
-  // ...and opening the row panel (from the grid) closes the column manager.
+  // ...and opening the row panel (from the grid) closes the header asides.
   columnManagerOpen.value = false;
+  settingsOpen.value = false;
 }
 
 async function handleDeleteRow(rowId: string) {
@@ -123,8 +142,20 @@ async function handleDeleteRow(rowId: string) {
       />
     </div>
 
+    <SettingsAside
+      v-if="settingsOpen"
+      :name="dataset.name"
+      :description="dataset.description ?? ''"
+      :title="t('dataset.detail.settings')"
+      :name-label="t('dataset.detail.nameLabel')"
+      :description-label="t('dataset.detail.descriptionLabel')"
+      :description-placeholder="t('dataset.detail.descriptionPlaceholder')"
+      :close-label="t('dataset.detail.closeSettings')"
+      @save="handleSaveSettings"
+      @close="settingsOpen = false"
+    />
     <DatasetColumnManager
-      v-if="columnManagerOpen"
+      v-else-if="columnManagerOpen"
       :columns="dataset.columns"
       :is-saving="isSavingColumns"
       @save="handleSaveColumns"

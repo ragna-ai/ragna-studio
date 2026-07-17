@@ -303,7 +303,12 @@
       "loadError": "Failed to load the dataset.",
       "loading": "Loading dataset...",
       "manageColumns": "Columns",
-      "rename": "Rename dataset"
+      "rename": "Rename dataset",
+      "settings": "Dataset settings",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Add a description...",
+      "closeSettings": "Close settings"
     },
     "grid": {
       "created": "Created",

@@ -320,7 +320,12 @@
       "loadError": "Datensatz konnte nicht geladen werden.",
       "loading": "Datensatz wird geladen...",
       "manageColumns": "Spalten",
-      "rename": "Datensatz umbenennen"
+      "rename": "Datensatz umbenennen",
+      "settings": "Datensatz-Einstellungen",
+      "nameLabel": "Name",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibung hinzufügen...",
+      "closeSettings": "Einstellungen schließen"
     },
     "grid": {
       "created": "Erstellt",

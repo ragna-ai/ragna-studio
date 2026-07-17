@@ -36,14 +36,13 @@ const { formatDateTime } = useDateTimeFormat();
       <TableRow>
         <TableHead>&nbsp;</TableHead>
         <TableHead>Name</TableHead>
-        <TableHead>Description</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Updated</TableHead>
         <TableHead class="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="workflows.length === 0" :colspan="6">
+      <TableEmpty v-if="workflows.length === 0" :colspan="5">
         No workflows yet.
       </TableEmpty>
       <TableRow
@@ -59,9 +58,12 @@ const { formatDateTime } = useDateTimeFormat();
           <div class="text-sm font-semibold">
             {{ workflow.name }}
           </div>
-        </TableCell>
-        <TableCell class="max-w-80 truncate text-sm text-muted-foreground">
-          {{ workflow.description || '—' }}
+          <div
+            v-if="workflow.description"
+            class="max-w-80 truncate text-xs text-muted-foreground"
+          >
+            {{ workflow.description }}
+          </div>
         </TableCell>
         <TableCell>
           <div class="flex items-center gap-1.5">

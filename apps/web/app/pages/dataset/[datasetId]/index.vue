@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SettingsIcon } from '@lucide/vue';
+import { Columns3Icon, SettingsIcon } from '@lucide/vue';
 import DatasetDetail from '~/features/dataset/components/DatasetDetail.vue';
 import {
   useGetDataset,
@@ -15,9 +15,11 @@ const route = useRoute();
 const datasetId = computed(() => route.params.datasetId as string);
 
 // Refs
-// Owned here, not inside DatasetDetail: the "Columns" button lives in this
-// page's header, which renders even before the dataset has loaded.
+// Owned here, not inside DatasetDetail: the "Columns" and settings buttons
+// live in this page's header, which renders even before the dataset has
+// loaded.
 const isColumnManagerOpen = ref(false);
+const isSettingsOpen = ref(false);
 // The dataset name is renamed inline in the breadcrumb's current item
 // (InlineNameField), same pattern as the workflow editor.
 const name = ref('');
@@ -85,8 +87,17 @@ function handleRename() {
           :disabled="!datasetData?.dataset"
           @click="isColumnManagerOpen = !isColumnManagerOpen"
         >
-          <SettingsIcon class="mr-2 size-4 stroke-1.5" />
+          <Columns3Icon class="mr-2 size-4 stroke-1.5" />
           {{ t('dataset.detail.manageColumns') }}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :aria-label="t('dataset.detail.settings')"
+          :disabled="!datasetData?.dataset"
+          @click="isSettingsOpen = !isSettingsOpen"
+        >
+          <SettingsIcon class="size-4 stroke-1.5" />
         </Button>
       </div>
     </header>
@@ -95,6 +106,7 @@ function handleRename() {
       v-if="datasetData?.dataset"
       :key="datasetData.dataset.id"
       v-model:column-manager-open="isColumnManagerOpen"
+      v-model:settings-open="isSettingsOpen"
       :dataset="datasetData.dataset"
       :rows="rowsData?.rows ?? []"
     />
