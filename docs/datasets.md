@@ -1,6 +1,6 @@
 # Datasets: shared structured state for humans and agents
 
-**Status: draft PRD, under review. Not implemented.**
+**Status: implemented (2026-07-17). See "As built" at the end for deviations and post-PRD additions.**
 
 Related: [workflow/README.md](./workflow/README.md) (workflows use datasets via agent nodes), [workflow/workflows-human-in-the-loop.md](./workflow/workflows-human-in-the-loop.md) (approval gates compose with dataset-driven flows), [agent-memory.md](./agent-memory.md) (the unstructured counterpart).
 
@@ -78,9 +78,14 @@ Both cases are the same primitive with different authors. That symmetry is the p
 | `apps/worker` | Agent executor: step cap 5 → 15 for workflow agent nodes |
 | `apps/web` | Feature module `features/dataset/`, pages (list, detail grid), column manager, task-tracker preset, "Datasets" nav entry, tool-list card with default-dataset picker, i18n (`de-DE`, `en-UK`) |
 
-## Open questions for review
+## Open questions (resolved at implementation)
 
-1. **Step cap (decision 6):** flat 15 for workflow agent nodes, or a per-node config field now? Proposed: flat 15.
-2. **Row `data` tool input:** typed record (proposed) vs JSON string parsed server-side. The record is cleaner; the string is more forgiving of model quirks.
-3. **Select handling on human edits:** the grid constrains input anyway, but should retyping a column (e.g. select → text) migrate existing values or leave them untouched? Proposed: leave untouched; values are jsonb and remain readable.
-4. **Agent-created dataset tidiness:** is the `origin` badge + manual delete enough for v1, or add an `archived` flag now? Proposed: badge + delete.
+All four resolved as proposed: flat step cap 15 for workflow agent nodes; row `data` as a typed record (`z.record(z.string(), z.union([z.string(), z.number(), z.null()]))`); column retype leaves existing jsonb values untouched; agent-created tidiness is the `origin` badge plus manual delete.
+
+## As built: deviations and post-PRD additions
+
+- **Row detail aside (`DatasetRowPanel`), added post-PRD.** Long text was unusable in one-line grid cells, so each row got an expand toggle (leading cell, `Maximize2Icon`, active state) opening a fixed aside: one field per column (text as auto-growing `Textarea` via `field-sizing-content`, others as their grid input types), per-field save on blur, row timestamps, and the delete action. Grid text cells truncate to one line; `created_at`/`updated_at` moved out of the grid and live only in the panel. The row panel and the column manager are mutually exclusive asides.
+- **"One toggle, five tools" became SDK-native toolset composition.** Initially implemented as an `expandActiveTools` helper feeding `activeTools`; replaced by `buildAgentToolset` (`packages/ai/src/tools/agent.tools.ts`): a `Record<AgentTool, ToolsetFactory>` registry merges only enabled toolsets into the `tools` record, `activeTools` dropped everywhere. Disabled tools are never constructed. See [agent-tool-discovery.md](./agent-tool-discovery.md) for the deferred evolution of this seam.
+- **Dataset rename lives in the breadcrumb.** The detail page's title is a breadcrumb trail whose current item is an inline-editable name (`InlineNameField`, shared with the workflow editor). An interim pencil-popover rename was replaced by this pattern.
+- **Default-dataset picker is clearable** ("None" sentinel option, explicit `null` persisted).
+- **Small pragmatics:** native `<input type="date">` (no date-picker component in the repo), column reorder via up/down buttons (no DnD dependency), list-page row counts via one `$count` per listed dataset, detail grid loads all rows in one call (bounded by the 1,000-row cap).
