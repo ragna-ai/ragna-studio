@@ -1,4 +1,12 @@
-import type { UIMessageStreamWriter } from 'ai';
+import type { AgentTool } from '@repo/database';
+import type { ToolSet, UIMessageStreamWriter } from 'ai';
+import {
+  getDatasetAppendRowTool,
+  getDatasetCreateTool,
+  getDatasetFindTool,
+  getDatasetListRowsTool,
+  getDatasetUpdateRowTool,
+} from './dataset.tools';
 import { getGeneratedImages } from './image-gen.tool';
 import { getLinkedinDraft } from './linkedin-draft.tool';
 import { getMemoryTool } from './memory.tool';
@@ -6,40 +14,53 @@ import { getThoughts } from './think.tool';
 import { getWebBrowserResults } from './web-browser.tool';
 import { getWebSearchResults } from './web-search.tool';
 
-export type AgentTools = {
-  think: ReturnType<typeof getThoughts>;
-  webSearch: ReturnType<typeof getWebSearchResults>;
-  webBrowser: ReturnType<typeof getWebBrowserResults>;
-  imageGen: ReturnType<typeof getGeneratedImages>;
-  linkedinDraft: ReturnType<typeof getLinkedinDraft>;
-  memory: ReturnType<typeof getMemoryTool>;
-};
-
 export type AgentToolContext = {
   userId: string;
   agentId: string;
   workspaceId: string | null;
 };
 
-/*
-  // need to type like this to avoid circular type dependencies
-  // typing here is not necessary, but provides type safety for `writer.write()`
-  // e.g. completion for `data-tool` and type safe `data` object
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-*/
+type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
 
-export const tools = (writer: UIMessageStreamWriter, ctx: AgentToolContext): AgentTools => ({
-  think: getThoughts(writer),
-  webSearch: getWebSearchResults(writer),
-  webBrowser: getWebBrowserResults(writer),
-  imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId),
-  linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),
-  memory: getMemoryTool(writer, ctx.agentId),
-  // knowledge: getKnowledgeData(writer),
-  // createDocument: () => {
-  //   /* ... */
-  // },
-  // editDocument: () => {
-  //   /* ... */
-  // },
-});
+// One toolset per stored agent-tool id (AgentTool, agent.schema.ts). Most
+// ids map to a single tool; `datasets` is a family behind one toggle
+// (docs/datasets.md decision 4). The AI SDK has no grouping concept of its
+// own: a ToolSet is just a record, so composition happens here and only the
+// enabled tools are ever constructed or sent to the model.
+const toolsets: Record<AgentTool, ToolsetFactory> = {
+  think: (writer) => ({ think: getThoughts(writer) }),
+  webSearch: (writer) => ({ webSearch: getWebSearchResults(writer) }),
+  webBrowser: (writer) => ({ webBrowser: getWebBrowserResults(writer) }),
+  imageGen: (writer, ctx) => ({
+    imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId),
+  }),
+  linkedinDraft: (writer, ctx) => ({
+    linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),
+  }),
+  memory: (writer, ctx) => ({ memory: getMemoryTool(writer, ctx.agentId) }),
+  datasets: (writer, ctx) => ({
+    datasetCreate: getDatasetCreateTool(writer, ctx.userId, ctx.workspaceId),
+    datasetFind: getDatasetFindTool(writer, ctx.userId, ctx.workspaceId),
+    datasetListRows: getDatasetListRowsTool(writer, ctx.userId, ctx.workspaceId),
+    datasetAppendRow: getDatasetAppendRowTool(writer, ctx.userId, ctx.workspaceId),
+    datasetUpdateRow: getDatasetUpdateRowTool(writer, ctx.userId, ctx.workspaceId),
+  }),
+};
+
+/**
+ * Builds the `tools` record for an agent from its enabled tool ids.
+ * Replaces the former all-tools-plus-`activeTools` filtering: a tool that
+ * isn't enabled isn't built at all. Ids not in the registry (stale jsonb
+ * values) are skipped.
+ */
+export function buildAgentToolset(
+  enabledTools: readonly AgentTool[],
+  writer: UIMessageStreamWriter,
+  ctx: AgentToolContext,
+): ToolSet {
+  const toolEntries = enabledTools.flatMap((toolId) => {
+    const factory = toolsets[toolId];
+    return factory ? Object.entries(factory(writer, ctx)) : [];
+  });
+  return Object.fromEntries(toolEntries);
+}

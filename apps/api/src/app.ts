@@ -10,6 +10,7 @@ import { agentDocumentController } from './controllers/agent-document.controller
 import { agentController } from './controllers/agent.controller';
 import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
+import { datasetController } from './controllers/dataset.controller';
 import { imageGenerateController } from './controllers/imagegen.controller';
 import { notificationController } from './controllers/notification.controller';
 import { socialPostController } from './controllers/social-post.controller';
@@ -53,6 +54,7 @@ export const app = new Hono()
   .route('/', socialPostController)
   .route('/', notificationController)
   .route('/', workspaceController)
+  .route('/', datasetController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

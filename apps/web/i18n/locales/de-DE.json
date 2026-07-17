@@ -55,6 +55,13 @@
       "memory": {
         "label": "Gedächtnis",
         "description": "Merkt sich Notizen über dich und deine Arbeit für zukünftige Unterhaltungen."
+      },
+      "datasets": {
+        "label": "Datensätze",
+        "description": "Liest und schreibt strukturierte Datentabellen: Aufgabenlisten, Pläne und anderen dauerhaften Zustand.",
+        "defaultDatasetLabel": "Standard-Datensatz",
+        "defaultDatasetPlaceholder": "Keiner (Agent sucht bei Bedarf selbst)",
+        "defaultDatasetNone": "Keiner"
       }
     }
   },
@@ -80,6 +87,10 @@
       "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
       "newWorkflow": "Workflow erstellen",
       "scheduled": "Geplant: {cron} ({timezone})"
+    },
+    "create": {
+      "title": "Workflow erstellen",
+      "subtitle": "Benenne deinen Workflow und baue ihn danach im Editor."
     },
     "editor": {
       "title": "Workflow-Editor"
@@ -256,6 +267,98 @@
       "mediaUploadError": "Bild konnte nicht hochgeladen werden.",
       "mediaAltTextError": "Alt-Text konnte nicht gespeichert werden.",
       "mediaDeleteError": "Bild konnte nicht entfernt werden."
+    }
+  },
+  "dataset": {
+    "list": {
+      "title": "Datensätze",
+      "subtitle": "Strukturierte Tabellen, die du und deine Agenten lesen und bearbeiten können.",
+      "newDataset": "Neuer Datensatz",
+      "empty": "Noch keine Datensätze.",
+      "loadError": "Datensätze konnten nicht geladen werden.",
+      "loading": "Datensätze werden geladen...",
+      "table": {
+        "name": "Name",
+        "origin": "Herkunft",
+        "rows": "Zeilen",
+        "workspace": "Arbeitsbereich",
+        "updated": "Aktualisiert",
+        "actions": "Aktionen"
+      }
+    },
+    "origin": {
+      "user": "Nutzer",
+      "agent": "Agent"
+    },
+    "deleteConfirm": {
+      "title": "Datensatz löschen",
+      "message": "Möchtest du diesen Datensatz wirklich löschen? Seine Zeilen werden ebenfalls gelöscht.",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "create": {
+      "title": "Neuer Datensatz",
+      "subtitle": "Leer beginnen oder eine Vorlage nutzen.",
+      "presetLabel": "Vorlage",
+      "preset": {
+        "empty": {
+          "title": "Leer",
+          "description": "Noch keine Spalten. Füge eigene im Spaltenmanager hinzu."
+        },
+        "taskTracker": {
+          "title": "Aufgabenliste",
+          "description": "Aufgabe, Anweisungen und Status (offen / in Bearbeitung / erledigt)."
+        }
+      },
+      "nameLabel": "Name",
+      "descriptionLabel": "Beschreibung",
+      "cancel": "Abbrechen",
+      "submit": "Erstellen"
+    },
+    "detail": {
+      "title": "Datensatz",
+      "loadError": "Datensatz konnte nicht geladen werden.",
+      "loading": "Datensatz wird geladen...",
+      "manageColumns": "Spalten",
+      "rename": "Datensatz umbenennen"
+    },
+    "grid": {
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
+      "actions": "Aktionen",
+      "empty": "Noch keine Zeilen. Füge unten eine hinzu.",
+      "addRow": "Zeile hinzufügen",
+      "selectPlaceholder": "Auswählen...",
+      "deleteRow": "Zeile löschen",
+      "deleteRowConfirm": {
+        "title": "Zeile löschen",
+        "message": "Möchtest du diese Zeile wirklich löschen?",
+        "confirm": "Löschen",
+        "cancel": "Abbrechen"
+      },
+      "expandRow": "Zeile erweitern"
+    },
+    "columnManager": {
+      "title": "Spalten",
+      "close": "Schließen",
+      "namePlaceholder": "Spaltenname",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "removeColumn": "Spalte entfernen",
+      "type": {
+        "text": "Text",
+        "number": "Zahl",
+        "date": "Datum",
+        "select": "Auswahl"
+      },
+      "optionsLabel": "Optionen",
+      "optionsPlaceholder": "offen, in Bearbeitung, erledigt",
+      "addColumn": "Spalte hinzufügen",
+      "save": "Spalten speichern"
+    },
+    "rowPanel": {
+      "title": "Zeilendetails",
+      "close": "Schließen"
     }
   },
   "workspace": {

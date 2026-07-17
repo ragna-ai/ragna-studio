@@ -15,10 +15,12 @@ import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
 import type { AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type UpsertAgentProps = {
   id?: string;
   userId?: string;
+  workspaceId?: string | null;
   aiModelId?: string;
   name?: string;
   systemPrompt?: string;
@@ -27,6 +29,7 @@ type UpsertAgentProps = {
   tools?: string[];
   isDefault?: boolean;
   settings?: AgentSettings | null;
+  defaultDatasetId?: string | null;
 };
 
 // Slider position when temperature is unset. 0 doubles as the "disabled"
@@ -52,6 +55,7 @@ const agentUpsertSchema = z.object({
   tools: z.array(z.string()),
   isDefault: z.boolean(),
   settings: agentSettingsSchema,
+  defaultDatasetId: z.uuidv7().nullable(),
 });
 
 // Props
@@ -63,6 +67,15 @@ const currentTab = ref('persona');
 
 // Composables
 const { isPending, mutate } = useUpsertAgent();
+const workspaceScopeStore = useWorkspaceScopeStore();
+
+// The "Default dataset" picker is scoped the same way the agent's own
+// dataset tools are at runtime (docs/datasets.md decision 10/11): an
+// existing agent uses its own stored workspaceId; a not-yet-saved agent
+// uses the workspace it will be created in.
+const datasetPickerWorkspaceId = computed(() =>
+  props.id ? (props.workspaceId ?? null) : workspaceScopeStore.createWorkspaceId,
+);
 
 const form = useForm({
   defaultValues: {
@@ -79,6 +92,7 @@ const form = useForm({
       temperature: props.settings?.temperature ?? null,
       maxOutputTokens: props.settings?.maxOutputTokens ?? null,
     },
+    defaultDatasetId: props.defaultDatasetId ?? null,
   },
   validators: {
     onChange: agentUpsertSchema,
@@ -254,11 +268,18 @@ const siderBarTabs = [
         <form.Field name="tools">
           <template v-slot="{ field, state }">
             <div class="space-y-6">
-              <AgentToolList
-                :model-value="state.value"
-                :invalid="state.meta.errors.length > 0"
-                @update:model-value="field.handleChange"
-              />
+              <form.Field name="defaultDatasetId">
+                <template v-slot="{ field: datasetField, state: datasetState }">
+                  <AgentToolList
+                    :model-value="state.value"
+                    :invalid="state.meta.errors.length > 0"
+                    :workspace-id="datasetPickerWorkspaceId"
+                    :default-dataset-id="datasetState.value"
+                    @update:model-value="field.handleChange"
+                    @update:default-dataset-id="datasetField.handleChange"
+                  />
+                </template>
+              </form.Field>
               <FormFieldInfo :state="state" />
             </div>
           </template>

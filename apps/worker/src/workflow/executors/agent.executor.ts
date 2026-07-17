@@ -1,10 +1,11 @@
 import {
   buildAgentInstructions,
+  buildAgentToolset,
   generateText,
   getLanguageModel,
   stepCountIs,
-  tools,
 } from '@repo/ai';
+import type { AgentTools } from '@repo/database';
 import { getAgentById, getDefaultAgent } from '@repo/database';
 import type { AgentConfig, WorkflowToolCall } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
@@ -25,8 +26,8 @@ function withAiModel<T>(record: T): T & { aiModel: AiModelRef } {
 // needs the agent's own `tools`/`settings` columns to run it like chat does.
 function withAgentConfig<T>(
   record: T,
-): T & { aiModel: AiModelRef; tools: string[]; settings: AgentSettingsRef } {
-  return record as T & { aiModel: AiModelRef; tools: string[]; settings: AgentSettingsRef };
+): T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef } {
+  return record as T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef };
 }
 
 type GenerateTextSteps = Awaited<ReturnType<typeof generateText>>['steps'];
@@ -100,22 +101,27 @@ export const executeAgent: Executor = async (node, ctx) => {
   const agent = withAgentConfig(agentRecord);
   const instructions = await buildAgentInstructions({
     agentId: config.agentId,
+    userId: ctx.userId,
     tools: agent.tools,
     systemPrompt: agent.systemPrompt,
     context: agent.context,
+    defaultDatasetId: agentRecord.defaultDatasetId,
   });
 
   const result = await generateText({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions,
     prompt,
-    tools: tools(noopWriter, {
+    tools: buildAgentToolset(agent.tools, noopWriter, {
       userId: ctx.userId,
       agentId: config.agentId,
       workspaceId: ctx.workspaceId,
     }),
-    activeTools: agent.tools,
-    stopWhen: stepCountIs(5),
+    // A plan-executing agent node can exhaust the chat-level step budget
+    // immediately (schema read + row list + work + row update already
+    // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow
+    // agent node; chat is unaffected and stays at 5 above.
+    stopWhen: stepCountIs(15),
     temperature: agent.settings?.temperature,
     maxOutputTokens: agent.settings?.maxOutputTokens,
   });

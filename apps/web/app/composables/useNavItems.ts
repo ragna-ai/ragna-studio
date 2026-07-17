@@ -1,5 +1,6 @@
 import {
   BotIcon,
+  DatabaseIcon,
   FolderClockIcon,
   HomeIcon,
   ImageIcon,
@@ -47,6 +48,13 @@ const defaultItems: NavItem[] = [
     path: '/chat',
     icon: MessagesSquareIcon,
     label: 'Chat',
+    children: [],
+  },
+  {
+    id: 'dataset',
+    path: '/dataset',
+    icon: DatabaseIcon,
+    label: 'Datasets',
     children: [],
   },
   // {

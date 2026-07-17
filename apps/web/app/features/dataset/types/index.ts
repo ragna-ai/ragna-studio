@@ -1,0 +1,72 @@
+export type DatasetColumnType = 'text' | 'number' | 'date' | 'select';
+
+export interface DatasetColumn {
+  id: string;
+  name: string;
+  type: DatasetColumnType;
+  // Only meaningful for type 'select'.
+  options?: string[];
+}
+
+// 'user' = created in the grid, 'agent' = created via the datasetCreate tool.
+export type DatasetOrigin = 'user' | 'agent';
+
+// Keyed by column id, not name.
+export type DatasetRowData = Record<string, string | number | null>;
+
+export interface Dataset {
+  id: string;
+  userId: string;
+  workspaceId?: string | null;
+  name: string;
+  description?: string | null;
+  origin: DatasetOrigin;
+  columns: DatasetColumn[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DatasetListItem = Dataset & { rowCount: number };
+
+export interface DatasetResponse {
+  dataset: Dataset;
+}
+
+export interface DatasetManyResponse {
+  datasets: DatasetListItem[];
+  meta: {
+    totalCount: number;
+  };
+}
+
+export interface DatasetRow {
+  id: string;
+  datasetId: string;
+  data: DatasetRowData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DatasetRowManyResponse {
+  rows: DatasetRow[];
+}
+
+export interface DatasetRowResponse {
+  row: DatasetRow;
+}
+
+export type CreateDatasetRequest = {
+  name: string;
+  description?: string;
+  columns?: DatasetColumn[];
+  // Set internally from the active workspace in useCreateDataset when a
+  // specific workspace is active; callers never pass this themselves.
+  workspaceId?: string;
+};
+
+export type UpdateDatasetRequest = {
+  datasetId: string;
+  name?: string;
+  description?: string | null;
+  columns?: DatasetColumn[];
+};

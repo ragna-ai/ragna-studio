@@ -16,6 +16,15 @@
     "clearAll": "Clear all"
   },
   "agent": {
+    "list": {
+      "title": "AI agents",
+      "subtitle": "All AI agents you have created.",
+      "newAgent": "Create AI agent"
+    },
+    "upsert": {
+      "title": "Edit AI agent",
+      "subtitle": "Create a new AI agent or edit an existing one tailored to your needs."
+    },
     "tools": {
       "think": {
         "title": "Think",
@@ -40,6 +49,17 @@
       "memory": {
         "title": "Memory",
         "description": "Save and recall notes about you and your work across conversations."
+      },
+      "datasets": {
+        "title": "Datasets",
+        "description": "Read and write structured data tables: task queues, plans, and other durable state."
+      }
+    },
+    "tool": {
+      "datasets": {
+        "defaultDatasetLabel": "Default dataset",
+        "defaultDatasetPlaceholder": "None (the agent searches when needed)",
+        "defaultDatasetNone": "None"
       }
     }
   },
@@ -60,6 +80,10 @@
       "subtitle": "Automate multi-step tasks with agents, tools, and conditions.",
       "newWorkflow": "New workflow",
       "scheduled": "Scheduled: {cron} ({timezone})"
+    },
+    "create": {
+      "title": "Create workflow",
+      "subtitle": "Name your workflow, then build it on the canvas."
     },
     "editor": {
       "title": "Workflow editor"
@@ -226,6 +250,98 @@
       "mediaUploadError": "Failed to upload the image.",
       "mediaAltTextError": "Failed to save the alt text.",
       "mediaDeleteError": "Failed to remove the image."
+    }
+  },
+  "dataset": {
+    "list": {
+      "title": "Datasets",
+      "subtitle": "Structured tables you and your agents can read and edit.",
+      "newDataset": "New dataset",
+      "empty": "No datasets yet.",
+      "loadError": "Failed to load datasets.",
+      "loading": "Loading datasets...",
+      "table": {
+        "name": "Name",
+        "origin": "Origin",
+        "rows": "Rows",
+        "workspace": "Workspace",
+        "updated": "Updated",
+        "actions": "Actions"
+      }
+    },
+    "origin": {
+      "user": "User",
+      "agent": "Agent"
+    },
+    "deleteConfirm": {
+      "title": "Delete dataset",
+      "message": "Are you sure you want to delete this dataset? Its rows are deleted too.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "create": {
+      "title": "New dataset",
+      "subtitle": "Start empty or from a preset.",
+      "presetLabel": "Start from",
+      "preset": {
+        "empty": {
+          "title": "Empty",
+          "description": "No columns yet. Add your own in the column manager."
+        },
+        "taskTracker": {
+          "title": "Task tracker",
+          "description": "Task, instructions, and status (todo / in progress / done)."
+        }
+      },
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "cancel": "Cancel",
+      "submit": "Create"
+    },
+    "detail": {
+      "title": "Dataset",
+      "loadError": "Failed to load the dataset.",
+      "loading": "Loading dataset...",
+      "manageColumns": "Columns",
+      "rename": "Rename dataset"
+    },
+    "grid": {
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "empty": "No rows yet. Add one below.",
+      "addRow": "Add row",
+      "selectPlaceholder": "Select...",
+      "deleteRow": "Delete row",
+      "deleteRowConfirm": {
+        "title": "Delete row",
+        "message": "Are you sure you want to delete this row?",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "expandRow": "Expand row"
+    },
+    "columnManager": {
+      "title": "Columns",
+      "close": "Close",
+      "namePlaceholder": "Column name",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "removeColumn": "Remove column",
+      "type": {
+        "text": "Text",
+        "number": "Number",
+        "date": "Date",
+        "select": "Select"
+      },
+      "optionsLabel": "Options",
+      "optionsPlaceholder": "todo, in progress, done",
+      "addColumn": "Add column",
+      "save": "Save columns"
+    },
+    "rowPanel": {
+      "title": "Row details",
+      "close": "Close"
     }
   },
   "workspace": {

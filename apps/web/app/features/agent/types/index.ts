@@ -22,6 +22,9 @@ export interface Agent {
   isDefault: boolean;
   settings?: AgentSettings | null;
   aiModel?: AgentAiModelRef;
+  // Soft pin (docs/datasets.md decision 10): the dataset injected into this
+  // agent's system prompt when the `datasets` tool is enabled.
+  defaultDatasetId?: string | null;
 }
 
 export interface AgentResponse {
