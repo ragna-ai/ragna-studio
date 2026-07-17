@@ -18,6 +18,7 @@ import {
   validUpsertAgentBody,
   validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
+import { deleteAgentDocumentsForAgent } from '../services/agent-document.service';
 
 export const agentController = new Hono()
   .basePath('/agent')
@@ -121,13 +122,29 @@ export const agentController = new Hono()
   })
   /**
    * [DELETE] /agent/:agentId
-   * Delete a specific agent by ID
+   * Delete a specific agent by ID. Its documents cascade at the DB level,
+   * but their R2 objects don't, so those are cleaned up here (best effort)
+   * before the row disappears.
    */
   .delete('/:agentId', validAgentIdParam, async (c) => {
     const user = c.get('user');
     const param = c.req.valid('param');
 
-    await deleteAgentById({ agentId: param.agentId, userId: user.id });
+    const { error: agentError, data: agent } = await tryCatch(() =>
+      getAgentById({ agentId: param.agentId, userId: user.id }),
+    );
+
+    if (agentError !== null) {
+      logger.error('Failed to get agent by ID', agentError);
+      throw new InternalServerErrorException('Failed to get agent by ID');
+    }
+
+    if (!agent) {
+      throw new NotFoundException('Agent not found');
+    }
+
+    await deleteAgentDocumentsForAgent({ agentId: agent.id });
+    await deleteAgentById({ agentId: agent.id, userId: user.id });
 
     return c.json({ message: 'Agent deleted successfully' });
   })

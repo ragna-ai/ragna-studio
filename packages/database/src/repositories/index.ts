@@ -1,4 +1,5 @@
 export * from './account.repo';
+export * from './agent-document.repo';
 export * from './agent-template.repo';
 export * from './agent.repo';
 export * from './ai-model.repo';

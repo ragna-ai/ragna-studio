@@ -77,6 +77,21 @@ export const validAgentMemoryBody = myzValidator(
   }),
 );
 
+export const validAgentDocumentParams = myzValidator(
+  'param',
+  z.object({
+    agentId: primaryId,
+    documentId: primaryId,
+  }),
+);
+
+export const validRenameAgentDocumentBody = myzValidator(
+  'json',
+  z.object({
+    name: z.string().trim().min(1).max(255),
+  }),
+);
+
 export const validGenerateImagesBody = myzValidator('json', generateImagesSchema);
 
 export const validWorkflowIdParam = myzValidator(

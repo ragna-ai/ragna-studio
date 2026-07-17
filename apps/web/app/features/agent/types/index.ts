@@ -49,3 +49,24 @@ export interface AgentMemoryResponse {
 }
 
 export type UpdateAgentMemoryRequest = AgentMemory;
+
+export type AgentDocumentStatus = 'pending' | 'ready' | 'failed';
+
+export interface AgentDocument {
+  id: string;
+  name: string;
+  mimeType: string;
+  fileSize: number;
+  status: AgentDocumentStatus;
+  isTruncated: boolean;
+  errorMessage: string | null;
+  updatedAt: string;
+}
+
+export interface AgentDocumentManyResponse {
+  documents: AgentDocument[];
+}
+
+export interface AgentDocumentResponse {
+  document: AgentDocument;
+}

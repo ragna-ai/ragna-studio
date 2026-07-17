@@ -133,10 +133,12 @@ const ConfigSchema = z.object({
   SERP_API_KEY: z.string().optional().default(''),
 
   // Cloudflare R2
+  CF_REGION: z.string().optional().default('auto'),
   CF_ACCOUNT_ID: z.string().optional().default(''),
   CF_ACCESS_KEY_ID: z.string().optional().default(''),
   CF_SECRET_ACCESS_KEY: z.string().optional().default(''),
-  CF_IMAGE_BUCKET_NAME: z.string().optional().default(''),
+  CF_IMAGES_BUCKET_NAME: z.string().optional().default(''),
+  CF_DOCUMENTS_BUCKET_NAME: z.string().optional().default(''),
 
   // AI Service Base URLs
   BFL_API_BASE_URL: z.string().optional(),
@@ -290,6 +292,10 @@ export class ConfigService {
     return this._config.STRIPE_PRICE_ID_LARGE_MONTHLY;
   }
 
+  get cfRegion(): string {
+    return this._config.CF_REGION;
+  }
+
   get cfAccountId(): string {
     return this._config.CF_ACCOUNT_ID;
   }
@@ -298,8 +304,12 @@ export class ConfigService {
     return this._config.CF_ACCESS_KEY_ID;
   }
 
-  get cfImageBucketName(): string {
-    return this._config.CF_IMAGE_BUCKET_NAME;
+  get cfImagesBucketName(): string {
+    return this._config.CF_IMAGES_BUCKET_NAME;
+  }
+
+  get cfDocumentsBucketName(): string {
+    return this._config.CF_DOCUMENTS_BUCKET_NAME;
   }
 
   // AI service URLs (non-sensitive)

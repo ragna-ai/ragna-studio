@@ -5,7 +5,7 @@ import { agent } from '../schema';
 import type { ICreateAgent, IUpdateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
 
-export type { AgentSettings } from '../schema';
+export type { Agent, AgentSettings } from '../schema';
 
 type AgentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -42,7 +42,11 @@ async function clearOtherDefaultAgentsInScope(
 // also what gets written to the row.
 async function resolveDefaultScopeWorkspaceId(
   tx: AgentTransaction,
-  { agentId, userId, workspaceId }: { agentId?: string; userId: string; workspaceId?: string | null },
+  {
+    agentId,
+    userId,
+    workspaceId,
+  }: { agentId?: string; userId: string; workspaceId?: string | null },
 ): Promise<string | null> {
   if (workspaceId !== undefined) {
     return workspaceId;

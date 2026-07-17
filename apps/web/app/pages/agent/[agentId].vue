@@ -41,7 +41,7 @@ useHead({
       </template>
       <template #bottom> </template>
     </Heading>
-    <div class="px-10">
+    <div class="px-20">
       <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />
     </div>
   </SectionWrapper>

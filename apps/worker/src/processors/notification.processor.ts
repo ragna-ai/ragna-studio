@@ -1,7 +1,7 @@
 import { createNotification } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, NOTIFICATIONS_QUEUE, NotifyUserJobDto, NOTIFY_USER_JOB } from '@repo/queue';
+import { createWorker, NOTIFICATIONS_QUEUE, NOTIFY_USER_JOB, NotifyUserJobDto } from '@repo/queue';
 
 export function registerNotificationJobProcessor(): Worker<any, any, string> {
   const notificationWorker = createWorker({
@@ -12,9 +12,6 @@ export function registerNotificationJobProcessor(): Worker<any, any, string> {
       switch (job.name) {
         case NOTIFY_USER_JOB: {
           const { userId, type, data } = NotifyUserJobDto.fromJSON(job.data);
-          // No rendering here: the row stores only the event (type + data).
-          // Title/message/link are rendered on read by the web presenter. This
-          // is also the future fan-out point for email/push channels.
           await createNotification({ userId, type, data });
           break;
         }

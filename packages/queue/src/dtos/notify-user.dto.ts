@@ -21,8 +21,12 @@ class NotifyUserJobDto<T extends NotificationType = NotificationType> {
     this.data = data.data;
   }
 
-  static fromJSON(data: unknown): NotifyUserJobDto {
-    return new NotifyUserJobDto(data as NotifyUserJobData);
+  static fromJSON(data: NotifyUserJobData): NotifyUserJobDto {
+    return new NotifyUserJobDto({
+      userId: data.userId,
+      type: data.type,
+      data: data.data,
+    });
   }
 
   toJSON(): NotifyUserJobData<T> {

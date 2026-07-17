@@ -6,6 +6,8 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import type {
+  AgentDocumentManyResponse,
+  AgentDocumentResponse,
   AgentMemoryResponse,
   AgentResponse,
   UpsertAgentRequest,
@@ -24,9 +26,18 @@ export const agentKeys = {
     ['agents', 'detail', agentId] as const,
   memory: (agentId: MaybeRefOrGetter<string>) =>
     ['agents', 'memory', agentId] as const,
+  documents: (agentId: MaybeRefOrGetter<string>) =>
+    ['agents', 'documents', agentId] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
+
+/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
+type FetchErrorWithData = { data?: { error?: string } };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
+}
 
 export function useGetAgent(
   agentId: MaybeRefOrGetter<string>,
@@ -124,6 +135,139 @@ export function useDeleteAgent() {
     },
     onError: () => {
       toast.error('Failed to delete agent');
+    },
+  });
+}
+
+// Client-side mirror of the API's limits
+// (apps/api/src/services/agent-document.service.ts), so invalid attachments
+// are rejected before a request is even sent.
+export const AGENT_DOCUMENT_MAX_FILES = 10;
+export const AGENT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+export const AGENT_DOCUMENT_ACCEPT = '.pdf,.docx,.txt,.md';
+
+// While any listed document is still 'pending', poll for its terminal
+// status. 'failed' is terminal and doesn't poll (docs/agent-context-documents.md).
+const AGENT_DOCUMENT_POLL_INTERVAL_MS = 2000;
+
+export function useGetAgentDocuments(agentId: MaybeRefOrGetter<string>) {
+  const api = useApi();
+  return useQuery<AgentDocumentManyResponse>({
+    queryKey: agentKeys.documents(agentId),
+    queryFn: ({ signal }) =>
+      api(`/agent/${toValue(agentId)}/documents`, { method: 'GET', signal }),
+    enabled: () => !!toValue(agentId),
+    refetchInterval: (query) => {
+      const hasPendingDocument = query.state.data?.documents.some(
+        (document) => document.status === 'pending',
+      );
+      return hasPendingDocument ? AGENT_DOCUMENT_POLL_INTERVAL_MS : false;
+    },
+  });
+}
+
+export interface UploadAgentDocumentsVariables {
+  agentId: string;
+  files: File[];
+}
+
+export function useUploadAgentDocuments() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentDocumentManyResponse, unknown, UploadAgentDocumentsVariables>({
+    mutationFn: ({ agentId, files }) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('files', file));
+      return api(`/agent/${agentId}/documents`, { method: 'POST', body: formData });
+    },
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to upload documents'));
+    },
+  });
+}
+
+export interface RenameAgentDocumentVariables {
+  agentId: string;
+  documentId: string;
+  name: string;
+}
+
+export function useRenameAgentDocument() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentDocumentResponse, unknown, RenameAgentDocumentVariables>({
+    mutationFn: ({ agentId, documentId, name }) =>
+      api(`/agent/${agentId}/documents/${documentId}`, { method: 'PATCH', body: { name } }),
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to rename document'));
+    },
+  });
+}
+
+export interface ReplaceAgentDocumentFileVariables {
+  agentId: string;
+  documentId: string;
+  file: File;
+}
+
+export function useReplaceAgentDocumentFile() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentDocumentResponse, unknown, ReplaceAgentDocumentFileVariables>({
+    mutationFn: ({ agentId, documentId, file }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api(`/agent/${agentId}/documents/${documentId}/file`, {
+        method: 'PUT',
+        body: formData,
+      });
+    },
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to replace document'));
+    },
+  });
+}
+
+export interface AgentDocumentIdVariables {
+  agentId: string;
+  documentId: string;
+}
+
+export function useRetryAgentDocument() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentDocumentResponse, unknown, AgentDocumentIdVariables>({
+    mutationFn: ({ agentId, documentId }) =>
+      api(`/agent/${agentId}/documents/${documentId}/retry`, { method: 'POST' }),
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to retry document'));
+    },
+  });
+}
+
+export function useDeleteAgentDocument() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, AgentDocumentIdVariables>({
+    mutationFn: ({ agentId, documentId }) =>
+      api(`/agent/${agentId}/documents/${documentId}`, { method: 'DELETE' }),
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to delete document'));
     },
   });
 }

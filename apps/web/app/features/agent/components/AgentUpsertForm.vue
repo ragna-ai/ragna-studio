@@ -9,6 +9,7 @@ import {
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
+import AgentDocumentPanel from '~/features/agent/components/AgentDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
@@ -265,6 +266,20 @@ const siderBarTabs = [
       </template>
       <!-- TAB 5: Context -->
       <template #context>
+        <div class="mb-8">
+          <Label class="mb-2 block text-sm font-medium">Documents</Label>
+          <p class="mb-2 text-sm text-muted-foreground">
+            Upload files whose content this agent should always have access to.
+            Extracted text joins the context text below.
+          </p>
+          <AgentDocumentPanel v-if="props.id" :agent-id="props.id" />
+          <div
+            v-else
+            class="rounded-lg border p-4 text-sm text-muted-foreground"
+          >
+            Save the agent first to upload documents.
+          </div>
+        </div>
         <form.Field name="context">
           <template v-slot="{ field, state }">
             <div>
@@ -283,7 +298,7 @@ const siderBarTabs = [
                   (v: string | number) => field.handleChange(String(v))
                 "
                 @blur="field.handleBlur"
-                class="min-h-100"
+                class="min-h-60"
                 autocomplete="off"
               />
               <FormFieldInfo :state="state" />
@@ -300,7 +315,7 @@ const siderBarTabs = [
       </template>
       <!-- TAB 7: Settings -->
       <template #settings>
-        <div class="space-y-8">
+        <div class="max-w-lg space-y-8">
           <form.Field name="isDefault">
             <template v-slot="{ field, state }">
               <div class="flex items-center space-x-3">
@@ -340,7 +355,10 @@ const siderBarTabs = [
             <form.Field name="settings.maxOutputTokens">
               <template v-slot="{ field, state }">
                 <div>
-                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  <Label
+                    class="mb-2 block text-sm font-medium"
+                    :for="field.name"
+                  >
                     Max output tokens
                   </Label>
                   <Input
@@ -361,8 +379,8 @@ const siderBarTabs = [
               </template>
             </form.Field>
             <p class="text-sm text-muted-foreground">
-              Set temperature to 0 to disable it. Leave max output tokens
-              empty to use the model's default.
+              Set temperature to 0 to disable it. Leave max output tokens empty
+              to use the model's default.
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # Agent Context — Phase 2: Documents
 
-Status: draft, pending review
+Status: approved, in implementation
 
 Phase 1 (see [agent-context.md](./agent-context.md)) gave agents a freeform
 `context` text field, injected as a `<context>` block by
@@ -57,10 +57,14 @@ No `userId`: ownership checks go through the agent
 
 ## Storage
 
-- Dedicated R2 bucket `ragna-cloud-documents` (hardcoded const in the
-  service, same pattern as `IMAGE_BUCKET_NAME` in
-  `social-post-media.service.ts`). **The bucket must be created in R2 before
-  this ships.**
+- Dedicated R2 bucket `ragna-studio-documents`, living in R2's **EU
+  jurisdiction**. Configured via `.env` as
+  `CF_DOCUMENTS_BUCKET_NAME=eu-ragna-studio-documents` (exposed as
+  `config.cfDocumentsBucketName`), read by both the API service and the
+  worker processor. The `eu-` prefix is a "bucket ref" convention decoded
+  in `packages/storage` (`bucket-ref.ts` + `createS3Client`): it selects
+  the EU endpoint host and is stripped from the real bucket name. See the
+  root README, "R2 buckets".
 - Key layout: `agents/{agentId}/{documentId}/{uploadId}` where `uploadId` is
   a fresh uuid per upload. Replace writes a new key first, then deletes the
   old object (best effort, logged not thrown, mirroring
@@ -68,10 +72,20 @@ No `userId`: ownership checks go through the agent
 
 ## Pipeline
 
-1. **Upload** (API): multipart request (`c.req.parseBody()`, like the social
-   media route). Validate type/size/count, upload to R2 via
-   `uploadObjectBuffer`, insert the row with `status: 'pending'`, enqueue an
-   extraction job.
+1. **Upload** (API): one multipart request may carry **multiple files**
+   (`c.req.parseBody({ all: true })`; the social media route shows the
+   single-file variant). Validation is server-side and all-or-nothing: if
+   any file fails, the whole request is rejected with a 400 naming the
+   offending file, and nothing is stored. Per file:
+   - size ≤ 10 MB and non-empty,
+   - allowed type, verified by **content sniffing**, not the client
+     `file.type`: `%PDF` magic bytes for pdf, ZIP magic (`PK`) plus a
+     `.docx` extension for docx, valid UTF-8 for txt/md,
+   - resulting document count (existing + batch) ≤ 10 per agent.
+
+   Then, per file: upload to R2 via `uploadObjectBuffer`, insert a row with
+   `status: 'pending'`, enqueue an extraction job. Response returns the
+   created rows.
 2. **Extract** (worker): new queue following the standard four steps (queue
    name constant, DTO `{ documentId: string }`, processor, register in
    `processors/index.ts`). The processor:
@@ -93,19 +107,26 @@ No `userId`: ownership checks go through the agent
 
 ## API
 
-New routes on the agent controller (all guarded by agent ownership):
+New dedicated controller `agent-document.controller.ts` in
+`apps/api/src/controllers/` (registered alongside the existing controllers),
+so document management stays out of the already large agent controller. All
+routes are guarded by agent ownership (`getAgentById({ agentId, userId })`).
 
 | Route | Purpose |
 | --- | --- |
 | `GET /agent/:agentId/documents` | list (id, name, mimeType, fileSize, status, isTruncated, errorMessage, updatedAt — **not** extractedText) |
-| `POST /agent/:agentId/documents` | multipart upload, returns the pending row |
+| `POST /agent/:agentId/documents` | multipart upload, one or more files, returns the pending rows |
 | `PUT /agent/:agentId/documents/:documentId/file` | replace file |
 | `PATCH /agent/:agentId/documents/:documentId` | rename |
 | `POST /agent/:agentId/documents/:documentId/retry` | re-enqueue extraction |
 | `DELETE /agent/:agentId/documents/:documentId` | delete row + R2 object (best effort) |
 
-Deleting an **agent** cascades the rows; the delete route additionally
-cleans up the R2 objects for that agent (best effort).
+R2 upload/delete mechanics live in a service
+(`apps/api/src/services/agent-document.service.ts`, mirroring
+`social-post-media.service.ts`), not in the controller.
+
+Deleting an **agent** cascades the rows; the agent delete path additionally
+cleans up the R2 objects for that agent via the same service (best effort).
 
 ## Prompt injection
 
@@ -140,11 +161,21 @@ All inside the existing Context tab of `AgentUpsertForm.vue`:
   otherwise a hint box "Save the agent first to upload documents." (exact
   same pattern as the Memory tab).
 - The section (own component, e.g. `AgentDocumentPanel.vue`, mirroring
-  `AgentMemoryPanel.vue`): upload button, list rows with name, file size,
-  status badge (pending / ready / failed with error tooltip), truncation
-  hint, and actions: rename, replace, retry (failed only), delete.
-- While any document is `pending`, poll the list (TanStack Query
-  `refetchInterval`, e.g. 2 s, off when nothing is pending).
+  `AgentMemoryPanel.vue`): a **drag-and-drop area** that is also
+  click-to-browse (VueUse `useDropZone` — auto-imported via
+  `@vueuse/nuxt` — over a hidden file input with `multiple` and the
+  allowed-type `accept` list; dropped or picked, all files go out as one
+  request; visual highlight via `isOverDropZone`), list rows with name,
+  file size, status badge (pending / ready / failed with error tooltip),
+  truncation hint, and actions: rename, replace (single file), retry
+  (failed only), delete.
+- Polling: while at least one listed document has `status = 'pending'`,
+  refetch the list every 2 s (TanStack Query `refetchInterval` computed from
+  the current list data). `failed` is terminal and does not poll. Because
+  the condition derives from fetched data, polling resumes automatically
+  when the user navigates away and returns while extraction is still
+  running. No push notifications: the existing notification system is for
+  global notifications and stays out of this.
 - Document mutations are immediate (they hit the API directly, like memory),
   independent of the form's save button.
 
@@ -159,10 +190,17 @@ All inside the existing Context tab of `AgentUpsertForm.vue`:
   attachments, different lifecycle).
 - Documents on `agent_templates`.
 
-## Open questions
+## Resolved questions
 
-1. Bucket name `ragna-cloud-documents` OK, and who creates it in R2?
-2. Are pdf/docx/txt/md enough for the first cut?
-3. Poll interval 2 s OK, or should extraction completion push a
-   notification instead (notification infra exists)? Polling is simpler and
-   proposed for phase 2.
+1. **Bucket**: `ragna-studio-documents`, created by the user in R2's EU
+   jurisdiction.
+2. **Formats**: pdf/docx/txt/md confirmed for the first cut.
+3. **Status updates**: polling while any document is `pending` (see Web
+   UI). No push notifications; the existing notification system is for
+   global notifications.
+4. **Scoping** (from review discussion): documents stay hard-tied to one
+   agent (non-null FK, cascade). A standalone document resource with an
+   optional agent link was considered and rejected: it reintroduces
+   ownership/deletion/budget ambiguity, and the plausible future consumers
+   (chat uploads) have a different lifecycle anyway. Code reuse (extraction
+   processor, R2 service, panel UI) does not require shared rows.

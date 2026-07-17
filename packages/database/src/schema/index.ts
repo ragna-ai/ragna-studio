@@ -1,4 +1,5 @@
 export * from './account.schema';
+export * from './agent-document.schema';
 export * from './agent.schema';
 export * from './aimodel.schema';
 export * from './chat.schema';
