@@ -28,10 +28,13 @@ const isEmpty = computed(
     <Spinner />
   </div>
   <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
-    Failed to load generated images.
+    {{ $t('imagen.grid.loadError') }}
   </p>
-  <p v-else-if="isEmpty" class="py-12 text-center text-sm text-muted-foreground">
-    No images yet. Describe an image above to generate one.
+  <p
+    v-else-if="isEmpty"
+    class="py-12 text-center text-sm text-muted-foreground"
+  >
+    {{ $t('imagen.grid.empty') }}
   </p>
   <div v-else class="columns-2 gap-4 lg:columns-3">
     <div
@@ -44,14 +47,13 @@ const isEmpty = computed(
       :key="image.id"
       type="button"
       class="group mb-4 block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-ring"
-      :title="image.prompt"
       @click="previewImage = image"
     >
       <img
         :src="image.imgUrl"
-        :alt="image.prompt"
+        :alt="image.imgUrl"
         loading="lazy"
-        class="w-full rounded-lg transition-opacity group-hover:opacity-90"
+        class="w-full rounded-lg group-hover:shadow-md group-hover:shadow-black/30"
       />
     </button>
   </div>

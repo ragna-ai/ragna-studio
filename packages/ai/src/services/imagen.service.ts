@@ -42,18 +42,21 @@ const openAiSizeMap: Record<AspectRatio, OpenAIImageSize> = {
   '16:9': '1536x1024',
 };
 
+// @ai-sdk/black-forest-labs validates width/height against the legacy FLUX.1
+// API limit (max 1920px per axis) regardless of the model id, so 2K stays at
+// 1920 on the long edge rather than BFL's native 2048.
 const ratiosResolutionMap = {
   '1:1': {
     '1K': { width: 1024, height: 1024 }, // bflCost: 1MP
-    '2K': { width: 2048, height: 2048 }, // bflCost: 4MP
+    '2K': { width: 1920, height: 1920 }, // bflCost: ~3.7MP
   },
   '4:3': {
     '1K': { width: 1024, height: 768 }, // bflCost: 1MP
-    '2K': { width: 2048, height: 1536 }, // bflCost: 3MP
+    '2K': { width: 1920, height: 1440 }, // bflCost: ~2.8MP
   },
   '16:9': {
     '1K': { width: 1024, height: 576 }, // bflCost: 1MP
-    '2K': { width: 2048, height: 1152 }, // bflCost: 3MP
+    '2K': { width: 1920, height: 1080 }, // bflCost: ~2.1MP
   },
 };
 
@@ -112,6 +115,7 @@ export async function createGenImages({
               width,
               height,
               outputFormat: 'png',
+              promptUpsampling: false,
             } satisfies BlackForestLabsImageProviderOptions,
           }),
         };

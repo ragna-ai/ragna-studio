@@ -14,13 +14,14 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import type { ChatStatus } from 'ai';
+import { storeToRefs } from 'pinia';
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
 import {
   imageAspectRatios,
   imageResolutions,
   useGenerateImages,
 } from '~/features/image/composables/useImageGenApi';
-import { useImageGenSettings } from '~/features/image/composables/useImageGenSettings';
+import { useImageGenSettingsStore } from '~/features/image/stores/imagegensettings.store';
 
 interface ImageModel {
   id: string;
@@ -33,7 +34,9 @@ interface ImageModel {
 // Composables
 const { data: aiModelData } = useGetAllAiModels();
 const { mutate: generateImages, isPending } = useGenerateImages();
-const { modelId, aspectRatio, resolution, count } = useImageGenSettings();
+const { modelId, aspectRatio, resolution, count } = storeToRefs(
+  useImageGenSettingsStore(),
+);
 
 // Computed
 const imageModels = computed<ImageModel[]>(

@@ -125,6 +125,7 @@
     }
   },
   "imagen": {
+    "title": "Text zu Bild",
     "input": {
       "placeholder": "Beschreibe das Bild, das du generieren möchtest..."
     },
@@ -141,6 +142,16 @@
       "title": "Anzahl der Bilder",
       "singular": "Bild",
       "plural": "Bilder"
+    },
+    "grid": {
+      "loadError": "Generierte Bilder konnten nicht geladen werden.",
+      "empty": "Noch keine Bilder. Beschreibe oben ein Bild, um eines zu generieren."
+    },
+    "preview": {
+      "title": "Generiertes Bild",
+      "copyPrompt": "Prompt kopieren",
+      "download": "Herunterladen",
+      "downloadError": "Bild konnte nicht heruntergeladen werden"
     }
   },
   "table": {

@@ -5,7 +5,7 @@ import ImageGenGrid from '~/features/image/components/ImageGenGrid.vue';
 // Composables
 const { t } = useI18n();
 useHead({
-  title: t('tti.title'),
+  title: t('imagen.title'),
 });
 </script>
 

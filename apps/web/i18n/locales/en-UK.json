@@ -104,6 +104,36 @@
       "nextRuns": "Next runs"
     }
   },
+  "imagen": {
+    "title": "Text to Image",
+    "input": {
+      "placeholder": "Describe the image you want to generate..."
+    },
+    "model": {
+      "title": "Model"
+    },
+    "aspectRatio": {
+      "title": "Aspect ratio"
+    },
+    "resolution": {
+      "title": "Resolution"
+    },
+    "count": {
+      "title": "Number of images",
+      "singular": "image",
+      "plural": "images"
+    },
+    "grid": {
+      "loadError": "Failed to load generated images.",
+      "empty": "No images yet. Describe an image above to generate one."
+    },
+    "preview": {
+      "title": "Generated image",
+      "copyPrompt": "Copy prompt",
+      "download": "Download",
+      "downloadError": "Failed to download image"
+    }
+  },
   "user": {
     "social": {
       "title": "Connected accounts",
