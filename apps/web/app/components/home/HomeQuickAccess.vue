@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import {
   BotIcon,
-  DatabaseIcon,
-  FolderIcon,
   ImageIcon,
   LayoutGridIcon,
-  ListTodoIcon,
   MessagesSquareIcon,
-  PieChartIcon,
+  Share2Icon,
   WorkflowIcon,
 } from '@lucide/vue';
 
@@ -19,13 +16,13 @@ const quickAccessItems = [
     label: 'Chat',
     route: '/chat',
   },
-  {
-    id: 3,
-    icon: ListTodoIcon,
-    class: 'bg-amber-200/50',
-    label: 'Cowork',
-    route: '/cowork',
-  },
+  // {
+  //   id: 3,
+  //   icon: ListTodoIcon,
+  //   class: 'bg-amber-200/50',
+  //   label: 'Cowork',
+  //   route: '/cowork',
+  // },
   {
     id: 6,
     icon: WorkflowIcon,
@@ -47,26 +44,33 @@ const quickAccessItems = [
     label: 'Image Generator',
     route: '/text-to-image',
   },
+  // {
+  //   id: 10,
+  //   icon: DatabaseIcon,
+  //   class: 'bg-lime-200/50',
+  //   label: 'Knowledge',
+  //   route: '/collection',
+  // },
+  // {
+  //   id: 11,
+  //   icon: PieChartIcon,
+  //   class: 'bg-blue-200/50',
+  //   label: 'Analytics',
+  //   route: '/account/statistics',
+  // },
+  // {
+  //   id: 12,
+  //   icon: FolderIcon,
+  //   class: 'bg-slate-200/50',
+  //   label: 'Files',
+  //   route: '/storage',
+  // },
   {
-    id: 10,
-    icon: DatabaseIcon,
+    id: 13,
+    icon: Share2Icon,
     class: 'bg-lime-200/50',
-    label: 'Knowledge',
-    route: '/collection',
-  },
-  {
-    id: 11,
-    icon: PieChartIcon,
-    class: 'bg-blue-200/50',
-    label: 'Analytics',
-    route: '/account/statistics',
-  },
-  {
-    id: 12,
-    icon: FolderIcon,
-    class: 'bg-slate-200/50',
-    label: 'Files',
-    route: '/storage',
+    label: 'Social',
+    route: '/social',
   },
 ];
 </script>
