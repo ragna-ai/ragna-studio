@@ -34,7 +34,7 @@ Web renders node config forms from the Zod schemas (VeeValidate) and validates b
 | `condition` | Branch on an expression or an LLM classification.                   |
 | `transform` | Template string or field mapping between nodes.                     |
 
-Later: `human-approval` (suspends the run until a user acts).
+Later: `approval` (suspends the run until a user acts), specified in [workflows-human-in-the-loop.md](./workflows-human-in-the-loop.md).
 
 ## Schema
 
