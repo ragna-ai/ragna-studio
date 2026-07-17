@@ -42,6 +42,13 @@ export const validChatIdParam = myzValidator(
   }),
 );
 
+export const validUpdateChatTitleBody = myzValidator(
+  'json',
+  z.object({
+    title: z.string().trim().min(1).max(255),
+  }),
+);
+
 export const validUpsertAgentBody = myzValidator(
   'json',
   z.object({

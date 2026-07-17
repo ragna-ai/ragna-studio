@@ -49,7 +49,9 @@
       "toggle": "Toggle chat history",
       "groupBy": "Change grouping",
       "close": "Close",
-      "empty": "No chats yet"
+      "empty": "No chats yet",
+      "rename": "Rename chat",
+      "titleRequired": "Title is required."
     }
   },
   "workflow": {

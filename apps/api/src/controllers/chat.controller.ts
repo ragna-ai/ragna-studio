@@ -32,6 +32,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validChatIdParam,
   validCreateChatBody,
+  validUpdateChatTitleBody,
   validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
 import { generateChatTitle } from '../services/chat.service';
@@ -191,6 +192,30 @@ export const chatController = new Hono()
     return c.json({ chat: chatDto });
   })
   /**
+   * [PATCH] /chat/:chatId
+   * Rename a specific chat owned by the authenticated user
+   */
+  .patch('/:chatId', validChatIdParam, validUpdateChatTitleBody, async (c) => {
+    const user = c.get('user');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const { error, data: chat } = await tryCatch(() =>
+      updateChatTitleById({ chatId: param.chatId, userId: user.id, title: body.title }),
+    );
+
+    if (error !== null) {
+      logger.error(`Error renaming chat ${param.chatId} for user ${user.id}`, error);
+      throw new InternalServerErrorException('Failed to rename chat');
+    }
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return c.json({ chat });
+  })
+  /**
    * [DELETE] /chat/:chatId
    * Delete a specific chat (and its messages via cascade) for the authenticated user
    */
@@ -267,7 +292,7 @@ export const chatController = new Hono()
         // Handle title generation in parallel
         if (titlePromise) {
           titlePromise.then((title) => {
-            updateChatTitleById({ chatId: userChat.id, title });
+            updateChatTitleById({ chatId: userChat.id, userId: user.id, title });
             dataStream.write({
               type: 'data-chat-title',
               data: { title },

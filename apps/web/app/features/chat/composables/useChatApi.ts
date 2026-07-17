@@ -143,6 +143,26 @@ export function useCreateChat() {
   });
 }
 
+interface UpdateChatTitleVariables {
+  chatId: string;
+  title: string;
+}
+
+export function useUpdateChatTitle() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<ChatResponse, unknown, UpdateChatTitleVariables>({
+    mutationFn: ({ chatId, title }) =>
+      api(`/chat/${chatId}`, { method: 'PATCH', body: { title } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.all });
+    },
+    onError: () => {
+      toast.error('Failed to rename chat');
+    },
+  });
+}
+
 export function useDeleteChat() {
   const api = useApi();
   const queryClient = useQueryClient();

@@ -12,16 +12,40 @@ const route = useRoute();
 const chatId = computed(() => route.params.chatId as string);
 
 // Composables
-const { data, error: chatError } = useGetChat(chatId);
+const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
 
 useHead({
   title: t('chat.conversation.title'),
 });
+
+// Computed
+
+// if the chat is taking longer than 500ms to load, show a loading state
+// this is to prevent flickering when the chat loads quickly
+// the problem with current implementation: if users switches chats quickly, the timeout might still set loadingTakesLonger to true for the previous chat.
+// fixed by using onScopeDispose to clear the timeout when the component is unmounted or the watcher is re-run
+const loadingTakesLonger = ref(false);
+watch(
+  () => isLoading.value,
+  (newIsLoading) => {
+    if (newIsLoading) {
+      const timeout = setTimeout(() => {
+        if (isLoading.value) {
+          loadingTakesLonger.value = true;
+        }
+      }, 500);
+      onScopeDispose(() => clearTimeout(timeout));
+    } else {
+      loadingTakesLonger.value = false;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <ChatHistoryToggle class="absolute left-2 top-2 z-10" />
+  <ChatHistoryToggle class="absolute top-2 left-2 z-10" />
   <ChatConversation
     v-if="data?.chat"
     :key="data.chat.id"
@@ -36,7 +60,10 @@ useHead({
       {{ chatError.message || 'An error occurred while fetching the chat.' }}
     </p>
   </div>
-  <div v-else class="flex h-full w-full items-center justify-center">
+  <div
+    v-if="loadingTakesLonger"
+    class="flex h-full w-full items-center justify-center"
+  >
     <Shimmer class="h-6 w-48"> Loading chat... </Shimmer>
   </div>
 </template>

@@ -2,6 +2,7 @@
 import { CalendarIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
+import ChatHistoryItemRow from '~/features/chat/components/ChatHistoryItem.vue';
 import {
   useGetChatHistory,
   type ChatHistoryItem,
@@ -102,6 +103,7 @@ const groups = computed<ChatGroup[]>(() => {
       </h2>
       <div class="flex items-center gap-1">
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           :aria-label="t('chat.history.groupBy')"
@@ -111,6 +113,7 @@ const groups = computed<ChatGroup[]>(() => {
           <CalendarIcon class="size-4 stroke-1.5" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           :aria-label="t('chat.history.close')"
@@ -142,16 +145,12 @@ const groups = computed<ChatGroup[]>(() => {
         >
           {{ group.label }}
         </div>
-        <NuxtLinkLocale
+        <ChatHistoryItemRow
           v-for="chat in group.chats"
           :key="chat.id"
-          :to="`/chat/${chat.id}`"
-          :title="chat.title"
-          class="block truncate rounded-md px-2 py-1.5 text-sm hover:bg-stone-100"
-          :class="{ 'bg-stone-100 font-medium': isActiveChat(chat.id) }"
-        >
-          {{ chat.title }}
-        </NuxtLinkLocale>
+          :chat="chat"
+          :active="isActiveChat(chat.id)"
+        />
       </div>
     </div>
   </div>

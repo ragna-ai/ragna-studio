@@ -137,18 +137,20 @@ export async function getAllChatsByUserId({
 
 export async function updateChatTitleById({
   chatId,
+  userId,
   title,
 }: {
   chatId: string;
+  userId: string;
   title: string;
-}): Promise<Chat> {
-  const [updatedChat] = await db.update(chat).set({ title }).where(eq(chat.id, chatId)).returning();
+}): Promise<Chat | null> {
+  const [updatedChat] = await db
+    .update(chat)
+    .set({ title })
+    .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
+    .returning();
 
-  if (!updatedChat) {
-    throw new Error('Failed to update chat title');
-  }
-
-  return updatedChat;
+  return updatedChat ?? null;
 }
 
 export async function deleteChatById({ userId, chatId }: { userId: string; chatId: string }) {

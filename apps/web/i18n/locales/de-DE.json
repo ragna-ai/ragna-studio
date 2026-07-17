@@ -69,7 +69,9 @@
       "toggle": "Chatverlauf ein-/ausblenden",
       "groupBy": "Gruppierung ändern",
       "close": "Schließen",
-      "empty": "Noch keine Chats"
+      "empty": "Noch keine Chats",
+      "rename": "Chat umbenennen",
+      "titleRequired": "Titel ist erforderlich."
     }
   },
   "workflow": {
