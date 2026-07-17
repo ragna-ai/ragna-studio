@@ -11,7 +11,6 @@ export function createS3Client(bucketName: string): S3mini {
   const jurisdictionHostSegment = config.cfRegion !== 'auto' ? `${config.cfRegion}.` : '';
 
   return new S3mini({
-    region: 'auto',
     endpoint: `https://${config.cfAccountId}.${jurisdictionHostSegment}r2.cloudflarestorage.com/${bucketName}`,
     accessKeyId: config.cfAccessKeyId || '',
     secretAccessKey: config.getSecret('CF_SECRET_ACCESS_KEY') || '',
