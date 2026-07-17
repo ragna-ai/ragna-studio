@@ -73,9 +73,12 @@ function handleSubmit(message: PromptInputMessage) {
 
 // Hooks
 // Fall back to the first image model when none (or a removed one) is selected.
+// Skip while the model list is still loading, so a persisted modelId isn't
+// wiped out before the fetch resolves.
 watch(
   imageModels,
   (models) => {
+    if (models.length === 0) return;
     if (models.some((model) => model.id === modelId.value)) return;
     modelId.value = models[0]?.id ?? '';
   },

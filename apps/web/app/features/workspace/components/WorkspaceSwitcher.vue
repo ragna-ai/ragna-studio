@@ -25,6 +25,19 @@ const activeLabel = computed(() => {
   );
   return active?.name ?? t('workspace.switcher.allItems');
 });
+
+// Hooks
+// Drop a persisted selection that points at a workspace which no longer
+// exists (e.g. deleted in another session). Skip while still loading, so a
+// not-yet-fetched list doesn't clear a valid selection.
+watch(data, (result) => {
+  if (!result) return;
+  const scope = workspaceScopeStore.scope;
+  if (scope.kind !== 'workspace') return;
+  if (result.workspaces.some((workspace) => workspace.id === scope.workspaceId))
+    return;
+  selectAllItems();
+});
 </script>
 
 <template>

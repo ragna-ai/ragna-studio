@@ -25,7 +25,9 @@ export interface WorkspaceListQuery {
 }
 
 export const useWorkspaceScopeStore = defineStore('workspace-scope', () => {
-  const scope = ref<WorkspaceScope>({ kind: 'all' });
+  const scope = useLocalStorage<WorkspaceScope>('workspace-scope', {
+    kind: 'all',
+  });
 
   function selectAllItems() {
     scope.value = { kind: 'all' };
