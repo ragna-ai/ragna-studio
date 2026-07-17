@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   BotIcon,
+  DatabaseIcon,
   ImageIcon,
   LayoutGridIcon,
   MessagesSquareIcon,
@@ -12,65 +13,72 @@ const quickAccessItems = [
   {
     id: 5,
     icon: MessagesSquareIcon,
-    class: 'bg-indigo-200/50',
+    class: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
     label: 'Chat',
     route: '/chat',
   },
   // {
   //   id: 3,
   //   icon: ListTodoIcon,
-  //   class: 'bg-amber-200/50',
+  //   class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   //   label: 'Cowork',
   //   route: '/cowork',
   // },
   {
     id: 6,
     icon: WorkflowIcon,
-    class: 'bg-cyan-200/50',
+    class: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
     label: 'Workflows',
     route: '/workflow',
   },
   {
     id: 7,
     icon: BotIcon,
-    class: 'bg-violet-200/50',
+    class: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
     label: 'Agents',
     route: '/agent',
   },
   {
     id: 8,
     icon: ImageIcon,
-    class: 'bg-fuchsia-200/50',
+    class: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     label: 'Image Generator',
     route: '/text-to-image',
   },
   // {
   //   id: 10,
   //   icon: DatabaseIcon,
-  //   class: 'bg-lime-200/50',
+  //   class: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
   //   label: 'Knowledge',
   //   route: '/collection',
   // },
   // {
   //   id: 11,
   //   icon: PieChartIcon,
-  //   class: 'bg-blue-200/50',
+  //   class: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   //   label: 'Analytics',
   //   route: '/account/statistics',
   // },
   // {
   //   id: 12,
   //   icon: FolderIcon,
-  //   class: 'bg-slate-200/50',
+  //   class: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
   //   label: 'Files',
   //   route: '/storage',
   // },
   {
     id: 13,
     icon: Share2Icon,
-    class: 'bg-lime-200/50',
+    class: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
     label: 'Social',
     route: '/social',
+  },
+  {
+    id: 14,
+    icon: DatabaseIcon,
+    class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    label: 'Datasets',
+    route: '/dataset',
   },
 ];
 </script>
@@ -88,14 +96,15 @@ const quickAccessItems = [
         :to="item.route"
       >
         <div
-          class="group h-40 w-60 space-y-2 rounded-2xl p-5 hover:shadow-md"
-          :class="item.class"
+          class="group h-40 w-60 space-y-3 rounded-2xl border border-border bg-stone-50 p-5 hover:border-foreground/10 hover:shadow-sm"
         >
-          <component
-            :is="item.icon"
-            class="size-6 stroke-1.5 group-hover:stroke-2"
-          />
-          <p class="text-xs font-medium group-hover:font-semibold">
+          <div
+            class="flex size-10 items-center justify-center rounded-lg"
+            :class="item.class"
+          >
+            <component :is="item.icon" class="size-5 stroke-1.5" />
+          </div>
+          <p class="text-xs font-medium">
             {{ item.label }}
           </p>
         </div>
