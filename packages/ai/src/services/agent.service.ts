@@ -1,4 +1,4 @@
-import type { AgentDocumentForPrompt, Dataset } from '@repo/database';
+import type { AgentDocumentForPrompt, AgentSettings, Dataset } from '@repo/database';
 import { getDatasetById, getMemoryByAgentId, getReadyAgentDocumentsForPrompt } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
@@ -207,4 +207,21 @@ export async function buildAgentInstructions({
  */
 export function normalizeAgentContext(context: string | null | undefined): string | null {
   return context?.trim() || null;
+}
+
+/**
+ * Maps an agent's stored settings to generateText/streamText parameters.
+ * Cleared settings live as explicit nulls in the `agents.settings` jsonb;
+ * providers reject null values ("Input should be a valid number"), while
+ * undefined means "parameter not sent". Shared by the chat controller and
+ * the workflow agent executor so the two paths cannot drift again.
+ */
+export function toModelSettings(settings: AgentSettings | null | undefined): {
+  temperature: number | undefined;
+  maxOutputTokens: number | undefined;
+} {
+  return {
+    temperature: settings?.temperature ?? undefined,
+    maxOutputTokens: settings?.maxOutputTokens ?? undefined,
+  };
 }

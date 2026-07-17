@@ -4,8 +4,9 @@ import {
   generateText,
   getLanguageModel,
   stepCountIs,
+  toModelSettings,
 } from '@repo/ai';
-import type { AgentTools } from '@repo/database';
+import type { AgentSettings, AgentTools } from '@repo/database';
 import { getAgentById, getDefaultAgent } from '@repo/database';
 import type { AgentConfig, WorkflowToolCall } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
@@ -13,7 +14,7 @@ import { noopWriter } from './noop-writer';
 import type { Executor } from './types';
 
 type AiModelRef = { provider: string; model: string };
-type AgentSettingsRef = { temperature?: number; maxOutputTokens?: number } | null;
+type AgentSettingsRef = AgentSettings | null;
 
 // getAgentById/getDefaultAgent both load the `aiModel` relation, but their
 // declared return types don't carry it (see agent.repo.ts). Narrow locally
@@ -122,8 +123,7 @@ export const executeAgent: Executor = async (node, ctx) => {
     // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow
     // agent node; chat is unaffected and stays at 5 above.
     stopWhen: stepCountIs(15),
-    temperature: agent.settings?.temperature,
-    maxOutputTokens: agent.settings?.maxOutputTokens,
+    ...toModelSettings(agent.settings),
   });
 
   const toolCalls = collectToolCalls(result.steps);

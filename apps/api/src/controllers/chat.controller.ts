@@ -8,6 +8,7 @@ import {
   safeValidateUIMessages,
   stepCountIs,
   streamText,
+  toModelSettings,
   toUIMessageStream,
 } from '@repo/ai';
 import {
@@ -321,8 +322,7 @@ export const chatController = new Hono()
             workspaceId: userChat.workspaceId,
           }),
           stopWhen: stepCountIs(5),
-          temperature: agent.settings?.temperature ?? undefined,
-          maxOutputTokens: agent.settings?.maxOutputTokens ?? undefined,
+          ...toModelSettings(agent.settings),
           onStart(st) {
             logger.debug('Request started', {
               callId: st.callId,
