@@ -7,7 +7,6 @@ import type {
 } from '@repo/workflow';
 import { isExecutionEquivalent } from '@repo/workflow';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
-import WorkflowNameField from '~/features/workflow/components/WorkflowNameField.vue';
 import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
 import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
 import WorkflowRecentRuns from '~/features/workflow/components/WorkflowRecentRuns.vue';
@@ -109,7 +108,11 @@ async function handlePublish() {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <WorkflowNameField v-model:name="name" @save="handleSave" />
+        <PageBreadcrumb :items="[{ label: $t('workflow.list.title'), to: '/workflow' }]">
+          <template #current>
+            <InlineNameField v-model:name="name" aria-label="Workflow name" @save="handleSave" />
+          </template>
+        </PageBreadcrumb>
         <p class="text-xs text-muted-foreground">
           {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
         </p>
