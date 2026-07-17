@@ -3,6 +3,7 @@ import {
   createDatasetRow,
   findDatasetsForAgent,
   getDatasetById,
+  getDatasetRowById,
   getDatasetRows,
   MAX_COLUMNS_PER_DATASET,
   MAX_LIST_ROWS_LIMIT,
@@ -21,7 +22,7 @@ import { tool } from 'ai';
 import * as z from 'zod';
 import { createDatasetForAgent } from '../services/dataset.service';
 
-// Five tools, one family (docs/datasets.md decision 3/4): the agent tool
+// Six tools, one family (docs/datasets.md decision 3/4): the agent tool
 // picker shows a single "Datasets" toggle that expands to all of these at
 // tool-build time (see agent.tools.ts).
 
@@ -92,13 +93,22 @@ function toDatasetOutput(datasetRecord: Dataset) {
 
 // Row ids and timestamps are always included so the model can reason about
 // recency ("skip rows updated in the last hour") without a separate call.
-function toRowOutput(row: DatasetRow) {
+function toRowOutput(row: DatasetRow, projectedColumnIds?: string[]) {
   return {
     id: row.id,
-    data: row.data,
+    data: projectedColumnIds ? projectRowData(row.data, projectedColumnIds) : row.data,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+function projectRowData(rowData: DatasetRow['data'], columnIds: string[]): DatasetRow['data'] {
+  return Object.fromEntries(columnIds.map((columnId) => [columnId, rowData[columnId] ?? null]));
+}
+
+function findUnknownColumnIds(columns: DatasetColumn[], requestedIds: string[]): string[] {
+  const knownIds = new Set(columns.map((column) => column.id));
+  return requestedIds.filter((requestedId) => !knownIds.has(requestedId));
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {
@@ -157,11 +167,15 @@ const datasetFindInputSchema = z.object({
   query: z
     .string()
     .optional()
-    .describe('Optional case-insensitive search over dataset names. Omit to list all.'),
+    .describe(
+      'Optional case-insensitive keyword search: every word must appear in the dataset name or description. Omit to list all.',
+    ),
 });
 
 type DatasetFindInput = z.infer<typeof datasetFindInputSchema>;
-type DatasetFindOutput = { datasets: ReturnType<typeof toDatasetOutput>[] } | { error: string };
+type DatasetFindOutput =
+  | { datasets: ReturnType<typeof toDatasetOutput>[]; note?: string }
+  | { error: string };
 
 export const getDatasetFindTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -184,7 +198,26 @@ export const getDatasetFindTool = (
         return { error: toErrorMessage(error, 'Failed to search datasets.') };
       }
 
-      return { datasets: datasets.map(toDatasetOutput) };
+      if (datasets.length > 0 || !input.query) {
+        return { datasets: datasets.map(toDatasetOutput) };
+      }
+
+      // A missed query (typo, wrong wording) would otherwise cost the model a
+      // second, broader call. Dataset counts are small, so answer with the
+      // full in-scope list right away and say why.
+      const { error: fallbackError, data: allDatasets } = await tryCatch(
+        () => findDatasetsForAgent({ userId, workspaceId }),
+        { retryOnFailure: false },
+      );
+
+      if (fallbackError !== null || !allDatasets) {
+        return { error: toErrorMessage(fallbackError, 'Failed to search datasets.') };
+      }
+
+      return {
+        datasets: allDatasets.map(toDatasetOutput),
+        note: `No dataset name or description matched "${input.query}"; showing all datasets instead.`,
+      };
     },
   });
 
@@ -196,6 +229,13 @@ const datasetListRowsInputSchema = z.object({
     .object({ columnId: z.string(), value: rowValueSchema })
     .optional()
     .describe('Equality filter on one column, e.g. { columnId: "status", value: "todo" }.'),
+  columns: z
+    .array(z.string())
+    .min(1)
+    .optional()
+    .describe(
+      'Column ids to include in each row\'s data. Omit to include all columns. Use this to skip long text columns when scanning, then read the chosen row in full with datasetGetRow.',
+    ),
   limit: z
     .number()
     .int()
@@ -215,7 +255,7 @@ export const getDatasetListRowsTool = (
 ): Tool<DatasetListRowsInput, DatasetListRowsOutput> =>
   tool({
     description:
-      'List the (non-deleted) rows of a dataset, oldest first, optionally filtered to rows where one column equals a value. Use this to find the next item to work on.',
+      'List the (non-deleted) rows of a dataset, oldest first, optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
     inputSchema: datasetListRowsInputSchema,
     execute: async (input) => {
       writer.write({
@@ -227,6 +267,15 @@ export const getDatasetListRowsTool = (
       const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
       if ('error' in scoped) {
         return scoped;
+      }
+
+      // Same trust boundary as writes: unknown column ids are a visible tool
+      // error, not silently empty fields.
+      if (input.columns) {
+        const unknownColumnIds = findUnknownColumnIds(scoped.dataset.columns, input.columns);
+        if (unknownColumnIds.length > 0) {
+          return { error: `Unknown column ids: ${unknownColumnIds.join(', ')}.` };
+        }
       }
 
       // Default to the cap, not "unlimited", when the model omits `limit`:
@@ -246,7 +295,55 @@ export const getDatasetListRowsTool = (
         return { error: toErrorMessage(error, 'Failed to list dataset rows.') };
       }
 
-      return { rows: rows.map(toRowOutput) };
+      return { rows: rows.map((row) => toRowOutput(row, input.columns)) };
+    },
+  });
+
+// datasetGetRow
+
+const datasetGetRowInputSchema = z.object({
+  datasetId: z.string(),
+  rowId: z.string(),
+});
+
+type DatasetGetRowInput = z.infer<typeof datasetGetRowInputSchema>;
+type DatasetGetRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+
+export const getDatasetGetRowTool = (
+  writer: UIMessageStreamWriter<UIMessage<never, any>>,
+  userId: string,
+  workspaceId: string | null,
+): Tool<DatasetGetRowInput, DatasetGetRowOutput> =>
+  tool({
+    description:
+      'Read a single dataset row in full by its id. Use this after a column-projected datasetListRows scan to load the complete data of the row you picked.',
+    inputSchema: datasetGetRowInputSchema,
+    execute: async (input) => {
+      writer.write({
+        type: 'data-dataset',
+        data: { action: 'getRow', datasetId: input.datasetId, rowId: input.rowId },
+        transient: true,
+      });
+
+      const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
+      if ('error' in scoped) {
+        return scoped;
+      }
+
+      const { error, data: row } = await tryCatch(
+        () => getDatasetRowById({ datasetId: input.datasetId, rowId: input.rowId }),
+        { retryOnFailure: false },
+      );
+
+      if (error !== null) {
+        return { error: toErrorMessage(error, 'Failed to read dataset row.') };
+      }
+
+      if (!row) {
+        return { error: 'Row not found.' };
+      }
+
+      return { row: toRowOutput(row) };
     },
   });
 
@@ -356,6 +453,10 @@ export type DatasetFindUiTool = InferUITool<ReturnType<typeof getDatasetFindTool
 export type DatasetListRowsToolInput = InferToolInput<ReturnType<typeof getDatasetListRowsTool>>;
 export type DatasetListRowsToolOutput = InferToolOutput<ReturnType<typeof getDatasetListRowsTool>>;
 export type DatasetListRowsUiTool = InferUITool<ReturnType<typeof getDatasetListRowsTool>>;
+
+export type DatasetGetRowToolInput = InferToolInput<ReturnType<typeof getDatasetGetRowTool>>;
+export type DatasetGetRowToolOutput = InferToolOutput<ReturnType<typeof getDatasetGetRowTool>>;
+export type DatasetGetRowUiTool = InferUITool<ReturnType<typeof getDatasetGetRowTool>>;
 
 export type DatasetAppendRowToolInput = InferToolInput<ReturnType<typeof getDatasetAppendRowTool>>;
 export type DatasetAppendRowToolOutput = InferToolOutput<

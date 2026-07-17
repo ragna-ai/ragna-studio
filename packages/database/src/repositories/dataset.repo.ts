@@ -200,7 +200,12 @@ export async function getAllDatasetsByUserId({
   }));
 }
 
-/** Unpaginated find for the `datasetFind` agent tool, same scope rules as above. */
+/**
+ * Unpaginated find for the `datasetFind` agent tool, same scope rules as above.
+ * The query is keyword-based, not a literal substring: every whitespace-separated
+ * term must appear in the name or description (case-insensitive), so an
+ * LLM-style query like "cake plan" matches "Cake Baking Plan".
+ */
 export async function findDatasetsForAgent({
   userId,
   workspaceId,
@@ -210,11 +215,22 @@ export async function findDatasetsForAgent({
   workspaceId?: string | null;
   query?: string;
 }): Promise<Dataset[]> {
+  const searchTerms = query?.split(/\s+/).filter((term) => term.length > 0) ?? [];
+
   return db.query.dataset.findMany({
     where: {
       userId,
       workspaceId: workspaceId ?? undefined,
-      ...(query ? { name: { ilike: `%${query}%` } } : {}),
+      ...(searchTerms.length > 0
+        ? {
+            AND: searchTerms.map((term) => ({
+              OR: [
+                { name: { ilike: `%${term}%` } },
+                { description: { ilike: `%${term}%` } },
+              ],
+            })),
+          }
+        : {}),
     },
     orderBy: (t, { desc }) => desc(t.updatedAt),
     limit: MAX_LIST_ROWS_LIMIT,

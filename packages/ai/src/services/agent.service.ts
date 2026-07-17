@@ -77,8 +77,8 @@ function describeDatasetColumn(column: Dataset['columns'][number]): string {
 /**
  * Builds the pinned-dataset block for the agent's instructions: the
  * dataset's id and column schema, so a pinned agent can go straight to
- * `datasetListRows`/`datasetAppendRow`/`datasetUpdateRow` without first
- * calling `datasetFind`.
+ * the row tools (`datasetListRows`, `datasetGetRow`, `datasetAppendRow`,
+ * `datasetUpdateRow`) without first calling `datasetFind`.
  * @param pinnedDataset The agent's pinned dataset, if loaded.
  * @returns The pinned-dataset block as a string, or undefined if there is none.
  */
@@ -89,7 +89,7 @@ function buildPinnedDatasetBlock(pinnedDataset: Dataset | undefined): string | u
 
   const columns = pinnedDataset.columns.map(describeDatasetColumn).join('\n');
 
-  return `<pinned_dataset>\nYour default dataset for the datasets tool family. Use this id directly with datasetListRows/datasetAppendRow/datasetUpdateRow; you don't need datasetFind for it.\n\nid: ${pinnedDataset.id}\nname: ${pinnedDataset.name}\ncolumns:\n${columns}\n</pinned_dataset>`;
+  return `<pinned_dataset>\nYour default dataset for the datasets tool family. Use this id directly with datasetListRows/datasetGetRow/datasetAppendRow/datasetUpdateRow; you don't need datasetFind for it.\n\nid: ${pinnedDataset.id}\nname: ${pinnedDataset.name}\ncolumns:\n${columns}\n</pinned_dataset>`;
 }
 
 /**
