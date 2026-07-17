@@ -1,0 +1,152 @@
+<script setup lang="ts">
+import { Maximize2Icon, PlusIcon, Trash2Icon } from '@lucide/vue';
+import type { DatasetColumn, DatasetRow } from '~/features/dataset/types';
+
+interface Props {
+  columns: DatasetColumn[];
+  rows: DatasetRow[];
+  isAddingRow?: boolean;
+  // Row whose panel is currently open; its expand button renders active
+  // (the button is a toggle).
+  expandedRowId?: string | null;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isAddingRow: false,
+  expandedRowId: null,
+});
+
+const emit = defineEmits<{
+  (e: 'update-cell', rowId: string, columnId: string, value: string | number | null): void;
+  (e: 'add-row'): void;
+  (e: 'delete-row', rowId: string): void;
+  // Opens DatasetRowPanel for this row. A dedicated leading-cell button,
+  // not a row click, so it doesn't fight with clicking into a cell to edit it.
+  (e: 'expand-row', rowId: string): void;
+}>();
+
+// Composables
+const { t } = useI18n();
+
+// Computed
+// +1 for the leading expand cell, +1 for actions. Timestamps live in
+// DatasetRowPanel, not the grid.
+const columnCount = computed(() => props.columns.length + 2);
+
+// Functions
+function cellValue(row: DatasetRow, column: DatasetColumn): string | number | null {
+  return row.data[column.id] ?? null;
+}
+
+function commitText(row: DatasetRow, column: DatasetColumn, rawValue: string) {
+  emit('update-cell', row.id, column.id, rawValue === '' ? null : rawValue);
+}
+
+function commitNumber(row: DatasetRow, column: DatasetColumn, rawValue: string) {
+  emit('update-cell', row.id, column.id, rawValue === '' ? null : Number(rawValue));
+}
+
+function commitSelect(row: DatasetRow, column: DatasetColumn, value: unknown) {
+  emit('update-cell', row.id, column.id, value === undefined ? null : String(value));
+}
+
+function inputValueOf(event: Event): string {
+  return (event.target as HTMLInputElement).value;
+}
+</script>
+
+<template>
+  <div class="overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>&nbsp;</TableHead>
+          <TableHead v-for="column in columns" :key="column.id" class="min-w-40">
+            {{ column.name }}
+          </TableHead>
+          <TableHead class="text-right">{{ t('dataset.grid.actions') }}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableEmpty v-if="rows.length === 0" :colspan="columnCount">
+          {{ t('dataset.grid.empty') }}
+        </TableEmpty>
+        <TableRow v-for="row in rows" :key="row.id">
+          <TableCell class="w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-7"
+              :class="{ 'bg-accent': row.id === expandedRowId }"
+              :aria-label="t('dataset.grid.expandRow')"
+              :aria-pressed="row.id === expandedRowId"
+              @click="emit('expand-row', row.id)"
+            >
+              <Maximize2Icon
+                class="size-3.5 stroke-1.5"
+                :class="row.id === expandedRowId ? 'text-foreground' : 'text-muted-foreground'"
+              />
+            </Button>
+          </TableCell>
+          <TableCell v-for="column in columns" :key="column.id">
+            <Select
+              v-if="column.type === 'select'"
+              :model-value="(cellValue(row, column) as string) ?? undefined"
+              @update:model-value="(v) => commitSelect(row, column, v)"
+            >
+              <SelectTrigger class="h-8 w-full">
+                <SelectValue :placeholder="t('dataset.grid.selectPlaceholder')" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="option in column.options ?? []" :key="option" :value="option">
+                  {{ option }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              v-else-if="column.type === 'number'"
+              type="number"
+              class="h-8"
+              :model-value="(cellValue(row, column) as number) ?? ''"
+              @blur="(e) => commitNumber(row, column, inputValueOf(e))"
+            />
+            <Input
+              v-else-if="column.type === 'date'"
+              type="date"
+              class="h-8"
+              :model-value="(cellValue(row, column) as string) ?? ''"
+              @blur="(e) => commitText(row, column, inputValueOf(e))"
+            />
+            <!-- Long text is edited in DatasetRowPanel (expand button
+                 above); the grid cell itself stays a single truncated
+                 line. -->
+            <Input
+              v-else
+              type="text"
+              class="h-8 truncate"
+              :model-value="(cellValue(row, column) as string) ?? ''"
+              @blur="(e) => commitText(row, column, inputValueOf(e))"
+            />
+          </TableCell>
+          <TableCell class="text-right">
+            <Button
+              variant="ghost"
+              size="icon"
+              :aria-label="t('dataset.grid.deleteRow')"
+              @click="emit('delete-row', row.id)"
+            >
+              <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
+            </Button>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+    <div class="mt-4">
+      <Button variant="outline" :disabled="isAddingRow" @click="emit('add-row')">
+        <Spinner v-if="isAddingRow" class="mr-2" />
+        <PlusIcon v-else class="mr-2 size-4" />
+        {{ t('dataset.grid.addRow') }}
+      </Button>
+    </div>
+  </div>
+</template>

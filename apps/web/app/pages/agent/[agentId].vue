@@ -25,6 +25,11 @@ useHead({
 });
 
 // Computed
+const breadcrumbItems = computed(() => [
+  { label: t('agent.list.title'), to: '/agent' },
+  { label: data.value?.agent.name ?? t('agent.upsert.title') },
+]);
+
 // Functions
 
 // Hooks
@@ -37,7 +42,11 @@ useHead({
         <HeadingTitle
           :title="$t('agent.upsert.title')"
           :subtitle="$t('agent.upsert.subtitle')"
-        />
+        >
+          <template #title>
+            <PageBreadcrumb :items="breadcrumbItems" />
+          </template>
+        </HeadingTitle>
       </template>
       <template #bottom> </template>
     </Heading>

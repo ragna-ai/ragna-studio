@@ -2,6 +2,7 @@
 import {
   AppWindowIcon,
   CheckIcon,
+  DatabaseIcon,
   GlobeIcon,
   ImageIcon,
   NotebookPenIcon,
@@ -9,19 +10,35 @@ import {
   Share2Icon,
   type LucideIcon,
 } from '@lucide/vue';
+import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDatasetApi';
 
 type AgentToolListProps = {
   modelValue: string[];
   invalid?: boolean;
+  // The agent's own workspaceId, used to scope the "Default dataset"
+  // picker the same way the datasets tool's workspace hard filter works
+  // (docs/datasets.md decision 10/11): a specific workspace filters to it,
+  // null/undefined (agent itself unassigned) shows every dataset.
+  workspaceId?: string | null;
+  defaultDatasetId?: string | null;
 };
 
 type AgentToolListEmit = {
   'update:modelValue': [value: string[]];
+  'update:defaultDatasetId': [value: string | null];
 };
+
+// shadcn's Select can't use an empty string as an item value (it's the
+// internal "no selection" sentinel), so a "None" option needs its own
+// placeholder value, mapped back to `null` on change. Same pattern as
+// WorkflowAgentConfigForm's NO_AGENT.
+const NO_DATASET = '__none__';
 
 // Imports
 const props = withDefaults(defineProps<AgentToolListProps>(), {
   invalid: false,
+  workspaceId: null,
+  defaultDatasetId: null,
 });
 
 const emit = defineEmits<AgentToolListEmit>();
@@ -32,8 +49,14 @@ const emit = defineEmits<AgentToolListEmit>();
 // Refs
 
 // Composables
+// A stable computed ref, not a plain getter: vue-query unwraps refs inside
+// query keys reactively, but a freshly created arrow function would compare
+// unequal on every render and defeat caching.
+const pickerWorkspaceId = computed(() => props.workspaceId);
+const { data: datasetsData } = useGetAllDatasetsForPicker(pickerWorkspaceId);
 
 // Computed
+const pickerDatasets = computed(() => datasetsData.value?.datasets ?? []);
 // Functions
 
 // Hooks
@@ -82,6 +105,12 @@ const availableTools: UiAgentTool[] = [
     titleKey: 'agent.tool.linkedinDraft.label',
     descriptionKey: 'agent.tool.linkedinDraft.description',
   },
+  {
+    id: 'datasets',
+    icon: DatabaseIcon,
+    titleKey: 'agent.tool.datasets.label',
+    descriptionKey: 'agent.tool.datasets.description',
+  },
 ];
 
 // Computed
@@ -128,5 +157,32 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
         <p class="text-xs opacity-75">{{ $t(tool.descriptionKey) }}</p>
       </div>
     </Label>
+  </div>
+
+  <div
+    v-if="selectedTools.includes('datasets')"
+    class="ml-8 max-w-xs space-y-2 border-l pl-4"
+  >
+    <Label class="text-xs text-muted-foreground">
+      {{ $t('agent.tool.datasets.defaultDatasetLabel') }}
+    </Label>
+    <Select
+      :model-value="defaultDatasetId ?? NO_DATASET"
+      @update:model-value="
+        (v) => emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
+      "
+    >
+      <SelectTrigger class="w-full">
+        <SelectValue :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem :value="NO_DATASET">
+          {{ $t('agent.tool.datasets.defaultDatasetNone') }}
+        </SelectItem>
+        <SelectItem v-for="dataset in pickerDatasets" :key="dataset.id" :value="dataset.id">
+          {{ dataset.name }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
   </div>
 </template>

@@ -4,6 +4,7 @@ import { agentDocument } from './agent-document.schema';
 import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
+import { dataset, datasetRow } from './dataset.schema';
 import { genImage } from './genimage.schema';
 import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
@@ -26,6 +27,8 @@ const schema = {
   agentDocument,
   chat,
   chatMessage,
+  dataset,
+  datasetRow,
   genImage,
   socialPost,
   socialPostMedia,
@@ -47,6 +50,7 @@ export const relations = defineRelations(schema, (r) => ({
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
     workspaces: r.many.workspace(),
+    datasets: r.many.dataset(),
   },
   account: {
     user: r.one.user({
@@ -81,6 +85,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.agent.aiModelId,
       to: r.aiModel.id,
       optional: false,
+    }),
+    defaultDataset: r.one.dataset({
+      from: r.agent.defaultDatasetId,
+      to: r.dataset.id,
+      optional: true,
     }),
     chats: r.many.chat(),
     memory: r.one.agentMemory(),
@@ -129,6 +138,27 @@ export const relations = defineRelations(schema, (r) => ({
     chat: r.one.chat({
       from: r.chatMessage.chatId,
       to: r.chat.id,
+      optional: false,
+    }),
+  },
+  dataset: {
+    user: r.one.user({
+      from: r.dataset.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.dataset.workspaceId,
+      to: r.workspace.id,
+      optional: true,
+    }),
+    rows: r.many.datasetRow(),
+    pinnedByAgents: r.many.agent(),
+  },
+  datasetRow: {
+    dataset: r.one.dataset({
+      from: r.datasetRow.datasetId,
+      to: r.dataset.id,
       optional: false,
     }),
   },
@@ -210,5 +240,6 @@ export const relations = defineRelations(schema, (r) => ({
     genImages: r.many.genImage(),
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
+    datasets: r.many.dataset(),
   },
 }));

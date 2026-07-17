@@ -1,13 +1,16 @@
-import type { AgentDocumentForPrompt } from '@repo/database';
-import { getMemoryByAgentId, getReadyAgentDocumentsForPrompt } from '@repo/database';
+import type { AgentDocumentForPrompt, Dataset } from '@repo/database';
+import { getDatasetById, getMemoryByAgentId, getReadyAgentDocumentsForPrompt } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 
 type BuildInstructionsInput = {
   agentId: string;
+  userId: string;
   tools: string[];
   systemPrompt: string;
   context: string | null;
+  /** Soft pin (docs/datasets.md decision 10), null/undefined = no pin. */
+  defaultDatasetId?: string | null;
 };
 
 /**
@@ -31,6 +34,62 @@ async function loadAgentMemoryContent(
   }
 
   return memory?.content ?? undefined;
+}
+
+/**
+ * Loads the agent's pinned default dataset for prompt injection, if the
+ * `datasets` tool is enabled and a dataset is pinned. Degrades the same way
+ * memory does: ownership is re-checked here (not just at pin time), and a
+ * lookup failure or a dataset that no longer belongs to this user logs a
+ * warning and the prompt continues without it.
+ * @param userId The agent owner's user id, for the ownership check.
+ * @param tools The list of tools enabled for the agent.
+ * @param defaultDatasetId The agent's pinned dataset id, if any.
+ * @returns The pinned dataset, or undefined if there is none to inject.
+ */
+async function loadPinnedDataset(
+  userId: string,
+  tools: string[],
+  defaultDatasetId: string | null | undefined,
+): Promise<Dataset | undefined> {
+  if (!tools.includes('datasets') || !defaultDatasetId) {
+    return undefined;
+  }
+
+  const { data: datasetRecord, error } = await tryCatch(() =>
+    getDatasetById({ datasetId: defaultDatasetId, userId }),
+  );
+
+  if (error !== null) {
+    logger.warn('Failed to load pinned dataset', error);
+    return undefined;
+  }
+
+  return datasetRecord ?? undefined;
+}
+
+function describeDatasetColumn(column: Dataset['columns'][number]): string {
+  const options =
+    column.type === 'select' && column.options ? ` (${column.options.join(' | ')})` : '';
+  return `- id: "${column.id}", name: "${column.name}", type: ${column.type}${options}`;
+}
+
+/**
+ * Builds the pinned-dataset block for the agent's instructions: the
+ * dataset's id and column schema, so a pinned agent can go straight to
+ * `datasetListRows`/`datasetAppendRow`/`datasetUpdateRow` without first
+ * calling `datasetFind`.
+ * @param pinnedDataset The agent's pinned dataset, if loaded.
+ * @returns The pinned-dataset block as a string, or undefined if there is none.
+ */
+function buildPinnedDatasetBlock(pinnedDataset: Dataset | undefined): string | undefined {
+  if (!pinnedDataset) {
+    return undefined;
+  }
+
+  const columns = pinnedDataset.columns.map(describeDatasetColumn).join('\n');
+
+  return `<pinned_dataset>\nYour default dataset for the datasets tool family. Use this id directly with datasetListRows/datasetAppendRow/datasetUpdateRow; you don't need datasetFind for it.\n\nid: ${pinnedDataset.id}\nname: ${pinnedDataset.name}\ncolumns:\n${columns}\n</pinned_dataset>`;
 }
 
 /**
@@ -95,11 +154,12 @@ function buildMemoryBlock(memoryContent: string | undefined): string | undefined
 }
 
 /**
- * Builds the final instructions for the agent by combining the system prompt, context, documents, and memory content.
+ * Builds the final instructions for the agent by combining the system prompt, context, documents, memory content, and pinned dataset.
  * @param systemPrompt The system prompt for the agent.
  * @param contextContent The context content for the agent.
  * @param documents The agent's ready documents, oldest first.
  * @param memoryContent The memory content for the agent.
+ * @param pinnedDataset The agent's pinned default dataset, if any.
  * @returns The combined instructions as a string.
  */
 function buildInstructions(
@@ -107,32 +167,37 @@ function buildInstructions(
   contextContent: string | null,
   documents: AgentDocumentForPrompt[],
   memoryContent: string | undefined,
+  pinnedDataset: Dataset | undefined,
 ): string {
   const blocks = [
     buildContextBlock(contextContent, documents),
     buildMemoryBlock(memoryContent),
+    buildPinnedDatasetBlock(pinnedDataset),
   ].filter((block) => block !== undefined);
 
   return [systemPrompt, ...blocks].join('\n\n');
 }
 
 /**
- * Builds the agent's instructions by combining the system prompt, context, documents, and memory content.
- * @param payload The input object containing agentId, tools, systemPrompt, and context.
+ * Builds the agent's instructions by combining the system prompt, context, documents, memory content, and pinned dataset.
+ * @param payload The input object containing agentId, userId, tools, systemPrompt, context, and defaultDatasetId.
  * @returns The combined instructions as a string.
  */
 export async function buildAgentInstructions({
   agentId,
+  userId,
   tools,
   systemPrompt,
   context,
+  defaultDatasetId,
 }: BuildInstructionsInput): Promise<string> {
-  const [memoryContent, documents] = await Promise.all([
+  const [memoryContent, documents, pinnedDataset] = await Promise.all([
     loadAgentMemoryContent(agentId, tools),
     loadAgentReadyDocuments(agentId),
+    loadPinnedDataset(userId, tools, defaultDatasetId),
   ]);
 
-  return buildInstructions(systemPrompt, context, documents, memoryContent);
+  return buildInstructions(systemPrompt, context, documents, memoryContent, pinnedDataset);
 }
 
 /**

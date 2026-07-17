@@ -86,6 +86,7 @@ export const agentController = new Hono()
         tools: body.tools,
         isDefault: body.isDefault,
         workspaceId: body.workspaceId,
+        defaultDatasetId: body.defaultDatasetId,
         settings: body.settings,
       }),
     );

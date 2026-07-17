@@ -3,6 +3,7 @@ export * from './agent-document.schema';
 export * from './agent.schema';
 export * from './aimodel.schema';
 export * from './chat.schema';
+export * from './dataset.schema';
 export * from './genimage.schema';
 export * from './memory.schema';
 export * from './notification.schema';

@@ -42,7 +42,7 @@ const form = useForm({
 function startEditing() {
   form.setFieldValue('title', props.chat.title);
   // The input is focused on mount, so isEditing flips after the next tick to
-  // avoid the same autofocus/outside-click race handled in WorkflowNameField.
+  // avoid the same autofocus/outside-click race handled in InlineNameField.
   nextTick(() => {
     isEditing.value = true;
   });

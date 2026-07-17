@@ -1,11 +1,24 @@
 import { generateImagesSchema } from '@repo/ai';
-import { userUpdateSchema } from '@repo/database';
+import { MAX_COLUMNS_PER_DATASET, userUpdateSchema } from '@repo/database';
 import { workflowDefinitionSchema } from '@repo/workflow';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 import { paginationSchema } from '../validation';
 
 const primaryId = z.uuidv7();
+
+// DATASET
+
+const datasetColumnSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(255),
+  type: z.enum(['text', 'number', 'date', 'select']),
+  options: z.array(z.string()).optional(),
+});
+
+const datasetColumnsSchema = z.array(datasetColumnSchema).max(MAX_COLUMNS_PER_DATASET);
+
+const datasetRowDataSchema = z.record(z.string(), z.union([z.string(), z.number(), z.null()]));
 
 // Client-driven view filter shared by every workspace-scoped list endpoint.
 // See docs/workspaces.md: absent means "All items", never a security boundary.
@@ -61,6 +74,7 @@ export const validUpsertAgentBody = myzValidator(
     tools: z.array(z.string()),
     isDefault: z.boolean().optional(),
     workspaceId: primaryId.optional(),
+    defaultDatasetId: primaryId.nullish(),
     settings: z
       .object({
         temperature: z.number().min(0).max(1).nullish(),
@@ -194,3 +208,51 @@ const workspaceNameBodySchema = z.object({
 export const validCreateWorkspaceBody = myzValidator('json', workspaceNameBodySchema);
 
 export const validRenameWorkspaceBody = myzValidator('json', workspaceNameBodySchema);
+
+export const validDatasetIdParam = myzValidator(
+  'param',
+  z.object({
+    datasetId: primaryId,
+  }),
+);
+
+export const validCreateDatasetBody = myzValidator(
+  'json',
+  z.object({
+    name: z.string().min(1).max(255),
+    description: z.string().max(1000).optional(),
+    columns: datasetColumnsSchema.optional(),
+    workspaceId: primaryId.optional(),
+  }),
+);
+
+export const validUpdateDatasetBody = myzValidator(
+  'json',
+  z.object({
+    name: z.string().min(1).max(255).optional(),
+    description: z.string().max(1000).nullish(),
+    columns: datasetColumnsSchema.optional(),
+  }),
+);
+
+export const validDatasetRowParams = myzValidator(
+  'param',
+  z.object({
+    datasetId: primaryId,
+    rowId: primaryId,
+  }),
+);
+
+export const validCreateDatasetRowBody = myzValidator(
+  'json',
+  z.object({
+    data: datasetRowDataSchema,
+  }),
+);
+
+export const validUpdateDatasetRowBody = myzValidator(
+  'json',
+  z.object({
+    data: datasetRowDataSchema,
+  }),
+);

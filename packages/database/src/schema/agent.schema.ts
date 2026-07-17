@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { dataset } from './dataset.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -16,7 +17,8 @@ export type AgentTool =
   | 'webBrowser'
   | 'imageGen'
   | 'linkedinDraft'
-  | 'memory';
+  | 'memory'
+  | 'datasets';
 export type AgentTools = AgentTool[];
 
 // No default temperature: Anthropic is deprecating the parameter, so new
@@ -54,6 +56,13 @@ export const agent = pgTable(
     // `systemPrompt` (behavior). Null/empty both mean "no context".
     context: text('context'),
     tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
+    // Soft pin (docs/datasets.md decision 10): when set, the dataset's id and
+    // schema are injected into this agent's instructions so it can skip
+    // `datasetFind` and go straight to row operations. Deleting the dataset
+    // nulls this out and the agent degrades to lookup mode.
+    defaultDatasetId: text('default_dataset_id').references(() => dataset.id, {
+      onDelete: 'set null',
+    }),
     settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()
@@ -64,6 +73,7 @@ export const agent = pgTable(
     index('agent_userId_idx').on(table.userId),
     index('agent_aiModelId_idx').on(table.aiModelId),
     index('agent_workspaceId_idx').on(table.workspaceId),
+    index('agent_defaultDatasetId_idx').on(table.defaultDatasetId),
     // isDefault is unique per scope: a workspace-scoped agent's scope is its
     // own workspaceId, an unassigned agent's scope is "no workspace". Two
     // partial indexes because a single unique index would treat every NULL

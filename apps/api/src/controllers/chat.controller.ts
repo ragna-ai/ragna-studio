@@ -1,5 +1,6 @@
 import {
   buildAgentInstructions,
+  buildAgentToolset,
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -7,7 +8,6 @@ import {
   safeValidateUIMessages,
   stepCountIs,
   streamText,
-  tools,
   toUIMessageStream,
 } from '@repo/ai';
 import {
@@ -271,9 +271,11 @@ export const chatController = new Hono()
     const modelMessages = await convertToModelMessages(validUiMessages);
     const instructions = await buildAgentInstructions({
       agentId: agent.id,
+      userId: user.id,
       tools: agent.tools,
       systemPrompt: agent.systemPrompt,
       context: agent.context,
+      defaultDatasetId: agent.defaultDatasetId,
     });
 
     const lastUiMessage = validUiMessages.at(-1);
@@ -313,12 +315,11 @@ export const chatController = new Hono()
           }),
           instructions,
           messages: modelMessages,
-          tools: tools(dataStream, {
+          tools: buildAgentToolset(agent.tools, dataStream, {
             userId: user.id,
             agentId: agent.id,
             workspaceId: userChat.workspaceId,
           }),
-          activeTools: agent.tools,
           stopWhen: stepCountIs(5),
           temperature: agent.settings?.temperature ?? undefined,
           maxOutputTokens: agent.settings?.maxOutputTokens ?? undefined,

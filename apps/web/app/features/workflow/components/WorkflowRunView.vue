@@ -3,6 +3,7 @@ import type { WorkflowEdge } from '@repo/workflow';
 import { CheckIcon, CopyIcon, Maximize2Icon } from '@lucide/vue';
 import {
   useCancelWorkflowRun,
+  useGetWorkflow,
   useGetWorkflowRun,
 } from '~/features/workflow/composables/useWorkflowApi';
 import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data';
@@ -39,6 +40,10 @@ const { data, error: runError } = useGetWorkflowRun(() => props.runId, {
   },
 });
 const { mutate: cancelRun, isPending: isCancelling } = useCancelWorkflowRun(() => props.runId);
+// For the breadcrumb's workflow-name crumb. Cached when the user arrives
+// from the editor; one extra fetch on deep links (e.g. from a notification).
+const { data: workflowData } = useGetWorkflow(() => data.value?.run.workflowId ?? '');
+const { t } = useI18n();
 // No `source` option: this copies the raw run output on demand via
 // `copy()`, not a value that's continuously reactive-copied.
 const { copy: copyOutput, copied: isOutputCopied } = useClipboard();
@@ -85,6 +90,15 @@ const selectedStep = computed(() =>
 
 const isCancellable = computed(() => !!run.value && ACTIVE_STATUSES.has(run.value.status));
 
+const breadcrumbItems = computed(() => [
+  { label: t('workflow.list.title'), to: '/workflow' },
+  {
+    label: workflowData.value?.workflow.name ?? '…',
+    to: run.value ? `/workflow/${run.value.workflowId}` : undefined,
+  },
+  { label: 'Run' },
+]);
+
 // A run with multiple terminal nodes stores its output as a JSON object
 // string (keyed by node id, see buildRunOutput in the worker's engine.ts),
 // not markdown prose. Detect that case and pretty-print it as code instead
@@ -104,8 +118,8 @@ const multiTerminalOutput = computed(() => {
   <div v-if="run" class="flex h-full flex-col">
     <header class="flex flex-col gap-2 border-b px-4 py-3">
       <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-sm font-semibold">Run</h1>
+        <div class="min-w-0">
+          <PageBreadcrumb :items="breadcrumbItems" />
           <p class="text-xs text-muted-foreground">{{ formatDateTime(run.createdAt) }}</p>
         </div>
         <div class="flex items-center gap-2">

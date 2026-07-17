@@ -5,7 +5,7 @@ import { agent } from '../schema';
 import type { ICreateAgent, IUpdateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
 
-export type { Agent, AgentSettings } from '../schema';
+export type { Agent, AgentSettings, AgentTool } from '../schema';
 
 type AgentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -77,6 +77,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
     context,
     tools,
     settings,
+    defaultDatasetId,
   } = values;
 
   // Every agent belongs to a user in practice; asserting it here (rather
@@ -121,6 +122,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
         systemPrompt,
         context,
         tools,
+        defaultDatasetId,
         ...settingsColumn,
       })
       .onConflictDoUpdate({
@@ -134,6 +136,7 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
           systemPrompt,
           context,
           tools,
+          defaultDatasetId,
           ...settingsColumn,
         },
       })

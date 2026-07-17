@@ -2,6 +2,13 @@
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 
+// Inline click-to-edit name, used as the current item of a PageBreadcrumb
+// trail (workflow editor, dataset detail). Emits `save` only when the
+// submitted name actually changed.
+
+// Props
+const props = defineProps<{ ariaLabel: string }>();
+
 // Emits
 const emit = defineEmits<{ save: [] }>();
 
@@ -11,13 +18,13 @@ const isEditing = ref(false);
 const formRef = useTemplateRef('formRef');
 
 // Functions
-const workflowNameSchema = z.object({
+const nameSchema = z.object({
   name: z.string().trim().min(1, { message: 'Name is required.' }),
 });
 
 const form = useForm({
   defaultValues: { name: name.value },
-  validators: { onChange: workflowNameSchema },
+  validators: { onChange: nameSchema },
   onSubmit: ({ value }) => {
     isEditing.value = false;
     if (value.name === name.value) {
@@ -77,7 +84,7 @@ onKeyStroke('Escape', (event) => {
           <Input
             :id="field.name"
             autofocus
-            aria-label="Workflow name"
+            :aria-label="props.ariaLabel"
             autocomplete="off"
             class="h-7 px-2 py-0 text-sm font-semibold"
             :model-value="state.value"
