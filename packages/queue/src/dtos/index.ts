@@ -1,4 +1,4 @@
-export * from './agent-document-job.dto';
+export * from './agent-context-document-job.dto';
 export * from './email-job.dto';
 export * from './get-social-profile.dto';
 export * from './notify-user.dto';

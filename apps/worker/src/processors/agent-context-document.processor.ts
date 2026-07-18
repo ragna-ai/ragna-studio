@@ -1,16 +1,16 @@
-import type { AgentDocument } from '@repo/database';
+import type { AgentContextDocument } from '@repo/database';
 import {
-  getAgentDocumentById,
-  getReadyAgentDocumentsForPrompt,
-  updateAgentDocument,
+  getAgentContextDocumentById,
+  getReadyAgentContextDocumentsForPrompt,
+  updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
 import {
-  AGENT_DOCUMENTS_QUEUE,
+  AGENT_CONTEXT_DOCUMENTS_QUEUE,
   createWorker,
-  EXTRACT_AGENT_DOCUMENT_JOB,
-  ExtractAgentDocumentJobDto,
+  EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB,
+  ExtractAgentContextDocumentJobDto,
 } from '@repo/queue';
 import { extractDocumentText } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
@@ -26,16 +26,16 @@ const NO_TEXT_FOUND_ERROR =
   'No extractable text was found in this file (it may be scanned or empty)';
 const EXTRACTION_FAILED_ERROR = 'Failed to extract text from the file';
 
-export function registerAgentDocumentJobProcessor(): Worker<any, any, string> {
-  const agentDocumentWorker = createWorker({
-    name: AGENT_DOCUMENTS_QUEUE,
+export function registerAgentContextDocumentJobProcessor(): Worker<any, any, string> {
+  const agentContextDocumentWorker = createWorker({
+    name: AGENT_CONTEXT_DOCUMENTS_QUEUE,
     processor: async (job) => {
       logger.info(`Processing agent document jobId: ${job.id} name: ${job.name}`);
 
       switch (job.name) {
-        case EXTRACT_AGENT_DOCUMENT_JOB: {
-          const { documentId } = ExtractAgentDocumentJobDto.fromJSON(job.data);
-          await extractAgentDocument(documentId);
+        case EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB: {
+          const { documentId } = ExtractAgentContextDocumentJobDto.fromJSON(job.data);
+          await extractAgentContextDocument(documentId);
           break;
         }
         default: {
@@ -48,11 +48,11 @@ export function registerAgentDocumentJobProcessor(): Worker<any, any, string> {
     },
   });
 
-  agentDocumentWorker.on('ready', () => {
+  agentContextDocumentWorker.on('ready', () => {
     logger.info('Agent document processor is ready and listening for jobs');
   });
 
-  return agentDocumentWorker;
+  return agentContextDocumentWorker;
 }
 
 /**
@@ -62,37 +62,37 @@ export function registerAgentDocumentJobProcessor(): Worker<any, any, string> {
  * rather than thrown, so a bad document never leaves the job retrying: the
  * user retries explicitly instead, via the retry route.
  */
-async function extractAgentDocument(documentId: string): Promise<void> {
-  const agentDocument = await getAgentDocumentById({ id: documentId });
+async function extractAgentContextDocument(documentId: string): Promise<void> {
+  const agentContextDocument = await getAgentContextDocumentById({ id: documentId });
 
-  if (!agentDocument) {
+  if (!agentContextDocument) {
     logger.warn(`Agent document ${documentId} not found, skipping extraction`);
     return;
   }
 
   const { error: extractError, data: text } = await tryCatch(() =>
     extractDocumentText({
-      storageKey: agentDocument.storageKey,
-      mimeType: agentDocument.mimeType,
+      storageKey: agentContextDocument.storageKey,
+      mimeType: agentContextDocument.mimeType,
     }),
   );
 
   if (extractError !== null || text === null) {
     logger.error(`Failed to extract text for agent document ${documentId}`, extractError);
-    await markDocumentFailed(agentDocument, EXTRACTION_FAILED_ERROR);
+    await markDocumentFailed(agentContextDocument, EXTRACTION_FAILED_ERROR);
     return;
   }
 
   if (text.trim().length === 0) {
-    await markDocumentFailed(agentDocument, NO_TEXT_FOUND_ERROR);
+    await markDocumentFailed(agentContextDocument, NO_TEXT_FOUND_ERROR);
     return;
   }
 
   const isTruncated = text.length > MAX_DOCUMENT_CHARS;
   const extractedText = isTruncated ? text.slice(0, MAX_DOCUMENT_CHARS) : text;
 
-  const otherReadyDocuments = await getReadyAgentDocumentsForPrompt({
-    agentId: agentDocument.agentId,
+  const otherReadyDocuments = await getReadyAgentContextDocumentsForPrompt({
+    agentId: agentContextDocument.agentId,
   });
   const otherReadyChars = otherReadyDocuments.reduce(
     (total, readyDocument) => total + readyDocument.extractedText.length,
@@ -103,13 +103,13 @@ async function extractAgentDocument(documentId: string): Promise<void> {
   // the agent over its total goes to 'failed' instead, so the user can
   // remove or shrink other documents and retry.
   if (otherReadyChars + extractedText.length > MAX_AGENT_TOTAL_CHARS) {
-    await markDocumentFailed(agentDocument, BUDGET_EXCEEDED_ERROR);
+    await markDocumentFailed(agentContextDocument, BUDGET_EXCEEDED_ERROR);
     return;
   }
 
-  await updateAgentDocument({
-    id: agentDocument.id,
-    agentId: agentDocument.agentId,
+  await updateAgentContextDocument({
+    id: agentContextDocument.id,
+    agentId: agentContextDocument.agentId,
     status: 'ready',
     extractedText,
     isTruncated,
@@ -118,12 +118,12 @@ async function extractAgentDocument(documentId: string): Promise<void> {
 }
 
 async function markDocumentFailed(
-  agentDocument: AgentDocument,
+  agentContextDocument: AgentContextDocument,
   errorMessage: string,
 ): Promise<void> {
-  await updateAgentDocument({
-    id: agentDocument.id,
-    agentId: agentDocument.agentId,
+  await updateAgentContextDocument({
+    id: agentContextDocument.id,
+    agentId: agentContextDocument.agentId,
     status: 'failed',
     errorMessage,
   });

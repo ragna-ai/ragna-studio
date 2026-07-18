@@ -60,6 +60,10 @@
         "defaultDatasetLabel": "Default dataset",
         "defaultDatasetPlaceholder": "None (the agent searches when needed)",
         "defaultDatasetNone": "None"
+      },
+      "documents": {
+        "label": "Documents",
+        "description": "List, read, create, and edit workspace documents."
       }
     }
   },
@@ -377,6 +381,86 @@
       "renameError": "Failed to rename the workspace.",
       "deleteSuccess": "Workspace deleted.",
       "deleteError": "Failed to delete the workspace."
+    }
+  },
+  "document": {
+    "list": {
+      "title": "Documents",
+      "subtitle": "Notes you and your agents can create and edit.",
+      "newDocument": "New document",
+      "selectWorkspace": "Select a workspace above to view its documents.",
+      "empty": "No documents yet.",
+      "loadError": "Failed to load documents.",
+      "loading": "Loading documents...",
+      "noFolder": "No folder",
+      "table": {
+        "title": "Title",
+        "author": "Author",
+        "updated": "Updated",
+        "folder": "Folder",
+        "actions": "Actions"
+      },
+      "item": {
+        "delete": "Delete document",
+        "moveSuccess": "Document moved."
+      }
+    },
+    "deleteConfirm": {
+      "title": "Delete document",
+      "message": "Are you sure you want to delete this document? This can't be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "createDialog": {
+      "title": "New document",
+      "nameLabel": "Title",
+      "namePlaceholder": "Untitled document",
+      "folderLabel": "Folder",
+      "folderNone": "No folder",
+      "cancel": "Cancel",
+      "submit": "Create"
+    },
+    "editor": {
+      "title": "Document",
+      "loadError": "Failed to load the document.",
+      "loading": "Loading document...",
+      "rename": "Rename document",
+      "contentPlaceholder": "Start writing...",
+      "saveStatus": {
+        "saved": "Saved",
+        "saving": "Saving..."
+      }
+    },
+    "toolbar": {
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "align": "Text alignment",
+      "list": "List",
+      "taskList": "Task list",
+      "highlight": "Highlight",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
+  },
+  "folder": {
+    "manage": {
+      "title": "Folders",
+      "description": "Group documents into folders.",
+      "namePlaceholder": "Folder name",
+      "rename": "Rename folder",
+      "saveRename": "Save name",
+      "cancelRename": "Cancel rename",
+      "delete": "Delete folder",
+      "deleteTitle": "Delete folder",
+      "deleteMessage": "Delete \"{name}\"? Its documents move to the root level, they are not deleted.",
+      "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
+      "empty": "No folders yet.",
+      "close": "Close"
     }
   }
 }

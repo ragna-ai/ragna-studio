@@ -18,7 +18,7 @@ import {
   validUpsertAgentBody,
   validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
-import { deleteAgentDocumentsForAgent } from '../services/agent-document.service';
+import { deleteAgentContextDocumentsForAgent } from '../services/agent-context-document.service';
 
 export const agentController = new Hono()
   .basePath('/agent')
@@ -144,7 +144,7 @@ export const agentController = new Hono()
       throw new NotFoundException('Agent not found');
     }
 
-    await deleteAgentDocumentsForAgent({ agentId: agent.id });
+    await deleteAgentContextDocumentsForAgent({ agentId: agent.id });
     await deleteAgentById({ agentId: agent.id, userId: user.id });
 
     return c.json({ message: 'Agent deleted successfully' });

@@ -9,7 +9,7 @@ import {
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
-import AgentDocumentPanel from '~/features/agent/components/AgentDocumentPanel.vue';
+import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useUpsertAgent } from '~/features/agent/composables/useAgentApi';
@@ -295,7 +295,7 @@ const siderBarTabs = [
             Upload files whose content this agent should always have access to.
             Extracted text joins the context text below.
           </p>
-          <AgentDocumentPanel v-if="props.id" :agent-id="props.id" />
+          <AgentContextDocumentPanel v-if="props.id" :agent-id="props.id" />
           <div
             v-else
             class="rounded-lg border p-4 text-sm text-muted-foreground"

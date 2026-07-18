@@ -6,11 +6,13 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
-import { agentDocumentController } from './controllers/agent-document.controller';
+import { agentContextDocumentController } from './controllers/agent-context-document.controller';
 import { agentController } from './controllers/agent.controller';
 import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
 import { datasetController } from './controllers/dataset.controller';
+import { documentController } from './controllers/document.controller';
+import { folderController } from './controllers/folder.controller';
 import { imageGenerateController } from './controllers/imagegen.controller';
 import { notificationController } from './controllers/notification.controller';
 import { socialPostController } from './controllers/social-post.controller';
@@ -47,7 +49,7 @@ export const app = new Hono()
   .route('/', userController)
   .route('/', chatController)
   .route('/', agentController)
-  .route('/', agentDocumentController)
+  .route('/', agentContextDocumentController)
   .route('/', aiModelController)
   .route('/', imageGenerateController)
   .route('/', workflowController)
@@ -55,6 +57,8 @@ export const app = new Hono()
   .route('/', notificationController)
   .route('/', workspaceController)
   .route('/', datasetController)
+  .route('/', documentController)
+  .route('/', folderController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

@@ -9,25 +9,25 @@ import {
 } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import {
-  AGENT_DOCUMENT_ACCEPT,
-  AGENT_DOCUMENT_MAX_FILE_BYTES,
-  AGENT_DOCUMENT_MAX_FILES,
-  useDeleteAgentDocument,
-  useGetAgentDocuments,
-  useRenameAgentDocument,
-  useReplaceAgentDocumentFile,
-  useRetryAgentDocument,
-  useUploadAgentDocuments,
+  AGENT_CONTEXT_DOCUMENT_ACCEPT,
+  AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,
+  AGENT_CONTEXT_DOCUMENT_MAX_FILES,
+  useDeleteAgentContextDocument,
+  useGetAgentContextDocuments,
+  useRenameAgentContextDocument,
+  useReplaceAgentContextDocumentFile,
+  useRetryAgentContextDocument,
+  useUploadAgentContextDocuments,
 } from '~/features/agent/composables/useAgentApi';
-import type { AgentDocument } from '~/features/agent/types';
-import AgentDocumentStatusBadge from './AgentDocumentStatusBadge.vue';
+import type { AgentContextDocument } from '~/features/agent/types';
+import AgentContextDocumentStatusBadge from './AgentContextDocumentStatusBadge.vue';
 
-type AgentDocumentPanelProps = {
+type AgentContextDocumentPanelProps = {
   agentId: string;
 };
 
 // Props
-const props = defineProps<AgentDocumentPanelProps>();
+const props = defineProps<AgentContextDocumentPanelProps>();
 
 // Refs
 const dropZoneRef = useTemplateRef('dropZoneRef');
@@ -38,22 +38,22 @@ const renamingDocumentId = ref<string | null>(null);
 const renameValue = ref('');
 
 // Composables
-const { data, isPending: isLoading } = useGetAgentDocuments(
+const { data, isPending: isLoading } = useGetAgentContextDocuments(
   () => props.agentId,
 );
 const { isPending: isUploading, mutate: uploadDocuments } =
-  useUploadAgentDocuments();
-const { mutate: renameDocument } = useRenameAgentDocument();
-const { mutate: replaceDocumentFile } = useReplaceAgentDocumentFile();
-const { mutate: retryDocument } = useRetryAgentDocument();
-const { mutate: deleteDocument } = useDeleteAgentDocument();
+  useUploadAgentContextDocuments();
+const { mutate: renameDocument } = useRenameAgentContextDocument();
+const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile();
+const { mutate: retryDocument } = useRetryAgentContextDocument();
+const { mutate: deleteDocument } = useDeleteAgentContextDocument();
 const { isOverDropZone } = useDropZone(dropZoneRef, {
   multiple: true,
   onDrop: (files) => uploadFiles(files),
 });
 
 // Computed
-const documents = computed<AgentDocument[]>(() => data.value?.documents ?? []);
+const documents = computed<AgentContextDocument[]>(() => data.value?.documents ?? []);
 
 // Functions
 function formatFileSize(bytes: number): string {
@@ -69,16 +69,16 @@ function uploadFiles(files: File[] | null) {
   if (!files || files.length === 0) return;
 
   const oversizedFile = files.find(
-    (file) => file.size > AGENT_DOCUMENT_MAX_FILE_BYTES,
+    (file) => file.size > AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,
   );
   if (oversizedFile) {
     toast.error(`"${oversizedFile.name}" is larger than 10 MB`);
     return;
   }
 
-  if (documents.value.length + files.length > AGENT_DOCUMENT_MAX_FILES) {
+  if (documents.value.length + files.length > AGENT_CONTEXT_DOCUMENT_MAX_FILES) {
     toast.error(
-      `An agent can have at most ${AGENT_DOCUMENT_MAX_FILES} documents`,
+      `An agent can have at most ${AGENT_CONTEXT_DOCUMENT_MAX_FILES} documents`,
     );
     return;
   }
@@ -96,7 +96,7 @@ function handleUploadInputChange(event: Event) {
   input.value = '';
 }
 
-function startRename(document: AgentDocument) {
+function startRename(document: AgentContextDocument) {
   renamingDocumentId.value = document.id;
   renameValue.value = document.name;
 }
@@ -105,7 +105,7 @@ function cancelRename() {
   renamingDocumentId.value = null;
 }
 
-function commitRename(document: AgentDocument) {
+function commitRename(document: AgentContextDocument) {
   const name = renameValue.value.trim();
   renamingDocumentId.value = null;
 
@@ -114,7 +114,7 @@ function commitRename(document: AgentDocument) {
   renameDocument({ agentId: props.agentId, documentId: document.id, name });
 }
 
-function openReplacePicker(document: AgentDocument) {
+function openReplacePicker(document: AgentContextDocument) {
   replaceTargetId.value = document.id;
   replaceInputRef.value?.click();
 }
@@ -131,11 +131,11 @@ function handleReplaceInputChange(event: Event) {
   replaceDocumentFile({ agentId: props.agentId, documentId, file });
 }
 
-function handleRetry(document: AgentDocument) {
+function handleRetry(document: AgentContextDocument) {
   retryDocument({ agentId: props.agentId, documentId: document.id });
 }
 
-function handleDelete(document: AgentDocument) {
+function handleDelete(document: AgentContextDocument) {
   deleteDocument({ agentId: props.agentId, documentId: document.id });
 }
 </script>
@@ -171,14 +171,14 @@ function handleDelete(document: AgentDocument) {
       type="file"
       multiple
       class="hidden"
-      :accept="AGENT_DOCUMENT_ACCEPT"
+      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
       @change="handleUploadInputChange"
     />
     <input
       ref="replaceInputRef"
       type="file"
       class="hidden"
-      :accept="AGENT_DOCUMENT_ACCEPT"
+      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
       @change="handleReplaceInputChange"
     />
 
@@ -239,7 +239,7 @@ function handleDelete(document: AgentDocument) {
               <Tooltip>
                 <TooltipTrigger as-child>
                   <span>
-                    <AgentDocumentStatusBadge :status="document.status" />
+                    <AgentContextDocumentStatusBadge :status="document.status" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -247,7 +247,7 @@ function handleDelete(document: AgentDocument) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <AgentDocumentStatusBadge v-else :status="document.status" />
+            <AgentContextDocumentStatusBadge v-else :status="document.status" />
           </TableCell>
           <TableCell class="text-right whitespace-nowrap">
             <Button

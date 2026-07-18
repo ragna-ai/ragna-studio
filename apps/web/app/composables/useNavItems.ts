@@ -1,6 +1,7 @@
 import {
   BotIcon,
   DatabaseIcon,
+  FileTextIcon,
   FolderClockIcon,
   HomeIcon,
   ImageIcon,
@@ -57,13 +58,13 @@ const defaultItems: NavItem[] = [
     label: 'Datasets',
     children: [],
   },
-  // {
-  //   id: 'document',
-  //   path: '/document',
-  //   icon: FileTextIcon,
-  //   label: 'Docs',
-  //   children: [],
-  // },
+  {
+    id: 'document',
+    path: '/document',
+    icon: FileTextIcon,
+    label: 'Docs',
+    children: [],
+  },
   {
     id: 'text-to-image',
     path: '/text-to-image',

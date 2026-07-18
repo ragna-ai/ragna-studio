@@ -70,7 +70,7 @@ function handleRename() {
           <template #current>
             <InlineNameField
               v-model:name="name"
-              :aria-label="t('dataset.detail.rename')"
+              :label="t('dataset.detail.rename')"
               @save="handleRename"
             />
           </template>

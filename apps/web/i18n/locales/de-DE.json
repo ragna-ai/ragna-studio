@@ -63,6 +63,10 @@
         "defaultDatasetLabel": "Standard-Datensatz",
         "defaultDatasetPlaceholder": "Keiner (Agent sucht bei Bedarf selbst)",
         "defaultDatasetNone": "Keiner"
+      },
+      "documents": {
+        "label": "Dokumente",
+        "description": "Listet, liest, erstellt und bearbeitet Dokumente im Workspace."
       }
     }
   },
@@ -395,6 +399,86 @@
       "renameError": "Arbeitsbereich konnte nicht umbenannt werden.",
       "deleteSuccess": "Arbeitsbereich gelöscht.",
       "deleteError": "Arbeitsbereich konnte nicht gelöscht werden."
+    }
+  },
+  "document": {
+    "list": {
+      "title": "Dokumente",
+      "subtitle": "Notizen, die du und deine Agenten erstellen und bearbeiten könnt.",
+      "newDocument": "Neues Dokument",
+      "selectWorkspace": "Wähle oben einen Arbeitsbereich, um dessen Dokumente zu sehen.",
+      "empty": "Noch keine Dokumente.",
+      "loadError": "Dokumente konnten nicht geladen werden.",
+      "loading": "Dokumente werden geladen...",
+      "noFolder": "Kein Ordner",
+      "table": {
+        "title": "Titel",
+        "author": "Autor",
+        "updated": "Aktualisiert",
+        "folder": "Ordner",
+        "actions": "Aktionen"
+      },
+      "item": {
+        "delete": "Dokument löschen",
+        "moveSuccess": "Dokument verschoben."
+      }
+    },
+    "deleteConfirm": {
+      "title": "Dokument löschen",
+      "message": "Möchtest du dieses Dokument wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "createDialog": {
+      "title": "Neues Dokument",
+      "nameLabel": "Titel",
+      "namePlaceholder": "Unbenanntes Dokument",
+      "folderLabel": "Ordner",
+      "folderNone": "Kein Ordner",
+      "cancel": "Abbrechen",
+      "submit": "Erstellen"
+    },
+    "editor": {
+      "title": "Dokument",
+      "loadError": "Dokument konnte nicht geladen werden.",
+      "loading": "Dokument wird geladen...",
+      "rename": "Dokument umbenennen",
+      "contentPlaceholder": "Schreib los...",
+      "saveStatus": {
+        "saved": "Gespeichert",
+        "saving": "Speichert..."
+      }
+    },
+    "toolbar": {
+      "heading1": "Überschrift 1",
+      "heading2": "Überschrift 2",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "underline": "Unterstrichen",
+      "strike": "Durchgestrichen",
+      "align": "Textausrichtung",
+      "list": "Liste",
+      "taskList": "Aufgabenliste",
+      "highlight": "Markieren",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen"
+    }
+  },
+  "folder": {
+    "manage": {
+      "title": "Ordner",
+      "description": "Gruppiere Dokumente in Ordnern.",
+      "namePlaceholder": "Ordnername",
+      "rename": "Ordner umbenennen",
+      "saveRename": "Namen speichern",
+      "cancelRename": "Umbenennen abbrechen",
+      "delete": "Ordner löschen",
+      "deleteTitle": "Ordner löschen",
+      "deleteMessage": "„{name}“ löschen? Die enthaltenen Dokumente werden auf die oberste Ebene verschoben, nicht gelöscht.",
+      "deleteConfirm": "Löschen",
+      "deleteCancel": "Abbrechen",
+      "empty": "Noch keine Ordner.",
+      "close": "Schließen"
     }
   }
 }

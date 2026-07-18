@@ -1,5 +1,5 @@
-import type { AgentDocumentForPrompt, AgentSettings, Dataset } from '@repo/database';
-import { getDatasetById, getMemoryByAgentId, getReadyAgentDocumentsForPrompt } from '@repo/database';
+import type { AgentContextDocumentForPrompt, AgentSettings, Dataset } from '@repo/database';
+import { getDatasetById, getMemoryByAgentId, getReadyAgentContextDocumentsForPrompt } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 
@@ -100,9 +100,9 @@ function buildPinnedDatasetBlock(pinnedDataset: Dataset | undefined): string | u
  * @param agentId The ID of the agent.
  * @returns The agent's ready documents, oldest first, or an empty array.
  */
-async function loadAgentReadyDocuments(agentId: string): Promise<AgentDocumentForPrompt[]> {
+async function loadAgentReadyDocuments(agentId: string): Promise<AgentContextDocumentForPrompt[]> {
   const { data: documents, error } = await tryCatch(() =>
-    getReadyAgentDocumentsForPrompt({ agentId }),
+    getReadyAgentContextDocumentsForPrompt({ agentId }),
   );
 
   if (error !== null) {
@@ -113,7 +113,7 @@ async function loadAgentReadyDocuments(agentId: string): Promise<AgentDocumentFo
   return documents ?? [];
 }
 
-function buildDocumentEntry(document: AgentDocumentForPrompt): string {
+function buildDocumentEntry(document: AgentContextDocumentForPrompt): string {
   return `<document name="${document.name}">\n${document.extractedText}\n</document>`;
 }
 
@@ -127,7 +127,7 @@ function buildDocumentEntry(document: AgentDocumentForPrompt): string {
  */
 function buildContextBlock(
   context: string | null,
-  documents: AgentDocumentForPrompt[],
+  documents: AgentContextDocumentForPrompt[],
 ): string | undefined {
   if (!context && documents.length === 0) {
     return undefined;
@@ -165,7 +165,7 @@ function buildMemoryBlock(memoryContent: string | undefined): string | undefined
 function buildInstructions(
   systemPrompt: string,
   contextContent: string | null,
-  documents: AgentDocumentForPrompt[],
+  documents: AgentContextDocumentForPrompt[],
   memoryContent: string | undefined,
   pinnedDataset: Dataset | undefined,
 ): string {
