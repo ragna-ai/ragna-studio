@@ -46,8 +46,9 @@ composable, transport) is reused by the room engine later.
 
 ## Stack
 
-Bun native WebSockets via Hono's `createBunWebSocket()` (`hono/bun`). No new
-dependencies.
+Bun native WebSockets via Hono's `upgradeWebSocket` / `websocket` exports
+from `hono/bun` (`createBunWebSocket()` is deprecated since hono 4.12 in
+favor of these direct exports). No new dependencies.
 
 - `apps/api/src/index.ts`: `Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 0 })`.
 - The upgrade is a normal GET through the Hono middleware chain, so
@@ -81,8 +82,11 @@ phase 2 adds `room:`.
 | server → client | `done`        | none (stream complete; client closes its ReadableStream) |
 | server → client | `error`       | `{ code, message }` (maps the HTTP exceptions) |
 
-Liveness uses WS-level ping/pong (Bun handles pong replies); the client
-composable treats a missed ping as a dead connection and reconnects.
+Liveness: the server uses WS-level ping/pong (browsers answer pongs
+transparently). Browser JS cannot observe ping frames, so the client cannot
+detect a missed ping; client reconnection is driven by the socket's
+`close`/`error` events instead. If true client-side liveness detection is
+ever needed, it requires an app-level heartbeat frame in the JSON protocol.
 
 ## Auth model
 
@@ -145,7 +149,12 @@ re-validates the session. Admin revocation before expiry is accepted lag.
 - Socket composable: one connection per app, subscribe/unsubscribe by
   channel, auto-reconnect with backoff, re-subscribe after reconnect,
   queue outgoing frames while disconnected.
-- `WebSocketChatTransport` implementing the AI SDK `ChatTransport`:
+- `WebSocketChatTransport` implementing the AI SDK `ChatTransport`. Note:
+  the `chatId` argument `useChat` passes to `sendMessages` is the chat
+  instance's internal id (a generated id when none is passed to `useChat`),
+  not the app's chat id. The transport therefore takes a
+  `getChatId: () => string | null` callback wired to the component's chat id
+  ref, the same source the old `prepareSendMessagesRequest` used.
   - `sendMessages`: publish the `message` frame (including `trigger` and
     `messageId`, so regeneration works), return a `ReadableStream` filled
     from incoming `chunk` frames until the finish chunk. Listens on the

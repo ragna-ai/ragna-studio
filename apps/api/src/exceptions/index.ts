@@ -39,6 +39,15 @@ export class ForbiddenException extends HTTPException {
   }
 }
 
+// Conflict (409) Exception
+export class ConflictException extends HTTPException {
+  constructor(message?: string) {
+    super(StatusCodes.CONFLICT, {
+      message: message || ReasonPhrases.CONFLICT,
+    });
+  }
+}
+
 // Not Found (404) Exception
 export class NotFoundException extends HTTPException {
   constructor(message?: string) {

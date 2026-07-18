@@ -1,17 +1,4 @@
 import {
-  buildAgentInstructions,
-  buildAgentToolset,
-  convertToModelMessages,
-  createUIMessageStream,
-  createUIMessageStreamResponse,
-  getLanguageModel,
-  safeValidateUIMessages,
-  stepCountIs,
-  streamText,
-  toModelSettings,
-  toUIMessageStream,
-} from '@repo/ai';
-import {
   createChat,
   deleteChatById,
   getAllChatsByUserId,
@@ -19,16 +6,11 @@ import {
   getChatCountByUserId,
   getOrCreateDefaultAgentForUser,
   updateChatTitleById,
-  upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { createPrimaryId, tryCatch } from '@repo/utils';
+import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '../exceptions';
+import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   validChatIdParam,
@@ -36,7 +18,6 @@ import {
   validUpdateChatTitleBody,
   validWorkspaceScopedListQuery,
 } from '../middlewares/validationMiddlewares';
-import { generateChatTitle } from '../services/chat.service';
 
 export const chatController = new Hono()
   .basePath('/chat')
@@ -234,156 +215,8 @@ export const chatController = new Hono()
     }
 
     return c.json({ message: 'Chat deleted successfully' });
-  })
-  /**
-   * [POST] /chat/:chatId
-   * Handle incoming chat messages and stream responses back to the client
-   */
-  .post('/:chatId', validChatIdParam, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
-    const body = await c.req.json();
-
-    // Get chat for user
-    const { error: userChatError, data: userChat } = await tryCatch(() =>
-      getChatByIdForUser({ chatId: param.chatId, userId: user.id }),
-    );
-
-    if (userChatError !== null) {
-      throw new InternalServerErrorException('Failed to fetch chat');
-    }
-
-    if (!userChat) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    const validated = await safeValidateUIMessages({ messages: body.messages });
-
-    if (!validated.success) {
-      logger.warn(`Invalid messages for chat ${param.chatId}`, validated.error);
-      throw new BadRequestException('Invalid messages format');
-    }
-
-    let titlePromise: Promise<string> | null = null;
-
-    const { agent } = userChat;
-
-    const validUiMessages = validated.data;
-    const modelMessages = await convertToModelMessages(validUiMessages);
-    const instructions = await buildAgentInstructions({
-      agentId: agent.id,
-      userId: user.id,
-      tools: agent.tools,
-      systemPrompt: agent.systemPrompt,
-      context: agent.context,
-      defaultDatasetId: agent.defaultDatasetId,
-    });
-
-    const lastUiMessage = validUiMessages.at(-1);
-
-    if (userChat.messages.length === 0 && lastUiMessage?.role === 'user') {
-      titlePromise = generateChatTitle({
-        uiMessage: lastUiMessage,
-      });
-    }
-
-    logger.debug(`Processing messages for chat ${param.chatId}`, { messages: validUiMessages });
-
-    const stream = createUIMessageStream({
-      originalMessages: validUiMessages,
-      execute: ({ writer: dataStream }) => {
-        // Handle title generation in parallel
-        if (titlePromise) {
-          titlePromise.then((title) => {
-            updateChatTitleById({ chatId: userChat.id, userId: user.id, title });
-            dataStream.write({
-              type: 'data-chat-title',
-              data: { title },
-              transient: true, // no history
-            });
-          });
-        }
-
-        // Stream the response from the language model
-        const result = streamText({
-          timeout: {
-            totalMs: 600_000, // whole multi-step run; image tools can take minutes
-            toolMs: 180_000, // single tool call (e.g. generating up to 4 images)
-          },
-          model: getLanguageModel({
-            provider: agent.aiModel.provider,
-            model: agent.aiModel.model,
-          }),
-          instructions,
-          messages: modelMessages,
-          tools: buildAgentToolset(agent.tools, dataStream, {
-            userId: user.id,
-            agentId: agent.id,
-            workspaceId: userChat.workspaceId,
-          }),
-          stopWhen: stepCountIs(5),
-          ...toModelSettings(agent.settings),
-          onStart(st) {
-            logger.debug('Request started', {
-              callId: st.callId,
-              modelId: st.modelId,
-              runtimeContext: st.runtimeContext,
-              instructions: st.instructions,
-            });
-          },
-          onEnd(res) {
-            logger.debug('Request finished', {
-              callId: res.callId,
-              finishReason: res.finishReason,
-              usage: res.usage,
-            });
-          },
-          onAbort() {
-            logger.warn('Request aborted by user');
-          },
-          onError(error) {
-            logger.error('Error in chat stream', error);
-          },
-        });
-
-        // result.consumeStream(); // consume stream even if user has disconnected/aborted
-
-        dataStream.merge(
-          toUIMessageStream({
-            stream: result.stream,
-            generateMessageId: createPrimaryId,
-            sendReasoning: true,
-          }),
-        );
-      },
-      async onEnd({ responseMessage, isAborted, finishReason }) {
-        if (isAborted || finishReason === 'error') {
-          return;
-        }
-
-        // Persist the new user message and the assistant response as UIMessages.
-        // Upsert by message id so retries and regenerations replace instead of duplicate.
-
-        const messagesToSave =
-          lastUiMessage?.role === 'user' ? [lastUiMessage, responseMessage] : [responseMessage];
-
-        const { error } = await tryCatch(() =>
-          upsertChatMessages(
-            messagesToSave.map((message) => ({
-              id: message.id,
-              chatId: userChat.id,
-              role: message.role,
-              parts: message.parts,
-              metadata: message.metadata ?? null,
-            })),
-          ),
-        );
-
-        if (error !== null) {
-          logger.error(`Failed to persist messages for chat ${userChat.id}`, error);
-        }
-      },
-    });
-
-    return createUIMessageStreamResponse({ stream });
   });
+// Chat message streaming ([POST] /chat/:chatId) moved to the WS `chat:<chatId>`
+// channel (see ws.controller.ts + services/chat.service.ts#runChatStream).
+// HTTP request teardown no longer cancels a run for free; see
+// chat.service.ts's in-flight run registry and abortChatRun.
