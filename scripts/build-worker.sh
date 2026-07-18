@@ -66,9 +66,9 @@ if [ -n "$PLATFORM" ]; then
 fi
 
 # Build the image with both tags
+  # --tag "$IMAGE_NAME:$VERSION" \
 docker build \
   --tag "$IMAGE_NAME:$TAG" \
-  --tag "$IMAGE_NAME:$VERSION" \
   --file "$DOCKERFILE" \
   $PLATFORM_ARG \
   "$PROJECT_ROOT"
@@ -76,13 +76,11 @@ docker build \
 echo ""
 echo "Build successful!"
 echo "  - $IMAGE_NAME:$TAG"
-echo "  - $IMAGE_NAME:$VERSION"
 
 # Push if requested
 if [ "$PUSH" = true ]; then
   echo ""
   echo "Pushing images..."
   docker push "$IMAGE_NAME:$TAG"
-  docker push "$IMAGE_NAME:$VERSION"
   echo "Push successful!"
 fi
