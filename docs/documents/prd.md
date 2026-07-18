@@ -1,5 +1,9 @@
 # Documents Feature (PRD)
 
+> **Status: implemented** (branch `feat/documents`, 2026-07-18). See
+> "Implementation notes" at the end for where the build deviated from this
+> spec.
+
 Workspace-scoped documents that both humans and agents can create and edit.
 Humans use a Tiptap editor in the web app. Agents use tools during chat.
 
@@ -150,3 +154,32 @@ Tiptap v3, so code ports directly). Reuse selectively:
 - Nested folders (`parentId` on `folder`).
 - Documents as injectable chat context.
 - Edit history / per-edit authorship.
+
+## Implementation notes (as shipped)
+
+Deviations and decisions made during the build:
+
+- **API routing**: everything is nested under `/workspace/:workspaceId/...`
+  instead of the flat dataset pattern. Documents have no owner column, so
+  every operation verifies workspace ownership first, via a shared
+  `loadOwnedWorkspace()` in `document.service.ts`. When multi-user workspace
+  membership lands, only that function changes.
+- **Authorship FKs** (`createdByUserId`, `createdByAgentId`) use
+  `onDelete: set null`: deleting a user or agent keeps their documents.
+- **Relation rename**: `agent.documents` (the context-document relation)
+  became `agent.contextDocuments`, freeing `documents` for the new entity.
+- **Agent toolset**: tools are named `listDocuments`, `readDocument`,
+  `createDocument`, `editDocument`, registered as a `documents` toolset
+  (added to the agent tools enum and the web form's tool toggles).
+- **`@repo/editor` type boundary**: tsdown's dts rollup drops the ambient
+  `declare module '@tiptap/core'` augmentations that extensions use to add
+  commands (`toggleHeading`, `getMarkdown`, ...). Therefore every
+  chain/command call lives behind plain typed functions in the package
+  (`commands.ts`, `document-editor.ts`). Invariant: `apps/web` never calls
+  `.chain()` or other augmented APIs directly.
+- **Editor UX**: Tiptap ships no CSS and Tailwind preflight strips
+  typography, so `DocumentEditor.vue` carries an unscoped `.document-sheet`
+  stylesheet (fill-height editable area, placeholder pseudo-element, heading/
+  list/blockquote styles). Empty-area focus uses `mousedown.self` (not
+  `click`) so finishing a selection drag over the padding does not collapse
+  the selection. The editor autofocuses at `end` on open.
