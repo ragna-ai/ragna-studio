@@ -27,9 +27,6 @@ const { t } = useI18n();
 
 // Refs
 const editor = props.controller.editor;
-
-// Computed
-const activeButtonClass = 'bg-accent text-accent-foreground';
 </script>
 
 <template>
@@ -39,55 +36,59 @@ const activeButtonClass = 'bg-accent text-accent-foreground';
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.heading1')"
-        :class="{ [activeButtonClass]: editor.isActive('heading', { level: 1 }) }"
+        :class="{
+          'is-active-button': editor.isActive('heading', { level: 1 }),
+        }"
         @click="() => controller.formatText('h1')"
       >
-        <Heading1Icon class="!size-5 stroke-1.5 bg-transparent" />
+        <Heading1Icon class="size-5! bg-transparent stroke-1.5" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.heading2')"
-        :class="{ [activeButtonClass]: editor.isActive('heading', { level: 2 }) }"
+        :class="{
+          'is-active-button': editor.isActive('heading', { level: 2 }),
+        }"
         @click="() => controller.formatText('h2')"
       >
-        <Heading2Icon class="!size-5 stroke-1.5 bg-transparent" />
+        <Heading2Icon class="size-5! bg-transparent stroke-1.5" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.bold')"
-        :class="{ [activeButtonClass]: editor.isActive('bold') }"
+        :class="{ 'is-active-button': editor.isActive('bold') }"
         @click="() => controller.formatText('bold')"
       >
-        <BoldIcon class="size-4 bg-transparent" />
+        <BoldIcon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.italic')"
-        :class="{ [activeButtonClass]: editor.isActive('italic') }"
+        :class="{ 'is-active-button': editor.isActive('italic') }"
         @click="() => controller.formatText('italic')"
       >
-        <ItalicIcon class="size-4 bg-transparent" />
+        <ItalicIcon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.underline')"
-        :class="{ [activeButtonClass]: editor.isActive('underline') }"
+        :class="{ 'is-active-button': editor.isActive('underline') }"
         @click="() => controller.formatText('underline')"
       >
-        <UnderlineIcon class="size-4 bg-transparent" />
+        <UnderlineIcon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.strike')"
-        :class="{ [activeButtonClass]: editor.isActive('strike') }"
+        :class="{ 'is-active-button': editor.isActive('strike') }"
         @click="() => controller.formatText('strike')"
       >
-        <StrikethroughIcon class="size-4 bg-transparent" />
+        <StrikethroughIcon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
@@ -97,52 +98,55 @@ const activeButtonClass = 'bg-accent text-accent-foreground';
       >
         <TextIcon
           v-if="editor.isActive({ textAlign: 'left' })"
-          class="!size-5 stroke-1.5 bg-transparent"
+          class="size-5! bg-transparent stroke-1.5"
         />
         <AlignCenterIcon
           v-else-if="editor.isActive({ textAlign: 'center' })"
-          class="!size-5 stroke-1.5 bg-transparent"
+          class="size-5! bg-transparent stroke-1.5"
         />
         <AlignRightIcon
           v-else-if="editor.isActive({ textAlign: 'right' })"
-          class="!size-5 stroke-1.5 bg-transparent"
+          class="size-5! bg-transparent stroke-1.5"
         />
         <AlignJustifyIcon
           v-else-if="editor.isActive({ textAlign: 'justify' })"
-          class="!size-5 stroke-1.5 bg-transparent"
+          class="size-5! bg-transparent stroke-1.5"
         />
-        <TextIcon v-else class="!size-5 stroke-1.5 bg-transparent" />
+        <TextIcon v-else class="size-5! bg-transparent stroke-1.5" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.list')"
-        :class="{ [activeButtonClass]: editor.isActive('bulletList') || editor.isActive('orderedList') }"
+        :class="{
+          'is-active-button':
+            editor.isActive('bulletList') || editor.isActive('orderedList'),
+        }"
         @click="() => controller.cycleList()"
       >
         <ListOrderedIcon
           v-if="editor.isActive('orderedList')"
-          class="!size-5 stroke-1.5 bg-transparent"
+          class="size-5! bg-transparent stroke-1.5"
         />
-        <ListIcon v-else class="!size-5 stroke-1.5 bg-transparent" />
+        <ListIcon v-else class="size-5! bg-transparent stroke-1.5" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.taskList')"
-        :class="{ [activeButtonClass]: editor.isActive('taskList') }"
+        :class="{ 'is-active-button': editor.isActive('taskList') }"
         @click="() => controller.toggleTaskList()"
       >
-        <ListChecksIcon class="!size-5 stroke-1.5 bg-transparent" />
+        <ListChecksIcon class="size-5! bg-transparent stroke-1.5" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         :aria-label="t('document.toolbar.highlight')"
-        :class="{ [activeButtonClass]: editor.isActive('highlight') }"
+        :class="{ 'is-active-button': editor.isActive('highlight') }"
         @click="() => controller.formatText('highlight')"
       >
-        <HighlighterIcon class="size-4 bg-transparent" />
+        <HighlighterIcon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
@@ -150,7 +154,7 @@ const activeButtonClass = 'bg-accent text-accent-foreground';
         :aria-label="t('document.toolbar.undo')"
         @click="() => controller.undo()"
       >
-        <Undo2Icon class="size-4 bg-transparent" />
+        <Undo2Icon class="size-4! bg-transparent" />
       </Button>
       <Button
         variant="ghost"
@@ -158,8 +162,14 @@ const activeButtonClass = 'bg-accent text-accent-foreground';
         :aria-label="t('document.toolbar.redo')"
         @click="() => controller.redo()"
       >
-        <Redo2Icon class="size-4 bg-transparent" />
+        <Redo2Icon class="size-4! bg-transparent" />
       </Button>
     </div>
   </div>
 </template>
+
+<style scoped>
+.is-active-button {
+  @apply bg-accent text-accent-foreground;
+}
+</style>
