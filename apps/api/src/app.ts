@@ -1,5 +1,4 @@
 import { auth } from '@repo/auth/server';
-import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -19,10 +18,8 @@ import { socialPostController } from './controllers/social-post.controller';
 import { userController } from './controllers/user.controller';
 import { workflowController } from './controllers/workflow.controller';
 import { workspaceController } from './controllers/workspace.controller';
-
-// Origins allowed to call the API with credentials (cookies).
-// Always include the web app origin so CORS holds even if TRUSTED_ORIGINS is empty.
-const allowedOrigins = [config.appUrl, ...config.trustedOrigins];
+import { wsController } from './controllers/ws.controller';
+import { allowedOrigins } from './utils/allowed-origins';
 
 export const app = new Hono()
   .basePath('/')
@@ -59,6 +56,7 @@ export const app = new Hono()
   .route('/', datasetController)
   .route('/', documentController)
   .route('/', folderController)
+  .route('/', wsController)
   // Error
   .onError((err, c) => {
     if (err instanceof HTTPException) {

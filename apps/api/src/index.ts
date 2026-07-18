@@ -1,13 +1,27 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import { app } from './app';
+import { websocket } from './ws/socket';
 
 function main() {
   logger.info('Starting API server...');
 
   const port = config.apiPort;
   // idleTimeout: 0 disables Bun's default 10s idle timeout, since we have streaming AI/tool responses
-  const server = Bun.serve({ port, fetch: app.fetch, idleTimeout: 0 });
+  const server = Bun.serve({
+    port,
+    fetch: app.fetch,
+    idleTimeout: 0,
+    websocket: {
+      ...websocket,
+      // ws.publish() excludes the sending socket by default. Every WS
+      // publish in this app goes through the shared channel.service helper,
+      // and the tab that sent a `message` frame must also receive its
+      // `chunk`/`done` frames (multi-tab sync), so flip this on globally
+      // instead of special-casing the sender in that helper.
+      publishToSelf: true,
+    },
+  });
 
   logger.info(`API server listening on http://localhost:${port}`);
 

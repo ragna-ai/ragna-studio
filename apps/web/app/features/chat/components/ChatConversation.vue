@@ -9,7 +9,6 @@ import {
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import {
-  DefaultChatTransport,
   isToolUIPart,
   lastAssistantMessageIsCompleteWithToolCalls,
   type UIDataTypes,
@@ -19,6 +18,7 @@ import {
 } from 'ai';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
+import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -35,7 +35,6 @@ const props = defineProps<Props>();
 const chatId = ref(props.chatId ?? null);
 
 // Composables
-const config = useRuntimeConfig();
 const { mutateAsync: createNewChat } = useCreateChat();
 
 // Computed
@@ -47,14 +46,7 @@ const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
   generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-  transport: new DefaultChatTransport({
-    credentials: 'include',
-    prepareSendMessagesRequest: ({ messages, body, trigger, messageId }) => ({
-      api: `${config.public.apiBaseUrl}/chat/${chatId.value}`,
-      body: { ...body, messages, trigger, messageId },
-      credentials: 'include',
-    }),
-  }),
+  transport: new WebSocketChatTransport(() => chatId.value),
 });
 
 const isBusy = computed(
