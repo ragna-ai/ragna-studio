@@ -74,7 +74,9 @@ const workspaceScopeStore = useWorkspaceScopeStore();
 // existing agent uses its own stored workspaceId; a not-yet-saved agent
 // uses the workspace it will be created in.
 const datasetPickerWorkspaceId = computed(() =>
-  props.id ? (props.workspaceId ?? null) : workspaceScopeStore.createWorkspaceId,
+  props.id
+    ? (props.workspaceId ?? null)
+    : workspaceScopeStore.createWorkspaceId,
 );
 
 const form = useForm({
@@ -215,7 +217,7 @@ const siderBarTabs = [
                     (v: string | number) => field.handleChange(String(v))
                   "
                   @blur="field.handleBlur"
-                  class="min-h-100"
+                  class="max-h-130 min-h-60"
                   autocomplete="off"
                 />
                 <FormFieldInfo :state="state" />

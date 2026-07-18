@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
 import { firstToUpperCase } from '~/lib/utils';
 
@@ -44,7 +43,7 @@ const models = computed<AiModelOption[]>(
       Error loading AI models.
     </p>
     <Select v-else v-model="modelValue">
-      <SelectTrigger class="w-64">
+      <SelectTrigger>
         <SelectValue placeholder="Select an AI model" />
       </SelectTrigger>
       <SelectContent>
