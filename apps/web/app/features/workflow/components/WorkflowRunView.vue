@@ -6,6 +6,7 @@ import {
   useGetWorkflow,
   useGetWorkflowRun,
 } from '~/features/workflow/composables/useWorkflowApi';
+import type { WorkflowRunStep } from '~/features/workflow/types';
 import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunStatusBadge.vue';
@@ -70,7 +71,7 @@ const nodes = computed<RenderableWorkflowNode[]>({
         data: {
           ...node.data,
           stepStatus: step?.status,
-          stepToolCallCount: step?.toolCalls?.length,
+          stepToolCallCount: countTraceToolCalls(step),
         },
       };
     }),
@@ -112,6 +113,14 @@ const multiTerminalOutput = computed(() => {
     return null;
   }
 });
+
+// Functions
+// Sums tool calls across every trace step, so the canvas badge shows the
+// step's total regardless of which AI SDK loop step they happened in.
+function countTraceToolCalls(step: WorkflowRunStep | undefined): number | undefined {
+  if (!step?.trace) return undefined;
+  return step.trace.reduce((total, traceStep) => total + traceStep.toolCalls.length, 0);
+}
 </script>
 
 <template>

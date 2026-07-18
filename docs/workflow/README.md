@@ -4,12 +4,13 @@ Entry point for the workflow feature docs. Read this first; it condenses the mec
 
 | Doc                                                                         | Content                                                                                       |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [workflows.md](./workflow/workflows.md)                                     | Original design: no Mastra, node catalog, schema rationale.                                   |
-| [workflows-implementation.md](./workflow/workflows-implementation.md)       | Binding v1 contracts: package exports, repos, engine behavior, API routes, web components.    |
-| [workflows-scheduling.md](./workflow/workflows-scheduling.md)               | Scheduled (cron) triggers: job schedulers, tick processor, reconciliation, stale-run sweeper. |
-| [workflows-human-in-the-loop.md](./workflow/workflows-human-in-the-loop.md) | PRD for the approval node (suspend/resume). Draft.                                            |
-| [workflows-email-trigger.md](./workflow/workflows-email-trigger.md)         | PRD for the email trigger (provider-neutral, Gmail first, polling). Draft.                    |
-| [workflows-known-issues.md](./workflow/workflows-known-issues.md)           | Resolved and open issues.                                                                     |
+| [workflows.md](./workflows.md)                                     | Original design: no Mastra, node catalog, schema rationale.                                   |
+| [workflows-implementation.md](./workflows-implementation.md)       | Binding v1 contracts: package exports, repos, engine behavior, API routes, web components.    |
+| [workflows-scheduling.md](./workflows-scheduling.md)               | Scheduled (cron) triggers: job schedulers, tick processor, reconciliation, stale-run sweeper. |
+| [workflows-human-in-the-loop.md](./workflows-human-in-the-loop.md) | PRD for the approval node (suspend/resume). Draft.                                            |
+| [workflows-email-trigger.md](./workflows-email-trigger.md)         | PRD for the email trigger (provider-neutral, Gmail first, polling). Draft.                    |
+| [workflows-team-node.md](./workflows-team-node.md)                 | Team node (lead agent delegating to 1-5 members) plus agent trace. Implemented.               |
+| [workflows-known-issues.md](./workflows-known-issues.md)           | Resolved and open issues.                                                                     |
 
 ## What it is
 

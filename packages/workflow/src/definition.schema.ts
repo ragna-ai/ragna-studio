@@ -2,12 +2,13 @@ import { z } from 'zod';
 import {
   agentConfigSchema,
   conditionConfigSchema,
+  teamConfigSchema,
   toolConfigSchema,
   transformConfigSchema,
   triggerConfigSchema,
 } from './config.schema';
 
-export const NODE_TYPES = ['trigger', 'agent', 'tool', 'condition', 'transform'] as const;
+export const NODE_TYPES = ['trigger', 'agent', 'tool', 'condition', 'transform', 'team'] as const;
 export type WorkflowNodeType = (typeof NODE_TYPES)[number];
 
 const positionSchema = z.object({
@@ -46,6 +47,12 @@ const workflowNodeSchema = z.discriminatedUnion('type', [
     type: z.literal('transform'),
     position: positionSchema,
     data: z.object({ label: z.string(), config: transformConfigSchema }),
+  }),
+  z.object({
+    id: z.string(),
+    type: z.literal('team'),
+    position: positionSchema,
+    data: z.object({ label: z.string(), config: teamConfigSchema }),
   }),
 ]);
 

@@ -35,6 +35,24 @@ function toExecutionEdges(edges: WorkflowEdge[]): ExecutionEdge[] {
     );
 }
 
+// Object key order is not stable across the save/publish round trip: Zod
+// parse rebuilds configs in schema declaration order and Postgres jsonb
+// reorders keys again on storage. Sorting keys recursively makes the
+// stringify comparison order-insensitive; array order stays meaningful.
+function toStableJson(value: unknown): string {
+  return JSON.stringify(value, (_key, node: unknown) => {
+    if (typeof node !== 'object' || node === null || Array.isArray(node)) {
+      return node;
+    }
+    const record = node as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(record)
+        .sort()
+        .map((key) => [key, record[key]]),
+    );
+  });
+}
+
 /**
  * Compares two definitions on the parts that change what a run does: node
  * `id`/`type`/`data.config` and edge `source`/`target`/`sourceHandle`.
@@ -61,5 +79,5 @@ export function isExecutionEquivalent(
     edges: toExecutionEdges(published.edges),
   };
 
-  return JSON.stringify(draftShape) === JSON.stringify(publishedShape);
+  return toStableJson(draftShape) === toStableJson(publishedShape);
 }

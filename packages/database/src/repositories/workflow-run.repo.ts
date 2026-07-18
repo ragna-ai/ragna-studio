@@ -1,9 +1,9 @@
 import type {
+  WorkflowAgentTraceStep,
   WorkflowDefinition,
   WorkflowRunStatus,
   WorkflowRunTrigger,
   WorkflowStepStatus,
-  WorkflowToolCall,
 } from '@repo/workflow';
 import { and, eq, lt, or } from 'drizzle-orm';
 import { db } from '../db';
@@ -152,7 +152,7 @@ export async function upsertRunStep({
   status,
   input,
   output,
-  toolCalls,
+  trace,
   error,
   startedAt,
   finishedAt,
@@ -162,7 +162,7 @@ export async function upsertRunStep({
   status: WorkflowStepStatus;
   input?: string;
   output?: string;
-  toolCalls?: WorkflowToolCall[];
+  trace?: WorkflowAgentTraceStep[];
   error?: string;
   startedAt?: Date;
   finishedAt?: Date;
@@ -175,7 +175,7 @@ export async function upsertRunStep({
       status,
       input,
       output,
-      toolCalls,
+      trace,
       error,
       startedAt,
       finishedAt,
@@ -186,7 +186,7 @@ export async function upsertRunStep({
         status,
         input,
         output,
-        toolCalls,
+        trace,
         error,
         startedAt,
         finishedAt,

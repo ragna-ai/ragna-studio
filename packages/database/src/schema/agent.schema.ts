@@ -11,14 +11,20 @@ export interface AgentSettings {
   maxOutputTokens?: number | null;
 }
 
-export type AgentTool =
-  | 'think'
-  | 'webSearch'
-  | 'webBrowser'
-  | 'imageGen'
-  | 'linkedinDraft'
-  | 'memory'
-  | 'datasets';
+// Single source of truth for the enum: drizzle-orm/zod can't derive a
+// column's `.$type<T>()` for jsonb columns (it only knows the storage is
+// JSON), so `packages/database/src/zod/index.ts` refines the `tools` field
+// with a zod schema built from this array.
+export const agentToolValues = [
+  'think',
+  'webSearch',
+  'webBrowser',
+  'imageGen',
+  'linkedinDraft',
+  'memory',
+  'datasets',
+] as const;
+export type AgentTool = (typeof agentToolValues)[number];
 export type AgentTools = AgentTool[];
 
 // No default temperature: Anthropic is deprecating the parameter, so new
