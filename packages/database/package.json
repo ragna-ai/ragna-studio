@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",

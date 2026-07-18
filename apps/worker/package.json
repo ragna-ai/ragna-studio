@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "bun --watch src/index.ts",
-    "start": "bun dist/index.mjs"
+    "start": "bun dist/index.mjs",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@repo/ai": "workspace:*",
