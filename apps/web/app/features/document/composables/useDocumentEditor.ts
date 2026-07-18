@@ -33,7 +33,7 @@ export function useDocumentEditor(options: UseDocumentEditorOptions) {
     editor.value = createDocumentEditor({
       content: options.content,
       placeholder: options.placeholder,
-      autofocus: 'end',
+      autofocus: 'start',
       onUpdate: options.onUpdate,
     });
   });
