@@ -1,59 +1,171 @@
 <script setup lang="ts">
-import type { WorkflowNode } from '@repo/workflow';
-import { XIcon } from '@lucide/vue';
-import type { WorkflowRunStep } from '~/features/workflow/types';
-import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CopyIcon,
+} from '@lucide/vue';
+import MessageResponse from '~/components/ai-elements/message/MessageResponse.vue';
 import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunStatusBadge.vue';
 import WorkflowTraceTimeline from '~/features/workflow/components/WorkflowTraceTimeline.vue';
-
-// Imports
+import type { WorkflowRunStep } from '~/features/workflow/types';
+import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
 
 // Props
-defineProps<{
-  node: WorkflowNode;
-  step: WorkflowRunStep | undefined;
+// `nodes` is the run definition's full node list, in definition order, used
+// for previous/next navigation; `stepByNodeId` looks up each node's result.
+const props = defineProps<{
+  nodes: RenderableWorkflowNode[];
+  stepByNodeId: Map<string, WorkflowRunStep>;
 }>();
 
-// Emits
-const emit = defineEmits<{
-  (e: 'close'): void;
-}>();
+// Refs
+const nodeId = defineModel<string | null>('nodeId', { default: null });
+
+// Composables
+const { copy: copyOutput, copied: isOutputCopied } = useClipboard();
+
+// Computed
+const isOpen = computed({
+  get: () => nodeId.value !== null,
+  set: (value) => {
+    if (!value) nodeId.value = null;
+  },
+});
+
+const currentIndex = computed(() =>
+  props.nodes.findIndex((node) => node.id === nodeId.value),
+);
+const selectedNode = computed(() =>
+  currentIndex.value >= 0 ? props.nodes[currentIndex.value] : null,
+);
+const selectedStep = computed(() =>
+  selectedNode.value
+    ? props.stepByNodeId.get(selectedNode.value.id)
+    : undefined,
+);
+const canGoPrevious = computed(() => currentIndex.value > 0);
+const canGoNext = computed(
+  () => currentIndex.value >= 0 && currentIndex.value < props.nodes.length - 1,
+);
+
+// Functions
+function goToPrevious() {
+  if (!canGoPrevious.value) return;
+  nodeId.value = props.nodes[currentIndex.value - 1]!.id;
+}
+
+function goToNext() {
+  if (!canGoNext.value) return;
+  nodeId.value = props.nodes[currentIndex.value + 1]!.id;
+}
+
+// A plain keydown listener on the dialog content: Escape and the accordion's
+// own up/down focus handling are untouched, this only reacts to left/right.
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    goToPrevious();
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    goToNext();
+  }
+}
 </script>
 
 <template>
-  <aside class="flex h-full w-96 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <Badge variant="outline">{{ NODE_TYPE_LABELS[node.type] }}</Badge>
-        <WorkflowRunStatusBadge v-if="step" :status="step.status" />
-      </div>
-      <Button variant="ghost" size="icon" aria-label="Close panel" @click="emit('close')">
-        <XIcon class="size-4 stroke-1.5" />
-      </Button>
-    </div>
+  <Dialog v-model:open="isOpen">
+    <DialogContent class="max-w-4xl min-w-3xl" @keydown="handleKeydown">
+      <DialogHeader>
+        <div class="flex items-center justify-between gap-4 pr-8">
+          <div class="flex min-w-0 items-center gap-2">
+            <DialogTitle class="truncate">{{
+              selectedNode?.data.label
+            }}</DialogTitle>
+            <Badge v-if="selectedNode" variant="outline">
+              {{ NODE_TYPE_LABELS[selectedNode.type] }}
+            </Badge>
+            <WorkflowRunStatusBadge
+              v-if="selectedStep"
+              :status="selectedStep.status"
+            />
+          </div>
+          <div class="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              :disabled="!canGoPrevious"
+              aria-label="Previous node"
+              @click="goToPrevious"
+            >
+              <ChevronLeftIcon class="size-4 stroke-1.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              :disabled="!canGoNext"
+              aria-label="Next node"
+              @click="goToNext"
+            >
+              <ChevronRightIcon class="size-4 stroke-1.5" />
+            </Button>
+          </div>
+        </div>
+      </DialogHeader>
 
-    <h3 class="text-sm font-semibold">{{ node.data.label }}</h3>
+      <div class="-mx-5 max-h-[75vh] space-y-4 overflow-y-auto px-5">
+        <p v-if="!selectedStep" class="text-sm text-muted-foreground">
+          This node has not run yet.
+        </p>
+        <template v-else>
+          <div v-if="selectedStep.input">
+            <Label class="mb-2 block text-sm font-medium">Input</Label>
+            <pre
+              class="max-h-[40vh] overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap"
+              >{{ selectedStep.input }}</pre>
+          </div>
+          <div v-if="selectedStep.output">
+            <Label class="mb-2 block text-sm font-medium">Output</Label>
+            <div class="relative">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                class="absolute top-2 right-2 z-10"
+                aria-label="Copy output"
+                @click="copyOutput(selectedStep.output ?? '')"
+              >
+                <component
+                  :is="isOutputCopied ? CheckIcon : CopyIcon"
+                  class="size-3.5 stroke-1.5"
+                />
+              </Button>
 
-    <p v-if="!step" class="text-sm text-muted-foreground">
-      This node has not run yet.
-    </p>
-    <template v-else>
-      <div v-if="step.input">
-        <Label class="mb-2 block text-sm font-medium">Input</Label>
-        <pre class="max-h-48 overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap">{{ step.input }}</pre>
+              <div
+                class="max-h-[40vh] overflow-y-auto rounded-md border bg-muted p-3 text-sm"
+              >
+                <MessageResponse
+                  :content="selectedStep.output"
+                  class="text-sm [&_:is(h1,h2,h3,h4,h5,h6)]:mt-3 [&_:is(h1,h2,h3,h4,h5,h6)]:text-sm!"
+                />
+              </div>
+            </div>
+          </div>
+          <div v-if="selectedStep.trace?.length">
+            <Label class="mb-2 block text-sm font-medium">Agent trace</Label>
+            <WorkflowTraceTimeline :trace="selectedStep.trace" />
+          </div>
+          <div v-if="selectedStep.error">
+            <Label class="mb-2 block text-sm font-medium text-destructive"
+              >Error</Label
+            >
+            <pre
+              class="max-h-[40vh] overflow-auto rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs whitespace-pre-wrap"
+              >{{ selectedStep.error }}</pre>
+          </div>
+        </template>
       </div>
-      <div v-if="step.output">
-        <Label class="mb-2 block text-sm font-medium">Output</Label>
-        <pre class="max-h-48 overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap">{{ step.output }}</pre>
-      </div>
-      <div v-if="step.trace?.length">
-        <Label class="mb-2 block text-sm font-medium">Agent trace</Label>
-        <WorkflowTraceTimeline :trace="step.trace" />
-      </div>
-      <div v-if="step.error">
-        <Label class="mb-2 block text-sm font-medium text-destructive">Error</Label>
-        <pre class="max-h-48 overflow-auto rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs whitespace-pre-wrap">{{ step.error }}</pre>
-      </div>
-    </template>
-  </aside>
+    </DialogContent>
+  </Dialog>
 </template>

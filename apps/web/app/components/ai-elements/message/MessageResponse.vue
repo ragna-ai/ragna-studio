@@ -1,36 +1,37 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
-import { computed, useSlots } from 'vue'
-import { Markdown } from 'vue-stream-markdown'
-import 'vue-stream-markdown/index.css'
+import { cn } from '@/lib/utils';
+import type { HTMLAttributes } from 'vue';
+import { computed, useSlots } from 'vue';
+import { Markdown } from 'vue-stream-markdown';
+import 'vue-stream-markdown/index.css';
 
 interface Props {
-  content?: string
-  class?: HTMLAttributes['class']
+  content?: string;
+  class?: HTMLAttributes['class'];
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
-const slots = useSlots()
+const slots = useSlots();
 const slotContent = computed<string | undefined>(() => {
-  const nodes = slots.default?.()
+  const nodes = slots.default?.();
   if (!Array.isArray(nodes)) {
-    return undefined
+    return undefined;
   }
-  let text = ''
+  let text = '';
   for (const node of nodes) {
-    if (typeof node.children === 'string')
-      text += node.children
+    if (typeof node.children === 'string') text += node.children;
   }
-  return text || undefined
-})
+  return text || undefined;
+});
 
-const md = computed(() => (slotContent.value ?? props.content ?? '') as string)
+const md = computed(() => (slotContent.value ?? props.content ?? '') as string);
 </script>
 
 <template>
   <Markdown
+    :mode="'static'"
+    :enable-animate="false"
     :content="md"
     :class="
       cn(
