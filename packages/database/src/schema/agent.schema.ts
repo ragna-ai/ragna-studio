@@ -23,6 +23,7 @@ export const agentToolValues = [
   'linkedinDraft',
   'memory',
   'datasets',
+  'documents',
 ] as const;
 export type AgentTool = (typeof agentToolValues)[number];
 export type AgentTools = AgentTool[];

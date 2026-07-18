@@ -1,25 +1,25 @@
 <script setup lang="ts">
 // Imports
 import type { BadgeVariants } from '~/components/ui/badge';
-import type { AgentDocumentStatus } from '~/features/agent/types';
+import type { AgentContextDocumentStatus } from '~/features/agent/types';
 import { cn } from '~/lib/utils';
 
 // Props
 const props = defineProps<{
-  status: AgentDocumentStatus;
+  status: AgentContextDocumentStatus;
 }>();
 
 // Computed
 // Color accents layered on top of the shared `outline` variant so each
 // status reads clearly without adding new badge variants for one caller
 // (same pattern as SocialPostStatusBadge / WorkflowRunStatusBadge).
-const variantByStatus: Record<AgentDocumentStatus, BadgeVariants['variant']> = {
+const variantByStatus: Record<AgentContextDocumentStatus, BadgeVariants['variant']> = {
   pending: 'outline',
   ready: 'outline',
   failed: 'destructive',
 };
 
-const colorClassByStatus: Partial<Record<AgentDocumentStatus, string>> = {
+const colorClassByStatus: Partial<Record<AgentContextDocumentStatus, string>> = {
   ready: 'border-green-600 text-green-700',
 };
 

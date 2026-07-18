@@ -3,6 +3,7 @@ import {
   AppWindowIcon,
   CheckIcon,
   DatabaseIcon,
+  FileTextIcon,
   GlobeIcon,
   ImageIcon,
   NotebookPenIcon,
@@ -110,6 +111,12 @@ const availableTools: UiAgentTool[] = [
     icon: DatabaseIcon,
     titleKey: 'agent.tool.datasets.label',
     descriptionKey: 'agent.tool.datasets.description',
+  },
+  {
+    id: 'documents',
+    icon: FileTextIcon,
+    titleKey: 'agent.tool.documents.label',
+    descriptionKey: 'agent.tool.documents.description',
   },
 ];
 

@@ -26,6 +26,10 @@ const datasetIdSchema = z.object({
   datasetId: primaryIdSchema,
 });
 
+const documentIdSchema = z.object({
+  documentId: primaryIdSchema,
+});
+
 export const hasValidChatId = (params: any) =>
   hasValidSchema(chatIdSchema, params);
 
@@ -43,6 +47,9 @@ export const hasValidSocialPostId = (params: any) =>
 
 export const hasValidDatasetId = (params: any) =>
   hasValidSchema(datasetIdSchema, params);
+
+export const hasValidDocumentId = (params: any) =>
+  hasValidSchema(documentIdSchema, params);
 
 export function hasValidPage(params: any) {
   const regexScheme = /^[1-9]\d{0,4}$/;

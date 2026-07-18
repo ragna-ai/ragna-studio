@@ -2,20 +2,20 @@ import { Hono } from 'hono';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
-  validAgentDocumentParams,
+  validAgentContextDocumentParams,
   validAgentIdParam,
-  validRenameAgentDocumentBody,
+  validRenameAgentContextDocumentBody,
 } from '../middlewares/validationMiddlewares';
 import {
-  deleteAgentDocument,
-  listAgentDocuments,
-  renameAgentDocument,
-  replaceAgentDocumentFile,
-  retryAgentDocument,
-  uploadAgentDocuments,
-} from '../services/agent-document.service';
+  deleteAgentContextDocument,
+  listAgentContextDocuments,
+  renameAgentContextDocument,
+  replaceAgentContextDocumentFile,
+  retryAgentContextDocument,
+  uploadAgentContextDocuments,
+} from '../services/agent-context-document.service';
 
-export const agentDocumentController = new Hono()
+export const agentContextDocumentController = new Hono()
   .basePath('/agent')
   .use(authMiddleware)
   /**
@@ -26,7 +26,7 @@ export const agentDocumentController = new Hono()
     const user = c.get('user');
     const param = c.req.valid('param');
 
-    const documents = await listAgentDocuments({ agentId: param.agentId, userId: user.id });
+    const documents = await listAgentContextDocuments({ agentId: param.agentId, userId: user.id });
 
     return c.json({ documents });
   })
@@ -43,7 +43,7 @@ export const agentDocumentController = new Hono()
     const files = Array.isArray(filesField) ? filesField : filesField ? [filesField] : [];
     const uploadedFiles = files.filter((file): file is File => file instanceof File);
 
-    const documents = await uploadAgentDocuments({
+    const documents = await uploadAgentContextDocuments({
       agentId: param.agentId,
       userId: user.id,
       files: uploadedFiles,
@@ -55,7 +55,7 @@ export const agentDocumentController = new Hono()
    * [PUT] /agent/:agentId/documents/:documentId/file
    * Replace a document's file (`file` field).
    */
-  .put('/:agentId/documents/:documentId/file', validAgentDocumentParams, async (c) => {
+  .put('/:agentId/documents/:documentId/file', validAgentContextDocumentParams, async (c) => {
     const user = c.get('user');
     const param = c.req.valid('param');
 
@@ -66,7 +66,7 @@ export const agentDocumentController = new Hono()
       throw new BadRequestException('A file is required');
     }
 
-    const document = await replaceAgentDocumentFile({
+    const document = await replaceAgentContextDocumentFile({
       agentId: param.agentId,
       userId: user.id,
       documentId: param.documentId,
@@ -81,14 +81,14 @@ export const agentDocumentController = new Hono()
    */
   .patch(
     '/:agentId/documents/:documentId',
-    validAgentDocumentParams,
-    validRenameAgentDocumentBody,
+    validAgentContextDocumentParams,
+    validRenameAgentContextDocumentBody,
     async (c) => {
       const user = c.get('user');
       const param = c.req.valid('param');
       const { name } = c.req.valid('json');
 
-      const document = await renameAgentDocument({
+      const document = await renameAgentContextDocument({
         agentId: param.agentId,
         userId: user.id,
         documentId: param.documentId,
@@ -102,11 +102,11 @@ export const agentDocumentController = new Hono()
    * [POST] /agent/:agentId/documents/:documentId/retry
    * Re-enqueue extraction for a failed document.
    */
-  .post('/:agentId/documents/:documentId/retry', validAgentDocumentParams, async (c) => {
+  .post('/:agentId/documents/:documentId/retry', validAgentContextDocumentParams, async (c) => {
     const user = c.get('user');
     const param = c.req.valid('param');
 
-    const document = await retryAgentDocument({
+    const document = await retryAgentContextDocument({
       agentId: param.agentId,
       userId: user.id,
       documentId: param.documentId,
@@ -118,11 +118,11 @@ export const agentDocumentController = new Hono()
    * [DELETE] /agent/:agentId/documents/:documentId
    * Remove a document and its R2 object (best effort).
    */
-  .delete('/:agentId/documents/:documentId', validAgentDocumentParams, async (c) => {
+  .delete('/:agentId/documents/:documentId', validAgentContextDocumentParams, async (c) => {
     const user = c.get('user');
     const param = c.req.valid('param');
 
-    await deleteAgentDocument({
+    await deleteAgentContextDocument({
       agentId: param.agentId,
       userId: user.id,
       documentId: param.documentId,

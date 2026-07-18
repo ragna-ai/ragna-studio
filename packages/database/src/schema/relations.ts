@@ -1,10 +1,12 @@
 import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
-import { agentDocument } from './agent-document.schema';
+import { agentContextDocument } from './agent-context-document.schema';
 import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { dataset, datasetRow } from './dataset.schema';
+import { document } from './document.schema';
+import { folder } from './folder.schema';
 import { genImage } from './genimage.schema';
 import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
@@ -24,11 +26,13 @@ const schema = {
   agent,
   agentTemplate,
   agentMemory,
-  agentDocument,
+  agentContextDocument,
   chat,
   chatMessage,
   dataset,
   datasetRow,
+  document,
+  folder,
   genImage,
   socialPost,
   socialPostMedia,
@@ -51,6 +55,7 @@ export const relations = defineRelations(schema, (r) => ({
     notifications: r.many.notification(),
     workspaces: r.many.workspace(),
     datasets: r.many.dataset(),
+    documents: r.many.document(),
   },
   account: {
     user: r.one.user({
@@ -93,7 +98,8 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     chats: r.many.chat(),
     memory: r.one.agentMemory(),
-    documents: r.many.agentDocument(),
+    contextDocuments: r.many.agentContextDocument(),
+    documents: r.many.document(),
   },
   agentMemory: {
     agent: r.one.agent({
@@ -102,9 +108,9 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
   },
-  agentDocument: {
+  agentContextDocument: {
     agent: r.one.agent({
-      from: r.agentDocument.agentId,
+      from: r.agentContextDocument.agentId,
       to: r.agent.id,
       optional: false,
     }),
@@ -161,6 +167,36 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.dataset.id,
       optional: false,
     }),
+  },
+  document: {
+    workspace: r.one.workspace({
+      from: r.document.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    folder: r.one.folder({
+      from: r.document.folderId,
+      to: r.folder.id,
+      optional: true,
+    }),
+    createdByUser: r.one.user({
+      from: r.document.createdByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    createdByAgent: r.one.agent({
+      from: r.document.createdByAgentId,
+      to: r.agent.id,
+      optional: true,
+    }),
+  },
+  folder: {
+    workspace: r.one.workspace({
+      from: r.folder.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    documents: r.many.document(),
   },
   genImage: {
     user: r.one.user({
@@ -241,5 +277,7 @@ export const relations = defineRelations(schema, (r) => ({
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     datasets: r.many.dataset(),
+    documents: r.many.document(),
+    folders: r.many.folder(),
   },
 }));

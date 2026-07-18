@@ -1,26 +1,26 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
-import type { AgentDocument, NewAgentDocument } from '../schema';
-import { agentDocument } from '../schema';
+import type { AgentContextDocument, NewAgentContextDocument } from '../schema';
+import { agentContextDocument } from '../schema';
 
-export type { AgentDocument, AgentDocumentStatus, NewAgentDocument } from '../schema';
+export type { AgentContextDocument, AgentContextDocumentStatus, NewAgentContextDocument } from '../schema';
 
-export async function createAgentDocuments(
-  records: NewAgentDocument[],
-): Promise<AgentDocument[]> {
+export async function createAgentContextDocuments(
+  records: NewAgentContextDocument[],
+): Promise<AgentContextDocument[]> {
   if (records.length === 0) {
     return [];
   }
 
-  return db.insert(agentDocument).values(records).returning();
+  return db.insert(agentContextDocument).values(records).returning();
 }
 
-export async function getAgentDocumentsByAgentId({
+export async function getAgentContextDocumentsByAgentId({
   agentId,
 }: {
   agentId: string;
-}): Promise<AgentDocument[]> {
-  return db.query.agentDocument.findMany({
+}): Promise<AgentContextDocument[]> {
+  return db.query.agentContextDocument.findMany({
     where: { agentId },
     orderBy: (t, { asc }) => asc(t.createdAt),
   });
@@ -29,14 +29,14 @@ export async function getAgentDocumentsByAgentId({
 // Ownership-scoped lookup for API routes: callers already resolved the agent
 // via `getAgentById({ agentId, userId })`, so this only needs to confirm the
 // document belongs to that agent.
-export async function getAgentDocumentByIdAndAgentId({
+export async function getAgentContextDocumentByIdAndAgentId({
   id,
   agentId,
 }: {
   id: string;
   agentId: string;
-}): Promise<AgentDocument | null> {
-  const found = await db.query.agentDocument.findFirst({
+}): Promise<AgentContextDocument | null> {
+  const found = await db.query.agentContextDocument.findFirst({
     where: { id, agentId },
   });
 
@@ -45,21 +45,21 @@ export async function getAgentDocumentByIdAndAgentId({
 
 // Plain lookup by id, no ownership scoping. Used by the extraction worker,
 // which only ever receives a trusted `documentId` from its own job data.
-export async function getAgentDocumentById({
+export async function getAgentContextDocumentById({
   id,
 }: {
   id: string;
-}): Promise<AgentDocument | null> {
-  const found = await db.query.agentDocument.findFirst({
+}): Promise<AgentContextDocument | null> {
+  const found = await db.query.agentContextDocument.findFirst({
     where: { id },
   });
 
   return found ?? null;
 }
 
-type UpdateAgentDocumentFields = Partial<
+type UpdateAgentContextDocumentFields = Partial<
   Pick<
-    NewAgentDocument,
+    NewAgentContextDocument,
     | 'name'
     | 'storageKey'
     | 'mimeType'
@@ -74,21 +74,21 @@ type UpdateAgentDocumentFields = Partial<
 // `agentId` is always required in the WHERE clause, even though every caller
 // has already loaded the row once to check ownership, so a mistaken id from
 // one agent can never overwrite a document belonging to another.
-export async function updateAgentDocument({
+export async function updateAgentContextDocument({
   id,
   agentId,
   ...fields
-}: { id: string; agentId: string } & UpdateAgentDocumentFields): Promise<AgentDocument | null> {
+}: { id: string; agentId: string } & UpdateAgentContextDocumentFields): Promise<AgentContextDocument | null> {
   const [updated] = await db
-    .update(agentDocument)
+    .update(agentContextDocument)
     .set(fields)
-    .where(and(eq(agentDocument.id, id), eq(agentDocument.agentId, agentId)))
+    .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)))
     .returning();
 
   return updated ?? null;
 }
 
-export async function deleteAgentDocumentById({
+export async function deleteAgentContextDocumentById({
   id,
   agentId,
 }: {
@@ -96,23 +96,23 @@ export async function deleteAgentDocumentById({
   agentId: string;
 }): Promise<void> {
   await db
-    .delete(agentDocument)
-    .where(and(eq(agentDocument.id, id), eq(agentDocument.agentId, agentId)));
+    .delete(agentContextDocument)
+    .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)));
 }
 
-export type AgentDocumentForPrompt = { name: string; extractedText: string };
+export type AgentContextDocumentForPrompt = { name: string; extractedText: string };
 
 // Lean query for prompt assembly: only `ready` documents, oldest first, only
 // the two fields `buildAgentInstructions()` renders. The extraction worker
 // reuses this same query to compute the agent's other ready documents' total
 // text length for the per-agent budget check, since it's the same set of
 // rows either way.
-export async function getReadyAgentDocumentsForPrompt({
+export async function getReadyAgentContextDocumentsForPrompt({
   agentId,
 }: {
   agentId: string;
-}): Promise<AgentDocumentForPrompt[]> {
-  const rows = await db.query.agentDocument.findMany({
+}): Promise<AgentContextDocumentForPrompt[]> {
+  const rows = await db.query.agentContextDocument.findMany({
     where: { agentId, status: 'ready' },
     columns: { name: true, extractedText: true },
     orderBy: (t, { asc }) => asc(t.createdAt),

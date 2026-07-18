@@ -1,5 +1,5 @@
 import {
-  AGENT_DOCUMENTS_QUEUE,
+  AGENT_CONTEXT_DOCUMENTS_QUEUE,
   EMAILS_QUEUE,
   NOTIFICATIONS_QUEUE,
   ONBOARDINGS_QUEUE,
@@ -16,5 +16,5 @@ export const queue = {
   onboarding: () => getOrCreateQueue({ name: ONBOARDINGS_QUEUE }),
   notification: () => getOrCreateQueue({ name: NOTIFICATIONS_QUEUE }),
   workflow: () => getOrCreateQueue({ name: WORKFLOWS_QUEUE }),
-  agentDocument: () => getOrCreateQueue({ name: AGENT_DOCUMENTS_QUEUE }),
+  agentContextDocument: () => getOrCreateQueue({ name: AGENT_CONTEXT_DOCUMENTS_QUEUE }),
 } as const;

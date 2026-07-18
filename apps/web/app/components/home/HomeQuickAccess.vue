@@ -2,6 +2,7 @@
 import {
   BotIcon,
   DatabaseIcon,
+  FileTextIcon,
   ImageIcon,
   MessagesSquareIcon,
   Share2Icon,
@@ -78,6 +79,13 @@ const quickAccessItems = [
     class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     label: 'Datasets',
     route: '/dataset',
+  },
+  {
+    id: 15,
+    icon: FileTextIcon,
+    class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    label: 'Documents',
+    route: '/document',
   },
 ];
 </script>

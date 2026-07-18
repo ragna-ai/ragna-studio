@@ -98,7 +98,7 @@ export const validAgentMemoryBody = myzValidator(
   }),
 );
 
-export const validAgentDocumentParams = myzValidator(
+export const validAgentContextDocumentParams = myzValidator(
   'param',
   z.object({
     agentId: primaryId,
@@ -106,7 +106,7 @@ export const validAgentDocumentParams = myzValidator(
   }),
 );
 
-export const validRenameAgentDocumentBody = myzValidator(
+export const validRenameAgentContextDocumentBody = myzValidator(
   'json',
   z.object({
     name: z.string().trim().min(1).max(255),
@@ -256,3 +256,47 @@ export const validUpdateDatasetRowBody = myzValidator(
     data: datasetRowDataSchema,
   }),
 );
+
+// DOCUMENTS & FOLDERS
+
+export const validWorkspaceDocumentParams = myzValidator(
+  'param',
+  z.object({
+    workspaceId: primaryId,
+    documentId: primaryId,
+  }),
+);
+
+export const validCreateDocumentBody = myzValidator(
+  'json',
+  z.object({
+    title: z.string().min(1).max(255),
+    content: z.string().max(1_000_000).optional(),
+    folderId: primaryId.nullish(),
+  }),
+);
+
+export const validUpdateDocumentBody = myzValidator(
+  'json',
+  z.object({
+    title: z.string().min(1).max(255).optional(),
+    content: z.string().max(1_000_000).optional(),
+    folderId: primaryId.nullish(),
+  }),
+);
+
+export const validWorkspaceFolderParams = myzValidator(
+  'param',
+  z.object({
+    workspaceId: primaryId,
+    folderId: primaryId,
+  }),
+);
+
+const folderNameBodySchema = z.object({
+  name: z.string().min(1).max(255),
+});
+
+export const validCreateFolderBody = myzValidator('json', folderNameBodySchema);
+
+export const validRenameFolderBody = myzValidator('json', folderNameBodySchema);

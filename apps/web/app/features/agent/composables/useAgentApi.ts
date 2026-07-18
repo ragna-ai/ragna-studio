@@ -6,8 +6,8 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import type {
-  AgentDocumentManyResponse,
-  AgentDocumentResponse,
+  AgentContextDocumentManyResponse,
+  AgentContextDocumentResponse,
   AgentMemoryResponse,
   AgentResponse,
   UpsertAgentRequest,
@@ -140,19 +140,19 @@ export function useDeleteAgent() {
 }
 
 // Client-side mirror of the API's limits
-// (apps/api/src/services/agent-document.service.ts), so invalid attachments
+// (apps/api/src/services/agent-context-document.service.ts), so invalid attachments
 // are rejected before a request is even sent.
-export const AGENT_DOCUMENT_MAX_FILES = 10;
-export const AGENT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-export const AGENT_DOCUMENT_ACCEPT = '.pdf,.docx,.txt,.md';
+export const AGENT_CONTEXT_DOCUMENT_MAX_FILES = 10;
+export const AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.txt,.md';
 
 // While any listed document is still 'pending', poll for its terminal
 // status. 'failed' is terminal and doesn't poll (docs/agent-context-documents.md).
-const AGENT_DOCUMENT_POLL_INTERVAL_MS = 2000;
+const AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS = 2000;
 
-export function useGetAgentDocuments(agentId: MaybeRefOrGetter<string>) {
+export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
   const api = useApi();
-  return useQuery<AgentDocumentManyResponse>({
+  return useQuery<AgentContextDocumentManyResponse>({
     queryKey: agentKeys.documents(agentId),
     queryFn: ({ signal }) =>
       api(`/agent/${toValue(agentId)}/documents`, { method: 'GET', signal }),
@@ -161,20 +161,20 @@ export function useGetAgentDocuments(agentId: MaybeRefOrGetter<string>) {
       const hasPendingDocument = query.state.data?.documents.some(
         (document) => document.status === 'pending',
       );
-      return hasPendingDocument ? AGENT_DOCUMENT_POLL_INTERVAL_MS : false;
+      return hasPendingDocument ? AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS : false;
     },
   });
 }
 
-export interface UploadAgentDocumentsVariables {
+export interface UploadAgentContextDocumentsVariables {
   agentId: string;
   files: File[];
 }
 
-export function useUploadAgentDocuments() {
+export function useUploadAgentContextDocuments() {
   const api = useApi();
   const queryClient = useQueryClient();
-  return useMutation<AgentDocumentManyResponse, unknown, UploadAgentDocumentsVariables>({
+  return useMutation<AgentContextDocumentManyResponse, unknown, UploadAgentContextDocumentsVariables>({
     mutationFn: ({ agentId, files }) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
@@ -189,16 +189,16 @@ export function useUploadAgentDocuments() {
   });
 }
 
-export interface RenameAgentDocumentVariables {
+export interface RenameAgentContextDocumentVariables {
   agentId: string;
   documentId: string;
   name: string;
 }
 
-export function useRenameAgentDocument() {
+export function useRenameAgentContextDocument() {
   const api = useApi();
   const queryClient = useQueryClient();
-  return useMutation<AgentDocumentResponse, unknown, RenameAgentDocumentVariables>({
+  return useMutation<AgentContextDocumentResponse, unknown, RenameAgentContextDocumentVariables>({
     mutationFn: ({ agentId, documentId, name }) =>
       api(`/agent/${agentId}/documents/${documentId}`, { method: 'PATCH', body: { name } }),
     onSuccess: (_, { agentId }) => {
@@ -210,16 +210,16 @@ export function useRenameAgentDocument() {
   });
 }
 
-export interface ReplaceAgentDocumentFileVariables {
+export interface ReplaceAgentContextDocumentFileVariables {
   agentId: string;
   documentId: string;
   file: File;
 }
 
-export function useReplaceAgentDocumentFile() {
+export function useReplaceAgentContextDocumentFile() {
   const api = useApi();
   const queryClient = useQueryClient();
-  return useMutation<AgentDocumentResponse, unknown, ReplaceAgentDocumentFileVariables>({
+  return useMutation<AgentContextDocumentResponse, unknown, ReplaceAgentContextDocumentFileVariables>({
     mutationFn: ({ agentId, documentId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
@@ -237,15 +237,15 @@ export function useReplaceAgentDocumentFile() {
   });
 }
 
-export interface AgentDocumentIdVariables {
+export interface AgentContextDocumentIdVariables {
   agentId: string;
   documentId: string;
 }
 
-export function useRetryAgentDocument() {
+export function useRetryAgentContextDocument() {
   const api = useApi();
   const queryClient = useQueryClient();
-  return useMutation<AgentDocumentResponse, unknown, AgentDocumentIdVariables>({
+  return useMutation<AgentContextDocumentResponse, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
       api(`/agent/${agentId}/documents/${documentId}/retry`, { method: 'POST' }),
     onSuccess: (_, { agentId }) => {
@@ -257,10 +257,10 @@ export function useRetryAgentDocument() {
   });
 }
 
-export function useDeleteAgentDocument() {
+export function useDeleteAgentContextDocument() {
   const api = useApi();
   const queryClient = useQueryClient();
-  return useMutation<void, unknown, AgentDocumentIdVariables>({
+  return useMutation<void, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
       api(`/agent/${agentId}/documents/${documentId}`, { method: 'DELETE' }),
     onSuccess: (_, { agentId }) => {

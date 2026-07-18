@@ -1,19 +1,19 @@
 import { config } from '@repo/config';
-import type { Agent, AgentDocument, AgentDocumentStatus } from '@repo/database';
+import type { Agent, AgentContextDocument, AgentContextDocumentStatus } from '@repo/database';
 import {
-  createAgentDocuments,
-  deleteAgentDocumentById,
+  createAgentContextDocuments,
+  deleteAgentContextDocumentById,
   getAgentById,
-  getAgentDocumentByIdAndAgentId,
-  getAgentDocumentsByAgentId,
-  updateAgentDocument,
+  getAgentContextDocumentByIdAndAgentId,
+  getAgentContextDocumentsByAgentId,
+  updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { EXTRACT_AGENT_DOCUMENT_JOB, ExtractAgentDocumentJobDto, queue } from '@repo/queue';
+import { EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, ExtractAgentContextDocumentJobDto, queue } from '@repo/queue';
 import {
   deleteObjects,
   MIME_TYPE_BY_KIND,
-  sniffAgentDocumentKind,
+  sniffAgentContextDocumentKind,
   uploadObjectBuffer,
   type SupportedDocumentKind,
 } from '@repo/storage';
@@ -25,10 +25,10 @@ import {
   NotFoundException,
 } from '../exceptions';
 
-const MAX_AGENT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-const MAX_AGENT_DOCUMENTS_PER_AGENT = 10;
+const MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 10;
 
-type AgentDocumentValidation =
+type AgentContextDocumentValidation =
   | { kind: SupportedDocumentKind; mimeType: string }
   | { error: string };
 
@@ -42,7 +42,7 @@ type AgentDocumentValidation =
  *   - valid UTF-8 for txt/md, disambiguated from each other by extension
  *     since content alone can't tell them apart.
  */
-function validateAgentDocumentFile({
+function validateAgentContextDocumentFile({
   filename,
   fileSize,
   buffer,
@@ -50,16 +50,16 @@ function validateAgentDocumentFile({
   filename: string;
   fileSize: number;
   buffer: Buffer;
-}): AgentDocumentValidation {
+}): AgentContextDocumentValidation {
   if (fileSize === 0) {
     return { error: `"${filename}" is empty` };
   }
 
-  if (fileSize > MAX_AGENT_DOCUMENT_FILE_BYTES) {
+  if (fileSize > MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES) {
     return { error: `"${filename}" is larger than 10 MB` };
   }
 
-  const kind = sniffAgentDocumentKind(buffer, filename);
+  const kind = sniffAgentContextDocumentKind(buffer, filename);
 
   if (!kind) {
     return { error: `"${filename}" is not a supported file type (pdf, docx, txt, md)` };
@@ -74,7 +74,7 @@ function validateAgentDocumentFile({
  * A replace calls this again with the same `documentId` but gets a new
  * `uploadId`, so the old object is never overwritten in place.
  */
-async function uploadAgentDocumentFile({
+async function uploadAgentContextDocumentFile({
   agentId,
   documentId,
   buffer,
@@ -102,7 +102,7 @@ async function uploadAgentDocumentFile({
  * logged, not thrown, so a stray object never blocks the delete/replace
  * action that triggered it (mirrors `deleteUploadedMediaObjects`).
  */
-async function deleteAgentDocumentObjects(storageKeys: string[]): Promise<void> {
+async function deleteAgentContextDocumentObjects(storageKeys: string[]): Promise<void> {
   if (storageKeys.length === 0) {
     return;
   }
@@ -129,15 +129,15 @@ async function deleteAgentDocumentObjects(storageKeys: string[]): Promise<void> 
  * its document rows, via cascade) is removed, since the cascade only
  * cleans up the database side.
  */
-export async function deleteAgentDocumentsForAgent({
+export async function deleteAgentContextDocumentsForAgent({
   agentId,
 }: {
   agentId: string;
 }): Promise<void> {
-  const { data: documents } = await tryCatch(() => getAgentDocumentsByAgentId({ agentId }));
+  const { data: documents } = await tryCatch(() => getAgentContextDocumentsByAgentId({ agentId }));
 
   if (documents && documents.length > 0) {
-    await deleteAgentDocumentObjects(documents.map((document) => document.storageKey));
+    await deleteAgentContextDocumentObjects(documents.map((document) => document.storageKey));
   }
 }
 
@@ -174,9 +174,9 @@ async function loadOwnedDocument({
 }: {
   agentId: string;
   documentId: string;
-}): Promise<AgentDocument> {
+}): Promise<AgentContextDocument> {
   const { error, data: document } = await tryCatch(() =>
-    getAgentDocumentByIdAndAgentId({ id: documentId, agentId }),
+    getAgentContextDocumentByIdAndAgentId({ id: documentId, agentId }),
   );
 
   if (error !== null) {
@@ -197,7 +197,7 @@ async function loadOwnedDocument({
  * instead of leaving it stuck 'pending' forever with no job behind it. The
  * user can retry once queueing recovers.
  */
-async function enqueueAgentDocumentExtraction({
+async function enqueueAgentContextDocumentExtraction({
   documentId,
   agentId,
 }: {
@@ -206,8 +206,8 @@ async function enqueueAgentDocumentExtraction({
 }): Promise<void> {
   const { error } = await tryCatch(() =>
     queue
-      .agentDocument()
-      .add(EXTRACT_AGENT_DOCUMENT_JOB, new ExtractAgentDocumentJobDto({ documentId }).toJSON()),
+      .agentContextDocument()
+      .add(EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, new ExtractAgentContextDocumentJobDto({ documentId }).toJSON()),
   );
 
   if (error === null) {
@@ -217,7 +217,7 @@ async function enqueueAgentDocumentExtraction({
   logger.error(`Failed to enqueue extraction for agent document ${documentId}`, error);
 
   await tryCatch(() =>
-    updateAgentDocument({
+    updateAgentContextDocument({
       id: documentId,
       agentId,
       status: 'failed',
@@ -226,12 +226,12 @@ async function enqueueAgentDocumentExtraction({
   );
 }
 
-export interface AgentDocumentResponse {
+export interface AgentContextDocumentResponse {
   id: string;
   name: string;
   mimeType: string;
   fileSize: number;
-  status: AgentDocumentStatus;
+  status: AgentContextDocumentStatus;
   isTruncated: boolean;
   errorMessage: string | null;
   updatedAt: Date;
@@ -240,7 +240,7 @@ export interface AgentDocumentResponse {
 // Never includes `extractedText` (can be up to 100k chars, see the PRD's
 // limits table) or `storageKey` (an internal R2 detail): no route in the Web
 // UI needs either.
-function toDocumentResponse(document: AgentDocument): AgentDocumentResponse {
+function toDocumentResponse(document: AgentContextDocument): AgentContextDocumentResponse {
   return {
     id: document.id,
     name: document.name,
@@ -257,17 +257,17 @@ function toDocumentResponse(document: AgentDocument): AgentDocumentResponse {
  * [GET] /agent/:agentId/documents
  * List an agent's documents, oldest first. Never returns extractedText.
  */
-export async function listAgentDocuments({
+export async function listAgentContextDocuments({
   agentId,
   userId,
 }: {
   agentId: string;
   userId: string;
-}): Promise<AgentDocumentResponse[]> {
+}): Promise<AgentContextDocumentResponse[]> {
   const agent = await loadOwnedAgent({ agentId, userId });
 
   const { error, data: documents } = await tryCatch(() =>
-    getAgentDocumentsByAgentId({ agentId: agent.id }),
+    getAgentContextDocumentsByAgentId({ agentId: agent.id }),
   );
 
   if (error !== null || !documents) {
@@ -285,7 +285,7 @@ export async function listAgentDocuments({
  * stored. Valid files are then uploaded to R2, inserted as 'pending' rows,
  * and queued for extraction.
  */
-export async function uploadAgentDocuments({
+export async function uploadAgentContextDocuments({
   agentId,
   userId,
   files,
@@ -293,7 +293,7 @@ export async function uploadAgentDocuments({
   agentId: string;
   userId: string;
   files: File[];
-}): Promise<AgentDocumentResponse[]> {
+}): Promise<AgentContextDocumentResponse[]> {
   const agent = await loadOwnedAgent({ agentId, userId });
 
   if (files.length === 0) {
@@ -301,7 +301,7 @@ export async function uploadAgentDocuments({
   }
 
   const { error: listError, data: existingDocuments } = await tryCatch(() =>
-    getAgentDocumentsByAgentId({ agentId: agent.id }),
+    getAgentContextDocumentsByAgentId({ agentId: agent.id }),
   );
 
   if (listError !== null || !existingDocuments) {
@@ -309,9 +309,9 @@ export async function uploadAgentDocuments({
     throw new InternalServerErrorException('Failed to load existing documents');
   }
 
-  if (existingDocuments.length + files.length > MAX_AGENT_DOCUMENTS_PER_AGENT) {
+  if (existingDocuments.length + files.length > MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT) {
     throw new BadRequestException(
-      `An agent can have at most ${MAX_AGENT_DOCUMENTS_PER_AGENT} documents`,
+      `An agent can have at most ${MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT} documents`,
     );
   }
 
@@ -320,7 +320,7 @@ export async function uploadAgentDocuments({
   const validatedFiles: { file: File; buffer: Buffer; mimeType: string }[] = [];
   for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const validation = validateAgentDocumentFile({
+    const validation = validateAgentContextDocumentFile({
       filename: file.name,
       fileSize: file.size,
       buffer,
@@ -337,7 +337,7 @@ export async function uploadAgentDocuments({
     Promise.all(
       validatedFiles.map(async ({ file, buffer, mimeType }) => {
         const documentId = createPrimaryId();
-        const storageKey = await uploadAgentDocumentFile({
+        const storageKey = await uploadAgentContextDocumentFile({
           agentId: agent.id,
           documentId,
           buffer,
@@ -355,7 +355,7 @@ export async function uploadAgentDocuments({
   }
 
   const { error: createError, data: createdDocuments } = await tryCatch(() =>
-    createAgentDocuments(
+    createAgentContextDocuments(
       uploads.map((upload) => ({
         id: upload.documentId,
         agentId: agent.id,
@@ -374,7 +374,7 @@ export async function uploadAgentDocuments({
   }
 
   for (const document of createdDocuments) {
-    await enqueueAgentDocumentExtraction({ documentId: document.id, agentId: agent.id });
+    await enqueueAgentContextDocumentExtraction({ documentId: document.id, agentId: agent.id });
   }
 
   return createdDocuments.map(toDocumentResponse);
@@ -387,7 +387,7 @@ export async function uploadAgentDocuments({
  * re-queues extraction. `name` is untouched, only the underlying file
  * changes.
  */
-export async function replaceAgentDocumentFile({
+export async function replaceAgentContextDocumentFile({
   agentId,
   userId,
   documentId,
@@ -397,12 +397,12 @@ export async function replaceAgentDocumentFile({
   userId: string;
   documentId: string;
   file: File;
-}): Promise<AgentDocumentResponse> {
+}): Promise<AgentContextDocumentResponse> {
   const agent = await loadOwnedAgent({ agentId, userId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const validation = validateAgentDocumentFile({
+  const validation = validateAgentContextDocumentFile({
     filename: file.name,
     fileSize: file.size,
     buffer,
@@ -413,7 +413,7 @@ export async function replaceAgentDocumentFile({
   }
 
   const { error: uploadError, data: storageKey } = await tryCatch(() =>
-    uploadAgentDocumentFile({
+    uploadAgentContextDocumentFile({
       agentId: agent.id,
       documentId: document.id,
       buffer,
@@ -427,7 +427,7 @@ export async function replaceAgentDocumentFile({
   }
 
   const { error: updateError, data: updated } = await tryCatch(() =>
-    updateAgentDocument({
+    updateAgentContextDocument({
       id: document.id,
       agentId: agent.id,
       storageKey,
@@ -444,9 +444,9 @@ export async function replaceAgentDocumentFile({
 
   // Only delete the previous object once the row safely points at the new
   // one, and only that one key: other documents are untouched.
-  await deleteAgentDocumentObjects([document.storageKey]);
+  await deleteAgentContextDocumentObjects([document.storageKey]);
 
-  await enqueueAgentDocumentExtraction({ documentId: document.id, agentId: agent.id });
+  await enqueueAgentContextDocumentExtraction({ documentId: document.id, agentId: agent.id });
 
   return toDocumentResponse(updated);
 }
@@ -455,7 +455,7 @@ export async function replaceAgentDocumentFile({
  * [PATCH] /agent/:agentId/documents/:documentId
  * Renames a document. Does not touch the underlying file.
  */
-export async function renameAgentDocument({
+export async function renameAgentContextDocument({
   agentId,
   userId,
   documentId,
@@ -465,14 +465,14 @@ export async function renameAgentDocument({
   userId: string;
   documentId: string;
   name: string;
-}): Promise<AgentDocumentResponse> {
+}): Promise<AgentContextDocumentResponse> {
   const agent = await loadOwnedAgent({ agentId, userId });
   // Only used for its ownership check: the update below is already scoped
   // to `agentId`, so nothing else from this row is needed.
   await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const { error, data: updated } = await tryCatch(() =>
-    updateAgentDocument({ id: documentId, agentId: agent.id, name }),
+    updateAgentContextDocument({ id: documentId, agentId: agent.id, name }),
   );
 
   if (error !== null || !updated) {
@@ -489,7 +489,7 @@ export async function renameAgentDocument({
  * Covers transient worker errors and budget failures after the user
  * removed or shrank other documents.
  */
-export async function retryAgentDocument({
+export async function retryAgentContextDocument({
   agentId,
   userId,
   documentId,
@@ -497,7 +497,7 @@ export async function retryAgentDocument({
   agentId: string;
   userId: string;
   documentId: string;
-}): Promise<AgentDocumentResponse> {
+}): Promise<AgentContextDocumentResponse> {
   const agent = await loadOwnedAgent({ agentId, userId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
@@ -506,7 +506,7 @@ export async function retryAgentDocument({
   }
 
   const { error, data: updated } = await tryCatch(() =>
-    updateAgentDocument({
+    updateAgentContextDocument({
       id: document.id,
       agentId: agent.id,
       status: 'pending',
@@ -519,7 +519,7 @@ export async function retryAgentDocument({
     throw new InternalServerErrorException('Failed to retry document');
   }
 
-  await enqueueAgentDocumentExtraction({ documentId: document.id, agentId: agent.id });
+  await enqueueAgentContextDocumentExtraction({ documentId: document.id, agentId: agent.id });
 
   return toDocumentResponse(updated);
 }
@@ -528,7 +528,7 @@ export async function retryAgentDocument({
  * [DELETE] /agent/:agentId/documents/:documentId
  * Removes the row and its R2 object (best effort).
  */
-export async function deleteAgentDocument({
+export async function deleteAgentContextDocument({
   agentId,
   userId,
   documentId,
@@ -540,6 +540,6 @@ export async function deleteAgentDocument({
   const agent = await loadOwnedAgent({ agentId, userId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
-  await deleteAgentDocumentObjects([document.storageKey]);
-  await deleteAgentDocumentById({ id: document.id, agentId: agent.id });
+  await deleteAgentContextDocumentObjects([document.storageKey]);
+  await deleteAgentContextDocumentById({ id: document.id, agentId: agent.id });
 }

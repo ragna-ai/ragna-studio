@@ -133,7 +133,7 @@ async function handlePublish() {
       <div class="min-w-0">
         <PageBreadcrumb :items="[{ label: $t('workflow.list.title'), to: '/workflow' }]">
           <template #current>
-            <InlineNameField v-model:name="name" aria-label="Workflow name" @save="handleSave" />
+            <InlineNameField v-model:name="name" label="Workflow name" @save="handleSave" />
           </template>
         </PageBreadcrumb>
         <p class="text-xs text-muted-foreground">

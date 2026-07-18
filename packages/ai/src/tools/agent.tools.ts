@@ -8,6 +8,12 @@ import {
   getDatasetListRowsTool,
   getDatasetUpdateRowTool,
 } from './dataset.tools';
+import {
+  getCreateDocumentTool,
+  getEditDocumentTool,
+  getListDocumentsTool,
+  getReadDocumentTool,
+} from './document.tools';
 import { getGeneratedImages } from './image-gen.tool';
 import { getLinkedinDraft } from './linkedin-draft.tool';
 import { getMemoryTool } from './memory.tool';
@@ -46,6 +52,12 @@ const toolsets: Record<AgentTool, ToolsetFactory> = {
     datasetGetRow: getDatasetGetRowTool(writer, ctx.userId, ctx.workspaceId),
     datasetAppendRow: getDatasetAppendRowTool(writer, ctx.userId, ctx.workspaceId),
     datasetUpdateRow: getDatasetUpdateRowTool(writer, ctx.userId, ctx.workspaceId),
+  }),
+  documents: (writer, ctx) => ({
+    listDocuments: getListDocumentsTool(writer, ctx.workspaceId),
+    readDocument: getReadDocumentTool(writer, ctx.workspaceId),
+    createDocument: getCreateDocumentTool(writer, ctx.workspaceId, ctx.agentId),
+    editDocument: getEditDocumentTool(writer, ctx.workspaceId),
   }),
 };
 

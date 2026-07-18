@@ -53,23 +53,23 @@ export interface AgentMemoryResponse {
 
 export type UpdateAgentMemoryRequest = AgentMemory;
 
-export type AgentDocumentStatus = 'pending' | 'ready' | 'failed';
+export type AgentContextDocumentStatus = 'pending' | 'ready' | 'failed';
 
-export interface AgentDocument {
+export interface AgentContextDocument {
   id: string;
   name: string;
   mimeType: string;
   fileSize: number;
-  status: AgentDocumentStatus;
+  status: AgentContextDocumentStatus;
   isTruncated: boolean;
   errorMessage: string | null;
   updatedAt: string;
 }
 
-export interface AgentDocumentManyResponse {
-  documents: AgentDocument[];
+export interface AgentContextDocumentManyResponse {
+  documents: AgentContextDocument[];
 }
 
-export interface AgentDocumentResponse {
-  document: AgentDocument;
+export interface AgentContextDocumentResponse {
+  document: AgentContextDocument;
 }

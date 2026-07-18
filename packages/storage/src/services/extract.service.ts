@@ -22,7 +22,7 @@ export async function extractDocumentText(document: BucketDocument): Promise<str
   return buffer.toString('utf-8');
 }
 
-export function sniffAgentDocumentKind(
+export function sniffAgentContextDocumentKind(
   buffer: Buffer,
   filename: string,
 ): SupportedDocumentKind | null {

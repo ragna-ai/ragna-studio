@@ -7,7 +7,10 @@ import { z } from 'zod';
 // submitted name actually changed.
 
 // Props
-const props = defineProps<{ ariaLabel: string }>();
+// Named `label` (not `ariaLabel`): a prop whose camelCase form matches a
+// native `aria-*` attribute never receives kebab-case `aria-label` bindings
+// in Volar's checking — the binding is absorbed as the plain HTML attribute.
+const props = defineProps<{ label: string }>();
 
 // Emits
 const emit = defineEmits<{ save: [] }>();
@@ -84,7 +87,7 @@ onKeyStroke('Escape', (event) => {
           <Input
             :id="field.name"
             autofocus
-            :aria-label="props.ariaLabel"
+            :aria-label="props.label"
             autocomplete="off"
             class="h-7 px-2 py-0 text-sm font-semibold"
             :model-value="state.value"

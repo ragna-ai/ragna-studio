@@ -21,6 +21,7 @@
     "@pinia/nuxt": "1.0.1",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/editor": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/workflow": "workspace:*",
     "@tanstack/vue-form": "^1.33.2",

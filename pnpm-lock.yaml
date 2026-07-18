@@ -146,6 +146,9 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@repo/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
