@@ -10,6 +10,7 @@ import type {
   NodeProps,
   VueFlowStore,
 } from '@vue-flow/core';
+import { NODE_TYPES } from '@repo/workflow';
 import { ConnectionMode } from '@vue-flow/core';
 import { nanoid } from 'nanoid';
 import { toast } from 'vue-sonner';
@@ -164,7 +165,7 @@ function toWorkflowNodeProps(
     @pane-click="onPaneClick"
   >
     <template
-      v-for="nodeType in ['trigger', 'agent', 'tool', 'condition', 'transform']"
+      v-for="nodeType in NODE_TYPES"
       :key="nodeType"
       #[`node-${nodeType}`]="nodeProps"
     >

@@ -143,7 +143,7 @@ async function runNode({
       nodeId: node.id,
       status: 'completed',
       output: result.output,
-      toolCalls: result.toolCalls,
+      trace: result.trace,
       finishedAt: new Date(),
     });
 

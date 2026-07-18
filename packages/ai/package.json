@@ -17,7 +17,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.15",

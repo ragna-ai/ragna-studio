@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit",
     "maizzle:dev": "maizzle serve --config maizzle.config.ts",
     "maizzle:build": "maizzle build --config maizzle.config.ts"
   },

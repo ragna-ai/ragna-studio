@@ -19,7 +19,8 @@
   },
   "home": {
     "title": "RAGNA Studio",
-    "subtitle": "Willkommen bei RAGNA Studio."
+    "titleWithName": "Willkommen, {name}",
+    "subtitle": "Wie kann ich dir heute helfen?"
   },
   "agent": {
     "list": {

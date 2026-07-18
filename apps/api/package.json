@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "bun --watch src/index.ts",
-    "preview": "bun dist/index.mjs"
+    "preview": "bun dist/index.mjs",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.0",

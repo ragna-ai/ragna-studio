@@ -5,6 +5,7 @@ import {
   GitBranchIcon,
   PlusIcon,
   ShuffleIcon,
+  UsersIcon,
   WrenchIcon,
   ZapIcon,
 } from '@lucide/vue';
@@ -24,6 +25,7 @@ const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
   tool: WrenchIcon,
   condition: GitBranchIcon,
   transform: ShuffleIcon,
+  team: UsersIcon,
 };
 </script>
 

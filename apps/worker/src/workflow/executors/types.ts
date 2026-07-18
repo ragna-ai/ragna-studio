@@ -1,4 +1,4 @@
-import type { WorkflowNode, WorkflowToolCall } from '@repo/workflow';
+import type { WorkflowAgentTraceStep, WorkflowNode } from '@repo/workflow';
 
 // Shared with @repo/workflow's resolveTemplate ctx shape, plus the
 // executing user so node executors can look up user-owned rows (agents).
@@ -8,11 +8,12 @@ export type ExecutorContext = {
   workspaceId: string | null;
 };
 
-// `toolCalls` is only ever set by the agent executor's agentId path (an
-// agent running with tools); every other executor returns just an output.
+// `trace` is only ever set by executors that run a referenced agent's tool
+// loop (the agent node's agentId path, the team node); every other executor
+// returns just an output.
 export type ExecutorResult = {
   output: string;
-  toolCalls?: WorkflowToolCall[];
+  trace?: WorkflowAgentTraceStep[];
 };
 
 export type Executor = (node: WorkflowNode, ctx: ExecutorContext) => Promise<ExecutorResult>;

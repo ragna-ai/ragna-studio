@@ -4,25 +4,25 @@ import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
-import { importPKCS8, SignJWT } from 'jose';
 
 // LinkedIn requires these scopes for sign-in (openid/profile/email) and
 // posting on the user's behalf (w_member_social). Used unless an operator
 // overrides them via the LINKEDIN_SCOPES env var.
 const DEFAULT_LINKEDIN_SCOPES = ['openid', 'profile', 'email', 'w_member_social'];
 
-async function generateAppleClientSecret() {
-  const privateKey = await importPKCS8(config.getSecret('APPLE_PRIVATE_KEY'), 'ES256');
-  const now = Math.floor(Date.now() / 1000);
-  return new SignJWT({})
-    .setProtectedHeader({ alg: 'ES256', kid: config.appleKeyId })
-    .setIssuer(config.appleTeamId)
-    .setSubject(config.appleClientId)
-    .setAudience('https://appleid.apple.com')
-    .setIssuedAt(now)
-    .setExpirationTime(now + 180 * 24 * 60 * 60)
-    .sign(privateKey);
-}
+// import { importPKCS8, SignJWT } from 'jose';
+// async function generateAppleClientSecret() {
+//   const privateKey = await importPKCS8(config.getSecret('APPLE_PRIVATE_KEY'), 'ES256');
+//   const now = Math.floor(Date.now() / 1000);
+//   return new SignJWT({})
+//     .setProtectedHeader({ alg: 'ES256', kid: config.appleKeyId })
+//     .setIssuer(config.appleTeamId)
+//     .setSubject(config.appleClientId)
+//     .setAudience('https://appleid.apple.com')
+//     .setIssuedAt(now)
+//     .setExpirationTime(now + 180 * 24 * 60 * 60)
+//     .sign(privateKey);
+// }
 
 export const auth = betterAuth({
   plugins: [admin()],

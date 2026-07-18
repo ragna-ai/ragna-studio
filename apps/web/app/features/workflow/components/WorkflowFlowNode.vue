@@ -5,6 +5,7 @@ import {
   GitBranchIcon,
   ShuffleIcon,
   SparklesIcon,
+  UsersIcon,
   WrenchIcon,
   ZapIcon,
 } from '@lucide/vue';
@@ -51,10 +52,25 @@ const typeIcon = computed(
       tool: WrenchIcon,
       condition: GitBranchIcon,
       transform: ShuffleIcon,
+      team: UsersIcon,
     })[props.type],
 );
 
 const isCondition = computed(() => props.type === 'condition');
+
+// The team node's lead agent, once loaded. Shown instead of the agent-only
+// model/tools card below, since a lead has no toolset of its own in v1.
+const teamLead = computed(() => {
+  if (props.type !== 'team') return undefined;
+  const config = props.data.config;
+  const leadAgentId = 'leadAgentId' in config ? config.leadAgentId : undefined;
+  return agentsData.value?.agents.find((agent) => agent.id === leadAgentId);
+});
+const teamMemberCount = computed(() => {
+  if (props.type !== 'team') return undefined;
+  const config = props.data.config;
+  return 'members' in config ? config.members.length : undefined;
+});
 
 // A one-line summary shown under the label so the canvas is scannable
 // without opening the config panel for every node.
@@ -71,6 +87,8 @@ const summary = computed(() => {
         : '';
     case 'transform':
       return 'template' in config ? config.template : '';
+    case 'team':
+      return 'prompt' in config ? config.prompt : '';
     default:
       return '';
   }
@@ -121,7 +139,7 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
     </NodeHeader>
 
     <NodeContent
-      v-if="summary || selectedAgent"
+      v-if="summary || selectedAgent || teamMemberCount !== undefined"
       class="flex flex-col gap-1.5 text-xs text-muted-foreground"
     >
       <p v-if="summary" class="truncate">{{ summary }}</p>
@@ -141,6 +159,11 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
           </Badge>
           <span v-if="!selectedAgent.tools?.length">No tools</span>
         </span>
+      </div>
+
+      <div v-if="teamMemberCount !== undefined" class="flex flex-col gap-1">
+        <span class="truncate">Lead: {{ teamLead?.name ?? 'Default agent' }}</span>
+        <span>{{ teamMemberCount }} member{{ teamMemberCount === 1 ? '' : 's' }}</span>
       </div>
     </NodeContent>
 

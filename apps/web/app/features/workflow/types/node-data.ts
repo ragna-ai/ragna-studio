@@ -1,6 +1,7 @@
 import type {
   AgentConfig,
   ConditionConfig,
+  TeamConfig,
   ToolConfig,
   TransformConfig,
   TriggerConfig,
@@ -14,7 +15,8 @@ export type WorkflowNodeConfig =
   | AgentConfig
   | ToolConfig
   | ConditionConfig
-  | TransformConfig;
+  | TransformConfig
+  | TeamConfig;
 
 /**
  * Vue Flow's node `data` payload for a workflow node. `stepStatus` and
@@ -45,4 +47,5 @@ export const NODE_TYPE_LABELS: Record<WorkflowNodeType, string> = {
   tool: 'Tool',
   condition: 'Condition',
   transform: 'Transform',
+  team: 'Team',
 };

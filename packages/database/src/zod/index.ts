@@ -1,6 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod';
-import type z from 'zod';
-import { agent, aiModel, chat, chatMessage } from '../schema';
+import z from 'zod';
+import { agent, agentToolValues, aiModel, chat, chatMessage } from '../schema';
 import { user } from '../schema/user.schema';
 
 // USER
@@ -16,23 +16,46 @@ export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
 export type IUpdateUser = Partial<UserUpdateSchema>;
 
 // AGENT
-export const agentSelectSchema = createSelectSchema(agent);
+// jsonb columns lose their `.$type<T>()` generic in drizzle-orm/zod (it only
+// sees "json" and falls back to a generic Json schema), so `tools` and
+// `settings` need explicit refinements to come out as `AgentTool[]` /
+// `AgentSettings` instead of `Json`.
+export const agentToolsSchema = z.array(z.enum(agentToolValues)).optional();
+export const agentSettingsSchema = z
+  .object({
+    temperature: z.number().nullish(),
+    maxOutputTokens: z.number().nullish(),
+  })
+  .optional();
+const agentRefine = { tools: agentToolsSchema, settings: agentSettingsSchema };
+
+export const agentSelectSchema = createSelectSchema(agent, agentRefine);
 export type AgentSelectSchema = z.infer<typeof agentSelectSchema>;
-export const agentCreateSchema = createInsertSchema(agent);
+export const agentCreateSchema = createInsertSchema(agent, agentRefine);
 export type AgentCreateSchema = z.infer<typeof agentCreateSchema>;
 export type ICreateAgent = Omit<AgentCreateSchema, 'id' | 'createdAt' | 'updatedAt'>;
-export const agentUpdateSchema = createUpdateSchema(agent);
+export const agentUpdateSchema = createUpdateSchema(agent, agentRefine);
 export type AgentUpdateSchema = z.infer<typeof agentUpdateSchema>;
 export type IUpdateAgent = Partial<AgentUpdateSchema>;
-// export const agentToolsSchema = z.enum(agentTools);
 
 // AI MODEL
-export const aiModelSelectSchema = createSelectSchema(aiModel);
+// Same jsonb-typing gap as AGENT above: `capabilities`/`meta` need explicit
+// refinements to come out as `AiModelCapabilities` / `AiModelMeta`.
+const aiModelCapabilitiesSchema = z.object({
+  canGenerateText: z.boolean().optional(),
+  canGenerateImage: z.boolean().optional(),
+  canGenerateVideo: z.boolean().optional(),
+  canGenerateAudio: z.boolean().optional(),
+});
+const aiModelMetaSchema = z.record(z.string(), z.any());
+const aiModelRefine = { capabilities: aiModelCapabilitiesSchema, meta: aiModelMetaSchema };
+
+export const aiModelSelectSchema = createSelectSchema(aiModel, aiModelRefine);
 export type AiModelSelectSchema = z.infer<typeof aiModelSelectSchema>;
-export const aiModelCreateSchema = createInsertSchema(aiModel);
+export const aiModelCreateSchema = createInsertSchema(aiModel, aiModelRefine);
 export type AiModelCreateSchema = z.infer<typeof aiModelCreateSchema>;
 export type ICreateAiModel = Omit<AiModelCreateSchema, 'id' | 'createdAt' | 'updatedAt'>;
-export const aiModelUpdateSchema = createUpdateSchema(aiModel);
+export const aiModelUpdateSchema = createUpdateSchema(aiModel, aiModelRefine);
 export type AiModelUpdateSchema = z.infer<typeof aiModelUpdateSchema>;
 export type IUpdateAiModel = Partial<AiModelUpdateSchema>;
 
@@ -44,9 +67,13 @@ export type ChatCreateSchema = z.infer<typeof chatCreateSchema>;
 export type ICreateChat = Omit<ChatCreateSchema, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
 
 // CHAT MESSAGE
-export const chatMessageSelectSchema = createSelectSchema(chatMessage);
+// Same jsonb-typing gap as AGENT above: `metadata` needs an explicit
+// refinement to come out as `Record<string, any>` instead of `Json`.
+const chatMessageRefine = { metadata: z.record(z.string(), z.any()).nullish() };
+
+export const chatMessageSelectSchema = createSelectSchema(chatMessage, chatMessageRefine);
 export type ChatMessageSelectSchema = z.infer<typeof chatMessageSelectSchema>;
-export const chatMessageCreateSchema = createInsertSchema(chatMessage);
+export const chatMessageCreateSchema = createInsertSchema(chatMessage, chatMessageRefine);
 export type ChatMessageCreateSchema = z.infer<typeof chatMessageCreateSchema>;
 export type ICreateChatMessage = Omit<
   ChatMessageCreateSchema,

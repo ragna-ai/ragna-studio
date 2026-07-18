@@ -14,7 +14,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

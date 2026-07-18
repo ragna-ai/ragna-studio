@@ -3,7 +3,6 @@ import {
   BotIcon,
   DatabaseIcon,
   ImageIcon,
-  LayoutGridIcon,
   MessagesSquareIcon,
   Share2Icon,
   WorkflowIcon,
@@ -85,10 +84,6 @@ const quickAccessItems = [
 
 <template>
   <div class="pt-5">
-    <div class="flex items-center space-x-2 pb-5">
-      <LayoutGridIcon class="size-5 stroke-1.5" />
-      <h2 class="text-2xl font-semibold">Quick Access</h2>
-    </div>
     <div class="flex flex-wrap gap-4">
       <NuxtLinkLocale
         v-for="item in quickAccessItems"

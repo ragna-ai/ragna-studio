@@ -221,7 +221,10 @@ export function toModelSettings(settings: AgentSettings | null | undefined): {
   maxOutputTokens: number | undefined;
 } {
   return {
-    temperature: settings?.temperature ?? undefined,
+    // Temperature 0 means "disabled", not "sample at 0" (the settings form
+    // treats 0 as off, and older agents still store a literal 0). Reasoning
+    // models reject the parameter outright, so 0 must not be sent either.
+    temperature: settings?.temperature || undefined,
     maxOutputTokens: settings?.maxOutputTokens ?? undefined,
   };
 }

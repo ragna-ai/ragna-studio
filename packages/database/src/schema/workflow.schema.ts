@@ -1,9 +1,9 @@
 import type {
+  WorkflowAgentTraceStep,
   WorkflowDefinition,
   WorkflowRunStatus,
   WorkflowRunTrigger,
   WorkflowStepStatus,
-  WorkflowToolCall,
 } from '@repo/workflow';
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
@@ -85,9 +85,10 @@ export const workflowRunStep = pgTable(
     status: text('status').notNull().$type<WorkflowStepStatus>().default('pending'),
     input: text('input'),
     output: text('output'),
-    // Only agent nodes running a referenced agent populate this (see
-    // agent.executor.ts); every other node type leaves it null.
-    toolCalls: jsonb('tool_calls').$type<WorkflowToolCall[]>(),
+    // Only nodes that run a referenced agent's tool loop populate this (the
+    // agent node's agentId path, the team node); every other node type
+    // leaves it null.
+    trace: jsonb('trace').$type<WorkflowAgentTraceStep[]>(),
     error: text('error'),
     startedAt: timestamp('started_at'),
     finishedAt: timestamp('finished_at'),

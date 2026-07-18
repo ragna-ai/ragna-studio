@@ -3,6 +3,7 @@ import type { WorkflowNode } from '@repo/workflow';
 import { Trash2Icon, XIcon } from '@lucide/vue';
 import WorkflowAgentConfigForm from '~/features/workflow/components/config/WorkflowAgentConfigForm.vue';
 import WorkflowConditionConfigForm from '~/features/workflow/components/config/WorkflowConditionConfigForm.vue';
+import WorkflowTeamConfigForm from '~/features/workflow/components/config/WorkflowTeamConfigForm.vue';
 import WorkflowToolConfigForm from '~/features/workflow/components/config/WorkflowToolConfigForm.vue';
 import WorkflowTransformConfigForm from '~/features/workflow/components/config/WorkflowTransformConfigForm.vue';
 import WorkflowTriggerConfigForm from '~/features/workflow/components/config/WorkflowTriggerConfigForm.vue';
@@ -56,5 +57,6 @@ const emit = defineEmits<{
     <WorkflowToolConfigForm v-else-if="node.type === 'tool'" :node="node" />
     <WorkflowConditionConfigForm v-else-if="node.type === 'condition'" :node="node" />
     <WorkflowTransformConfigForm v-else-if="node.type === 'transform'" :node="node" />
+    <WorkflowTeamConfigForm v-else-if="node.type === 'team'" :node="node" />
   </aside>
 </template>

@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

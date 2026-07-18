@@ -23,7 +23,7 @@ export function createWorkflowNode(
         id,
         type,
         position,
-        data: { label, config: { tool: 'webSearch', input: '{{input}}' } },
+        data: { label, config: { tool: 'placeholder', input: '{{input}}' } },
       };
     case 'condition':
       return {
@@ -34,6 +34,20 @@ export function createWorkflowNode(
       };
     case 'transform':
       return { id, type, position, data: { label, config: { template: '{{input}}' } } };
+    case 'team':
+      return {
+        id,
+        type,
+        position,
+        data: {
+          label,
+          config: {
+            mode: 'delegate',
+            prompt: '{{input}}',
+            members: [{ agentId: '', role: '' }],
+          },
+        },
+      };
   }
 }
 

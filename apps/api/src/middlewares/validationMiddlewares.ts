@@ -1,5 +1,10 @@
 import { generateImagesSchema } from '@repo/ai';
-import { MAX_COLUMNS_PER_DATASET, userUpdateSchema } from '@repo/database';
+import {
+  MAX_COLUMNS_PER_DATASET,
+  agentSettingsSchema,
+  agentToolsSchema,
+  userUpdateSchema,
+} from '@repo/database';
 import { workflowDefinitionSchema } from '@repo/workflow';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
@@ -71,16 +76,11 @@ export const validUpsertAgentBody = myzValidator(
     aiModelId: primaryId,
     systemPrompt: z.string(),
     context: z.string().max(30_000).nullish(),
-    tools: z.array(z.string()),
+    tools: agentToolsSchema,
     isDefault: z.boolean().optional(),
     workspaceId: primaryId.optional(),
     defaultDatasetId: primaryId.nullish(),
-    settings: z
-      .object({
-        temperature: z.number().min(0).max(1).nullish(),
-        maxOutputTokens: z.number().int().min(1).max(64_000).nullish(),
-      })
-      .optional(),
+    settings: agentSettingsSchema,
   }),
 );
 

@@ -62,3 +62,22 @@ export const transformConfigSchema = z.object({
   template: z.string(),
 });
 export type TransformConfig = z.infer<typeof transformConfigSchema>;
+
+const teamMemberSchema = z.object({
+  agentId: z.string(),
+  // Tells the lead when to hand work to this member. Allowed empty so a
+  // freshly added node passes draft save; the executor falls back to the
+  // member's agent name when no role is set.
+  role: z.string(),
+});
+
+const delegateTeamConfigSchema = z.object({
+  mode: z.literal('delegate'),
+  leadAgentId: z.string().optional(), // default agent if unset
+  prompt: z.string().min(1), // template, {{input}} supported
+  members: z.array(teamMemberSchema).min(1).max(5),
+});
+
+// Single-variant union today; a `roundRobin` mode joins it later.
+export const teamConfigSchema = z.discriminatedUnion('mode', [delegateTeamConfigSchema]);
+export type TeamConfig = z.infer<typeof teamConfigSchema>;

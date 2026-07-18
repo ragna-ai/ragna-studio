@@ -1,77 +1,9 @@
-import {
-  buildAgentInstructions,
-  buildAgentToolset,
-  generateText,
-  getLanguageModel,
-  stepCountIs,
-  toModelSettings,
-} from '@repo/ai';
-import type { AgentSettings, AgentTools } from '@repo/database';
-import { getAgentById, getDefaultAgent } from '@repo/database';
-import type { AgentConfig, WorkflowToolCall } from '@repo/workflow';
+import { generateText, getLanguageModel } from '@repo/ai';
+import { getDefaultAgent } from '@repo/database';
+import type { AgentConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
-import { noopWriter } from './noop-writer';
+import { runReferencedAgent, withAiModel } from './run-referenced-agent';
 import type { Executor } from './types';
-
-type AiModelRef = { provider: string; model: string };
-type AgentSettingsRef = AgentSettings | null;
-
-// getAgentById/getDefaultAgent both load the `aiModel` relation, but their
-// declared return types don't carry it (see agent.repo.ts). Narrow locally
-// instead of widening the shared repo types.
-function withAiModel<T>(record: T): T & { aiModel: AiModelRef } {
-  return record as T & { aiModel: AiModelRef };
-}
-
-// Same narrowing as withAiModel, widened for the agentId path, which also
-// needs the agent's own `tools`/`settings` columns to run it like chat does.
-function withAgentConfig<T>(
-  record: T,
-): T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef } {
-  return record as T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef };
-}
-
-type GenerateTextSteps = Awaited<ReturnType<typeof generateText>>['steps'];
-type GenerateTextContentPart = GenerateTextSteps[number]['content'][number];
-type ToolErrorPart = Extract<GenerateTextContentPart, { type: 'tool-error' }>;
-
-function isToolErrorPart(part: GenerateTextContentPart): part is ToolErrorPart {
-  return part.type === 'tool-error';
-}
-
-function formatToolError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-// Each step reports its tool calls and their results/errors separately,
-// joined only by `toolCallId`. `toolResults` omits calls that errored, so
-// those are recovered from the step's `content` array instead (the only
-// place a 'tool-error' part appears).
-function collectToolCalls(steps: GenerateTextSteps): WorkflowToolCall[] {
-  const toolCalls: WorkflowToolCall[] = [];
-
-  for (const step of steps) {
-    const outputByCallId = new Map(
-      step.toolResults.map((result) => [result.toolCallId, result.output]),
-    );
-    const errorByCallId = new Map(
-      step.content
-        .filter(isToolErrorPart)
-        .map((part) => [part.toolCallId, formatToolError(part.error)]),
-    );
-
-    for (const call of step.toolCalls) {
-      toolCalls.push({
-        toolName: call.toolName,
-        input: call.input,
-        output: outputByCallId.get(call.toolCallId),
-        error: errorByCallId.get(call.toolCallId),
-      });
-    }
-  }
-
-  return toolCalls;
-}
 
 export const executeAgent: Executor = async (node, ctx) => {
   const config = node.data.config as AgentConfig;
@@ -95,38 +27,12 @@ export const executeAgent: Executor = async (node, ctx) => {
     return { output: text };
   }
 
-  const agentRecord = await getAgentById({ agentId: config.agentId, userId: ctx.userId });
-  if (!agentRecord) {
-    throw new Error(`Agent "${config.agentId}" not found for this user`);
-  }
-  const agent = withAgentConfig(agentRecord);
-  const instructions = await buildAgentInstructions({
+  const { text, trace } = await runReferencedAgent({
     agentId: config.agentId,
     userId: ctx.userId,
-    tools: agent.tools,
-    systemPrompt: agent.systemPrompt,
-    context: agent.context,
-    defaultDatasetId: agentRecord.defaultDatasetId,
-  });
-
-  const result = await generateText({
-    model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
-    instructions,
+    workspaceId: ctx.workspaceId,
     prompt,
-    tools: buildAgentToolset(agent.tools, noopWriter, {
-      userId: ctx.userId,
-      agentId: config.agentId,
-      workspaceId: ctx.workspaceId,
-    }),
-    // A plan-executing agent node can exhaust the chat-level step budget
-    // immediately (schema read + row list + work + row update already
-    // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow
-    // agent node; chat is unaffected and stays at 5 above.
-    stopWhen: stepCountIs(15),
-    ...toModelSettings(agent.settings),
   });
 
-  const toolCalls = collectToolCalls(result.steps);
-
-  return { output: result.text, toolCalls: toolCalls.length > 0 ? toolCalls : undefined };
+  return { output: text, trace: trace.length > 0 ? trace : undefined };
 };
