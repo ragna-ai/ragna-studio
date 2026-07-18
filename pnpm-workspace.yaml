@@ -10,6 +10,12 @@ packageExtensions:
     dependencies:
       drizzle-orm: 1.0.0-rc.4
 
+# yuku-parser@0.6.8 dropped the runtime `walk` export that rolldown-plugin-dts
+# (tsdown's dts plugin) imports, while still satisfying its ^0.6.3 range; 0.6.9
+# restored it. Keep resolution off the one broken version.
+overrides:
+  yuku-parser: ^0.6.9
+
 allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true
@@ -33,3 +39,17 @@ updateConfig:
   ignoreDependencies:
     - '@types/node'
     - 'typescript'
+
+minimumReleaseAgeExclude:
+  - '@yuku-parser/binding-darwin-arm64@0.6.9'
+  - '@yuku-parser/binding-darwin-x64@0.6.9'
+  - '@yuku-parser/binding-freebsd-x64@0.6.9'
+  - '@yuku-parser/binding-linux-arm-gnu@0.6.9'
+  - '@yuku-parser/binding-linux-arm-musl@0.6.9'
+  - '@yuku-parser/binding-linux-arm64-gnu@0.6.9'
+  - '@yuku-parser/binding-linux-arm64-musl@0.6.9'
+  - '@yuku-parser/binding-linux-x64-gnu@0.6.9'
+  - '@yuku-parser/binding-linux-x64-musl@0.6.9'
+  - '@yuku-parser/binding-win32-arm64@0.6.9'
+  - '@yuku-parser/binding-win32-x64@0.6.9'
+  - yuku-parser@0.6.9
