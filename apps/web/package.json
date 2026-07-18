@@ -12,8 +12,8 @@
     "check-types": "nuxt typecheck"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.29",
-    "@lucide/vue": "^1.24.0",
+    "@ai-sdk/vue": "^4.0.31",
+    "@lucide/vue": "^1.25.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/icon": "2.3.1",
     "@nuxt/image": "2.0.0",
