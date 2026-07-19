@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/ts-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["bun"],
+    "lib": ["es2023", "dom"]
+  },
+  "include": ["src"]
+}

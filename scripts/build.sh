@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TARGETS=(api webapp worker)
+TARGETS=(api webapp worker webbrowser)
 
 # Pick the target off argv if it's already given (non-interactive use),
 # leaving the rest of argv to forward to the underlying build script.
@@ -23,8 +23,8 @@ if [ -z "$choice" ]; then
   select opt in "${TARGETS[@]}" all quit; do
     case "$opt" in
       quit) exit 0 ;;
-      api|webapp|worker|all) choice="$opt"; break ;;
-      *) echo "Invalid choice, try again." ;;
+      "") echo "Invalid choice, try again." ;;
+      *) choice="$opt"; break ;;
     esac
   done
 fi

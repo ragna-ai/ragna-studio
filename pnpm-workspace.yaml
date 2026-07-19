@@ -22,6 +22,7 @@ allowBuilds:
   better-sqlite3: true
   esbuild: false
   msgpackr-extract: true
+  puppeteer: true
   sharp: true
   vue-demi: true
 

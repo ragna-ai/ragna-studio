@@ -19,6 +19,7 @@ services:
       - DB_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - WEBBROWSER_BASE_URL=http://webbrowser:3011
     ports:
       - ${API_PORT:-3010}:3010
 
@@ -33,6 +34,14 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SMTP_HOST=host.docker.internal
+
+  webbrowser:
+    cpus: 1
+    restart: no
+    profiles:
+      - prod
+    ports:
+      - ${WEBBROWSER_PORT:-3011}:3011
 
   postgres:
     cpus: 1

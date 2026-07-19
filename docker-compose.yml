@@ -45,6 +45,18 @@ services:
     depends_on:
       - postgres
       - redis
+      - webbrowser
+
+  webbrowser:
+    image: ghcr.io/ragna-ai/ragna-studio-webbrowser:latest
+    container_name: ragna_studio_webbrowser
+    restart: always
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
 
   postgres:
     image: postgres:18.4-alpine3.24

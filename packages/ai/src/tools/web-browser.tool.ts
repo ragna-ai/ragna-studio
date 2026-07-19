@@ -1,3 +1,4 @@
+import { config } from '@repo/config';
 import type { InferToolInput, InferToolOutput, Tool, UIMessage, UIMessageStreamWriter } from 'ai';
 import { tool } from 'ai';
 import * as z from 'zod';
@@ -26,8 +27,7 @@ export const getWebBrowserResults = (
     description: 'Use this tool to browse the web and retrieve the content of a webpage.',
     inputSchema: webBrowserSchema,
     execute: async ({ url }) => {
-      // TODO: Make the server URL configurable
-      const webBrowserServerUrl = 'http://localhost:3010/scrape';
+      const webBrowserServerUrl = `${config.webBrowserBaseUrl}/scrape`;
       const newURL = new URL(url);
       if (newURL.protocol !== 'https:') {
         throw new Error('Invalid URL protocol - must be HTTPS');
@@ -56,7 +56,7 @@ export const getWebBrowserResults = (
           throw new Error('Failed to scrape');
         }
 
-        const data = (await response.json()) as { body: string; meta: any };
+        const data = (await response.json()) as { body: string; meta: unknown };
 
         return {
           meta: null,

@@ -19,6 +19,28 @@ const ConfigSchema = z.object({
   NODE_ENV: NodeEnvSchema,
   APP_PORT: PortSchema.default(3000),
   API_PORT: PortSchema.default(3010),
+  WEBBROWSER_PORT: PortSchema.default(3011),
+  WEBBROWSER_BASE_URL: z
+    .string()
+    .trim()
+    .default('')
+    .transform((val) => {
+      if (val) return val;
+      const port = process.env.WEBBROWSER_PORT || '3011';
+      return `http://localhost:${port}`;
+    }),
+  BROWSER_NAVIGATION_TIMEOUT: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 25_000),
+  BROWSER_BODY_LOAD_TIMEOUT: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 10_000),
+  BROWSER_MAX_CONCURRENCY: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 4),
   APP_URL: z
     .string()
     .trim()
@@ -218,6 +240,26 @@ export class ConfigService {
 
   get apiPort(): number {
     return this._config.API_PORT;
+  }
+
+  get webBrowserPort(): number {
+    return this._config.WEBBROWSER_PORT;
+  }
+
+  get webBrowserBaseUrl(): string {
+    return this._config.WEBBROWSER_BASE_URL;
+  }
+
+  get browserNavigationTimeout(): number {
+    return this._config.BROWSER_NAVIGATION_TIMEOUT;
+  }
+
+  get browserBodyLoadTimeout(): number {
+    return this._config.BROWSER_BODY_LOAD_TIMEOUT;
+  }
+
+  get browserMaxConcurrency(): number {
+    return this._config.BROWSER_MAX_CONCURRENCY;
   }
 
   get appUrl(): string {
