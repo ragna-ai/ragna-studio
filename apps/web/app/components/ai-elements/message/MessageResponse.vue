@@ -30,8 +30,6 @@ const md = computed(() => (slotContent.value ?? props.content ?? '') as string);
 
 <template>
   <Markdown
-    :mode="'static'"
-    :enable-animate="false"
     :content="md"
     :class="
       cn(

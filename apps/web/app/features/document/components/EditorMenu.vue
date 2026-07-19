@@ -167,9 +167,3 @@ const editor = props.controller.editor;
     </div>
   </div>
 </template>
-
-<style scoped>
-.is-active-button {
-  @apply bg-accent text-accent-foreground;
-}
-</style>

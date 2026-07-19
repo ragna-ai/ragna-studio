@@ -69,6 +69,18 @@ export const wsController = new Hono()
             return;
           }
 
+          // Raw heartbeat, deliberately outside the JSON envelope protocol
+          // (see PRD "Liveness"). The web client's `useWebSocket` heartbeat
+          // sends this as a plain text frame every 30s; Bun delivers text
+          // frames as `string` (binary frames come through as
+          // `ArrayBufferLike`, which can never equal this string). Reply
+          // directly to this socket, not published to any topic, and skip
+          // envelope parsing entirely so it never produces an error frame.
+          if (event.data === 'ping') {
+            raw.send('pong');
+            return;
+          }
+
           const envelope = parseWsEnvelope(event.data);
           if (!envelope) {
             sendFrame(raw, {
