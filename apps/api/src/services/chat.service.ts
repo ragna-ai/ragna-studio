@@ -23,6 +23,7 @@ import {
   getOrCreateDefaultAgentForUser,
   updateChatTitleById,
   updateChatTitleByWorkspaceId,
+  upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { createPrimaryId, tryCatch } from '@repo/utils';

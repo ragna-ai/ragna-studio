@@ -4,6 +4,8 @@ import type { Chat, ChatMessage } from '../schema';
 import { chat, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
 
+export type { Chat, ChatMessage } from '../schema';
+
 export async function createChat(payload: ICreateChat): Promise<Chat> {
   const [createdChat] = await db
     .insert(chat)

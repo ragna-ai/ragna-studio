@@ -36,8 +36,8 @@ export const datasetController = new Hono()
 
     const { datasets, meta } = await listDatasets({
       workspaceId: workspace.id,
-      page: query.page,
-      limit: query.limit,
+      page: query.page || 1,
+      limit: query.limit || 10,
       sort: query.sort,
     });
 
@@ -145,25 +145,20 @@ export const datasetController = new Hono()
    * [PATCH] /workspace/:workspaceId/dataset/:datasetId/row/:rowId
    * Partially update a dataset row.
    */
-  .patch(
-    '/:datasetId/row/:rowId',
-    validDatasetRowIdParam,
-    validUpdateDatasetRowBody,
-    async (c) => {
-      const workspace = c.get('workspace');
-      const param = c.req.valid('param');
-      const body = c.req.valid('json');
+  .patch('/:datasetId/row/:rowId', validDatasetRowIdParam, validUpdateDatasetRowBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
 
-      const updatedRow = await updateDatasetRowForUser({
-        workspaceId: workspace.id,
-        datasetId: param.datasetId,
-        rowId: param.rowId,
-        data: body.data,
-      });
+    const updatedRow = await updateDatasetRowForUser({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      rowId: param.rowId,
+      data: body.data,
+    });
 
-      return c.json({ row: updatedRow });
-    },
-  )
+    return c.json({ row: updatedRow });
+  })
   /**
    * [DELETE] /workspace/:workspaceId/dataset/:datasetId/row/:rowId
    * Soft delete a dataset row.

@@ -1,6 +1,6 @@
 import { and, count, eq } from 'drizzle-orm';
 import { db } from '../db';
-import { workspace } from '../schema';
+import { workspace, type Workspace } from '../schema';
 
 export type { Workspace } from '../schema';
 
@@ -33,11 +33,7 @@ export async function getAllWorkspacesByOwnerId({
 
 // Used by the "cannot delete last workspace" rule (WP1): a user must always
 // keep at least one workspace.
-export async function countWorkspacesByOwnerId({
-  ownerId,
-}: {
-  ownerId: string;
-}): Promise<number> {
+export async function countWorkspacesByOwnerId({ ownerId }: { ownerId: string }): Promise<number> {
   const [result] = await db
     .select({ count: count() })
     .from(workspace)
