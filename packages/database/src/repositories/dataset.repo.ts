@@ -223,10 +223,7 @@ export async function findDatasetsForAgent({
       ...(searchTerms.length > 0
         ? {
             AND: searchTerms.map((term) => ({
-              OR: [
-                { name: { ilike: `%${term}%` } },
-                { description: { ilike: `%${term}%` } },
-              ],
+              OR: [{ name: { ilike: `%${term}%` } }, { description: { ilike: `%${term}%` } }],
             })),
           }
         : {}),
@@ -324,7 +321,7 @@ export async function getDatasetRows({
           }
         : {}),
     },
-    orderBy: (t, { asc }) => asc(t.createdAt),
+    orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
     limit: cappedLimit,
   });
 }
