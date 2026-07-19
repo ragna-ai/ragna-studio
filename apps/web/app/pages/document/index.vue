@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FolderCogIcon } from '@lucide/vue';
+import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import DocumentCreateDialog from '~/features/document/components/DocumentCreateDialog.vue';
 import DocumentTable from '~/features/document/components/DocumentTable.vue';
@@ -17,25 +18,17 @@ const isCreateDialogOpen = ref(false);
 const isFolderManageOpen = ref(false);
 
 // Composables
-const workspaceScopeStore = useWorkspaceScopeStore();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
-// Documents live in exactly one workspace (docs/documents/prd.md), so the
-// page requires a specific workspace to be active, unlike datasets/agents
-// which also support the "All items"/"Unassigned" scopes.
-const workspaceId = computed(() =>
-  workspaceScopeStore.scope.kind === 'workspace'
-    ? workspaceScopeStore.scope.workspaceId
-    : null,
-);
-const hasWorkspace = computed(() => workspaceId.value !== null);
-
 const { data: documentsData, error: documentsError } =
-  useGetDocuments(workspaceId);
-const { data: foldersData } = useGetFolders(workspaceId);
-const { mutateAsync: deleteDocument } = useDeleteDocument(workspaceId);
-const { mutate: updateDocument } = useUpdateDocument(workspaceId);
+  useGetDocuments(activeWorkspaceId);
+const { data: foldersData } = useGetFolders(activeWorkspaceId);
+const { mutateAsync: deleteDocument } = useDeleteDocument(activeWorkspaceId);
+const { mutate: updateDocument } = useUpdateDocument(activeWorkspaceId);
 
 useHead({
   title: t('document.list.title'),
@@ -82,7 +75,7 @@ function handleMoveDocument(payload: {
             <div class="flex gap-2">
               <Button
                 variant="secondary"
-                :disabled="!hasWorkspace"
+                :disabled="!activeWorkspaceId"
                 @click="isFolderManageOpen = true"
               >
                 <FolderCogIcon class="mr-2 size-4 stroke-1.5" />
@@ -90,7 +83,7 @@ function handleMoveDocument(payload: {
               </Button>
               <Button
                 variant="secondary"
-                :disabled="!hasWorkspace"
+                :disabled="!activeWorkspaceId"
                 @click="isCreateDialogOpen = true"
               >
                 {{ t('document.list.newDocument') }}
@@ -104,10 +97,10 @@ function handleMoveDocument(payload: {
 
     <div class="px-5">
       <div
-        v-if="!hasWorkspace"
+        v-if="!activeWorkspaceId"
         class="rounded-lg border p-6 text-sm text-muted-foreground"
       >
-        {{ t('document.list.selectWorkspace') }}
+        {{ t('document.list.loading') }}
       </div>
       <div v-else-if="documentsData">
         <DocumentTable
@@ -127,15 +120,15 @@ function handleMoveDocument(payload: {
       </div>
     </div>
 
-    <template v-if="workspaceId">
+    <template v-if="activeWorkspaceId">
       <DocumentCreateDialog
         v-model:open="isCreateDialogOpen"
-        :workspace-id="workspaceId"
+        :workspace-id="activeWorkspaceId"
         :folders="folders"
       />
       <FolderManageDialog
         v-model:open="isFolderManageOpen"
-        :workspace-id="workspaceId"
+        :workspace-id="activeWorkspaceId"
         :folders="folders"
       />
     </template>

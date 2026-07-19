@@ -11,7 +11,9 @@ export const genImage = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
     // Object key in the image bucket
     storageKey: text('storage_key').notNull(),
     prompt: text('prompt').notNull(),

@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import SocialPostManyTable from '~/features/social/components/SocialPostManyTable.vue';
 import { useDeleteSocialPost } from '~/features/social/composables/useSocialPostApi';
 import useSocialPostList from '~/features/social/composables/useSocialPostList';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Props
 // Emits
@@ -9,9 +11,10 @@ import useSocialPostList from '~/features/social/composables/useSocialPostList';
 // Refs
 
 // Composables
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { page, limit, useGetAllSocialPosts } = useSocialPostList();
 const { data, error: postsError } = useGetAllSocialPosts();
-const { mutateAsync: deleteSocialPost } = useDeleteSocialPost();
+const { mutateAsync: deleteSocialPost } = useDeleteSocialPost(activeWorkspaceId);
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

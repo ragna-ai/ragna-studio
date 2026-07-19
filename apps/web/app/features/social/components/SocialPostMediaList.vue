@@ -19,6 +19,7 @@ import {
 // Props
 const props = defineProps<{
   postId: string;
+  workspaceId: string;
   media: SocialPostMedia[];
   editable: boolean;
 }>();
@@ -29,14 +30,16 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 
 // Composables
 const { t } = useI18n();
-const { mutate: uploadMedia } = useUploadSocialPostMedia();
+const { mutate: uploadMedia } = useUploadSocialPostMedia(() => props.workspaceId);
 const pendingUploads = usePendingSocialPostMediaUploads(props.postId);
 const {
   mutate: deleteMedia,
   isPending: isDeleting,
   variables: deletingVariables,
-} = useDeleteSocialPostMedia();
-const { mutate: saveAltText } = useUpdateSocialPostMediaAltText();
+} = useDeleteSocialPostMedia(() => props.workspaceId);
+const { mutate: saveAltText } = useUpdateSocialPostMediaAltText(
+  () => props.workspaceId,
+);
 
 // Computed
 const attachedCount = computed(

@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { GenImage, NewGenImage } from '../schema';
 import { genImage } from '../schema';
@@ -8,19 +9,35 @@ export async function createGenImageRecords(records: NewGenImage[]): Promise<Gen
   return db.insert(genImage).values(records).returning();
 }
 
-export async function getGenImagesByUserId({
-  userId,
+// Workspace-scoped list, newest first by default. Access is gated by the
+// workspace guard upstream (docs/api-standards/prd.md), so this no longer
+// filters by userId.
+export async function getGenImagesByWorkspaceId({
   workspaceId,
-  unassigned,
+  limit,
+  offset,
+  sort = 'desc',
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
+  limit: number;
+  offset: number;
+  sort?: 'asc' | 'desc';
 }): Promise<GenImage[]> {
   return db.query.genImage.findMany({
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
-    orderBy: (t, { desc }) => desc(t.createdAt),
+    where: { workspaceId },
+    orderBy: (t, { asc, desc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
+    limit,
+    offset,
   });
+}
+
+// Matches the filters of getGenImagesByWorkspaceId exactly, for pagination meta.
+export async function getGenImageCountByWorkspaceId({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<number> {
+  return db.$count(genImage, eq(genImage.workspaceId, workspaceId));
 }
 
 // Ownership check for attaching gen images to another record (e.g. a

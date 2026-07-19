@@ -84,7 +84,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.agent.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
     aiModel: r.one.aiModel({
       from: r.agent.aiModelId,
@@ -131,7 +131,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.chat.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
     agent: r.one.agent({
       from: r.chat.agentId,
@@ -156,7 +156,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.dataset.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
     rows: r.many.datasetRow(),
     pinnedByAgents: r.many.agent(),
@@ -207,7 +207,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.genImage.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
   },
   socialPost: {
@@ -219,7 +219,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.socialPost.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
     media: r.many.socialPostMedia(),
   },
@@ -239,7 +239,7 @@ export const relations = defineRelations(schema, (r) => ({
     workspace: r.one.workspace({
       from: r.workflow.workspaceId,
       to: r.workspace.id,
-      optional: true,
+      optional: false,
     }),
     runs: r.many.workflowRun(),
   },

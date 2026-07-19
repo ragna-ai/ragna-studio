@@ -12,7 +12,8 @@ export interface AgentSettings {
 export interface Agent {
   id: string;
   userId: string;
-  workspaceId?: string | null;
+  // Every agent lives in exactly one workspace (docs/api-standards/prd.md).
+  workspaceId: string;
   aiModelId: string;
   name: string;
   systemPrompt: string;
@@ -38,10 +39,16 @@ export interface AgentManyResponse {
   };
 }
 
-export type UpsertAgentRequest = Omit<Agent, 'id' | 'userId'> & {
-  id: string | null;
-  userId: string | null;
-};
+// workspaceId is never part of the body: it comes from the path
+// (`/workspace/:workspaceId/agent`). The client knows whether it is
+// creating or editing, so create and update are separate requests instead
+// of one upsert (docs/api-standards/prd.md).
+export type CreateAgentRequest = Omit<
+  Agent,
+  'id' | 'userId' | 'workspaceId' | 'aiModel'
+>;
+
+export type UpdateAgentRequest = Partial<CreateAgentRequest>;
 
 export interface AgentMemory {
   content: string;

@@ -44,7 +44,7 @@ type ImageGenOutput = { images: GeneratedAgentImage[] } | { error: string };
 export const getGeneratedImages = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<ImageGenInput, ImageGenOutput> =>
   tool({
     description:

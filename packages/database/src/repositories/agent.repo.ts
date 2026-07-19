@@ -1,25 +1,43 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Agent } from '../schema';
 import { agent } from '../schema';
-import type { ICreateAgent, IUpdateAgent } from '../zod';
+import type { ICreateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
 
 export type { Agent, AgentSettings, AgentTool, AgentTools } from '../schema';
 
 type AgentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Clears `isDefault` on every other agent in the same scope (the agent's own
-// workspaceId, where `null` is its own "unassigned" scope), so at most one
-// default agent can exist per scope. Must run in the same transaction as the
-// write that sets the new default, otherwise a race can leave two defaults.
+// Every agent now lives in exactly one workspace (workspaceId is NOT NULL),
+// so "scope" is always a concrete (userId, workspaceId) pair; there is no
+// more "unassigned" scope to fall back to.
+type UpdateAgentFields = Partial<
+  Pick<
+    ICreateAgent,
+    | 'name'
+    | 'description'
+    | 'aiModelId'
+    | 'isDefault'
+    | 'systemPrompt'
+    | 'context'
+    | 'tools'
+    | 'settings'
+    | 'defaultDatasetId'
+  >
+>;
+
+// Clears `isDefault` on every other agent owned by `userId` in `workspaceId`,
+// so at most one default agent can exist per user per workspace. Must run in
+// the same transaction as the write that sets the new default, otherwise a
+// race can leave two defaults.
 async function clearOtherDefaultAgentsInScope(
   tx: AgentTransaction,
   {
     userId,
     workspaceId,
     exceptAgentId,
-  }: { userId: string; workspaceId?: string | null; exceptAgentId?: string },
+  }: { userId: string; workspaceId: string; exceptAgentId?: string },
 ): Promise<void> {
   await tx
     .update(agent)
@@ -27,46 +45,14 @@ async function clearOtherDefaultAgentsInScope(
     .where(
       and(
         eq(agent.userId, userId),
-        sql`${agent.workspaceId} IS NOT DISTINCT FROM ${workspaceId ?? null}`,
+        eq(agent.workspaceId, workspaceId),
         exceptAgentId ? sql`${agent.id} <> ${exceptAgentId}` : undefined,
       ),
     );
 }
 
-// Edits never send `workspaceId` (docs/workspaces.md: it's stamped on create
-// only, never on edit), so on the update path `workspaceId` is `undefined`
-// here even though the row already belongs to a workspace. Falling back to
-// the raw body value would coalesce that to the unassigned scope and clear
-// the wrong agents' defaults, so the row's current workspace is looked up
-// instead. The body value still wins when explicitly provided, since that's
-// also what gets written to the row.
-async function resolveDefaultScopeWorkspaceId(
-  tx: AgentTransaction,
-  {
-    agentId,
-    userId,
-    workspaceId,
-  }: { agentId?: string; userId: string; workspaceId?: string | null },
-): Promise<string | null> {
-  if (workspaceId !== undefined) {
-    return workspaceId;
-  }
-
-  if (!agentId) {
-    return null;
-  }
-
-  const existingAgent = await tx.query.agent.findFirst({
-    where: { id: agentId, userId },
-    columns: { workspaceId: true },
-  });
-
-  return existingAgent?.workspaceId ?? null;
-}
-
-export async function upsertAgent(values: ICreateAgent & { id?: string }): Promise<Agent> {
+export async function createAgent(values: ICreateAgent): Promise<Agent> {
   const {
-    id: agentId,
     userId,
     workspaceId,
     name,
@@ -84,35 +70,17 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
   // than trusting the wider, nullable ICreateAgent type) keeps the scoped
   // cleanup below from ever matching rows across users.
   if (!userId) {
-    throw new Error('userId is required to upsert an agent');
+    throw new Error('userId is required to create an agent');
   }
-
-  // Omit the key entirely when unset: insert keeps the column's $defaultFn
-  // default, update leaves the previously stored settings untouched.
-  const settingsColumn = settings !== undefined ? { settings } : {};
 
   return db.transaction(async (tx) => {
     if (isDefault) {
-      const scopeWorkspaceId = await resolveDefaultScopeWorkspaceId(tx, {
-        agentId,
-        userId,
-        workspaceId,
-      });
-
-      // On update (agentId set), exclude the row being written so it isn't
-      // cleared right before the write below sets it back to true. On
-      // insert (no agentId yet), there is no row to exclude.
-      await clearOtherDefaultAgentsInScope(tx, {
-        userId,
-        workspaceId: scopeWorkspaceId,
-        exceptAgentId: agentId,
-      });
+      await clearOtherDefaultAgentsInScope(tx, { userId, workspaceId });
     }
 
     const [createdAgent] = await tx
       .insert(agent)
       .values({
-        id: agentId,
         userId,
         workspaceId,
         aiModelId,
@@ -123,22 +91,8 @@ export async function upsertAgent(values: ICreateAgent & { id?: string }): Promi
         context,
         tools,
         defaultDatasetId,
-        ...settingsColumn,
-      })
-      .onConflictDoUpdate({
-        target: agent.id,
-        set: {
-          workspaceId,
-          aiModelId,
-          isDefault,
-          name,
-          description,
-          systemPrompt,
-          context,
-          tools,
-          defaultDatasetId,
-          ...settingsColumn,
-        },
+        // Omit when unset so the column's $defaultFn default applies.
+        ...(settings !== undefined ? { settings } : {}),
       })
       .returning();
 
@@ -156,13 +110,10 @@ export async function getOrCreateDefaultAgentForUser({
   workspaceId,
 }: {
   userId: string;
-  workspaceId?: string;
+  workspaceId: string;
 }): Promise<Agent> {
-  // `workspaceId` undefined means "all/unassigned" mode: resolve it to the
-  // unassigned scope instead of letting Drizzle drop the filter and match
-  // any default agent, including workspace-scoped ones.
   const existingAgent = await db.query.agent.findFirst({
-    where: { userId, workspaceId: workspaceId ?? { isNull: true }, isDefault: true },
+    where: { userId, workspaceId, isDefault: true },
   });
 
   if (existingAgent) {
@@ -171,7 +122,7 @@ export async function getOrCreateDefaultAgentForUser({
 
   const defaultAgent = await getDefaultAgent();
 
-  return upsertAgent({
+  return createAgent({
     userId,
     aiModelId: defaultAgent.aiModelId,
     workspaceId,
@@ -184,28 +135,36 @@ export async function getOrCreateDefaultAgentForUser({
   });
 }
 
-export async function getAgentCountByUserId({
-  userId,
+export async function getAgentCountByWorkspaceId({
   workspaceId,
-  unassigned,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
 }): Promise<number> {
-  return db.$count(
-    agent,
-    and(
-      eq(agent.userId, userId),
-      unassigned
-        ? isNull(agent.workspaceId)
-        : workspaceId
-          ? eq(agent.workspaceId, workspaceId)
-          : undefined,
-    ),
-  );
+  return db.$count(agent, eq(agent.workspaceId, workspaceId));
 }
 
+// Plain lookup by id, scoped by workspace only: the workspace guard already
+// proved the caller owns `workspaceId`, so access control ends there.
+export async function getAgentByIdAndWorkspaceId({
+  agentId,
+  workspaceId,
+}: {
+  agentId: string;
+  workspaceId: string;
+}): Promise<Agent | null> {
+  const agentRecord = await db.query.agent.findFirst({
+    where: { id: agentId, workspaceId },
+    with: {
+      aiModel: true,
+    },
+  });
+
+  return agentRecord ?? null;
+}
+
+// Ownership lookup for callers outside the workspace-guarded HTTP routes
+// (e.g. workflow executors resolving an agent the running user referenced):
+// scoped by userId instead, since there is no workspace guard in that path.
 export async function getAgentById({
   agentId,
   userId,
@@ -214,26 +173,22 @@ export async function getAgentById({
   userId: string;
 }): Promise<Agent | null> {
   const agentRecord = await db.query.agent.findFirst({
-    where: { id: agentId, userId: userId },
+    where: { id: agentId, userId },
     with: {
       aiModel: true,
     },
   });
 
-  return agentRecord || null;
+  return agentRecord ?? null;
 }
 
-export async function getAllAgentsByUserId({
-  userId,
+export async function getAgentsByWorkspaceId({
   workspaceId,
-  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -248,7 +203,7 @@ export async function getAllAgentsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
+    where: { workspaceId },
     with: {
       aiModel: {
         columns: {
@@ -260,39 +215,47 @@ export async function getAllAgentsByUserId({
     },
     limit,
     offset,
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),
+    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
   return agents;
 }
 
-export async function updateAgent(params: IUpdateAgent): Promise<Agent> {
-  const { id: agentId, ...updateData } = params;
+// `agentId`/`workspaceId` are always required in the WHERE clause, even
+// though the caller already resolved the agent once via
+// `getAgentByIdAndWorkspaceId()` to check ownership, so a mismatched id can
+// never update a row outside the caller's workspace. Fields left out of
+// `fields` are left untouched (partial update).
+export async function updateAgent({
+  agentId,
+  workspaceId,
+  userId,
+  ...fields
+}: { agentId: string; workspaceId: string; userId: string } & UpdateAgentFields): Promise<
+  Agent | null
+> {
+  return db.transaction(async (tx) => {
+    if (fields.isDefault) {
+      await clearOtherDefaultAgentsInScope(tx, { userId, workspaceId, exceptAgentId: agentId });
+    }
 
-  if (!agentId) {
-    throw new Error('Agent ID is required for update');
-  }
+    const [updatedAgent] = await tx
+      .update(agent)
+      .set(fields)
+      .where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)))
+      .returning();
 
-  const [updatedAgent] = await db
-    .update(agent)
-    .set(updateData)
-    .where(eq(agent.id, agentId))
-    .returning();
-
-  if (!updatedAgent) {
-    throw new Error('Failed to update agent');
-  }
-
-  return updatedAgent;
+    return updatedAgent ?? null;
+  });
 }
 
-// DELETE an agent by ID
+// DELETE an agent by ID, scoped to its workspace.
 export async function deleteAgentById({
   agentId,
-  userId,
+  workspaceId,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<void> {
-  await db.delete(agent).where(and(eq(agent.id, agentId), eq(agent.userId, userId)));
+  await db.delete(agent).where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)));
 }

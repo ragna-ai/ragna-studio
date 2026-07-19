@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 import { useGetAgent } from '~/features/agent/composables/useAgentApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Imports
 
@@ -17,7 +18,9 @@ const agentId = computed(() => route.params.agentId as string);
 // Refs
 
 // Composables
-const { data, error: agentError } = useGetAgent(agentId);
+// A workspace is always active (docs/api-standards/prd.md).
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { data, error: agentError } = useGetAgent(activeWorkspaceId, agentId);
 const { t } = useI18n();
 
 useHead({

@@ -35,7 +35,7 @@ export function useGetDocuments(workspaceId: WorkspaceId, options: QueryOpts = {
   return useQuery<DocumentManyResponse>({
     queryKey: documentKeys.list(workspaceId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/documents`, { method: 'GET', signal }),
+      api(`/workspace/${toValue(workspaceId)}/document`, { method: 'GET', signal }),
     enabled: () => !!toValue(workspaceId),
     ...options,
   });
@@ -50,7 +50,7 @@ export function useGetDocument(
   return useQuery<DocumentResponse>({
     queryKey: documentKeys.detail(workspaceId, documentId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/documents/${toValue(documentId)}`, {
+      api(`/workspace/${toValue(workspaceId)}/document/${toValue(documentId)}`, {
         method: 'GET',
         signal,
       }),
@@ -64,7 +64,7 @@ export function useCreateDocument(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, CreateDocumentRequest>({
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/documents`, { method: 'POST', body }),
+      api(`/workspace/${toValue(workspaceId)}/document`, { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: documentKeys.all(workspaceId) });
     },
@@ -89,7 +89,7 @@ export function useUpdateDocument(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, UpdateDocumentVariables>({
     mutationFn: ({ documentId, ...body }) =>
-      api(`/workspace/${toValue(workspaceId)}/documents/${documentId}`, {
+      api(`/workspace/${toValue(workspaceId)}/document/${documentId}`, {
         method: 'PATCH',
         body,
       }),
@@ -111,7 +111,7 @@ export function useDeleteDocument(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (documentId) =>
-      api(`/workspace/${toValue(workspaceId)}/documents/${documentId}`, { method: 'DELETE' }),
+      api(`/workspace/${toValue(workspaceId)}/document/${documentId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: documentKeys.all(workspaceId) });
       toast.success('Document deleted');

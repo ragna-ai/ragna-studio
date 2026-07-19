@@ -1,400 +1,206 @@
-import {
-  createWorkflowRun,
-  deleteWorkflowById,
-  getAllWorkflowsByUserId,
-  getRunById,
-  getRunsByWorkflowId,
-  getWorkflowById,
-  getWorkflowCountByUserId,
-  publishWorkflow,
-  updateRunStatus,
-  upsertWorkflow,
-} from '@repo/database';
-import { logger } from '@repo/logger';
-import {
-  queue,
-  removeQueueJobScheduler,
-  upsertQueueJobScheduler,
-  WORKFLOW_RUN_JOB,
-  WORKFLOW_SCHEDULE_TICK_JOB,
-  WORKFLOW_SCHEDULES_QUEUE,
-  WorkflowRunJobDto,
-  WorkflowScheduleTickJobDto,
-} from '@repo/queue';
-import { tryCatch } from '@repo/utils';
-import { getScheduleFromDefinition, validateWorkflowDefinition } from '@repo/workflow';
 import { Hono } from 'hono';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
-  validRunIdParam,
+  validCreateWorkflowBody,
+  validPaginationQuery,
   validRunWorkflowBody,
-  validUpsertWorkflowBody,
+  validUpdateWorkflowBody,
   validWorkflowIdParam,
-  validWorkspaceScopedListQuery,
-} from '../middlewares/validationMiddlewares';
+  validWorkflowRunIdParam,
+} from '../validation';
+import {
+  cancelWorkflowRun,
+  createWorkflowForUser,
+  deleteWorkflowForWorkspace,
+  getWorkflowForWorkspace,
+  getWorkflowRun,
+  listWorkflowRuns,
+  listWorkflows,
+  publishWorkflowForWorkspace,
+  startWorkflowRun,
+  updateWorkflowForWorkspace,
+} from '../services/workflow.service';
 
 export const workflowController = new Hono()
-  .basePath('/workflow')
+  .basePath('/workspace/:workspaceId/workflow')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /workflow
-   * Get all workflows for the authenticated user
+   * [GET] /workspace/:workspaceId/workflow
+   * Lists the workspace's workflows, paginated.
    */
-  .get('/', validWorkspaceScopedListQuery, async (c) => {
-    const user = c.get('user');
+  .get('/', validPaginationQuery, async (c) => {
+    const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
-    const page = query.page ? Number(query.page) : 1;
-    const limit = query.limit ? Number(query.limit) : 10;
-    const sort = query.sort || 'desc';
-    const unassigned = query.unassigned === 'true';
+    const { workflows, meta } = await listWorkflows({
+      workspaceId: workspace.id,
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      sort: query.sort ?? 'desc',
+    });
 
-    // Calculate offset for pagination ((page number - 1) * page size)
-    const offset = page && limit ? (page - 1) * limit : undefined;
-
-    // Get all workflow count and fail gracefully
-    const { data: workflowsCount } = await tryCatch(() =>
-      getWorkflowCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
-    );
-
-    const { error, data: allUserWorkflows } = await tryCatch(() =>
-      getAllWorkflowsByUserId({
-        userId: user.id,
-        workspaceId: query.workspaceId,
-        unassigned,
-        limit,
-        sort,
-        offset,
-      }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get workflows for user', error);
-      throw new InternalServerErrorException('Failed to get workflows for user');
-    }
-
-    const meta = {
-      totalCount: workflowsCount || 0,
-    };
-
-    return c.json({ workflows: allUserWorkflows, meta });
+    return c.json({ workflows, meta });
   })
   /**
-   * [POST] /workflow
-   * Create or update a workflow
+   * [POST] /workspace/:workspaceId/workflow
+   * Creates a new workflow.
    */
-  .post('/', validUpsertWorkflowBody, async (c) => {
+  .post('/', validCreateWorkflowBody, async (c) => {
     const user = c.get('user');
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
-    const { error, data: upsertedWorkflow } = await tryCatch(() =>
-      upsertWorkflow({
-        id: body.id ?? undefined,
-        userId: user.id,
-        name: body.name,
-        description: body.description,
-        definition: body.definition,
-        workspaceId: body.workspaceId,
-      }),
-    );
+    const workflow = await createWorkflowForUser({
+      workspaceId: workspace.id,
+      userId: user.id,
+      name: body.name,
+      description: body.description,
+      definition: body.definition,
+    });
 
-    if (error !== null) {
-      logger.error('Failed to upsert workflow', error);
-      throw new InternalServerErrorException('Failed to upsert workflow');
-    }
-
-    return c.json({ workflow: upsertedWorkflow });
+    return c.json({ workflow }, 201);
   })
   /**
-   * [GET] /workflow/run/:runId
-   * Get a specific workflow run by ID, including its steps
-   */
-  .get('/run/:runId', validRunIdParam, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
-
-    const { error, data: run } = await tryCatch(() =>
-      getRunById({ runId: param.runId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get workflow run by ID', error);
-      throw new InternalServerErrorException('Failed to get workflow run by ID');
-    }
-
-    if (!run) {
-      throw new NotFoundException('Workflow run not found');
-    }
-
-    return c.json({ run });
-  })
-  /**
-   * [POST] /workflow/run/:runId/cancel
-   * Cancel a pending or running workflow run
-   */
-  .post('/run/:runId/cancel', validRunIdParam, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
-
-    const { error, data: run } = await tryCatch(() =>
-      getRunById({ runId: param.runId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get workflow run by ID', error);
-      throw new InternalServerErrorException('Failed to get workflow run by ID');
-    }
-
-    if (!run) {
-      throw new NotFoundException('Workflow run not found');
-    }
-
-    if (run.status !== 'pending' && run.status !== 'running') {
-      throw new BadRequestException(`Workflow run cannot be cancelled while ${run.status}`);
-    }
-
-    const { error: cancelError } = await tryCatch(() =>
-      updateRunStatus({ runId: param.runId, status: 'cancelled', finishedAt: new Date() }),
-    );
-
-    if (cancelError !== null) {
-      logger.error('Failed to cancel workflow run', cancelError);
-      throw new InternalServerErrorException('Failed to cancel workflow run');
-    }
-
-    // Re-fetch with steps so the response shape matches GET /workflow/run/:runId.
-    const { error: reloadError, data: cancelledRun } = await tryCatch(() =>
-      getRunById({ runId: param.runId, userId: user.id }),
-    );
-
-    if (reloadError !== null) {
-      logger.error('Failed to reload cancelled workflow run', reloadError);
-      throw new InternalServerErrorException('Failed to reload cancelled workflow run');
-    }
-
-    return c.json({ run: cancelledRun });
-  })
-  /**
-   * [GET] /workflow/:workflowId
-   * Get a specific workflow by ID
+   * [GET] /workspace/:workspaceId/workflow/:workflowId
    */
   .get('/:workflowId', validWorkflowIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error, data: workflow } = await tryCatch(() =>
-      getWorkflowById({ workflowId: param.workflowId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get workflow by ID', error);
-      throw new InternalServerErrorException('Failed to get workflow by ID');
-    }
-
-    if (!workflow) {
-      throw new NotFoundException('Workflow not found');
-    }
+    const workflow = await getWorkflowForWorkspace({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+    });
 
     return c.json({ workflow });
   })
   /**
-   * [DELETE] /workflow/:workflowId
-   * Delete a specific workflow by ID
+   * [PATCH] /workspace/:workspaceId/workflow/:workflowId
+   * Updates any of name/description/definition.
+   */
+  .patch('/:workflowId', validWorkflowIdParam, validUpdateWorkflowBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const workflow = await updateWorkflowForWorkspace({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+      name: body.name,
+      description: body.description,
+      definition: body.definition,
+    });
+
+    return c.json({ workflow });
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/workflow/:workflowId
    */
   .delete('/:workflowId', validWorkflowIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    await deleteWorkflowById({ workflowId: param.workflowId, userId: user.id });
-
-    // Best-effort: an orphaned scheduler is otherwise cleaned up by the
-    // worker's tick orphan guard, so a failure here must not fail the delete.
-    const { error: schedulerError } = await tryCatch(() =>
-      removeQueueJobScheduler({
-        queueName: WORKFLOW_SCHEDULES_QUEUE,
-        schedulerId: param.workflowId,
-      }),
-    );
-
-    if (schedulerError !== null) {
-      logger.error('Failed to remove workflow schedule after delete', schedulerError);
-    }
+    await deleteWorkflowForWorkspace({ workspaceId: workspace.id, workflowId: param.workflowId });
 
     return c.json({ message: 'Workflow deleted successfully' });
   })
   /**
-   * [POST] /workflow/:workflowId/publish
-   * Validate and publish a workflow's current definition
+   * [POST] /workspace/:workspaceId/workflow/:workflowId/publish
+   * Validates and publishes a workflow's current definition.
    */
   .post('/:workflowId/publish', validWorkflowIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error, data: workflow } = await tryCatch(() =>
-      getWorkflowById({ workflowId: param.workflowId, userId: user.id }),
-    );
+    const result = await publishWorkflowForWorkspace({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+    });
 
-    if (error !== null) {
-      logger.error('Failed to get workflow by ID', error);
-      throw new InternalServerErrorException('Failed to get workflow by ID');
-    }
-
-    if (!workflow) {
-      throw new NotFoundException('Workflow not found');
-    }
-
-    const validation = validateWorkflowDefinition(workflow.definition);
-
-    if (!validation.valid) {
+    if (!result.published) {
+      // Bypasses the normal exception -> { code, error } envelope on
+      // purpose: the web app needs the full validation `errors` list (see
+      // workflow.service.ts's publishWorkflowForWorkspace doc comment).
       return c.json(
-        { code: 400, error: 'Workflow definition is invalid', errors: validation.errors },
+        { code: 400, error: 'Workflow definition is invalid', errors: result.errors },
         400,
       );
     }
 
-    const schedule = getScheduleFromDefinition(workflow.definition);
-
-    const { error: publishError, data: publishedWorkflow } = await tryCatch(() =>
-      publishWorkflow({
-        workflowId: param.workflowId,
-        userId: user.id,
-        scheduleCron: schedule?.cron ?? null,
-        scheduleTimezone: schedule?.timezone ?? null,
-      }),
-    );
-
-    if (publishError !== null) {
-      logger.error('Failed to publish workflow', publishError);
-      throw new InternalServerErrorException('Failed to publish workflow');
-    }
-
-    // The DB write above is the source of truth; this syncs the Redis
-    // scheduler to match it. Queues are fail-fast (enableOfflineQueue:
-    // false), so a sync failure surfaces as a 500 rather than leaving the
-    // client believing publish succeeded while the schedule silently didn't
-    // apply. Publish is idempotent and retryable, and worker-side
-    // reconciliation heals any residual drift, so there is no DB rollback.
-    const { error: schedulerError } = await tryCatch(async () => {
-      if (!schedule) {
-        return removeQueueJobScheduler({
-          queueName: WORKFLOW_SCHEDULES_QUEUE,
-          schedulerId: param.workflowId,
-        });
-      }
-
-      return upsertQueueJobScheduler({
-        queueName: WORKFLOW_SCHEDULES_QUEUE,
-        schedulerId: param.workflowId,
-        repeat: { pattern: schedule.cron, tz: schedule.timezone },
-        job: {
-          name: WORKFLOW_SCHEDULE_TICK_JOB,
-          data: new WorkflowScheduleTickJobDto({ workflowId: param.workflowId }).toJSON(),
-          opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
-        },
-      });
-    });
-
-    if (schedulerError !== null) {
-      logger.error('Failed to sync workflow schedule after publish', schedulerError);
-      throw new InternalServerErrorException('Failed to sync workflow schedule');
-    }
-
-    return c.json({ workflow: publishedWorkflow });
+    return c.json({ workflow: result.workflow });
   })
   /**
-   * [POST] /workflow/:workflowId/run
-   * Enqueue a run of a workflow's published definition
+   * [GET] /workspace/:workspaceId/workflow/:workflowId/run
+   * Lists every run of the workflow, latest first. Not paginated: see
+   * listWorkflowRuns in workflow.service.ts.
+   */
+  .get('/:workflowId/run', validWorkflowIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const runs = await listWorkflowRuns({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+    });
+
+    return c.json({ runs });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/workflow/:workflowId/run
+   * Enqueues a run of the workflow's published definition.
    */
   .post('/:workflowId/run', validWorkflowIdParam, validRunWorkflowBody, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
-    const { error, data: workflow } = await tryCatch(() =>
-      getWorkflowById({ workflowId: param.workflowId, userId: user.id }),
-    );
+    const result = await startWorkflowRun({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+      input: body.input,
+    });
 
-    if (error !== null) {
-      logger.error('Failed to get workflow by ID', error);
-      throw new InternalServerErrorException('Failed to get workflow by ID');
-    }
-
-    if (!workflow) {
-      throw new NotFoundException('Workflow not found');
-    }
-
-    if (!workflow.publishedDefinition) {
-      throw new BadRequestException('Workflow is not published');
-    }
-
-    const validation = validateWorkflowDefinition(workflow.publishedDefinition);
-
-    if (!validation.valid) {
+    if (!result.started) {
+      // Same bypass as the publish endpoint above.
       return c.json(
-        { code: 400, error: 'Workflow definition is invalid', errors: validation.errors },
+        { code: 400, error: 'Workflow definition is invalid', errors: result.errors },
         400,
       );
     }
 
-    const { error: createRunError, data: run } = await tryCatch(() =>
-      createWorkflowRun({
-        workflowId: param.workflowId,
-        definition: workflow.publishedDefinition!,
-        input: body.input,
-      }),
-    );
+    return c.json({ run: result.run });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/workflow/:workflowId/run/:runId
+   * Gets a specific workflow run, including its steps.
+   */
+  .get('/:workflowId/run/:runId', validWorkflowRunIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
 
-    if (createRunError !== null || !run) {
-      logger.error('Failed to create workflow run', createRunError);
-      throw new InternalServerErrorException('Failed to create workflow run');
-    }
-
-    const { error: enqueueError } = await tryCatch(() =>
-      queue.workflow().add(WORKFLOW_RUN_JOB, new WorkflowRunJobDto({ runId: run.id }).toJSON(), {
-        attempts: 3,
-      }),
-    );
-
-    if (enqueueError !== null) {
-      logger.error('Failed to enqueue workflow run', enqueueError);
-
-      // Best-effort: the run row would otherwise stay 'pending' forever
-      // with no job behind it (e.g. Redis is down).
-      await tryCatch(() =>
-        updateRunStatus({
-          runId: run.id,
-          status: 'failed',
-          error: 'Failed to enqueue workflow run',
-          finishedAt: new Date(),
-        }),
-      );
-
-      throw new InternalServerErrorException('Failed to enqueue workflow run');
-    }
+    const run = await getWorkflowRun({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+      runId: param.runId,
+    });
 
     return c.json({ run });
   })
   /**
-   * [GET] /workflow/:workflowId/runs
-   * Get all runs for a specific workflow, latest first
+   * [POST] /workspace/:workspaceId/workflow/:workflowId/run/:runId/cancel
+   * Cancels a pending or running run.
    */
-  .get('/:workflowId/runs', validWorkflowIdParam, async (c) => {
-    const user = c.get('user');
+  .post('/:workflowId/run/:runId/cancel', validWorkflowRunIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error, data: runs } = await tryCatch(() =>
-      getRunsByWorkflowId({ workflowId: param.workflowId, userId: user.id }),
-    );
+    const run = await cancelWorkflowRun({
+      workspaceId: workspace.id,
+      workflowId: param.workflowId,
+      runId: param.runId,
+    });
 
-    if (error !== null) {
-      logger.error('Failed to get workflow runs', error);
-      throw new InternalServerErrorException('Failed to get workflow runs');
-    }
-
-    return c.json({ runs });
+    return c.json({ run });
   });

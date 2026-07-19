@@ -8,7 +8,9 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useDatasetList() {
   const api = useApi();
-  const { listQuery, scopeKey, isAllItemsActive } = storeToRefs(useWorkspaceScopeStore());
+  // A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+  // is only briefly '' on first load, before the workspace list resolves it.
+  const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
@@ -21,17 +23,17 @@ export default function useDatasetList() {
 
   function useGetAllDatasets(options: QueryOpts = {}) {
     return useQuery<DatasetManyResponse>({
-      queryKey: datasetKeys.list(page, limit, scopeKey),
+      queryKey: datasetKeys.list(activeWorkspaceId, page, limit),
       queryFn: ({ signal }) =>
-        api('/dataset', {
+        api(`/workspace/${toValue(activeWorkspaceId)}/dataset`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
-            ...listQuery.value,
           },
           signal,
         }),
+      enabled: () => !!toValue(activeWorkspaceId),
       placeholderData: (prev: DatasetManyResponse | undefined) => prev,
       ...options,
     });
@@ -41,10 +43,6 @@ export default function useDatasetList() {
     page,
     limit,
     setPage,
-    // The workspace column in the list table only shows in the "All items"
-    // view (docs/datasets.md); a single workspace or Unassigned already
-    // implies the workspace, so it would be redundant there.
-    isAllItemsActive,
     useGetAllDatasets,
   };
 }

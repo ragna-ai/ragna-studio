@@ -1,5 +1,6 @@
 import { safeParseInt } from '@repo/utils';
 import * as z from 'zod';
+import { myzValidator } from '../utils/validator-wrapper';
 
 export const paginationSchema = z.object({
   page: z
@@ -18,3 +19,5 @@ export const paginationSchema = z.object({
     .optional(),
   sort: z.enum(['asc', 'desc']).optional(),
 });
+
+export const validPaginationQuery = myzValidator('query', paginationSchema);

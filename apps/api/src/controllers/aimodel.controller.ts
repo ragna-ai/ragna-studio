@@ -8,10 +8,10 @@ export const aiModelController = new Hono()
   .basePath('/aimodel')
   .use(authMiddleware)
   /**
-   * [GET] /aimodel/list
+   * [GET] /aimodel
    * Get all AI models
    */
-  .get('/list', async (c) => {
+  .get('/', async (c) => {
     // Fetch all AI models from the database
     const { error, data: aiModels } = await tryCatch(() => getAllAiModels());
 

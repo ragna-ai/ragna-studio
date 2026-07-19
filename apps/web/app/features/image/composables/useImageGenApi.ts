@@ -5,14 +5,20 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from '@tanstack/vue-query';
-import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
+
+interface GenImageListParams {
+  page?: number;
+  limit?: number;
+  sort?: 'asc' | 'desc';
+}
 
 export const genImageKeys = {
-  all: ['gen-images'] as const,
-  list: (scopeKey: MaybeRefOrGetter<string>) =>
-    ['gen-images', 'list', scopeKey] as const,
+  all: (workspaceId: WorkspaceId) => ['gen-images', workspaceId] as const,
+  list: (workspaceId: WorkspaceId, params: GenImageListParams) =>
+    ['gen-images', workspaceId, 'list', params] as const,
   create: () => ['gen-images', 'create'] as const,
 };
 
@@ -33,7 +39,12 @@ export interface GeneratedImage {
 }
 
 export interface GenImagesResponse {
-  images: GeneratedImage[];
+  genImages: GeneratedImage[];
+  meta: { totalCount: number };
+}
+
+export interface GenerateImagesResponse {
+  genImages: GeneratedImage[];
 }
 
 export interface GenerateImagesBody {
@@ -45,46 +56,46 @@ export interface GenerateImagesBody {
   n?: number;
   seed?: number;
   negativePrompt?: string;
-  // Set internally from the active workspace in useGenerateImages; callers
-  // never pass this themselves.
-  workspaceId?: string;
 }
 
-export function useGetGenImages(options: QueryOpts = {}) {
+/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
+type FetchErrorWithData = { data?: { error?: string } };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
+}
+
+export function useGetGenImages(
+  workspaceId: WorkspaceId,
+  params: GenImageListParams = {},
+  options: QueryOpts = {},
+) {
   const api = useApi();
-  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
   return useQuery<GenImagesResponse>({
-    queryKey: genImageKeys.list(scopeKey),
+    queryKey: genImageKeys.list(workspaceId, params),
     queryFn: ({ signal }) =>
-      api('/image/generate', {
+      api(`/workspace/${toValue(workspaceId)}/gen-image`, {
         method: 'GET',
-        query: { ...listQuery.value },
+        query: params,
         signal,
       }),
+    enabled: () => !!toValue(workspaceId),
     ...options,
   });
 }
 
-export function useGenerateImages() {
+export function useGenerateImages(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
-  const workspaceScopeStore = useWorkspaceScopeStore();
-  return useMutation<GenImagesResponse, unknown, GenerateImagesBody>({
+  return useMutation<GenerateImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),
-    mutationFn: (body) => {
-      // Only a specific active workspace assigns one; All and Unassigned
-      // both send nothing (docs/workspaces.md).
-      const workspaceId = workspaceScopeStore.createWorkspaceId;
-      return api('/image/generate', {
-        method: 'POST',
-        body: workspaceId ? { ...body, workspaceId } : body,
-      });
-    },
+    mutationFn: (body) =>
+      api(`/workspace/${toValue(workspaceId)}/gen-image`, { method: 'POST', body }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: genImageKeys.all });
+      queryClient.invalidateQueries({ queryKey: genImageKeys.all(workspaceId) });
     },
-    onError: () => {
-      toast.error('Failed to generate images');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to generate images'));
     },
   });
 }

@@ -1,5 +1,10 @@
 # Workspaces
 
+> **Superseded (2026-07-19):** the optional-filter model below ("All items",
+> "Unassigned", nullable `workspaceId`) is replaced by the required-container
+> model in [docs/api-standards/prd.md](../api-standards/prd.md). The security
+> and ownership sections remain accurate.
+
 User-specific workspaces let a single user organize their own resources (agents, chats, workflows, generated images, social posts) into named buckets. A workspace is a **private, organizational overlay** on top of a user's data, not a shared multi-tenant boundary.
 
 This PRD describes **v1**, the minimal functional core: a `workspace` table, an optional `workspaceId` on scoped resources, a workspace switcher in the UI, and optional filtering of list views. Collaboration, roles, invites, and moving items between workspaces are explicitly out of scope for v1.

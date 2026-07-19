@@ -1,7 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { db } from '../db';
-import type { Workspace } from '../schema';
 import { workspace } from '../schema';
+
+export type { Workspace } from '../schema';
 
 export async function createWorkspace({
   ownerId,
@@ -28,6 +29,21 @@ export async function getAllWorkspacesByOwnerId({
     where: { ownerId },
     orderBy: (t, { asc }) => asc(t.createdAt),
   });
+}
+
+// Used by the "cannot delete last workspace" rule (WP1): a user must always
+// keep at least one workspace.
+export async function countWorkspacesByOwnerId({
+  ownerId,
+}: {
+  ownerId: string;
+}): Promise<number> {
+  const [result] = await db
+    .select({ count: count() })
+    .from(workspace)
+    .where(eq(workspace.ownerId, ownerId));
+
+  return result?.count ?? 0;
 }
 
 export async function getWorkspaceById({
@@ -62,8 +78,10 @@ export async function updateWorkspace({
   return updatedWorkspace ?? null;
 }
 
-// Resources scoped to this workspace fall back to unassigned (workspaceId
-// set to null) via the column's onDelete: 'set null'; they are never deleted.
+// Resources scoped to this workspace are deleted with it: their workspaceId
+// FK is onDelete: 'cascade' (docs/api-standards/prd.md). Callers must reject
+// deleting a user's last workspace before calling this (see WP1's
+// workspace.service.ts).
 export async function deleteWorkspaceById({
   id,
   ownerId,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CalendarIcon, XIcon } from '@lucide/vue';
+import { storeToRefs } from 'pinia';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import ChatHistoryItemRow from '~/features/chat/components/ChatHistoryItem.vue';
@@ -7,6 +8,7 @@ import {
   useGetChatHistory,
   type ChatHistoryItem,
 } from '~/features/chat/composables/useChatApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import { useSidePanelStore } from '~/stores/sidepanel.store';
 
 // Imports
@@ -35,7 +37,10 @@ const GROUP_LABEL_FORMATS: Record<GroupBy, Intl.DateTimeFormatOptions> = {
 const sidePanel = useSidePanelStore();
 const route = useRoute();
 const { t, locale } = useI18n();
-const { data, isPending: isLoading } = useGetChatHistory();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { data, isPending: isLoading } = useGetChatHistory(activeWorkspaceId);
 const groupBy = useLocalStorage<GroupBy>('chat-history:group-by', 'day');
 
 // Functions
@@ -150,6 +155,7 @@ const groups = computed<ChatGroup[]>(() => {
           :key="chat.id"
           :chat="chat"
           :active="isActiveChat(chat.id)"
+          :workspace-id="activeWorkspaceId"
         />
       </div>
     </div>

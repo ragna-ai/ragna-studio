@@ -6,26 +6,32 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import type {
-  UpsertWorkflowRequest,
+  CreateWorkflowRequest,
+  UpdateWorkflowRequest,
   WorkflowResponse,
   WorkflowRunManyResponse,
   WorkflowRunResponse,
 } from '~/features/workflow/types';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string>;
 
 export const workflowKeys = {
-  all: ['workflows'] as const,
+  all: (workspaceId: WorkspaceId) => ['workflows', workspaceId] as const,
   list: (
+    workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    scopeKey: MaybeRefOrGetter<string>,
-  ) => ['workflows', 'list', page, limit, scopeKey] as const,
-  detail: (workflowId: MaybeRefOrGetter<string>) =>
-    ['workflows', 'detail', workflowId] as const,
-  runs: (workflowId: MaybeRefOrGetter<string>) =>
-    ['workflows', 'detail', workflowId, 'runs'] as const,
-  run: (runId: MaybeRefOrGetter<string>) =>
-    ['workflow-runs', 'detail', runId] as const,
+    sort: MaybeRefOrGetter<string>,
+  ) => ['workflows', workspaceId, 'list', page, limit, sort] as const,
+  detail: (workspaceId: WorkspaceId, workflowId: MaybeRefOrGetter<string>) =>
+    ['workflows', workspaceId, 'detail', workflowId] as const,
+  runs: (workspaceId: WorkspaceId, workflowId: MaybeRefOrGetter<string>) =>
+    ['workflows', workspaceId, 'detail', workflowId, 'runs'] as const,
+  run: (
+    workspaceId: WorkspaceId,
+    workflowId: MaybeRefOrGetter<string>,
+    runId: MaybeRefOrGetter<string>,
+  ) => ['workflows', workspaceId, 'detail', workflowId, 'runs', runId] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -53,9 +59,11 @@ function hasErrorMessage(data: unknown): data is { error: string } {
 
 /**
  * Turns a failed $fetch call into a user-facing message: prefers the
- * `errors: string[]` list `POST /workflow/:workflowId/publish` returns on a
- * validation failure, falls back to a plain `{ error: string }` body (e.g.
+ * `errors: string[]` list `POST .../workflow/:workflowId/publish` returns on
+ * a validation failure, falls back to a plain `{ error: string }` body (e.g.
  * "not published" on `.../run`), then a generic fallback.
+ *
+ * Also used by useNotificationApi.ts; keep this exported.
  */
 export function extractErrorMessage(error: unknown, fallback: string): string {
   const data = (error as FetchErrorWithData | undefined)?.data;
@@ -69,41 +77,56 @@ export function extractErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function useGetWorkflow(
+  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<WorkflowResponse>({
-    queryKey: workflowKeys.detail(workflowId),
+    queryKey: workflowKeys.detail(workspaceId, workflowId),
     queryFn: ({ signal }) =>
-      api(`/workflow/${toValue(workflowId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(workflowId),
+      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(workflowId),
     ...options,
   });
 }
 
-export function useUpsertWorkflow() {
+export function useCreateWorkflow(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
-  const workspaceScopeStore = useWorkspaceScopeStore();
-  return useMutation<WorkflowResponse, unknown, UpsertWorkflowRequest>({
-    mutationFn: (body) => {
-      // Stamp the active workspace only when creating (no id yet) and a
-      // specific workspace is active. Editing must not silently move a
-      // workflow; All and Unassigned both mean "no workspace" and send
-      // nothing (docs/workspaces.md).
-      const workspaceId = body.id
-        ? null
-        : workspaceScopeStore.createWorkspaceId;
-      return api('/workflow', {
-        method: 'POST',
-        body: workspaceId ? { ...body, workspaceId } : body,
-      });
+  return useMutation<WorkflowResponse, unknown, CreateWorkflowRequest>({
+    mutationFn: (body) =>
+      api(`/workspace/${toValue(workspaceId)}/workflow`, { method: 'POST', body }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
+      toast.success('Workflow created');
     },
+    onError: () => {
+      toast.error('Failed to create workflow');
+    },
+  });
+}
+
+interface UpdateWorkflowVariables extends UpdateWorkflowRequest {
+  workflowId: string;
+}
+
+export function useUpdateWorkflow(workspaceId: WorkspaceId) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<WorkflowResponse, unknown, UpdateWorkflowVariables>({
+    mutationFn: ({ workflowId, ...body }) =>
+      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}`, {
+        method: 'PATCH',
+        body,
+      }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
       queryClient.invalidateQueries({
-        queryKey: workflowKeys.detail(response.workflow.id),
+        queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
       toast.success('Workflow saved');
     },
@@ -113,14 +136,14 @@ export function useUpsertWorkflow() {
   });
 }
 
-export function useDeleteWorkflow() {
+export function useDeleteWorkflow(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (workflowId) =>
-      api(`/workflow/${workflowId}`, { method: 'DELETE' }),
+      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
       toast.success('Workflow deleted');
     },
     onError: () => {
@@ -129,15 +152,17 @@ export function useDeleteWorkflow() {
   });
 }
 
-export function usePublishWorkflow() {
+export function usePublishWorkflow(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, string>({
     mutationFn: (workflowId) =>
-      api(`/workflow/${workflowId}/publish`, { method: 'POST' }),
+      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}/publish`, {
+        method: 'POST',
+      }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({
-        queryKey: workflowKeys.detail(response.workflow.id),
+        queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
       toast.success('Workflow published');
     },
@@ -147,18 +172,21 @@ export function usePublishWorkflow() {
   });
 }
 
-export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
+export function useCreateWorkflowRun(
+  workspaceId: WorkspaceId,
+  workflowId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, string | undefined>({
     mutationFn: (input) =>
-      api(`/workflow/${toValue(workflowId)}/run`, {
+      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`, {
         method: 'POST',
         body: { input },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: workflowKeys.runs(workflowId),
+        queryKey: workflowKeys.runs(workspaceId, workflowId),
       });
     },
     onError: (error) => {
@@ -167,16 +195,23 @@ export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
   });
 }
 
-export function useCancelWorkflowRun(runId: MaybeRefOrGetter<string>) {
+export function useCancelWorkflowRun(
+  workspaceId: WorkspaceId,
+  workflowId: MaybeRefOrGetter<string>,
+  runId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
     mutationFn: () =>
-      api(`/workflow/run/${toValue(runId)}/cancel`, { method: 'POST' }),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.run(runId) });
+      api(
+        `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run/${toValue(runId)}/cancel`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.run(workspaceId, workflowId, runId) });
       queryClient.invalidateQueries({
-        queryKey: workflowKeys.runs(response.run.workflowId),
+        queryKey: workflowKeys.runs(workspaceId, workflowId),
       });
       toast.success('Run cancelled');
     },
@@ -187,29 +222,38 @@ export function useCancelWorkflowRun(runId: MaybeRefOrGetter<string>) {
 }
 
 export function useGetWorkflowRuns(
+  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<WorkflowRunManyResponse>({
-    queryKey: workflowKeys.runs(workflowId),
+    queryKey: workflowKeys.runs(workspaceId, workflowId),
     queryFn: ({ signal }) =>
-      api(`/workflow/${toValue(workflowId)}/runs`, { method: 'GET', signal }),
-    enabled: () => !!toValue(workflowId),
+      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(workflowId),
     ...options,
   });
 }
 
 export function useGetWorkflowRun(
+  workspaceId: WorkspaceId,
+  workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<WorkflowRunResponse>({
-    queryKey: workflowKeys.run(runId),
+    queryKey: workflowKeys.run(workspaceId, workflowId, runId),
     queryFn: ({ signal }) =>
-      api(`/workflow/run/${toValue(runId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(runId),
+      api(
+        `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run/${toValue(runId)}`,
+        { method: 'GET', signal },
+      ),
+    enabled: () => !!toValue(workspaceId) && !!toValue(workflowId) && !!toValue(runId),
     ...options,
   });
 }

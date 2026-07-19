@@ -9,6 +9,7 @@ const RECENT_RUNS_LIMIT = 3;
 
 // Props
 const props = defineProps<{
+  workspaceId: string;
   workflowId: string;
 }>();
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 
 // Composables
 const { data: runsData, isLoading: isLoadingRuns } = useGetWorkflowRuns(
+  () => props.workspaceId,
   () => props.workflowId,
 );
 const { formatDateTime } = useDateTimeFormat();

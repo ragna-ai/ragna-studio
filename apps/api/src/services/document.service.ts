@@ -1,44 +1,14 @@
-import type { DocumentWithRelations, Workspace } from '@repo/database';
+import type { DocumentWithRelations } from '@repo/database';
 import {
   createDocument,
   deleteDocumentById,
   getDocumentById,
   getDocumentsByWorkspaceId,
-  getWorkspaceById,
   updateDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
-
-/**
- * Loads a workspace, throwing 404 if it doesn't exist or doesn't belong to
- * `userId`. Documents and folders have no owner column of their own
- * (docs/documents/prd.md): access is gated entirely by workspace ownership,
- * so every function below (and folder.service.ts) checks this first.
- */
-export async function loadOwnedWorkspace({
-  workspaceId,
-  userId,
-}: {
-  workspaceId: string;
-  userId: string;
-}): Promise<Workspace> {
-  const { error, data: workspaceRecord } = await tryCatch(() =>
-    getWorkspaceById({ id: workspaceId, ownerId: userId }),
-  );
-
-  if (error !== null) {
-    logger.error('Failed to load workspace', error);
-    throw new InternalServerErrorException('Failed to load workspace');
-  }
-
-  if (!workspaceRecord) {
-    throw new NotFoundException('Workspace not found');
-  }
-
-  return workspaceRecord;
-}
 
 export interface DocumentResponse {
   id: string;
@@ -75,8 +45,11 @@ function toDocumentResponse(documentRecord: DocumentWithRelations): DocumentResp
   };
 }
 
-/** Loads one document and converts it, throwing 404 if it isn't found.
- * Callers must already have resolved the workspace via `loadOwnedWorkspace()`. */
+/**
+ * Loads one document and converts it, throwing 404 if it isn't found.
+ * Callers rely on the workspace guard having already verified `workspaceId`
+ * belongs to the authenticated user (docs/api-standards/prd.md).
+ */
 async function loadDocumentResponse({
   workspaceId,
   documentId,
@@ -101,18 +74,14 @@ async function loadDocumentResponse({
 }
 
 /**
- * [GET] /workspace/:workspaceId/documents
+ * [GET] /workspace/:workspaceId/document
  * Lists a workspace's documents, most recently updated first.
  */
 export async function listDocuments({
   workspaceId,
-  userId,
 }: {
   workspaceId: string;
-  userId: string;
 }): Promise<DocumentResponse[]> {
-  await loadOwnedWorkspace({ workspaceId, userId });
-
   const { error, data: documents } = await tryCatch(() =>
     getDocumentsByWorkspaceId({ workspaceId }),
   );
@@ -126,24 +95,20 @@ export async function listDocuments({
 }
 
 /**
- * [GET] /workspace/:workspaceId/documents/:documentId
+ * [GET] /workspace/:workspaceId/document/:documentId
  */
 export async function getDocument({
   workspaceId,
-  userId,
   documentId,
 }: {
   workspaceId: string;
-  userId: string;
   documentId: string;
 }): Promise<DocumentResponse> {
-  await loadOwnedWorkspace({ workspaceId, userId });
-
   return loadDocumentResponse({ workspaceId, documentId });
 }
 
 /**
- * [POST] /workspace/:workspaceId/documents
+ * [POST] /workspace/:workspaceId/document
  * Human-created: sets createdByUserId, never createdByAgentId.
  */
 export async function createDocumentForUser({
@@ -159,8 +124,6 @@ export async function createDocumentForUser({
   content?: string;
   folderId?: string | null;
 }): Promise<DocumentResponse> {
-  await loadOwnedWorkspace({ workspaceId, userId });
-
   const { error, data: createdDocument } = await tryCatch(() =>
     createDocument({ workspaceId, folderId, title, content, createdByUserId: userId }),
   );
@@ -174,27 +137,23 @@ export async function createDocumentForUser({
 }
 
 /**
- * [PATCH] /workspace/:workspaceId/documents/:documentId
+ * [PATCH] /workspace/:workspaceId/document/:documentId
  * Also the autosave endpoint (debounced client-side): last writer wins, no
  * conflict detection in v1 (docs/documents/prd.md).
  */
 export async function updateDocumentForUser({
   workspaceId,
-  userId,
   documentId,
   title,
   content,
   folderId,
 }: {
   workspaceId: string;
-  userId: string;
   documentId: string;
   title?: string;
   content?: string;
   folderId?: string | null;
 }): Promise<DocumentResponse> {
-  await loadOwnedWorkspace({ workspaceId, userId });
-
   const { error, data: updated } = await tryCatch(() =>
     updateDocument({ documentId, workspaceId, title, content, folderId }),
   );
@@ -212,18 +171,14 @@ export async function updateDocumentForUser({
 }
 
 /**
- * [DELETE] /workspace/:workspaceId/documents/:documentId
+ * [DELETE] /workspace/:workspaceId/document/:documentId
  */
 export async function deleteDocument({
   workspaceId,
-  userId,
   documentId,
 }: {
   workspaceId: string;
-  userId: string;
   documentId: string;
 }): Promise<void> {
-  await loadOwnedWorkspace({ workspaceId, userId });
-
   await deleteDocumentById({ documentId, workspaceId });
 }

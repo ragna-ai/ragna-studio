@@ -31,14 +31,16 @@ export interface WorkflowManyResponse {
   };
 }
 
-export type UpsertWorkflowRequest = {
-  id?: string;
+export type CreateWorkflowRequest = {
   name: string;
   description?: string;
   definition: WorkflowDefinition;
-  // Set internally from the active workspace in useUpsertWorkflow when
-  // creating (no id yet); callers never pass this themselves.
-  workspaceId?: string;
+};
+
+export type UpdateWorkflowRequest = {
+  name?: string;
+  description?: string;
+  definition?: WorkflowDefinition;
 };
 
 export interface WorkflowRunStep {
@@ -79,7 +81,7 @@ export interface WorkflowRunManyResponse {
   runs: WorkflowRunListItem[];
 }
 
-/** Body shape the API returns on a 400 from POST /workflow/:workflowId/publish. */
+/** Body shape the API returns on a 400 from POST .../workflow/:workflowId/publish. */
 export interface WorkflowValidationErrorBody {
   error: string;
   errors: string[];

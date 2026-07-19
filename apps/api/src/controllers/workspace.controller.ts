@@ -1,19 +1,16 @@
-import {
-  createWorkspace,
-  deleteWorkspaceById,
-  getAllWorkspacesByOwnerId,
-  updateWorkspace,
-} from '@repo/database';
-import { logger } from '@repo/logger';
-import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import {
+  createWorkspaceForUser,
+  deleteWorkspaceForUser,
+  listWorkspacesForUser,
+  renameWorkspaceForUser,
+} from '../services/workspace.service';
 import {
   validCreateWorkspaceBody,
   validRenameWorkspaceBody,
   validWorkspaceIdParam,
-} from '../middlewares/validationMiddlewares';
+} from '../validation';
 
 export const workspaceController = new Hono()
   .basePath('/workspace')
@@ -25,14 +22,7 @@ export const workspaceController = new Hono()
   .get('/', async (c) => {
     const user = c.get('user');
 
-    const { error, data: workspaces } = await tryCatch(() =>
-      getAllWorkspacesByOwnerId({ ownerId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get workspaces for user', error);
-      throw new InternalServerErrorException('Failed to get workspaces for user');
-    }
+    const workspaces = await listWorkspacesForUser({ userId: user.id });
 
     return c.json({ workspaces });
   })
@@ -44,14 +34,7 @@ export const workspaceController = new Hono()
     const user = c.get('user');
     const body = c.req.valid('json');
 
-    const { error, data: workspace } = await tryCatch(() =>
-      createWorkspace({ ownerId: user.id, name: body.name }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to create workspace', error);
-      throw new InternalServerErrorException('Failed to create workspace');
-    }
+    const workspace = await createWorkspaceForUser({ userId: user.id, name: body.name });
 
     return c.json({ workspace }, 201);
   })
@@ -64,31 +47,25 @@ export const workspaceController = new Hono()
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
-    const { error, data: workspace } = await tryCatch(() =>
-      updateWorkspace({ id: param.workspaceId, ownerId: user.id, name: body.name }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to rename workspace', error);
-      throw new InternalServerErrorException('Failed to rename workspace');
-    }
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
+    const workspace = await renameWorkspaceForUser({
+      userId: user.id,
+      workspaceId: param.workspaceId,
+      name: body.name,
+    });
 
     return c.json({ workspace });
   })
   /**
    * [DELETE] /workspace/:workspaceId
-   * Delete a workspace owned by the authenticated user. Resources that were
-   * in it fall back to unassigned (workspaceId set to null), never deleted.
+   * Delete a workspace owned by the authenticated user. Contained resources
+   * (agents, chats, documents, ...) cascade-delete with it. Rejected with
+   * 400 if this is the user's only workspace.
    */
   .delete('/:workspaceId', validWorkspaceIdParam, async (c) => {
     const user = c.get('user');
     const param = c.req.valid('param');
 
-    await deleteWorkspaceById({ id: param.workspaceId, ownerId: user.id });
+    await deleteWorkspaceForUser({ userId: user.id, workspaceId: param.workspaceId });
 
     return c.json({ message: 'Workspace deleted successfully' });
   });

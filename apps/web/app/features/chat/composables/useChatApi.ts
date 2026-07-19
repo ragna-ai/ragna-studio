@@ -5,29 +5,31 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
-import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
 export const chatKeys = {
-  // Prefix is 'chats' (not a separate top-level key) so the existing
-  // invalidateQueries({ queryKey: chatKeys.all }) on create/delete also
-  // refreshes this query.
-  all: ['chats'] as const,
+  all: (workspaceId: WorkspaceId) => ['chats', workspaceId] as const,
   list: (
+    workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    search: MaybeRefOrGetter<string>,
-    scopeKey: MaybeRefOrGetter<string>,
-  ) => ['chats', 'list', page, limit, search, scopeKey] as const,
-  detail: (chatId: MaybeRefOrGetter<string>) =>
-    ['chats', 'detail', chatId] as const,
-  recent: () => ['chats', 'recent'] as const,
-  history: (scopeKey: MaybeRefOrGetter<string>) =>
-    ['chats', 'history', scopeKey] as const,
+    searchQuery: MaybeRefOrGetter<string>,
+  ) => ['chats', workspaceId, 'list', page, limit, searchQuery] as const,
+  detail: (workspaceId: WorkspaceId, chatId: MaybeRefOrGetter<string>) =>
+    ['chats', workspaceId, 'detail', chatId] as const,
+  history: (workspaceId: WorkspaceId) => ['chats', workspaceId, 'history'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
+
+/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
+type FetchErrorWithData = { data?: { error?: string } };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
+}
 
 export interface ChatResponse {
   chat: {
@@ -42,9 +44,6 @@ export interface ChatResponse {
 
 interface NewChatBody {
   agentId?: string;
-  // Set internally from the active workspace in useCreateChat; callers never
-  // pass this themselves.
-  workspaceId?: string;
 }
 
 export interface ChatHistoryItem {
@@ -69,15 +68,19 @@ export interface ChatHistoryResponse {
 }
 
 export function useGetChat(
+  workspaceId: WorkspaceId,
   chatId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<ChatResponse>({
-    queryKey: chatKeys.detail(chatId),
+    queryKey: chatKeys.detail(workspaceId, chatId),
     queryFn: ({ signal }) =>
-      api(`/chat/${toValue(chatId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(chatId),
+      api(`/workspace/${toValue(workspaceId)}/chat/${toValue(chatId)}`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(chatId),
     // Messages change outside vue-query via the AI SDK stream, and the
     // consumer renders the first snapshot only, so never serve cached data.
     staleTime: 0,
@@ -94,51 +97,33 @@ export function useGetChat(
   });
 }
 
-export function useGetRecentChat(options: QueryOpts = {}) {
+export function useGetChatHistory(workspaceId: WorkspaceId, options: QueryOpts = {}) {
   const api = useApi();
-  return useQuery<ChatResponse>({
-    queryKey: chatKeys.recent(),
-    queryFn: ({ signal }) => api('/chat/recent', { method: 'GET', signal }),
-    ...options,
-  });
-}
-
-export function useGetChatHistory(options: QueryOpts = {}) {
-  const api = useApi();
-  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
   return useQuery<ChatHistoryResponse>({
-    queryKey: chatKeys.history(scopeKey),
+    queryKey: chatKeys.history(workspaceId),
     queryFn: ({ signal }) =>
-      api('/chat', {
+      api(`/workspace/${toValue(workspaceId)}/chat`, {
         method: 'GET',
-        query: { page: 1, limit: 60, ...listQuery.value },
+        query: { page: 1, limit: 60 },
         signal,
       }),
+    enabled: () => !!toValue(workspaceId),
     placeholderData: (prev: ChatHistoryResponse | undefined) => prev, // keep previous results while refetching
     ...options,
   });
 }
 
-export function useCreateChat() {
+export function useCreateChat(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
-  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<ChatResponse, unknown, NewChatBody>({
-    mutationFn: (body) => {
-      // Only a specific active workspace assigns one; All and Unassigned
-      // both send nothing (docs/workspaces.md).
-      const workspaceId = workspaceScopeStore.createWorkspaceId;
-      return api('/chat', {
-        method: 'POST',
-        body: workspaceId ? { ...body, workspaceId } : body,
-      });
-    },
+    mutationFn: (body) =>
+      api(`/workspace/${toValue(workspaceId)}/chat`, { method: 'POST', body }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: chatKeys.all });
-      // toast.success('Chat created');
+      queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
-    onError: () => {
-      toast.error('Failed to create chat');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to create chat'));
     },
   });
 }
@@ -148,33 +133,36 @@ interface UpdateChatTitleVariables {
   title: string;
 }
 
-export function useUpdateChatTitle() {
+export function useUpdateChatTitle(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, UpdateChatTitleVariables>({
     mutationFn: ({ chatId, title }) =>
-      api(`/chat/${chatId}`, { method: 'PATCH', body: { title } }),
+      api(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, {
+        method: 'PATCH',
+        body: { title },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: chatKeys.all });
+      queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
-    onError: () => {
-      toast.error('Failed to rename chat');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to rename chat'));
     },
   });
 }
 
-export function useDeleteChat() {
+export function useDeleteChat(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (chatId: string) =>
-      api(`/chat/${chatId}`, { method: 'DELETE' }),
+      api(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: chatKeys.all });
+      queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
       toast.success('Chat deleted');
     },
-    onError: () => {
-      toast.error('Failed to delete chat');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to delete chat'));
     },
   });
 }

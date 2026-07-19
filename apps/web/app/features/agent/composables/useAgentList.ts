@@ -8,7 +8,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useAgentList() {
   const api = useApi();
-  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
+  const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each
@@ -28,18 +28,18 @@ export default function useAgentList() {
 
   function useGetAllAgents(options: QueryOpts = {}) {
     return useQuery<AgentManyResponse>({
-      queryKey: agentKeys.list(page, limit, searchQuery, scopeKey),
+      queryKey: agentKeys.list(activeWorkspaceId, page, limit, searchQuery),
       queryFn: ({ signal }) =>
-        api('/agent', {
+        api(`/workspace/${activeWorkspaceId.value}/agent`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
             searchQuery: searchQuery.value,
-            ...listQuery.value,
           },
           signal,
         }),
+      enabled: () => !!activeWorkspaceId.value,
       placeholderData: (prev: AgentManyResponse | undefined) => prev, // keep previous results while refetching
       ...options,
     });

@@ -9,34 +9,24 @@ const isManageDialogOpen = ref(false);
 
 // Composables
 const { data } = useGetWorkspaces();
-const workspaceScopeStore = useWorkspaceScopeStore();
-const { selectAllItems, selectUnassigned, selectWorkspace, isWorkspaceActive } =
-  workspaceScopeStore;
+const { selectWorkspace, isActive, ensureActiveWorkspace } =
+  useWorkspaceScopeStore();
 const { t } = useI18n();
 
 // Computed
 const workspaces = computed(() => data.value?.workspaces ?? []);
 const activeLabel = computed(() => {
-  if (workspaceScopeStore.isUnassignedActive) {
-    return t('workspace.switcher.unassigned');
-  }
-  const active = workspaces.value.find((workspace) =>
-    isWorkspaceActive(workspace.id),
-  );
-  return active?.name ?? t('workspace.switcher.allItems');
+  const active = workspaces.value.find((workspace) => isActive(workspace.id));
+  return active?.name ?? '';
 });
 
 // Hooks
-// Drop a persisted selection that points at a workspace which no longer
-// exists (e.g. deleted in another session). Skip while still loading, so a
-// not-yet-fetched list doesn't clear a valid selection.
+// A workspace is always active once the list has loaded: fall back to the
+// first one when the persisted id is empty or points at a workspace that
+// no longer exists (e.g. deleted in another session).
 watch(data, (result) => {
   if (!result) return;
-  const scope = workspaceScopeStore.scope;
-  if (scope.kind !== 'workspace') return;
-  if (result.workspaces.some((workspace) => workspace.id === scope.workspaceId))
-    return;
-  selectAllItems();
+  ensureActiveWorkspace(result.workspaces);
 });
 </script>
 
@@ -52,26 +42,7 @@ watch(data, (result) => {
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start" class="w-56">
-      <DropdownMenuItem @click="selectAllItems()">
-        <CheckIcon
-          class="mr-2 size-4"
-          :class="
-            workspaceScopeStore.isAllItemsActive ? 'opacity-100' : 'opacity-0'
-          "
-        />
-        {{ t('workspace.switcher.allItems') }}
-      </DropdownMenuItem>
-      <DropdownMenuItem @click="selectUnassigned()">
-        <CheckIcon
-          class="mr-2 size-4"
-          :class="
-            workspaceScopeStore.isUnassignedActive ? 'opacity-100' : 'opacity-0'
-          "
-        />
-        {{ t('workspace.switcher.unassigned') }}
-      </DropdownMenuItem>
       <template v-if="workspaces.length > 0">
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           v-for="workspace in workspaces"
           :key="workspace.id"
@@ -79,14 +50,12 @@ watch(data, (result) => {
         >
           <CheckIcon
             class="mr-2 size-4"
-            :class="
-              isWorkspaceActive(workspace.id) ? 'opacity-100' : 'opacity-0'
-            "
+            :class="isActive(workspace.id) ? 'opacity-100' : 'opacity-0'"
           />
           <span class="truncate">{{ workspace.name }}</span>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
       </template>
-      <DropdownMenuSeparator />
       <DropdownMenuItem @click="isManageDialogOpen = true">
         <SettingsIcon class="mr-2 size-4" />
         {{ t('workspace.switcher.manage') }}

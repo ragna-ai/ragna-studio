@@ -11,10 +11,7 @@ import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import {
-  validNotificationIdParam,
-  validPaginationQuery,
-} from '../middlewares/validationMiddlewares';
+import { validNotificationIdParam, validPaginationQuery } from '../validation';
 
 export const notificationController = new Hono()
   .basePath('/notification')

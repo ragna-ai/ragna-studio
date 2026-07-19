@@ -159,7 +159,7 @@ export async function runReferencedAgent({
 }: {
   agentId: string;
   userId: string;
-  workspaceId: string | null;
+  workspaceId: string;
   prompt: string;
 }): Promise<ReferencedAgentRun> {
   const agentRecord = await getAgentById({ agentId, userId });

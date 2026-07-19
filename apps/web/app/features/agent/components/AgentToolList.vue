@@ -16,11 +16,11 @@ import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDa
 type AgentToolListProps = {
   modelValue: string[];
   invalid?: boolean;
-  // The agent's own workspaceId, used to scope the "Default dataset"
-  // picker the same way the datasets tool's workspace hard filter works
-  // (docs/datasets.md decision 10/11): a specific workspace filters to it,
-  // null/undefined (agent itself unassigned) shows every dataset.
-  workspaceId?: string | null;
+  // The active workspace, used to scope the "Default dataset" picker the
+  // same way the datasets tool's workspace filter works at runtime
+  // (docs/datasets.md decision 10/11). An agent always lives in exactly one
+  // workspace (docs/api-standards/prd.md), so this is never null.
+  workspaceId: string;
   defaultDatasetId?: string | null;
 };
 
@@ -38,7 +38,6 @@ const NO_DATASET = '__none__';
 // Imports
 const props = withDefaults(defineProps<AgentToolListProps>(), {
   invalid: false,
-  workspaceId: null,
   defaultDatasetId: null,
 });
 

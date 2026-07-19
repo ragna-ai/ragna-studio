@@ -10,7 +10,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useSocialPostList() {
   const api = useApi();
-  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
+  const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
@@ -23,17 +23,17 @@ export default function useSocialPostList() {
 
   function useGetAllSocialPosts(options: QueryOpts = {}) {
     return useQuery<SocialPostManyResponse>({
-      queryKey: socialPostKeys.list(page, limit, scopeKey),
+      queryKey: socialPostKeys.list(activeWorkspaceId, page, limit),
       queryFn: ({ signal }) =>
-        api('/social-posts', {
+        api(`/workspace/${activeWorkspaceId.value}/social-post`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
-            ...listQuery.value,
           },
           signal,
         }),
+      enabled: () => !!activeWorkspaceId.value,
       placeholderData: (prev: SocialPostManyResponse | undefined) => prev,
       ...options,
     });

@@ -1,63 +1,44 @@
-import { createGenImages } from '@repo/ai';
-import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import { InternalServerErrorException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import {
-  validGenerateImagesBody,
-  validWorkspaceIdQuery,
-} from '../middlewares/validationMiddlewares';
-import { getGenImagesForUser } from '../services/imagegen.service';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
+import { generateImagesForWorkspace, listGenImages } from '../services/imagegen.service';
+import { validGenerateImagesBody, validGenImageListQuery } from '../validation';
 
-export const imageGenerateController = new Hono()
-  .basePath('/image/generate')
+export const genImageController = new Hono()
+  .basePath('/workspace/:workspaceId/gen-image')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /image/generate
-   * Get all generated images for the authenticated user.
+   * [GET] /workspace/:workspaceId/gen-image
+   * List the workspace's generated images, paginated, newest first by default.
    */
-  .get('/', validWorkspaceIdQuery, async (c) => {
-    const user = c.get('user');
+  .get('/', validGenImageListQuery, async (c) => {
+    const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
-    const unassigned = query.unassigned === 'true';
+    const { genImages, meta } = await listGenImages({
+      workspaceId: workspace.id,
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+    });
 
-    const { error, data: images } = await tryCatch(() =>
-      getGenImagesForUser({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
-    );
-
-    if (error !== null || !images) {
-      throw new InternalServerErrorException('Failed to list generated images');
-    }
-
-    return c.json({ images });
+    return c.json({ genImages, meta });
   })
   /**
-   * [POST] /image/generate
-   * Generate new image(s) based on the provided prompt and options for the authenticated user.
+   * [POST] /workspace/:workspaceId/gen-image
+   * Generate image(s) from a prompt and persist them in the workspace.
    */
   .post('/', validGenerateImagesBody, async (c) => {
     const user = c.get('user');
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
-    const { error, data: generated } = await tryCatch(() =>
-      createGenImages({
-        userId: user.id,
-        prompt: body.prompt,
-        provider: body.provider,
-        model: body.model,
-        resolution: body.resolution,
-        aspectRatio: body.aspectRatio,
-        n: body.n,
-        seed: body.seed,
-        negativePrompt: body.negativePrompt,
-        workspaceId: body.workspaceId,
-      }),
-    );
+    const { genImages } = await generateImagesForWorkspace({
+      userId: user.id,
+      workspaceId: workspace.id,
+      input: body,
+    });
 
-    if (error !== null || !generated) {
-      throw new InternalServerErrorException('Image generation failed');
-    }
-
-    return c.json({ images: generated.images });
+    return c.json({ genImages }, 201);
   });

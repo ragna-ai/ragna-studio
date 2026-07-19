@@ -5,6 +5,7 @@ import {
 } from '~/features/agent/composables/useAgentApi';
 
 type AgentMemoryPanelProps = {
+  workspaceId: string;
   agentId: string;
 };
 
@@ -17,8 +18,11 @@ const content = ref('');
 const isInitialized = ref(false);
 
 // Composables
-const { data, isPending: isLoading } = useGetAgentMemory(() => props.agentId);
-const { isPending: isSaving, mutate } = useUpdateAgentMemory();
+const { data, isPending: isLoading } = useGetAgentMemory(
+  () => props.workspaceId,
+  () => props.agentId,
+);
+const { isPending: isSaving, mutate } = useUpdateAgentMemory(() => props.workspaceId);
 
 // Computed
 // Functions

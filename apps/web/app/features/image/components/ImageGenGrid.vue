@@ -1,22 +1,29 @@
 <script setup lang="ts">
 // Imports
 import { Spinner } from '@/components/ui/spinner';
+import { storeToRefs } from 'pinia';
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
 import type { GeneratedImage } from '~/features/image/composables/useImageGenApi';
 import {
   useGetGenImages,
   usePendingGenImageCount,
 } from '~/features/image/composables/useImageGenApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Refs
 const previewImage = ref<GeneratedImage | null>(null);
 
 // Composables
-const { data, isLoading, isError } = useGetGenImages();
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+// No pager in this grid yet: request a high limit so it still reads as
+// "all of the workspace's images" under the paginated endpoint.
+const { data, isLoading, isError } = useGetGenImages(activeWorkspaceId, {
+  limit: 100,
+});
 const pendingCount = usePendingGenImageCount();
 
 // Computed
-const images = computed(() => data.value?.images ?? []);
+const images = computed(() => data.value?.genImages ?? []);
 
 const isEmpty = computed(
   () => images.value.length === 0 && pendingCount.value === 0,

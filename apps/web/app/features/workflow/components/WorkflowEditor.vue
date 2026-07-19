@@ -14,7 +14,7 @@ import WorkflowRunDialog from '~/features/workflow/components/WorkflowRunDialog.
 import WorkflowRunsList from '~/features/workflow/components/WorkflowRunsList.vue';
 import {
   usePublishWorkflow,
-  useUpsertWorkflow,
+  useUpdateWorkflow,
 } from '~/features/workflow/composables/useWorkflowApi';
 import {
   createWorkflowNode,
@@ -26,6 +26,7 @@ import type { Workflow } from '~/features/workflow/types';
 // Imports
 
 interface Props {
+  workspaceId: string;
   workflow: Workflow;
 }
 
@@ -58,9 +59,12 @@ watch(selectedNodeId, (nodeId) => {
 });
 
 // Composables
-const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpsertWorkflow();
-const { mutateAsync: publishWorkflow, isPending: isPublishing } =
-  usePublishWorkflow();
+const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow(
+  () => props.workspaceId,
+);
+const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow(
+  () => props.workspaceId,
+);
 
 // Computed
 const selectedNode = computed(
@@ -110,7 +114,7 @@ async function handleSaveSettings(value: { name: string; description: string }) 
 
 async function handleSave() {
   await saveWorkflow({
-    id: props.workflow.id,
+    workflowId: props.workflow.id,
     name: name.value,
     description: description.value || undefined,
     definition: draftDefinition.value,
@@ -189,6 +193,7 @@ async function handlePublish() {
         <div class="flex flex-col gap-3">
           <Separator />
           <WorkflowRecentRuns
+            :workspace-id="workspaceId"
             :workflow-id="workflow.id"
             @show-all-runs="isRunsListOpen = true"
           />
@@ -222,11 +227,13 @@ async function handlePublish() {
 
     <WorkflowRunDialog
       v-model:open="isRunDialogOpen"
+      :workspace-id="workspaceId"
       :workflow="workflow"
       :draft-definition="draftDefinition"
     />
     <WorkflowRunsList
       v-model:open="isRunsListOpen"
+      :workspace-id="workspaceId"
       :workflow-id="workflow.id"
     />
   </div>

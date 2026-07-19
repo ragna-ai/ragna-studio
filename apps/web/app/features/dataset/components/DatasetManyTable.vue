@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { DatabaseIcon, Trash2Icon } from '@lucide/vue';
 import type { DatasetListItem } from '~/features/dataset/types';
-import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 
 interface Props {
   datasets: DatasetListItem[];
   meta?: { totalCount: number };
-  // Only shown in the "All items" view (docs/datasets.md): a single
-  // workspace or Unassigned already implies the workspace.
-  showWorkspaceColumn?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showWorkspaceColumn: false,
-});
+defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'delete-dataset', datasetId: string): void;
@@ -22,22 +16,8 @@ const emit = defineEmits<{
 // Composables
 const { t } = useI18n();
 const { formatDateTime } = useDateTimeFormat();
-const { data: workspacesData } = useGetWorkspaces();
 
-// Computed
-const workspaceNameById = computed<Record<string, string>>(() => {
-  const entries = workspacesData.value?.workspaces ?? [];
-  return Object.fromEntries(entries.map((workspace) => [workspace.id, workspace.name]));
-});
-
-function workspaceName(workspaceId?: string | null): string {
-  if (!workspaceId) {
-    return t('workspace.switcher.unassigned');
-  }
-  return workspaceNameById.value[workspaceId] ?? t('workspace.switcher.unassigned');
-}
-
-const columnCount = computed(() => (props.showWorkspaceColumn ? 7 : 6));
+const columnCount = 6;
 </script>
 
 <template>
@@ -48,9 +28,6 @@ const columnCount = computed(() => (props.showWorkspaceColumn ? 7 : 6));
         <TableHead>{{ t('dataset.list.table.name') }}</TableHead>
         <TableHead>{{ t('dataset.list.table.origin') }}</TableHead>
         <TableHead>{{ t('dataset.list.table.rows') }}</TableHead>
-        <TableHead v-if="showWorkspaceColumn">
-          {{ t('dataset.list.table.workspace') }}
-        </TableHead>
         <TableHead>{{ t('dataset.list.table.updated') }}</TableHead>
         <TableHead class="text-right">{{ t('dataset.list.table.actions') }}</TableHead>
       </TableRow>
@@ -80,9 +57,6 @@ const columnCount = computed(() => (props.showWorkspaceColumn ? 7 : 6));
           </Badge>
         </TableCell>
         <TableCell class="whitespace-nowrap">{{ dataset.rowCount }}</TableCell>
-        <TableCell v-if="showWorkspaceColumn" class="whitespace-nowrap text-sm">
-          {{ workspaceName(dataset.workspaceId) }}
-        </TableCell>
         <TableCell class="whitespace-nowrap">
           {{ formatDateTime(dataset.updatedAt) }}
         </TableCell>

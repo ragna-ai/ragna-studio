@@ -7,6 +7,7 @@ import {
 } from '@lucide/vue';
 import type { Agent } from '~/features/agent/types';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Imports
 
@@ -23,7 +24,9 @@ const props = defineProps<Props>();
 
 // Composables
 const router = useRouter();
-const { mutateAsync: createNewChat } = useCreateChat();
+// A workspace is always active (docs/api-standards/prd.md).
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { mutateAsync: createNewChat } = useCreateChat(activeWorkspaceId);
 
 // Computed
 

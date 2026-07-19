@@ -37,7 +37,7 @@ type LinkedinDraftOutput = DraftLinkedInPostResult;
 export const getLinkedinDraft = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<LinkedinDraftInput, LinkedinDraftOutput> =>
   tool({
     description:

@@ -7,7 +7,7 @@ export function useGetAllAiModels(options: QueryOpts = {}) {
   return useQuery({
     queryKey: ['aimodels'],
     queryFn: ({ signal }) =>
-      api('/aimodel/list', {
+      api('/aimodel', {
         method: 'GET',
         signal,
       }),

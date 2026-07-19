@@ -5,7 +5,7 @@ import { isExecutionEquivalent } from '@repo/workflow';
 import {
   useCreateWorkflowRun,
   usePublishWorkflow,
-  useUpsertWorkflow,
+  useUpdateWorkflow,
 } from '~/features/workflow/composables/useWorkflowApi';
 import type { Workflow } from '~/features/workflow/types';
 
@@ -13,6 +13,7 @@ import type { Workflow } from '~/features/workflow/types';
 
 // Props
 const props = defineProps<{
+  workspaceId: string;
   workflow: Workflow;
   draftDefinition: WorkflowDefinition;
 }>();
@@ -22,11 +23,16 @@ const open = defineModel<boolean>('open', { default: false });
 const input = ref('');
 
 // Composables
-const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpsertWorkflow();
-const { mutateAsync: publishWorkflow, isPending: isPublishing } =
-  usePublishWorkflow();
-const { mutateAsync: createRun, isPending: isCreatingRun } =
-  useCreateWorkflowRun(() => props.workflow.id);
+const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow(
+  () => props.workspaceId,
+);
+const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow(
+  () => props.workspaceId,
+);
+const { mutateAsync: createRun, isPending: isCreatingRun } = useCreateWorkflowRun(
+  () => props.workspaceId,
+  () => props.workflow.id,
+);
 
 // Computed
 const isPublished = computed(() => props.workflow.publishedDefinition !== null);
@@ -59,7 +65,7 @@ async function handleRun() {
 async function handlePublishAndRun() {
   try {
     await saveWorkflow({
-      id: props.workflow.id,
+      workflowId: props.workflow.id,
       name: props.workflow.name,
       description: props.workflow.description ?? undefined,
       definition: props.draftDefinition,

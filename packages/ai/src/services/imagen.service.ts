@@ -15,6 +15,10 @@ export const imageGenProviders = ['bfl', 'google-vertex', 'openai'] as const;
 export const imageGenAspectRatios = ['1:1', '4:3', '16:9'] as const;
 export const imageGenResolutions = ['1K', '2K'] as const;
 
+// workspaceId is not part of the request body schema: the HTTP endpoint
+// takes it from the route (`/workspace/:workspaceId/gen-image`), and the
+// chat agent's image tool takes it from the chat. Both pass it separately
+// into createGenImages/createGenImagesWithDefaultModel below.
 export const generateImagesSchema = z.object({
   prompt: z.string().min(1).max(5000),
   provider: z.enum(imageGenProviders),
@@ -24,7 +28,6 @@ export const generateImagesSchema = z.object({
   n: z.number().int().min(1).max(4).optional(),
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
-  workspaceId: z.uuidv7().optional(),
 });
 
 export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
@@ -32,7 +35,9 @@ export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
 type AspectRatio = NonNullable<GenerateImagesInput['aspectRatio']>;
 type ImageResolution = NonNullable<GenerateImagesInput['resolution']>;
 
-type CreateImageParams = GenerateImagesInput & { userId: string };
+// workspaceId is required: gen_images.workspaceId is NOT NULL
+// (docs/api-standards/prd.md).
+type CreateImageParams = GenerateImagesInput & { userId: string; workspaceId: string };
 
 type OpenAIImageSize = '1024x1024' | '1024x1536' | '1536x1024';
 
@@ -197,7 +202,7 @@ export async function createGenImages({
     createGenImageRecords(
       uploadData.map(({ key }) => ({
         userId,
-        workspaceId: workspaceId ?? null,
+        workspaceId,
         storageKey: key,
         prompt,
         provider,
@@ -223,7 +228,7 @@ type CreateImagesWithDefaultModelParams = {
   prompt: string;
   aspectRatio?: AspectRatio;
   n?: number;
-  workspaceId: string | null;
+  workspaceId: string;
 };
 
 /**
@@ -253,10 +258,7 @@ export async function createGenImagesWithDefaultModel({
     n,
     provider: imageModel.provider,
     model: imageModel.model,
-    // createGenImages is shared with the direct HTTP endpoint, whose request
-    // body (generateImagesSchema) treats workspaceId as optional/absent
-    // rather than nullable.
-    workspaceId: workspaceId ?? undefined,
+    workspaceId,
   });
 }
 

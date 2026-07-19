@@ -1,17 +1,15 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
-import { storeToRefs } from 'pinia';
 import {
   chatKeys,
   type ChatHistoryResponse,
 } from '~/features/chat/composables/useChatApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
+type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
-export default function useChatList() {
+export default function useChatList(workspaceId: WorkspaceId) {
   const api = useApi();
-  const { listQuery, scopeKey } = storeToRefs(useWorkspaceScopeStore());
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each
@@ -31,18 +29,17 @@ export default function useChatList() {
 
   function useGetAllChats(options: QueryOpts = {}) {
     return useQuery<ChatHistoryResponse>({
-      queryKey: chatKeys.list(page, limit, searchQuery, scopeKey),
+      queryKey: chatKeys.list(workspaceId, page, limit, searchQuery),
       queryFn: ({ signal }) =>
-        api('/chat', {
+        api(`/workspace/${toValue(workspaceId)}/chat`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
-            searchQuery: searchQuery.value,
-            ...listQuery.value,
           },
           signal,
         }),
+      enabled: () => !!toValue(workspaceId),
       placeholderData: (prev: ChatHistoryResponse | undefined) => prev, // keep previous results while refetching
       ...options,
     });

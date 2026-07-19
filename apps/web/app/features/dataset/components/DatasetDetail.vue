@@ -61,14 +61,19 @@ watch(
 
 // Composables
 const { t } = useI18n();
-const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateDataset();
 // A stable computed ref (not a plain getter) so vue-query's queryKey/queryFn
 // reactivity tracking works the same way it does for every other detail
-// composable in this app (see useGetWorkflow/useGetDataset).
+// composable in this app (see useGetWorkflow/useGetDataset). The dataset
+// already carries its own workspaceId, so there's no need for a separate prop.
 const datasetId = computed(() => props.dataset.id);
-const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(datasetId);
-const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
-const { mutateAsync: deleteRow } = useDeleteDatasetRow(datasetId);
+const workspaceId = computed(() => props.dataset.workspaceId);
+const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateDataset(workspaceId);
+const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(
+  workspaceId,
+  datasetId,
+);
+const { mutateAsync: updateRow } = useUpdateDatasetRow(workspaceId, datasetId);
+const { mutateAsync: deleteRow } = useDeleteDatasetRow(workspaceId, datasetId);
 const { confirm } = useConfirmDialog();
 
 // Functions

@@ -17,7 +17,7 @@ export type DatasetRowData = Record<string, string | number | null>;
 export interface Dataset {
   id: string;
   userId: string;
-  workspaceId?: string | null;
+  workspaceId: string;
   name: string;
   description?: string | null;
   origin: DatasetOrigin;
@@ -59,9 +59,6 @@ export type CreateDatasetRequest = {
   name: string;
   description?: string;
   columns?: DatasetColumn[];
-  // Set internally from the active workspace in useCreateDataset when a
-  // specific workspace is active; callers never pass this themselves.
-  workspaceId?: string;
 };
 
 export type UpdateDatasetRequest = {

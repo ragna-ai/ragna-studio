@@ -101,7 +101,7 @@ export async function createDataset({
   origin = 'user',
 }: {
   userId: string;
-  workspaceId?: string | null;
+  workspaceId: string;
   name: string;
   description?: string | null;
   columns?: DatasetColumn[];
@@ -124,6 +124,11 @@ export async function createDataset({
   return createdDataset;
 }
 
+// Access boundary for the agent tool family (docs/api-standards/prd.md,
+// "dataset tool factory" note): a tool call is scoped by the acting user,
+// not a workspace. Kept for `@repo/ai`; the REST API uses
+// `getDatasetByWorkspaceId` below instead (access is workspace ownership,
+// per the container model).
 export async function getDatasetById({
   datasetId,
   userId,
@@ -138,56 +143,50 @@ export async function getDatasetById({
   return datasetRecord ?? null;
 }
 
-export async function getDatasetCountByUserId({
-  userId,
+/** Access boundary for the REST API: a dataset belongs to exactly one workspace. */
+export async function getDatasetByWorkspaceId({
+  datasetId,
   workspaceId,
-  unassigned,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  datasetId: string;
+  workspaceId: string;
+}): Promise<Dataset | null> {
+  const datasetRecord = await db.query.dataset.findFirst({
+    where: { id: datasetId, workspaceId },
+  });
+
+  return datasetRecord ?? null;
+}
+
+export async function getDatasetCountByWorkspaceId({
+  workspaceId,
+}: {
+  workspaceId: string;
 }): Promise<number> {
-  return db.$count(
-    dataset,
-    and(
-      eq(dataset.userId, userId),
-      unassigned
-        ? isNull(dataset.workspaceId)
-        : workspaceId
-          ? eq(dataset.workspaceId, workspaceId)
-          : undefined,
-    ),
-  );
+  return db.$count(dataset, eq(dataset.workspaceId, workspaceId));
 }
 
 /**
- * Paginated dataset list, scoped by userId with the standard three-state
- * workspace filter (docs/workspaces.md), reused as-is by the agent tools'
- * hard workspace filter (docs/datasets.md decision 11): the tool passes its
- * own `workspaceId` and never sets `unassigned`. Each dataset's row count
+ * Paginated dataset list for one workspace. Each dataset's row count
  * (soft-deleted rows excluded) is attached with one extra count query per
  * row, acceptable at the list's page-size caps.
  */
-export async function getAllDatasetsByUserId({
-  userId,
+export async function getAllDatasetsByWorkspaceId({
   workspaceId,
-  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
 }): Promise<DatasetWithRowCount[]> {
   const datasets = await db.query.dataset.findMany({
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
+    where: { workspaceId },
     limit,
     offset,
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),
+    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
   const rowCounts = await Promise.all(
@@ -239,13 +238,13 @@ export async function findDatasetsForAgent({
 
 export async function updateDataset({
   datasetId,
-  userId,
+  workspaceId,
   name,
   description,
   columns,
 }: {
   datasetId: string;
-  userId: string;
+  workspaceId: string;
   name?: string;
   description?: string | null;
   // Retyping a column (e.g. select -> text) leaves existing row values
@@ -262,7 +261,7 @@ export async function updateDataset({
   const [updatedDataset] = await db
     .update(dataset)
     .set({ name, description, columns })
-    .where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)))
+    .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
     .returning();
 
   if (!updatedDataset) {
@@ -274,12 +273,14 @@ export async function updateDataset({
 
 export async function deleteDatasetById({
   datasetId,
-  userId,
+  workspaceId,
 }: {
   datasetId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<void> {
-  await db.delete(dataset).where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)));
+  await db
+    .delete(dataset)
+    .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)));
 }
 
 // DATASET ROWS
