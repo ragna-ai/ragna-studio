@@ -1,3 +1,5 @@
+import { useWebSocket } from '@vueuse/core';
+
 export type WebSocketFrameType =
   | 'subscribe'
   | 'unsubscribe'
@@ -16,16 +18,9 @@ export interface WebSocketFrame<TPayload = unknown> {
 
 type FrameListener = (frame: WebSocketFrame) => void;
 
-const RECONNECT_BASE_DELAY_MS = 500;
-const RECONNECT_MAX_DELAY_MS = 15_000;
-
-// Module-level singleton: one socket for the whole app, shared across every
-// caller of useWebSocketChannel(). Deliberately kept outside Vue reactivity;
-// nothing here needs to trigger a re-render.
-let socket: WebSocket | null = null;
-let connecting = false;
-let reconnectAttempts = 0;
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+const HEARTBEAT_INTERVAL_MS = 30_000;
+const HEARTBEAT_PONG_TIMEOUT_MS = 10_000;
+const RECONNECT_DELAY_MS = 2_000;
 
 const channelListeners = new Map<string, Set<FrameListener>>();
 const outgoingQueue: WebSocketFrame[] = [];
@@ -44,44 +39,31 @@ function getWebSocketUrl(): string {
   return `${publicConfig.apiBaseUrl.replace(/^http/, 'ws')}/ws`;
 }
 
-function sendNow(frame: WebSocketFrame) {
-  socket?.send(JSON.stringify(frame));
+/** Re-sends a `subscribe` for every channel that still has listeners. */
+function resubscribeAll() {
+  for (const channel of channelListeners.keys()) {
+    // useBuffer=false: our own outgoingQueue is the single source of truth
+    // for frames sent while disconnected, not useWebSocket's internal one.
+    wsSend(JSON.stringify({ channel, type: 'subscribe' }), false);
+  }
 }
 
 function flushQueue() {
   while (outgoingQueue.length > 0) {
     const frame = outgoingQueue.shift();
-    if (frame) sendNow(frame);
+    if (frame) wsSend(JSON.stringify(frame), false);
   }
 }
 
-/** Re-sends a `subscribe` for every channel that still has listeners. */
-function resubscribeAll() {
-  for (const channel of channelListeners.keys()) {
-    sendNow({ channel, type: 'subscribe' });
-  }
-}
-
-function scheduleReconnect() {
-  if (reconnectTimer) return;
-
-  const delay = Math.min(
-    RECONNECT_BASE_DELAY_MS * 2 ** reconnectAttempts,
-    RECONNECT_MAX_DELAY_MS,
-  );
-  reconnectAttempts += 1;
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = null;
-    connect();
-  }, delay);
-}
-
-function handleMessage(event: MessageEvent) {
+function handleMessage(_ws: WebSocket, event: MessageEvent) {
   let parsed: unknown;
   try {
     parsed = JSON.parse(event.data);
   } catch {
-    return; // malformed frame, ignore
+    // Malformed or non-JSON payload, ignore it silently. The heartbeat's
+    // own `pong` reply never reaches here: useWebSocket recognizes it via
+    // `responseMessage` below and swallows it before onMessage fires.
+    return;
   }
   if (!isWebSocketFrame(parsed)) return;
 
@@ -92,39 +74,53 @@ function handleMessage(event: MessageEvent) {
   for (const listener of listeners) listener(parsed);
 }
 
-function handleOpen() {
-  connecting = false;
-  reconnectAttempts = 0;
-  resubscribeAll();
-  flushQueue();
-}
-
-function handleClose() {
-  connecting = false;
-  socket = null;
-  scheduleReconnect();
-}
+// Module-level singleton: one socket for the whole app, shared across every
+// caller of useWebSocketChannel(). `useWebSocket` is instantiated exactly
+// once, right here at module scope, outside any component's effect scope —
+// calling it inside a component would tie its `tryOnScopeDispose(close)` to
+// that component and kill the app-wide socket on unmount.
+//
+// `immediate` and `autoConnect` are both off, so nothing here opens a
+// connection yet. That matters because the URL getter below calls
+// useRuntimeConfig(), which needs Nuxt's app context to resolve correctly;
+// with `autoConnect` off, useWebSocket never eagerly reads the URL (it only
+// would to set up its `watch(urlRef, open)`), so the getter isn't invoked
+// until `connect()` calls `open()` on the first real `subscribe`/`send`,
+// by which point the app has always finished bootstrapping.
+const {
+  status: socketStatus,
+  send: wsSend,
+  open: openSocket,
+} = useWebSocket<string>(() => getWebSocketUrl(), {
+  immediate: false,
+  autoConnect: false,
+  heartbeat: {
+    message: 'ping',
+    responseMessage: 'pong',
+    interval: HEARTBEAT_INTERVAL_MS,
+    pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
+  },
+  autoReconnect: {
+    retries: -1,
+    delay: RECONNECT_DELAY_MS,
+  },
+  onConnected: () => {
+    // Resubscribe frames must hit the wire before queued `message` frames,
+    // or the server rejects the latter for lacking a granted channel.
+    resubscribeAll();
+    flushQueue();
+  },
+  onMessage: handleMessage,
+});
 
 function connect() {
-  // A reconnect is already scheduled or in flight; let it run its course
-  // instead of racing it with a second socket.
-  if (socket || connecting || reconnectTimer) return;
-
-  connecting = true;
-  const ws = new WebSocket(getWebSocketUrl());
-  ws.addEventListener('open', handleOpen);
-  ws.addEventListener('message', handleMessage);
-  ws.addEventListener('close', handleClose);
-  // A socket-level error is always followed by a close event; handleClose
-  // owns the reconnect so it only fires once per drop.
-  ws.addEventListener('error', () => ws.close());
-  socket = ws;
+  if (socketStatus.value === 'CLOSED') openSocket();
 }
 
 function sendOrQueue(frame: WebSocketFrame) {
   connect();
-  if (socket?.readyState === WebSocket.OPEN) {
-    sendNow(frame);
+  if (socketStatus.value === 'OPEN') {
+    wsSend(JSON.stringify(frame), false);
   } else {
     outgoingQueue.push(frame);
   }
@@ -133,9 +129,10 @@ function sendOrQueue(frame: WebSocketFrame) {
 /**
  * One shared WebSocket connection for the whole app, multiplexed by channel.
  *
- * Connects lazily on first `subscribe`/`send` call, reconnects with
- * exponential backoff, re-subscribes every channel that still has listeners
- * after a reconnect, and queues outgoing frames while disconnected.
+ * Connects lazily on first `subscribe`/`send` call, reconnects with a fixed
+ * delay (heartbeats detect dead connections so the server side stays
+ * accurate), re-subscribes every channel that still has listeners after a
+ * reconnect, and queues outgoing frames while disconnected.
  */
 export function useWebSocketChannel() {
   /** Subscribes to a channel; returns an unsubscribe function. */
@@ -146,10 +143,10 @@ export function useWebSocketChannel() {
     if (!listeners) {
       listeners = new Set();
       channelListeners.set(channel, listeners);
-      // If we're not connected yet, handleOpen()'s resubscribeAll() will
+      // If we're not connected yet, onConnected()'s resubscribeAll() will
       // pick this channel up once the socket opens.
-      if (socket?.readyState === WebSocket.OPEN) {
-        sendNow({ channel, type: 'subscribe' });
+      if (socketStatus.value === 'OPEN') {
+        wsSend(JSON.stringify({ channel, type: 'subscribe' }), false);
       }
     }
     listeners.add(onFrame);

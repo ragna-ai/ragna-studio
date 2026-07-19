@@ -157,3 +157,7 @@
 .nav-item-child {
   @apply pt-0 pl-4;
 }
+
+.is-active-button {
+  @apply bg-accent text-accent-foreground;
+}

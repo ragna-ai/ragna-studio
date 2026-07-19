@@ -1,8 +1,11 @@
 # Live Team Chat over WebSocket (PRD)
 
-> **Status: draft** (2026-07-18). Phase 1 is specified in full. The room
-> engine (phase 2) is outlined at the end and gets its own PRD once phase 1
-> has shipped.
+> **Status: phase 1 implemented** (merged to main via PR #5, 2026-07-19).
+> The spec below was updated during the build, so it reflects what shipped,
+> including a follow-up that moved the socket composable onto VueUse
+> `useWebSocket` with an app-level ping/pong heartbeat (branch
+> `feat/ws-vueuse`). The room engine (phase 2) is outlined at the end and
+> gets its own PRD.
 
 Teams exist today only as a workflow node: the lead runs a batch
 `generateText` loop in the worker and the user sees a trace afterwards. The
@@ -82,11 +85,17 @@ phase 2 adds `room:`.
 | server → client | `done`        | none (stream complete; client closes its ReadableStream) |
 | server → client | `error`       | `{ code, message }` (maps the HTTP exceptions) |
 
-Liveness: the server uses WS-level ping/pong (browsers answer pongs
-transparently). Browser JS cannot observe ping frames, so the client cannot
-detect a missed ping; client reconnection is driven by the socket's
-`close`/`error` events instead. If true client-side liveness detection is
-ever needed, it requires an app-level heartbeat frame in the JSON protocol.
+Liveness: an app-level heartbeat, not WS-level ping/pong. Browser JS cannot
+observe WS-level ping frames, so the client cannot detect a missed one that
+way. Instead, the client's `useWebSocket` composable sends the raw string
+`ping` every 30 seconds. The server replies with the raw string `pong`,
+directly to that socket. `ping`/`pong` are plain text frames, deliberately
+outside the `{ channel, type, payload }` envelope: they never go through
+frame parsing or channel dispatch. Any incoming traffic counts as liveness
+on the client side, not just a `pong`. If no message arrives within 10
+seconds of a `ping`, the client treats the connection as dead, closes it,
+and reconnects after a fixed 2-second delay (VueUse `autoReconnect`; the
+earlier hand-rolled exponential backoff is gone).
 
 ## Auth model
 
@@ -146,9 +155,9 @@ re-validates the session. Admin revocation before expiry is accepted lag.
 
 ## Web changes (apps/web)
 
-- Socket composable: one connection per app, subscribe/unsubscribe by
-  channel, auto-reconnect with backoff, re-subscribe after reconnect,
-  queue outgoing frames while disconnected.
+- Socket composable: one connection per app, built on VueUse `useWebSocket`
+  (subscribe/unsubscribe by channel, fixed-delay auto-reconnect, heartbeat,
+  re-subscribe after reconnect, queue outgoing frames while disconnected).
 - `WebSocketChatTransport` implementing the AI SDK `ChatTransport`. Note:
   the `chatId` argument `useChat` passes to `sendMessages` is the chat
   instance's internal id (a generated id when none is passed to `useChat`),
