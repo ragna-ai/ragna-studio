@@ -12,8 +12,8 @@
     "check-types": "nuxt typecheck"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.29",
-    "@lucide/vue": "^1.24.0",
+    "@ai-sdk/vue": "^4.0.31",
+    "@lucide/vue": "^1.25.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/icon": "2.3.1",
     "@nuxt/image": "2.0.0",
@@ -40,7 +40,7 @@
     "embla-carousel-vue": "^8.6.0",
     "motion-v": "^2.3.0",
     "nanoid": "^6.0.0",
-    "nuxt": "^4.4.8",
+    "nuxt": "^4.5.0",
     "pinia": "^4.0.2",
     "prettier": "^3.9.5",
     "reka-ui": "^2.10.1",
