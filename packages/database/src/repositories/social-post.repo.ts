@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   NewSocialPost,
@@ -21,15 +21,17 @@ export async function createSocialPost(values: NewSocialPost): Promise<SocialPos
   return created;
 }
 
+// Scoped by workspaceId, the access boundary (docs/api-standards/prd.md,
+// "Access control"). userId is kept on the row as authorship metadata only.
 export async function getSocialPostById({
   id,
-  userId,
+  workspaceId,
 }: {
   id: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<SocialPostWithMedia | null> {
   const post = await db.query.socialPost.findFirst({
-    where: { id, userId },
+    where: { id, workspaceId },
     with: {
       media: { orderBy: (t, { asc }) => asc(t.sortOrder) },
     },
@@ -38,45 +40,27 @@ export async function getSocialPostById({
   return post ?? null;
 }
 
-export async function getSocialPostCountByUserId({
-  userId,
+export async function getSocialPostCountByWorkspaceId({
   workspaceId,
-  unassigned,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
 }): Promise<number> {
-  return db.$count(
-    socialPost,
-    and(
-      eq(socialPost.userId, userId),
-      unassigned
-        ? isNull(socialPost.workspaceId)
-        : workspaceId
-          ? eq(socialPost.workspaceId, workspaceId)
-          : undefined,
-    ),
-  );
+  return db.$count(socialPost, eq(socialPost.workspaceId, workspaceId));
 }
 
-export async function getAllSocialPostsByUserId({
-  userId,
+export async function getAllSocialPostsByWorkspaceId({
   workspaceId,
-  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
 }): Promise<SocialPostWithMedia[]> {
   return db.query.socialPost.findMany({
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
+    where: { workspaceId },
     limit,
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
@@ -89,18 +73,22 @@ export async function getAllSocialPostsByUserId({
 // Only a draft's content can be edited, whether by the agent tool or the user.
 export async function updateSocialPostContent({
   id,
-  userId,
+  workspaceId,
   content,
 }: {
   id: string;
-  userId: string;
+  workspaceId: string;
   content: string;
 }): Promise<SocialPost | null> {
   const [updated] = await db
     .update(socialPost)
     .set({ content })
     .where(
-      and(eq(socialPost.id, id), eq(socialPost.userId, userId), eq(socialPost.status, 'draft')),
+      and(
+        eq(socialPost.id, id),
+        eq(socialPost.workspaceId, workspaceId),
+        eq(socialPost.status, 'draft'),
+      ),
     )
     .returning();
 
@@ -109,22 +97,24 @@ export async function updateSocialPostContent({
 
 export async function deleteSocialPostById({
   id,
-  userId,
+  workspaceId,
 }: {
   id: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<void> {
-  await db.delete(socialPost).where(and(eq(socialPost.id, id), eq(socialPost.userId, userId)));
+  await db
+    .delete(socialPost)
+    .where(and(eq(socialPost.id, id), eq(socialPost.workspaceId, workspaceId)));
 }
 
 export async function markSocialPostPublished({
   id,
-  userId,
+  workspaceId,
   externalId,
   externalUrl,
 }: {
   id: string;
-  userId: string;
+  workspaceId: string;
   externalId: string;
   externalUrl: string;
 }): Promise<SocialPost | null> {
@@ -137,7 +127,7 @@ export async function markSocialPostPublished({
       publishedAt: new Date(),
       publishError: null,
     })
-    .where(and(eq(socialPost.id, id), eq(socialPost.userId, userId)))
+    .where(and(eq(socialPost.id, id), eq(socialPost.workspaceId, workspaceId)))
     .returning();
 
   return updated ?? null;
@@ -145,17 +135,17 @@ export async function markSocialPostPublished({
 
 export async function markSocialPostFailed({
   id,
-  userId,
+  workspaceId,
   publishError,
 }: {
   id: string;
-  userId: string;
+  workspaceId: string;
   publishError: string;
 }): Promise<SocialPost | null> {
   const [updated] = await db
     .update(socialPost)
     .set({ status: 'failed', publishError })
-    .where(and(eq(socialPost.id, id), eq(socialPost.userId, userId)))
+    .where(and(eq(socialPost.id, id), eq(socialPost.workspaceId, workspaceId)))
     .returning();
 
   return updated ?? null;
@@ -163,11 +153,12 @@ export async function markSocialPostFailed({
 
 // SOCIAL POST MEDIA
 //
-// None of these take a userId: callers must first load the owning post with
-// `getSocialPostById({ id: socialPostId, userId })` to confirm ownership,
-// then scope every media operation to that postId. This mirrors how the API
-// controller and the agent's social-post.service.ts already have to load the
-// post anyway (to check its `draft` status) before touching its media.
+// None of these take a workspaceId: callers must first load the owning post
+// with `getSocialPostById({ id: socialPostId, workspaceId })` to confirm
+// ownership, then scope every media operation to that postId. This mirrors
+// how the API controller and the agent's social-post.service.ts already have
+// to load the post anyway (to check its `draft` status) before touching its
+// media.
 
 export async function createSocialPostMediaRecords(
   records: NewSocialPostMedia[],

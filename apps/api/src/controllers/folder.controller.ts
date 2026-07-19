@@ -1,81 +1,70 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import {
-  validCreateFolderBody,
-  validRenameFolderBody,
-  validWorkspaceFolderParams,
-  validWorkspaceIdParam,
-} from '../middlewares/validationMiddlewares';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   createFolderForUser,
   deleteFolder,
   listFolders,
   renameFolderForUser,
 } from '../services/folder.service';
+import { validCreateFolderBody, validFolderIdParam, validRenameFolderBody } from '../validation';
 
 export const folderController = new Hono()
-  .basePath('/workspace')
+  .basePath('/workspace/:workspaceId/folder')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /workspace/:workspaceId/folders
+   * [GET] /workspace/:workspaceId/folder
+   * Lists every folder in the workspace. Not paginated: folders are a small,
+   * naturally bounded collection (docs/api-standards/prd.md, "Pagination").
    */
-  .get('/:workspaceId/folders', validWorkspaceIdParam, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
+  .get('/', async (c) => {
+    const workspace = c.get('workspace');
 
-    const folders = await listFolders({ workspaceId: param.workspaceId, userId: user.id });
+    const folders = await listFolders({ workspaceId: workspace.id });
 
     return c.json({ folders });
   })
   /**
-   * [POST] /workspace/:workspaceId/folders
+   * [POST] /workspace/:workspaceId/folder
    */
-  .post('/:workspaceId/folders', validWorkspaceIdParam, validCreateFolderBody, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
+  .post('/', validCreateFolderBody, async (c) => {
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
     const folderRecord = await createFolderForUser({
-      workspaceId: param.workspaceId,
-      userId: user.id,
+      workspaceId: workspace.id,
       name: body.name,
     });
 
     return c.json({ folder: folderRecord }, 201);
   })
   /**
-   * [PATCH] /workspace/:workspaceId/folders/:folderId
+   * [PATCH] /workspace/:workspaceId/folder/:folderId
    */
-  .patch(
-    '/:workspaceId/folders/:folderId',
-    validWorkspaceFolderParams,
-    validRenameFolderBody,
-    async (c) => {
-      const user = c.get('user');
-      const param = c.req.valid('param');
-      const body = c.req.valid('json');
+  .patch('/:folderId', validFolderIdParam, validRenameFolderBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
 
-      const folderRecord = await renameFolderForUser({
-        workspaceId: param.workspaceId,
-        userId: user.id,
-        folderId: param.folderId,
-        name: body.name,
-      });
+    const folderRecord = await renameFolderForUser({
+      workspaceId: workspace.id,
+      folderId: param.folderId,
+      name: body.name,
+    });
 
-      return c.json({ folder: folderRecord });
-    },
-  )
+    return c.json({ folder: folderRecord });
+  })
   /**
-   * [DELETE] /workspace/:workspaceId/folders/:folderId
+   * [DELETE] /workspace/:workspaceId/folder/:folderId
    * Documents in this folder move to root, they are not deleted.
    */
-  .delete('/:workspaceId/folders/:folderId', validWorkspaceFolderParams, async (c) => {
-    const user = c.get('user');
+  .delete('/:folderId', validFolderIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     await deleteFolder({
-      workspaceId: param.workspaceId,
-      userId: user.id,
+      workspaceId: workspace.id,
       folderId: param.folderId,
     });
 

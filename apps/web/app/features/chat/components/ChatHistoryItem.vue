@@ -9,6 +9,7 @@ import { useUpdateChatTitle } from '~/features/chat/composables/useChatApi';
 const props = defineProps<{
   chat: ChatHistoryItem;
   active: boolean;
+  workspaceId: string;
 }>();
 
 // Refs
@@ -17,7 +18,9 @@ const formRef = useTemplateRef('formRef');
 
 // Composables
 const { t } = useI18n();
-const { mutate: updateChatTitle } = useUpdateChatTitle();
+const { mutate: updateChatTitle } = useUpdateChatTitle(
+  computed(() => props.workspaceId),
+);
 
 const chatTitleSchema = z.object({
   title: z

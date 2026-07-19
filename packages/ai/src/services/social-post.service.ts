@@ -16,7 +16,7 @@ export type DraftLinkedInPostInput = {
   text: string;
   /** Revise this existing draft instead of creating a new one. */
   draftId?: string;
-  workspaceId: string | null;
+  workspaceId: string;
   /**
    * gen_images ids to attach, in display order. Omit to leave a revised
    * draft's images untouched; pass `[]` to clear them. New drafts with no
@@ -79,7 +79,7 @@ export async function draftLinkedInPost({
   }
 
   if (draftId) {
-    return reviseDraft({ userId, text, draftId, imageIds });
+    return reviseDraft({ userId, text, draftId, imageIds, workspaceId });
   }
 
   const { error, data: created } = await tryCatch(() =>
@@ -111,14 +111,16 @@ async function reviseDraft({
   text,
   draftId,
   imageIds,
+  workspaceId,
 }: {
   userId: string;
   text: string;
   draftId: string;
   imageIds?: string[];
+  workspaceId: string;
 }): Promise<DraftLinkedInPostResult> {
   const { error: findError, data: existing } = await tryCatch(() =>
-    getSocialPostById({ id: draftId, userId }),
+    getSocialPostById({ id: draftId, workspaceId }),
   );
 
   if (findError !== null) {
@@ -135,7 +137,7 @@ async function reviseDraft({
   }
 
   const { error: updateError, data: updated } = await tryCatch(() =>
-    updateSocialPostContent({ id: draftId, userId, content: text }),
+    updateSocialPostContent({ id: draftId, workspaceId, content: text }),
   );
 
   if (updateError !== null || !updated) {

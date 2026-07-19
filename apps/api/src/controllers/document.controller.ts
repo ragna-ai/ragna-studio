@@ -1,11 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import {
-  validCreateDocumentBody,
-  validUpdateDocumentBody,
-  validWorkspaceDocumentParams,
-  validWorkspaceIdParam,
-} from '../middlewares/validationMiddlewares';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   createDocumentForUser,
   deleteDocument,
@@ -13,33 +8,34 @@ import {
   listDocuments,
   updateDocumentForUser,
 } from '../services/document.service';
+import { validCreateDocumentBody, validDocumentIdParam, validUpdateDocumentBody } from '../validation';
 
 export const documentController = new Hono()
-  .basePath('/workspace')
+  .basePath('/workspace/:workspaceId/document')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /workspace/:workspaceId/documents
+   * [GET] /workspace/:workspaceId/document
    * List a workspace's documents, most recently updated first.
    */
-  .get('/:workspaceId/documents', validWorkspaceIdParam, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
+  .get('/', async (c) => {
+    const workspace = c.get('workspace');
 
-    const documents = await listDocuments({ workspaceId: param.workspaceId, userId: user.id });
+    const documents = await listDocuments({ workspaceId: workspace.id });
 
     return c.json({ documents });
   })
   /**
-   * [POST] /workspace/:workspaceId/documents
+   * [POST] /workspace/:workspaceId/document
    * Create a document. Human-created: sets createdByUserId.
    */
-  .post('/:workspaceId/documents', validWorkspaceIdParam, validCreateDocumentBody, async (c) => {
+  .post('/', validCreateDocumentBody, async (c) => {
     const user = c.get('user');
-    const param = c.req.valid('param');
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
     const documentRecord = await createDocumentForUser({
-      workspaceId: param.workspaceId,
+      workspaceId: workspace.id,
       userId: user.id,
       title: body.title,
       content: body.content,
@@ -49,56 +45,48 @@ export const documentController = new Hono()
     return c.json({ document: documentRecord }, 201);
   })
   /**
-   * [GET] /workspace/:workspaceId/documents/:documentId
+   * [GET] /workspace/:workspaceId/document/:documentId
    */
-  .get('/:workspaceId/documents/:documentId', validWorkspaceDocumentParams, async (c) => {
-    const user = c.get('user');
+  .get('/:documentId', validDocumentIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     const documentRecord = await getDocument({
-      workspaceId: param.workspaceId,
-      userId: user.id,
+      workspaceId: workspace.id,
       documentId: param.documentId,
     });
 
     return c.json({ document: documentRecord });
   })
   /**
-   * [PATCH] /workspace/:workspaceId/documents/:documentId
+   * [PATCH] /workspace/:workspaceId/document/:documentId
    * Updates title/content/folderId. Also doubles as the autosave endpoint
    * (debounced client-side): last writer wins, no conflict detection in v1.
    */
-  .patch(
-    '/:workspaceId/documents/:documentId',
-    validWorkspaceDocumentParams,
-    validUpdateDocumentBody,
-    async (c) => {
-      const user = c.get('user');
-      const param = c.req.valid('param');
-      const body = c.req.valid('json');
+  .patch('/:documentId', validDocumentIdParam, validUpdateDocumentBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
 
-      const documentRecord = await updateDocumentForUser({
-        workspaceId: param.workspaceId,
-        userId: user.id,
-        documentId: param.documentId,
-        title: body.title,
-        content: body.content,
-        folderId: body.folderId,
-      });
+    const documentRecord = await updateDocumentForUser({
+      workspaceId: workspace.id,
+      documentId: param.documentId,
+      title: body.title,
+      content: body.content,
+      folderId: body.folderId,
+    });
 
-      return c.json({ document: documentRecord });
-    },
-  )
+    return c.json({ document: documentRecord });
+  })
   /**
-   * [DELETE] /workspace/:workspaceId/documents/:documentId
+   * [DELETE] /workspace/:workspaceId/document/:documentId
    */
-  .delete('/:workspaceId/documents/:documentId', validWorkspaceDocumentParams, async (c) => {
-    const user = c.get('user');
+  .delete('/:documentId', validDocumentIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     await deleteDocument({
-      workspaceId: param.workspaceId,
-      userId: user.id,
+      workspaceId: workspace.id,
       documentId: param.documentId,
     });
 

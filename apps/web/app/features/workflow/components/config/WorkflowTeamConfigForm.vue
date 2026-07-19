@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { WorkflowNode } from '@repo/workflow';
 import { PlusIcon, Trash2Icon } from '@lucide/vue';
+import { storeToRefs } from 'pinia';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplateHint.vue';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Imports
 
@@ -18,7 +20,8 @@ const props = defineProps<{
 }>();
 
 // Composables
-const { data: agentsData, isLoading: isLoadingAgents } = useGetAllAgents();
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { data: agentsData, isLoading: isLoadingAgents } = useGetAllAgents(activeWorkspaceId);
 
 // Computed
 const agentOptions = computed(() => agentsData.value?.agents ?? []);

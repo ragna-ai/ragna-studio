@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useForm } from '@tanstack/vue-form';
+import { storeToRefs } from 'pinia';
 import { z } from 'zod';
-import { useUpsertWorkflow } from '~/features/workflow/composables/useWorkflowApi';
+import { useCreateWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 import { createWorkflowNode } from '~/features/workflow/lib/default-node';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 const workflowCreateSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
@@ -10,7 +12,8 @@ const workflowCreateSchema = z.object({
 });
 
 // Composables
-const { isPending, mutateAsync } = useUpsertWorkflow();
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { isPending, mutateAsync } = useCreateWorkflow(activeWorkspaceId);
 const { t } = useI18n();
 
 useHead({

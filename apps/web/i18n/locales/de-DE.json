@@ -373,8 +373,6 @@
   },
   "workspace": {
     "switcher": {
-      "allItems": "Alle Elemente",
-      "unassigned": "Nicht zugeordnet",
       "manage": "Arbeitsbereiche verwalten"
     },
     "manage": {
@@ -384,10 +382,11 @@
       "empty": "Noch keine Arbeitsbereiche. Erstelle einen, um deine Elemente zu organisieren.",
       "rename": "Arbeitsbereich umbenennen",
       "delete": "Arbeitsbereich löschen",
+      "deleteLastWorkspace": "Du benötigst mindestens einen Arbeitsbereich, dieser kann daher nicht gelöscht werden.",
       "saveRename": "Namen speichern",
       "cancelRename": "Umbenennen abbrechen",
       "deleteTitle": "Arbeitsbereich löschen",
-      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei nicht gelöscht, sondern nur nicht mehr zugeordnet.",
+      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei ebenfalls gelöscht.",
       "deleteConfirm": "Löschen",
       "deleteCancel": "Abbrechen",
       "close": "Schließen"

@@ -13,7 +13,6 @@ import {
   useDeleteWorkspace,
   useRenameWorkspace,
 } from '~/features/workspace/composables/useWorkspaceApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import type { Workspace } from '~/features/workspace/types';
 
 const createWorkspaceSchema = z.object({
@@ -21,7 +20,7 @@ const createWorkspaceSchema = z.object({
 });
 
 // Props
-defineProps<{ workspaces: Workspace[] }>();
+const props = defineProps<{ workspaces: Workspace[] }>();
 
 // Refs
 const open = defineModel<boolean>('open', { default: false });
@@ -34,7 +33,6 @@ const { mutateAsync: createWorkspace, isPending: isCreating } =
 const { mutateAsync: renameWorkspace, isPending: isRenaming } =
   useRenameWorkspace();
 const { mutateAsync: deleteWorkspace } = useDeleteWorkspace();
-const { isWorkspaceActive, selectAllItems } = useWorkspaceScopeStore();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
@@ -46,6 +44,11 @@ const createForm = useForm({
     createForm.reset();
   },
 });
+
+// Computed
+// The API rejects deleting a user's only workspace; disable the action
+// up front instead of letting the user hit the 400.
+const canDeleteWorkspace = computed(() => props.workspaces.length > 1);
 
 // Functions
 function startEditing(workspace: Workspace) {
@@ -69,6 +72,12 @@ async function saveEditing() {
 }
 
 async function handleDelete(workspace: Workspace) {
+  // Guarded in the template too (disabled button), but re-checked here in
+  // case the list changed between render and click.
+  if (!canDeleteWorkspace.value) {
+    return;
+  }
+
   const confirmed = await confirm({
     title: t('workspace.manage.deleteTitle'),
     message: t('workspace.manage.deleteMessage', { name: workspace.name }),
@@ -80,14 +89,9 @@ async function handleDelete(workspace: Workspace) {
     return;
   }
 
-  // Capture before the delete: the row is about to disappear.
-  const wasActive = isWorkspaceActive(workspace.id);
+  // If the deleted workspace was active, WorkspaceSwitcher falls back to
+  // another one once the invalidated workspace list refetches.
   await deleteWorkspace(workspace.id);
-  // The deleted workspace can no longer be the active filter; fall back to
-  // "All items" so the UI doesn't keep filtering by a workspace that's gone.
-  if (wasActive) {
-    selectAllItems();
-  }
 }
 </script>
 
@@ -177,7 +181,17 @@ async function handleDelete(workspace: Workspace) {
             <Button
               variant="ghost"
               size="icon"
-              :aria-label="t('workspace.manage.delete')"
+              :disabled="!canDeleteWorkspace"
+              :aria-label="
+                canDeleteWorkspace
+                  ? t('workspace.manage.delete')
+                  : t('workspace.manage.deleteLastWorkspace')
+              "
+              :title="
+                canDeleteWorkspace
+                  ? undefined
+                  : t('workspace.manage.deleteLastWorkspace')
+              "
               @click="handleDelete(workspace)"
             >
               <Trash2Icon class="size-4 text-destructive" />

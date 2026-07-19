@@ -3,7 +3,7 @@ import type { Agent, AgentContextDocument, AgentContextDocumentStatus } from '@r
 import {
   createAgentContextDocuments,
   deleteAgentContextDocumentById,
-  getAgentById,
+  getAgentByIdAndWorkspaceId,
   getAgentContextDocumentByIdAndAgentId,
   getAgentContextDocumentsByAgentId,
   updateAgentContextDocument,
@@ -125,9 +125,9 @@ async function deleteAgentContextDocumentObjects(storageKeys: string[]): Promise
 
 /**
  * Deletes the R2 objects for every document belonging to an agent. Called
- * by agent.controller.ts's DELETE route right before the agent row (and
- * its document rows, via cascade) is removed, since the cascade only
- * cleans up the database side.
+ * by agent.service.ts's `deleteAgentForWorkspace()` right before the agent
+ * row (and its document rows, via cascade) is removed, since the cascade
+ * only cleans up the database side.
  */
 export async function deleteAgentContextDocumentsForAgent({
   agentId,
@@ -141,17 +141,21 @@ export async function deleteAgentContextDocumentsForAgent({
   }
 }
 
-/** Loads an agent, throwing the appropriate HTTP exception if it doesn't
- * exist or doesn't belong to `userId`. Shared by every function below that
- * needs an ownership check before touching a document. */
+/** Loads an agent scoped to its workspace, throwing the appropriate HTTP
+ * exception if it doesn't exist there. Shared by every function below that
+ * needs to resolve the agent before touching a document. Callers rely on
+ * the workspace guard having already verified `workspaceId` belongs to the
+ * authenticated user (docs/api-standards/prd.md). */
 async function loadOwnedAgent({
   agentId,
-  userId,
+  workspaceId,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<Agent> {
-  const { error, data: agent } = await tryCatch(() => getAgentById({ agentId, userId }));
+  const { error, data: agent } = await tryCatch(() =>
+    getAgentByIdAndWorkspaceId({ agentId, workspaceId }),
+  );
 
   if (error !== null) {
     logger.error('Failed to load agent', error);
@@ -254,17 +258,17 @@ function toDocumentResponse(document: AgentContextDocument): AgentContextDocumen
 }
 
 /**
- * [GET] /agent/:agentId/documents
+ * [GET] /workspace/:workspaceId/agent/:agentId/context-document
  * List an agent's documents, oldest first. Never returns extractedText.
  */
 export async function listAgentContextDocuments({
   agentId,
-  userId,
+  workspaceId,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<AgentContextDocumentResponse[]> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
 
   const { error, data: documents } = await tryCatch(() =>
     getAgentContextDocumentsByAgentId({ agentId: agent.id }),
@@ -279,7 +283,7 @@ export async function listAgentContextDocuments({
 }
 
 /**
- * [POST] /agent/:agentId/documents
+ * [POST] /workspace/:workspaceId/agent/:agentId/context-document
  * Uploads one or more files. Validation is all-or-nothing: the first
  * invalid file rejects the whole batch with a 400 naming it, and nothing is
  * stored. Valid files are then uploaded to R2, inserted as 'pending' rows,
@@ -287,14 +291,14 @@ export async function listAgentContextDocuments({
  */
 export async function uploadAgentContextDocuments({
   agentId,
-  userId,
+  workspaceId,
   files,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   files: File[];
 }): Promise<AgentContextDocumentResponse[]> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
@@ -381,7 +385,7 @@ export async function uploadAgentContextDocuments({
 }
 
 /**
- * [PUT] /agent/:agentId/documents/:documentId/file
+ * [PUT] /workspace/:workspaceId/agent/:agentId/context-document/:documentId/file
  * Replaces a document's file: uploads to a new key, points the row at it
  * and back to 'pending', then deletes the old object (best effort) and
  * re-queues extraction. `name` is untouched, only the underlying file
@@ -389,16 +393,16 @@ export async function uploadAgentContextDocuments({
  */
 export async function replaceAgentContextDocumentFile({
   agentId,
-  userId,
+  workspaceId,
   documentId,
   file,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   documentId: string;
   file: File;
 }): Promise<AgentContextDocumentResponse> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -452,21 +456,21 @@ export async function replaceAgentContextDocumentFile({
 }
 
 /**
- * [PATCH] /agent/:agentId/documents/:documentId
+ * [PATCH] /workspace/:workspaceId/agent/:agentId/context-document/:documentId
  * Renames a document. Does not touch the underlying file.
  */
 export async function renameAgentContextDocument({
   agentId,
-  userId,
+  workspaceId,
   documentId,
   name,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   documentId: string;
   name: string;
 }): Promise<AgentContextDocumentResponse> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
   // Only used for its ownership check: the update below is already scoped
   // to `agentId`, so nothing else from this row is needed.
   await loadOwnedDocument({ agentId: agent.id, documentId });
@@ -484,21 +488,21 @@ export async function renameAgentContextDocument({
 }
 
 /**
- * [POST] /agent/:agentId/documents/:documentId/retry
+ * [POST] /workspace/:workspaceId/agent/:agentId/context-document/:documentId/retry
  * Re-enqueues extraction for a failed document, without re-uploading.
  * Covers transient worker errors and budget failures after the user
  * removed or shrank other documents.
  */
 export async function retryAgentContextDocument({
   agentId,
-  userId,
+  workspaceId,
   documentId,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   documentId: string;
 }): Promise<AgentContextDocumentResponse> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   if (document.status !== 'failed') {
@@ -525,19 +529,19 @@ export async function retryAgentContextDocument({
 }
 
 /**
- * [DELETE] /agent/:agentId/documents/:documentId
+ * [DELETE] /workspace/:workspaceId/agent/:agentId/context-document/:documentId
  * Removes the row and its R2 object (best effort).
  */
 export async function deleteAgentContextDocument({
   agentId,
-  userId,
+  workspaceId,
   documentId,
 }: {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   documentId: string;
 }): Promise<void> {
-  const agent = await loadOwnedAgent({ agentId, userId });
+  const agent = await loadOwnedAgent({ agentId, workspaceId });
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   await deleteAgentContextDocumentObjects([document.storageKey]);

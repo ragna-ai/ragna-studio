@@ -15,6 +15,13 @@ import type {
 } from '../schema';
 import { workflowRun, workflowRunStep } from '../schema';
 
+export type {
+  WorkflowRun,
+  WorkflowRunStep,
+  WorkflowRunWithSteps,
+  WorkflowRunWithWorkflow,
+} from '../schema';
+
 export async function createWorkflowRun({
   workflowId,
   definition,
@@ -56,13 +63,13 @@ export async function hasActiveRun({ workflowId }: { workflowId: string }): Prom
 
 export async function getRunById({
   runId,
-  userId,
+  workflowId,
 }: {
   runId: string;
-  userId: string;
+  workflowId: string;
 }): Promise<WorkflowRunWithSteps | null> {
   const runRecord = await db.query.workflowRun.findFirst({
-    where: { id: runId, workflow: { userId } },
+    where: { id: runId, workflowId },
     with: {
       steps: true,
     },
@@ -73,13 +80,11 @@ export async function getRunById({
 
 export async function getRunsByWorkflowId({
   workflowId,
-  userId,
 }: {
   workflowId: string;
-  userId: string;
 }): Promise<WorkflowRun[]> {
   const runs = await db.query.workflowRun.findMany({
-    where: { workflowId, workflow: { userId } },
+    where: { workflowId },
     orderBy: (t, { desc }) => desc(t.createdAt),
   });
 

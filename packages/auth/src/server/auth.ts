@@ -1,5 +1,5 @@
 import { config } from '@repo/config';
-import { db, schema } from '@repo/database';
+import { createWorkspace, db, schema } from '@repo/database';
 import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -71,6 +71,10 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          // Every user needs a workspace to create anything in (WP0 of
+          // docs/api-standards/prd.md: workspaceId is a required container).
+          await createWorkspace({ ownerId: user.id, name: 'Personal' });
+
           await queue.email().add(
             WELCOME_EMAIL_JOB,
             WelcomeEmailJobDto.fromJSON({

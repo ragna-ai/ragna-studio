@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import { useCreateSocialPost } from '~/features/social/composables/useSocialPostApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Props
 // Emits
@@ -8,7 +10,8 @@ import { useCreateSocialPost } from '~/features/social/composables/useSocialPost
 // Refs
 
 // Composables
-const { mutate: createPost, isError } = useCreateSocialPost();
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { mutate: createPost, isError } = useCreateSocialPost(activeWorkspaceId);
 const { t } = useI18n();
 
 useHead({

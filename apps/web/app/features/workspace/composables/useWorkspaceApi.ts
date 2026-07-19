@@ -64,6 +64,13 @@ export function useRenameWorkspace() {
   });
 }
 
+/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
+type FetchErrorWithData = { data?: { error?: string } };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
+}
+
 export function useDeleteWorkspace() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -75,8 +82,10 @@ export function useDeleteWorkspace() {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       toast.success(t('workspace.toast.deleteSuccess'));
     },
-    onError: () => {
-      toast.error(t('workspace.toast.deleteError'));
+    onError: (error) => {
+      // The API rejects deleting a user's only workspace with a 400 and a
+      // human-readable message; surface that instead of a generic failure.
+      toast.error(getErrorMessage(error, t('workspace.toast.deleteError')));
     },
   });
 }

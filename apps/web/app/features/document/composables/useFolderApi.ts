@@ -29,7 +29,7 @@ export function useGetFolders(workspaceId: WorkspaceId, options: QueryOpts = {})
   return useQuery<FolderManyResponse>({
     queryKey: folderKeys.list(workspaceId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/folders`, { method: 'GET', signal }),
+      api(`/workspace/${toValue(workspaceId)}/folder`, { method: 'GET', signal }),
     enabled: () => !!toValue(workspaceId),
     ...options,
   });
@@ -40,7 +40,7 @@ export function useCreateFolder(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, { name: string }>({
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/folders`, { method: 'POST', body }),
+      api(`/workspace/${toValue(workspaceId)}/folder`, { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
       toast.success('Folder created');
@@ -61,7 +61,7 @@ export function useRenameFolder(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, RenameFolderVariables>({
     mutationFn: ({ folderId, name }) =>
-      api(`/workspace/${toValue(workspaceId)}/folders/${folderId}`, {
+      api(`/workspace/${toValue(workspaceId)}/folder/${folderId}`, {
         method: 'PATCH',
         body: { name },
       }),
@@ -82,7 +82,7 @@ export function useDeleteFolder(workspaceId: WorkspaceId) {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (folderId) =>
-      api(`/workspace/${toValue(workspaceId)}/folders/${folderId}`, { method: 'DELETE' }),
+      api(`/workspace/${toValue(workspaceId)}/folder/${folderId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
       queryClient.invalidateQueries({ queryKey: documentKeys.list(workspaceId) });

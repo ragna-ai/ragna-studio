@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useForm } from '@tanstack/vue-form';
+import { storeToRefs } from 'pinia';
 import { z } from 'zod';
 import type { DatasetColumn } from '~/features/dataset/types';
 import { useCreateDataset } from '~/features/dataset/composables/useDatasetApi';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type DatasetPreset = 'empty' | 'taskTracker';
 
@@ -21,7 +23,10 @@ const datasetCreateSchema = z.object({
 const preset = ref<DatasetPreset>('empty');
 
 // Composables
-const { isPending, mutateAsync } = useCreateDataset();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { isPending, mutateAsync } = useCreateDataset(activeWorkspaceId);
 const { t } = useI18n();
 
 useHead({

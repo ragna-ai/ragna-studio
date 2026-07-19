@@ -24,7 +24,7 @@ import { getWebSearchResults } from './web-search.tool';
 export type AgentToolContext = {
   userId: string;
   agentId: string;
-  workspaceId: string | null;
+  workspaceId: string;
 };
 
 type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;

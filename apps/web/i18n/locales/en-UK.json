@@ -355,8 +355,6 @@
   },
   "workspace": {
     "switcher": {
-      "allItems": "All items",
-      "unassigned": "Unassigned",
       "manage": "Manage workspaces"
     },
     "manage": {
@@ -366,10 +364,11 @@
       "empty": "No workspaces yet. Create one to start organizing your items.",
       "rename": "Rename workspace",
       "delete": "Delete workspace",
+      "deleteLastWorkspace": "You need at least one workspace, so this one can't be deleted.",
       "saveRename": "Save name",
       "cancelRename": "Cancel rename",
       "deleteTitle": "Delete workspace",
-      "deleteMessage": "Delete \"{name}\"? Items in this workspace are not deleted, they just become unassigned.",
+      "deleteMessage": "Delete \"{name}\"? Items in this workspace will be deleted too.",
       "deleteConfirm": "Delete",
       "deleteCancel": "Cancel",
       "close": "Close"

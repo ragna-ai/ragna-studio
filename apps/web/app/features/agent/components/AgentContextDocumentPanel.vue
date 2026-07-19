@@ -23,6 +23,7 @@ import type { AgentContextDocument } from '~/features/agent/types';
 import AgentContextDocumentStatusBadge from './AgentContextDocumentStatusBadge.vue';
 
 type AgentContextDocumentPanelProps = {
+  workspaceId: string;
   agentId: string;
 };
 
@@ -39,14 +40,17 @@ const renameValue = ref('');
 
 // Composables
 const { data, isPending: isLoading } = useGetAgentContextDocuments(
+  () => props.workspaceId,
   () => props.agentId,
 );
 const { isPending: isUploading, mutate: uploadDocuments } =
-  useUploadAgentContextDocuments();
-const { mutate: renameDocument } = useRenameAgentContextDocument();
-const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile();
-const { mutate: retryDocument } = useRetryAgentContextDocument();
-const { mutate: deleteDocument } = useDeleteAgentContextDocument();
+  useUploadAgentContextDocuments(() => props.workspaceId);
+const { mutate: renameDocument } = useRenameAgentContextDocument(() => props.workspaceId);
+const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile(
+  () => props.workspaceId,
+);
+const { mutate: retryDocument } = useRetryAgentContextDocument(() => props.workspaceId);
+const { mutate: deleteDocument } = useDeleteAgentContextDocument(() => props.workspaceId);
 const { isOverDropZone } = useDropZone(dropZoneRef, {
   multiple: true,
   onDrop: (files) => uploadFiles(files),

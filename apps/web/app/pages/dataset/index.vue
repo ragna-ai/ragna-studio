@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import DatasetManyTable from '~/features/dataset/components/DatasetManyTable.vue';
 import { useDeleteDataset } from '~/features/dataset/composables/useDatasetApi';
 import useDatasetList from '~/features/dataset/composables/useDatasetList';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Composables
-const { page, limit, isAllItemsActive, useGetAllDatasets } = useDatasetList();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { page, limit, useGetAllDatasets } = useDatasetList();
 const { data, error: datasetsError } = useGetAllDatasets();
-const { mutateAsync: deleteDataset } = useDeleteDataset();
+const { mutateAsync: deleteDataset } = useDeleteDataset(activeWorkspaceId);
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
@@ -53,7 +58,6 @@ const handleDeleteDataset = async (datasetId: string) => {
       <DatasetManyTable
         :datasets="data.datasets"
         :meta="meta"
-        :show-workspace-column="isAllItemsActive"
         @delete-dataset="handleDeleteDataset"
       />
       <div class="pb-10">

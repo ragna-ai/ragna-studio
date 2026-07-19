@@ -4,7 +4,7 @@ import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
 import { InternalServerErrorException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import { validUpdateUserProfileBody } from '../middlewares/validationMiddlewares';
+import { validUpdateUserProfileBody } from '../validation';
 
 export const userController = new Hono()
   .basePath('/user')

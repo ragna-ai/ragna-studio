@@ -1,94 +1,78 @@
 import type { WorkflowDefinition } from '@repo/workflow';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { Workflow } from '../schema';
 import { workflow } from '../schema';
 
-export async function upsertWorkflow(values: {
-  id?: string;
+export type { Workflow, NewWorkflow } from '../schema';
+
+export async function createWorkflow(values: {
   userId: string;
-  workspaceId?: string | null;
+  workspaceId: string;
   name: string;
   description?: string;
   definition: WorkflowDefinition;
 }): Promise<Workflow> {
-  const { id: workflowId, userId, workspaceId, name, description, definition } = values;
+  const [createdWorkflow] = await db.insert(workflow).values(values).returning();
 
-  const [upsertedWorkflow] = await db
-    .insert(workflow)
-    .values({
-      id: workflowId,
-      userId,
-      workspaceId,
-      name,
-      description,
-      definition,
-    })
-    .onConflictDoUpdate({
-      target: workflow.id,
-      set: {
-        workspaceId,
-        name,
-        description,
-        definition,
-      },
-    })
-    .returning();
-
-  if (!upsertedWorkflow) {
-    throw new Error('Failed to save workflow');
+  if (!createdWorkflow) {
+    throw new Error('Failed to create workflow');
   }
 
-  return upsertedWorkflow;
+  return createdWorkflow;
+}
+
+export async function updateWorkflow({
+  workflowId,
+  workspaceId,
+  name,
+  description,
+  definition,
+}: {
+  workflowId: string;
+  workspaceId: string;
+  name?: string;
+  description?: string;
+  definition?: WorkflowDefinition;
+}): Promise<Workflow | null> {
+  const [updatedWorkflow] = await db
+    .update(workflow)
+    .set({ name, description, definition })
+    .where(and(eq(workflow.id, workflowId), eq(workflow.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedWorkflow ?? null;
 }
 
 export async function getWorkflowById({
   workflowId,
-  userId,
+  workspaceId,
 }: {
   workflowId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<Workflow | null> {
   const workflowRecord = await db.query.workflow.findFirst({
-    where: { id: workflowId, userId },
+    where: { id: workflowId, workspaceId },
   });
 
   return workflowRecord || null;
 }
 
-export async function getWorkflowCountByUserId({
-  userId,
+export async function getWorkflowCountByWorkspaceId({
   workspaceId,
-  unassigned,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
 }): Promise<number> {
-  return db.$count(
-    workflow,
-    and(
-      eq(workflow.userId, userId),
-      unassigned
-        ? isNull(workflow.workspaceId)
-        : workspaceId
-          ? eq(workflow.workspaceId, workspaceId)
-          : undefined,
-    ),
-  );
+  return db.$count(workflow, eq(workflow.workspaceId, workspaceId));
 }
 
-export async function getAllWorkflowsByUserId({
-  userId,
+export async function getAllWorkflowsByWorkspaceId({
   workspaceId,
-  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -104,10 +88,10 @@ export async function getAllWorkflowsByUserId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
+    where: { workspaceId },
     limit,
     offset,
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),
+    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
   return workflows;
@@ -115,29 +99,31 @@ export async function getAllWorkflowsByUserId({
 
 export async function deleteWorkflowById({
   workflowId,
-  userId,
+  workspaceId,
 }: {
   workflowId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<void> {
-  await db.delete(workflow).where(and(eq(workflow.id, workflowId), eq(workflow.userId, userId)));
+  await db
+    .delete(workflow)
+    .where(and(eq(workflow.id, workflowId), eq(workflow.workspaceId, workspaceId)));
 }
 
 export async function publishWorkflow({
   workflowId,
-  userId,
+  workspaceId,
   scheduleCron,
   scheduleTimezone,
 }: {
   workflowId: string;
-  userId: string;
+  workspaceId: string;
   scheduleCron?: string | null;
   scheduleTimezone?: string | null;
-}): Promise<Workflow> {
-  const existingWorkflow = await getWorkflowById({ workflowId, userId });
+}): Promise<Workflow | null> {
+  const existingWorkflow = await getWorkflowById({ workflowId, workspaceId });
 
   if (!existingWorkflow) {
-    throw new Error('Workflow not found');
+    return null;
   }
 
   const [publishedWorkflow] = await db
@@ -147,14 +133,10 @@ export async function publishWorkflow({
       scheduleCron: scheduleCron ?? null,
       scheduleTimezone: scheduleTimezone ?? null,
     })
-    .where(and(eq(workflow.id, workflowId), eq(workflow.userId, userId)))
+    .where(and(eq(workflow.id, workflowId), eq(workflow.workspaceId, workspaceId)))
     .returning();
 
-  if (!publishedWorkflow) {
-    throw new Error('Failed to publish workflow');
-  }
-
-  return publishedWorkflow;
+  return publishedWorkflow ?? null;
 }
 
 export type ScheduledWorkflow = {

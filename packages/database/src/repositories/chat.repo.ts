@@ -1,6 +1,6 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
-import type { Chat, ChatMessage, ChatWithMessages } from '../schema';
+import type { Chat, ChatMessage } from '../schema';
 import { chat, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
 
@@ -22,21 +22,9 @@ export async function createChat(payload: ICreateChat): Promise<Chat> {
   return createdChat;
 }
 
-export async function getChatById({
-  chatId,
-}: {
-  chatId: string;
-}): Promise<ChatWithMessages | null> {
-  const chatRecord = await db.query.chat.findFirst({
-    where: { id: chatId },
-    with: {
-      messages: true,
-    },
-  });
-
-  return chatRecord || null;
-}
-
+// Kept for the WS layer (chat.service.ts's runChatStream, channel.service.ts's
+// subscribe authorizer): those check ownership via the authenticated userId,
+// not the HTTP workspace guard. Do not repurpose for the REST controller.
 export async function getChatByIdForUser(payload: { chatId: string; userId: string }) {
   const chatRecord = await db.query.chat.findFirst({
     columns: {
@@ -73,35 +61,49 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
   return chatRecord || null;
 }
 
-export async function getChatCountByUserId(payload: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
-}): Promise<number> {
-  return db.$count(
-    chat,
-    and(
-      eq(chat.userId, payload.userId),
-      payload.unassigned
-        ? isNull(chat.workspaceId)
-        : payload.workspaceId
-          ? eq(chat.workspaceId, payload.workspaceId)
-          : undefined,
-    ),
-  );
+// Same shape as getChatByIdForUser, scoped by workspaceId instead of userId:
+// the REST controller's `GET /:chatId`, called after the workspace guard has
+// already verified ownership of workspaceId.
+export async function getChatByIdForWorkspace(payload: { chatId: string; workspaceId: string }) {
+  const chatRecord = await db.query.chat.findFirst({
+    columns: {
+      id: true,
+      agentId: true,
+      title: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    where: { id: payload.chatId, workspaceId: payload.workspaceId },
+    with: {
+      messages: {
+        columns: {
+          id: true,
+          role: true,
+          parts: true,
+          metadata: true,
+          createdAt: true,
+        },
+        // A turn's user and assistant message are upserted in one insert and
+        // share createdAt; the time-ordered uuidv7 id breaks the tie.
+        orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
+      },
+    },
+  });
+
+  return chatRecord || null;
 }
 
-export async function getAllChatsByUserId({
-  userId,
+export async function getChatCountByWorkspaceId(payload: { workspaceId: string }): Promise<number> {
+  return db.$count(chat, eq(chat.workspaceId, payload.workspaceId));
+}
+
+export async function getChatsByWorkspaceId({
   workspaceId,
-  unassigned,
   limit,
   sort = 'desc',
   offset,
 }: {
-  userId: string;
-  workspaceId?: string;
-  unassigned?: boolean;
+  workspaceId: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -109,7 +111,6 @@ export async function getAllChatsByUserId({
   const chatRecords = await db.query.chat.findMany({
     columns: {
       id: true,
-      userId: true,
       agentId: true,
       title: true,
       createdAt: true,
@@ -128,15 +129,19 @@ export async function getAllChatsByUserId({
         },
       },
     },
-    where: { userId, workspaceId: unassigned ? { isNull: true } : workspaceId },
+    where: { workspaceId },
     limit,
     offset,
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.updatedAt) : desc(t.updatedAt)),
+    // Pagination contract (docs/api-standards/prd.md): sort by createdAt.
+    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
   return chatRecords || [];
 }
 
+// Kept for the WS layer (chat.service.ts's runChatStream persists a
+// generated title mid-stream, scoped by userId there). The REST controller's
+// `PATCH /:chatId` uses updateChatTitleByWorkspaceId below instead.
 export async function updateChatTitleById({
   chatId,
   userId,
@@ -155,8 +160,32 @@ export async function updateChatTitleById({
   return updatedChat ?? null;
 }
 
-export async function deleteChatById({ userId, chatId }: { userId: string; chatId: string }) {
-  return db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.userId, userId)));
+export async function updateChatTitleByWorkspaceId({
+  chatId,
+  workspaceId,
+  title,
+}: {
+  chatId: string;
+  workspaceId: string;
+  title: string;
+}): Promise<Chat | null> {
+  const [updatedChat] = await db
+    .update(chat)
+    .set({ title })
+    .where(and(eq(chat.id, chatId), eq(chat.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedChat ?? null;
+}
+
+export async function deleteChatByWorkspaceId({
+  chatId,
+  workspaceId,
+}: {
+  chatId: string;
+  workspaceId: string;
+}) {
+  return db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.workspaceId, workspaceId)));
 }
 
 // CHAT MESSAGES

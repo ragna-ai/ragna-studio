@@ -51,7 +51,9 @@ export const agent = pgTable(
   {
     id: primaryIdColumn,
     userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
-    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
     aiModelId: text('ai_model_id')
       .notNull()
       .references(() => aiModel.id, { onDelete: 'cascade' }),

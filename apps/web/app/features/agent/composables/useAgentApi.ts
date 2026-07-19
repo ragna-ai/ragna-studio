@@ -8,26 +8,29 @@ import { toast } from 'vue-sonner';
 import type {
   AgentContextDocumentManyResponse,
   AgentContextDocumentResponse,
+  AgentManyResponse,
   AgentMemoryResponse,
   AgentResponse,
-  UpsertAgentRequest,
+  CreateAgentRequest,
+  UpdateAgentRequest,
 } from '~/features/agent/types';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string>;
 
 export const agentKeys = {
-  all: ['agents'] as const,
+  all: (workspaceId: WorkspaceId) => ['agents', workspaceId] as const,
   list: (
+    workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
     search: MaybeRefOrGetter<string>,
-    scopeKey: MaybeRefOrGetter<string>,
-  ) => ['agents', 'list', page, limit, search, scopeKey] as const,
-  detail: (agentId: MaybeRefOrGetter<string>) =>
-    ['agents', 'detail', agentId] as const,
-  memory: (agentId: MaybeRefOrGetter<string>) =>
-    ['agents', 'memory', agentId] as const,
-  documents: (agentId: MaybeRefOrGetter<string>) =>
-    ['agents', 'documents', agentId] as const,
+  ) => ['agents', workspaceId, 'list', page, limit, search] as const,
+  detail: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
+    ['agents', workspaceId, 'detail', agentId] as const,
+  memory: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
+    ['agents', workspaceId, 'memory', agentId] as const,
+  documents: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
+    ['agents', workspaceId, 'documents', agentId] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -39,51 +42,69 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
+function agentBasePath(workspaceId: WorkspaceId): string {
+  return `/workspace/${toValue(workspaceId)}/agent`;
+}
+
 export function useGetAgent(
+  workspaceId: WorkspaceId,
   agentId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<AgentResponse>({
-    queryKey: agentKeys.detail(agentId),
+    queryKey: agentKeys.detail(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(`/agent/${toValue(agentId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(agentId),
+      api(`${agentBasePath(workspaceId)}/${toValue(agentId)}`, { method: 'GET', signal }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
   });
 }
 
 /** Unpaginated agent list for pickers (e.g. the workflow agent-node config). */
-export function useGetAllAgents(options: QueryOpts = {}) {
+export function useGetAllAgents(workspaceId: WorkspaceId, options: QueryOpts = {}) {
   const api = useApi();
   return useQuery<AgentManyResponse>({
-    queryKey: [...agentKeys.all, 'picker'],
+    queryKey: [...agentKeys.all(workspaceId), 'picker'],
     queryFn: ({ signal }) =>
-      api('/agent', { method: 'GET', query: { page: 1, limit: 100 }, signal }),
+      api(agentBasePath(workspaceId), {
+        method: 'GET',
+        query: { page: 1, limit: 100 },
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId),
     ...options,
   });
 }
 
-export function useUpsertAgent() {
+export function useCreateAgent(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
-  const workspaceScopeStore = useWorkspaceScopeStore();
-  return useMutation<AgentResponse, unknown, UpsertAgentRequest>({
-    mutationFn: (body) => {
-      // Stamp the active workspace only when creating (no id yet) and a
-      // specific workspace is active. Editing must not silently move an
-      // agent; All and Unassigned both mean "no workspace" and send nothing
-      // (docs/workspaces.md).
-      const workspaceId = body.id
-        ? null
-        : workspaceScopeStore.createWorkspaceId;
-      return api('/agent', {
-        method: 'POST',
-        body: workspaceId ? { ...body, workspaceId } : body,
-      });
-    },
+  return useMutation<AgentResponse, unknown, CreateAgentRequest>({
+    mutationFn: (body) => api(agentBasePath(workspaceId), { method: 'POST', body }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
+      toast.success('Agent created');
+    },
+    onError: () => {
+      toast.error('Failed to create agent');
+    },
+  });
+}
+
+interface UpdateAgentVariables extends UpdateAgentRequest {
+  agentId: string;
+}
+
+export function useUpdateAgent(workspaceId: WorkspaceId) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<AgentResponse, unknown, UpdateAgentVariables>({
+    mutationFn: ({ agentId, ...body }) =>
+      api(`${agentBasePath(workspaceId)}/${agentId}`, { method: 'PATCH', body }),
+    onSuccess: (_, { agentId }) => {
+      queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.detail(workspaceId, agentId) });
       toast.success('Agent updated');
     },
     onError: () => {
@@ -93,29 +114,30 @@ export function useUpsertAgent() {
 }
 
 export function useGetAgentMemory(
+  workspaceId: WorkspaceId,
   agentId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
   return useQuery<AgentMemoryResponse>({
-    queryKey: agentKeys.memory(agentId),
+    queryKey: agentKeys.memory(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(`/agent/${toValue(agentId)}/memory`, { method: 'GET', signal }),
-    enabled: () => !!toValue(agentId),
+      api(`${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`, { method: 'GET', signal }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
   });
 }
 
 type UpdateAgentMemoryVariables = { agentId: string; content: string };
 
-export function useUpdateAgentMemory() {
+export function useUpdateAgentMemory(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
     mutationFn: ({ agentId, content }) =>
-      api(`/agent/${agentId}/memory`, { method: 'PUT', body: { content } }),
+      api(`${agentBasePath(workspaceId)}/${agentId}/memory`, { method: 'PUT', body: { content } }),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.memory(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.memory(workspaceId, agentId) });
       toast.success('Memory updated');
     },
     onError: () => {
@@ -124,13 +146,14 @@ export function useUpdateAgentMemory() {
   });
 }
 
-export function useDeleteAgent() {
+export function useDeleteAgent(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
-    mutationFn: (agentId) => api(`/agent/${agentId}`, { method: 'DELETE' }),
+    mutationFn: (agentId) =>
+      api(`${agentBasePath(workspaceId)}/${agentId}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
       toast.success('Agent deleted');
     },
     onError: () => {
@@ -150,13 +173,23 @@ export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.txt,.md';
 // status. 'failed' is terminal and doesn't poll (docs/agent-context-documents.md).
 const AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS = 2000;
 
-export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
+function contextDocumentBasePath(
+  workspaceId: WorkspaceId,
+  agentId: MaybeRefOrGetter<string>,
+): string {
+  return `${agentBasePath(workspaceId)}/${toValue(agentId)}/context-document`;
+}
+
+export function useGetAgentContextDocuments(
+  workspaceId: WorkspaceId,
+  agentId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   return useQuery<AgentContextDocumentManyResponse>({
-    queryKey: agentKeys.documents(agentId),
+    queryKey: agentKeys.documents(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(`/agent/${toValue(agentId)}/documents`, { method: 'GET', signal }),
-    enabled: () => !!toValue(agentId),
+      api(contextDocumentBasePath(workspaceId, agentId), { method: 'GET', signal }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     refetchInterval: (query) => {
       const hasPendingDocument = query.state.data?.documents.some(
         (document) => document.status === 'pending',
@@ -171,17 +204,20 @@ export interface UploadAgentContextDocumentsVariables {
   files: File[];
 }
 
-export function useUploadAgentContextDocuments() {
+export function useUploadAgentContextDocuments(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentManyResponse, unknown, UploadAgentContextDocumentsVariables>({
     mutationFn: ({ agentId, files }) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
-      return api(`/agent/${agentId}/documents`, { method: 'POST', body: formData });
+      return api(contextDocumentBasePath(workspaceId, agentId), {
+        method: 'POST',
+        body: formData,
+      });
     },
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to upload documents'));
@@ -195,14 +231,17 @@ export interface RenameAgentContextDocumentVariables {
   name: string;
 }
 
-export function useRenameAgentContextDocument() {
+export function useRenameAgentContextDocument(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, RenameAgentContextDocumentVariables>({
     mutationFn: ({ agentId, documentId, name }) =>
-      api(`/agent/${agentId}/documents/${documentId}`, { method: 'PATCH', body: { name } }),
+      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`, {
+        method: 'PATCH',
+        body: { name },
+      }),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to rename document'));
@@ -216,20 +255,20 @@ export interface ReplaceAgentContextDocumentFileVariables {
   file: File;
 }
 
-export function useReplaceAgentContextDocumentFile() {
+export function useReplaceAgentContextDocumentFile(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, ReplaceAgentContextDocumentFileVariables>({
     mutationFn: ({ agentId, documentId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
-      return api(`/agent/${agentId}/documents/${documentId}/file`, {
+      return api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/file`, {
         method: 'PUT',
         body: formData,
       });
     },
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to replace document'));
@@ -242,14 +281,16 @@ export interface AgentContextDocumentIdVariables {
   documentId: string;
 }
 
-export function useRetryAgentContextDocument() {
+export function useRetryAgentContextDocument(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
-      api(`/agent/${agentId}/documents/${documentId}/retry`, { method: 'POST' }),
+      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/retry`, {
+        method: 'POST',
+      }),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to retry document'));
@@ -257,14 +298,16 @@ export function useRetryAgentContextDocument() {
   });
 }
 
-export function useDeleteAgentContextDocument() {
+export function useDeleteAgentContextDocument(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
-      api(`/agent/${agentId}/documents/${documentId}`, { method: 'DELETE' }),
+      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(agentId) });
+      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to delete document'));

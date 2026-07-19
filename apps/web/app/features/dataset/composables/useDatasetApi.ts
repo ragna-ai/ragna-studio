@@ -8,25 +8,27 @@ import { toast } from 'vue-sonner';
 import type {
   CreateDatasetRequest,
   DatasetManyResponse,
-  DatasetResponse,
   DatasetRowData,
   DatasetRowManyResponse,
   DatasetRowResponse,
+  DatasetResponse,
   UpdateDatasetRequest,
 } from '~/features/dataset/types';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
 export const datasetKeys = {
-  all: ['datasets'] as const,
+  all: (workspaceId: WorkspaceId) => ['datasets', workspaceId] as const,
   list: (
+    workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    scopeKey: MaybeRefOrGetter<string>,
-  ) => ['datasets', 'list', page, limit, scopeKey] as const,
-  picker: (workspaceId: MaybeRefOrGetter<string | null | undefined>) =>
-    ['datasets', 'picker', workspaceId] as const,
-  detail: (datasetId: MaybeRefOrGetter<string>) => ['datasets', 'detail', datasetId] as const,
-  rows: (datasetId: MaybeRefOrGetter<string>) => ['datasets', 'detail', datasetId, 'rows'] as const,
+  ) => ['datasets', workspaceId, 'list', page, limit] as const,
+  picker: (workspaceId: WorkspaceId) => ['datasets', workspaceId, 'picker'] as const,
+  detail: (workspaceId: WorkspaceId, datasetId: MaybeRefOrGetter<string>) =>
+    ['datasets', workspaceId, 'detail', datasetId] as const,
+  rows: (workspaceId: WorkspaceId, datasetId: MaybeRefOrGetter<string>) =>
+    ['datasets', workspaceId, 'detail', datasetId, 'rows'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -38,60 +40,51 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
-export function useGetDataset(datasetId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
+export function useGetDataset(
+  workspaceId: WorkspaceId,
+  datasetId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
   const api = useApi();
   return useQuery<DatasetResponse>({
-    queryKey: datasetKeys.detail(datasetId),
-    queryFn: ({ signal }) => api(`/dataset/${toValue(datasetId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(datasetId),
+    queryKey: datasetKeys.detail(workspaceId, datasetId),
+    queryFn: ({ signal }) =>
+      api(`/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(datasetId),
     ...options,
   });
 }
 
 /**
- * Unpaginated dataset list for the agent "Default dataset" picker, scoped
- * the same way the tools' workspace hard filter is (docs/datasets.md
- * decision 11): a specific workspace filters to it, `null`/`undefined`
- * (the agent itself is unassigned) shows every dataset.
+ * Unpaginated dataset list for the agent "Default dataset" picker
+ * (docs/api-standards/prd.md: a resource lives in exactly one workspace, so
+ * the picker only ever shows the agent's own workspace).
  */
-export function useGetAllDatasetsForPicker(
-  workspaceId: MaybeRefOrGetter<string | null | undefined>,
-) {
+export function useGetAllDatasetsForPicker(workspaceId: WorkspaceId) {
   const api = useApi();
   return useQuery<DatasetManyResponse>({
     queryKey: datasetKeys.picker(workspaceId),
-    queryFn: ({ signal }) => {
-      const scopedWorkspaceId = toValue(workspaceId);
-      return api('/dataset', {
+    queryFn: ({ signal }) =>
+      api(`/workspace/${toValue(workspaceId)}/dataset`, {
         method: 'GET',
-        query: {
-          page: 1,
-          limit: 100,
-          ...(scopedWorkspaceId ? { workspaceId: scopedWorkspaceId } : {}),
-        },
+        query: { page: 1, limit: 100 },
         signal,
-      });
-    },
+      }),
+    enabled: () => !!toValue(workspaceId),
   });
 }
 
-export function useCreateDataset() {
+export function useCreateDataset(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
-  const workspaceScopeStore = useWorkspaceScopeStore();
   return useMutation<DatasetResponse, unknown, CreateDatasetRequest>({
-    mutationFn: (body) => {
-      // New datasets inherit the active workspace only when a specific
-      // workspace is selected (docs/workspaces.md); All and Unassigned both
-      // mean "no workspace".
-      const workspaceId = workspaceScopeStore.createWorkspaceId;
-      return api('/dataset', {
-        method: 'POST',
-        body: workspaceId ? { ...body, workspaceId } : body,
-      });
-    },
+    mutationFn: (body) =>
+      api(`/workspace/${toValue(workspaceId)}/dataset`, { method: 'POST', body }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.all });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });
       toast.success('Dataset created');
     },
     onError: (error) => {
@@ -100,15 +93,18 @@ export function useCreateDataset() {
   });
 }
 
-export function useUpdateDataset() {
+export function useUpdateDataset(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<DatasetResponse, unknown, UpdateDatasetRequest>({
     mutationFn: ({ datasetId, ...body }) =>
-      api(`/dataset/${datasetId}`, { method: 'PATCH', body }),
+      api(`/workspace/${toValue(workspaceId)}/dataset/${datasetId}`, { method: 'PATCH', body }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.all });
-      queryClient.invalidateQueries({ queryKey: datasetKeys.detail(response.dataset.id) });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });
+      queryClient.setQueryData(
+        datasetKeys.detail(workspaceId, response.dataset.id),
+        response,
+      );
       toast.success('Dataset saved');
     },
     onError: (error) => {
@@ -117,13 +113,14 @@ export function useUpdateDataset() {
   });
 }
 
-export function useDeleteDataset() {
+export function useDeleteDataset(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
-    mutationFn: (datasetId) => api(`/dataset/${datasetId}`, { method: 'DELETE' }),
+    mutationFn: (datasetId) =>
+      api(`/workspace/${toValue(workspaceId)}/dataset/${datasetId}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.all });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });
       toast.success('Dataset deleted');
     },
     onError: () => {
@@ -132,24 +129,38 @@ export function useDeleteDataset() {
   });
 }
 
-export function useGetDatasetRows(datasetId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
+export function useGetDatasetRows(
+  workspaceId: WorkspaceId,
+  datasetId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
   const api = useApi();
   return useQuery<DatasetRowManyResponse>({
-    queryKey: datasetKeys.rows(datasetId),
-    queryFn: ({ signal }) => api(`/dataset/${toValue(datasetId)}/rows`, { method: 'GET', signal }),
-    enabled: () => !!toValue(datasetId),
+    queryKey: datasetKeys.rows(workspaceId, datasetId),
+    queryFn: ({ signal }) =>
+      api(`/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/row`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(datasetId),
     ...options,
   });
 }
 
-export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
+export function useCreateDatasetRow(
+  workspaceId: WorkspaceId,
+  datasetId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, DatasetRowData>({
     mutationFn: (data) =>
-      api(`/dataset/${toValue(datasetId)}/rows`, { method: 'POST', body: { data } }),
+      api(`/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/row`, {
+        method: 'POST',
+        body: { data },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(datasetId) });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(workspaceId, datasetId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to add row'));
@@ -162,14 +173,20 @@ interface UpdateDatasetRowVariables {
   data: DatasetRowData;
 }
 
-export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
+export function useUpdateDatasetRow(
+  workspaceId: WorkspaceId,
+  datasetId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, UpdateDatasetRowVariables>({
     mutationFn: ({ rowId, data }) =>
-      api(`/dataset/${toValue(datasetId)}/rows/${rowId}`, { method: 'PATCH', body: { data } }),
+      api(`/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/row/${rowId}`, {
+        method: 'PATCH',
+        body: { data },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(datasetId) });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(workspaceId, datasetId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to update row'));
@@ -177,14 +194,19 @@ export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
   });
 }
 
-export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
+export function useDeleteDatasetRow(
+  workspaceId: WorkspaceId,
+  datasetId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (rowId) =>
-      api(`/dataset/${toValue(datasetId)}/rows/${rowId}`, { method: 'DELETE' }),
+      api(`/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/row/${rowId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(datasetId) });
+      queryClient.invalidateQueries({ queryKey: datasetKeys.rows(workspaceId, datasetId) });
     },
     onError: () => {
       toast.error('Failed to delete row');

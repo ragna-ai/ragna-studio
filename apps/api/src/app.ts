@@ -12,7 +12,7 @@ import { chatController } from './controllers/chat.controller';
 import { datasetController } from './controllers/dataset.controller';
 import { documentController } from './controllers/document.controller';
 import { folderController } from './controllers/folder.controller';
-import { imageGenerateController } from './controllers/imagegen.controller';
+import { genImageController } from './controllers/imagegen.controller';
 import { notificationController } from './controllers/notification.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { userController } from './controllers/user.controller';
@@ -48,7 +48,7 @@ export const app = new Hono()
   .route('/', agentController)
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)
-  .route('/', imageGenerateController)
+  .route('/', genImageController)
   .route('/', workflowController)
   .route('/', socialPostController)
   .route('/', notificationController)

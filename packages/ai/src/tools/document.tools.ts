@@ -12,9 +12,8 @@ import type {
 import { tool } from 'ai';
 import * as z from 'zod';
 
-// Workspace-scoped like dataset.tools.ts: a document always belongs to a
-// workspace (unlike datasets, there's no "unassigned" document), so a null
-// workspaceId means there's simply nothing to list/read/create/edit here.
+// Workspace-scoped: a document always belongs to a workspace, and every
+// chat (and therefore every tool call) always has one.
 //
 // Every schema below is a flat top-level z.object: Anthropic's tool
 // `input_schema` requires a top-level `type: "object"`, and a top-level
@@ -42,7 +41,7 @@ type ListDocumentsOutput = { documents: ReturnType<typeof toDocumentSummary>[] }
 
 export const getListDocumentsTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<ListDocumentsInput, ListDocumentsOutput> =>
   tool({
     description:
@@ -50,10 +49,6 @@ export const getListDocumentsTool = (
     inputSchema: listDocumentsInputSchema,
     execute: async () => {
       writer.write({ type: 'data-document', data: { action: 'list' }, transient: true });
-
-      if (!workspaceId) {
-        return { error: 'No workspace is active, so there are no documents to list.' };
-      }
 
       const { error, data: documents } = await tryCatch(
         () => getDocumentsByWorkspaceId({ workspaceId }),
@@ -79,7 +74,7 @@ type ReadDocumentOutput = { title: string; content: string } | { error: string }
 
 export const getReadDocumentTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<ReadDocumentInput, ReadDocumentOutput> =>
   tool({
     description: "Read a document's title and full markdown content by its id.",
@@ -90,10 +85,6 @@ export const getReadDocumentTool = (
         data: { action: 'read', documentId: input.documentId },
         transient: true,
       });
-
-      if (!workspaceId) {
-        return { error: 'No workspace is active, so there is no document to read.' };
-      }
 
       const { error, data: documentRecord } = await tryCatch(
         () => getDocumentById({ documentId: input.documentId, workspaceId }),
@@ -128,7 +119,7 @@ type CreateDocumentOutput = { id: string; title: string } | { error: string };
 
 export const getCreateDocumentTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string | null,
+  workspaceId: string,
   agentId: string,
 ): Tool<CreateDocumentInput, CreateDocumentOutput> =>
   tool({
@@ -137,10 +128,6 @@ export const getCreateDocumentTool = (
     inputSchema: createDocumentInputSchema,
     execute: async (input) => {
       writer.write({ type: 'data-document', data: { action: 'create' }, transient: true });
-
-      if (!workspaceId) {
-        return { error: 'No workspace is active, so a document cannot be created here.' };
-      }
 
       const { error, data: createdDocument } = await tryCatch(
         () =>
@@ -192,7 +179,7 @@ type EditDocumentOutput = { ok: true } | { error: string };
 
 export const getEditDocumentTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<EditDocumentInput, EditDocumentOutput> =>
   tool({
     description:
@@ -204,10 +191,6 @@ export const getEditDocumentTool = (
         data: { action: 'edit', documentId: input.documentId },
         transient: true,
       });
-
-      if (!workspaceId) {
-        return { error: 'No workspace is active, so there is no document to edit.' };
-      }
 
       const { error, data: result } = await tryCatch(
         () => applyDocumentEdit({ documentId: input.documentId, workspaceId, input }),

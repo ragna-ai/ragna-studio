@@ -1,271 +1,182 @@
-import {
-  createDataset,
-  createDatasetRow,
-  deleteDatasetById,
-  getAllDatasetsByUserId,
-  getDatasetById,
-  getDatasetCountByUserId,
-  getDatasetRows,
-  softDeleteDatasetRow,
-  updateDataset,
-  updateDatasetRow,
-} from '@repo/database';
-import { logger } from '@repo/logger';
-import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
+import {
+  createDatasetForUser,
+  createDatasetRowForUser,
+  deleteDataset,
+  deleteDatasetRow,
+  getDataset,
+  listDatasetRows,
+  listDatasets,
+  updateDatasetForUser,
+  updateDatasetRowForUser,
+} from '../services/dataset.service';
 import {
   validCreateDatasetBody,
   validCreateDatasetRowBody,
   validDatasetIdParam,
-  validDatasetRowParams,
+  validDatasetRowIdParam,
+  validPaginationQuery,
   validUpdateDatasetBody,
   validUpdateDatasetRowBody,
-  validWorkspaceScopedListQuery,
-} from '../middlewares/validationMiddlewares';
+} from '../validation';
 
 export const datasetController = new Hono()
-  .basePath('/dataset')
+  .basePath('/workspace/:workspaceId/dataset')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /dataset
-   * Get all datasets for the authenticated user
+   * [GET] /workspace/:workspaceId/dataset
+   * Paginated list of the workspace's datasets, newest first by default.
    */
-  .get('/', validWorkspaceScopedListQuery, async (c) => {
-    const user = c.get('user');
+  .get('/', validPaginationQuery, async (c) => {
+    const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
-    const page = query.page ? Number(query.page) : 1;
-    const limit = query.limit ? Number(query.limit) : 10;
-    const sort = query.sort || 'desc';
-    const unassigned = query.unassigned === 'true';
+    const { datasets, meta } = await listDatasets({
+      workspaceId: workspace.id,
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+    });
 
-    // Calculate offset for pagination ((page number - 1) * page size)
-    const offset = page && limit ? (page - 1) * limit : undefined;
-
-    // Get all dataset count and fail gracefully
-    const { data: datasetsCount } = await tryCatch(() =>
-      getDatasetCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
-    );
-
-    const { error, data: allUserDatasets } = await tryCatch(() =>
-      getAllDatasetsByUserId({
-        userId: user.id,
-        workspaceId: query.workspaceId,
-        unassigned,
-        limit,
-        sort,
-        offset,
-      }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get datasets for user', error);
-      throw new InternalServerErrorException('Failed to get datasets for user');
-    }
-
-    const meta = {
-      totalCount: datasetsCount || 0,
-    };
-
-    return c.json({ datasets: allUserDatasets, meta });
+    return c.json({ datasets, meta });
   })
   /**
-   * [POST] /dataset
-   * Create a new dataset
+   * [POST] /workspace/:workspaceId/dataset
+   * Create a dataset in this workspace.
    */
   .post('/', validCreateDatasetBody, async (c) => {
     const user = c.get('user');
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
-    const { error, data: createdDataset } = await tryCatch(() =>
-      createDataset({
-        userId: user.id,
-        workspaceId: body.workspaceId,
-        name: body.name,
-        description: body.description,
-        columns: body.columns,
-      }),
-    );
+    const createdDataset = await createDatasetForUser({
+      workspaceId: workspace.id,
+      userId: user.id,
+      name: body.name,
+      description: body.description,
+      columns: body.columns,
+    });
 
-    if (error !== null || !createdDataset) {
-      logger.error('Failed to create dataset', error);
-      throw new InternalServerErrorException('Failed to create dataset');
-    }
-
-    return c.json({ dataset: createdDataset });
+    return c.json({ dataset: createdDataset }, 201);
   })
   /**
-   * [GET] /dataset/:datasetId
-   * Get a specific dataset (with its columns) by ID
+   * [GET] /workspace/:workspaceId/dataset/:datasetId
+   * Get a specific dataset (with its columns) by ID.
    */
   .get('/:datasetId', validDatasetIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error, data: datasetRecord } = await tryCatch(() =>
-      getDatasetById({ datasetId: param.datasetId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get dataset by ID', error);
-      throw new InternalServerErrorException('Failed to get dataset by ID');
-    }
-
-    if (!datasetRecord) {
-      throw new NotFoundException('Dataset not found');
-    }
+    const datasetRecord = await getDataset({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+    });
 
     return c.json({ dataset: datasetRecord });
   })
   /**
-   * [PATCH] /dataset/:datasetId
-   * Update a dataset's name, description, and/or columns
+   * [PATCH] /workspace/:workspaceId/dataset/:datasetId
+   * Update a dataset's name, description, and/or columns.
    */
   .patch('/:datasetId', validDatasetIdParam, validUpdateDatasetBody, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
-    const { error, data: updatedDataset } = await tryCatch(() =>
-      updateDataset({
-        datasetId: param.datasetId,
-        userId: user.id,
-        name: body.name,
-        description: body.description,
-        columns: body.columns,
-      }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to update dataset', error);
-      throw new BadRequestException(error.message);
-    }
+    const updatedDataset = await updateDatasetForUser({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      name: body.name,
+      description: body.description,
+      columns: body.columns,
+    });
 
     return c.json({ dataset: updatedDataset });
   })
   /**
-   * [DELETE] /dataset/:datasetId
-   * Delete a specific dataset (and its rows via cascade) by ID
+   * [DELETE] /workspace/:workspaceId/dataset/:datasetId
+   * Delete a specific dataset (and its rows via cascade) by ID.
    */
   .delete('/:datasetId', validDatasetIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error } = await tryCatch(() =>
-      deleteDatasetById({ datasetId: param.datasetId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to delete dataset', error);
-      throw new InternalServerErrorException('Failed to delete dataset');
-    }
+    await deleteDataset({ workspaceId: workspace.id, datasetId: param.datasetId });
 
     return c.json({ message: 'Dataset deleted successfully' });
   })
   /**
-   * [GET] /dataset/:datasetId/rows
-   * Get all (non-deleted) rows of a dataset, oldest first
+   * [GET] /workspace/:workspaceId/dataset/:datasetId/row
+   * Get all (non-deleted) rows of a dataset, oldest first. Unpaginated:
+   * rows within one dataset are bounded by MAX_ROWS_PER_DATASET.
    */
-  .get('/:datasetId/rows', validDatasetIdParam, async (c) => {
-    const user = c.get('user');
+  .get('/:datasetId/row', validDatasetIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error: datasetError, data: datasetRecord } = await tryCatch(() =>
-      getDatasetById({ datasetId: param.datasetId, userId: user.id }),
-    );
-
-    if (datasetError !== null) {
-      logger.error('Failed to get dataset by ID', datasetError);
-      throw new InternalServerErrorException('Failed to get dataset by ID');
-    }
-
-    if (!datasetRecord) {
-      throw new NotFoundException('Dataset not found');
-    }
-
-    const { error, data: rows } = await tryCatch(() =>
-      getDatasetRows({ datasetId: param.datasetId }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to get dataset rows', error);
-      throw new InternalServerErrorException('Failed to get dataset rows');
-    }
+    const rows = await listDatasetRows({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+    });
 
     return c.json({ rows });
   })
   /**
-   * [POST] /dataset/:datasetId/rows
-   * Append a new row to a dataset
+   * [POST] /workspace/:workspaceId/dataset/:datasetId/row
+   * Append a new row to a dataset.
    */
-  .post('/:datasetId/rows', validDatasetIdParam, validCreateDatasetRowBody, async (c) => {
-    const user = c.get('user');
+  .post('/:datasetId/row', validDatasetIdParam, validCreateDatasetRowBody, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
-    const { error, data: createdRow } = await tryCatch(() =>
-      createDatasetRow({ datasetId: param.datasetId, userId: user.id, data: body.data }),
-    );
+    const createdRow = await createDatasetRowForUser({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      data: body.data,
+    });
 
-    if (error !== null) {
-      logger.error('Failed to create dataset row', error);
-      throw new BadRequestException(error.message);
-    }
-
-    return c.json({ row: createdRow });
+    return c.json({ row: createdRow }, 201);
   })
   /**
-   * [PATCH] /dataset/:datasetId/rows/:rowId
-   * Partially update a dataset row
+   * [PATCH] /workspace/:workspaceId/dataset/:datasetId/row/:rowId
+   * Partially update a dataset row.
    */
   .patch(
-    '/:datasetId/rows/:rowId',
-    validDatasetRowParams,
+    '/:datasetId/row/:rowId',
+    validDatasetRowIdParam,
     validUpdateDatasetRowBody,
     async (c) => {
-      const user = c.get('user');
+      const workspace = c.get('workspace');
       const param = c.req.valid('param');
       const body = c.req.valid('json');
 
-      const { error, data: updatedRow } = await tryCatch(() =>
-        updateDatasetRow({
-          datasetId: param.datasetId,
-          rowId: param.rowId,
-          userId: user.id,
-          data: body.data,
-        }),
-      );
-
-      if (error !== null) {
-        logger.error('Failed to update dataset row', error);
-        throw new BadRequestException(error.message);
-      }
+      const updatedRow = await updateDatasetRowForUser({
+        workspaceId: workspace.id,
+        datasetId: param.datasetId,
+        rowId: param.rowId,
+        data: body.data,
+      });
 
       return c.json({ row: updatedRow });
     },
   )
   /**
-   * [DELETE] /dataset/:datasetId/rows/:rowId
-   * Soft delete a dataset row
+   * [DELETE] /workspace/:workspaceId/dataset/:datasetId/row/:rowId
+   * Soft delete a dataset row.
    */
-  .delete('/:datasetId/rows/:rowId', validDatasetRowParams, async (c) => {
-    const user = c.get('user');
+  .delete('/:datasetId/row/:rowId', validDatasetRowIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error } = await tryCatch(() =>
-      softDeleteDatasetRow({ datasetId: param.datasetId, rowId: param.rowId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error('Failed to delete dataset row', error);
-      throw new InternalServerErrorException('Failed to delete dataset row');
-    }
+    await deleteDatasetRow({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      rowId: param.rowId,
+    });
 
     return c.json({ message: 'Row deleted successfully' });
   });

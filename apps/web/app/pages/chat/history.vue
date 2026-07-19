@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import ChatManyTable from '~/features/chat/components/ChatManyTable.vue';
 import { useDeleteChat } from '~/features/chat/composables/useChatApi';
 import useChatList from '~/features/chat/composables/useChatList';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Props
 // Emits
@@ -9,9 +11,12 @@ import useChatList from '~/features/chat/composables/useChatList';
 // Refs
 
 // Composables
-const { page, limit, useGetAllChats } = useChatList();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { page, limit, useGetAllChats } = useChatList(activeWorkspaceId);
 const { data, error: chatsError } = useGetAllChats();
-const { mutateAsync: deleteChat } = useDeleteChat();
+const { mutateAsync: deleteChat } = useDeleteChat(activeWorkspaceId);
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

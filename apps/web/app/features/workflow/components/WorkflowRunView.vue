@@ -19,6 +19,8 @@ const ACTIVE_STATUSES = new Set(['pending', 'running']);
 const POLL_INTERVAL_MS = 1500;
 
 interface Props {
+  workspaceId: string;
+  workflowId: string;
   runId: string;
 }
 
@@ -29,19 +31,26 @@ const props = defineProps<Props>();
 const selectedNodeId = ref<string | null>(null);
 
 // Composables
-const { data, error: runError } = useGetWorkflowRun(() => props.runId, {
-  refetchInterval: (query) => {
-    const status = query.state.data?.run.status;
-    return status && ACTIVE_STATUSES.has(status) ? POLL_INTERVAL_MS : false;
+const { data, error: runError } = useGetWorkflowRun(
+  () => props.workspaceId,
+  () => props.workflowId,
+  () => props.runId,
+  {
+    refetchInterval: (query) => {
+      const status = query.state.data?.run.status;
+      return status && ACTIVE_STATUSES.has(status) ? POLL_INTERVAL_MS : false;
+    },
   },
-});
+);
 const { mutate: cancelRun, isPending: isCancelling } = useCancelWorkflowRun(
+  () => props.workspaceId,
+  () => props.workflowId,
   () => props.runId,
 );
-// For the breadcrumb's workflow-name crumb. Cached when the user arrives
-// from the editor; one extra fetch on deep links (e.g. from a notification).
+// For the breadcrumb's workflow-name crumb.
 const { data: workflowData } = useGetWorkflow(
-  () => data.value?.run.workflowId ?? '',
+  () => props.workspaceId,
+  () => props.workflowId,
 );
 const { t } = useI18n();
 const { formatDateTime } = useDateTimeFormat();

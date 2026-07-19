@@ -5,23 +5,28 @@ import {
   useQueryClient,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+
+type WorkspaceId = MaybeRefOrGetter<string>;
+
+function postsBasePath(workspaceId: WorkspaceId): string {
+  return `/workspace/${toValue(workspaceId)}/social-post`;
+}
 
 export const socialPostKeys = {
-  all: ['social-posts'] as const,
+  all: (workspaceId: WorkspaceId) => ['social-posts', workspaceId] as const,
   list: (
+    workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    scopeKey: MaybeRefOrGetter<string>,
-  ) => ['social-posts', 'list', page, limit, scopeKey] as const,
-  detail: (postId: MaybeRefOrGetter<string>) =>
-    ['social-posts', 'detail', postId] as const,
+  ) => ['social-posts', workspaceId, 'list', page, limit] as const,
+  detail: (workspaceId: WorkspaceId, postId: MaybeRefOrGetter<string>) =>
+    ['social-posts', workspaceId, 'detail', postId] as const,
   mediaUpload: () => ['social-posts', 'media', 'upload'] as const,
 };
 
 export type SocialPostStatus = 'draft' | 'published' | 'failed';
 
-// Client-side mirror of the API's limits (apps/api/src/controllers/social-post.controller.ts),
+// Client-side mirror of the API's limits (apps/api/src/services/social-post.service.ts),
 // so invalid attachments are rejected before a request is even sent.
 export const SOCIAL_POST_MAX_MEDIA = 9;
 export const SOCIAL_POST_MAX_MEDIA_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -73,9 +78,9 @@ export interface SocialPostMediaResponse {
 /** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
 type FetchErrorWithData = { data?: { error?: string; errorCode?: string } };
 
-// Returned by POST /social-posts/:id/publish when the user has no LinkedIn
-// account linked, so the UI can show a "connect LinkedIn" hint instead of a
-// generic error toast.
+// Returned by POST .../social-post/:socialPostId/publish when the user has
+// no LinkedIn account linked, so the UI can show a "connect LinkedIn" hint
+// instead of a generic error toast.
 export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
 
 export function isLinkedInNotConnectedError(error: unknown): boolean {
@@ -95,13 +100,19 @@ function getErrorMessage(error: unknown, fallback: string): string {
  * `socialPostKeys`), so mutations that invalidate `socialPostKeys.all`
  * refresh both together.
  */
-export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
+export function useGetSocialPost(
+  workspaceId: WorkspaceId,
+  postId: MaybeRefOrGetter<string>,
+) {
   const api = useApi();
   const { data, isLoading, isError } = useQuery<SocialPostResponse>({
-    queryKey: socialPostKeys.detail(postId),
+    queryKey: socialPostKeys.detail(workspaceId, postId),
     queryFn: ({ signal }) =>
-      api(`/social-posts/${toValue(postId)}`, { method: 'GET', signal }),
-    enabled: () => !!toValue(postId),
+      api(`${postsBasePath(workspaceId)}/${toValue(postId)}`, {
+        method: 'GET',
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId) && !!toValue(postId),
   });
 
   const post = computed(() => data.value?.post ?? null);
@@ -109,31 +120,26 @@ export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
   return { post, isLoading, isError };
 }
 
-export function useCreateSocialPost() {
+export function useCreateSocialPost(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
-  const workspaceScopeStore = useWorkspaceScopeStore();
 
   return useMutation<SocialPostResponse, unknown, string>({
-    mutationFn: (content) => {
-      // Only a specific active workspace assigns one; All and Unassigned
-      // both send nothing (docs/workspaces.md).
-      const workspaceId = workspaceScopeStore.createWorkspaceId;
-      return api('/social-posts', {
+    mutationFn: (content) =>
+      api(postsBasePath(workspaceId), {
         method: 'POST',
-        body: workspaceId ? { content, workspaceId } : { content },
-      });
-    },
+        body: { content },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, t('social.toast.createError'))),
   });
 }
 
-export function useUpdateSocialPost() {
+export function useUpdateSocialPost(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -144,9 +150,12 @@ export function useUpdateSocialPost() {
     { id: string; content: string }
   >({
     mutationFn: ({ id, content }) =>
-      api(`/social-posts/${id}`, { method: 'PATCH', body: { content } }),
+      api(`${postsBasePath(workspaceId)}/${id}`, {
+        method: 'PATCH',
+        body: { content },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
       toast.success(t('social.toast.updateSuccess'));
     },
     onError: (error) =>
@@ -154,15 +163,16 @@ export function useUpdateSocialPost() {
   });
 }
 
-export function useDeleteSocialPost() {
+export function useDeleteSocialPost(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<void, unknown, string>({
-    mutationFn: (id) => api(`/social-posts/${id}`, { method: 'DELETE' }),
+    mutationFn: (id) =>
+      api(`${postsBasePath(workspaceId)}/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
       toast.success(t('social.toast.deleteSuccess'));
     },
     onError: (error) =>
@@ -170,21 +180,22 @@ export function useDeleteSocialPost() {
   });
 }
 
-export function usePublishSocialPost() {
+export function usePublishSocialPost(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<SocialPostResponse, unknown, string>({
-    mutationFn: (id) => api(`/social-posts/${id}/publish`, { method: 'POST' }),
+    mutationFn: (id) =>
+      api(`${postsBasePath(workspaceId)}/${id}/publish`, { method: 'POST' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
       toast.success(t('social.toast.publishSuccess'));
     },
     onError: (error) => {
       // Invalidate too: a failed publish still updates the post's status
       // and publishError server-side.
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
 
       if (isLinkedInNotConnectedError(error)) {
         toast.error(t('social.toast.linkedinNotConnected'));
@@ -200,7 +211,7 @@ export interface UploadSocialPostMediaVariables {
   file: File;
 }
 
-export function useUploadSocialPostMedia() {
+export function useUploadSocialPostMedia(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -214,13 +225,13 @@ export function useUploadSocialPostMedia() {
     mutationFn: ({ postId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
-      return api(`/social-posts/${postId}/media`, {
+      return api(`${postsBasePath(workspaceId)}/${postId}/media`, {
         method: 'POST',
         body: formData,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, t('social.toast.mediaUploadError'))),
@@ -245,7 +256,7 @@ export function usePendingSocialPostMediaUploads(postId: string) {
   );
 }
 
-export function useUpdateSocialPostMediaAltText() {
+export function useUpdateSocialPostMediaAltText(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -256,28 +267,30 @@ export function useUpdateSocialPostMediaAltText() {
     { postId: string; mediaId: string; altText: string }
   >({
     mutationFn: ({ postId, mediaId, altText }) =>
-      api(`/social-posts/${postId}/media/${mediaId}`, {
+      api(`${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`, {
         method: 'PATCH',
         body: { altText },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, t('social.toast.mediaAltTextError'))),
   });
 }
 
-export function useDeleteSocialPostMedia() {
+export function useDeleteSocialPostMedia(workspaceId: WorkspaceId) {
   const api = useApi();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<void, unknown, { postId: string; mediaId: string }>({
     mutationFn: ({ postId, mediaId }) =>
-      api(`/social-posts/${postId}/media/${mediaId}`, { method: 'DELETE' }),
+      api(`${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all });
+      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, t('social.toast.mediaDeleteError'))),

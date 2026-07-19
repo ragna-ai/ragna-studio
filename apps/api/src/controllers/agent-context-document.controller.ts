@@ -1,11 +1,7 @@
 import { Hono } from 'hono';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import {
-  validAgentContextDocumentParams,
-  validAgentIdParam,
-  validRenameAgentContextDocumentBody,
-} from '../middlewares/validationMiddlewares';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   deleteAgentContextDocument,
   listAgentContextDocuments,
@@ -14,28 +10,37 @@ import {
   retryAgentContextDocument,
   uploadAgentContextDocuments,
 } from '../services/agent-context-document.service';
+import {
+  validAgentContextDocumentParams,
+  validAgentIdParam,
+  validRenameAgentContextDocumentBody,
+} from '../validation';
 
 export const agentContextDocumentController = new Hono()
-  .basePath('/agent')
+  .basePath('/workspace/:workspaceId/agent/:agentId/context-document')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /agent/:agentId/documents
+   * [GET] /workspace/:workspaceId/agent/:agentId/context-document
    * List an agent's documents.
    */
-  .get('/:agentId/documents', validAgentIdParam, async (c) => {
-    const user = c.get('user');
+  .get('/', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const documents = await listAgentContextDocuments({ agentId: param.agentId, userId: user.id });
+    const documents = await listAgentContextDocuments({
+      agentId: param.agentId,
+      workspaceId: workspace.id,
+    });
 
     return c.json({ documents });
   })
   /**
-   * [POST] /agent/:agentId/documents
+   * [POST] /workspace/:workspaceId/agent/:agentId/context-document
    * Upload one or more files in a single multipart request (`files` field).
    */
-  .post('/:agentId/documents', validAgentIdParam, async (c) => {
-    const user = c.get('user');
+  .post('/', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     const body = await c.req.parseBody({ all: true });
@@ -45,18 +50,18 @@ export const agentContextDocumentController = new Hono()
 
     const documents = await uploadAgentContextDocuments({
       agentId: param.agentId,
-      userId: user.id,
+      workspaceId: workspace.id,
       files: uploadedFiles,
     });
 
     return c.json({ documents }, 201);
   })
   /**
-   * [PUT] /agent/:agentId/documents/:documentId/file
+   * [PUT] /workspace/:workspaceId/agent/:agentId/context-document/:documentId/file
    * Replace a document's file (`file` field).
    */
-  .put('/:agentId/documents/:documentId/file', validAgentContextDocumentParams, async (c) => {
-    const user = c.get('user');
+  .put('/:documentId/file', validAgentContextDocumentParams, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     const body = await c.req.parseBody();
@@ -68,7 +73,7 @@ export const agentContextDocumentController = new Hono()
 
     const document = await replaceAgentContextDocumentFile({
       agentId: param.agentId,
-      userId: user.id,
+      workspaceId: workspace.id,
       documentId: param.documentId,
       file,
     });
@@ -76,21 +81,21 @@ export const agentContextDocumentController = new Hono()
     return c.json({ document });
   })
   /**
-   * [PATCH] /agent/:agentId/documents/:documentId
+   * [PATCH] /workspace/:workspaceId/agent/:agentId/context-document/:documentId
    * Rename a document.
    */
   .patch(
-    '/:agentId/documents/:documentId',
+    '/:documentId',
     validAgentContextDocumentParams,
     validRenameAgentContextDocumentBody,
     async (c) => {
-      const user = c.get('user');
+      const workspace = c.get('workspace');
       const param = c.req.valid('param');
       const { name } = c.req.valid('json');
 
       const document = await renameAgentContextDocument({
         agentId: param.agentId,
-        userId: user.id,
+        workspaceId: workspace.id,
         documentId: param.documentId,
         name,
       });
@@ -99,32 +104,32 @@ export const agentContextDocumentController = new Hono()
     },
   )
   /**
-   * [POST] /agent/:agentId/documents/:documentId/retry
+   * [POST] /workspace/:workspaceId/agent/:agentId/context-document/:documentId/retry
    * Re-enqueue extraction for a failed document.
    */
-  .post('/:agentId/documents/:documentId/retry', validAgentContextDocumentParams, async (c) => {
-    const user = c.get('user');
+  .post('/:documentId/retry', validAgentContextDocumentParams, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     const document = await retryAgentContextDocument({
       agentId: param.agentId,
-      userId: user.id,
+      workspaceId: workspace.id,
       documentId: param.documentId,
     });
 
     return c.json({ document });
   })
   /**
-   * [DELETE] /agent/:agentId/documents/:documentId
+   * [DELETE] /workspace/:workspaceId/agent/:agentId/context-document/:documentId
    * Remove a document and its R2 object (best effort).
    */
-  .delete('/:agentId/documents/:documentId', validAgentContextDocumentParams, async (c) => {
-    const user = c.get('user');
+  .delete('/:documentId', validAgentContextDocumentParams, async (c) => {
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     await deleteAgentContextDocument({
       agentId: param.agentId,
-      userId: user.id,
+      workspaceId: workspace.id,
       documentId: param.documentId,
     });
 

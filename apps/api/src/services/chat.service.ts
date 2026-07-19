@@ -12,7 +12,18 @@ import {
   toModelSettings,
   toUIMessageStream,
 } from '@repo/ai';
-import { getChatByIdForUser, updateChatTitleById, upsertChatMessages } from '@repo/database';
+import type { Chat } from '@repo/database';
+import {
+  createChat,
+  deleteChatByWorkspaceId,
+  getChatByIdForUser,
+  getChatByIdForWorkspace,
+  getChatCountByWorkspaceId,
+  getChatsByWorkspaceId,
+  getOrCreateDefaultAgentForUser,
+  updateChatTitleById,
+  updateChatTitleByWorkspaceId,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import {
@@ -21,6 +32,241 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+
+// CHAT CRUD (docs/api-standards/prd.md, WP4)
+//
+// Every function below is called after the workspace guard has already
+// verified the caller owns `:workspaceId`; access is scoped by workspaceId,
+// never by userId. `userId` is only stamped on create as authorship
+// metadata. This is distinct from the streaming pipeline further down,
+// which predates the guard and still checks ownership via userId.
+
+export interface ChatSummaryResponse {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  agent: {
+    id: string;
+    name: string;
+    aiModel: {
+      id: string;
+      provider: string;
+      displayName: string;
+    };
+  };
+}
+
+export interface ChatListResponse {
+  chats: ChatSummaryResponse[];
+  totalCount: number;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/chat
+ * Lists a workspace's chats, paginated and sorted by createdAt.
+ */
+export async function listChatsForWorkspace({
+  workspaceId,
+  page,
+  limit,
+  sort,
+}: {
+  workspaceId: string;
+  page: number;
+  limit: number;
+  sort: 'asc' | 'desc';
+}): Promise<ChatListResponse> {
+  const offset = (page - 1) * limit;
+
+  const { error: countError, data: totalCount } = await tryCatch(() =>
+    getChatCountByWorkspaceId({ workspaceId }),
+  );
+
+  if (countError !== null || totalCount === null) {
+    logger.error(`Error counting chats for workspace ${workspaceId}`, countError);
+    throw new InternalServerErrorException('Failed to count chats');
+  }
+
+  const { error, data: chats } = await tryCatch(() =>
+    getChatsByWorkspaceId({ workspaceId, limit, offset, sort }),
+  );
+
+  if (error !== null || !chats) {
+    logger.error(`Error listing chats for workspace ${workspaceId}`, error);
+    throw new InternalServerErrorException('Failed to list chats');
+  }
+
+  return {
+    chats: chats.map((chatRecord) => ({
+      id: chatRecord.id,
+      title: chatRecord.title,
+      createdAt: chatRecord.createdAt,
+      updatedAt: chatRecord.updatedAt,
+      agent: {
+        id: chatRecord.agent.id,
+        name: chatRecord.agent.name,
+        aiModel: {
+          id: chatRecord.agent.aiModel.id,
+          provider: chatRecord.agent.aiModel.provider,
+          displayName: chatRecord.agent.aiModel.displayName,
+        },
+      },
+    })),
+    totalCount,
+  };
+}
+
+export interface ChatMessageResponse {
+  id: string;
+  role: string;
+  parts: unknown[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface ChatDetailResponse {
+  id: string;
+  agentId: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  messages: ChatMessageResponse[] | null;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/chat/:chatId
+ */
+export async function getChatForWorkspace({
+  workspaceId,
+  chatId,
+}: {
+  workspaceId: string;
+  chatId: string;
+}): Promise<ChatDetailResponse> {
+  const { error, data: chatRecord } = await tryCatch(() =>
+    getChatByIdForWorkspace({ chatId, workspaceId }),
+  );
+
+  if (error !== null) {
+    logger.error(`Error fetching chat ${chatId}`, error);
+    throw new InternalServerErrorException('Failed to fetch chat');
+  }
+
+  if (!chatRecord) {
+    throw new NotFoundException('Chat not found');
+  }
+
+  // Return stored messages strictly UIMessage-shaped ({ id, role, parts,
+  // metadata? }) so the client can feed them into useChat as-is.
+  const messages = chatRecord.messages.map((message) => ({
+    id: message.id,
+    role: message.role,
+    parts: message.parts,
+    metadata: message.metadata ?? undefined,
+  }));
+
+  return {
+    id: chatRecord.id,
+    agentId: chatRecord.agentId,
+    title: chatRecord.title,
+    createdAt: chatRecord.createdAt,
+    updatedAt: chatRecord.updatedAt,
+    messages: messages.length ? messages : null,
+  };
+}
+
+async function resolveDefaultAgentId({
+  workspaceId,
+  userId,
+}: {
+  workspaceId: string;
+  userId: string;
+}): Promise<string> {
+  const { error, data: agent } = await tryCatch(() =>
+    getOrCreateDefaultAgentForUser({ userId, workspaceId }),
+  );
+
+  if (error !== null || !agent) {
+    logger.error(`Error fetching default agent for user ${userId}`, error);
+    throw new InternalServerErrorException('Failed to fetch default agent');
+  }
+
+  return agent.id;
+}
+
+/**
+ * [POST] /workspace/:workspaceId/chat
+ * Creates a chat, defaulting to the workspace's default agent when no
+ * agentId is given.
+ */
+export async function createChatForWorkspace({
+  workspaceId,
+  userId,
+  agentId,
+}: {
+  workspaceId: string;
+  userId: string;
+  agentId?: string;
+}): Promise<Chat> {
+  const resolvedAgentId = agentId ?? (await resolveDefaultAgentId({ workspaceId, userId }));
+
+  const { error, data: chatRecord } = await tryCatch(() =>
+    createChat({ userId, agentId: resolvedAgentId, title: 'New Chat', workspaceId }),
+  );
+
+  if (error !== null || !chatRecord) {
+    logger.error(`Error creating chat for user ${userId}`, error);
+    throw new InternalServerErrorException('Failed to create chat');
+  }
+
+  return chatRecord;
+}
+
+/**
+ * [PATCH] /workspace/:workspaceId/chat/:chatId
+ */
+export async function renameChatForWorkspace({
+  workspaceId,
+  chatId,
+  title,
+}: {
+  workspaceId: string;
+  chatId: string;
+  title: string;
+}): Promise<Chat> {
+  const { error, data: chatRecord } = await tryCatch(() =>
+    updateChatTitleByWorkspaceId({ chatId, workspaceId, title }),
+  );
+
+  if (error !== null) {
+    logger.error(`Error renaming chat ${chatId}`, error);
+    throw new InternalServerErrorException('Failed to rename chat');
+  }
+
+  if (!chatRecord) {
+    throw new NotFoundException('Chat not found');
+  }
+
+  return chatRecord;
+}
+
+/**
+ * [DELETE] /workspace/:workspaceId/chat/:chatId
+ */
+export async function deleteChatForWorkspace({
+  workspaceId,
+  chatId,
+}: {
+  workspaceId: string;
+  chatId: string;
+}): Promise<void> {
+  const { error } = await tryCatch(() => deleteChatByWorkspaceId({ chatId, workspaceId }));
+
+  if (error !== null) {
+    logger.error(`Error deleting chat ${chatId}`, error);
+    throw new InternalServerErrorException('Failed to delete chat');
+  }
+}
 
 const chatTitleGeneratorPrompt = `As a chat title generator your task is to create a short chat title based on the provided text.\n
   You always only respond with the chat title in plain text in the users language.\n

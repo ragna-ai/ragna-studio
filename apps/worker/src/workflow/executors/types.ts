@@ -5,7 +5,7 @@ import type { WorkflowAgentTraceStep, WorkflowNode } from '@repo/workflow';
 export type ExecutorContext = {
   input: string;
   userId: string;
-  workspaceId: string | null;
+  workspaceId: string;
 };
 
 // `trace` is only ever set by executors that run a referenced agent's tool

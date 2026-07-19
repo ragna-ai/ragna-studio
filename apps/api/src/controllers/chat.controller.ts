@@ -1,222 +1,100 @@
-import {
-  createChat,
-  deleteChatById,
-  getAllChatsByUserId,
-  getChatByIdForUser,
-  getChatCountByUserId,
-  getOrCreateDefaultAgentForUser,
-  updateChatTitleById,
-} from '@repo/database';
-import { logger } from '@repo/logger';
-import { tryCatch } from '@repo/utils';
 import { Hono } from 'hono';
-import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   validChatIdParam,
   validCreateChatBody,
+  validPaginationQuery,
   validUpdateChatTitleBody,
-  validWorkspaceScopedListQuery,
-} from '../middlewares/validationMiddlewares';
+} from '../validation';
+import {
+  createChatForWorkspace,
+  deleteChatForWorkspace,
+  getChatForWorkspace,
+  listChatsForWorkspace,
+  renameChatForWorkspace,
+} from '../services/chat.service';
 
 export const chatController = new Hono()
-  .basePath('/chat')
+  .basePath('/workspace/:workspaceId/chat')
   .use(authMiddleware)
+  .use(workspaceGuard)
   /**
-   * [GET] /chat
-   * Get all chats for the authenticated user
+   * [GET] /workspace/:workspaceId/chat
+   * List a workspace's chats, paginated and sorted by createdAt.
    */
-  .get('/', validWorkspaceScopedListQuery, async (c) => {
-    const user = c.get('user');
+  .get('/', validPaginationQuery, async (c) => {
+    const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
-    const page = query.page ? Number(query.page) : 1;
-    const limit = query.limit ? Number(query.limit) : 10;
-    const sort = query.sort || 'desc';
-    const unassigned = query.unassigned === 'true';
-
-    // Calculate offset for pagination ((page number - 1) * page size)
-    const offset = page && limit ? (page - 1) * limit : undefined;
-
-    // Get all chat count and fail gracefully
-    const { data: chatsCount } = await tryCatch(() =>
-      getChatCountByUserId({ userId: user.id, workspaceId: query.workspaceId, unassigned }),
-    );
-
-    // Get chat history for user
-    const { error, data: userChats } = await tryCatch(() =>
-      getAllChatsByUserId({
-        userId: user.id,
-        workspaceId: query.workspaceId,
-        unassigned,
-        limit,
-        offset,
-        sort,
-      }),
-    );
-
-    if (error !== null) {
-      logger.error(`Error fetching chat history for user ${user.id}`, error);
-      throw new InternalServerErrorException('Failed to fetch chat history');
-    }
-
-    if (!userChats) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    const userChatsHistoryDto = userChats.map((chat) => {
-      return {
-        id: chat.id,
-        title: chat.title,
-        createdAt: chat.createdAt,
-        updatedAt: chat.updatedAt,
-        agent: {
-          id: chat.agent.id,
-          name: chat.agent.name,
-          aiModel: {
-            id: chat.agent.aiModel.id,
-            provider: chat.agent.aiModel.provider,
-            displayName: chat.agent.aiModel.displayName,
-          },
-        },
-      };
+    const { chats, totalCount } = await listChatsForWorkspace({
+      workspaceId: workspace.id,
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      sort: query.sort ?? 'desc',
     });
 
-    const meta = {
-      totalCount: chatsCount || 0,
-    };
-
-    return c.json({ chats: userChatsHistoryDto, meta });
+    return c.json({ chats, meta: { totalCount } });
   })
   /**
-   * [POST] /chat
-   * Create a new chat for the authenticated user
+   * [POST] /workspace/:workspaceId/chat
+   * Create a new chat. Defaults to the workspace's default agent.
    */
   .post('/', validCreateChatBody, async (c) => {
     const user = c.get('user');
+    const workspace = c.get('workspace');
     const body = c.req.valid('json');
 
-    let agentId: string;
+    const chat = await createChatForWorkspace({
+      workspaceId: workspace.id,
+      userId: user.id,
+      agentId: body.agentId,
+    });
 
-    if (!body.agentId) {
-      const { error, data: agent } = await tryCatch(() =>
-        getOrCreateDefaultAgentForUser({ userId: user.id, workspaceId: body.workspaceId }),
-      );
-
-      if (error !== null || !agent) {
-        logger.error(`Error fetching default agent for user ${user.id}`, error);
-        throw new InternalServerErrorException('Failed to fetch default agent');
-      }
-
-      agentId = agent.id;
-    } else {
-      agentId = body.agentId;
-    }
-
-    const { error, data: chat } = await tryCatch(() =>
-      createChat({
-        userId: user.id,
-        agentId,
-        title: 'New Chat',
-        workspaceId: body.workspaceId,
-      }),
-    );
-
-    if (error !== null || !chat) {
-      logger.error(`Error creating chat for user ${user.id}`, error);
-      throw new InternalServerErrorException('Failed to create chat');
-    }
-
-    return c.json({ chat });
+    return c.json({ chat }, 201);
   })
   /**
-   * [GET] /chat/:chatId
-   * Get a specific chat by ID for the authenticated user
+   * [GET] /workspace/:workspaceId/chat/:chatId
    */
   .get('/:chatId', validChatIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error, data: userChat } = await tryCatch(() =>
-      getChatByIdForUser({
-        chatId: param.chatId,
-        userId: user.id,
-      }),
-    );
-
-    if (error !== null) {
-      logger.error(`Error fetching chat ${param.chatId} for user ${user.id}`, error);
-      throw new InternalServerErrorException('Failed to fetch chat');
-    }
-
-    if (!userChat) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    // Return stored messages strictly UIMessage-shaped ({ id, role, parts, metadata? })
-    // so the client can feed them into useChat as-is.
-    const messagesDto = userChat.messages.map((message) => ({
-      id: message.id,
-      role: message.role,
-      parts: message.parts,
-      metadata: message.metadata ?? undefined,
-    }));
-
-    const chatDto = {
-      id: userChat.id,
-      agentId: userChat.agentId,
-      title: userChat.title,
-      createdAt: userChat.createdAt,
-      updatedAt: userChat.updatedAt,
-      messages: messagesDto.length ? messagesDto : null,
-    };
-
-    return c.json({ chat: chatDto });
-  })
-  /**
-   * [PATCH] /chat/:chatId
-   * Rename a specific chat owned by the authenticated user
-   */
-  .patch('/:chatId', validChatIdParam, validUpdateChatTitleBody, async (c) => {
-    const user = c.get('user');
-    const param = c.req.valid('param');
-    const body = c.req.valid('json');
-
-    const { error, data: chat } = await tryCatch(() =>
-      updateChatTitleById({ chatId: param.chatId, userId: user.id, title: body.title }),
-    );
-
-    if (error !== null) {
-      logger.error(`Error renaming chat ${param.chatId} for user ${user.id}`, error);
-      throw new InternalServerErrorException('Failed to rename chat');
-    }
-
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
+    const chat = await getChatForWorkspace({ workspaceId: workspace.id, chatId: param.chatId });
 
     return c.json({ chat });
   })
   /**
-   * [DELETE] /chat/:chatId
-   * Delete a specific chat (and its messages via cascade) for the authenticated user
+   * [PATCH] /workspace/:workspaceId/chat/:chatId
+   * Renames a chat.
+   */
+  .patch('/:chatId', validChatIdParam, validUpdateChatTitleBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const chat = await renameChatForWorkspace({
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+      title: body.title,
+    });
+
+    return c.json({ chat });
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/chat/:chatId
+   * Deletes a chat (and its messages via cascade).
    */
   .delete('/:chatId', validChatIdParam, async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const { error } = await tryCatch(() =>
-      deleteChatById({ chatId: param.chatId, userId: user.id }),
-    );
-
-    if (error !== null) {
-      logger.error(`Error deleting chat ${param.chatId} for user ${user.id}`, error);
-      throw new InternalServerErrorException('Failed to delete chat');
-    }
+    await deleteChatForWorkspace({ workspaceId: workspace.id, chatId: param.chatId });
 
     return c.json({ message: 'Chat deleted successfully' });
   });
-// Chat message streaming ([POST] /chat/:chatId) moved to the WS `chat:<chatId>`
-// channel (see ws.controller.ts + services/chat.service.ts#runChatStream).
-// HTTP request teardown no longer cancels a run for free; see
-// chat.service.ts's in-flight run registry and abortChatRun.
+// Chat message streaming (previously [POST] /chat/:chatId) lives on the WS
+// `chat:<chatId>` channel (see ws.controller.ts + services/chat.service.ts's
+// runChatStream), unchanged by this migration. HTTP request teardown still
+// doesn't cancel a run for free; see chat.service.ts's in-flight run
+// registry and abortChatRun.

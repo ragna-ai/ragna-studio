@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import DocumentEditor from '~/features/document/components/DocumentEditor.vue';
 import { useGetDocument } from '~/features/document/composables/useDocumentApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
@@ -11,21 +12,16 @@ const route = useRoute();
 const documentId = computed(() => route.params.documentId as string);
 
 // Composables
-const workspaceScopeStore = useWorkspaceScopeStore();
-const { t } = useI18n();
-
 // Documents are always workspace-scoped (docs/documents/prd.md): the
 // document itself carries its workspaceId, but the API needs it in the URL
 // before the document has loaded, so this relies on the active workspace
-// scope the same way the /document list page does.
-const workspaceId = computed(() =>
-  workspaceScopeStore.scope.kind === 'workspace'
-    ? workspaceScopeStore.scope.workspaceId
-    : null,
-);
+// the same way the /document list page does. activeWorkspaceId is only
+// briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { t } = useI18n();
 
 const { data: documentData, error: documentError } = useGetDocument(
-  workspaceId,
+  activeWorkspaceId,
   documentId,
 );
 
@@ -43,9 +39,9 @@ useHead({
     :document="documentData.document"
     :workspace-id="documentData.document.workspaceId"
   />
-  <div v-else-if="!workspaceId" class="flex h-full items-center justify-center">
+  <div v-else-if="!activeWorkspaceId" class="flex h-full items-center justify-center">
     <p class="text-sm text-stone-500">
-      {{ t('document.list.selectWorkspace') }}
+      {{ t('document.list.loading') }}
     </p>
   </div>
   <div

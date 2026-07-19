@@ -15,7 +15,7 @@ export async function createDatasetForAgent({
   columns,
 }: {
   userId: string;
-  workspaceId: string | null;
+  workspaceId: string;
   name: string;
   description?: string;
   columns: DatasetColumn[];

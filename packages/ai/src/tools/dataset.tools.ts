@@ -49,13 +49,11 @@ const columnInputSchema = z.object({
     .describe('Allowed values. Required and only meaningful when type is "select".'),
 });
 
-// Workspace hard filter (docs/datasets.md decision 11): when the tool
-// context carries a workspaceId, the whole family only sees/touches that
-// workspace's datasets. A null-workspace context (unassigned chat/workflow)
-// sees all of the user's datasets. userId remains the underlying security
-// boundary either way.
-function isDatasetInScope(datasetRecord: Dataset, workspaceId: string | null): boolean {
-  return workspaceId === null || datasetRecord.workspaceId === workspaceId;
+// Workspace hard filter (docs/datasets.md decision 11): the whole family
+// only sees/touches the tool context's workspace. userId remains the
+// underlying security boundary.
+function isDatasetInScope(datasetRecord: Dataset, workspaceId: string): boolean {
+  return datasetRecord.workspaceId === workspaceId;
 }
 
 type ScopedDatasetResult = { dataset: Dataset } | { error: string };
@@ -67,7 +65,7 @@ async function loadDatasetInScope({
 }: {
   datasetId: string;
   userId: string;
-  workspaceId: string | null;
+  workspaceId: string;
 }): Promise<ScopedDatasetResult> {
   const datasetRecord = await getDatasetById({ datasetId, userId });
 
@@ -132,7 +130,7 @@ type DatasetCreateOutput = { dataset: ReturnType<typeof toDatasetOutput> } | { e
 export const getDatasetCreateTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetCreateInput, DatasetCreateOutput> =>
   tool({
     description:
@@ -180,7 +178,7 @@ type DatasetFindOutput =
 export const getDatasetFindTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetFindInput, DatasetFindOutput> =>
   tool({
     description:
@@ -251,7 +249,7 @@ type DatasetListRowsOutput = { rows: ReturnType<typeof toRowOutput>[] } | { erro
 export const getDatasetListRowsTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetListRowsInput, DatasetListRowsOutput> =>
   tool({
     description:
@@ -312,7 +310,7 @@ type DatasetGetRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: st
 export const getDatasetGetRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetGetRowInput, DatasetGetRowOutput> =>
   tool({
     description:
@@ -360,7 +358,7 @@ type DatasetAppendRowOutput = { row: ReturnType<typeof toRowOutput> } | { error:
 export const getDatasetAppendRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetAppendRowInput, DatasetAppendRowOutput> =>
   tool({
     description:
@@ -405,7 +403,7 @@ type DatasetUpdateRowOutput = { row: ReturnType<typeof toRowOutput> } | { error:
 export const getDatasetUpdateRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
-  workspaceId: string | null,
+  workspaceId: string,
 ): Tool<DatasetUpdateRowInput, DatasetUpdateRowOutput> =>
   tool({
     description:

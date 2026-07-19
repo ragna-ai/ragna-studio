@@ -11,7 +11,9 @@ export const chat = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    workspaceId: text('workspace_id').references(() => workspace.id, { onDelete: 'set null' }),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
     agentId: text('agent_id')
       .notNull()
       .references(() => agent.id, { onDelete: 'cascade' }),

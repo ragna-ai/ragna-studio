@@ -16,9 +16,11 @@ import {
   type UIMessagePart,
   type UITools,
 } from 'ai';
+import { storeToRefs } from 'pinia';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -35,7 +37,10 @@ const props = defineProps<Props>();
 const chatId = ref(props.chatId ?? null);
 
 // Composables
-const { mutateAsync: createNewChat } = useCreateChat();
+// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
+// is only briefly '' on first load, before the workspace list resolves it.
+const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const { mutateAsync: createNewChat } = useCreateChat(activeWorkspaceId);
 
 // Computed
 const initialMessages = props.initialMessages
