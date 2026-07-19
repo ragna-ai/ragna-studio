@@ -17,11 +17,9 @@ import {
   NodeHeader,
   NodeTitle,
 } from '~/components/ai-elements/node';
-import { storeToRefs } from 'pinia';
 import { Badge } from '~/components/ui/badge';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { NODE_TYPE_LABELS, type WorkflowNodeData } from '~/features/workflow/types/node-data';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import { cn, firstToUpperCase } from '~/lib/utils';
 
 // Imports
@@ -32,11 +30,10 @@ type Props = NodeProps<WorkflowNodeData, object, WorkflowNodeType>;
 const props = defineProps<Props>();
 
 // Composables
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 // Every agent node calls this; TanStack vue-query dedupes by query key, so
 // this is one shared fetch (or cache hit) for the whole canvas, not one per
 // node, and no prop plumbing through Vue Flow is needed.
-const { data: agentsData } = useGetAllAgents(activeWorkspaceId);
+const { data: agentsData } = useGetAllAgents();
 
 // Computed
 // The referenced agent, once loaded. Only agent-type nodes with an

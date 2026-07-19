@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import SocialPostUpsertForm from '~/features/social/components/SocialPostUpsertForm.vue';
 import { useGetSocialPost } from '~/features/social/composables/useSocialPostApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 definePageMeta({
   validate: (route) => hasValidSocialPostId(route.params),
@@ -16,11 +14,7 @@ const route = useRoute();
 const postId = computed(() => route.params.postId as string);
 
 // Composables
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { post, isLoading, isError } = useGetSocialPost(
-  activeWorkspaceId,
-  postId,
-);
+const { post, isLoading, isError } = useGetSocialPost(postId);
 const { t } = useI18n();
 
 useHead({
@@ -53,12 +47,7 @@ const breadcrumbItems = computed(() => [
       <template #bottom> </template>
     </Heading>
     <div class="px-5 pb-10">
-      <SocialPostUpsertForm
-        v-if="post"
-        :key="post.id"
-        :post="post"
-        :workspace-id="activeWorkspaceId"
-      />
+      <SocialPostUpsertForm v-if="post" :key="post.id" :post="post" />
       <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
         {{ t('social.loadError') }}
       </p>

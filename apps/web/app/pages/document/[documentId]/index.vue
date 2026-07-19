@@ -20,10 +20,7 @@ const documentId = computed(() => route.params.documentId as string);
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { t } = useI18n();
 
-const { data: documentData, error: documentError } = useGetDocument(
-  activeWorkspaceId,
-  documentId,
-);
+const { data: documentData, error: documentError } = useGetDocument(documentId);
 
 useHead({
   title: computed(
@@ -37,7 +34,6 @@ useHead({
     v-if="documentData?.document"
     :key="documentData.document.id"
     :document="documentData.document"
-    :workspace-id="documentData.document.workspaceId"
   />
   <div v-else-if="!activeWorkspaceId" class="flex h-full items-center justify-center">
     <p class="text-sm text-stone-500">

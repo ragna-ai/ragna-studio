@@ -24,11 +24,10 @@ const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
-const { data: documentsData, error: documentsError } =
-  useGetDocuments(activeWorkspaceId);
-const { data: foldersData } = useGetFolders(activeWorkspaceId);
-const { mutateAsync: deleteDocument } = useDeleteDocument(activeWorkspaceId);
-const { mutate: updateDocument } = useUpdateDocument(activeWorkspaceId);
+const { data: documentsData, error: documentsError } = useGetDocuments();
+const { data: foldersData } = useGetFolders();
+const { mutateAsync: deleteDocument } = useDeleteDocument();
+const { mutate: updateDocument } = useUpdateDocument();
 
 useHead({
   title: t('document.list.title'),
@@ -118,16 +117,8 @@ function handleMoveDocument(payload: {
     </div>
 
     <template v-if="activeWorkspaceId">
-      <DocumentCreateDialog
-        v-model:open="isCreateDialogOpen"
-        :workspace-id="activeWorkspaceId"
-        :folders="folders"
-      />
-      <FolderManageDialog
-        v-model:open="isFolderManageOpen"
-        :workspace-id="activeWorkspaceId"
-        :folders="folders"
-      />
+      <DocumentCreateDialog v-model:open="isCreateDialogOpen" :folders="folders" />
+      <FolderManageDialog v-model:open="isFolderManageOpen" :folders="folders" />
     </template>
   </SectionWrapper>
 </template>

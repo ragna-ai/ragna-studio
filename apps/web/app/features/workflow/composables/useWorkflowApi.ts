@@ -77,11 +77,11 @@ export function extractErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function useGetWorkflow(
-  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowResponse>({
     queryKey: workflowKeys.detail(workspaceId, workflowId),
     queryFn: ({ signal }) =>
@@ -94,8 +94,9 @@ export function useGetWorkflow(
   });
 }
 
-export function useCreateWorkflow(workspaceId: WorkspaceId) {
+export function useCreateWorkflow() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, CreateWorkflowRequest>({
     mutationFn: (body) =>
@@ -114,8 +115,9 @@ interface UpdateWorkflowVariables extends UpdateWorkflowRequest {
   workflowId: string;
 }
 
-export function useUpdateWorkflow(workspaceId: WorkspaceId) {
+export function useUpdateWorkflow() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, UpdateWorkflowVariables>({
     mutationFn: ({ workflowId, ...body }) =>
@@ -136,8 +138,9 @@ export function useUpdateWorkflow(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteWorkflow(workspaceId: WorkspaceId) {
+export function useDeleteWorkflow() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (workflowId) =>
@@ -152,8 +155,9 @@ export function useDeleteWorkflow(workspaceId: WorkspaceId) {
   });
 }
 
-export function usePublishWorkflow(workspaceId: WorkspaceId) {
+export function usePublishWorkflow() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, string>({
     mutationFn: (workflowId) =>
@@ -172,11 +176,9 @@ export function usePublishWorkflow(workspaceId: WorkspaceId) {
   });
 }
 
-export function useCreateWorkflowRun(
-  workspaceId: WorkspaceId,
-  workflowId: MaybeRefOrGetter<string>,
-) {
+export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, string | undefined>({
     mutationFn: (input) =>
@@ -196,11 +198,11 @@ export function useCreateWorkflowRun(
 }
 
 export function useCancelWorkflowRun(
-  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
     mutationFn: () =>
@@ -222,11 +224,11 @@ export function useCancelWorkflowRun(
 }
 
 export function useGetWorkflowRuns(
-  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowRunManyResponse>({
     queryKey: workflowKeys.runs(workspaceId, workflowId),
     queryFn: ({ signal }) =>
@@ -240,12 +242,12 @@ export function useGetWorkflowRuns(
 }
 
 export function useGetWorkflowRun(
-  workspaceId: WorkspaceId,
   workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowRunResponse>({
     queryKey: workflowKeys.run(workspaceId, workflowId, runId),
     queryFn: ({ signal }) =>

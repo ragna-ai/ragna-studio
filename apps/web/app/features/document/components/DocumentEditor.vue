@@ -6,7 +6,7 @@ import { useDocumentEditor } from '~/features/document/composables/useDocumentEd
 import type { Document } from '~/features/document/types';
 
 // Props
-const props = defineProps<{ document: Document; workspaceId: string }>();
+const props = defineProps<{ document: Document }>();
 
 // Refs
 const title = ref(props.document.title);
@@ -15,7 +15,7 @@ const isDirty = ref(false);
 
 // Composables
 const { t } = useI18n();
-const { mutate: saveDocument } = useUpdateDocument(() => props.workspaceId);
+const { mutate: saveDocument } = useUpdateDocument();
 
 const controller = useDocumentEditor({
   content: props.document.content,

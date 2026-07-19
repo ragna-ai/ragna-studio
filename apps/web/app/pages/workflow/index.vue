@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import WorkflowManyTable from '~/features/workflow/components/WorkflowManyTable.vue';
 import { useDeleteWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 import useWorkflowList from '~/features/workflow/composables/useWorkflowList';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Props
 // Emits
@@ -11,10 +9,9 @@ import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacesco
 // Refs
 
 // Composables
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { page, limit, useGetAllWorkflows } = useWorkflowList();
 const { data, error: workflowsError } = useGetAllWorkflows();
-const { mutateAsync: deleteWorkflow } = useDeleteWorkflow(activeWorkspaceId);
+const { mutateAsync: deleteWorkflow } = useDeleteWorkflow();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

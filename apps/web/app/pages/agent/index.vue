@@ -2,7 +2,6 @@
 import AgentManyTable from '~/features/agent/components/AgentManyTable.vue';
 import { useDeleteAgent } from '~/features/agent/composables/useAgentApi';
 import useAgentList from '~/features/agent/composables/useAgentList';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Props
 // Emits
@@ -10,11 +9,9 @@ import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacesco
 // Refs
 
 // Composables
-// A workspace is always active (docs/api-standards/prd.md).
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { page, limit, useGetAllAgents } = useAgentList();
 const { data, error: agentsError } = useGetAllAgents();
-const { mutateAsync: deleteAgent } = useDeleteAgent(activeWorkspaceId);
+const { mutateAsync: deleteAgent } = useDeleteAgent();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

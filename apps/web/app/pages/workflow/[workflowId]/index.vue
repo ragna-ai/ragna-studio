@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import WorkflowEditor from '~/features/workflow/components/WorkflowEditor.vue';
 import { useGetWorkflow } from '~/features/workflow/composables/useWorkflowApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 definePageMeta({
   validate: (route) => hasValidWorkflowId(route.params),
@@ -12,11 +10,7 @@ const route = useRoute();
 const workflowId = computed(() => route.params.workflowId as string);
 
 // Composables
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { data, error: workflowError } = useGetWorkflow(
-  activeWorkspaceId,
-  workflowId,
-);
+const { data, error: workflowError } = useGetWorkflow(workflowId);
 const { t } = useI18n();
 
 useHead({
@@ -28,7 +22,6 @@ useHead({
   <WorkflowEditor
     v-if="data?.workflow"
     :key="data.workflow.id"
-    :workspace-id="activeWorkspaceId"
     :workflow="data.workflow"
   />
   <div

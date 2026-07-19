@@ -66,14 +66,10 @@ const { t } = useI18n();
 // composable in this app (see useGetWorkflow/useGetDataset). The dataset
 // already carries its own workspaceId, so there's no need for a separate prop.
 const datasetId = computed(() => props.dataset.id);
-const workspaceId = computed(() => props.dataset.workspaceId);
-const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateDataset(workspaceId);
-const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(
-  workspaceId,
-  datasetId,
-);
-const { mutateAsync: updateRow } = useUpdateDatasetRow(workspaceId, datasetId);
-const { mutateAsync: deleteRow } = useDeleteDatasetRow(workspaceId, datasetId);
+const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateDataset();
+const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(datasetId);
+const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
+const { mutateAsync: deleteRow } = useDeleteDatasetRow(datasetId);
 const { confirm } = useConfirmDialog();
 
 // Functions

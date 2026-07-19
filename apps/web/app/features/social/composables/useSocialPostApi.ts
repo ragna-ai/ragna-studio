@@ -100,11 +100,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
  * `socialPostKeys`), so mutations that invalidate `socialPostKeys.all`
  * refresh both together.
  */
-export function useGetSocialPost(
-  workspaceId: WorkspaceId,
-  postId: MaybeRefOrGetter<string>,
-) {
+export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const { data, isLoading, isError } = useQuery<SocialPostResponse>({
     queryKey: socialPostKeys.detail(workspaceId, postId),
     queryFn: ({ signal }) =>
@@ -120,8 +118,9 @@ export function useGetSocialPost(
   return { post, isLoading, isError };
 }
 
-export function useCreateSocialPost(workspaceId: WorkspaceId) {
+export function useCreateSocialPost() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -139,8 +138,9 @@ export function useCreateSocialPost(workspaceId: WorkspaceId) {
   });
 }
 
-export function useUpdateSocialPost(workspaceId: WorkspaceId) {
+export function useUpdateSocialPost() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -163,8 +163,9 @@ export function useUpdateSocialPost(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteSocialPost(workspaceId: WorkspaceId) {
+export function useDeleteSocialPost() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -180,8 +181,9 @@ export function useDeleteSocialPost(workspaceId: WorkspaceId) {
   });
 }
 
-export function usePublishSocialPost(workspaceId: WorkspaceId) {
+export function usePublishSocialPost() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -211,8 +213,9 @@ export interface UploadSocialPostMediaVariables {
   file: File;
 }
 
-export function useUploadSocialPostMedia(workspaceId: WorkspaceId) {
+export function useUploadSocialPostMedia() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -256,8 +259,9 @@ export function usePendingSocialPostMediaUploads(postId: string) {
   );
 }
 
-export function useUpdateSocialPostMediaAltText(workspaceId: WorkspaceId) {
+export function useUpdateSocialPostMediaAltText() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -279,8 +283,9 @@ export function useUpdateSocialPostMediaAltText(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteSocialPostMedia(workspaceId: WorkspaceId) {
+export function useDeleteSocialPostMedia() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 

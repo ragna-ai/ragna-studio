@@ -1,16 +1,12 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
-import { storeToRefs } from 'pinia';
 import { datasetKeys } from '~/features/dataset/composables/useDatasetApi';
 import type { DatasetManyResponse } from '~/features/dataset/types';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useDatasetList() {
   const api = useApi();
-  // A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
-  // is only briefly '' on first load, before the workspace list resolves it.
-  const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+  const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.

@@ -16,14 +16,13 @@ const createDocumentSchema = z.object({
 });
 
 // Props
-const props = defineProps<{ workspaceId: string; folders: Folder[] }>();
+const props = defineProps<{ folders: Folder[] }>();
 
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 
 // Composables
-const workspaceId = computed(() => props.workspaceId);
-const { mutateAsync: createDocument, isPending } = useCreateDocument(workspaceId);
+const { mutateAsync: createDocument, isPending } = useCreateDocument();
 const { t } = useI18n();
 
 const form = useForm({

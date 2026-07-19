@@ -15,7 +15,6 @@ import AgentToolList from '~/features/agent/components/AgentToolList.vue';
 import { useCreateAgent, useUpdateAgent } from '~/features/agent/composables/useAgentApi';
 import type { AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type UpsertAgentProps = {
   // Present only when editing: an existing agent's id. Absent means create.
@@ -63,11 +62,8 @@ const props = defineProps<UpsertAgentProps>();
 const currentTab = ref('persona');
 
 // Composables
-// A workspace is always active (docs/api-standards/prd.md): an agent is
-// always created in, and can only be edited from, the active workspace.
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { isPending: isCreating, mutate: createAgent } = useCreateAgent(activeWorkspaceId);
-const { isPending: isUpdating, mutate: updateAgent } = useUpdateAgent(activeWorkspaceId);
+const { isPending: isCreating, mutate: createAgent } = useCreateAgent();
+const { isPending: isUpdating, mutate: updateAgent } = useUpdateAgent();
 const isPending = computed(() => isCreating.value || isUpdating.value);
 
 const form = useForm({
@@ -265,7 +261,6 @@ const siderBarTabs = [
                   <AgentToolList
                     :model-value="state.value"
                     :invalid="state.meta.errors.length > 0"
-                    :workspace-id="activeWorkspaceId"
                     :default-dataset-id="datasetState.value"
                     @update:model-value="field.handleChange"
                     @update:default-dataset-id="datasetField.handleChange"
@@ -285,11 +280,7 @@ const siderBarTabs = [
             Upload files whose content this agent should always have access to.
             Extracted text joins the context text below.
           </p>
-          <AgentContextDocumentPanel
-            v-if="props.id"
-            :workspace-id="activeWorkspaceId"
-            :agent-id="props.id"
-          />
+          <AgentContextDocumentPanel v-if="props.id" :agent-id="props.id" />
           <div
             v-else
             class="rounded-lg border p-4 text-sm text-muted-foreground"
@@ -325,11 +316,7 @@ const siderBarTabs = [
       </template>
       <!-- TAB 6: Memory -->
       <template #memory>
-        <AgentMemoryPanel
-          v-if="props.id"
-          :workspace-id="activeWorkspaceId"
-          :agent-id="props.id"
-        />
+        <AgentMemoryPanel v-if="props.id" :agent-id="props.id" />
         <div v-else class="rounded-lg border p-4 text-sm text-muted-foreground">
           Save the agent first to view and edit its memory.
         </div>

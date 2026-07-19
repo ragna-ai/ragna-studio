@@ -19,7 +19,6 @@ const ACTIVE_STATUSES = new Set(['pending', 'running']);
 const POLL_INTERVAL_MS = 1500;
 
 interface Props {
-  workspaceId: string;
   workflowId: string;
   runId: string;
 }
@@ -32,7 +31,6 @@ const selectedNodeId = ref<string | null>(null);
 
 // Composables
 const { data, error: runError } = useGetWorkflowRun(
-  () => props.workspaceId,
   () => props.workflowId,
   () => props.runId,
   {
@@ -43,15 +41,11 @@ const { data, error: runError } = useGetWorkflowRun(
   },
 );
 const { mutate: cancelRun, isPending: isCancelling } = useCancelWorkflowRun(
-  () => props.workspaceId,
   () => props.workflowId,
   () => props.runId,
 );
 // For the breadcrumb's workflow-name crumb.
-const { data: workflowData } = useGetWorkflow(
-  () => props.workspaceId,
-  () => props.workflowId,
-);
+const { data: workflowData } = useGetWorkflow(() => props.workflowId);
 const { t } = useI18n();
 const { formatDateTime } = useDateTimeFormat();
 

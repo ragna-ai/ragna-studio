@@ -7,7 +7,6 @@ import WorkflowRunTriggerBadge from '~/features/workflow/components/WorkflowRunT
 
 // Props
 const props = defineProps<{
-  workspaceId: string;
   workflowId: string;
 }>();
 
@@ -16,7 +15,6 @@ const open = defineModel<boolean>('open', { default: false });
 
 // Composables
 const { data, isLoading } = useGetWorkflowRuns(
-  () => props.workspaceId,
   () => props.workflowId,
   { enabled: () => open.value },
 );

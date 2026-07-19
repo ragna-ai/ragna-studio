@@ -6,10 +6,10 @@ import {
 } from '~/features/chat/composables/useChatApi';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
-export default function useChatList(workspaceId: WorkspaceId) {
+export default function useChatList() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each

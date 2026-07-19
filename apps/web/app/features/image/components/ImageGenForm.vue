@@ -22,7 +22,6 @@ import {
   useGenerateImages,
 } from '~/features/image/composables/useImageGenApi';
 import { useImageGenSettingsStore } from '~/features/image/stores/imagegensettings.store';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 interface ImageModel {
   id: string;
@@ -34,8 +33,7 @@ interface ImageModel {
 
 // Composables
 const { data: aiModelData } = useGetAllAiModels();
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { mutate: generateImages, isPending } = useGenerateImages(activeWorkspaceId);
+const { mutate: generateImages, isPending } = useGenerateImages();
 const { modelId, aspectRatio, resolution, count } = storeToRefs(
   useImageGenSettingsStore(),
 );

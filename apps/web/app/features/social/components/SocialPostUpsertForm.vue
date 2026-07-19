@@ -21,18 +21,13 @@ const socialPostUpsertSchema = z.object({
 // Props
 const props = defineProps<{
   post: SocialPost;
-  workspaceId: string;
 }>();
 
 // Composables
 const { t } = useI18n();
 const { accounts, isLoading: isLoadingAccounts } = useUserSocialAccounts();
-const { mutate: updatePost, isPending: isUpdating } = useUpdateSocialPost(
-  () => props.workspaceId,
-);
-const { mutate: publishPost, isPending: isPublishing } = usePublishSocialPost(
-  () => props.workspaceId,
-);
+const { mutate: updatePost, isPending: isUpdating } = useUpdateSocialPost();
+const { mutate: publishPost, isPending: isPublishing } = usePublishSocialPost();
 const { formatDateTime } = useDateTimeFormat();
 
 const form = useForm({
@@ -108,7 +103,6 @@ function handlePublish() {
 
     <SocialPostMediaList
       :post-id="post.id"
-      :workspace-id="workspaceId"
       :media="post.media"
       :editable="canEdit"
     />

@@ -13,7 +13,6 @@ import type { Workflow } from '~/features/workflow/types';
 
 // Props
 const props = defineProps<{
-  workspaceId: string;
   workflow: Workflow;
   draftDefinition: WorkflowDefinition;
 }>();
@@ -23,14 +22,9 @@ const open = defineModel<boolean>('open', { default: false });
 const input = ref('');
 
 // Composables
-const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow(
-  () => props.workspaceId,
-);
-const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow(
-  () => props.workspaceId,
-);
+const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
+const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
 const { mutateAsync: createRun, isPending: isCreatingRun } = useCreateWorkflowRun(
-  () => props.workspaceId,
   () => props.workflow.id,
 );
 

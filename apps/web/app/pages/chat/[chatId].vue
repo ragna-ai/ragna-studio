@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 definePageMeta({
   validate: (route) => hasValidChatId(route.params),
@@ -14,10 +12,7 @@ const route = useRoute();
 const chatId = computed(() => route.params.chatId as string);
 
 // Composables
-// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
-// is only briefly '' on first load, before the workspace list resolves it.
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { data, isLoading, error: chatError } = useGetChat(activeWorkspaceId, chatId);
+const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
 
 useHead({

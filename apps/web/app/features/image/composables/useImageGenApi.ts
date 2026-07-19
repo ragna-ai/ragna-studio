@@ -65,12 +65,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
-export function useGetGenImages(
-  workspaceId: WorkspaceId,
-  params: GenImageListParams = {},
-  options: QueryOpts = {},
-) {
+export function useGetGenImages(params: GenImageListParams = {}, options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<GenImagesResponse>({
     queryKey: genImageKeys.list(workspaceId, params),
     queryFn: ({ signal }) =>
@@ -84,8 +81,9 @@ export function useGetGenImages(
   });
 }
 
-export function useGenerateImages(workspaceId: WorkspaceId) {
+export function useGenerateImages() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<GenerateImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),

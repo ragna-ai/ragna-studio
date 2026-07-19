@@ -46,12 +46,9 @@ function agentBasePath(workspaceId: WorkspaceId): string {
   return `/workspace/${toValue(workspaceId)}/agent`;
 }
 
-export function useGetAgent(
-  workspaceId: WorkspaceId,
-  agentId: MaybeRefOrGetter<string>,
-  options: QueryOpts = {},
-) {
+export function useGetAgent(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentResponse>({
     queryKey: agentKeys.detail(workspaceId, agentId),
     queryFn: ({ signal }) =>
@@ -62,8 +59,9 @@ export function useGetAgent(
 }
 
 /** Unpaginated agent list for pickers (e.g. the workflow agent-node config). */
-export function useGetAllAgents(workspaceId: WorkspaceId, options: QueryOpts = {}) {
+export function useGetAllAgents(options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentManyResponse>({
     queryKey: [...agentKeys.all(workspaceId), 'picker'],
     queryFn: ({ signal }) =>
@@ -77,8 +75,9 @@ export function useGetAllAgents(workspaceId: WorkspaceId, options: QueryOpts = {
   });
 }
 
-export function useCreateAgent(workspaceId: WorkspaceId) {
+export function useCreateAgent() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, CreateAgentRequest>({
     mutationFn: (body) => api(agentBasePath(workspaceId), { method: 'POST', body }),
@@ -96,8 +95,9 @@ interface UpdateAgentVariables extends UpdateAgentRequest {
   agentId: string;
 }
 
-export function useUpdateAgent(workspaceId: WorkspaceId) {
+export function useUpdateAgent() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, UpdateAgentVariables>({
     mutationFn: ({ agentId, ...body }) =>
@@ -113,12 +113,9 @@ export function useUpdateAgent(workspaceId: WorkspaceId) {
   });
 }
 
-export function useGetAgentMemory(
-  workspaceId: WorkspaceId,
-  agentId: MaybeRefOrGetter<string>,
-  options: QueryOpts = {},
-) {
+export function useGetAgentMemory(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentMemoryResponse>({
     queryKey: agentKeys.memory(workspaceId, agentId),
     queryFn: ({ signal }) =>
@@ -130,8 +127,9 @@ export function useGetAgentMemory(
 
 type UpdateAgentMemoryVariables = { agentId: string; content: string };
 
-export function useUpdateAgentMemory(workspaceId: WorkspaceId) {
+export function useUpdateAgentMemory() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
     mutationFn: ({ agentId, content }) =>
@@ -146,8 +144,9 @@ export function useUpdateAgentMemory(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteAgent(workspaceId: WorkspaceId) {
+export function useDeleteAgent() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (agentId) =>
@@ -180,11 +179,9 @@ function contextDocumentBasePath(
   return `${agentBasePath(workspaceId)}/${toValue(agentId)}/context-document`;
 }
 
-export function useGetAgentContextDocuments(
-  workspaceId: WorkspaceId,
-  agentId: MaybeRefOrGetter<string>,
-) {
+export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentContextDocumentManyResponse>({
     queryKey: agentKeys.documents(workspaceId, agentId),
     queryFn: ({ signal }) =>
@@ -204,8 +201,9 @@ export interface UploadAgentContextDocumentsVariables {
   files: File[];
 }
 
-export function useUploadAgentContextDocuments(workspaceId: WorkspaceId) {
+export function useUploadAgentContextDocuments() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentManyResponse, unknown, UploadAgentContextDocumentsVariables>({
     mutationFn: ({ agentId, files }) => {
@@ -231,8 +229,9 @@ export interface RenameAgentContextDocumentVariables {
   name: string;
 }
 
-export function useRenameAgentContextDocument(workspaceId: WorkspaceId) {
+export function useRenameAgentContextDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, RenameAgentContextDocumentVariables>({
     mutationFn: ({ agentId, documentId, name }) =>
@@ -255,8 +254,9 @@ export interface ReplaceAgentContextDocumentFileVariables {
   file: File;
 }
 
-export function useReplaceAgentContextDocumentFile(workspaceId: WorkspaceId) {
+export function useReplaceAgentContextDocumentFile() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, ReplaceAgentContextDocumentFileVariables>({
     mutationFn: ({ agentId, documentId, file }) => {
@@ -281,8 +281,9 @@ export interface AgentContextDocumentIdVariables {
   documentId: string;
 }
 
-export function useRetryAgentContextDocument(workspaceId: WorkspaceId) {
+export function useRetryAgentContextDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentContextDocumentResponse, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
@@ -298,8 +299,9 @@ export function useRetryAgentContextDocument(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteAgentContextDocument(workspaceId: WorkspaceId) {
+export function useDeleteAgentContextDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>

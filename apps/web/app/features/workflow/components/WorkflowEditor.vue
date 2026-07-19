@@ -26,7 +26,6 @@ import type { Workflow } from '~/features/workflow/types';
 // Imports
 
 interface Props {
-  workspaceId: string;
   workflow: Workflow;
 }
 
@@ -59,12 +58,8 @@ watch(selectedNodeId, (nodeId) => {
 });
 
 // Composables
-const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow(
-  () => props.workspaceId,
-);
-const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow(
-  () => props.workspaceId,
-);
+const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
+const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
 
 // Computed
 const selectedNode = computed(
@@ -193,7 +188,6 @@ async function handlePublish() {
         <div class="flex flex-col gap-3">
           <Separator />
           <WorkflowRecentRuns
-            :workspace-id="workspaceId"
             :workflow-id="workflow.id"
             @show-all-runs="isRunsListOpen = true"
           />
@@ -227,14 +221,9 @@ async function handlePublish() {
 
     <WorkflowRunDialog
       v-model:open="isRunDialogOpen"
-      :workspace-id="workspaceId"
       :workflow="workflow"
       :draft-definition="draftDefinition"
     />
-    <WorkflowRunsList
-      v-model:open="isRunsListOpen"
-      :workspace-id="workspaceId"
-      :workflow-id="workflow.id"
-    />
+    <WorkflowRunsList v-model:open="isRunsListOpen" :workflow-id="workflow.id" />
   </div>
 </template>

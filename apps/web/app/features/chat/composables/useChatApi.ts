@@ -67,12 +67,9 @@ export interface ChatHistoryResponse {
   meta: { totalCount: number };
 }
 
-export function useGetChat(
-  workspaceId: WorkspaceId,
-  chatId: MaybeRefOrGetter<string>,
-  options: QueryOpts = {},
-) {
+export function useGetChat(chatId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<ChatResponse>({
     queryKey: chatKeys.detail(workspaceId, chatId),
     queryFn: ({ signal }) =>
@@ -97,8 +94,9 @@ export function useGetChat(
   });
 }
 
-export function useGetChatHistory(workspaceId: WorkspaceId, options: QueryOpts = {}) {
+export function useGetChatHistory(options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<ChatHistoryResponse>({
     queryKey: chatKeys.history(workspaceId),
     queryFn: ({ signal }) =>
@@ -113,8 +111,9 @@ export function useGetChatHistory(workspaceId: WorkspaceId, options: QueryOpts =
   });
 }
 
-export function useCreateChat(workspaceId: WorkspaceId) {
+export function useCreateChat() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, NewChatBody>({
     mutationFn: (body) =>
@@ -133,8 +132,9 @@ interface UpdateChatTitleVariables {
   title: string;
 }
 
-export function useUpdateChatTitle(workspaceId: WorkspaceId) {
+export function useUpdateChatTitle() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, UpdateChatTitleVariables>({
     mutationFn: ({ chatId, title }) =>
@@ -151,8 +151,9 @@ export function useUpdateChatTitle(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteChat(workspaceId: WorkspaceId) {
+export function useDeleteChat() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (chatId: string) =>

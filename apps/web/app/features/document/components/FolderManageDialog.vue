@@ -14,7 +14,7 @@ const createFolderSchema = z.object({
 });
 
 // Props
-const props = defineProps<{ workspaceId: string; folders: Folder[] }>();
+const props = defineProps<{ folders: Folder[] }>();
 
 // Refs
 const open = defineModel<boolean>('open', { default: false });
@@ -22,10 +22,9 @@ const editingFolderId = ref<string | null>(null);
 const editingName = ref('');
 
 // Composables
-const workspaceId = computed(() => props.workspaceId);
-const { mutateAsync: createFolder, isPending: isCreating } = useCreateFolder(workspaceId);
-const { mutateAsync: renameFolder, isPending: isRenaming } = useRenameFolder(workspaceId);
-const { mutateAsync: deleteFolder } = useDeleteFolder(workspaceId);
+const { mutateAsync: createFolder, isPending: isCreating } = useCreateFolder();
+const { mutateAsync: renameFolder, isPending: isRenaming } = useRenameFolder();
+const { mutateAsync: deleteFolder } = useDeleteFolder();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { Columns3Icon, SettingsIcon } from '@lucide/vue';
-import { storeToRefs } from 'pinia';
 import DatasetDetail from '~/features/dataset/components/DatasetDetail.vue';
 import {
   useGetDataset,
   useGetDatasetRows,
   useUpdateDataset,
 } from '~/features/dataset/composables/useDatasetApi';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 definePageMeta({
   validate: (route) => hasValidDatasetId(route.params),
@@ -27,15 +25,9 @@ const isSettingsOpen = ref(false);
 const name = ref('');
 
 // Composables
-// A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
-// is only briefly '' on first load, before the workspace list resolves it.
-const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { data: datasetData, error: datasetError } = useGetDataset(
-  activeWorkspaceId,
-  datasetId,
-);
-const { data: rowsData } = useGetDatasetRows(activeWorkspaceId, datasetId);
-const { mutate: renameDataset } = useUpdateDataset(activeWorkspaceId);
+const { data: datasetData, error: datasetError } = useGetDataset(datasetId);
+const { data: rowsData } = useGetDatasetRows(datasetId);
+const { mutate: renameDataset } = useUpdateDataset();
 const { t } = useI18n();
 
 useHead({

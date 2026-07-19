@@ -30,8 +30,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
-export function useGetDocuments(workspaceId: WorkspaceId, options: QueryOpts = {}) {
+export function useGetDocuments(options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<DocumentManyResponse>({
     queryKey: documentKeys.list(workspaceId),
     queryFn: ({ signal }) =>
@@ -42,11 +43,11 @@ export function useGetDocuments(workspaceId: WorkspaceId, options: QueryOpts = {
 }
 
 export function useGetDocument(
-  workspaceId: WorkspaceId,
   documentId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<DocumentResponse>({
     queryKey: documentKeys.detail(workspaceId, documentId),
     queryFn: ({ signal }) =>
@@ -59,8 +60,9 @@ export function useGetDocument(
   });
 }
 
-export function useCreateDocument(workspaceId: WorkspaceId) {
+export function useCreateDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, CreateDocumentRequest>({
     mutationFn: (body) =>
@@ -84,8 +86,9 @@ interface UpdateDocumentVariables extends UpdateDocumentRequest {
  * that represent a deliberate action (move to folder, rename from the list)
  * pass their own `onSuccess` to `mutate()` to surface one.
  */
-export function useUpdateDocument(workspaceId: WorkspaceId) {
+export function useUpdateDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, UpdateDocumentVariables>({
     mutationFn: ({ documentId, ...body }) =>
@@ -106,8 +109,9 @@ export function useUpdateDocument(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteDocument(workspaceId: WorkspaceId) {
+export function useDeleteDocument() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (documentId) =>

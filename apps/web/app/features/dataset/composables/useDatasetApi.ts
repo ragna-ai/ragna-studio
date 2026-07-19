@@ -41,11 +41,11 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function useGetDataset(
-  workspaceId: WorkspaceId,
   datasetId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<DatasetResponse>({
     queryKey: datasetKeys.detail(workspaceId, datasetId),
     queryFn: ({ signal }) =>
@@ -63,8 +63,9 @@ export function useGetDataset(
  * (docs/api-standards/prd.md: a resource lives in exactly one workspace, so
  * the picker only ever shows the agent's own workspace).
  */
-export function useGetAllDatasetsForPicker(workspaceId: WorkspaceId) {
+export function useGetAllDatasetsForPicker() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<DatasetManyResponse>({
     queryKey: datasetKeys.picker(workspaceId),
     queryFn: ({ signal }) =>
@@ -77,8 +78,9 @@ export function useGetAllDatasetsForPicker(workspaceId: WorkspaceId) {
   });
 }
 
-export function useCreateDataset(workspaceId: WorkspaceId) {
+export function useCreateDataset() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetResponse, unknown, CreateDatasetRequest>({
     mutationFn: (body) =>
@@ -93,8 +95,9 @@ export function useCreateDataset(workspaceId: WorkspaceId) {
   });
 }
 
-export function useUpdateDataset(workspaceId: WorkspaceId) {
+export function useUpdateDataset() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetResponse, unknown, UpdateDatasetRequest>({
     mutationFn: ({ datasetId, ...body }) =>
@@ -113,8 +116,9 @@ export function useUpdateDataset(workspaceId: WorkspaceId) {
   });
 }
 
-export function useDeleteDataset(workspaceId: WorkspaceId) {
+export function useDeleteDataset() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (datasetId) =>
@@ -130,11 +134,11 @@ export function useDeleteDataset(workspaceId: WorkspaceId) {
 }
 
 export function useGetDatasetRows(
-  workspaceId: WorkspaceId,
   datasetId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<DatasetRowManyResponse>({
     queryKey: datasetKeys.rows(workspaceId, datasetId),
     queryFn: ({ signal }) =>
@@ -147,11 +151,9 @@ export function useGetDatasetRows(
   });
 }
 
-export function useCreateDatasetRow(
-  workspaceId: WorkspaceId,
-  datasetId: MaybeRefOrGetter<string>,
-) {
+export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, DatasetRowData>({
     mutationFn: (data) =>
@@ -173,11 +175,9 @@ interface UpdateDatasetRowVariables {
   data: DatasetRowData;
 }
 
-export function useUpdateDatasetRow(
-  workspaceId: WorkspaceId,
-  datasetId: MaybeRefOrGetter<string>,
-) {
+export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, UpdateDatasetRowVariables>({
     mutationFn: ({ rowId, data }) =>
@@ -194,11 +194,9 @@ export function useUpdateDatasetRow(
   });
 }
 
-export function useDeleteDatasetRow(
-  workspaceId: WorkspaceId,
-  datasetId: MaybeRefOrGetter<string>,
-) {
+export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (rowId) =>

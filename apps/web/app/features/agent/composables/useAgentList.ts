@@ -2,13 +2,12 @@ import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
 import { agentKeys } from '~/features/agent/composables/useAgentApi';
 import type { AgentManyResponse } from '~/features/agent/types';
-import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useAgentList() {
   const api = useApi();
-  const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+  const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination/search is
   // owned once instead of per-caller (the old clustered composable gave each

@@ -24,8 +24,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
 }
 
-export function useGetFolders(workspaceId: WorkspaceId, options: QueryOpts = {}) {
+export function useGetFolders(options: QueryOpts = {}) {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   return useQuery<FolderManyResponse>({
     queryKey: folderKeys.list(workspaceId),
     queryFn: ({ signal }) =>
@@ -35,8 +36,9 @@ export function useGetFolders(workspaceId: WorkspaceId, options: QueryOpts = {})
   });
 }
 
-export function useCreateFolder(workspaceId: WorkspaceId) {
+export function useCreateFolder() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, { name: string }>({
     mutationFn: (body) =>
@@ -56,8 +58,9 @@ interface RenameFolderVariables {
   name: string;
 }
 
-export function useRenameFolder(workspaceId: WorkspaceId) {
+export function useRenameFolder() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, RenameFolderVariables>({
     mutationFn: ({ folderId, name }) =>
@@ -77,8 +80,9 @@ export function useRenameFolder(workspaceId: WorkspaceId) {
 }
 
 /** Deleting a folder moves its documents to root; it never deletes them. */
-export function useDeleteFolder(workspaceId: WorkspaceId) {
+export function useDeleteFolder() {
   const api = useApi();
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (folderId) =>

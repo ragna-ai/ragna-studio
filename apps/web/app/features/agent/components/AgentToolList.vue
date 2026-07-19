@@ -16,11 +16,6 @@ import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDa
 type AgentToolListProps = {
   modelValue: string[];
   invalid?: boolean;
-  // The active workspace, used to scope the "Default dataset" picker the
-  // same way the datasets tool's workspace filter works at runtime
-  // (docs/datasets.md decision 10/11). An agent always lives in exactly one
-  // workspace (docs/api-standards/prd.md), so this is never null.
-  workspaceId: string;
   defaultDatasetId?: string | null;
 };
 
@@ -49,11 +44,7 @@ const emit = defineEmits<AgentToolListEmit>();
 // Refs
 
 // Composables
-// A stable computed ref, not a plain getter: vue-query unwraps refs inside
-// query keys reactively, but a freshly created arrow function would compare
-// unequal on every render and defeat caching.
-const pickerWorkspaceId = computed(() => props.workspaceId);
-const { data: datasetsData } = useGetAllDatasetsForPicker(pickerWorkspaceId);
+const { data: datasetsData } = useGetAllDatasetsForPicker();
 
 // Computed
 const pickerDatasets = computed(() => datasetsData.value?.datasets ?? []);
