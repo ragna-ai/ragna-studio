@@ -14,7 +14,7 @@ const props = defineProps<Props>();
 
 <template>
   <Collapsible
-    :class="cn('group not-prose mb-4 w-full', props.class)"
+    :class="cn('group not-prose w-full', props.class)"
     v-bind="$attrs"
   >
     <slot />

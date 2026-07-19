@@ -54,7 +54,7 @@
         "description": "Speichert LinkedIn-Beiträge. Du veröffentlichst sie selbst."
       },
       "memory": {
-        "label": "Gedächtnis",
+        "label": "Gedächtnis Notizen",
         "description": "Merkt sich Notizen über dich und deine Arbeit für zukünftige Unterhaltungen."
       },
       "datasets": {
@@ -67,6 +67,18 @@
       "documents": {
         "label": "Dokumente",
         "description": "Listet, liest, erstellt und bearbeitet Dokumente im Workspace."
+      },
+      "listDocuments": {
+        "label": "Dokumente auflisten"
+      },
+      "readDocument": {
+        "label": "Dokument lesen"
+      },
+      "editDocument": {
+        "label": "Dokument bearbeiten"
+      },
+      "createDocument": {
+        "label": "Dokument erstellen"
       }
     }
   },
@@ -74,6 +86,9 @@
     "conversation": {
       "title": "Chat-Konversation",
       "subtitle": "Unterhalte dich mit deinem KI-Agenten."
+    },
+    "input": {
+      "placeholder": "Wie kann ich dir helfen?"
     },
     "history": {
       "title": "Chat-Verlauf",

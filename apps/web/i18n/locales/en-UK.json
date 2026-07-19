@@ -68,8 +68,16 @@
     }
   },
   "chat": {
+    "conversation": {
+      "title": "Chat Conversation",
+      "subtitle": "Chat with your AI agent."
+    },
+    "input": {
+      "placeholder": "How can I help you?"
+    },
     "history": {
       "title": "Chat history",
+      "subtitle": "Your past conversations.",
       "toggle": "Toggle chat history",
       "groupBy": "Change grouping",
       "close": "Close",

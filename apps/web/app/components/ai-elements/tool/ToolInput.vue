@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import type { DynamicToolUIPart, ToolUIPart } from 'ai'
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
-import { computed } from 'vue'
-import { CodeBlock } from '../code-block'
+import { cn } from '@/lib/utils';
+import type { DynamicToolUIPart, ToolUIPart } from 'ai';
+import type { HTMLAttributes } from 'vue';
+import { computed } from 'vue';
+import { CodeBlock } from '../code-block';
 
-type ToolPart = ToolUIPart | DynamicToolUIPart
+type ToolPart = ToolUIPart | DynamicToolUIPart;
 
 interface Props extends /* @vue-ignore */ HTMLAttributes {
-  input: ToolPart['input']
-  class?: HTMLAttributes['class']
+  input: ToolPart['input'];
+  class?: HTMLAttributes['class'];
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 const formattedInput = computed(() => {
-  return JSON.stringify(props.input, null, 2)
-})
+  return JSON.stringify(props.input, null, 2);
+});
 </script>
 
 <template>
@@ -25,9 +25,9 @@ const formattedInput = computed(() => {
     v-bind="$attrs"
   >
     <h4
-      class="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+      class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
     >
-      Parameters
+      Input
     </h4>
     <div class="rounded-md bg-muted/50">
       <CodeBlock :code="formattedInput" language="json" />

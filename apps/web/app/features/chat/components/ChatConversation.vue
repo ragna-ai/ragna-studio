@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
+import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import {
@@ -34,7 +28,9 @@ const props = defineProps<Props>();
 // Emits
 
 // Refs
+const inputContainerRef = useTemplateRef<HTMLDivElement>('inputContainerRef');
 const chatId = ref(props.chatId ?? null);
+const inputText = ref('');
 
 // Composables
 // A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
@@ -94,7 +90,20 @@ async function handleSubmit(message: { text: string }) {
   sendMessage({ text });
 }
 
+function onSubmit(e: Event) {
+  e.preventDefault();
+  const text = inputText.value.trim();
+  if (!text) return;
+  inputText.value = '';
+  handleSubmit({ text });
+}
+
 // Hooks
+onMounted(() => {
+  const textarea = inputContainerRef.value?.querySelector('textarea');
+  if (!textarea) return;
+  textarea.focus();
+});
 </script>
 
 <template>
@@ -132,18 +141,22 @@ async function handleSubmit(message: { text: string }) {
 
     <!-- input -->
     <div class="mx-auto w-full max-w-4xl">
-      <PromptInput multiple global-drop @submit="handleSubmit">
-        <PromptInputBody>
-          <PromptInputTextarea class="" autofocus />
-        </PromptInputBody>
-        <PromptInputFooter @click="() => console.log('footer clicked')">
+      <form @submit.prevent="onSubmit" class="w-full">
+        <div ref="inputContainerRef" class="relative">
+          <Textarea
+            v-model="inputText"
+            :placeholder="$t('chat.input.placeholder')"
+            name="message"
+            class="min-h-12 resize-none rounded-xl py-3"
+            @keydown.enter.exact.prevent="onSubmit"
+          />
           <PromptInputSubmit
-            class="ml-auto"
+            class="absolute right-2 bottom-2"
             :status="status"
             :disabled="isBusy"
           />
-        </PromptInputFooter>
-      </PromptInput>
+        </div>
+      </form>
     </div>
   </div>
 </template>

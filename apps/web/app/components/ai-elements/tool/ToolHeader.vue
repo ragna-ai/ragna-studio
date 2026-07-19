@@ -34,16 +34,16 @@ const derivedName = computed(() =>
 <template>
   <CollapsibleTrigger
     :class="
-      cn('flex w-full items-center justify-between gap-4 py-3', props.class)
+      cn('group/tool flex items-center justify-between gap-4 py-3', props.class)
     "
     v-bind="$attrs"
   >
     <div class="flex items-center gap-2">
       <component
         :is="props.icon ?? defaultIcon"
-        class="size-4 stroke-1.5 text-muted-foreground"
+        class="size-4 stroke-1.5 text-muted-foreground group-hover/tool:text-foreground"
       />
-      <span class="text-sm text-foreground">
+      <span class="text-sm text-foreground/60 group-hover/tool:text-foreground">
         {{ props.title ?? derivedName }}
       </span>
       <StatusBadge :state="props.state" />

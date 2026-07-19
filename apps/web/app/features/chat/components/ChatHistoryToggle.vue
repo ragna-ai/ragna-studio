@@ -14,7 +14,7 @@ const { t } = useI18n();
     size="icon"
     :aria-label="t('chat.history.toggle')"
     :title="t('chat.history.toggle')"
-    @click="sidePanel.toggle('chat-history')"
+    @click.stop="sidePanel.toggle('chat-history')"
   >
     <HistoryIcon class="size-4 stroke-1.5 opacity-75" />
   </Button>

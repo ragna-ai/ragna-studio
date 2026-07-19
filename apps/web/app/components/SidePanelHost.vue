@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
-import { useSidePanelStore, type SidePanelView } from '~/stores/sidepanel.store';
+import {
+  useSidePanelStore,
+  type SidePanelView,
+} from '~/stores/sidepanel.store';
 
 // A view only needs to know which component to render and which route area
 // it belongs to, so the panel can close itself when navigation leaves that
@@ -43,7 +46,7 @@ watch(
 
 <template>
   <Transition name="side-panel">
-    <div v-if="activeEntry" class="w-72 shrink-0 overflow-hidden">
+    <div v-if="activeEntry" class="w-68 shrink-0 overflow-hidden">
       <div class="h-full overflow-y-auto p-2">
         <component :is="activeEntry.component" />
       </div>

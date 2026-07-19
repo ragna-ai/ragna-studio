@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import {
+  FilePenIcon,
   FileTextIcon,
+  FolderOpenIcon,
   ImageIcon,
+  NotebookTextIcon,
   PencilLineIcon,
   SearchIcon,
 } from '@lucide/vue';
@@ -53,6 +56,11 @@ const toolNames: Record<string, string> = {
   'tool-imageGen': t('agent.tool.imageGen.label'),
   'tool-webSearch': t('agent.tool.webSearch.label'),
   'tool-webBrowser': t('agent.tool.webBrowser.label'),
+  'tool-listDocuments': t('agent.tool.listDocuments.label'),
+  'tool-readDocument': t('agent.tool.readDocument.label'),
+  'tool-editDocument': t('agent.tool.editDocument.label'),
+  'tool-createDocument': t('agent.tool.createDocument.label'),
+  'tool-memory': t('agent.tool.memory.label'),
 };
 
 const getToolTitle = (part: ToolPart): string => {
@@ -71,6 +79,16 @@ const getToolIcon = (part: ToolPart) => {
       return SearchIcon;
     case 'tool-webBrowser':
       return SearchIcon;
+    case 'tool-listDocuments':
+      return FolderOpenIcon;
+    case 'tool-readDocument':
+      return FileTextIcon;
+    case 'tool-editDocument':
+      return FilePenIcon;
+    case 'tool-createDocument':
+      return FilePenIcon;
+    case 'tool-memory':
+      return NotebookTextIcon;
     default:
       return undefined;
   }

@@ -1,72 +1,77 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { InputGroupTextarea } from '@/components/ui/input-group'
-import { cn } from '@/lib/utils'
-import { computed, ref } from 'vue'
-import { usePromptInput } from './context'
+import { InputGroupTextarea } from '@/components/ui/input-group';
+import { cn } from '@/lib/utils';
+import type { HTMLAttributes } from 'vue';
+import { computed, ref } from 'vue';
+import { usePromptInput } from './context';
 
-type PromptInputTextareaProps = InstanceType<typeof InputGroupTextarea>['$props']
+type PromptInputTextareaProps = InstanceType<
+  typeof InputGroupTextarea
+>['$props'];
 
 interface Props extends /* @vue-ignore */ PromptInputTextareaProps {
-  class?: HTMLAttributes['class']
+  class?: HTMLAttributes['class'];
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
-const { textInput, setTextInput, addFiles, files, removeFile } = usePromptInput()
-const isComposing = ref(false)
+const { textInput, setTextInput, addFiles, files, removeFile } =
+  usePromptInput();
+const isComposing = ref(false);
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter') {
-    if (isComposing.value || e.isComposing || e.shiftKey)
-      return
+    if (isComposing.value || e.isComposing || e.shiftKey) return;
 
-    e.preventDefault()
+    e.preventDefault();
 
-    const textarea = e.currentTarget as HTMLTextAreaElement | null
-    const submitButton = textarea?.form?.querySelector('button[type="submit"]') as HTMLButtonElement | null
+    const textarea = e.currentTarget as HTMLTextAreaElement | null;
+    const submitButton = textarea?.form?.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement | null;
 
-    if (submitButton?.disabled)
-      return
+    if (submitButton?.disabled) return;
 
-    textarea?.form?.requestSubmit()
+    textarea?.form?.requestSubmit();
   }
 
   // Remove last attachment on backspace if input is empty
-  if (e.key === 'Backspace' && textInput.value === '' && files.value.length > 0) {
-    e.preventDefault()
+  if (
+    e.key === 'Backspace' &&
+    textInput.value === '' &&
+    files.value.length > 0
+  ) {
+    e.preventDefault();
 
-    const lastFile = files.value[files.value.length - 1]
+    const lastFile = files.value[files.value.length - 1];
     if (lastFile) {
-      removeFile(lastFile.id)
+      removeFile(lastFile.id);
     }
   }
 }
 
 function handlePaste(e: ClipboardEvent) {
-  const items = e.clipboardData?.items
-  if (!items)
-    return
+  const items = e.clipboardData?.items;
+  if (!items) return;
 
-  const pastedFiles: File[] = []
+  const pastedFiles: File[] = [];
   for (const item of Array.from(items)) {
     if (item.kind === 'file') {
-      const file = item.getAsFile()
-      if (file)
-        pastedFiles.push(file)
+      const file = item.getAsFile();
+      if (file) pastedFiles.push(file);
     }
   }
 
   if (pastedFiles.length > 0) {
-    e.preventDefault()
-    addFiles(pastedFiles)
+    e.preventDefault();
+    addFiles(pastedFiles);
   }
 }
 
 const modelValue = computed({
   get: () => textInput.value,
-  set: val => setTextInput(val),
-})
+  set: (val) => setTextInput(val),
+});
 </script>
 
 <template>
