@@ -3,8 +3,11 @@ import { getWorkspaceById } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { createMiddleware } from 'hono/factory';
+import * as z from 'zod';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import type { AuthEnv } from './authMiddleware';
+
+const workspaceIdSchema = z.uuidv7();
 
 export type WorkspaceGuardEnv = AuthEnv & {
   Variables: AuthEnv['Variables'] & {
@@ -17,7 +20,7 @@ export type WorkspaceGuardEnv = AuthEnv & {
  * "Access control"). Generalizes the `loadOwnedWorkspace()` helper that used
  * to live in `document.service.ts`.
  *
- * Reads the raw `:workspaceId` route param, loads the workspace, and throws
+ * Reads the `:workspaceId` route param, loads the workspace, and throws
  * `NotFoundException` unless it belongs to the authenticated user. On
  * success the workspace is stashed in context as `c.get('workspace')` for
  * every downstream handler, so services no longer need to re-fetch it.
@@ -36,19 +39,22 @@ export type WorkspaceGuardEnv = AuthEnv & {
  *   });
  * ```
  *
- * Does not validate the id's format (e.g. uuidv7); a malformed or unknown id
- * simply fails to resolve to a workspace and 404s.
+ * Validates the id is a uuidv7 before querying; a malformed or unknown id
+ * both 404 as "Workspace not found".
  */
 export const workspaceGuard = createMiddleware<WorkspaceGuardEnv>(async (c, next) => {
   const user = c.get('user');
   const workspaceId = c.req.param('workspaceId');
 
-  if (!workspaceId) {
+  const { success: validationSuccess, data: validWorkspaceId } =
+    workspaceIdSchema.safeParse(workspaceId);
+
+  if (!validationSuccess) {
     throw new NotFoundException('Workspace not found');
   }
 
   const { error, data: workspaceRecord } = await tryCatch(() =>
-    getWorkspaceById({ id: workspaceId, ownerId: user.id }),
+    getWorkspaceById({ id: validWorkspaceId, ownerId: user.id }),
   );
 
   if (error !== null) {
