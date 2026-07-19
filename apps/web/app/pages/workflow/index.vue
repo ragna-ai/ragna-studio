@@ -85,8 +85,5 @@ const handleDeleteWorkflow = async (workflowId: string) => {
         }}
       </p>
     </div>
-    <div v-else>
-      <p class="text-sm text-stone-500">Loading workflows...</p>
-    </div>
   </SectionWrapper>
 </template>

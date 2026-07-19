@@ -115,9 +115,6 @@ function handleMoveDocument(payload: {
           {{ documentsError.message || t('document.list.loadError') }}
         </p>
       </div>
-      <div v-else>
-        <p class="text-sm text-stone-500">{{ t('document.list.loading') }}</p>
-      </div>
     </div>
 
     <template v-if="activeWorkspaceId">

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import { Spinner } from '@/components/ui/spinner';
 import { storeToRefs } from 'pinia';
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
 import type { GeneratedImage } from '~/features/image/composables/useImageGenApi';
@@ -31,10 +30,7 @@ const isEmpty = computed(
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex justify-center py-12">
-    <Spinner />
-  </div>
-  <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
+  <p v-if="isError" class="py-12 text-center text-sm text-destructive">
     {{ $t('imagen.grid.loadError') }}
   </p>
   <p

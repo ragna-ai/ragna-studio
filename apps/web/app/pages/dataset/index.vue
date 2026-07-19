@@ -42,7 +42,10 @@ const handleDeleteDataset = async (datasetId: string) => {
   <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
-        <HeadingTitle :title="t('dataset.list.title')" :subtitle="t('dataset.list.subtitle')">
+        <HeadingTitle
+          :title="t('dataset.list.title')"
+          :subtitle="t('dataset.list.subtitle')"
+        >
           <template #button>
             <Button as-child variant="secondary">
               <NuxtLinkLocale to="/dataset/create">
@@ -73,9 +76,6 @@ const handleDeleteDataset = async (datasetId: string) => {
       <p class="text-sm text-stone-500">
         {{ datasetsError.message || t('dataset.list.loadError') }}
       </p>
-    </div>
-    <div v-else>
-      <p class="text-sm text-stone-500">{{ t('dataset.list.loading') }}</p>
     </div>
   </SectionWrapper>
 </template>

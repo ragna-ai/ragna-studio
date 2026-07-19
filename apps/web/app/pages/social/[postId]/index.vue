@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { Shimmer } from '~/components/ai-elements/shimmer';
 import SocialPostUpsertForm from '~/features/social/components/SocialPostUpsertForm.vue';
 import { useGetSocialPost } from '~/features/social/composables/useSocialPostApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
@@ -18,7 +17,10 @@ const postId = computed(() => route.params.postId as string);
 
 // Composables
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { post, isLoading, isError } = useGetSocialPost(activeWorkspaceId, postId);
+const { post, isLoading, isError } = useGetSocialPost(
+  activeWorkspaceId,
+  postId,
+);
 const { t } = useI18n();
 
 useHead({
@@ -60,9 +62,6 @@ const breadcrumbItems = computed(() => [
       <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
         {{ t('social.loadError') }}
       </p>
-      <div v-else-if="isLoading" class="flex justify-center py-12">
-        <Shimmer class="h-6 w-48">{{ t('social.editor.loading') }}</Shimmer>
-      </div>
       <p v-else class="py-12 text-center text-sm text-muted-foreground">
         {{ t('social.editor.notFound') }}
       </p>

@@ -14,7 +14,8 @@ import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacesco
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { page, limit, useGetAllSocialPosts } = useSocialPostList();
 const { data, error: postsError } = useGetAllSocialPosts();
-const { mutateAsync: deleteSocialPost } = useDeleteSocialPost(activeWorkspaceId);
+const { mutateAsync: deleteSocialPost } =
+  useDeleteSocialPost(activeWorkspaceId);
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
@@ -81,9 +82,6 @@ async function handleDeletePost(postId: string) {
       <p class="text-sm text-stone-500">
         {{ postsError.message || t('social.loadError') }}
       </p>
-    </div>
-    <div v-else>
-      <p class="text-sm text-stone-500">{{ t('social.list.loading') }}</p>
     </div>
   </SectionWrapper>
 </template>

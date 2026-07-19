@@ -30,13 +30,18 @@ const name = ref('');
 // A workspace is always active (docs/api-standards/prd.md): activeWorkspaceId
 // is only briefly '' on first load, before the workspace list resolves it.
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
-const { data: datasetData, error: datasetError } = useGetDataset(activeWorkspaceId, datasetId);
+const { data: datasetData, error: datasetError } = useGetDataset(
+  activeWorkspaceId,
+  datasetId,
+);
 const { data: rowsData } = useGetDatasetRows(activeWorkspaceId, datasetId);
 const { mutate: renameDataset } = useUpdateDataset(activeWorkspaceId);
 const { t } = useI18n();
 
 useHead({
-  title: computed(() => datasetData.value?.dataset.name ?? t('dataset.detail.title')),
+  title: computed(
+    () => datasetData.value?.dataset.name ?? t('dataset.detail.title'),
+  ),
 });
 
 // Keep the editable name synced to the loaded dataset, so a refetch after
@@ -53,7 +58,9 @@ watch(
 // The breadcrumb replaces the page title in-place, so it has to render
 // immediately, before the dataset name is known. While loading, a static
 // trail with the "loading" copy stands in for the editable current item.
-const ancestorItems = computed(() => [{ label: t('dataset.list.title'), to: '/dataset' }]);
+const ancestorItems = computed(() => [
+  { label: t('dataset.list.title'), to: '/dataset' },
+]);
 const loadingItems = computed(() => [
   ...ancestorItems.value,
   { label: t('dataset.detail.loading') },
@@ -115,13 +122,13 @@ function handleRename() {
       :dataset="datasetData.dataset"
       :rows="rowsData?.rows ?? []"
     />
-    <div v-else-if="datasetError" class="flex min-h-0 flex-1 items-center justify-center">
+    <div
+      v-else-if="datasetError"
+      class="flex min-h-0 flex-1 items-center justify-center"
+    >
       <p class="text-sm text-stone-500">
         {{ datasetError.message || t('dataset.detail.loadError') }}
       </p>
-    </div>
-    <div v-else class="flex min-h-0 flex-1 items-center justify-center">
-      <p class="text-sm text-stone-500">{{ t('dataset.detail.loading') }}</p>
     </div>
   </div>
 </template>

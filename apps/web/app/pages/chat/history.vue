@@ -79,8 +79,5 @@ const handleDeleteChat = async (chatId: string) => {
         }}
       </p>
     </div>
-    <div v-else>
-      <p class="text-sm text-stone-500">Loading chat history...</p>
-    </div>
   </SectionWrapper>
 </template>

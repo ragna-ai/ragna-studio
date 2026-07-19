@@ -85,8 +85,5 @@ const handleDeleteAgent = async (agentId: string) => {
         }}
       </p>
     </div>
-    <div v-else>
-      <p class="text-sm text-stone-500">Loading agents...</p>
-    </div>
   </SectionWrapper>
 </template>
