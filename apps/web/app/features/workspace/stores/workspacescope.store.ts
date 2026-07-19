@@ -37,8 +37,9 @@ export const useWorkspaceScopeStore = defineStore('workspace-scope', () => {
       (workspace) => workspace.id === activeWorkspaceId.value,
     );
     if (isStillValid) return;
-    // TODO: Object workspaces[0] is possibly 'undefined'.
-    activeWorkspaceId.value = workspaces[0].id;
+    const fallbackWorkspace = workspaces[0];
+    if (!fallbackWorkspace) return;
+    activeWorkspaceId.value = fallbackWorkspace.id;
   }
 
   return {

@@ -76,13 +76,13 @@ function inputValueOf(event: Event): string {
           v-else-if="column.type === 'number'"
           type="number"
           :model-value="(cellValue(column) as number) ?? ''"
-          @blur="(e) => commitNumber(column, inputValueOf(e))"
+          @blur="(e: Event) => commitNumber(column, inputValueOf(e))"
         />
         <Input
           v-else-if="column.type === 'date'"
           type="date"
           :model-value="(cellValue(column) as string) ?? ''"
-          @blur="(e) => commitText(column, inputValueOf(e))"
+          @blur="(e: Event) => commitText(column, inputValueOf(e))"
         />
         <!-- `field-sizing-content` on the base Textarea (see
              components/ui/textarea/Textarea.vue) grows it with its
@@ -91,7 +91,7 @@ function inputValueOf(event: Event): string {
           v-else
           class="min-h-24"
           :model-value="(cellValue(column) as string) ?? ''"
-          @blur="(e) => commitText(column, inputValueOf(e))"
+          @blur="(e: Event) => commitText(column, inputValueOf(e))"
         />
       </div>
     </div>

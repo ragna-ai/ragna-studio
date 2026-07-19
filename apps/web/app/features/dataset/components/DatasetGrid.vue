@@ -108,14 +108,14 @@ function inputValueOf(event: Event): string {
               type="number"
               class="h-8"
               :model-value="(cellValue(row, column) as number) ?? ''"
-              @blur="(e) => commitNumber(row, column, inputValueOf(e))"
+              @blur="(e: Event) => commitNumber(row, column, inputValueOf(e))"
             />
             <Input
               v-else-if="column.type === 'date'"
               type="date"
               class="h-8"
               :model-value="(cellValue(row, column) as string) ?? ''"
-              @blur="(e) => commitText(row, column, inputValueOf(e))"
+              @blur="(e: Event) => commitText(row, column, inputValueOf(e))"
             />
             <!-- Long text is edited in DatasetRowPanel (expand button
                  above); the grid cell itself stays a single truncated
@@ -125,7 +125,7 @@ function inputValueOf(event: Event): string {
               type="text"
               class="h-8 truncate"
               :model-value="(cellValue(row, column) as string) ?? ''"
-              @blur="(e) => commitText(row, column, inputValueOf(e))"
+              @blur="(e: Event) => commitText(row, column, inputValueOf(e))"
             />
           </TableCell>
           <TableCell class="text-right">

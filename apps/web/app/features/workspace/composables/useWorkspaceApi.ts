@@ -5,11 +5,11 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
 import type {
   WorkspaceManyResponse,
   WorkspaceResponse,
 } from '~/features/workspace/types';
+import { extractErrorMessage } from '~/lib/api-error';
 
 export const workspaceKeys = {
   all: ['workspaces'] as const,
@@ -19,20 +19,22 @@ export const workspaceKeys = {
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export function useGetWorkspaces(options: QueryOpts = {}) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   return useQuery<WorkspaceManyResponse>({
     queryKey: workspaceKeys.list(),
-    queryFn: ({ signal }) => api('/workspace', { method: 'GET', signal }),
+    queryFn: ({ signal }) =>
+      $api<WorkspaceManyResponse>('/workspace', { method: 'GET', signal }),
     ...options,
   });
 }
 
 export function useCreateWorkspace() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   const { t } = useI18n();
   return useMutation<WorkspaceResponse, unknown, { name: string }>({
-    mutationFn: (body) => api('/workspace', { method: 'POST', body }),
+    mutationFn: (body) =>
+      $api<WorkspaceResponse>('/workspace', { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       toast.success(t('workspace.toast.createSuccess'));
@@ -49,12 +51,15 @@ interface RenameWorkspaceVariables {
 }
 
 export function useRenameWorkspace() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   const { t } = useI18n();
   return useMutation<WorkspaceResponse, unknown, RenameWorkspaceVariables>({
     mutationFn: ({ workspaceId, name }) =>
-      api(`/workspace/${workspaceId}`, { method: 'PATCH', body: { name } }),
+      $api<WorkspaceResponse>(`/workspace/${workspaceId}`, {
+        method: 'PATCH',
+        body: { name },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       toast.success(t('workspace.toast.renameSuccess'));
@@ -66,12 +71,12 @@ export function useRenameWorkspace() {
 }
 
 export function useDeleteWorkspace() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   const { t } = useI18n();
   return useMutation<void, unknown, string>({
     mutationFn: (workspaceId) =>
-      api(`/workspace/${workspaceId}`, { method: 'DELETE' }),
+      $api<void>(`/workspace/${workspaceId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       toast.success(t('workspace.toast.deleteSuccess'));

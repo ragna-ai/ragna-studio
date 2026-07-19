@@ -6,7 +6,7 @@ import type { AgentManyResponse } from '~/features/agent/types';
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useAgentList() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination/search is
@@ -29,7 +29,7 @@ export default function useAgentList() {
     return useQuery<AgentManyResponse>({
       queryKey: agentKeys.list(activeWorkspaceId, page, limit, searchQuery),
       queryFn: ({ signal }) =>
-        api(`/workspace/${activeWorkspaceId.value}/agent`, {
+        $api<AgentManyResponse>(`/workspace/${activeWorkspaceId.value}/agent`, {
           method: 'GET',
           query: {
             page: page.value,

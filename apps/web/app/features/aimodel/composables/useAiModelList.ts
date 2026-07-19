@@ -3,11 +3,11 @@ import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export function useGetAllAiModels(options: QueryOpts = {}) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   return useQuery({
     queryKey: ['aimodels'],
     queryFn: ({ signal }) =>
-      api('/aimodel', {
+      $api('/aimodel', {
         method: 'GET',
         signal,
       }),

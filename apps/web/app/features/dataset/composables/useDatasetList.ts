@@ -5,7 +5,7 @@ import type { DatasetManyResponse } from '~/features/dataset/types';
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useDatasetList() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination is owned
@@ -21,14 +21,17 @@ export default function useDatasetList() {
     return useQuery<DatasetManyResponse>({
       queryKey: datasetKeys.list(activeWorkspaceId, page, limit),
       queryFn: ({ signal }) =>
-        api(`/workspace/${toValue(activeWorkspaceId)}/dataset`, {
-          method: 'GET',
-          query: {
-            page: page.value,
-            limit: limit.value,
+        $api<DatasetManyResponse>(
+          `/workspace/${toValue(activeWorkspaceId)}/dataset`,
+          {
+            method: 'GET',
+            query: {
+              page: page.value,
+              limit: limit.value,
+            },
+            signal,
           },
-          signal,
-        }),
+        ),
       enabled: () => !!toValue(activeWorkspaceId),
       placeholderData: (prev: DatasetManyResponse | undefined) => prev,
       ...options,

@@ -98,15 +98,18 @@ export function isLinkedInNotConnectedError(error: unknown): boolean {
  * refresh both together.
  */
 export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const { data, isLoading, isError } = useQuery<SocialPostResponse>({
     queryKey: socialPostKeys.detail(workspaceId, postId),
     queryFn: ({ signal }) =>
-      api(`${postsBasePath(workspaceId)}/${toValue(postId)}`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<SocialPostResponse>(
+        `${postsBasePath(workspaceId)}/${toValue(postId)}`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(postId),
   });
 
@@ -116,19 +119,21 @@ export function useGetSocialPost(postId: MaybeRefOrGetter<string>) {
 }
 
 export function useCreateSocialPost() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<SocialPostResponse, unknown, string>({
     mutationFn: (content) =>
-      api(postsBasePath(workspaceId), {
+      $api<SocialPostResponse>(postsBasePath(workspaceId), {
         method: 'POST',
         body: { content },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
     },
     onError: (error) =>
       toast.error(extractErrorMessage(error, t('social.toast.createError'))),
@@ -136,7 +141,7 @@ export function useCreateSocialPost() {
 }
 
 export function useUpdateSocialPost() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -147,12 +152,14 @@ export function useUpdateSocialPost() {
     { id: string; content: string }
   >({
     mutationFn: ({ id, content }) =>
-      api(`${postsBasePath(workspaceId)}/${id}`, {
+      $api<SocialPostResponse>(`${postsBasePath(workspaceId)}/${id}`, {
         method: 'PATCH',
         body: { content },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
       toast.success(t('social.toast.updateSuccess'));
     },
     onError: (error) =>
@@ -161,16 +168,18 @@ export function useUpdateSocialPost() {
 }
 
 export function useDeleteSocialPost() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<void, unknown, string>({
     mutationFn: (id) =>
-      api(`${postsBasePath(workspaceId)}/${id}`, { method: 'DELETE' }),
+      $api<void>(`${postsBasePath(workspaceId)}/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
       toast.success(t('social.toast.deleteSuccess'));
     },
     onError: (error) =>
@@ -179,22 +188,28 @@ export function useDeleteSocialPost() {
 }
 
 export function usePublishSocialPost() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<SocialPostResponse, unknown, string>({
     mutationFn: (id) =>
-      api(`${postsBasePath(workspaceId)}/${id}/publish`, { method: 'POST' }),
+      $api<SocialPostResponse>(`${postsBasePath(workspaceId)}/${id}/publish`, {
+        method: 'POST',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
       toast.success(t('social.toast.publishSuccess'));
     },
     onError: (error) => {
       // Invalidate too: a failed publish still updates the post's status
       // and publishError server-side.
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
 
       if (isLinkedInNotConnectedError(error)) {
         toast.error(t('social.toast.linkedinNotConnected'));
@@ -211,7 +226,7 @@ export interface UploadSocialPostMediaVariables {
 }
 
 export function useUploadSocialPostMedia() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -225,16 +240,23 @@ export function useUploadSocialPostMedia() {
     mutationFn: ({ postId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
-      return api(`${postsBasePath(workspaceId)}/${postId}/media`, {
-        method: 'POST',
-        body: formData,
-      });
+      return $api<SocialPostMediaResponse>(
+        `${postsBasePath(workspaceId)}/${postId}/media`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.mediaUploadError'))),
+      toast.error(
+        extractErrorMessage(error, t('social.toast.mediaUploadError')),
+      ),
   });
 }
 
@@ -257,7 +279,7 @@ export function usePendingSocialPostMediaUploads(postId: string) {
 }
 
 export function useUpdateSocialPostMediaAltText() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -268,33 +290,44 @@ export function useUpdateSocialPostMediaAltText() {
     { postId: string; mediaId: string; altText: string }
   >({
     mutationFn: ({ postId, mediaId, altText }) =>
-      api(`${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`, {
-        method: 'PATCH',
-        body: { altText },
-      }),
+      $api<SocialPostMediaResponse>(
+        `${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`,
+        {
+          method: 'PATCH',
+          body: { altText },
+        },
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.mediaAltTextError'))),
+      toast.error(
+        extractErrorMessage(error, t('social.toast.mediaAltTextError')),
+      ),
   });
 }
 
 export function useDeleteSocialPostMedia() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
   return useMutation<void, unknown, { postId: string; mediaId: string }>({
     mutationFn: ({ postId, mediaId }) =>
-      api(`${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`, {
+      $api<void>(`${postsBasePath(workspaceId)}/${postId}/media/${mediaId}`, {
         method: 'DELETE',
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialPostKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: socialPostKeys.all(workspaceId),
+      });
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.mediaDeleteError'))),
+      toast.error(
+        extractErrorMessage(error, t('social.toast.mediaDeleteError')),
+      ),
   });
 }

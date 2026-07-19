@@ -143,7 +143,7 @@ function handleSave() {
             :model-value="optionsText(column)"
             :placeholder="t('dataset.columnManager.optionsPlaceholder')"
             class="h-8"
-            @change="(e) => setOptionsFromText(column, (e.target as HTMLInputElement).value)"
+            @change="(e: Event) => setOptionsFromText(column, (e.target as HTMLInputElement).value)"
           />
         </div>
       </div>

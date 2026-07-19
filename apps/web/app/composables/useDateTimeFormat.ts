@@ -3,7 +3,7 @@ export function useDateTimeFormat() {
 
   const dateTimeFormatter = computed(
     () =>
-      new Intl.DateTimeFormat(localeProperties.value.iso, {
+      new Intl.DateTimeFormat(localeProperties.value.language, {
         dateStyle: 'medium',
         timeStyle: 'short',
       }),

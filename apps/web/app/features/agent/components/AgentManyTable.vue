@@ -114,7 +114,7 @@ const handleDeleteFavorite = (agentId: string) => {
             </div>
           </TableCell>
           <TableCell class="whitespace-nowrap">
-            <div class="flex items-center space-x-2">
+            <div v-if="agent.aiModel" class="flex items-center space-x-2">
               <span :name="agent.aiModel.provider" class="size-4 stroke-1.5" />
               <span>{{ agent.aiModel.displayName }}</span>
             </div>

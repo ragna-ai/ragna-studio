@@ -5,7 +5,7 @@ import type { WorkflowManyResponse } from '~/features/workflow/types';
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useWorkflowList() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination is owned
@@ -22,15 +22,18 @@ export default function useWorkflowList() {
     return useQuery<WorkflowManyResponse>({
       queryKey: workflowKeys.list(activeWorkspaceId, page, limit, sort),
       queryFn: ({ signal }) =>
-        api(`/workspace/${activeWorkspaceId.value}/workflow`, {
-          method: 'GET',
-          query: {
-            page: page.value,
-            limit: limit.value,
-            sort: sort.value,
+        $api<WorkflowManyResponse>(
+          `/workspace/${activeWorkspaceId.value}/workflow`,
+          {
+            method: 'GET',
+            query: {
+              page: page.value,
+              limit: limit.value,
+              sort: sort.value,
+            },
+            signal,
           },
-          signal,
-        }),
+        ),
       enabled: () => !!activeWorkspaceId.value,
       placeholderData: (prev: WorkflowManyResponse | undefined) => prev,
       ...options,

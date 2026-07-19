@@ -59,13 +59,16 @@ export interface GenerateImagesBody {
   negativePrompt?: string;
 }
 
-export function useGetGenImages(params: GenImageListParams = {}, options: QueryOpts = {}) {
-  const api = useApi();
+export function useGetGenImages(
+  params: GenImageListParams = {},
+  options: QueryOpts = {},
+) {
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<GenImagesResponse>({
     queryKey: genImageKeys.list(workspaceId, params),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/gen-image`, {
+      $api<GenImagesResponse>(`/workspace/${toValue(workspaceId)}/gen-image`, {
         method: 'GET',
         query: params,
         signal,
@@ -76,15 +79,20 @@ export function useGetGenImages(params: GenImageListParams = {}, options: QueryO
 }
 
 export function useGenerateImages() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<GenerateImagesResponse, unknown, GenerateImagesBody>({
     mutationKey: genImageKeys.create(),
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/gen-image`, { method: 'POST', body }),
+      $api<GenerateImagesResponse>(
+        `/workspace/${toValue(workspaceId)}/gen-image`,
+        { method: 'POST', body },
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: genImageKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: genImageKeys.all(workspaceId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to generate images'));

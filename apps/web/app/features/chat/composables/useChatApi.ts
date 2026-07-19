@@ -20,7 +20,8 @@ export const chatKeys = {
   ) => ['chats', workspaceId, 'list', page, limit, searchQuery] as const,
   detail: (workspaceId: WorkspaceId, chatId: MaybeRefOrGetter<string>) =>
     ['chats', workspaceId, 'detail', chatId] as const,
-  history: (workspaceId: WorkspaceId) => ['chats', workspaceId, 'history'] as const,
+  history: (workspaceId: WorkspaceId) =>
+    ['chats', workspaceId, 'history'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -61,16 +62,22 @@ export interface ChatHistoryResponse {
   meta: { totalCount: number };
 }
 
-export function useGetChat(chatId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
-  const api = useApi();
+export function useGetChat(
+  chatId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<ChatResponse>({
     queryKey: chatKeys.detail(workspaceId, chatId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/chat/${toValue(chatId)}`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<ChatResponse>(
+        `/workspace/${toValue(workspaceId)}/chat/${toValue(chatId)}`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(chatId),
     // Messages change outside vue-query via the AI SDK stream, and the
     // consumer renders the first snapshot only, so never serve cached data.
@@ -89,12 +96,12 @@ export function useGetChat(chatId: MaybeRefOrGetter<string>, options: QueryOpts 
 }
 
 export function useGetChatHistory(options: QueryOpts = {}) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<ChatHistoryResponse>({
     queryKey: chatKeys.history(workspaceId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/chat`, {
+      $api<ChatHistoryResponse>(`/workspace/${toValue(workspaceId)}/chat`, {
         method: 'GET',
         query: { page: 1, limit: 60 },
         signal,
@@ -106,12 +113,15 @@ export function useGetChatHistory(options: QueryOpts = {}) {
 }
 
 export function useCreateChat() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, NewChatBody>({
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/chat`, { method: 'POST', body }),
+      $api<ChatResponse>(`/workspace/${toValue(workspaceId)}/chat`, {
+        method: 'POST',
+        body,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
@@ -127,12 +137,12 @@ interface UpdateChatTitleVariables {
 }
 
 export function useUpdateChatTitle() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, UpdateChatTitleVariables>({
     mutationFn: ({ chatId, title }) =>
-      api(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, {
+      $api<ChatResponse>(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, {
         method: 'PATCH',
         body: { title },
       }),
@@ -146,12 +156,14 @@ export function useUpdateChatTitle() {
 }
 
 export function useDeleteChat() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (chatId: string) =>
-      api(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, { method: 'DELETE' }),
+      $api<void>(`/workspace/${toValue(workspaceId)}/chat/${chatId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
       toast.success('Chat deleted');

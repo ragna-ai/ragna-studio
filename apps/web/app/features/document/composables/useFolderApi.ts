@@ -6,8 +6,11 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { documentKeys } from '~/features/document/composables/useDocumentApi';
+import type {
+  FolderManyResponse,
+  FolderResponse,
+} from '~/features/document/types';
 import { extractErrorMessage } from '~/lib/api-error';
-import type { FolderManyResponse, FolderResponse } from '~/features/document/types';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -19,24 +22,30 @@ export const folderKeys = {
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export function useGetFolders(options: QueryOpts = {}) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<FolderManyResponse>({
     queryKey: folderKeys.list(workspaceId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/folder`, { method: 'GET', signal }),
+      $api<FolderManyResponse>(`/workspace/${toValue(workspaceId)}/folder`, {
+        method: 'GET',
+        signal,
+      }),
     enabled: () => !!toValue(workspaceId),
     ...options,
   });
 }
 
 export function useCreateFolder() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, { name: string }>({
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/folder`, { method: 'POST', body }),
+      $api<FolderResponse>(`/workspace/${toValue(workspaceId)}/folder`, {
+        method: 'POST',
+        body,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
       toast.success('Folder created');
@@ -53,18 +62,23 @@ interface RenameFolderVariables {
 }
 
 export function useRenameFolder() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, RenameFolderVariables>({
     mutationFn: ({ folderId, name }) =>
-      api(`/workspace/${toValue(workspaceId)}/folder/${folderId}`, {
-        method: 'PATCH',
-        body: { name },
-      }),
+      $api<FolderResponse>(
+        `/workspace/${toValue(workspaceId)}/folder/${folderId}`,
+        {
+          method: 'PATCH',
+          body: { name },
+        },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: documentKeys.list(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.list(workspaceId),
+      });
       toast.success('Folder renamed');
     },
     onError: (error) => {
@@ -75,15 +89,19 @@ export function useRenameFolder() {
 
 /** Deleting a folder moves its documents to root; it never deletes them. */
 export function useDeleteFolder() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (folderId) =>
-      api(`/workspace/${toValue(workspaceId)}/folder/${folderId}`, { method: 'DELETE' }),
+      $api<void>(`/workspace/${toValue(workspaceId)}/folder/${folderId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: documentKeys.list(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.list(workspaceId),
+      });
       toast.success('Folder deleted');
     },
     onError: (error) => {

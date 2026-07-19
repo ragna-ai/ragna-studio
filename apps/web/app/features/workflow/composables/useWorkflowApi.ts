@@ -5,7 +5,6 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
 import type {
   CreateWorkflowRequest,
   UpdateWorkflowRequest,
@@ -13,6 +12,7 @@ import type {
   WorkflowRunManyResponse,
   WorkflowRunResponse,
 } from '~/features/workflow/types';
+import { extractErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string>;
 
@@ -41,29 +41,37 @@ export function useGetWorkflow(
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowResponse>({
     queryKey: workflowKeys.detail(workspaceId, workflowId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<WorkflowResponse>(
+        `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(workflowId),
     ...options,
   });
 }
 
 export function useCreateWorkflow() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, CreateWorkflowRequest>({
     mutationFn: (body) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow`, { method: 'POST', body }),
+      $api<WorkflowResponse>(`/workspace/${toValue(workspaceId)}/workflow`, {
+        method: 'POST',
+        body,
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.all(workspaceId),
+      });
       toast.success('Workflow created');
     },
     onError: () => {
@@ -77,17 +85,22 @@ interface UpdateWorkflowVariables extends UpdateWorkflowRequest {
 }
 
 export function useUpdateWorkflow() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, UpdateWorkflowVariables>({
     mutationFn: ({ workflowId, ...body }) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}`, {
-        method: 'PATCH',
-        body,
-      }),
+      $api<WorkflowResponse>(
+        `/workspace/${toValue(workspaceId)}/workflow/${workflowId}`,
+        {
+          method: 'PATCH',
+          body,
+        },
+      ),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.all(workspaceId),
+      });
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
@@ -100,14 +113,18 @@ export function useUpdateWorkflow() {
 }
 
 export function useDeleteWorkflow() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (workflowId) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}`, { method: 'DELETE' }),
+      $api<void>(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.all(workspaceId),
+      });
       toast.success('Workflow deleted');
     },
     onError: () => {
@@ -117,14 +134,17 @@ export function useDeleteWorkflow() {
 }
 
 export function usePublishWorkflow() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, string>({
     mutationFn: (workflowId) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${workflowId}/publish`, {
-        method: 'POST',
-      }),
+      $api<WorkflowResponse>(
+        `/workspace/${toValue(workspaceId)}/workflow/${workflowId}/publish`,
+        {
+          method: 'POST',
+        },
+      ),
     onSuccess: (response) => {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
@@ -138,15 +158,18 @@ export function usePublishWorkflow() {
 }
 
 export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, string | undefined>({
     mutationFn: (input) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`, {
-        method: 'POST',
-        body: { input },
-      }),
+      $api<WorkflowRunResponse>(
+        `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`,
+        {
+          method: 'POST',
+          body: { input },
+        },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.runs(workspaceId, workflowId),
@@ -162,17 +185,19 @@ export function useCancelWorkflowRun(
   workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
 ) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
     mutationFn: () =>
-      api(
+      $api<WorkflowRunResponse>(
         `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run/${toValue(runId)}/cancel`,
         { method: 'POST' },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workflowKeys.run(workspaceId, workflowId, runId) });
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.run(workspaceId, workflowId, runId),
+      });
       queryClient.invalidateQueries({
         queryKey: workflowKeys.runs(workspaceId, workflowId),
       });
@@ -188,15 +213,18 @@ export function useGetWorkflowRuns(
   workflowId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowRunManyResponse>({
     queryKey: workflowKeys.runs(workspaceId, workflowId),
     queryFn: ({ signal }) =>
-      api(`/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<WorkflowRunManyResponse>(
+        `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(workflowId),
     ...options,
   });
@@ -207,16 +235,17 @@ export function useGetWorkflowRun(
   runId: MaybeRefOrGetter<string>,
   options: QueryOpts = {},
 ) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<WorkflowRunResponse>({
     queryKey: workflowKeys.run(workspaceId, workflowId, runId),
     queryFn: ({ signal }) =>
-      api(
+      $api<WorkflowRunResponse>(
         `/workspace/${toValue(workspaceId)}/workflow/${toValue(workflowId)}/run/${toValue(runId)}`,
         { method: 'GET', signal },
       ),
-    enabled: () => !!toValue(workspaceId) && !!toValue(workflowId) && !!toValue(runId),
+    enabled: () =>
+      !!toValue(workspaceId) && !!toValue(workflowId) && !!toValue(runId),
     ...options,
   });
 }

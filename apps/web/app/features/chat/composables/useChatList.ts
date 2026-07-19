@@ -8,7 +8,7 @@ import {
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useChatList() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination/search is
@@ -31,11 +31,12 @@ export default function useChatList() {
     return useQuery<ChatHistoryResponse>({
       queryKey: chatKeys.list(workspaceId, page, limit, searchQuery),
       queryFn: ({ signal }) =>
-        api(`/workspace/${toValue(workspaceId)}/chat`, {
+        $api<ChatHistoryResponse>(`/workspace/${toValue(workspaceId)}/chat`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
+            searchQuery: searchQuery.value,
           },
           signal,
         }),

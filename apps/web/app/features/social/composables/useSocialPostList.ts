@@ -7,7 +7,7 @@ import {
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export default function useSocialPostList() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const activeWorkspaceId = useActiveWorkspaceId();
 
   // useState -> single shared instance keyed by name, so pagination is owned
@@ -23,14 +23,17 @@ export default function useSocialPostList() {
     return useQuery<SocialPostManyResponse>({
       queryKey: socialPostKeys.list(activeWorkspaceId, page, limit),
       queryFn: ({ signal }) =>
-        api(`/workspace/${activeWorkspaceId.value}/social-post`, {
-          method: 'GET',
-          query: {
-            page: page.value,
-            limit: limit.value,
+        $api<SocialPostManyResponse>(
+          `/workspace/${activeWorkspaceId.value}/social-post`,
+          {
+            method: 'GET',
+            query: {
+              page: page.value,
+              limit: limit.value,
+            },
+            signal,
           },
-          signal,
-        }),
+        ),
       enabled: () => !!activeWorkspaceId.value,
       placeholderData: (prev: SocialPostManyResponse | undefined) => prev,
       ...options,

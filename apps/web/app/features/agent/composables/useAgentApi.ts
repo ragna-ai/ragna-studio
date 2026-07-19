@@ -5,7 +5,6 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
 import type {
   AgentContextDocumentManyResponse,
   AgentContextDocumentResponse,
@@ -15,6 +14,7 @@ import type {
   CreateAgentRequest,
   UpdateAgentRequest,
 } from '~/features/agent/types';
+import { extractErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string>;
 
@@ -40,13 +40,19 @@ function agentBasePath(workspaceId: WorkspaceId): string {
   return `/workspace/${toValue(workspaceId)}/agent`;
 }
 
-export function useGetAgent(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
-  const api = useApi();
+export function useGetAgent(
+  agentId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentResponse>({
     queryKey: agentKeys.detail(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(`${agentBasePath(workspaceId)}/${toValue(agentId)}`, { method: 'GET', signal }),
+      $api<AgentResponse>(`${agentBasePath(workspaceId)}/${toValue(agentId)}`, {
+        method: 'GET',
+        signal,
+      }),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
   });
@@ -54,12 +60,12 @@ export function useGetAgent(agentId: MaybeRefOrGetter<string>, options: QueryOpt
 
 /** Unpaginated agent list for pickers (e.g. the workflow agent-node config). */
 export function useGetAllAgents(options: QueryOpts = {}) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentManyResponse>({
     queryKey: [...agentKeys.all(workspaceId), 'picker'],
     queryFn: ({ signal }) =>
-      api(agentBasePath(workspaceId), {
+      $api<AgentManyResponse>(agentBasePath(workspaceId), {
         method: 'GET',
         query: { page: 1, limit: 100 },
         signal,
@@ -70,11 +76,12 @@ export function useGetAllAgents(options: QueryOpts = {}) {
 }
 
 export function useCreateAgent() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, CreateAgentRequest>({
-    mutationFn: (body) => api(agentBasePath(workspaceId), { method: 'POST', body }),
+    mutationFn: (body) =>
+      $api<AgentResponse>(agentBasePath(workspaceId), { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
       toast.success('Agent created');
@@ -90,15 +97,20 @@ interface UpdateAgentVariables extends UpdateAgentRequest {
 }
 
 export function useUpdateAgent() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, UpdateAgentVariables>({
     mutationFn: ({ agentId, ...body }) =>
-      api(`${agentBasePath(workspaceId)}/${agentId}`, { method: 'PATCH', body }),
+      $api<AgentResponse>(`${agentBasePath(workspaceId)}/${agentId}`, {
+        method: 'PATCH',
+        body,
+      }),
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: agentKeys.detail(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.detail(workspaceId, agentId),
+      });
       toast.success('Agent updated');
     },
     onError: () => {
@@ -107,13 +119,19 @@ export function useUpdateAgent() {
   });
 }
 
-export function useGetAgentMemory(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
-  const api = useApi();
+export function useGetAgentMemory(
+  agentId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentMemoryResponse>({
     queryKey: agentKeys.memory(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(`${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`, { method: 'GET', signal }),
+      $api<AgentMemoryResponse>(
+        `${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`,
+        { method: 'GET', signal },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
   });
@@ -122,14 +140,19 @@ export function useGetAgentMemory(agentId: MaybeRefOrGetter<string>, options: Qu
 type UpdateAgentMemoryVariables = { agentId: string; content: string };
 
 export function useUpdateAgentMemory() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
     mutationFn: ({ agentId, content }) =>
-      api(`${agentBasePath(workspaceId)}/${agentId}/memory`, { method: 'PUT', body: { content } }),
+      $api<AgentMemoryResponse>(
+        `${agentBasePath(workspaceId)}/${agentId}/memory`,
+        { method: 'PUT', body: { content } },
+      ),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.memory(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.memory(workspaceId, agentId),
+      });
       toast.success('Memory updated');
     },
     onError: () => {
@@ -139,12 +162,14 @@ export function useUpdateAgentMemory() {
 }
 
 export function useDeleteAgent() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (agentId) =>
-      api(`${agentBasePath(workspaceId)}/${agentId}`, { method: 'DELETE' }),
+      $api<void>(`${agentBasePath(workspaceId)}/${agentId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
       toast.success('Agent deleted');
@@ -174,18 +199,23 @@ function contextDocumentBasePath(
 }
 
 export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentContextDocumentManyResponse>({
     queryKey: agentKeys.documents(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      api(contextDocumentBasePath(workspaceId, agentId), { method: 'GET', signal }),
+      $api<AgentContextDocumentManyResponse>(
+        contextDocumentBasePath(workspaceId, agentId),
+        { method: 'GET', signal },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     refetchInterval: (query) => {
       const hasPendingDocument = query.state.data?.documents.some(
         (document) => document.status === 'pending',
       );
-      return hasPendingDocument ? AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS : false;
+      return hasPendingDocument
+        ? AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS
+        : false;
     },
   });
 }
@@ -196,20 +226,29 @@ export interface UploadAgentContextDocumentsVariables {
 }
 
 export function useUploadAgentContextDocuments() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentManyResponse, unknown, UploadAgentContextDocumentsVariables>({
+  return useMutation<
+    AgentContextDocumentManyResponse,
+    unknown,
+    UploadAgentContextDocumentsVariables
+  >({
     mutationFn: ({ agentId, files }) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
-      return api(contextDocumentBasePath(workspaceId, agentId), {
-        method: 'POST',
-        body: formData,
-      });
+      return $api<AgentContextDocumentManyResponse>(
+        contextDocumentBasePath(workspaceId, agentId),
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
     },
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.documents(workspaceId, agentId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to upload documents'));
@@ -224,17 +263,26 @@ export interface RenameAgentContextDocumentVariables {
 }
 
 export function useRenameAgentContextDocument() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentResponse, unknown, RenameAgentContextDocumentVariables>({
+  return useMutation<
+    AgentContextDocumentResponse,
+    unknown,
+    RenameAgentContextDocumentVariables
+  >({
     mutationFn: ({ agentId, documentId, name }) =>
-      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`, {
-        method: 'PATCH',
-        body: { name },
-      }),
+      $api<AgentContextDocumentResponse>(
+        `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`,
+        {
+          method: 'PATCH',
+          body: { name },
+        },
+      ),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.documents(workspaceId, agentId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to rename document'));
@@ -249,20 +297,29 @@ export interface ReplaceAgentContextDocumentFileVariables {
 }
 
 export function useReplaceAgentContextDocumentFile() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentResponse, unknown, ReplaceAgentContextDocumentFileVariables>({
+  return useMutation<
+    AgentContextDocumentResponse,
+    unknown,
+    ReplaceAgentContextDocumentFileVariables
+  >({
     mutationFn: ({ agentId, documentId, file }) => {
       const formData = new FormData();
       formData.append('file', file);
-      return api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/file`, {
-        method: 'PUT',
-        body: formData,
-      });
+      return $api<AgentContextDocumentResponse>(
+        `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/file`,
+        {
+          method: 'PUT',
+          body: formData,
+        },
+      );
     },
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.documents(workspaceId, agentId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to replace document'));
@@ -276,16 +333,25 @@ export interface AgentContextDocumentIdVariables {
 }
 
 export function useRetryAgentContextDocument() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentResponse, unknown, AgentContextDocumentIdVariables>({
+  return useMutation<
+    AgentContextDocumentResponse,
+    unknown,
+    AgentContextDocumentIdVariables
+  >({
     mutationFn: ({ agentId, documentId }) =>
-      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/retry`, {
-        method: 'POST',
-      }),
+      $api<AgentContextDocumentResponse>(
+        `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/retry`,
+        {
+          method: 'POST',
+        },
+      ),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.documents(workspaceId, agentId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to retry document'));
@@ -294,16 +360,21 @@ export function useRetryAgentContextDocument() {
 }
 
 export function useDeleteAgentContextDocument() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
-      api(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`, {
-        method: 'DELETE',
-      }),
+      $api<void>(
+        `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`,
+        {
+          method: 'DELETE',
+        },
+      ),
     onSuccess: (_, { agentId }) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
+      queryClient.invalidateQueries({
+        queryKey: agentKeys.documents(workspaceId, agentId),
+      });
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to delete document'));

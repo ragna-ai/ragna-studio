@@ -72,7 +72,7 @@ const nodes = computed<RenderableWorkflowNode[]>({
           stepStatus: step?.status,
           stepToolCallCount: countTraceToolCalls(step),
         },
-      };
+      } as RenderableWorkflowNode;
     }),
   set: () => {},
 });

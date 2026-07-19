@@ -16,21 +16,24 @@ export const notificationKeys = {
 };
 
 export function useGetUnreadNotificationCount() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   return useQuery<NotificationUnreadResponse>({
     queryKey: notificationKeys.unreadCount(),
     queryFn: ({ signal }) =>
-      api('/notification/unread-count', { method: 'GET', signal }),
+      $api<NotificationUnreadResponse>('/notification/unread-count', {
+        method: 'GET',
+        signal,
+      }),
     refetchInterval: 30_000,
   });
 }
 
 export function useGetNotificationList(open: MaybeRefOrGetter<boolean> = true) {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   return useQuery<NotificationManyResponse>({
     queryKey: notificationKeys.list(),
     queryFn: ({ signal }) =>
-      api('/notification', {
+      $api<NotificationManyResponse>('/notification', {
         method: 'GET',
         query: { page: 1, limit: LIST_LIMIT },
         signal,
@@ -40,11 +43,13 @@ export function useGetNotificationList(open: MaybeRefOrGetter<boolean> = true) {
 }
 
 export function useMarkReadNotification() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<NotificationResponse, unknown, string>({
     mutationFn: (notificationId) =>
-      api(`/notification/${notificationId}/read`, { method: 'PATCH' }),
+      $api<NotificationResponse>(`/notification/${notificationId}/read`, {
+        method: 'PATCH',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: notificationKeys.unreadCount(),
@@ -60,10 +65,11 @@ export function useMarkReadNotification() {
 }
 
 export function useMarkAllReadNotification() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ count: number }, unknown, void>({
-    mutationFn: () => api('/notification/read-all', { method: 'PATCH' }),
+    mutationFn: () =>
+      $api<{ count: number }>('/notification/read-all', { method: 'PATCH' }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: notificationKeys.unreadCount(),
@@ -79,11 +85,13 @@ export function useMarkAllReadNotification() {
 }
 
 export function useDeleteNotification() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, unknown, string>({
     mutationFn: (notificationId) =>
-      api(`/notification/${notificationId}`, { method: 'DELETE' }),
+      $api<{ success: boolean }>(`/notification/${notificationId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: notificationKeys.unreadCount(),
@@ -97,10 +105,11 @@ export function useDeleteNotification() {
 }
 
 export function useDeleteAllNotifications() {
-  const api = useApi();
+  const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ count: number }, unknown, void>({
-    mutationFn: () => api('/notification', { method: 'DELETE' }),
+    mutationFn: () =>
+      $api<{ count: number }>('/notification', { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: notificationKeys.unreadCount(),

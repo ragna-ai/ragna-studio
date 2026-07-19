@@ -62,7 +62,6 @@ const handleDeleteAgent = async (agentId: string) => {
     <div v-if="data?.agents" class="px-5">
       <AgentManyTable
         :agents="data.agents"
-        :favorites="data?.agentFavorites"
         @delete-agent="handleDeleteAgent"
       />
       <div class="pb-10">
