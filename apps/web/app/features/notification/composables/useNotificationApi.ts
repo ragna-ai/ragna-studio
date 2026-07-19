@@ -5,7 +5,7 @@ import type {
   NotificationResponse,
   NotificationUnreadResponse,
 } from '~/features/notification/types';
-import { extractErrorMessage } from '~/features/workflow/composables/useWorkflowApi';
+import { extractErrorMessage } from '~/lib/api-error';
 
 const LIST_LIMIT = 10;
 

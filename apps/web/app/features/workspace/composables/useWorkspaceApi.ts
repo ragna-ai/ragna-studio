@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 import type {
   WorkspaceManyResponse,
   WorkspaceResponse,
@@ -64,13 +65,6 @@ export function useRenameWorkspace() {
   });
 }
 
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
-
 export function useDeleteWorkspace() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -85,7 +79,7 @@ export function useDeleteWorkspace() {
     onError: (error) => {
       // The API rejects deleting a user's only workspace with a 400 and a
       // human-readable message; surface that instead of a generic failure.
-      toast.error(getErrorMessage(error, t('workspace.toast.deleteError')));
+      toast.error(extractErrorMessage(error, t('workspace.toast.deleteError')));
     },
   });
 }

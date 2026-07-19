@@ -179,9 +179,24 @@ workspaceId: text('workspace_id')
 - **Switcher**: shows the user's workspaces plus "Manage workspaces".
   No "All items", no "Unassigned" entries.
 - **API composables**: the `useDocumentApi.ts` pattern is the standard.
-  One `use<Resource>Api.ts` per feature, workspaceId as
-  `MaybeRefOrGetter`, workspaceId folded into every query key, `enabled`
-  guards on the id, invalidation on mutation.
+  One `use<Resource>Api.ts` per feature, workspaceId folded into every
+  query key, `enabled` guards on the id, invalidation on mutation.
+  Composables read the active workspace themselves via
+  `useActiveWorkspaceId()` (`app/composables/useActiveWorkspaceId.ts`,
+  wrapping `storeToRefs(useWorkspaceScopeStore()).activeWorkspaceId`)
+  instead of taking `workspaceId` as a parameter. Earlier revisions of this
+  migration threaded `workspaceId: MaybeRefOrGetter<string>` through every
+  exported function and every call site had to pull it from the store via
+  `storeToRefs` just to forward it along; since there is exactly one active
+  workspace and no code path ever passes a different one, that was pure
+  prop-drilling. Removed 2026-07-19 across all 8 `use<Resource>Api.ts`
+  files and the sibling `use<Resource>List.ts` composables (`useAgentList`,
+  `useChatList`, `useDatasetList`, `useSocialPostList`, `useWorkflowList`).
+  No performance impact: Pinia stores are singletons (the store's setup
+  function, including the `useLocalStorage` call, runs once regardless of
+  how many composables call `useWorkspaceScopeStore()`), and `storeToRefs`
+  returns a lightweight ref that delegates to the same reactive state, so
+  reactivity/invalidation behavior is unchanged.
 - Pages no longer need empty states for "no workspace selected": a
   workspace is always active.
 
@@ -312,6 +327,11 @@ build clean. Open items found during the migration, deliberately deferred:
   kept intentionally; folding these into the error handler is a follow-up.
 - **`tsx` is not a workspace devDependency**, so `db:seed` and the new
   `db:backfill-workspace` scripts only run via `pnpm dlx tsx`.
+
+**Follow-up done (2026-07-19):** removed the `workspaceId` parameter
+prop-drilling described in [Frontend](#frontend) above, across all API
+composables, the sibling list composables, and ~40 call-site
+pages/components. See that section for details.
 
 ## Out of scope
 

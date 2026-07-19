@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 import type {
   CreateWorkflowRequest,
   UpdateWorkflowRequest,
@@ -35,46 +36,6 @@ export const workflowKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: unknown };
-
-function hasErrorList(data: unknown): data is { errors: string[] } {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'errors' in data &&
-    Array.isArray((data as { errors: unknown }).errors)
-  );
-}
-
-function hasErrorMessage(data: unknown): data is { error: string } {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'error' in data &&
-    typeof (data as { error: unknown }).error === 'string'
-  );
-}
-
-/**
- * Turns a failed $fetch call into a user-facing message: prefers the
- * `errors: string[]` list `POST .../workflow/:workflowId/publish` returns on
- * a validation failure, falls back to a plain `{ error: string }` body (e.g.
- * "not published" on `.../run`), then a generic fallback.
- *
- * Also used by useNotificationApi.ts; keep this exported.
- */
-export function extractErrorMessage(error: unknown, fallback: string): string {
-  const data = (error as FetchErrorWithData | undefined)?.data;
-  if (hasErrorList(data)) {
-    return data.errors.join(', ');
-  }
-  if (hasErrorMessage(data)) {
-    return data.error;
-  }
-  return fallback;
-}
 
 export function useGetWorkflow(
   workflowId: MaybeRefOrGetter<string>,

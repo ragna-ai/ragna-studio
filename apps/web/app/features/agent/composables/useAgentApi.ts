@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 import type {
   AgentContextDocumentManyResponse,
   AgentContextDocumentResponse,
@@ -34,13 +35,6 @@ export const agentKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
 
 function agentBasePath(workspaceId: WorkspaceId): string {
   return `/workspace/${toValue(workspaceId)}/agent`;
@@ -218,7 +212,7 @@ export function useUploadAgentContextDocuments() {
       queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to upload documents'));
+      toast.error(extractErrorMessage(error, 'Failed to upload documents'));
     },
   });
 }
@@ -243,7 +237,7 @@ export function useRenameAgentContextDocument() {
       queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to rename document'));
+      toast.error(extractErrorMessage(error, 'Failed to rename document'));
     },
   });
 }
@@ -271,7 +265,7 @@ export function useReplaceAgentContextDocumentFile() {
       queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to replace document'));
+      toast.error(extractErrorMessage(error, 'Failed to replace document'));
     },
   });
 }
@@ -294,7 +288,7 @@ export function useRetryAgentContextDocument() {
       queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to retry document'));
+      toast.error(extractErrorMessage(error, 'Failed to retry document'));
     },
   });
 }
@@ -312,7 +306,7 @@ export function useDeleteAgentContextDocument() {
       queryClient.invalidateQueries({ queryKey: agentKeys.documents(workspaceId, agentId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete document'));
+      toast.error(extractErrorMessage(error, 'Failed to delete document'));
     },
   });
 }

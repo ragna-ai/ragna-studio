@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -23,13 +24,6 @@ export const chatKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
 
 export interface ChatResponse {
   chat: {
@@ -122,7 +116,7 @@ export function useCreateChat() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create chat'));
+      toast.error(extractErrorMessage(error, 'Failed to create chat'));
     },
   });
 }
@@ -146,7 +140,7 @@ export function useUpdateChatTitle() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to rename chat'));
+      toast.error(extractErrorMessage(error, 'Failed to rename chat'));
     },
   });
 }
@@ -163,7 +157,7 @@ export function useDeleteChat() {
       toast.success('Chat deleted');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete chat'));
+      toast.error(extractErrorMessage(error, 'Failed to delete chat'));
     },
   });
 }

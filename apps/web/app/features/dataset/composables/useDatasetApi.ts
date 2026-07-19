@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 import type {
   CreateDatasetRequest,
   DatasetManyResponse,
@@ -32,13 +33,6 @@ export const datasetKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
 
 export function useGetDataset(
   datasetId: MaybeRefOrGetter<string>,
@@ -90,7 +84,7 @@ export function useCreateDataset() {
       toast.success('Dataset created');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create dataset'));
+      toast.error(extractErrorMessage(error, 'Failed to create dataset'));
     },
   });
 }
@@ -111,7 +105,7 @@ export function useUpdateDataset() {
       toast.success('Dataset saved');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to save dataset'));
+      toast.error(extractErrorMessage(error, 'Failed to save dataset'));
     },
   });
 }
@@ -165,7 +159,7 @@ export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       queryClient.invalidateQueries({ queryKey: datasetKeys.rows(workspaceId, datasetId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to add row'));
+      toast.error(extractErrorMessage(error, 'Failed to add row'));
     },
   });
 }
@@ -189,7 +183,7 @@ export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       queryClient.invalidateQueries({ queryKey: datasetKeys.rows(workspaceId, datasetId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to update row'));
+      toast.error(extractErrorMessage(error, 'Failed to update row'));
     },
   });
 }

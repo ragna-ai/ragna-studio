@@ -6,6 +6,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -58,13 +59,6 @@ export interface GenerateImagesBody {
   negativePrompt?: string;
 }
 
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
-
 export function useGetGenImages(params: GenImageListParams = {}, options: QueryOpts = {}) {
   const api = useApi();
   const workspaceId = useActiveWorkspaceId();
@@ -93,7 +87,7 @@ export function useGenerateImages() {
       queryClient.invalidateQueries({ queryKey: genImageKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to generate images'));
+      toast.error(extractErrorMessage(error, 'Failed to generate images'));
     },
   });
 }

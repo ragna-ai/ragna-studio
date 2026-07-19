@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { documentKeys } from '~/features/document/composables/useDocumentApi';
+import { extractErrorMessage } from '~/lib/api-error';
 import type { FolderManyResponse, FolderResponse } from '~/features/document/types';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
@@ -16,13 +17,6 @@ export const folderKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
 
 export function useGetFolders(options: QueryOpts = {}) {
   const api = useApi();
@@ -48,7 +42,7 @@ export function useCreateFolder() {
       toast.success('Folder created');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create folder'));
+      toast.error(extractErrorMessage(error, 'Failed to create folder'));
     },
   });
 }
@@ -74,7 +68,7 @@ export function useRenameFolder() {
       toast.success('Folder renamed');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to rename folder'));
+      toast.error(extractErrorMessage(error, 'Failed to rename folder'));
     },
   });
 }
@@ -93,7 +87,7 @@ export function useDeleteFolder() {
       toast.success('Folder deleted');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete folder'));
+      toast.error(extractErrorMessage(error, 'Failed to delete folder'));
     },
   });
 }

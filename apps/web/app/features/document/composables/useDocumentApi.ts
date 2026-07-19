@@ -5,6 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { extractErrorMessage } from '~/lib/api-error';
 import type {
   CreateDocumentRequest,
   DocumentManyResponse,
@@ -22,13 +23,6 @@ export const documentKeys = {
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
-
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithData = { data?: { error?: string } };
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return (error as FetchErrorWithData | undefined)?.data?.error || fallback;
-}
 
 export function useGetDocuments(options: QueryOpts = {}) {
   const api = useApi();
@@ -71,7 +65,7 @@ export function useCreateDocument() {
       queryClient.invalidateQueries({ queryKey: documentKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create document'));
+      toast.error(extractErrorMessage(error, 'Failed to create document'));
     },
   });
 }
@@ -104,7 +98,7 @@ export function useUpdateDocument() {
       );
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to save document'));
+      toast.error(extractErrorMessage(error, 'Failed to save document'));
     },
   });
 }
@@ -121,7 +115,7 @@ export function useDeleteDocument() {
       toast.success('Document deleted');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete document'));
+      toast.error(extractErrorMessage(error, 'Failed to delete document'));
     },
   });
 }
