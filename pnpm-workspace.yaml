@@ -10,6 +10,13 @@ packageExtensions:
     dependencies:
       drizzle-orm: 1.0.0-rc.4
 
+minimumReleaseAgeExclude:
+  - 'nuxt'
+  - '@nuxt/kit@4.5.0'
+  - '@nuxt/nitro-server@4.5.0'
+  - '@nuxt/schema@4.5.0'
+  - '@nuxt/vite-builder@4.5.0'
+
 allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true
