@@ -50,10 +50,3 @@ const onExpandClick = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.nav-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-}
-</style>

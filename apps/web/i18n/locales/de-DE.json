@@ -296,7 +296,7 @@
       "previousNode": "Vorheriger Knoten",
       "nextNode": "Nächster Knoten",
       "notRunYet": "Dieser Knoten wurde noch nicht ausgeführt.",
-      "agentTrace": "Agenten-Ablauf",
+      "agentTrace": "Verlauf",
       "copyOutput": "Ausgabe kopieren"
     },
     "node": {
