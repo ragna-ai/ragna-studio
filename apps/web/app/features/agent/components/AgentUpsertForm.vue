@@ -340,13 +340,13 @@ const siderBarTabs = computed(() => [
               <template v-slot="{ field, state }">
                 <div>
                   <div class="mb-2 flex items-center justify-between">
-                    <Label :for="field.name">{{ t('agent.upsert.temperatureLabel') }}</Label>
+                    <Label :id="`${field.name}-label`">{{ t('agent.upsert.temperatureLabel') }}</Label>
                     <span class="text-sm text-muted-foreground">
                       {{ state.value ? state.value : t('agent.upsert.temperatureDisabled') }}
                     </span>
                   </div>
                   <Slider
-                    :id="field.name"
+                    :aria-labelledby="`${field.name}-label`"
                     :model-value="[state.value ?? DISABLED_TEMPERATURE]"
                     :min="0"
                     :max="1"

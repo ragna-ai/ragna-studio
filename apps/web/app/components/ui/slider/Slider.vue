@@ -3,6 +3,7 @@ import type { SliderRootEmits, SliderRootProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack, useForwardPropsEmits } from "reka-ui"
+import { useAttrs } from "vue"
 import { cn } from "@/lib/utils"
 
 const props = defineProps<SliderRootProps & { class?: HTMLAttributes["class"] }>()
@@ -11,6 +12,11 @@ const emits = defineEmits<SliderRootEmits>()
 const delegatedProps = reactiveOmit(props, "class")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+// The thumb, not the root span, is the focusable element, so its accessible
+// name must come from an explicit aria-label/aria-labelledby instead of a
+// <label for> pointing at the (non-labelable) slider root.
+const attrs = useAttrs()
 </script>
 
 <template>
@@ -37,6 +43,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       v-for="(_, key) in modelValue"
       :key="key"
       data-slot="slider-thumb"
+      :aria-label="attrs['aria-label'] as string | undefined"
+      :aria-labelledby="attrs['aria-labelledby'] as string | undefined"
       class="bg-white border-primary ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
     />
   </SliderRoot>
