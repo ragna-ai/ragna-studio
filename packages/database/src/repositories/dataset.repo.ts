@@ -3,7 +3,14 @@ import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
 import { dataset, datasetRow } from '../schema';
 
-export type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
+export type {
+  Dataset,
+  DatasetColumn,
+  DatasetColumnType,
+  DatasetOrigin,
+  DatasetRow,
+  DatasetRowData,
+} from '../schema';
 
 // Size guardrails (docs/datasets.md decision 8): keep tool responses inside
 // sane token budgets and the grid snappy.

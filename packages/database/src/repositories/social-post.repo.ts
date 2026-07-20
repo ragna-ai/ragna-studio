@@ -9,7 +9,14 @@ import type {
 } from '../schema';
 import { socialPost, socialPostMedia } from '../schema';
 
-export type { SocialPost, SocialPostMedia, SocialPostWithMedia } from '../schema';
+export type {
+  SocialPost,
+  SocialPostMedia,
+  SocialPostMediaOrigin,
+  SocialPostSource,
+  SocialPostStatus,
+  SocialPostWithMedia,
+} from '../schema';
 
 export async function createSocialPost(values: NewSocialPost): Promise<SocialPost> {
   const [created] = await db.insert(socialPost).values(values).returning();

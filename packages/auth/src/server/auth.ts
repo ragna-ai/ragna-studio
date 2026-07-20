@@ -1,5 +1,6 @@
 import { config } from '@repo/config';
-import { createWorkspace, db, schema } from '@repo/database';
+import { createWorkspace, db } from '@repo/database';
+import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
