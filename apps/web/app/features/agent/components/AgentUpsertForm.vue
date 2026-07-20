@@ -35,25 +35,6 @@ type UpsertAgentProps = {
 // stored temperature (or one dragged back to 0) sends nothing to the model.
 const DISABLED_TEMPERATURE = 0;
 
-const agentSettingsSchema = z.object({
-  temperature: z.number().min(0).max(1).nullable(),
-  maxOutputTokens: z.number().int().min(1).max(64_000).nullable(),
-});
-
-const agentUpsertSchema = z.object({
-  aiModelId: z.uuidv7(),
-  name: z.string().min(4, {
-    message: 'Name must be at least 4 characters.',
-  }),
-  systemPrompt: z.string(),
-  description: z.string(),
-  context: z.string().max(30_000),
-  tools: z.array(z.string()),
-  isDefault: z.boolean(),
-  settings: agentSettingsSchema,
-  defaultDatasetId: z.uuidv7().nullable(),
-});
-
 // Props
 const props = defineProps<UpsertAgentProps>();
 // Emits
@@ -65,6 +46,26 @@ const currentTab = ref('persona');
 const { isPending: isCreating, mutate: createAgent } = useCreateAgent();
 const { isPending: isUpdating, mutate: updateAgent } = useUpdateAgent();
 const isPending = computed(() => isCreating.value || isUpdating.value);
+const { t } = useI18n();
+
+const agentSettingsSchema = z.object({
+  temperature: z.number().min(0).max(1).nullable(),
+  maxOutputTokens: z.number().int().min(1).max(64_000).nullable(),
+});
+
+const agentUpsertSchema = z.object({
+  aiModelId: z.uuidv7(),
+  name: z.string().min(4, {
+    message: t('agent.upsert.nameRequired'),
+  }),
+  systemPrompt: z.string(),
+  description: z.string(),
+  context: z.string().max(30_000),
+  tools: z.array(z.string()),
+  isDefault: z.boolean(),
+  settings: agentSettingsSchema,
+  defaultDatasetId: z.uuidv7().nullable(),
+});
 
 const form = useForm({
   defaultValues: {
@@ -102,38 +103,38 @@ const tabsWithErrors = computed<string[]>(() => {
 
 // Hooks
 
-const siderBarTabs = [
-  { id: 'persona', icon: UserIcon, label: 'Persona' },
+const siderBarTabs = computed(() => [
+  { id: 'persona', icon: UserIcon, label: t('agent.upsert.tabs.persona') },
   // {
   //   id: 'systemPrompt',
   //   icon: CircleUserRoundIcon,
-  //   label: 'System Prompt',
+  //   label: t('agent.upsert.systemPromptTitle'),
   // },
-  { id: 'aimodel', icon: BrainIcon, label: 'Intelligence' },
+  { id: 'aimodel', icon: BrainIcon, label: t('agent.upsert.tabs.intelligence') },
   {
     id: 'tools',
     icon: BriefcaseBusinessIcon,
-    label: 'Tools',
+    label: t('agent.upsert.tabs.tools'),
   },
-  { id: 'context', icon: BookIcon, label: 'Context' },
-  { id: 'memory', icon: NotebookPenIcon, label: 'Memory' },
+  { id: 'context', icon: BookIcon, label: t('agent.upsert.tabs.context') },
+  { id: 'memory', icon: NotebookPenIcon, label: t('agent.upsert.tabs.memory') },
   {
     id: 'settings',
     icon: SettingsIcon,
-    label: 'Settings',
+    label: t('agent.upsert.tabs.settings'),
   },
-];
+]);
 </script>
 
 <template>
   <form @submit.prevent.stop="form.handleSubmit">
     <div class="mb-4 flex w-full justify-end space-x-4">
       <Button as-child variant="secondary">
-        <NuxtLinkLocale to="/agent">Cancel</NuxtLinkLocale>
+        <NuxtLinkLocale to="/agent">{{ t('common.cancel') }}</NuxtLinkLocale>
       </Button>
       <Button type="submit" :disabled="isPending">
         <Spinner v-if="isPending" class="mr-2" />
-        Save
+        {{ t('common.save') }}
       </Button>
     </div>
     <TabSidebar
@@ -148,7 +149,7 @@ const siderBarTabs = [
             <template v-slot="{ field, state }">
               <div>
                 <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                  Name
+                  {{ t('common.name') }}
                 </Label>
                 <InputGroup>
                   <InputGroupAddon>
@@ -173,7 +174,7 @@ const siderBarTabs = [
             <template v-slot="{ field, state }">
               <div class="hidden">
                 <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                  Description
+                  {{ t('common.description') }}
                 </Label>
                 <Textarea
                   :id="field.name"
@@ -193,7 +194,7 @@ const siderBarTabs = [
             <template v-slot="{ field, state }">
               <div>
                 <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                  Behavior / Instructions
+                  {{ t('agent.upsert.systemPromptLabel') }}
                 </Label>
                 <Textarea
                   :id="field.name"
@@ -218,7 +219,7 @@ const siderBarTabs = [
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                System Prompt
+                {{ t('agent.upsert.systemPromptTitle') }}
               </Label>
               <Textarea
                 :id="field.name"
@@ -275,28 +276,26 @@ const siderBarTabs = [
       <!-- TAB 5: Context -->
       <template #context>
         <div class="mb-8">
-          <Label class="mb-2 block text-sm font-medium">Documents</Label>
+          <Label class="mb-2 block text-sm font-medium">{{ t('agent.upsert.documentsLabel') }}</Label>
           <p class="mb-2 text-sm text-muted-foreground">
-            Upload files whose content this agent should always have access to.
-            Extracted text joins the context text below.
+            {{ t('agent.upsert.documentsHint') }}
           </p>
           <AgentContextDocumentPanel v-if="props.id" :agent-id="props.id" />
           <div
             v-else
             class="rounded-lg border p-4 text-sm text-muted-foreground"
           >
-            Save the agent first to upload documents.
+            {{ t('agent.upsert.saveFirstDocuments') }}
           </div>
         </div>
         <form.Field name="context">
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                Context
+                {{ t('agent.upsert.contextLabel') }}
               </Label>
               <p class="mb-2 text-sm text-muted-foreground">
-                Background knowledge this agent should always have. For behavior
-                and rules, use Persona.
+                {{ t('agent.upsert.contextHint') }}
               </p>
               <Textarea
                 :id="field.name"
@@ -318,7 +317,7 @@ const siderBarTabs = [
       <template #memory>
         <AgentMemoryPanel v-if="props.id" :agent-id="props.id" />
         <div v-else class="rounded-lg border p-4 text-sm text-muted-foreground">
-          Save the agent first to view and edit its memory.
+          {{ t('agent.upsert.saveFirstMemory') }}
         </div>
       </template>
       <!-- TAB 7: Settings -->
@@ -332,7 +331,7 @@ const siderBarTabs = [
                   :model-value="state.value"
                   @update:model-value="field.handleChange"
                 />
-                <Label :for="field.name">Make this the default agent</Label>
+                <Label :for="field.name">{{ t('agent.upsert.defaultAgentLabel') }}</Label>
               </div>
             </template>
           </form.Field>
@@ -341,9 +340,9 @@ const siderBarTabs = [
               <template v-slot="{ field, state }">
                 <div>
                   <div class="mb-2 flex items-center justify-between">
-                    <Label :for="field.name">Temperature</Label>
+                    <Label :for="field.name">{{ t('agent.upsert.temperatureLabel') }}</Label>
                     <span class="text-sm text-muted-foreground">
-                      {{ state.value ? state.value : 'Disabled' }}
+                      {{ state.value ? state.value : t('agent.upsert.temperatureDisabled') }}
                     </span>
                   </div>
                   <Slider
@@ -367,7 +366,7 @@ const siderBarTabs = [
                     class="mb-2 block text-sm font-medium"
                     :for="field.name"
                   >
-                    Max output tokens
+                    {{ t('agent.upsert.maxOutputTokensLabel') }}
                   </Label>
                   <Input
                     :id="field.name"
@@ -387,8 +386,7 @@ const siderBarTabs = [
               </template>
             </form.Field>
             <p class="text-sm text-muted-foreground">
-              Set temperature to 0 to disable it. Leave max output tokens empty
-              to use the model's default.
+              {{ t('agent.upsert.settingsHint') }}
             </p>
           </div>
         </div>

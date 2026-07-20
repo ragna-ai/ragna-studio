@@ -52,7 +52,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 | `@repo/queue`     | BullMQ wrapper. Defines queue/worker/cron factories in `src/services/bullmq.service.ts`. Queue names and job constants in `src/constants/`. Job DTOs in `src/dtos/`.                       |
 | `@repo/mail`      | Nodemailer + MJML + Brevo transport. Template-based `sendEmail()` with `templateId` and `variables`.                                                                                       |
 | `@repo/ai`        | Vercel AI SDK configured for Anthropic, OpenAI, Google, and Black Forest Labs models. Exports factories and tool definitions.                                                              |
-| `@repo/storage`   | `s3mini` (lightweight S3-compatible client) pointed at Cloudflare R2 (`BucketService`).                                                                                                     |
+| `@repo/storage`   | `s3mini` (lightweight S3-compatible client) pointed at Cloudflare R2 (`BucketService`).                                                                                                    |
 | `@repo/editor`    | Tiptap v3 rich-text editor (Vue 3 extensions).                                                                                                                                             |
 | `@repo/logger`    | Consola-based structured logger. Log level controlled by `config.logLevel`.                                                                                                                |
 | `@repo/utils`     | Tiny utilities: `tryCatch` (async error handling) and `retryExpoBackoff`.                                                                                                                  |
@@ -78,18 +78,12 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 - **Web dev server**: runs on port **3000** (`http://localhost:3000`).
 - **API dev server**: runs on port **3010** (`http://localhost:3010`).
 
+### Typescript
+
+`as any` types are **strictly prohibited**. never use them.
+
 ### Coding
 
 Always use the clean-code skill.
 
-Skip self-verification of changes unless explicitly asked:
-
-- no type check
-- no visual confirmation
-- no git status/diff check
-- no git commit
-- no browser verification
-
-The user handles verification and commits.
-
-`as any` types are **strictly prohibited**. never use them.
+**Skip self-verification of changes** unless explicitly asked, means: no type-check at all, no visual confirmation, no git status/diff check, no git commit, no browser verification. The user handles verification and commits.

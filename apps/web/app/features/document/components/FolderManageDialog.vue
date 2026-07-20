@@ -62,8 +62,8 @@ async function handleDelete(folder: Folder) {
   const confirmed = await confirm({
     title: t('folder.manage.deleteTitle'),
     message: t('folder.manage.deleteMessage', { name: folder.name }),
-    confirmLabel: t('folder.manage.deleteConfirm'),
-    cancelLabel: t('folder.manage.deleteCancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {
@@ -123,7 +123,7 @@ async function handleDelete(folder: Folder) {
               variant="ghost"
               size="icon"
               :disabled="isRenaming"
-              :aria-label="t('folder.manage.saveRename')"
+              :aria-label="t('common.saveRename')"
               @click="saveEditing"
             >
               <Spinner v-if="isRenaming" />
@@ -132,7 +132,7 @@ async function handleDelete(folder: Folder) {
             <Button
               variant="ghost"
               size="icon"
-              :aria-label="t('folder.manage.cancelRename')"
+              :aria-label="t('common.cancelRename')"
               @click="cancelEditing"
             >
               <XIcon class="size-4" />
@@ -163,7 +163,7 @@ async function handleDelete(folder: Folder) {
 
       <DialogFooter>
         <Button variant="secondary" @click="open = false">
-          {{ t('folder.manage.close') }}
+          {{ t('common.close') }}
         </Button>
       </DialogFooter>
     </DialogContent>

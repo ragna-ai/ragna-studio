@@ -11,6 +11,9 @@ const props = defineProps<{
   node: Extract<WorkflowNode, { type: 'condition' }>;
 }>();
 
+// Composables
+const { t } = useI18n();
+
 // Computed
 const needsRightOperand = computed(
   () => props.node.data.config.operator !== 'isEmpty' && props.node.data.config.operator !== 'isNotEmpty',
@@ -20,13 +23,13 @@ const needsRightOperand = computed(
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">Left</Label>
+      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.leftLabel') }}</Label>
       <Input v-model="node.data.config.left" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
 
     <div>
-      <Label class="mb-2 block text-sm font-medium">Operator</Label>
+      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.operatorLabel') }}</Label>
       <Select v-model="node.data.config.operator">
         <SelectTrigger class="w-full">
           <SelectValue />
@@ -40,14 +43,13 @@ const needsRightOperand = computed(
     </div>
 
     <div v-if="needsRightOperand">
-      <Label class="mb-2 block text-sm font-medium">Right</Label>
+      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.rightLabel') }}</Label>
       <Input v-model="node.data.config.right" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
 
     <p class="text-xs text-muted-foreground">
-      The two edges leaving this node are labeled "true" and "false"; connect each to the
-      branch that should run.
+      {{ t('workflow.conditionConfig.note') }}
     </p>
   </div>
 </template>

@@ -25,6 +25,7 @@ const emit = defineEmits<{
 
 // Composables
 const { formatDateTime } = useDateTimeFormat();
+const { t } = useI18n();
 
 // Computed
 
@@ -38,13 +39,13 @@ const { formatDateTime } = useDateTimeFormat();
     <TableHeader>
       <TableRow>
         <TableHead>&nbsp;</TableHead>
-        <TableHead>{{ $t('table.title') }}</TableHead>
-        <TableHead>{{ $t('table.ai_agent') }}</TableHead>
+        <TableHead>{{ t('common.title') }}</TableHead>
+        <TableHead>{{ t('chat.history.table.agent') }}</TableHead>
         <TableHead class="whitespace-nowrap">
-          {{ $t('table.ai_model') }}
+          {{ t('common.model') }}
         </TableHead>
-        <TableHead>{{ $t('table.updated_at') }}</TableHead>
-        <TableHead class="text-right">{{ $t('table.actions') }}</TableHead>
+        <TableHead>{{ t('common.updated') }}</TableHead>
+        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>

@@ -10,7 +10,7 @@ import WorkflowRunStatusBadge from '~/features/workflow/components/WorkflowRunSt
 import WorkflowTraceTimeline from '~/features/workflow/components/WorkflowTraceTimeline.vue';
 import type { WorkflowRunStep } from '~/features/workflow/types';
 import type { RenderableWorkflowNode } from '~/features/workflow/types/node-data';
-import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 
 // Props
 // `nodes` is the run definition's full node list, in definition order, used
@@ -25,6 +25,7 @@ const nodeId = defineModel<string | null>('nodeId', { default: null });
 
 // Composables
 const { copy: copyOutput, copied: isOutputCopied } = useClipboard();
+const { t } = useI18n();
 
 // Computed
 const isOpen = computed({
@@ -84,7 +85,7 @@ function handleKeydown(event: KeyboardEvent) {
               selectedNode?.data.label
             }}</DialogTitle>
             <Badge v-if="selectedNode" variant="outline">
-              {{ NODE_TYPE_LABELS[selectedNode.type] }}
+              {{ t(NODE_TYPE_LABEL_KEYS[selectedNode.type]) }}
             </Badge>
             <WorkflowRunStatusBadge
               v-if="selectedStep"
@@ -96,7 +97,7 @@ function handleKeydown(event: KeyboardEvent) {
               variant="ghost"
               size="icon-sm"
               :disabled="!canGoPrevious"
-              aria-label="Previous node"
+              :aria-label="t('workflow.runStepDialog.previousNode')"
               @click="goToPrevious"
             >
               <ChevronLeftIcon class="size-4 stroke-1.5" />
@@ -105,7 +106,7 @@ function handleKeydown(event: KeyboardEvent) {
               variant="ghost"
               size="icon-sm"
               :disabled="!canGoNext"
-              aria-label="Next node"
+              :aria-label="t('workflow.runStepDialog.nextNode')"
               @click="goToNext"
             >
               <ChevronRightIcon class="size-4 stroke-1.5" />
@@ -116,24 +117,24 @@ function handleKeydown(event: KeyboardEvent) {
 
       <div class="-mx-5 max-h-[75vh] space-y-4 overflow-y-auto px-5">
         <p v-if="!selectedStep" class="text-sm text-muted-foreground">
-          This node has not run yet.
+          {{ t('workflow.runStepDialog.notRunYet') }}
         </p>
         <template v-else>
           <div v-if="selectedStep.input">
-            <Label class="mb-2 block text-sm font-medium">Input</Label>
+            <Label class="mb-2 block text-sm font-medium">{{ t('common.input') }}</Label>
             <pre
               class="max-h-[40vh] overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap"
               >{{ selectedStep.input }}</pre>
           </div>
           <div v-if="selectedStep.output">
-            <Label class="mb-2 block text-sm font-medium">Output</Label>
+            <Label class="mb-2 block text-sm font-medium">{{ t('common.output') }}</Label>
             <div class="relative">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 class="absolute top-2 right-2 z-10"
-                aria-label="Copy output"
+                :aria-label="t('workflow.runStepDialog.copyOutput')"
                 @click="copyOutput(selectedStep.output ?? '')"
               >
                 <component
@@ -153,12 +154,12 @@ function handleKeydown(event: KeyboardEvent) {
             </div>
           </div>
           <div v-if="selectedStep.trace?.length">
-            <Label class="mb-2 block text-sm font-medium">Agent trace</Label>
+            <Label class="mb-2 block text-sm font-medium">{{ t('workflow.runStepDialog.agentTrace') }}</Label>
             <WorkflowTraceTimeline :trace="selectedStep.trace" />
           </div>
           <div v-if="selectedStep.error">
             <Label class="mb-2 block text-sm font-medium text-destructive"
-              >Error</Label
+              >{{ t('common.error') }}</Label
             >
             <pre
               class="max-h-[40vh] overflow-auto rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs whitespace-pre-wrap"

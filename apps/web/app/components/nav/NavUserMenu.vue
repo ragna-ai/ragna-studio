@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  BellIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
   LogOutIcon,
@@ -97,7 +96,7 @@ async function signOut() {
       <DropdownMenuGroup>
         <DropdownMenuItem class="cursor-pointer px-4 py-2">
           <SparklesIcon class="mr-2 size-4 stroke-1.5" />
-          Upgrade to Pro
+          {{ $t('nav.userMenu.upgrade') }}
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
@@ -105,25 +104,19 @@ async function signOut() {
         <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
           <NuxtLink to="/account">
             <UserIcon class="mr-2 size-4 stroke-1.5" />
-            Account
+            {{ $t('nav.userMenu.account') }}
           </NuxtLink>
         </DropdownMenuItem>
         <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
           <NuxtLink to="/account/statistics">
             <ChartColumnIcon class="mr-2 size-4 stroke-1.5" />
-            Statistics
+            {{ $t('nav.userMenu.statistics') }}
           </NuxtLink>
         </DropdownMenuItem>
         <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
-          <NuxtLink to="/account/settings">
+          <NuxtLink to="/account">
             <SettingsIcon class="mr-2 size-4 stroke-1.5" />
-            Settings
-          </NuxtLink>
-        </DropdownMenuItem>
-        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
-          <NuxtLink to="/account/notifications">
-            <BellIcon class="mr-2 size-4 stroke-1.5" />
-            Notifications
+            {{ $t('nav.userMenu.settings') }}
           </NuxtLink>
         </DropdownMenuItem>
       </DropdownMenuGroup>
@@ -131,7 +124,7 @@ async function signOut() {
       <DropdownMenuGroup>
         <DropdownMenuItem class="cursor-pointer px-4 py-2" @click="signOut">
           <LogOutIcon class="mr-2 size-4 stroke-1.5" />
-          Sign out
+          {{ $t('nav.userMenu.signOut') }}
         </DropdownMenuItem>
       </DropdownMenuGroup>
     </DropdownMenuContent>

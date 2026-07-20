@@ -27,8 +27,8 @@ async function handleDeletePost(postId: string) {
   const confirmed = await confirm({
     title: t('social.deleteConfirm.title'),
     message: t('social.deleteConfirm.message'),
-    confirmLabel: t('social.deleteConfirm.confirm'),
-    cancelLabel: t('social.deleteConfirm.cancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {

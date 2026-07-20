@@ -43,7 +43,7 @@ const { dynamicNavItems } = useNavItems();
                     </div>
                     <span
                       class="nav-icon-text truncate px-4 pt-0 text-foreground"
-                      >More</span
+                      >{{ $t('nav.more') }}</span
                     >
                   </div>
                 </DropdownMenuTrigger>

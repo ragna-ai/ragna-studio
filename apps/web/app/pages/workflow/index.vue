@@ -25,10 +25,10 @@ const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
 // Functions
 const handleDeleteWorkflow = async (workflowId: string) => {
   const confirmed = await confirm({
-    title: 'Delete Workflow',
-    message: 'Are you sure you want to delete this workflow?',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    title: t('workflow.list.deleteConfirm.title'),
+    message: t('workflow.list.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {
@@ -78,7 +78,7 @@ const handleDeleteWorkflow = async (workflowId: string) => {
       <p class="text-sm text-stone-500">
         {{
           workflowsError.message ||
-          'An error occurred while fetching the workflows.'
+          t('workflow.list.loadError')
         }}
       </p>
     </div>

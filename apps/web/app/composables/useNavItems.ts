@@ -13,6 +13,14 @@ import {
 import type { Component } from 'vue';
 import { computed } from 'vue';
 
+interface NavItemConfig {
+  id: string;
+  path?: string;
+  icon?: Component;
+  labelKey?: string;
+  children: NavItemConfig[];
+}
+
 export interface NavItem {
   id: string;
   path?: string;
@@ -21,62 +29,62 @@ export interface NavItem {
   children: NavItem[];
 }
 
-const homeItem: NavItem = {
+const homeItem: NavItemConfig = {
   id: 'home',
   path: '/',
   icon: HomeIcon,
-  label: 'Home',
+  labelKey: 'nav.home',
   children: [],
 };
 
-const defaultItems: NavItem[] = [
+const defaultItems: NavItemConfig[] = [
   {
     id: 'workflow',
     path: '/workflow',
     icon: WorkflowIcon,
-    label: 'Workflows',
+    labelKey: 'nav.workflows',
     children: [],
   },
   {
     id: 'agent',
     path: '/agent',
     icon: BotIcon,
-    label: 'Agents',
+    labelKey: 'nav.agents',
     children: [],
   },
   {
     id: 'chat',
     path: '/chat',
     icon: MessagesSquareIcon,
-    label: 'Chat',
+    labelKey: 'nav.chat',
     children: [],
   },
   {
     id: 'dataset',
     path: '/dataset',
     icon: DatabaseIcon,
-    label: 'Datasets',
+    labelKey: 'nav.datasets',
     children: [],
   },
   {
     id: 'document',
     path: '/document',
     icon: FileTextIcon,
-    label: 'Docs',
+    labelKey: 'nav.docs',
     children: [],
   },
   {
     id: 'text-to-image',
     path: '/text-to-image',
     icon: ImageIcon,
-    label: 'Image',
+    labelKey: 'nav.image',
     children: [],
   },
   {
     id: 'social',
     path: '/social',
     icon: Share2Icon,
-    label: 'Social',
+    labelKey: 'nav.social',
     children: [],
   },
   // { id: 'sep-1', children: [] },
@@ -87,97 +95,111 @@ const defaultItems: NavItem[] = [
   //       id: 'collection',
   //       path: '/collection',
   //       icon: DatabaseIcon,
-  //       label: 'Collections',
+  //       labelKey: 'nav.collections',
   //       children: [],
   //     },
   //     {
   //       id: 'media',
   //       path: '/media',
   //       icon: FolderIcon,
-  //       label: 'Media',
+  //       labelKey: 'nav.media',
   //       children: [],
   //     },
   //     {
   //       id: 'analytics',
   //       path: '/account/statistics',
   //       icon: PieChartIcon,
-  //       label: 'Analytics',
+  //       labelKey: 'nav.analytics',
   //       children: [],
   //     },
   //   ],
   // },
 ];
 
-const chatItems: NavItem[] = [
+const chatItems: NavItemConfig[] = [
   {
     id: 'chat-new',
     path: '/chat',
     icon: PlusCircleIcon,
-    label: 'New',
+    labelKey: 'nav.new',
     children: [],
   },
   {
     id: 'chat-history',
     path: '/chat/history',
     icon: FolderClockIcon,
-    label: 'History',
+    labelKey: 'nav.history',
     children: [],
   },
   {
     id: 'agent',
     path: '/agent',
     icon: BotIcon,
-    label: 'Agents',
+    labelKey: 'nav.agents',
     children: [],
   },
 ];
 
-const agentItems: NavItem[] = [
+const agentItems: NavItemConfig[] = [
   {
     id: 'agent-create',
     path: '/agent/create',
     icon: PlusCircleIcon,
-    label: 'Create',
+    labelKey: 'common.create',
     children: [],
   },
   {
     id: 'agent',
     path: '/agent',
     icon: BotIcon,
-    label: 'Agents',
+    labelKey: 'nav.agents',
     children: [],
   },
 ];
 
-const workflowItems: NavItem[] = [
+const workflowItems: NavItemConfig[] = [
   {
     id: 'workflow-create',
     path: '/workflow/create',
     icon: PlusCircleIcon,
-    label: 'Create',
+    labelKey: 'common.create',
     children: [],
   },
   {
     id: 'workflow',
     path: '/workflow',
     icon: WorkflowIcon,
-    label: 'Workflows',
+    labelKey: 'nav.workflows',
     children: [],
   },
 ];
 
+function translateItems(
+  items: NavItemConfig[],
+  t: (key: string) => string,
+): NavItem[] {
+  return items.map((item) => ({
+    id: item.id,
+    path: item.path,
+    icon: item.icon,
+    label: item.labelKey ? t(item.labelKey) : undefined,
+    children: translateItems(item.children, t),
+  }));
+}
+
 export function useNavItems() {
   const route = useRoute();
+  const { t } = useI18n();
 
   const dynamicNavItems = computed<NavItem[]>(() => {
-    // if (route.path.startsWith('/chat')) return [homeItem, ...chatItems];
-    // if (route.path.startsWith('/agent')) return [homeItem, ...agentItems];
-    // if (route.path.startsWith('/workflow')) return [homeItem, ...workflowItems];
-    return [homeItem, ...defaultItems];
+    // if (route.path.startsWith('/chat')) return translateItems([homeItem, ...chatItems], t);
+    // if (route.path.startsWith('/agent')) return translateItems([homeItem, ...agentItems], t);
+    // if (route.path.startsWith('/workflow')) return translateItems([homeItem, ...workflowItems], t);
+    return translateItems([homeItem, ...defaultItems], t);
   });
 
   function getAllItems(): NavItem[] {
-    return [homeItem, ...defaultItems].flatMap((item) =>
+    return translateItems([homeItem, ...defaultItems], t).flatMap((item) =>
       item.path ? [item] : item.children.filter((child) => child.path),
     );
   }

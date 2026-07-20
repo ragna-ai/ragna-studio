@@ -27,6 +27,7 @@ const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWork
 const { mutateAsync: createRun, isPending: isCreatingRun } = useCreateWorkflowRun(
   () => props.workflow.id,
 );
+const { t } = useI18n();
 
 // Computed
 const isPublished = computed(() => props.workflow.publishedDefinition !== null);
@@ -77,42 +78,42 @@ async function handlePublishAndRun() {
   <Dialog v-model:open="open">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Run workflow</DialogTitle>
+        <DialogTitle>{{ t('workflow.runDialog.title') }}</DialogTitle>
         <DialogDescription>
-          Optionally provide an input for the trigger node.
+          {{ t('workflow.runDialog.subtitle') }}
         </DialogDescription>
       </DialogHeader>
 
       <Alert v-if="hasUnpublishedChanges" class="border-amber-500/50 text-amber-600">
         <TriangleAlertIcon />
-        <AlertTitle>Unpublished changes</AlertTitle>
+        <AlertTitle>{{ t('workflow.editor.unpublishedChanges') }}</AlertTitle>
         <AlertDescription>
           {{
             isPublished
-              ? 'Running now uses the last published version, not your latest changes.'
-              : 'This workflow has never been published. Publish it to run your changes.'
+              ? t('workflow.runDialog.unpublishedChangesPublished')
+              : t('workflow.runDialog.unpublishedChangesUnpublished')
           }}
         </AlertDescription>
       </Alert>
 
-      <Textarea v-model="input" rows="4" placeholder="Input (optional)" />
+      <Textarea v-model="input" rows="4" :placeholder="t('workflow.runDialog.inputPlaceholder')" />
 
       <DialogFooter>
-        <Button variant="secondary" @click="open = false">Cancel</Button>
+        <Button variant="secondary" @click="open = false">{{ t('common.cancel') }}</Button>
         <Button
           v-if="hasUnpublishedChanges && isPublished"
           variant="outline"
           :disabled="isBusy"
           @click="handleRun"
         >
-          Run published version
+          {{ t('workflow.runDialog.runPublished') }}
         </Button>
         <Button
           :disabled="isBusy"
           @click="hasUnpublishedChanges ? handlePublishAndRun() : handleRun()"
         >
           <Spinner v-if="isBusy" class="mr-2" />
-          {{ hasUnpublishedChanges ? 'Publish & run' : 'Run' }}
+          {{ hasUnpublishedChanges ? t('workflow.runDialog.publishAndRun') : t('common.run') }}
         </Button>
       </DialogFooter>
     </DialogContent>

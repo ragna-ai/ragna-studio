@@ -64,7 +64,7 @@ function inputValueOf(event: Event): string {
           <TableHead v-for="column in columns" :key="column.id" class="min-w-40">
             {{ column.name }}
           </TableHead>
-          <TableHead class="text-right">{{ t('dataset.grid.actions') }}</TableHead>
+          <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

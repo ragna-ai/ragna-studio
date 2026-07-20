@@ -54,7 +54,7 @@ function handleDisconnect(providerId: SocialProviderId, accountId: string) {
 </script>
 
 <template>
-  <Card class="mx-auto mt-10 w-full max-w-2xl">
+  <Card class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ $t('user.social.title') }}</CardTitle>
     </CardHeader>

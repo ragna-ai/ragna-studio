@@ -18,7 +18,7 @@ const session = useAuthSession();
 </script>
 
 <template>
-  <div class="mx-auto mt-10 w-full max-w-2xl">
+  <div class="mx-auto w-full max-w-2xl">
     <UserProfileForm
       :name="session?.user.name ?? ''"
       :email="session?.user.email ?? ''"

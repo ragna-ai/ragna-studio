@@ -103,7 +103,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('dataset.create.nameLabel') }}
+                {{ t('common.name') }}
               </Label>
               <Input
                 :id="field.name"
@@ -121,7 +121,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('dataset.create.descriptionLabel') }}
+                {{ t('common.description') }}
               </Label>
               <Textarea
                 :id="field.name"
@@ -138,11 +138,11 @@ const form = useForm({
 
         <div class="flex justify-end gap-4">
           <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/dataset">{{ t('dataset.create.cancel') }}</NuxtLinkLocale>
+            <NuxtLinkLocale to="/dataset">{{ t('common.cancel') }}</NuxtLinkLocale>
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" class="mr-2" />
-            {{ t('dataset.create.submit') }}
+            {{ t('common.create') }}
           </Button>
         </div>
       </form>

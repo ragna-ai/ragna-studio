@@ -42,8 +42,8 @@ async function handleDeleteDocument(documentId: string) {
   const confirmed = await confirm({
     title: t('document.deleteConfirm.title'),
     message: t('document.deleteConfirm.message'),
-    confirmLabel: t('document.deleteConfirm.confirm'),
-    cancelLabel: t('document.deleteConfirm.cancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {

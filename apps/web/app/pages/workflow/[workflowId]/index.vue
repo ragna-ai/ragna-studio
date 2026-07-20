@@ -31,7 +31,7 @@ useHead({
     <p class="text-sm text-stone-500">
       {{
         workflowError.message ||
-        'An error occurred while fetching the workflow.'
+        t('workflow.editor.loadError')
       }}
     </p>
   </div>

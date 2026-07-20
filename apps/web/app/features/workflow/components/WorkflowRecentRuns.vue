@@ -22,6 +22,7 @@ const { data: runsData, isLoading: isLoadingRuns } = useGetWorkflowRuns(
   () => props.workflowId,
 );
 const { formatDateTime } = useDateTimeFormat();
+const { t } = useI18n();
 
 // Computed
 const recentRuns = computed(() =>
@@ -32,25 +33,25 @@ const recentRuns = computed(() =>
 <template>
   <div class="flex flex-col gap-1.5">
     <div class="flex items-center justify-between px-1">
-      <p class="text-xs font-medium text-muted-foreground">Recent runs</p>
+      <p class="text-xs font-medium text-muted-foreground">{{ t('workflow.recentRuns.title') }}</p>
       <Button
         variant="ghost"
         size="sm"
         class="text-xs text-muted-foreground"
         @click="emit('show-all-runs')"
       >
-        Show all
+        {{ t('workflow.recentRuns.showAll') }}
       </Button>
     </div>
 
     <p v-if="isLoadingRuns" class="px-1 text-xs text-muted-foreground">
-      Loading...
+      {{ t('workflow.recentRuns.loading') }}
     </p>
     <p
       v-else-if="recentRuns.length === 0"
       class="px-1 text-xs text-muted-foreground"
     >
-      No runs yet.
+      {{ t('workflow.recentRuns.empty') }}
     </p>
     <ul v-else class="flex flex-col gap-1">
       <li v-for="run in recentRuns" :key="run.id">

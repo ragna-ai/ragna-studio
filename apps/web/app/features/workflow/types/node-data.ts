@@ -41,11 +41,11 @@ export type RenderableWorkflowNode = WorkflowNode & {
   data: { stepStatus?: WorkflowStepStatus; stepToolCallCount?: number };
 };
 
-export const NODE_TYPE_LABELS: Record<WorkflowNodeType, string> = {
-  trigger: 'Trigger',
-  agent: 'Agent',
-  tool: 'Tool',
-  condition: 'Condition',
-  transform: 'Transform',
-  team: 'Team',
+export const NODE_TYPE_LABEL_KEYS: Record<WorkflowNodeType, string> = {
+  trigger: 'workflow.nodeType.trigger',
+  agent: 'workflow.nodeType.agent',
+  tool: 'workflow.nodeType.tool',
+  condition: 'workflow.nodeType.condition',
+  transform: 'workflow.nodeType.transform',
+  team: 'workflow.nodeType.team',
 };

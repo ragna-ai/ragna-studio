@@ -9,7 +9,7 @@ import {
   WrenchIcon,
   ZapIcon,
 } from '@lucide/vue';
-import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 
 // Imports
 
@@ -17,6 +17,9 @@ import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
 const emit = defineEmits<{
   (e: 'add-node', type: WorkflowNodeType): void;
 }>();
+
+// Composables
+const { t } = useI18n();
 
 // Computed
 const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
@@ -31,7 +34,7 @@ const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
 
 <template>
   <div class="flex flex-col gap-1">
-    <p class="px-1 pb-1 text-xs font-medium text-muted-foreground">Add node</p>
+    <p class="px-1 pb-1 text-xs font-medium text-muted-foreground">{{ t('workflow.palette.addNode') }}</p>
     <Button
       v-for="type in NODE_TYPES"
       :key="type"
@@ -41,7 +44,7 @@ const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
       @click="emit('add-node', type)"
     >
       <component :is="typeIcon[type]" class="size-4 stroke-1.5 text-primary" />
-      {{ NODE_TYPE_LABELS[type] }}
+      {{ t(NODE_TYPE_LABEL_KEYS[type]) }}
       <PlusIcon class="ml-auto size-3.5 stroke-1.5 text-muted-foreground" />
     </Button>
   </div>

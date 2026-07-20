@@ -31,10 +31,13 @@ const colorClassByStatus: Partial<Record<Status, string>> = {
   skipped: 'border-dashed text-muted-foreground',
 };
 
+const { t } = useI18n();
+
 const variant = computed(() => variantByStatus[props.status]);
 const colorClass = computed(() => colorClassByStatus[props.status]);
+const label = computed(() => t(`workflow.status.${props.status}`));
 </script>
 
 <template>
-  <Badge :variant="variant" :class="cn('capitalize', colorClass)">{{ status }}</Badge>
+  <Badge :variant="variant" :class="cn(colorClass)">{{ label }}</Badge>
 </template>

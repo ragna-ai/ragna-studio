@@ -36,11 +36,11 @@ const { formatDateTime } = useDateTimeFormat();
     <TableHeader>
       <TableRow>
         <TableHead>&nbsp;</TableHead>
-        <TableHead>{{ t('social.list.table.status') }}</TableHead>
+        <TableHead>{{ t('common.status') }}</TableHead>
         <TableHead>{{ t('social.list.table.content') }}</TableHead>
-        <TableHead>{{ t('social.list.table.created') }}</TableHead>
+        <TableHead>{{ t('common.created') }}</TableHead>
         <TableHead class="text-right">
-          {{ t('social.list.table.actions') }}
+          {{ t('common.actions') }}
         </TableHead>
       </TableRow>
     </TableHeader>
@@ -74,7 +74,7 @@ const { formatDateTime } = useDateTimeFormat();
           <Button
             variant="outline"
             size="icon"
-            :aria-label="t('social.actions.delete')"
+            :aria-label="t('common.delete')"
             @click="() => emit('delete-post', post.id)"
           >
             <Trash2Icon class="size-4 stroke-1.5 text-destructive" />

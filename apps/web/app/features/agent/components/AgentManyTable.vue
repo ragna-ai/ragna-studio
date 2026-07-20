@@ -24,6 +24,7 @@ const props = defineProps<Props>();
 // Composables
 const router = useRouter();
 const { mutateAsync: createNewChat } = useCreateChat();
+const { t } = useI18n();
 
 // Computed
 
@@ -66,13 +67,13 @@ const handleDeleteFavorite = (agentId: string) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{{ $t('table.favorit') }}</TableHead>
-          <TableHead>{{ $t('table.avatar') }}</TableHead>
-          <TableHead>{{ $t('table.name') }}</TableHead>
+          <TableHead>{{ t('agent.list.table.favorite') }}</TableHead>
+          <TableHead>{{ t('agent.list.table.avatar') }}</TableHead>
+          <TableHead>{{ t('common.name') }}</TableHead>
           <TableHead class="whitespace-nowrap">
-            {{ $t('table.ai_model') }}
+            {{ t('common.model') }}
           </TableHead>
-          <TableHead class="text-right">{{ $t('table.actions') }}</TableHead>
+          <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

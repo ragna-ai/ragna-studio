@@ -60,6 +60,7 @@ watch(selectedNodeId, (nodeId) => {
 // Composables
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
 const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
+const { t } = useI18n();
 
 // Computed
 const selectedNode = computed(
@@ -77,7 +78,7 @@ const hasUnpublishedChanges = computed(
 
 // Functions
 function addNode(type: WorkflowNodeType) {
-  const node = createWorkflowNode(type, nextFreePosition(nodes.value));
+  const node = createWorkflowNode(type, nextFreePosition(nodes.value), t);
   nodes.value.push(node);
   selectedNodeId.value = node.id;
 }
@@ -130,13 +131,13 @@ async function handlePublish() {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <PageBreadcrumb :items="[{ label: $t('workflow.list.title'), to: '/workflow' }]">
+        <PageBreadcrumb :items="[{ label: t('workflow.list.title'), to: '/workflow' }]">
           <template #current>
-            <InlineNameField v-model:name="name" label="Workflow name" @save="handleSave" />
+            <InlineNameField v-model:name="name" :label="t('workflow.editor.nameLabel')" @save="handleSave" />
           </template>
         </PageBreadcrumb>
         <p class="text-xs text-muted-foreground">
-          {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
+          {{ workflow.publishedDefinition ? t('workflow.list.status.published') : t('workflow.list.status.draft') }}
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -145,12 +146,12 @@ async function handlePublish() {
           variant="outline"
           class="border-amber-500 text-amber-600"
         >
-          Unpublished changes
+          {{ t('workflow.editor.unpublishedChanges') }}
         </Badge>
         <Button
           variant="outline"
           size="sm"
-          aria-label="Workflow settings"
+          :aria-label="t('workflow.editor.settingsTitle')"
           @click="toggleSettings"
         >
           <SettingsIcon class="size-4 stroke-1.5" />
@@ -162,7 +163,7 @@ async function handlePublish() {
           @click="handleSave"
         >
           <Spinner v-if="isSaving" class="mr-2" />
-          Save
+          {{ t('common.save') }}
         </Button>
         <Button
           variant="outline"
@@ -171,11 +172,11 @@ async function handlePublish() {
           @click="handlePublish"
         >
           <Spinner v-if="isPublishing" class="mr-2" />
-          Publish
+          {{ t('common.publish') }}
         </Button>
         <Button size="sm" @click="isRunDialogOpen = true">
           <PlayIcon class="mr-2 size-4 stroke-1.5" />
-          Run
+          {{ t('common.run') }}
         </Button>
       </div>
     </header>
@@ -206,7 +207,7 @@ async function handlePublish() {
         v-if="isSettingsOpen"
         :name="name"
         :description="description"
-        title="Workflow settings"
+        :title="t('workflow.editor.settingsTitle')"
         @save="handleSaveSettings"
         @close="isSettingsOpen = false"
       />

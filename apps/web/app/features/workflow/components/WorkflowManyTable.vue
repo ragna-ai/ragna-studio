@@ -35,15 +35,15 @@ const { formatDateTime } = useDateTimeFormat();
     <TableHeader>
       <TableRow>
         <TableHead>&nbsp;</TableHead>
-        <TableHead>Name</TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead>Updated</TableHead>
-        <TableHead class="text-right">Actions</TableHead>
+        <TableHead>{{ t('common.name') }}</TableHead>
+        <TableHead>{{ t('common.status') }}</TableHead>
+        <TableHead>{{ t('common.updated') }}</TableHead>
+        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       <TableEmpty v-if="workflows.length === 0" :colspan="5">
-        No workflows yet.
+        {{ t('workflow.list.empty') }}
       </TableEmpty>
       <TableRow
         v-for="workflow in workflows"
@@ -70,7 +70,7 @@ const { formatDateTime } = useDateTimeFormat();
             <Badge
               :variant="workflow.publishedDefinition ? 'default' : 'secondary'"
             >
-              {{ workflow.publishedDefinition ? 'Published' : 'Draft' }}
+              {{ workflow.publishedDefinition ? t('workflow.list.status.published') : t('workflow.list.status.draft') }}
             </Badge>
             <TooltipProvider v-if="workflow.scheduleCron">
               <Tooltip>

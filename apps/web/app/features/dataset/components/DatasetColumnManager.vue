@@ -81,7 +81,7 @@ function handleSave() {
   <aside class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4">
     <div class="flex items-center justify-between">
       <p class="text-sm font-semibold">{{ t('dataset.columnManager.title') }}</p>
-      <Button variant="ghost" size="icon" :aria-label="t('dataset.columnManager.close')" @click="emit('close')">
+      <Button variant="ghost" size="icon" :aria-label="t('common.close')" @click="emit('close')">
         <XIcon class="size-4 stroke-1.5" />
       </Button>
     </div>

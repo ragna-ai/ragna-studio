@@ -42,10 +42,10 @@ const form = useForm({
 <template>
   <form @submit.prevent.stop="form.handleSubmit">
     <div>
-      <p class="mb-2 block text-sm font-medium">Avatar</p>
+      <p class="mb-2 block text-sm font-medium">{{ $t('user.profile.avatar') }}</p>
       <div class="flex flex-row items-center justify-between">
         <UserAvatar :user-name="props.name" class="size-16" />
-        <Button type="button" variant="outline">Change</Button>
+        <Button type="button" variant="outline">{{ $t('user.profile.change') }}</Button>
       </div>
     </div>
 
@@ -55,7 +55,7 @@ const form = useForm({
       <template v-slot="{ field, state }">
         <div>
           <Label class="mb-2 block text-sm font-medium" :for="field.name">
-            Name
+            {{ $t('common.name') }}
           </Label>
           <InputGroup>
             <InputGroupAddon>
@@ -81,7 +81,7 @@ const form = useForm({
       <template v-slot="{ field, state }">
         <div>
           <Label class="mb-2 block text-sm font-medium" :for="field.name">
-            Email
+            {{ $t('user.profile.email') }}
           </Label>
           <InputGroup>
             <InputGroupAddon>
@@ -99,6 +99,8 @@ const form = useForm({
 
     <Separator class="my-4" />
 
-    <Button type="submit" :disabled="isPending"> Save </Button>
+    <Button type="submit" :disabled="isPending">
+      {{ $t('common.save') }}
+    </Button>
   </form>
 </template>

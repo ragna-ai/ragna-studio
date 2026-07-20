@@ -65,12 +65,12 @@ function handlePublish() {
       <div class="flex gap-4">
         <Button as-child variant="secondary">
           <NuxtLinkLocale to="/social">
-            {{ t('social.actions.cancel') }}
+            {{ t('common.cancel') }}
           </NuxtLinkLocale>
         </Button>
         <Button v-if="canEdit" type="submit" :disabled="isUpdating">
           <Spinner v-if="isUpdating" class="mr-2" />
-          {{ t('social.actions.save') }}
+          {{ t('common.save') }}
         </Button>
       </div>
     </div>

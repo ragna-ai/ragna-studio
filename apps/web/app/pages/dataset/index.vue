@@ -22,8 +22,8 @@ const handleDeleteDataset = async (datasetId: string) => {
   const confirmed = await confirm({
     title: t('dataset.deleteConfirm.title'),
     message: t('dataset.deleteConfirm.message'),
-    confirmLabel: t('dataset.deleteConfirm.confirm'),
-    cancelLabel: t('dataset.deleteConfirm.cancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {

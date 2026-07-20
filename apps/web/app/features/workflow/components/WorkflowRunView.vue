@@ -91,7 +91,7 @@ const breadcrumbItems = computed(() => [
     label: workflowData.value?.workflow.name ?? '…',
     to: run.value ? `/workflow/${run.value.workflowId}` : undefined,
   },
-  { label: 'Run' },
+  { label: t('workflow.run.breadcrumbLabel') },
 ]);
 
 // Functions
@@ -128,7 +128,7 @@ function countTraceToolCalls(
             :disabled="isCancelling"
             @click="cancelRun()"
           >
-            Cancel run
+            {{ t('workflow.run.cancelRun') }}
           </Button>
         </div>
       </div>
@@ -137,11 +137,11 @@ function countTraceToolCalls(
         class="grid gap-3 text-xs sm:grid-cols-3"
       >
         <div v-if="run.input" class="min-w-0">
-          <p class="font-medium text-muted-foreground">Input</p>
+          <p class="font-medium text-muted-foreground">{{ t('common.input') }}</p>
           <p class="truncate">{{ run.input }}</p>
         </div>
         <div v-if="run.error" class="min-w-0">
-          <p class="font-medium text-destructive">Error</p>
+          <p class="font-medium text-destructive">{{ t('common.error') }}</p>
           <p class="truncate text-destructive">{{ run.error }}</p>
         </div>
       </div>
@@ -169,10 +169,10 @@ function countTraceToolCalls(
     class="flex h-full w-full items-center justify-center"
   >
     <p class="text-sm text-stone-500">
-      {{ runError.message || 'An error occurred while fetching the run.' }}
+      {{ runError.message || t('workflow.run.loadError') }}
     </p>
   </div>
   <div v-else class="flex h-full w-full items-center justify-center">
-    <Shimmer class="h-6 w-48"> Loading run... </Shimmer>
+    <Shimmer class="h-6 w-48">{{ t('workflow.run.loading') }}</Shimmer>
   </div>
 </template>

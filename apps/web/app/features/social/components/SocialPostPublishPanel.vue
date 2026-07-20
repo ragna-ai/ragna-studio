@@ -62,7 +62,7 @@ function handlePublish() {
 
     <Button v-if="canPublish" :disabled="isPublishing" @click="handlePublish">
       <Spinner v-if="isPublishing" class="mr-2" />
-      {{ t('social.actions.publish') }}
+      {{ t('common.publish') }}
     </Button>
   </div>
 </template>

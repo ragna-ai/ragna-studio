@@ -10,12 +10,15 @@ import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplat
 defineProps<{
   node: Extract<WorkflowNode, { type: 'transform' }>;
 }>();
+
+// Composables
+const { t } = useI18n();
 </script>
 
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">Template</Label>
+      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.transformConfig.templateLabel') }}</Label>
       <Textarea v-model="node.data.config.template" rows="6" />
       <WorkflowTemplateHint class="mt-1" />
     </div>

@@ -1,4 +1,54 @@
 {
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "actions": "Actions",
+    "create": "Create",
+    "updated": "Updated",
+    "created": "Created",
+    "input": "Input",
+    "output": "Output",
+    "error": "Error",
+    "name": "Name",
+    "description": "Description",
+    "title": "Title",
+    "folder": "Folder",
+    "save": "Save",
+    "run": "Run",
+    "status": "Status",
+    "model": "Model",
+    "prompt": "Prompt",
+    "noTools": "No tools",
+    "publish": "Publish",
+    "saveRename": "Save name",
+    "cancelRename": "Cancel rename"
+  },
+  "nav": {
+    "home": "Home",
+    "workflows": "Workflows",
+    "agents": "Agents",
+    "chat": "Chat",
+    "datasets": "Datasets",
+    "docs": "Docs",
+    "image": "Image",
+    "social": "Social",
+    "more": "More",
+    "new": "New",
+    "history": "History",
+    "userMenu": {
+      "upgrade": "Upgrade to Pro",
+      "account": "Account",
+      "statistics": "Statistics",
+      "settings": "Settings",
+      "signOut": "Sign out"
+    }
+  },
+  "home": {
+    "title": "RAGNA Studio",
+    "titleWithName": "Welcome, {name}",
+    "subtitle": "How can I help you today?"
+  },
   "notification": {
     "workflowRunSucceeded": {
       "title": "Workflow completed",
@@ -12,6 +62,8 @@
       "title": "Notification",
       "message": "You have a new notification."
     },
+    "panelTitle": "Notifications",
+    "empty": "No notifications.",
     "delete": "Delete notification",
     "clearAll": "Clear all"
   },
@@ -19,44 +71,78 @@
     "list": {
       "title": "AI agents",
       "subtitle": "All AI agents you have created.",
-      "newAgent": "Create AI agent"
+      "newAgent": "Create AI agent",
+      "table": {
+        "favorite": "Favorite",
+        "avatar": "Avatar"
+      }
     },
     "upsert": {
       "title": "Edit AI agent",
-      "subtitle": "Create a new AI agent or edit an existing one tailored to your needs."
+      "subtitle": "Create a new AI agent or edit an existing one tailored to your needs.",
+      "tabs": {
+        "persona": "Persona",
+        "intelligence": "Intelligence",
+        "tools": "Tools",
+        "context": "Context",
+        "memory": "Memory",
+        "settings": "Settings"
+      },
+      "nameRequired": "Name must be at least 4 characters.",
+      "systemPromptLabel": "Behavior / Instructions",
+      "systemPromptTitle": "System Prompt",
+      "documentsLabel": "Documents",
+      "documentsHint": "Upload files whose content this agent should always have access to. Extracted text joins the context text below.",
+      "saveFirstDocuments": "Save the agent first to upload documents.",
+      "contextLabel": "Context",
+      "contextHint": "Background knowledge this agent should always have. For behavior and rules, use Persona.",
+      "saveFirstMemory": "Save the agent first to view and edit its memory.",
+      "defaultAgentLabel": "Make this the default agent",
+      "temperatureLabel": "Temperature",
+      "temperatureDisabled": "Disabled",
+      "maxOutputTokensLabel": "Max output tokens",
+      "settingsHint": "Set temperature to 0 to disable it. Leave max output tokens empty to use the model's default."
     },
-    "tools": {
+    "tool": {
       "think": {
-        "title": "Think",
+        "label": "Think",
         "description": "Enable deeper reasoning before responding."
       },
       "webSearch": {
-        "title": "Web Search",
+        "label": "Web Search",
         "description": "Find up-to-date information from the web."
       },
       "webBrowser": {
-        "title": "Web Browser",
+        "label": "Web Browser",
         "description": "Open pages and interact with websites."
       },
       "imageGen": {
-        "title": "Image Generation",
+        "label": "Image Generation",
         "description": "Create images from text prompts."
       },
       "linkedinDraft": {
-        "title": "LinkedIn Draft",
+        "label": "LinkedIn Draft",
         "description": "Draft LinkedIn posts. You publish them yourself."
       },
       "memory": {
-        "title": "Memory",
+        "label": "Memory",
         "description": "Save and recall notes about you and your work across conversations."
       },
+      "listDocuments": {
+        "label": "List Documents"
+      },
+      "readDocument": {
+        "label": "Read Document"
+      },
+      "editDocument": {
+        "label": "Edit Document"
+      },
+      "createDocument": {
+        "label": "Create Document"
+      },
       "datasets": {
-        "title": "Datasets",
-        "description": "Read and write structured data tables: task queues, plans, and other durable state."
-      }
-    },
-    "tool": {
-      "datasets": {
+        "label": "Datasets",
+        "description": "Read and write structured data tables: task queues, plans, and other durable state.",
         "defaultDatasetLabel": "Default dataset",
         "defaultDatasetPlaceholder": "None (the agent searches when needed)",
         "defaultDatasetNone": "None"
@@ -83,7 +169,10 @@
       "close": "Close",
       "empty": "No chats yet",
       "rename": "Rename chat",
-      "titleRequired": "Title is required."
+      "titleRequired": "Title is required.",
+      "table": {
+        "agent": "Agent"
+      }
     }
   },
   "workflow": {
@@ -91,21 +180,40 @@
       "title": "Workflows",
       "subtitle": "Automate multi-step tasks with agents, tools, and conditions.",
       "newWorkflow": "New workflow",
-      "scheduled": "Scheduled: {cron} ({timezone})"
+      "scheduled": "Scheduled: {cron} ({timezone})",
+      "empty": "No workflows yet.",
+      "loadError": "An error occurred while fetching the workflows.",
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "deleteConfirm": {
+        "title": "Delete workflow",
+        "message": "Are you sure you want to delete this workflow?"
+      }
     },
     "create": {
       "title": "Create workflow",
-      "subtitle": "Name your workflow, then build it on the canvas."
+      "subtitle": "Name your workflow, then build it on the canvas.",
+      "nameRequired": "Name is required."
     },
     "editor": {
-      "title": "Workflow editor"
+      "title": "Workflow editor",
+      "nameLabel": "Workflow name",
+      "unpublishedChanges": "Unpublished changes",
+      "settingsTitle": "Workflow settings",
+      "loadError": "An error occurred while fetching the workflow."
     },
     "run": {
       "title": "View workflow run",
       "trigger": {
         "manual": "Manual",
         "schedule": "Scheduled"
-      }
+      },
+      "breadcrumbLabel": "Run",
+      "cancelRun": "Cancel run",
+      "loading": "Loading run...",
+      "loadError": "An error occurred while fetching the run."
     },
     "trigger": {
       "kind": {
@@ -138,15 +246,116 @@
       },
       "timezone": "Timezone",
       "nextRuns": "Next runs"
+    },
+    "nodeType": {
+      "trigger": "Trigger",
+      "agent": "Agent",
+      "tool": "Tool",
+      "condition": "Condition",
+      "transform": "Transform",
+      "team": "Team"
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "suspended": "Suspended",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "skipped": "Skipped"
+    },
+    "palette": {
+      "addNode": "Add node"
+    },
+    "configPanel": {
+      "deleteNode": "Delete node",
+      "closePanel": "Close panel",
+      "labelField": "Label"
+    },
+    "recentRuns": {
+      "title": "Recent runs",
+      "showAll": "Show all",
+      "loading": "Loading...",
+      "empty": "No runs yet."
+    },
+    "runsList": {
+      "title": "Runs",
+      "subtitle": "Past executions of this workflow.",
+      "loading": "Loading runs..."
+    },
+    "runDialog": {
+      "title": "Run workflow",
+      "subtitle": "Optionally provide an input for the trigger node.",
+      "unpublishedChangesPublished": "Running now uses the last published version, not your latest changes.",
+      "unpublishedChangesUnpublished": "This workflow has never been published. Publish it to run your changes.",
+      "inputPlaceholder": "Input (optional)",
+      "runPublished": "Run published version",
+      "publishAndRun": "Publish & run"
+    },
+    "runStepDialog": {
+      "previousNode": "Previous node",
+      "nextNode": "Next node",
+      "notRunYet": "This node has not run yet.",
+      "agentTrace": "Agent trace",
+      "copyOutput": "Copy output"
+    },
+    "node": {
+      "lead": "Lead: {name}",
+      "defaultAgent": "Default agent",
+      "memberSingular": "member",
+      "memberPlural": "members",
+      "toolCallTooltip": "{count} tool call(s) in this run",
+      "input": "input",
+      "output": "output"
+    },
+    "agentPicker": {
+      "placeholder": "Select an agent",
+      "loading": "Loading agents..."
+    },
+    "agentConfig": {
+      "noneUseSystemPrompt": "None (use system prompt below)",
+      "agentConfiguration": "Agent configuration",
+      "editAgentSettings": "Edit agent settings",
+      "tools": "Tools",
+      "note": "The agent runs with this model and these tools during the workflow.",
+      "systemPromptLabel": "System prompt",
+      "systemPromptPlaceholder": "You are a helpful assistant."
+    },
+    "conditionConfig": {
+      "leftLabel": "Left",
+      "operatorLabel": "Operator",
+      "rightLabel": "Right",
+      "note": "The two edges leaving this node are labeled \"true\" and \"false\"; connect each to the branch that should run."
+    },
+    "teamConfig": {
+      "leadAgentLabel": "Lead agent",
+      "noneUseDefaultAgent": "None (use default agent)",
+      "membersLabel": "Members",
+      "addMember": "Add member",
+      "memberN": "Member {index}",
+      "removeMember": "Remove member",
+      "rolePlaceholder": "Role, e.g. researches background facts",
+      "note": "1 to 5 members. Each needs an agent and a short role describing what it handles."
+    },
+    "toolConfig": {
+      "selectTool": "Select a tool"
+    },
+    "transformConfig": {
+      "templateLabel": "Template"
+    },
+    "templateHint": "is this node's input, i.e. the previous node's output (the run input for the first node).",
+    "toolCallList": {
+      "memberToolCalls": "Member tool calls"
+    },
+    "trace": {
+      "step": "Step {number}",
+      "tokenCount": "{count} tokens"
     }
   },
   "imagen": {
     "title": "Text to Image",
     "input": {
       "placeholder": "Describe the image you want to generate..."
-    },
-    "model": {
-      "title": "Model"
     },
     "aspectRatio": {
       "title": "Aspect ratio"
@@ -171,6 +380,22 @@
     }
   },
   "user": {
+    "tabs": {
+      "profile": "Profile",
+      "social": "Connected accounts",
+      "language": "Language"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose the language used across the interface."
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Manage your personal information.",
+      "avatar": "Avatar",
+      "change": "Change",
+      "email": "Email"
+    },
     "social": {
       "title": "Connected accounts",
       "loadError": "Failed to load connected accounts.",
@@ -196,10 +421,7 @@
       "emptyContent": "Empty draft",
       "loading": "Loading posts...",
       "table": {
-        "status": "Status",
-        "content": "Content",
-        "created": "Created",
-        "actions": "Actions"
+        "content": "Content"
       }
     },
     "create": {
@@ -219,20 +441,12 @@
       "published": "Published",
       "failed": "Failed"
     },
-    "actions": {
-      "save": "Save",
-      "publish": "Publish",
-      "delete": "Delete",
-      "cancel": "Cancel"
-    },
     "viewOnLinkedIn": "View on LinkedIn",
     "loadError": "Failed to load posts.",
     "empty": "No posts yet. Ask your agent to draft a LinkedIn post.",
     "deleteConfirm": {
       "title": "Delete post",
-      "message": "Are you sure you want to delete this post?",
-      "confirm": "Delete",
-      "cancel": "Cancel"
+      "message": "Are you sure you want to delete this post?"
     },
     "linkedinHint": {
       "title": "LinkedIn not connected",
@@ -273,12 +487,9 @@
       "loadError": "Failed to load datasets.",
       "loading": "Loading datasets...",
       "table": {
-        "name": "Name",
         "origin": "Origin",
         "rows": "Rows",
-        "workspace": "Workspace",
-        "updated": "Updated",
-        "actions": "Actions"
+        "workspace": "Workspace"
       }
     },
     "origin": {
@@ -287,9 +498,7 @@
     },
     "deleteConfirm": {
       "title": "Delete dataset",
-      "message": "Are you sure you want to delete this dataset? Its rows are deleted too.",
-      "confirm": "Delete",
-      "cancel": "Cancel"
+      "message": "Are you sure you want to delete this dataset? Its rows are deleted too."
     },
     "create": {
       "title": "New dataset",
@@ -304,11 +513,7 @@
           "title": "Task tracker",
           "description": "Task, instructions, and status (todo / in progress / done)."
         }
-      },
-      "nameLabel": "Name",
-      "descriptionLabel": "Description",
-      "cancel": "Cancel",
-      "submit": "Create"
+      }
     },
     "detail": {
       "title": "Dataset",
@@ -317,30 +522,22 @@
       "manageColumns": "Columns",
       "rename": "Rename dataset",
       "settings": "Dataset settings",
-      "nameLabel": "Name",
-      "descriptionLabel": "Description",
       "descriptionPlaceholder": "Add a description...",
       "closeSettings": "Close settings"
     },
     "grid": {
-      "created": "Created",
-      "updated": "Updated",
-      "actions": "Actions",
       "empty": "No rows yet. Add one below.",
       "addRow": "Add row",
       "selectPlaceholder": "Select...",
       "deleteRow": "Delete row",
       "deleteRowConfirm": {
         "title": "Delete row",
-        "message": "Are you sure you want to delete this row?",
-        "confirm": "Delete",
-        "cancel": "Cancel"
+        "message": "Are you sure you want to delete this row?"
       },
       "expandRow": "Expand row"
     },
     "columnManager": {
       "title": "Columns",
-      "close": "Close",
       "namePlaceholder": "Column name",
       "moveUp": "Move up",
       "moveDown": "Move down",
@@ -357,8 +554,7 @@
       "save": "Save columns"
     },
     "rowPanel": {
-      "title": "Row details",
-      "close": "Close"
+      "title": "Row details"
     }
   },
   "workspace": {
@@ -373,13 +569,8 @@
       "rename": "Rename workspace",
       "delete": "Delete workspace",
       "deleteLastWorkspace": "You need at least one workspace, so this one can't be deleted.",
-      "saveRename": "Save name",
-      "cancelRename": "Cancel rename",
       "deleteTitle": "Delete workspace",
-      "deleteMessage": "Delete \"{name}\"? Items in this workspace will be deleted too.",
-      "deleteConfirm": "Delete",
-      "deleteCancel": "Cancel",
-      "close": "Close"
+      "deleteMessage": "Delete \"{name}\"? Items in this workspace will be deleted too."
     },
     "toast": {
       "createSuccess": "Workspace created.",
@@ -401,11 +592,7 @@
       "loading": "Loading documents...",
       "noFolder": "No folder",
       "table": {
-        "title": "Title",
-        "author": "Author",
-        "updated": "Updated",
-        "folder": "Folder",
-        "actions": "Actions"
+        "author": "Author"
       },
       "item": {
         "delete": "Delete document",
@@ -414,18 +601,12 @@
     },
     "deleteConfirm": {
       "title": "Delete document",
-      "message": "Are you sure you want to delete this document? This can't be undone.",
-      "confirm": "Delete",
-      "cancel": "Cancel"
+      "message": "Are you sure you want to delete this document? This can't be undone."
     },
     "createDialog": {
       "title": "New document",
-      "nameLabel": "Title",
       "namePlaceholder": "Untitled document",
-      "folderLabel": "Folder",
-      "folderNone": "No folder",
-      "cancel": "Cancel",
-      "submit": "Create"
+      "folderNone": "No folder"
     },
     "editor": {
       "title": "Document",
@@ -459,15 +640,10 @@
       "description": "Group documents into folders.",
       "namePlaceholder": "Folder name",
       "rename": "Rename folder",
-      "saveRename": "Save name",
-      "cancelRename": "Cancel rename",
       "delete": "Delete folder",
       "deleteTitle": "Delete folder",
       "deleteMessage": "Delete \"{name}\"? Its documents move to the root level, they are not deleted.",
-      "deleteConfirm": "Delete",
-      "deleteCancel": "Cancel",
-      "empty": "No folders yet.",
-      "close": "Close"
+      "empty": "No folders yet."
     }
   }
 }

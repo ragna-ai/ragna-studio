@@ -1,4 +1,49 @@
 {
+  "common": {
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "actions": "Aktionen",
+    "create": "Erstellen",
+    "updated": "Aktualisiert",
+    "created": "Erstellt",
+    "input": "Eingabe",
+    "output": "Ausgabe",
+    "error": "Fehler",
+    "name": "Name",
+    "description": "Beschreibung",
+    "title": "Titel",
+    "folder": "Ordner",
+    "save": "Speichern",
+    "run": "Ausführen",
+    "status": "Status",
+    "model": "Modell",
+    "prompt": "Prompt",
+    "noTools": "Keine Werkzeuge",
+    "publish": "Veröffentlichen",
+    "saveRename": "Namen speichern",
+    "cancelRename": "Umbenennen abbrechen"
+  },
+  "nav": {
+    "home": "Start",
+    "workflows": "Workflows",
+    "agents": "Agenten",
+    "chat": "Chat",
+    "datasets": "Datensätze",
+    "docs": "Dokumente",
+    "image": "Bild",
+    "social": "Social",
+    "more": "Mehr",
+    "new": "Neu",
+    "history": "Verlauf",
+    "userMenu": {
+      "upgrade": "Auf Pro upgraden",
+      "account": "Konto",
+      "statistics": "Statistiken",
+      "settings": "Einstellungen",
+      "signOut": "Abmelden"
+    }
+  },
   "notification": {
     "workflowRunSucceeded": {
       "title": "Workflow abgeschlossen",
@@ -12,8 +57,8 @@
       "title": "Benachrichtigung",
       "message": "Sie haben eine neue Benachrichtigung."
     },
-    "title": "Benachrichtigungen",
-    "emptyList": "Keine Benachrichtigungen",
+    "panelTitle": "Benachrichtigungen",
+    "empty": "Keine Benachrichtigungen.",
     "delete": "Benachrichtigung löschen",
     "clearAll": "Alle löschen"
   },
@@ -26,11 +71,37 @@
     "list": {
       "title": "KI-Agenten",
       "subtitle": "Liste aller KI-Agenten, die du erstellt hast.",
-      "newAgent": "KI-Agent erstellen"
+      "newAgent": "KI-Agent erstellen",
+      "table": {
+        "favorite": "Favorit",
+        "avatar": "Avatar"
+      }
     },
     "upsert": {
       "title": "KI-Agent bearbeiten",
-      "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist."
+      "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist.",
+      "tabs": {
+        "persona": "Persona",
+        "intelligence": "Intelligenz",
+        "tools": "Werkzeuge",
+        "context": "Kontext",
+        "memory": "Gedächtnis",
+        "settings": "Einstellungen"
+      },
+      "nameRequired": "Name muss mindestens 4 Zeichen lang sein.",
+      "systemPromptLabel": "Verhalten / Anweisungen",
+      "systemPromptTitle": "Systemprompt",
+      "documentsLabel": "Dokumente",
+      "documentsHint": "Lade Dateien hoch, auf deren Inhalt dieser Agent immer zugreifen können soll. Extrahierter Text ergänzt den Kontexttext unten.",
+      "saveFirstDocuments": "Speichere den Agenten zuerst, um Dokumente hochzuladen.",
+      "contextLabel": "Kontext",
+      "contextHint": "Hintergrundwissen, über das dieser Agent immer verfügen soll. Für Verhalten und Regeln nutze Persona.",
+      "saveFirstMemory": "Speichere den Agenten zuerst, um sein Gedächtnis anzusehen und zu bearbeiten.",
+      "defaultAgentLabel": "Diesen Agenten als Standard festlegen",
+      "temperatureLabel": "Temperatur",
+      "temperatureDisabled": "Deaktiviert",
+      "maxOutputTokensLabel": "Maximale Ausgabe-Tokens",
+      "settingsHint": "Setze die Temperatur auf 0, um sie zu deaktivieren. Lasse die maximalen Ausgabe-Tokens leer, um den Standardwert des Modells zu verwenden."
     },
     "tool": {
       "think": {
@@ -98,7 +169,10 @@
       "close": "Schließen",
       "empty": "Noch keine Chats",
       "rename": "Chat umbenennen",
-      "titleRequired": "Titel ist erforderlich."
+      "titleRequired": "Titel ist erforderlich.",
+      "table": {
+        "agent": "Agent"
+      }
     }
   },
   "workflow": {
@@ -106,21 +180,40 @@
       "title": "Workflows",
       "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
       "newWorkflow": "Workflow erstellen",
-      "scheduled": "Geplant: {cron} ({timezone})"
+      "scheduled": "Geplant: {cron} ({timezone})",
+      "empty": "Noch keine Workflows.",
+      "loadError": "Workflows konnten nicht geladen werden.",
+      "status": {
+        "published": "Veröffentlicht",
+        "draft": "Entwurf"
+      },
+      "deleteConfirm": {
+        "title": "Workflow löschen",
+        "message": "Möchtest du diesen Workflow wirklich löschen?"
+      }
     },
     "create": {
       "title": "Workflow erstellen",
-      "subtitle": "Benenne deinen Workflow und baue ihn danach im Editor."
+      "subtitle": "Benenne deinen Workflow und baue ihn danach im Editor.",
+      "nameRequired": "Name ist erforderlich."
     },
     "editor": {
-      "title": "Workflow-Editor"
+      "title": "Workflow-Editor",
+      "nameLabel": "Workflow-Name",
+      "unpublishedChanges": "Unveröffentlichte Änderungen",
+      "settingsTitle": "Workflow-Einstellungen",
+      "loadError": "Der Workflow konnte nicht geladen werden."
     },
     "run": {
       "title": "Workflow ansehen",
       "trigger": {
         "manual": "Manuell",
         "schedule": "Geplant"
-      }
+      },
+      "breadcrumbLabel": "Ausführung",
+      "cancelRun": "Ausführung abbrechen",
+      "loading": "Ausführung wird geladen...",
+      "loadError": "Die Ausführung konnte nicht geladen werden."
     },
     "trigger": {
       "kind": {
@@ -153,15 +246,116 @@
       },
       "timezone": "Zeitzone",
       "nextRuns": "Nächste Ausführungen"
+    },
+    "nodeType": {
+      "trigger": "Auslöser",
+      "agent": "Agent",
+      "tool": "Werkzeug",
+      "condition": "Bedingung",
+      "transform": "Transformation",
+      "team": "Team"
+    },
+    "status": {
+      "pending": "Ausstehend",
+      "running": "Läuft",
+      "suspended": "Angehalten",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen",
+      "skipped": "Übersprungen"
+    },
+    "palette": {
+      "addNode": "Knoten hinzufügen"
+    },
+    "configPanel": {
+      "deleteNode": "Knoten löschen",
+      "closePanel": "Panel schließen",
+      "labelField": "Bezeichnung"
+    },
+    "recentRuns": {
+      "title": "Letzte Ausführungen",
+      "showAll": "Alle anzeigen",
+      "loading": "Wird geladen...",
+      "empty": "Noch keine Ausführungen."
+    },
+    "runsList": {
+      "title": "Ausführungen",
+      "subtitle": "Vergangene Ausführungen dieses Workflows.",
+      "loading": "Ausführungen werden geladen..."
+    },
+    "runDialog": {
+      "title": "Workflow ausführen",
+      "subtitle": "Optional eine Eingabe für den Auslöser-Knoten angeben.",
+      "unpublishedChangesPublished": "Die Ausführung verwendet die zuletzt veröffentlichte Version, nicht deine aktuellen Änderungen.",
+      "unpublishedChangesUnpublished": "Dieser Workflow wurde noch nie veröffentlicht. Veröffentliche ihn, um deine Änderungen auszuführen.",
+      "inputPlaceholder": "Eingabe (optional)",
+      "runPublished": "Veröffentlichte Version ausführen",
+      "publishAndRun": "Veröffentlichen & ausführen"
+    },
+    "runStepDialog": {
+      "previousNode": "Vorheriger Knoten",
+      "nextNode": "Nächster Knoten",
+      "notRunYet": "Dieser Knoten wurde noch nicht ausgeführt.",
+      "agentTrace": "Agenten-Ablauf",
+      "copyOutput": "Ausgabe kopieren"
+    },
+    "node": {
+      "lead": "Lead: {name}",
+      "defaultAgent": "Standardagent",
+      "memberSingular": "Mitglied",
+      "memberPlural": "Mitglieder",
+      "toolCallTooltip": "{count} Werkzeugaufruf(e) in dieser Ausführung",
+      "input": "Eingabe",
+      "output": "Ausgabe"
+    },
+    "agentPicker": {
+      "placeholder": "Agent auswählen",
+      "loading": "Agenten werden geladen..."
+    },
+    "agentConfig": {
+      "noneUseSystemPrompt": "Keiner (Systemprompt unten verwenden)",
+      "agentConfiguration": "Agentenkonfiguration",
+      "editAgentSettings": "Agenteneinstellungen bearbeiten",
+      "tools": "Werkzeuge",
+      "note": "Der Agent läuft während des Workflows mit diesem Modell und diesen Werkzeugen.",
+      "systemPromptLabel": "Systemprompt",
+      "systemPromptPlaceholder": "Du bist ein hilfreicher Assistent."
+    },
+    "conditionConfig": {
+      "leftLabel": "Links",
+      "operatorLabel": "Operator",
+      "rightLabel": "Rechts",
+      "note": "Die beiden von diesem Knoten ausgehenden Kanten sind mit „true“ und „false“ beschriftet; verbinde jede mit dem Zweig, der ausgeführt werden soll."
+    },
+    "teamConfig": {
+      "leadAgentLabel": "Lead-Agent",
+      "noneUseDefaultAgent": "Keiner (Standardagent verwenden)",
+      "membersLabel": "Mitglieder",
+      "addMember": "Mitglied hinzufügen",
+      "memberN": "Mitglied {index}",
+      "removeMember": "Mitglied entfernen",
+      "rolePlaceholder": "Rolle, z. B. recherchiert Hintergrundfakten",
+      "note": "1 bis 5 Mitglieder. Jedes benötigt einen Agenten und eine kurze Rollenbeschreibung."
+    },
+    "toolConfig": {
+      "selectTool": "Werkzeug auswählen"
+    },
+    "transformConfig": {
+      "templateLabel": "Vorlage"
+    },
+    "templateHint": "ist die Eingabe dieses Knotens, d. h. die Ausgabe des vorherigen Knotens (die Ausführungseingabe beim ersten Knoten).",
+    "toolCallList": {
+      "memberToolCalls": "Werkzeugaufrufe der Mitglieder"
+    },
+    "trace": {
+      "step": "Schritt {number}",
+      "tokenCount": "{count} Tokens"
     }
   },
   "imagen": {
     "title": "Text zu Bild",
     "input": {
       "placeholder": "Beschreibe das Bild, das du generieren möchtest..."
-    },
-    "model": {
-      "title": "Modell"
     },
     "aspectRatio": {
       "title": "Seitenverhältnis"
@@ -185,17 +379,23 @@
       "downloadError": "Bild konnte nicht heruntergeladen werden"
     }
   },
-  "table": {
-    "favorit": "Favorit",
-    "avatar": "Avatar",
-    "title": "Titel",
-    "name": "Name",
-    "ai_model": "Künstliche Intelligenz",
-    "ai_agent": "Agent",
-    "updated_at": "Aktualisiert am",
-    "actions": "Aktionen"
-  },
   "user": {
+    "tabs": {
+      "profile": "Profil",
+      "social": "Verbundene Konten",
+      "language": "Sprache"
+    },
+    "language": {
+      "title": "Sprache",
+      "subtitle": "Wähle die Sprache für die Benutzeroberfläche."
+    },
+    "profile": {
+      "title": "Profil",
+      "subtitle": "Verwalte deine persönlichen Informationen.",
+      "avatar": "Avatar",
+      "change": "Ändern",
+      "email": "E-Mail"
+    },
     "social": {
       "title": "Verbundene Konten",
       "loadError": "Verbundene Konten konnten nicht geladen werden.",
@@ -221,10 +421,7 @@
       "emptyContent": "Leerer Entwurf",
       "loading": "Posts werden geladen...",
       "table": {
-        "status": "Status",
-        "content": "Inhalt",
-        "created": "Erstellt",
-        "actions": "Aktionen"
+        "content": "Inhalt"
       }
     },
     "create": {
@@ -244,20 +441,12 @@
       "published": "Veröffentlicht",
       "failed": "Fehlgeschlagen"
     },
-    "actions": {
-      "save": "Speichern",
-      "publish": "Veröffentlichen",
-      "delete": "Löschen",
-      "cancel": "Abbrechen"
-    },
     "viewOnLinkedIn": "Auf LinkedIn ansehen",
     "loadError": "Posts konnten nicht geladen werden.",
     "empty": "Noch keine Posts. Bitte den Agenten, einen LinkedIn-Entwurf zu schreiben.",
     "deleteConfirm": {
       "title": "Post löschen",
-      "message": "Möchtest du diesen Post wirklich löschen?",
-      "confirm": "Löschen",
-      "cancel": "Abbrechen"
+      "message": "Möchtest du diesen Post wirklich löschen?"
     },
     "linkedinHint": {
       "title": "LinkedIn nicht verbunden",
@@ -298,12 +487,9 @@
       "loadError": "Datensätze konnten nicht geladen werden.",
       "loading": "Datensätze werden geladen...",
       "table": {
-        "name": "Name",
         "origin": "Herkunft",
         "rows": "Zeilen",
-        "workspace": "Arbeitsbereich",
-        "updated": "Aktualisiert",
-        "actions": "Aktionen"
+        "workspace": "Arbeitsbereich"
       }
     },
     "origin": {
@@ -312,9 +498,7 @@
     },
     "deleteConfirm": {
       "title": "Datensatz löschen",
-      "message": "Möchtest du diesen Datensatz wirklich löschen? Seine Zeilen werden ebenfalls gelöscht.",
-      "confirm": "Löschen",
-      "cancel": "Abbrechen"
+      "message": "Möchtest du diesen Datensatz wirklich löschen? Seine Zeilen werden ebenfalls gelöscht."
     },
     "create": {
       "title": "Neuer Datensatz",
@@ -329,11 +513,7 @@
           "title": "Aufgabenliste",
           "description": "Aufgabe, Anweisungen und Status (offen / in Bearbeitung / erledigt)."
         }
-      },
-      "nameLabel": "Name",
-      "descriptionLabel": "Beschreibung",
-      "cancel": "Abbrechen",
-      "submit": "Erstellen"
+      }
     },
     "detail": {
       "title": "Datensatz",
@@ -342,30 +522,22 @@
       "manageColumns": "Spalten",
       "rename": "Datensatz umbenennen",
       "settings": "Datensatz-Einstellungen",
-      "nameLabel": "Name",
-      "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibung hinzufügen...",
       "closeSettings": "Einstellungen schließen"
     },
     "grid": {
-      "created": "Erstellt",
-      "updated": "Aktualisiert",
-      "actions": "Aktionen",
       "empty": "Noch keine Zeilen. Füge unten eine hinzu.",
       "addRow": "Zeile hinzufügen",
       "selectPlaceholder": "Auswählen...",
       "deleteRow": "Zeile löschen",
       "deleteRowConfirm": {
         "title": "Zeile löschen",
-        "message": "Möchtest du diese Zeile wirklich löschen?",
-        "confirm": "Löschen",
-        "cancel": "Abbrechen"
+        "message": "Möchtest du diese Zeile wirklich löschen?"
       },
       "expandRow": "Zeile erweitern"
     },
     "columnManager": {
       "title": "Spalten",
-      "close": "Schließen",
       "namePlaceholder": "Spaltenname",
       "moveUp": "Nach oben",
       "moveDown": "Nach unten",
@@ -382,8 +554,7 @@
       "save": "Spalten speichern"
     },
     "rowPanel": {
-      "title": "Zeilendetails",
-      "close": "Schließen"
+      "title": "Zeilendetails"
     }
   },
   "workspace": {
@@ -398,13 +569,8 @@
       "rename": "Arbeitsbereich umbenennen",
       "delete": "Arbeitsbereich löschen",
       "deleteLastWorkspace": "Du benötigst mindestens einen Arbeitsbereich, dieser kann daher nicht gelöscht werden.",
-      "saveRename": "Namen speichern",
-      "cancelRename": "Umbenennen abbrechen",
       "deleteTitle": "Arbeitsbereich löschen",
-      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei ebenfalls gelöscht.",
-      "deleteConfirm": "Löschen",
-      "deleteCancel": "Abbrechen",
-      "close": "Schließen"
+      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei ebenfalls gelöscht."
     },
     "toast": {
       "createSuccess": "Arbeitsbereich erstellt.",
@@ -426,11 +592,7 @@
       "loading": "Dokumente werden geladen...",
       "noFolder": "Kein Ordner",
       "table": {
-        "title": "Titel",
-        "author": "Autor",
-        "updated": "Aktualisiert",
-        "folder": "Ordner",
-        "actions": "Aktionen"
+        "author": "Autor"
       },
       "item": {
         "delete": "Dokument löschen",
@@ -439,18 +601,12 @@
     },
     "deleteConfirm": {
       "title": "Dokument löschen",
-      "message": "Möchtest du dieses Dokument wirklich löschen? Das kann nicht rückgängig gemacht werden.",
-      "confirm": "Löschen",
-      "cancel": "Abbrechen"
+      "message": "Möchtest du dieses Dokument wirklich löschen? Das kann nicht rückgängig gemacht werden."
     },
     "createDialog": {
       "title": "Neues Dokument",
-      "nameLabel": "Titel",
       "namePlaceholder": "Unbenanntes Dokument",
-      "folderLabel": "Ordner",
-      "folderNone": "Kein Ordner",
-      "cancel": "Abbrechen",
-      "submit": "Erstellen"
+      "folderNone": "Kein Ordner"
     },
     "editor": {
       "title": "Dokument",
@@ -484,15 +640,10 @@
       "description": "Gruppiere Dokumente in Ordnern.",
       "namePlaceholder": "Ordnername",
       "rename": "Ordner umbenennen",
-      "saveRename": "Namen speichern",
-      "cancelRename": "Umbenennen abbrechen",
       "delete": "Ordner löschen",
       "deleteTitle": "Ordner löschen",
       "deleteMessage": "„{name}“ löschen? Die enthaltenen Dokumente werden auf die oberste Ebene verschoben, nicht gelöscht.",
-      "deleteConfirm": "Löschen",
-      "deleteCancel": "Abbrechen",
-      "empty": "Noch keine Ordner.",
-      "close": "Schließen"
+      "empty": "Noch keine Ordner."
     }
   }
 }

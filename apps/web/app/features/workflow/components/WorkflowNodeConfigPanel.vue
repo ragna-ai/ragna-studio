@@ -7,7 +7,7 @@ import WorkflowTeamConfigForm from '~/features/workflow/components/config/Workfl
 import WorkflowToolConfigForm from '~/features/workflow/components/config/WorkflowToolConfigForm.vue';
 import WorkflowTransformConfigForm from '~/features/workflow/components/config/WorkflowTransformConfigForm.vue';
 import WorkflowTriggerConfigForm from '~/features/workflow/components/config/WorkflowTriggerConfigForm.vue';
-import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 
 // Imports
 
@@ -24,29 +24,32 @@ const emit = defineEmits<{
   (e: 'delete'): void;
   (e: 'close'): void;
 }>();
+
+// Composables
+const { t } = useI18n();
 </script>
 
 <template>
   <aside class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4">
     <div class="flex items-center justify-between">
-      <Badge variant="outline">{{ NODE_TYPE_LABELS[node.type] }}</Badge>
+      <Badge variant="outline">{{ t(NODE_TYPE_LABEL_KEYS[node.type]) }}</Badge>
       <div class="flex items-center gap-1">
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Delete node"
+          :aria-label="t('workflow.configPanel.deleteNode')"
           @click="emit('delete')"
         >
           <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Close panel" @click="emit('close')">
+        <Button variant="ghost" size="icon" :aria-label="t('workflow.configPanel.closePanel')" @click="emit('close')">
           <XIcon class="size-4 stroke-1.5" />
         </Button>
       </div>
     </div>
 
     <div>
-      <Label class="mb-2 block text-sm font-medium">Label</Label>
+      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.configPanel.labelField') }}</Label>
       <Input v-model="node.data.label" />
     </div>
 

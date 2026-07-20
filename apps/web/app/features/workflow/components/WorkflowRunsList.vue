@@ -19,6 +19,7 @@ const { data, isLoading } = useGetWorkflowRuns(
   { enabled: () => open.value },
 );
 const { formatDateTime } = useDateTimeFormat();
+const { t } = useI18n();
 
 // Computed
 const runs = computed(() => data.value?.runs ?? []);
@@ -28,13 +29,13 @@ const runs = computed(() => data.value?.runs ?? []);
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-lg">
       <DialogHeader>
-        <DialogTitle>Runs</DialogTitle>
-        <DialogDescription>Past executions of this workflow.</DialogDescription>
+        <DialogTitle>{{ t('workflow.runsList.title') }}</DialogTitle>
+        <DialogDescription>{{ t('workflow.runsList.subtitle') }}</DialogDescription>
       </DialogHeader>
 
-      <p v-if="isLoading" class="text-sm text-muted-foreground">Loading runs...</p>
+      <p v-if="isLoading" class="text-sm text-muted-foreground">{{ t('workflow.runsList.loading') }}</p>
       <p v-else-if="runs.length === 0" class="text-sm text-muted-foreground">
-        No runs yet.
+        {{ t('workflow.recentRuns.empty') }}
       </p>
       <ul v-else class="max-h-96 space-y-2 overflow-y-auto">
         <li v-for="run in runs" :key="run.id">

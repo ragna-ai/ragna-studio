@@ -19,7 +19,7 @@ import {
 } from '~/components/ai-elements/node';
 import { Badge } from '~/components/ui/badge';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
-import { NODE_TYPE_LABELS, type WorkflowNodeData } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABEL_KEYS, type WorkflowNodeData } from '~/features/workflow/types/node-data';
 import { cn, firstToUpperCase } from '~/lib/utils';
 
 // Imports
@@ -34,6 +34,7 @@ const props = defineProps<Props>();
 // this is one shared fetch (or cache hit) for the whole canvas, not one per
 // node, and no prop plumbing through Vue Flow is needed.
 const { data: agentsData } = useGetAllAgents();
+const { t } = useI18n();
 
 // Computed
 // The referenced agent, once loaded. Only agent-type nodes with an
@@ -128,12 +129,12 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
           <span
             v-if="props.data.stepToolCallCount"
             class="flex items-center gap-0.5 text-xs font-normal text-muted-foreground"
-            :title="`${props.data.stepToolCallCount} tool call(s) in this run`"
+            :title="t('workflow.node.toolCallTooltip', { count: props.data.stepToolCallCount })"
           >
             <SparklesIcon class="size-3 stroke-1.5" />
             {{ props.data.stepToolCallCount }}
           </span>
-          <Badge variant="outline">{{ NODE_TYPE_LABELS[props.type] }}</Badge>
+          <Badge variant="outline">{{ t(NODE_TYPE_LABEL_KEYS[props.type]) }}</Badge>
         </span>
       </NodeTitle>
     </NodeHeader>
@@ -157,13 +158,17 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
           >
             {{ tool }}
           </Badge>
-          <span v-if="!selectedAgent.tools?.length">No tools</span>
+          <span v-if="!selectedAgent.tools?.length">{{ t('common.noTools') }}</span>
         </span>
       </div>
 
       <div v-if="teamMemberCount !== undefined" class="flex flex-col gap-1">
-        <span class="truncate">Lead: {{ teamLead?.name ?? 'Default agent' }}</span>
-        <span>{{ teamMemberCount }} member{{ teamMemberCount === 1 ? '' : 's' }}</span>
+        <span class="truncate">{{
+          t('workflow.node.lead', { name: teamLead?.name ?? t('workflow.node.defaultAgent') })
+        }}</span>
+        <span>{{ teamMemberCount }}
+          {{ teamMemberCount === 1 ? t('workflow.node.memberSingular') : t('workflow.node.memberPlural') }}
+        </span>
       </div>
     </NodeContent>
 
@@ -171,12 +176,12 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
          the trigger (it has no target handle), "output" on the right, or
          "true"/"false" for a condition's two branch handles. -->
     <div class="flex items-center justify-between px-3 pb-2 text-xs text-muted-foreground">
-      <span>{{ props.type === 'trigger' ? '' : 'input' }}</span>
+      <span>{{ props.type === 'trigger' ? '' : t('workflow.node.input') }}</span>
       <span v-if="isCondition" class="flex gap-3">
         <span>true</span>
         <span>false</span>
       </span>
-      <span v-else>output</span>
+      <span v-else>{{ t('workflow.node.output') }}</span>
     </div>
 
     <template v-if="isCondition">

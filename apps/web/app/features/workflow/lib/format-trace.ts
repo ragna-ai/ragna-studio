@@ -10,11 +10,10 @@ export function formatDurationMs(durationMs: number): string {
   return `${(durationMs / MS_PER_SECOND).toFixed(1)}s`;
 }
 
-/** "N tokens" for a usage badge, or undefined when nothing was reported. */
-export function formatTokenUsage(usage: WorkflowTokenUsage | undefined): string | undefined {
+/** Total token count for a usage badge, or undefined when nothing was reported. */
+export function tokenUsageTotal(usage: WorkflowTokenUsage | undefined): number | undefined {
   if (!usage) return undefined;
-  const total = usage.totalTokens ?? sumKnownTokenCounts(usage);
-  return total !== undefined ? `${total} tokens` : undefined;
+  return usage.totalTokens ?? sumKnownTokenCounts(usage);
 }
 
 function sumKnownTokenCounts(usage: WorkflowTokenUsage): number | undefined {

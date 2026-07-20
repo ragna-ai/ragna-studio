@@ -52,7 +52,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('document.createDialog.nameLabel') }}
+                {{ t('common.title') }}
               </Label>
               <Input
                 :id="field.name"
@@ -72,7 +72,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium">
-                {{ t('document.createDialog.folderLabel') }}
+                {{ t('common.folder') }}
               </Label>
               <Select :model-value="state.value" @update:model-value="(v) => field.handleChange(String(v))">
                 <SelectTrigger class="w-full">
@@ -93,11 +93,11 @@ const form = useForm({
 
         <DialogFooter>
           <Button type="button" variant="secondary" @click="open = false">
-            {{ t('document.createDialog.cancel') }}
+            {{ t('common.cancel') }}
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" class="mr-2" />
-            {{ t('document.createDialog.submit') }}
+            {{ t('common.create') }}
           </Button>
         </DialogFooter>
       </form>

@@ -25,11 +25,11 @@ const columnCount = 6;
     <TableHeader>
       <TableRow>
         <TableHead>&nbsp;</TableHead>
-        <TableHead>{{ t('dataset.list.table.name') }}</TableHead>
+        <TableHead>{{ t('common.name') }}</TableHead>
         <TableHead>{{ t('dataset.list.table.origin') }}</TableHead>
         <TableHead>{{ t('dataset.list.table.rows') }}</TableHead>
-        <TableHead>{{ t('dataset.list.table.updated') }}</TableHead>
-        <TableHead class="text-right">{{ t('dataset.list.table.actions') }}</TableHead>
+        <TableHead>{{ t('common.updated') }}</TableHead>
+        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>

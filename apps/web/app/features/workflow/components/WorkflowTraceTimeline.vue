@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { WorkflowAgentTraceStep } from '@repo/workflow';
-import { formatTokenUsage } from '~/features/workflow/lib/format-trace';
+import { tokenUsageTotal } from '~/features/workflow/lib/format-trace';
 import WorkflowToolCallList from '~/features/workflow/components/WorkflowToolCallList.vue';
 
 // Imports
@@ -9,6 +9,9 @@ import WorkflowToolCallList from '~/features/workflow/components/WorkflowToolCal
 defineProps<{
   trace: WorkflowAgentTraceStep[];
 }>();
+
+// Composables
+const { t } = useI18n();
 </script>
 
 <template>
@@ -19,13 +22,13 @@ defineProps<{
       class="space-y-2 border-l-2 border-muted pl-3"
     >
       <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-muted-foreground">Step {{ index + 1 }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{ t('workflow.trace.step', { number: index + 1 }) }}</span>
         <Badge
-          v-if="formatTokenUsage(traceStep.usage)"
+          v-if="tokenUsageTotal(traceStep.usage) !== undefined"
           variant="outline"
           class="px-1.5 py-0 text-[10px] font-normal text-muted-foreground"
         >
-          {{ formatTokenUsage(traceStep.usage) }}
+          {{ t('workflow.trace.tokenCount', { count: tokenUsageTotal(traceStep.usage) }) }}
         </Badge>
       </div>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { WorkflowToolCall } from '@repo/workflow';
 import { SparklesIcon } from '@lucide/vue';
-import { formatDurationMs, formatTokenUsage } from '~/features/workflow/lib/format-trace';
+import { formatDurationMs, tokenUsageTotal } from '~/features/workflow/lib/format-trace';
 
 // Imports
 
@@ -16,6 +16,9 @@ const props = withDefaults(
   }>(),
   { idPrefix: 'tool-call' },
 );
+
+// Composables
+const { t } = useI18n();
 
 // Functions
 // Tool call input/output are opaque JSON values from the AI SDK (unlike a
@@ -45,30 +48,30 @@ function formatToolValue(value: unknown): string {
             {{ formatDurationMs(toolCall.durationMs) }}
           </Badge>
           <Badge
-            v-if="formatTokenUsage(toolCall.usage)"
+            v-if="tokenUsageTotal(toolCall.usage) !== undefined"
             variant="outline"
             class="px-1.5 py-0 text-[10px] font-normal text-muted-foreground"
           >
-            {{ formatTokenUsage(toolCall.usage) }}
+            {{ t('workflow.trace.tokenCount', { count: tokenUsageTotal(toolCall.usage) }) }}
           </Badge>
-          <span v-if="toolCall.error" class="text-destructive">Failed</span>
+          <span v-if="toolCall.error" class="text-destructive">{{ t('workflow.status.failed') }}</span>
         </span>
       </AccordionTrigger>
       <AccordionContent class="space-y-2 pb-3">
         <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">Input</p>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">{{ t('common.input') }}</p>
           <pre class="max-h-48 overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap">{{ formatToolValue(toolCall.input) }}</pre>
         </div>
         <div v-if="toolCall.output !== undefined && toolCall.output !== null">
-          <p class="mb-1 text-xs font-medium text-muted-foreground">Output</p>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">{{ t('common.output') }}</p>
           <pre class="max-h-48 overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap">{{ formatToolValue(toolCall.output) }}</pre>
         </div>
         <div v-if="toolCall.error">
-          <p class="mb-1 text-xs font-medium text-destructive">Error</p>
+          <p class="mb-1 text-xs font-medium text-destructive">{{ t('common.error') }}</p>
           <pre class="max-h-48 overflow-auto rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs whitespace-pre-wrap">{{ toolCall.error }}</pre>
         </div>
         <div v-if="toolCall.calls?.length" class="pl-3">
-          <p class="mb-1 text-xs font-medium text-muted-foreground">Member tool calls</p>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">{{ t('workflow.toolCallList.memberToolCalls') }}</p>
           <WorkflowToolCallList
             :tool-calls="toolCall.calls"
             :id-prefix="`${props.idPrefix}-${index}`"

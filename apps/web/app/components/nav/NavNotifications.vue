@@ -96,7 +96,7 @@ function handleClearAllClick() {
       align="end"
     >
       <div class="flex items-center justify-between p-4">
-        <p class="text-sm font-medium">{{ t('notification.title') }}</p>
+        <p class="text-sm font-medium">{{ t('notification.panelTitle') }}</p>
         <div v-if="notifications.length > 0" class="flex items-center">
           <Button
             variant="ghost"
@@ -126,7 +126,7 @@ function handleClearAllClick() {
           class="flex flex-col items-center gap-2 py-8 text-muted-foreground"
         >
           <InboxIcon class="size-6 stroke-1" />
-          <p class="text-sm">{{ t('notification.emptyList') }}</p>
+          <p class="text-sm">{{ t('notification.empty') }}</p>
         </div>
         <NotificationListItem
           v-for="item in notificationItems"

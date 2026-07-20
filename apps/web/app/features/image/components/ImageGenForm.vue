@@ -99,7 +99,7 @@ watch(
       <PromptInputTools>
         <PromptInputSelect v-model="modelId">
           <PromptInputSelectTrigger>
-            <PromptInputSelectValue :placeholder="$t('imagen.model.title')" />
+            <PromptInputSelectValue :placeholder="$t('common.model')" />
           </PromptInputSelectTrigger>
           <PromptInputSelectContent>
             <PromptInputSelectItem

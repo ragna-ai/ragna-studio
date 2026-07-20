@@ -1,14 +1,15 @@
 import type { WorkflowNode, WorkflowNodeType } from '@repo/workflow';
 import { nanoid } from 'nanoid';
-import { NODE_TYPE_LABELS } from '~/features/workflow/types/node-data';
+import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 
 /** Builds a new node with a sensible default config, ready to drop on the canvas. */
 export function createWorkflowNode(
   type: WorkflowNodeType,
   position: { x: number; y: number },
+  t: (key: string) => string,
 ): WorkflowNode {
   const id = `node-${nanoid(8)}`;
-  const label = NODE_TYPE_LABELS[type];
+  const label = t(NODE_TYPE_LABEL_KEYS[type]);
 
   // A switch (rather than a lookup keyed by config type) lets TypeScript
   // narrow each returned object against the matching member of the

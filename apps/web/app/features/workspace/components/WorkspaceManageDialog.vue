@@ -81,8 +81,8 @@ async function handleDelete(workspace: Workspace) {
   const confirmed = await confirm({
     title: t('workspace.manage.deleteTitle'),
     message: t('workspace.manage.deleteMessage', { name: workspace.name }),
-    confirmLabel: t('workspace.manage.deleteConfirm'),
-    cancelLabel: t('workspace.manage.deleteCancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {
@@ -153,7 +153,7 @@ async function handleDelete(workspace: Workspace) {
               variant="ghost"
               size="icon"
               :disabled="isRenaming"
-              :aria-label="t('workspace.manage.saveRename')"
+              :aria-label="t('common.saveRename')"
               @click="saveEditing"
             >
               <Spinner v-if="isRenaming" />
@@ -162,7 +162,7 @@ async function handleDelete(workspace: Workspace) {
             <Button
               variant="ghost"
               size="icon"
-              :aria-label="t('workspace.manage.cancelRename')"
+              :aria-label="t('common.cancelRename')"
               @click="cancelEditing"
             >
               <XIcon class="size-4" />
@@ -205,7 +205,7 @@ async function handleDelete(workspace: Workspace) {
 
       <DialogFooter>
         <Button variant="secondary" @click="open = false">
-          {{ t('workspace.manage.close') }}
+          {{ t('common.close') }}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -72,11 +72,11 @@ function moveDocument(document: Document, folderId: string) {
     <TableHeader>
       <TableRow>
         <TableHead>&nbsp;</TableHead>
-        <TableHead>{{ t('document.list.table.title') }}</TableHead>
+        <TableHead>{{ t('common.title') }}</TableHead>
         <TableHead>{{ t('document.list.table.author') }}</TableHead>
-        <TableHead>{{ t('document.list.table.updated') }}</TableHead>
-        <TableHead>{{ t('document.list.table.folder') }}</TableHead>
-        <TableHead class="text-right">{{ t('document.list.table.actions') }}</TableHead>
+        <TableHead>{{ t('common.updated') }}</TableHead>
+        <TableHead>{{ t('common.folder') }}</TableHead>
+        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>

@@ -114,8 +114,8 @@ async function handleDeleteRow(rowId: string) {
   const confirmed = await confirm({
     title: t('dataset.grid.deleteRowConfirm.title'),
     message: t('dataset.grid.deleteRowConfirm.message'),
-    confirmLabel: t('dataset.grid.deleteRowConfirm.confirm'),
-    cancelLabel: t('dataset.grid.deleteRowConfirm.cancel'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {
@@ -148,8 +148,8 @@ async function handleDeleteRow(rowId: string) {
       :name="dataset.name"
       :description="dataset.description ?? ''"
       :title="t('dataset.detail.settings')"
-      :name-label="t('dataset.detail.nameLabel')"
-      :description-label="t('dataset.detail.descriptionLabel')"
+      :name-label="t('common.name')"
+      :description-label="t('common.description')"
       :description-placeholder="t('dataset.detail.descriptionPlaceholder')"
       :close-label="t('dataset.detail.closeSettings')"
       @save="handleSaveSettings"

@@ -48,7 +48,7 @@ function inputValueOf(event: Event): string {
       <Button
         variant="ghost"
         size="icon"
-        :aria-label="t('dataset.rowPanel.close')"
+        :aria-label="t('common.close')"
         @click="emit('close')"
       >
         <XIcon class="size-4 stroke-1.5" />
@@ -99,8 +99,8 @@ function inputValueOf(event: Event): string {
     <Separator />
 
     <div class="space-y-1 text-xs text-muted-foreground">
-      <p>{{ t('dataset.grid.created') }}: {{ formatDateTime(row.createdAt) }}</p>
-      <p>{{ t('dataset.grid.updated') }}: {{ formatDateTime(row.updatedAt) }}</p>
+      <p>{{ t('common.created') }}: {{ formatDateTime(row.createdAt) }}</p>
+      <p>{{ t('common.updated') }}: {{ formatDateTime(row.updatedAt) }}</p>
     </div>
 
     <Button variant="outline" class="text-destructive" @click="emit('delete', row.id)">

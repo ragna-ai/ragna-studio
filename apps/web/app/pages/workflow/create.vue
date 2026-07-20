@@ -4,14 +4,14 @@ import { z } from 'zod';
 import { useCreateWorkflow } from '~/features/workflow/composables/useWorkflowApi';
 import { createWorkflowNode } from '~/features/workflow/lib/default-node';
 
-const workflowCreateSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }),
-  description: z.string(),
-});
-
 // Composables
 const { isPending, mutateAsync } = useCreateWorkflow();
 const { t } = useI18n();
+
+const workflowCreateSchema = z.object({
+  name: z.string().min(1, { message: t('workflow.create.nameRequired') }),
+  description: z.string(),
+});
 
 useHead({
   title: t('workflow.create.title'),
@@ -33,7 +33,7 @@ const form = useForm({
   onSubmit: async ({ value }) => {
     // Every workflow needs exactly one trigger node before it can be
     // published, so start the canvas with one already placed.
-    const triggerNode = createWorkflowNode('trigger', { x: 250, y: 150 });
+    const triggerNode = createWorkflowNode('trigger', { x: 250, y: 150 }, t);
     const response = await mutateAsync({
       name: value.name,
       description: value.description || undefined,
@@ -65,7 +65,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                Name
+                {{ t('common.name') }}
               </Label>
               <Input
                 :id="field.name"
@@ -83,7 +83,7 @@ const form = useForm({
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                Description
+                {{ t('common.description') }}
               </Label>
               <Textarea
                 :id="field.name"
@@ -100,11 +100,11 @@ const form = useForm({
 
         <div class="flex justify-end gap-4">
           <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/workflow">Cancel</NuxtLinkLocale>
+            <NuxtLinkLocale to="/workflow">{{ t('common.cancel') }}</NuxtLinkLocale>
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" class="mr-2" />
-            Create
+            {{ t('common.create') }}
           </Button>
         </div>
       </form>
