@@ -13,6 +13,10 @@ const currentTab = ref('profile');
 // Composables
 const { t } = useI18n();
 
+useHead({
+  title: t('user.profile.title'),
+});
+
 // Computed
 const sideBarTabs = computed(() => [
   { id: 'profile', icon: UserIcon, label: t('user.tabs.profile') },
