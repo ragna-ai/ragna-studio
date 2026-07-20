@@ -15,7 +15,7 @@
 </script>
 
 <template>
-  <section class="flex flex-col gap-2">
+  <section class="flex h-full flex-col gap-2">
     <slot />
   </section>
 </template>

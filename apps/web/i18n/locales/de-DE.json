@@ -31,7 +31,7 @@
     "chat": "Chat",
     "datasets": "Datensätze",
     "docs": "Dokumente",
-    "image": "Bild",
+    "image": "Bilder",
     "social": "Social",
     "more": "Mehr",
     "new": "Neu",
@@ -63,7 +63,7 @@
     "clearAll": "Alle löschen"
   },
   "home": {
-    "title": "RAGNA Studio",
+    "title": "Dashboard",
     "titleWithName": "Willkommen, {name}",
     "subtitle": "Wie kann ich dir heute helfen?"
   },

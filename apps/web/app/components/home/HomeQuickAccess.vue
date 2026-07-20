@@ -14,7 +14,7 @@ const quickAccessItems = [
     id: 5,
     icon: MessagesSquareIcon,
     class: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-    label: 'Chat',
+    labelKey: 'nav.chat',
     route: '/chat',
   },
   // {
@@ -28,21 +28,21 @@ const quickAccessItems = [
     id: 6,
     icon: WorkflowIcon,
     class: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
-    label: 'Workflows',
+    labelKey: 'nav.workflows',
     route: '/workflow',
   },
   {
     id: 7,
     icon: BotIcon,
     class: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-    label: 'Agents',
+    labelKey: 'nav.agents',
     route: '/agent',
   },
   {
     id: 8,
     icon: ImageIcon,
     class: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
-    label: 'Image Generator',
+    labelKey: 'nav.image',
     route: '/text-to-image',
   },
   // {
@@ -70,21 +70,21 @@ const quickAccessItems = [
     id: 13,
     icon: Share2Icon,
     class: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
-    label: 'Social',
+    labelKey: 'nav.social',
     route: '/social',
   },
   {
     id: 14,
     icon: DatabaseIcon,
     class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    label: 'Datasets',
+    labelKey: 'nav.datasets',
     route: '/dataset',
   },
   {
     id: 15,
     icon: FileTextIcon,
     class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    label: 'Documents',
+    labelKey: 'nav.docs',
     route: '/document',
   },
 ];
@@ -108,7 +108,7 @@ const quickAccessItems = [
             <component :is="item.icon" class="size-5 stroke-1.5" />
           </div>
           <p class="text-xs font-medium">
-            {{ item.label }}
+            {{ $t(item.labelKey) }}
           </p>
         </div>
       </NuxtLinkLocale>

@@ -45,7 +45,7 @@
     }
   },
   "home": {
-    "title": "RAGNA Studio",
+    "title": "Dashboard",
     "titleWithName": "Welcome, {name}",
     "subtitle": "How can I help you today?"
   },
