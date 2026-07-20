@@ -84,9 +84,9 @@ function handleClearAllClick() {
         <BellIcon class="size-5 stroke-1 hover:stroke-1.5" />
         <span
           v-if="unreadCount > 0"
-          class="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white"
+          class="absolute top-0 right-0.5 flex size-1.5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white"
         >
-          {{ unreadBadgeLabel }}
+          &nbsp;
         </span>
       </button>
     </DropdownMenuTrigger>

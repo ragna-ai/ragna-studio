@@ -230,7 +230,7 @@ export async function createChatForWorkspace({
   const resolvedAgentId = agentId ?? (await resolveDefaultAgentId({ workspaceId, userId }));
 
   const { error, data: chatRecord } = await tryCatch(() =>
-    createChat({ userId, agentId: resolvedAgentId, title: 'New Chat', workspaceId }),
+    createChat({ userId, agentId: resolvedAgentId, title: 'Chat', workspaceId }),
   );
 
   if (error !== null || !chatRecord) {

@@ -85,7 +85,7 @@
         "intelligence": "Intelligenz",
         "tools": "Werkzeuge",
         "context": "Kontext",
-        "memory": "Gedächtnis",
+        "memory": "Erinnerungen",
         "settings": "Einstellungen"
       },
       "nameRequired": "Name muss mindestens 4 Zeichen lang sein.",
@@ -105,8 +105,8 @@
     },
     "tool": {
       "think": {
-        "label": "Gedanken machen",
-        "description": "Aktiviert tieferes Nachdenken vor der Antwort."
+        "label": "Selbstreflektion",
+        "description": "Ermöglicht Selbstreflektion vor der Antwort."
       },
       "webSearch": {
         "label": "Websuche",
@@ -125,8 +125,8 @@
         "description": "Speichert LinkedIn-Beiträge. Du veröffentlichst sie selbst."
       },
       "memory": {
-        "label": "Gedächtnis Notizen",
-        "description": "Merkt sich Notizen über dich und deine Arbeit für zukünftige Unterhaltungen."
+        "label": "Erinnerungen",
+        "description": "Merkt sich Infos über dich und deine Arbeit für zukünftige Unterhaltungen."
       },
       "datasets": {
         "label": "Datensätze",
@@ -154,6 +154,12 @@
     }
   },
   "chat": {
+    "new": {
+      "title": "Chat"
+    },
+    "create": {
+      "label": "Neuer Chat"
+    },
     "conversation": {
       "title": "Chat-Konversation",
       "subtitle": "Unterhalte dich mit deinem KI-Agenten."
