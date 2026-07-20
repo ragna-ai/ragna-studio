@@ -3,6 +3,7 @@ import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
+import { useChatStore } from '~/features/chat/stores/chat.store';
 
 definePageMeta({
   validate: (route) => hasValidChatId(route.params),
@@ -14,6 +15,7 @@ const chatId = computed(() => route.params.chatId as string);
 // Composables
 const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
+const chatStore = useChatStore();
 
 useHead({
   title: t('chat.conversation.title'),
@@ -42,6 +44,14 @@ watch(
   },
   { immediate: true },
 );
+
+watch(
+  () => data.value?.chat,
+  (chat) => chatStore.setChat(chat),
+  { immediate: true },
+);
+
+onScopeDispose(() => chatStore.setChat());
 </script>
 
 <template>

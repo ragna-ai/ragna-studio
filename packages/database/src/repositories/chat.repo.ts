@@ -77,6 +77,17 @@ export async function getChatByIdForWorkspace(payload: { chatId: string; workspa
     },
     where: { id: payload.chatId, workspaceId: payload.workspaceId },
     with: {
+      agent: {
+        columns: {
+          id: true,
+          name: true,
+        },
+        with: {
+          aiModel: {
+            columns: { id: true, provider: true, displayName: true },
+          },
+        },
+      },
       messages: {
         columns: {
           id: true,

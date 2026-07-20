@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { MaximizeIcon } from '@lucide/vue';
+import ChatHeading from '~/features/chat/components/ChatHeading.vue';
+import { useChatStore } from '~/features/chat/stores/chat.store';
 import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
+
+const chatStore = useChatStore();
 
 const onExpandClick = () => {
   const rootNode = document.documentElement;
@@ -13,12 +17,12 @@ const onExpandClick = () => {
 </script>
 
 <template>
-  <div class="flex h-14 items-center justify-between border-0">
+  <div class="grid h-14 grid-cols-3 items-center border-0">
     <div class="flex">
-      <div class="ml-[0.1rem] px-6 mt-1">
+      <div class="mt-1 ml-[0.1rem] px-6">
         <NavTopPopover />
       </div>
-      <div class="pl-2 flex items-center space-x-2 text-sm">
+      <div class="flex items-center space-x-2 pl-2 text-sm">
         <div class="">
           <BrandLogo :text-visible="true" />
         </div>
@@ -29,7 +33,10 @@ const onExpandClick = () => {
         <div></div>
       </div>
     </div>
-    <div class="flex h-full items-center space-x-5">
+    <div class="flex justify-center">
+      <ChatHeading v-if="chatStore.id" />
+    </div>
+    <div class="flex h-full items-center justify-end space-x-5">
       <NavNotifications />
       <div>
         <NavHelpMenu />

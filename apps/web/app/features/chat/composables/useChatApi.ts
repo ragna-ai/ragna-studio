@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
+import type { ChatAgent } from '~/features/chat/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
@@ -29,7 +30,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 export interface ChatResponse {
   chat: {
     id: string;
-    agentId: string;
+    agent: ChatAgent;
     title: string;
     messages?: UIMessage[] | null;
     createdAt: string;

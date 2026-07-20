@@ -125,9 +125,19 @@ export interface ChatMessageResponse {
   metadata?: Record<string, unknown>;
 }
 
+export interface ChatAgentResponse {
+  id: string;
+  name: string;
+  aiModel: {
+    id: string;
+    provider: string;
+    displayName: string;
+  };
+}
+
 export interface ChatDetailResponse {
   id: string;
-  agentId: string;
+  agent: ChatAgentResponse;
   title: string;
   createdAt: Date;
   updatedAt: Date;
@@ -168,7 +178,15 @@ export async function getChatForWorkspace({
 
   return {
     id: chatRecord.id,
-    agentId: chatRecord.agentId,
+    agent: {
+      id: chatRecord.agent.id,
+      name: chatRecord.agent.name,
+      aiModel: {
+        id: chatRecord.agent.aiModel.id,
+        provider: chatRecord.agent.aiModel.provider,
+        displayName: chatRecord.agent.aiModel.displayName,
+      },
+    },
     title: chatRecord.title,
     createdAt: chatRecord.createdAt,
     updatedAt: chatRecord.updatedAt,
