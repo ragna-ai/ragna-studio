@@ -17,6 +17,13 @@ import {
 import { getGeneratedImages } from './image-gen.tool';
 import { getLinkedinDraft } from './linkedin-draft.tool';
 import { getMemoryTool } from './memory.tool';
+import {
+  getCreateTaskTool,
+  getListTasksTool,
+  getMoveTaskTool,
+  getReadTaskTool,
+  getUpdateTaskTool,
+} from './task.tools';
 import { getThoughts } from './think.tool';
 import { getWebBrowserResults } from './web-browser.tool';
 import { getWebSearchResults } from './web-search.tool';
@@ -58,6 +65,13 @@ const toolsets: Record<AgentTool, ToolsetFactory> = {
     readDocument: getReadDocumentTool(writer, ctx.workspaceId),
     createDocument: getCreateDocumentTool(writer, ctx.workspaceId, ctx.agentId),
     editDocument: getEditDocumentTool(writer, ctx.workspaceId),
+  }),
+  tasks: (writer, ctx) => ({
+    listTasks: getListTasksTool(writer, ctx.workspaceId),
+    readTask: getReadTaskTool(writer, ctx.workspaceId),
+    createTask: getCreateTaskTool(writer, ctx.workspaceId, ctx.agentId),
+    updateTask: getUpdateTaskTool(writer, ctx.workspaceId),
+    moveTask: getMoveTaskTool(writer, ctx.workspaceId),
   }),
 };
 

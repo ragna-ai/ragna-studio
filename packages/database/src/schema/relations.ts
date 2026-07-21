@@ -12,6 +12,7 @@ import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
+import { task, taskLabel, taskToTaskLabel } from './task.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -40,6 +41,9 @@ const schema = {
   workflowRun,
   workflowRunStep,
   notification,
+  task,
+  taskLabel,
+  taskToTaskLabel,
   workspace,
 };
 
@@ -265,6 +269,54 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
   },
+  task: {
+    workspace: r.one.workspace({
+      from: r.task.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    // Self-relation for the one-level subtask rule (docs/tasks/prd.md).
+    // `alias` pairs this "one" side with the "many" side below so drizzle
+    // can tell them apart from any other task<->task relation.
+    parentTask: r.one.task({
+      from: r.task.parentTaskId,
+      to: r.task.id,
+      optional: true,
+      alias: 'taskParentSubtasks',
+    }),
+    subtasks: r.many.task({ alias: 'taskParentSubtasks' }),
+    assignedAgent: r.one.agent({
+      from: r.task.assignedAgentId,
+      to: r.agent.id,
+      optional: true,
+    }),
+    createdByUser: r.one.user({
+      from: r.task.createdByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    createdByAgent: r.one.agent({
+      from: r.task.createdByAgentId,
+      to: r.agent.id,
+      optional: true,
+    }),
+    // Many-to-many through the tasks_to_task_labels join table.
+    labels: r.many.taskLabel({
+      from: r.task.id.through(r.taskToTaskLabel.taskId),
+      to: r.taskLabel.id.through(r.taskToTaskLabel.taskLabelId),
+    }),
+  },
+  taskLabel: {
+    workspace: r.one.workspace({
+      from: r.taskLabel.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    tasks: r.many.task({
+      from: r.taskLabel.id.through(r.taskToTaskLabel.taskLabelId),
+      to: r.task.id.through(r.taskToTaskLabel.taskId),
+    }),
+  },
   workspace: {
     owner: r.one.user({
       from: r.workspace.ownerId,
@@ -279,5 +331,7 @@ export const relations = defineRelations(schema, (r) => ({
     datasets: r.many.dataset(),
     documents: r.many.document(),
     folders: r.many.folder(),
+    tasks: r.many.task(),
+    taskLabels: r.many.taskLabel(),
   },
 }));

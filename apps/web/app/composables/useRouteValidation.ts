@@ -30,6 +30,10 @@ const documentIdSchema = z.object({
   documentId: primaryIdSchema,
 });
 
+const taskIdSchema = z.object({
+  taskId: primaryIdSchema,
+});
+
 export const hasValidChatId = (params: any) =>
   hasValidSchema(chatIdSchema, params);
 
@@ -50,6 +54,9 @@ export const hasValidDatasetId = (params: any) =>
 
 export const hasValidDocumentId = (params: any) =>
   hasValidSchema(documentIdSchema, params);
+
+export const hasValidTaskId = (params: any) =>
+  hasValidSchema(taskIdSchema, params);
 
 export function hasValidPage(params: any) {
   const regexScheme = /^[1-9]\d{0,4}$/;

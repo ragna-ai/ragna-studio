@@ -15,6 +15,8 @@ import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
 import { notificationController } from './controllers/notification.controller';
 import { socialPostController } from './controllers/social-post.controller';
+import { taskLabelController } from './controllers/task-label.controller';
+import { taskController } from './controllers/task.controller';
 import { userController } from './controllers/user.controller';
 import { workflowController } from './controllers/workflow.controller';
 import { workspaceController } from './controllers/workspace.controller';
@@ -56,6 +58,8 @@ export const app = new Hono()
   .route('/', datasetController)
   .route('/', documentController)
   .route('/', folderController)
+  .route('/', taskController)
+  .route('/', taskLabelController)
   .route('/', wsController)
   // Error
   .onError((err, c) => {

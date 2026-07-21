@@ -31,6 +31,7 @@
     "chat": "Chat",
     "datasets": "Datensätze",
     "docs": "Dokumente",
+    "tasks": "Aufgaben",
     "image": "Bilder",
     "social": "Social",
     "more": "Mehr",
@@ -52,6 +53,10 @@
     "workflowRunFailed": {
       "title": "Workflow fehlgeschlagen",
       "message": "„{name}“ wurde nicht erfolgreich abgeschlossen."
+    },
+    "taskReminderDue": {
+      "title": "Aufgaben-Erinnerung",
+      "message": "{displayId} „{title}“ ist bald fällig."
     },
     "unknown": {
       "title": "Benachrichtigung",
@@ -138,6 +143,10 @@
       "documents": {
         "label": "Dokumente",
         "description": "Listet, liest, erstellt und bearbeitet Dokumente im Workspace."
+      },
+      "tasks": {
+        "label": "Aufgaben",
+        "description": "Listet, liest, erstellt, aktualisiert und verschiebt Aufgaben auf dem Workspace-Board."
       },
       "listDocuments": {
         "label": "Dokumente auflisten"
@@ -650,6 +659,103 @@
       "deleteTitle": "Ordner löschen",
       "deleteMessage": "„{name}“ löschen? Die enthaltenen Dokumente werden auf die oberste Ebene verschoben, nicht gelöscht.",
       "empty": "Noch keine Ordner."
+    }
+  },
+  "task": {
+    "list": {
+      "title": "Aufgaben",
+      "subtitle": "Plane und verfolge Arbeit auf einem Linear-artigen Board.",
+      "newTask": "Neue Aufgabe",
+      "loading": "Aufgaben werden geladen...",
+      "loadError": "Aufgaben konnten nicht geladen werden.",
+      "empty": "Noch keine Aufgaben.",
+      "table": {
+        "id": "ID",
+        "priority": "Priorität",
+        "labels": "Labels",
+        "dueDate": "Fällig am",
+        "assignee": "Zugewiesen an"
+      }
+    },
+    "view": {
+      "board": "Board",
+      "list": "Liste"
+    },
+    "board": {
+      "quickAddPlaceholder": "Titel der neuen Aufgabe..."
+    },
+    "filter": {
+      "status": "Status",
+      "priority": "Priorität",
+      "label": "Label",
+      "allStatuses": "Alle Status",
+      "allPriorities": "Alle Prioritäten",
+      "allLabels": "Alle Labels"
+    },
+    "card": {
+      "subtaskProgress": "{done}/{total}"
+    },
+    "status": {
+      "backlog": "Backlog",
+      "todo": "Zu erledigen",
+      "in_progress": "In Bearbeitung",
+      "done": "Erledigt",
+      "canceled": "Abgebrochen"
+    },
+    "priority": {
+      "none": "Keine Priorität",
+      "low": "Niedrig",
+      "medium": "Mittel",
+      "high": "Hoch",
+      "urgent": "Dringend"
+    },
+    "createDialog": {
+      "title": "Neue Aufgabe",
+      "titlePlaceholder": "Titel der Aufgabe"
+    },
+    "label": {
+      "manageTitle": "Labels",
+      "manageDescription": "Workspace-Labels erstellen, umbenennen, umfärben und löschen.",
+      "namePlaceholder": "Labelname",
+      "colorLabel": "Labelfarbe",
+      "rename": "Label umbenennen",
+      "delete": "Label löschen",
+      "deleteTitle": "Label löschen",
+      "deleteMessage": "„{name}“ löschen? Es wird von allen Aufgaben entfernt, keine Aufgaben werden gelöscht.",
+      "empty": "Noch keine Labels."
+    },
+    "detail": {
+      "title": "Aufgabe",
+      "loading": "Aufgabe wird geladen...",
+      "loadError": "Aufgabe konnte nicht geladen werden.",
+      "rename": "Aufgabe umbenennen",
+      "titlePlaceholder": "Unbenannte Aufgabe",
+      "descriptionPlaceholder": "Beschreibung hinzufügen...",
+      "subtasks": "Unteraufgaben",
+      "addSubtaskPlaceholder": "Titel der neuen Unteraufgabe...",
+      "backToParent": "Zurück zur übergeordneten Aufgabe",
+      "deleteConfirmTitle": "Aufgabe löschen",
+      "deleteConfirmMessage": "Möchtest du diese Aufgabe wirklich löschen? Ihre Unteraufgaben werden zu eigenständigen Aufgaben."
+    },
+    "property": {
+      "priority": "Priorität",
+      "dueDate": "Fällig am",
+      "assignee": "Zugewiesen an",
+      "unassigned": "Nicht zugewiesen",
+      "labels": "Labels",
+      "noLabels": "Keine Labels",
+      "reminder": "Erinnere mich",
+      "delete": "Aufgabe löschen"
+    },
+    "reminder": {
+      "off": "Aus",
+      "onDueDate": "Am Fälligkeitsdatum",
+      "oneDayBefore": "1 Tag vorher",
+      "twoDaysBefore": "2 Tage vorher",
+      "oneWeekBefore": "1 Woche vorher",
+      "custom": "Benutzerdefiniert",
+      "needsDueDateHint": "Lege ein Fälligkeitsdatum fest, um Erinnerungen zu aktivieren.",
+      "daysBeforeSuffix": "Tage vorher"
     }
   }
 }

@@ -8,6 +8,8 @@ export * from './gen-image.schema';
 export * from './notification.schema';
 export * from './pagination.schema';
 export * from './social-post.schema';
+export * from './task-label.schema';
+export * from './task.schema';
 export * from './user.schema';
 export * from './workflow.schema';
 export * from './workspace.schema';

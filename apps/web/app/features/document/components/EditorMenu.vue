@@ -18,9 +18,13 @@ import {
   Undo2Icon,
 } from '@lucide/vue';
 import type { DocumentEditorController } from '~/features/document/composables/useDocumentEditor';
+import { cn } from '~/lib/utils';
 
 // Props
-const props = defineProps<{ controller: DocumentEditorController }>();
+const props = defineProps<{
+  controller: DocumentEditorController;
+  class?: string;
+}>();
 
 // Composables
 const { t } = useI18n();
@@ -30,7 +34,10 @@ const editor = props.controller.editor;
 </script>
 
 <template>
-  <div v-if="editor" class="relative flex justify-between px-4 py-3">
+  <div
+    v-if="editor"
+    :class="cn('relative flex justify-between px-4 py-3', props.class)"
+  >
     <div class="flex space-x-1">
       <Button
         variant="ghost"

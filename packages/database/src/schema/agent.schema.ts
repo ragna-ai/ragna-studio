@@ -24,6 +24,7 @@ export const agentToolValues = [
   'memory',
   'datasets',
   'documents',
+  'tasks',
 ] as const;
 export type AgentTool = (typeof agentToolValues)[number];
 export type AgentTools = AgentTool[];
