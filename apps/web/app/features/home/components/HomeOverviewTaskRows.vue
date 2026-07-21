@@ -30,9 +30,7 @@ const groups = computed(() =>
 <template>
   <div class="divide-y divide-foreground/5">
     <template v-for="group in groups" :key="group.value">
-      <div
-        class="bg-stone-50 px-6 py-1.5 text-xs font-semibold text-muted-foreground"
-      >
+      <div class="font-base px-6 py-1.5 text-xs text-muted-foreground">
         {{ t(group.labelKey) }} · {{ group.tasks.length }}
       </div>
       <NuxtLinkLocale
