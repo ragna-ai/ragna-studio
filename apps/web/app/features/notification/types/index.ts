@@ -6,11 +6,13 @@ export interface NotificationDataMap {
     workflowId: string;
     runId: string;
     workflowName: string;
+    workspaceId: string;
   };
   workflow_run_failed: {
     workflowId: string;
     runId: string;
     workflowName: string;
+    workspaceId: string;
   };
   task_reminder_due: {
     taskId: string;

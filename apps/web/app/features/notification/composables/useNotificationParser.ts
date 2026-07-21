@@ -8,6 +8,7 @@ export interface UINotification {
   title: string;
   message: string;
   to: string | null;
+  workspaceId: string | null;
 }
 
 interface NotificationTemplate {
@@ -15,6 +16,7 @@ interface NotificationTemplate {
   messageKey: string;
   params: Record<string, unknown>;
   to: string | null;
+  workspaceId: string | null;
 }
 
 type TemplateBuilder<T extends NotificationType> = (
@@ -27,12 +29,14 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
     messageKey: 'notification.workflowRunSucceeded.message',
     params: { name: data.workflowName },
     to: `/workflow/${data.workflowId}`,
+    workspaceId: data.workspaceId,
   }),
   workflow_run_failed: (data) => ({
     titleKey: 'notification.workflowRunFailed.title',
     messageKey: 'notification.workflowRunFailed.message',
     params: { name: data.workflowName },
     to: `/workflow/${data.workflowId}`,
+    workspaceId: data.workspaceId,
   }),
   task_reminder_due: (data) => ({
     titleKey: 'notification.taskReminderDue.title',
@@ -42,6 +46,7 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
       title: data.taskTitle,
     },
     to: `/tasks/${data.taskId}`,
+    workspaceId: data.workspaceId,
   }),
 };
 
@@ -50,6 +55,7 @@ const fallbackTemplate: NotificationTemplate = {
   messageKey: 'notification.unknown.message',
   params: {},
   to: null,
+  workspaceId: null,
 };
 
 function isSupportedNotificationType(type: string): type is NotificationType {
@@ -86,6 +92,7 @@ export default function useNotificationParser() {
       title: t(template.titleKey, template.params),
       message: t(template.messageKey, template.params),
       to: template.to,
+      workspaceId: template.workspaceId,
     };
   }
 

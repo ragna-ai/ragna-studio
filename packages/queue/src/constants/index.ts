@@ -13,8 +13,8 @@ export const AGENT_CONTEXT_DOCUMENTS_QUEUE = 'agent-context-documents-queue';
 export interface NotificationDataMap {
   // `workflowName` is snapshotted at emit time so the presenter can interpolate
   // it without a lookup, and it reflects the name as it was when the run ran.
-  workflow_run_succeeded: { workflowId: string; runId: string; workflowName: string };
-  workflow_run_failed: { workflowId: string; runId: string; workflowName: string };
+  workflow_run_succeeded: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
+  workflow_run_failed: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
   task_reminder_due: { taskId: string; workspaceId: string; taskNumber: number; taskTitle: string };
 }
 

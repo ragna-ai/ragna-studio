@@ -11,6 +11,7 @@ import {
   useMarkReadNotification,
 } from '~/features/notification/composables/useNotificationApi';
 import useNotificationParser from '~/features/notification/composables/useNotificationParser';
+import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Refs
 const open = ref(false);
@@ -24,6 +25,8 @@ const markRead = useMarkReadNotification();
 const markAllRead = useMarkAllReadNotification();
 const deleteNotification = useDeleteNotification();
 const deleteAll = useDeleteAllNotifications();
+const activeWorkspaceId = useActiveWorkspaceId();
+const { selectWorkspace } = useWorkspaceScopeStore();
 
 // Computed
 const unreadCount = computed(() => unreadCountData.value?.count ?? 0);
@@ -40,6 +43,7 @@ const notificationItems = computed(() =>
       title: parsedNotification.title,
       message: parsedNotification.message,
       to: parsedNotification.to,
+      workspaceId: parsedNotification.workspaceId,
     };
   }),
 );
@@ -58,6 +62,9 @@ async function handleNotificationSelect(notificationId: string) {
   }
   if (item.notification.readAt === null) {
     markRead.mutate(notificationId);
+  }
+  if (item.workspaceId && item.workspaceId !== activeWorkspaceId.value) {
+    selectWorkspace(item.workspaceId);
   }
   if (item?.to) {
     await navigateTo(item.to);

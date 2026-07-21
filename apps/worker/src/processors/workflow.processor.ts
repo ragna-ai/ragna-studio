@@ -102,7 +102,12 @@ async function notifyRunFinished({ runId }: { runId: string }): Promise<void> {
     }
 
     const { userId } = run.workflow;
-    const data = { workflowId: run.workflowId, runId: run.id, workflowName: run.workflow.name };
+    const data = {
+      workflowId: run.workflowId,
+      runId: run.id,
+      workflowName: run.workflow.name,
+      workspaceId: run.workflow.workspaceId,
+    };
 
     switch (run.status) {
       case 'completed':
