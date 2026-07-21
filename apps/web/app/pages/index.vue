@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
+
 const { t } = useI18n();
 useHead({ title: t('home.title') });
 
@@ -18,8 +20,14 @@ const headingTitle = computed(() => {
 <template>
   <SectionWrapper class="relative">
     <div class="grid-background absolute inset-0 opacity-20"></div>
-    <div class="relative z-10 mx-auto flex max-w-300 flex-col gap-4 p-20">
+    <div
+      class="relative z-10 mx-auto flex max-w-300 flex-col gap-4 px-20 py-10"
+    >
       <div class="flex flex-col gap-6">
+        <!-- workspace switcher -->
+        <div>
+          <WorkspaceSwitcher size="lg" />
+        </div>
         <!-- datetime -->
         <div class="text-sm font-medium text-foreground/75">
           <NuxtTime

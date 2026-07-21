@@ -3,6 +3,14 @@ import { CheckIcon, ChevronsUpDownIcon, SettingsIcon } from '@lucide/vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+import { cn } from '~/lib/utils';
+
+interface WorkspaceSwitcherProps {
+  size?: 'sm' | 'md' | 'lg';
+}
+
+// Props
+const props = defineProps<WorkspaceSwitcherProps>();
 
 // Refs
 const isManageDialogOpen = ref(false);
@@ -14,6 +22,22 @@ const { selectWorkspace, isActive, ensureActiveWorkspace } =
 const { t } = useI18n();
 
 // Computed
+const sizeClass = computed(() => {
+  switch (props.size) {
+    case 'sm':
+      return { button: 'h-7 text-xs', label: 'max-w-28' };
+    case 'md':
+      return { button: 'h-8 text-sm', label: 'max-w-28' };
+    case 'lg':
+      return {
+        button:
+          'h-9 text-2xl border-0 text-foreground/90 px-0 font-medium hover:bg-transparent hover:text-foreground/90',
+        label: 'max-w-38',
+      };
+    default:
+      return { button: 'h-7 text-xs', label: 'max-w-28' };
+  }
+});
 const workspaces = computed(() => data.value?.workspaces ?? []);
 const activeLabel = computed(() => {
   const active = workspaces.value.find((workspace) => isActive(workspace.id));
@@ -35,9 +59,16 @@ watch(data, (result) => {
     <DropdownMenuTrigger as-child>
       <button
         type="button"
-        class="flex h-7 items-center gap-1 rounded-md border px-2 text-xs text-stone-600 hover:bg-stone-100"
+        :class="
+          cn(
+            'flex h-7 items-center gap-1 rounded-md border px-2 text-xs text-stone-600 hover:bg-stone-100',
+            sizeClass.button,
+          )
+        "
       >
-        <span class="max-w-28 truncate">{{ activeLabel }}</span>
+        <span :class="cn('max-w-28 truncate', sizeClass.label)">{{
+          activeLabel
+        }}</span>
         <ChevronsUpDownIcon class="size-3 shrink-0 opacity-50" />
       </button>
     </DropdownMenuTrigger>

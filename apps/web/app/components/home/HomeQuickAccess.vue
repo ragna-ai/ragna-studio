@@ -4,6 +4,7 @@ import {
   DatabaseIcon,
   FileTextIcon,
   ImageIcon,
+  ListTodoIcon,
   MessagesSquareIcon,
   Share2Icon,
   WorkflowIcon,
@@ -11,7 +12,14 @@ import {
 
 const quickAccessItems = [
   {
-    id: 5,
+    id: 'tasks',
+    icon: ListTodoIcon,
+    class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    labelKey: 'nav.tasks',
+    route: '/tasks',
+  },
+  {
+    id: 'chat',
     icon: MessagesSquareIcon,
     class: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
     labelKey: 'nav.chat',
@@ -25,21 +33,21 @@ const quickAccessItems = [
   //   route: '/cowork',
   // },
   {
-    id: 6,
+    id: 'workflow',
     icon: WorkflowIcon,
     class: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
     labelKey: 'nav.workflows',
     route: '/workflow',
   },
   {
-    id: 7,
+    id: 'agents',
     icon: BotIcon,
     class: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
     labelKey: 'nav.agents',
     route: '/agent',
   },
   {
-    id: 8,
+    id: 'image',
     icon: ImageIcon,
     class: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     labelKey: 'nav.image',
@@ -67,21 +75,21 @@ const quickAccessItems = [
   //   route: '/storage',
   // },
   {
-    id: 13,
+    id: 'social',
     icon: Share2Icon,
     class: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
     labelKey: 'nav.social',
     route: '/social',
   },
   {
-    id: 14,
+    id: 'datasets',
     icon: DatabaseIcon,
     class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     labelKey: 'nav.datasets',
     route: '/dataset',
   },
   {
-    id: 15,
+    id: 'docs',
     icon: FileTextIcon,
     class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     labelKey: 'nav.docs',
