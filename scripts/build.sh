@@ -6,11 +6,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TARGETS=(api webapp worker webbrowser)
+CORE_TARGETS=(api webapp worker)
 
 # Pick the target off argv if it's already given (non-interactive use),
 # leaving the rest of argv to forward to the underlying build script.
 choice=""
-for t in "${TARGETS[@]}" all; do
+for t in "${TARGETS[@]}" core all; do
   if [ "$1" = "$t" ]; then
     choice="$1"
     shift
@@ -20,7 +21,7 @@ done
 
 if [ -z "$choice" ]; then
   echo "Which app do you want to build?"
-  select opt in "${TARGETS[@]}" all quit; do
+  select opt in "${TARGETS[@]}" core all quit; do
     case "$opt" in
       quit) exit 0 ;;
       "") echo "Invalid choice, try again." ;;
@@ -37,6 +38,10 @@ run_target() {
 
 if [ "$choice" = "all" ]; then
   for t in "${TARGETS[@]}"; do
+    run_target "$t" "$@"
+  done
+elif [ "$choice" = "core" ]; then
+  for t in "${CORE_TARGETS[@]}"; do
     run_target "$t" "$@"
   done
 else

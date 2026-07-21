@@ -51,7 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "========================================"
-echo "Building Ragna Studio Webbrowser Docker Image"
+echo "Building Ragna Studio Webbrowser Image"
 echo "========================================"
 echo "Image:    $IMAGE_NAME"
 echo "Tag:      $TAG"
