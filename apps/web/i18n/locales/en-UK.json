@@ -48,7 +48,35 @@
   "home": {
     "title": "Dashboard",
     "titleWithName": "Welcome, {name}",
-    "subtitle": "How can I help you today?"
+    "subtitle": "How can I help you today?",
+    "overview": {
+      "viewAll": "View all",
+      "tasks": {
+        "title": "Tasks",
+        "empty": "No tasks yet.",
+        "quickCreate": "New task"
+      },
+      "chats": {
+        "title": "Chats",
+        "empty": "No chats yet.",
+        "quickCreate": "New chat"
+      },
+      "workflows": {
+        "title": "Workflows",
+        "empty": "No workflows yet.",
+        "quickCreate": "New workflow",
+        "neverRun": "Never run"
+      },
+      "agents": {
+        "title": "Agents",
+        "createTile": "New agent"
+      },
+      "documents": {
+        "title": "Documents",
+        "empty": "No documents yet.",
+        "quickCreate": "New document"
+      }
+    }
   },
   "notification": {
     "workflowRunSucceeded": {

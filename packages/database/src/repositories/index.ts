@@ -10,6 +10,7 @@ export * from './folder.repo';
 export * from './gen-image.repo';
 export * from './memory.repo';
 export * from './notification.repo';
+export * from './overview.repo';
 export * from './session.repo';
 export * from './social-post.repo';
 export * from './task-label.repo';

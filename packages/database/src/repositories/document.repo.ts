@@ -16,6 +16,14 @@ export type DocumentWithRelations = Document & {
 
 const documentAuthorColumns = { columns: { id: true, name: true } } as const;
 
+export async function getDocumentCountByWorkspaceId({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<number> {
+  return db.$count(document, eq(document.workspaceId, workspaceId));
+}
+
 // Workspace-scoped list, most recently updated first, with each document's
 // folder and author attached so the web UI can group/label without extra
 // round trips.
