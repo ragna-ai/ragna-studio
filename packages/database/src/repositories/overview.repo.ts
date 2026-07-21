@@ -1,13 +1,13 @@
 import type { WorkflowRunStatus } from '@repo/workflow';
-import { and, eq, notInArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import type { TaskPriority, TaskStatus } from '../schema';
 import { task } from '../schema';
 
-// Statuses the tasks card ignores entirely (docs/home/prd.md, "Canceled +
-// backlog tasks"): canceled is noise, backlog can be substantial and
-// doesn't need attention on the home overview.
-const TASK_STATUSES_EXCLUDED_FROM_OVERVIEW: TaskStatus[] = ['canceled', 'backlog'];
+// The only statuses the tasks card shows (docs/home/prd.md, "Task
+// statuses"): the overview is about work needing attention, so done,
+// canceled, and the potentially large backlog stay out.
+const OVERVIEW_TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress'];
 
 // Home overview (docs/home/prd.md): small, purpose-built reads for the home
 // page's dashboard cards. Distinct from the paginated list functions in
@@ -25,8 +25,8 @@ export type RecentTask = {
 };
 
 /**
- * Latest tasks for the tasks card, newest first. Canceled and backlog tasks
- * are excluded entirely (docs/home/prd.md, "Canceled + backlog tasks").
+ * Latest tasks for the tasks card, newest first. Only todo and in-progress
+ * tasks are included (docs/home/prd.md, "Task statuses").
  */
 export async function getRecentTasksByWorkspaceId({
   workspaceId,
@@ -45,16 +45,16 @@ export async function getRecentTasksByWorkspaceId({
       dueDate: true,
       updatedAt: true,
     },
-    where: { workspaceId, status: { notIn: TASK_STATUSES_EXCLUDED_FROM_OVERVIEW } },
+    where: { workspaceId, status: { in: OVERVIEW_TASK_STATUSES } },
     orderBy: (t, { desc }) => desc(t.updatedAt),
     limit,
   });
 }
 
 /**
- * Workspace task total for the tasks card. Excludes canceled and backlog
- * tasks, the same rule `getRecentTasksByWorkspaceId` applies to its list
- * (docs/home/prd.md, "Canceled + backlog tasks").
+ * Workspace task total for the tasks card. Counts only todo and
+ * in-progress tasks, the same rule `getRecentTasksByWorkspaceId` applies
+ * to its list (docs/home/prd.md, "Task statuses").
  */
 export async function getActiveTaskCountByWorkspaceId({
   workspaceId,
@@ -63,10 +63,7 @@ export async function getActiveTaskCountByWorkspaceId({
 }): Promise<number> {
   return db.$count(
     task,
-    and(
-      eq(task.workspaceId, workspaceId),
-      notInArray(task.status, TASK_STATUSES_EXCLUDED_FROM_OVERVIEW),
-    ),
+    and(eq(task.workspaceId, workspaceId), inArray(task.status, OVERVIEW_TASK_STATUSES)),
   );
 }
 

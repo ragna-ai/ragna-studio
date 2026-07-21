@@ -3,8 +3,8 @@
 > **Status: implemented** (2026-07-21, verified and approved by the user).
 > Built as specced; spec-level changes made during the build are already
 > folded into this document (flex-column layout instead of grid,
-> `foreground/5` inner dividers, documents card added, backlog tasks
-> excluded alongside canceled).
+> `foreground/5` inner dividers, documents card added, tasks card
+> narrowed to `todo` + `in_progress` only).
 
 Overview cards on the home page (`pages/index.vue`). One card per section:
 Tasks, Chats, Workflows, Agents. Each card shows the latest items of its
@@ -25,7 +25,7 @@ Settled in discussion on 2026-07-21.
 | **DTOs**          | Slim projections, only what the card renders. Never full rows.                                            |
 | **Caching**       | None in v1. `cache.service.ts` exists if it's ever measurably needed.                                     |
 | **Indexes**       | Existing `workspace_id` indexes suffice at current scale. No composite `(workspace_id, updated_at)` index in v1. |
-| **Canceled + backlog tasks** | Excluded from the tasks card entirely: filtered out of both `items` and `total`. Canceled is noise; backlog can be substantial and doesn't need attention (decided 2026-07-21). |
+| **Task statuses** | The tasks card only shows `todo` and `in_progress`, in both `items` and `total`. Canceled is noise, backlog can be substantial, and done needs no attention; the card is about actionable work (decided 2026-07-21). |
 | **Card order**    | Tasks, Chats, Workflows, Agents (most action-oriented first).                                             |
 | **Tasks grouping** | Display-only, client-side, same pattern as `TaskListView.vue`. API returns a flat recency-sorted list.   |
 
@@ -107,8 +107,8 @@ Response:
 | **Documents** | `id`, `title`, `updatedAt`                            | No `content`, no folder/author joins. Title and recency are enough at overview granularity. |
 
 `total` is a `count(*)` per entity per workspace, fetched in the same
-`Promise.all`. The tasks query and count both exclude `canceled` and
-`backlog` tasks.
+`Promise.all`. The tasks query and count both include only `todo` and
+`in_progress` tasks.
 
 ### Service shape
 
