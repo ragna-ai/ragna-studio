@@ -31,7 +31,7 @@ const sizeClass = computed(() => {
     case 'lg':
       return {
         button:
-          'h-9 text-2xl border-0 text-foreground/90 px-0 font-medium hover:bg-transparent hover:text-foreground/90',
+          'h-9 text-2xl border-0 text-foreground/90 font-medium hover:bg-transparent hover:text-foreground/90 bg-transparent p-0 hover:shadow-none',
         label: 'max-w-38',
       };
     default:
@@ -61,7 +61,7 @@ watch(data, (result) => {
         type="button"
         :class="
           cn(
-            'flex h-7 items-center gap-1 rounded-md border px-2 text-xs text-stone-600 hover:bg-stone-100',
+            'flex h-7 items-center gap-1 rounded-full border bg-white p-4',
             sizeClass.button,
           )
         "

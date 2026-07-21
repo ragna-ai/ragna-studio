@@ -59,6 +59,21 @@ const documentsTotal = computed(() => data.value?.documents.total ?? 0);
       </HomeOverviewCard>
 
       <HomeOverviewCard
+        :icon="FileTextIcon"
+        icon-class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+        :title="t('home.overview.documents.title')"
+        :total="documentsTotal"
+        view-all-to="/document"
+        :loading="pending"
+        :is-empty="documents.length === 0"
+        :empty-label="t('home.overview.documents.empty')"
+        :quick-create-label="t('home.overview.documents.quickCreate')"
+        quick-create-to="/document"
+      >
+        <HomeOverviewDocumentRows :documents="documents" />
+      </HomeOverviewCard>
+
+      <HomeOverviewCard
         :icon="WorkflowIcon"
         icon-class="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
         :title="t('home.overview.workflows.title')"
@@ -103,21 +118,6 @@ const documentsTotal = computed(() => data.value?.documents.total ?? 0);
         quick-create-to="/chat"
       >
         <HomeOverviewChatRows :chats="chats" />
-      </HomeOverviewCard>
-
-      <HomeOverviewCard
-        :icon="FileTextIcon"
-        icon-class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-        :title="t('home.overview.documents.title')"
-        :total="documentsTotal"
-        view-all-to="/document"
-        :loading="pending"
-        :is-empty="documents.length === 0"
-        :empty-label="t('home.overview.documents.empty')"
-        :quick-create-label="t('home.overview.documents.quickCreate')"
-        quick-create-to="/document"
-      >
-        <HomeOverviewDocumentRows :documents="documents" />
       </HomeOverviewCard>
     </div>
   </div>

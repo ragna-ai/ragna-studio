@@ -49,7 +49,7 @@ const headingTitle = computed(() => {
           </p>
         </div>
       </div>
-      <div class="w-full">
+      <div>
         <HomeOverview />
       </div>
     </div>

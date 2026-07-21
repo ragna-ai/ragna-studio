@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlusIcon, type LucideIcon } from '@lucide/vue';
+import { Maximize2Icon, PlusIcon, type LucideIcon } from '@lucide/vue';
 
 // Props
 // Generic shell shared by all four overview cards (docs/home/prd.md, "Card
@@ -53,13 +53,14 @@ const quickCreate = computed(() => {
           <component :is="icon" class="size-4 stroke-1.5" />
         </div>
         <CardTitle class="truncate text-base">{{ title }}</CardTitle>
-        <Badge variant="secondary">{{ total }}</Badge>
+        <Badge variant="outline" class="text-xxs opacity-75">{{ total }}</Badge>
       </div>
       <NuxtLinkLocale
         :to="viewAllTo"
+        :title="$t('home.overview.viewAll')"
         class="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
       >
-        {{ $t('home.overview.viewAll') }}
+        <Maximize2Icon class="size-3" />
       </NuxtLinkLocale>
     </CardHeader>
 
