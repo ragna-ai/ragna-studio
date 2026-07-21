@@ -14,6 +14,7 @@ import { documentController } from './controllers/document.controller';
 import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
 import { notificationController } from './controllers/notification.controller';
+import { overviewController } from './controllers/overview.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { taskLabelController } from './controllers/task-label.controller';
 import { taskController } from './controllers/task.controller';
@@ -55,6 +56,7 @@ export const app = new Hono()
   .route('/', socialPostController)
   .route('/', notificationController)
   .route('/', workspaceController)
+  .route('/', overviewController)
   .route('/', datasetController)
   .route('/', documentController)
   .route('/', folderController)

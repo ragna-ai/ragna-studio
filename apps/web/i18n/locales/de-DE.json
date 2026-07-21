@@ -70,7 +70,35 @@
   "home": {
     "title": "Dashboard",
     "titleWithName": "Willkommen, {name}",
-    "subtitle": "Wie kann ich dir heute helfen?"
+    "subtitle": "Wie kann ich dir heute helfen?",
+    "overview": {
+      "viewAll": "Alle anzeigen",
+      "tasks": {
+        "title": "Aufgaben",
+        "empty": "Noch keine Aufgaben.",
+        "quickCreate": "Neue Aufgabe"
+      },
+      "chats": {
+        "title": "Chats",
+        "empty": "Noch keine Chats.",
+        "quickCreate": "Neuer Chat"
+      },
+      "workflows": {
+        "title": "Workflows",
+        "empty": "Noch keine Workflows.",
+        "quickCreate": "Neuer Workflow",
+        "neverRun": "Nie ausgeführt"
+      },
+      "agents": {
+        "title": "Agenten",
+        "createTile": "Neuer Agent"
+      },
+      "documents": {
+        "title": "Dokumente",
+        "empty": "Noch keine Dokumente.",
+        "quickCreate": "Neues Dokument"
+      }
+    }
   },
   "agent": {
     "list": {

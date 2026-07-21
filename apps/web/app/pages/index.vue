@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HomeOverview from '~/features/home/components/HomeOverview.vue';
 import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
 
 const { t } = useI18n();
@@ -19,10 +20,8 @@ const headingTitle = computed(() => {
 
 <template>
   <SectionWrapper class="relative">
-    <div class="grid-background absolute inset-0 opacity-20"></div>
-    <div
-      class="relative z-10 mx-auto flex max-w-300 flex-col gap-4 px-20 py-10"
-    >
+    <div class="grid-background absolute inset-0 size-full opacity-20"></div>
+    <div class="relative z-10 mx-auto flex w-full flex-col gap-6 px-20 py-10">
       <div class="flex flex-col gap-6">
         <!-- workspace switcher -->
         <div>
@@ -50,11 +49,8 @@ const headingTitle = computed(() => {
           </p>
         </div>
       </div>
-      <div class="">
-        <HomeQuickAccess />
-        <div class="py-10">
-          <HomeFavorites />
-        </div>
+      <div class="w-full">
+        <HomeOverview />
       </div>
     </div>
   </SectionWrapper>
