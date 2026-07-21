@@ -63,6 +63,13 @@ export const datasetRow = pgTable(
     // deletedAt means a removed row can never be resurrected or
     // double-processed by an agent (see dataset.repo.ts read paths).
     data: jsonb('data').notNull().$type<DatasetRowData>().default({}),
+    // Fractional-index rank (same pattern as task.sortOrder): assigned once,
+    // atomically, at creation time under a dataset-row lock (see
+    // `createDatasetRow`), so row order reflects true creation order even
+    // when several rows are created concurrently (e.g. an agent appending a
+    // multi-step plan in one turn). createdAt can't be used for this: rows
+    // created concurrently can commit out of the order they were requested.
+    sortOrder: text('sort_order').notNull(),
     ...timestamps,
   },
   (table) => [index('datasetRow_datasetId_idx').on(table.datasetId)],

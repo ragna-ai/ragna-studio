@@ -1,4 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
 import { dataset, datasetRow } from '../schema';
@@ -299,7 +300,8 @@ export async function getDatasetRowCount({ datasetId }: { datasetId: string }): 
 export type DatasetRowFilter = { columnId: string; value: string | number | null };
 
 /**
- * Rows for one dataset, oldest first (v1 has no manual reordering), always
+ * Rows for one dataset, in creation order (v1 has no manual reordering; see
+ * `sortOrder` on the schema for why this isn't `createdAt`), always
  * excluding soft-deleted rows so an agent can never resurrect or
  * double-process a removed task. `filter` is an equality match on one
  * column's value (v1 scope for the `datasetListRows` tool); `limit` is
@@ -328,7 +330,7 @@ export async function getDatasetRows({
           }
         : {}),
     },
-    orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
+    orderBy: (c, { asc }) => [asc(c.sortOrder)],
     limit: cappedLimit,
   });
 }
@@ -347,6 +349,12 @@ export async function getDatasetRowById({
   return rowRecord ?? null;
 }
 
+/**
+ * Locks the parent dataset row for the duration of the transaction, so
+ * concurrent creates for the same dataset (e.g. an agent appending several
+ * plan steps in one turn) are serialized rather than racing to read the
+ * same "current last row" and compute colliding sort keys.
+ */
 export async function createDatasetRow({
   datasetId,
   userId,
@@ -356,28 +364,50 @@ export async function createDatasetRow({
   userId: string;
   data: DatasetRowData;
 }): Promise<DatasetRow> {
-  const datasetRecord = await getDatasetById({ datasetId, userId });
-  if (!datasetRecord) {
-    throw new Error('Dataset not found');
-  }
+  return db.transaction(async (tx) => {
+    const [lockedDataset] = await tx
+      .select()
+      .from(dataset)
+      .where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)))
+      .for('update');
 
-  const rowCount = await getDatasetRowCount({ datasetId });
-  if (rowCount >= MAX_ROWS_PER_DATASET) {
-    throw new Error(`Dataset has reached the ${MAX_ROWS_PER_DATASET}-row limit`);
-  }
+    if (!lockedDataset) {
+      throw new Error('Dataset not found');
+    }
 
-  const validation = validateRowData(datasetRecord.columns, data);
-  if (!validation.valid) {
-    throw new Error(validation.error);
-  }
+    const rowCount = await tx.$count(
+      datasetRow,
+      and(eq(datasetRow.datasetId, datasetId), isNull(datasetRow.deletedAt)),
+    );
+    if (rowCount >= MAX_ROWS_PER_DATASET) {
+      throw new Error(`Dataset has reached the ${MAX_ROWS_PER_DATASET}-row limit`);
+    }
 
-  const [createdRow] = await db.insert(datasetRow).values({ datasetId, data }).returning();
+    const validation = validateRowData(lockedDataset.columns, data);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
 
-  if (!createdRow) {
-    throw new Error('Failed to create dataset row');
-  }
+    const [lastRow] = await tx
+      .select({ sortOrder: datasetRow.sortOrder })
+      .from(datasetRow)
+      .where(eq(datasetRow.datasetId, datasetId))
+      .orderBy(desc(datasetRow.sortOrder))
+      .limit(1);
 
-  return createdRow;
+    const sortOrder = generateKeyBetween(lastRow?.sortOrder ?? null, null);
+
+    const [createdRow] = await tx
+      .insert(datasetRow)
+      .values({ datasetId, data, sortOrder })
+      .returning();
+
+    if (!createdRow) {
+      throw new Error('Failed to create dataset row');
+    }
+
+    return createdRow;
+  });
 }
 
 export async function updateDatasetRow({

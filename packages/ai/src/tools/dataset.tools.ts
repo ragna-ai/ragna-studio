@@ -113,6 +113,28 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+// When a model appends several rows in one turn (e.g. a multi-step plan),
+// the AI SDK runs those tool calls concurrently, so their DB writes can
+// land out of the order the model intended. The dataset-row lock inside
+// `createDatasetRow` keeps the sort key itself correct, but only if calls
+// reach it in the right order in the first place. This in-process FIFO
+// queue provides that: each call's turn starts only after the previous
+// one (for the same dataset) has finished, matching call/emission order.
+const datasetRowLocks = new Map<string, Promise<unknown>>();
+
+function withDatasetRowLock<T>(datasetId: string, fn: () => Promise<T>): Promise<T> {
+  const previous = datasetRowLocks.get(datasetId) ?? Promise.resolve();
+  const next = previous.then(fn, fn);
+  datasetRowLocks.set(
+    datasetId,
+    next.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return next;
+}
+
 // datasetCreate
 
 const datasetCreateInputSchema = z.object({
@@ -371,21 +393,23 @@ export const getDatasetAppendRowTool = (
         transient: true,
       });
 
-      const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-      if ('error' in scoped) {
-        return scoped;
-      }
+      return withDatasetRowLock(input.datasetId, async () => {
+        const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
+        if ('error' in scoped) {
+          return scoped;
+        }
 
-      const { error, data: row } = await tryCatch(
-        () => createDatasetRow({ datasetId: input.datasetId, userId, data: input.data }),
-        { retryOnFailure: false },
-      );
+        const { error, data: row } = await tryCatch(
+          () => createDatasetRow({ datasetId: input.datasetId, userId, data: input.data }),
+          { retryOnFailure: false },
+        );
 
-      if (error !== null || !row) {
-        return { error: toErrorMessage(error, 'Failed to append dataset row.') };
-      }
+        if (error !== null || !row) {
+          return { error: toErrorMessage(error, 'Failed to append dataset row.') };
+        }
 
-      return { row: toRowOutput(row) };
+        return { row: toRowOutput(row) };
+      });
     },
   });
 
