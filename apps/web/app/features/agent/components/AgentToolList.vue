@@ -6,6 +6,7 @@ import {
   FileTextIcon,
   GlobeIcon,
   ImageIcon,
+  ListTodoIcon,
   NotebookPenIcon,
   PencilLineIcon,
   Share2Icon,
@@ -107,6 +108,12 @@ const availableTools: UiAgentTool[] = [
     icon: FileTextIcon,
     titleKey: 'agent.tool.documents.label',
     descriptionKey: 'agent.tool.documents.description',
+  },
+  {
+    id: 'tasks',
+    icon: ListTodoIcon,
+    titleKey: 'agent.tool.tasks.label',
+    descriptionKey: 'agent.tool.tasks.description',
   },
 ];
 

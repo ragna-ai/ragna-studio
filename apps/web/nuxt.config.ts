@@ -117,6 +117,7 @@ export default defineNuxtConfig({
         'motion-v',
         'vue-stream-markdown',
         'shiki',
+        'vue-draggable-plus',
       ],
     },
     // Pre-transform pages/components at dev startup so navigation doesn't

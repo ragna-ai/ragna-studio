@@ -31,6 +31,7 @@
     "chat": "Chat",
     "datasets": "Datasets",
     "docs": "Docs",
+    "tasks": "Tasks",
     "image": "Images",
     "social": "Social",
     "more": "More",
@@ -57,6 +58,10 @@
     "workflowRunFailed": {
       "title": "Workflow failed",
       "message": "\"{name}\" did not complete successfully."
+    },
+    "taskReminderDue": {
+      "title": "Task reminder",
+      "message": "{displayId} \"{title}\" is due soon."
     },
     "unknown": {
       "title": "Notification",
@@ -150,6 +155,10 @@
       "documents": {
         "label": "Documents",
         "description": "List, read, create, and edit workspace documents."
+      },
+      "tasks": {
+        "label": "Tasks",
+        "description": "List, read, create, update, and move tasks on the workspace board."
       }
     }
   },
@@ -644,6 +653,103 @@
       "deleteTitle": "Delete folder",
       "deleteMessage": "Delete \"{name}\"? Its documents move to the root level, they are not deleted.",
       "empty": "No folders yet."
+    }
+  },
+  "task": {
+    "list": {
+      "title": "Tasks",
+      "subtitle": "Plan and track work on a Linear-style board.",
+      "newTask": "New task",
+      "loading": "Loading tasks...",
+      "loadError": "Failed to load tasks.",
+      "empty": "No tasks yet.",
+      "table": {
+        "id": "ID",
+        "priority": "Priority",
+        "labels": "Labels",
+        "dueDate": "Due date",
+        "assignee": "Assignee"
+      }
+    },
+    "view": {
+      "board": "Board",
+      "list": "List"
+    },
+    "board": {
+      "quickAddPlaceholder": "New task title..."
+    },
+    "filter": {
+      "status": "Status",
+      "priority": "Priority",
+      "label": "Label",
+      "allStatuses": "All statuses",
+      "allPriorities": "All priorities",
+      "allLabels": "All labels"
+    },
+    "card": {
+      "subtaskProgress": "{done}/{total}"
+    },
+    "status": {
+      "backlog": "Backlog",
+      "todo": "Todo",
+      "in_progress": "In Progress",
+      "done": "Done",
+      "canceled": "Canceled"
+    },
+    "priority": {
+      "none": "No priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "createDialog": {
+      "title": "New task",
+      "titlePlaceholder": "Task title"
+    },
+    "label": {
+      "manageTitle": "Labels",
+      "manageDescription": "Create, rename, recolor, and delete workspace labels.",
+      "namePlaceholder": "Label name",
+      "colorLabel": "Label color",
+      "rename": "Rename label",
+      "delete": "Delete label",
+      "deleteTitle": "Delete label",
+      "deleteMessage": "Delete \"{name}\"? It is removed from every task, no tasks are deleted.",
+      "empty": "No labels yet."
+    },
+    "detail": {
+      "title": "Task",
+      "loading": "Loading task...",
+      "loadError": "Failed to load the task.",
+      "rename": "Rename task",
+      "titlePlaceholder": "Untitled task",
+      "descriptionPlaceholder": "Add a description...",
+      "subtasks": "Subtasks",
+      "addSubtaskPlaceholder": "New subtask title...",
+      "backToParent": "Back to parent task",
+      "deleteConfirmTitle": "Delete task",
+      "deleteConfirmMessage": "Are you sure you want to delete this task? Its subtasks become top-level tasks."
+    },
+    "property": {
+      "priority": "Priority",
+      "dueDate": "Due date",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "labels": "Labels",
+      "noLabels": "No labels",
+      "reminder": "Remind me",
+      "delete": "Delete task"
+    },
+    "reminder": {
+      "off": "Off",
+      "onDueDate": "On due date",
+      "oneDayBefore": "1 day before",
+      "twoDaysBefore": "2 days before",
+      "oneWeekBefore": "1 week before",
+      "custom": "Custom",
+      "needsDueDateHint": "Set a due date to enable reminders.",
+      "daysBeforeSuffix": "days before"
     }
   }
 }

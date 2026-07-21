@@ -15,6 +15,7 @@ export interface NotificationDataMap {
   // it without a lookup, and it reflects the name as it was when the run ran.
   workflow_run_succeeded: { workflowId: string; runId: string; workflowName: string };
   workflow_run_failed: { workflowId: string; runId: string; workflowName: string };
+  task_reminder_due: { taskId: string; workspaceId: string; taskNumber: number; taskTitle: string };
 }
 
 export type NotificationType = keyof NotificationDataMap;

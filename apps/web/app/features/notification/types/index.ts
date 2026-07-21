@@ -12,6 +12,12 @@ export interface NotificationDataMap {
     runId: string;
     workflowName: string;
   };
+  task_reminder_due: {
+    taskId: string;
+    workspaceId: string;
+    taskNumber: number;
+    taskTitle: string;
+  };
 }
 
 export type NotificationType = keyof NotificationDataMap;

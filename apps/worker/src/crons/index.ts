@@ -3,6 +3,7 @@ import { addCronJob } from '@repo/queue';
 
 import { cleanupProcessor } from './cleanup.cron';
 import { staleRunsProcessor } from './stale-runs.cron';
+import { taskReminderProcessor } from './task-reminder.cron';
 
 export function registerCronJobs() {
   logger.info('Registering cron jobs...');
@@ -17,6 +18,12 @@ export function registerCronJobs() {
     name: 'stale-workflow-runs',
     processor: staleRunsProcessor,
     schedule: { pattern: '*/15 * * * *' }, // Every 15 minutes
+  });
+
+  addCronJob({
+    name: 'task-reminder',
+    processor: taskReminderProcessor,
+    schedule: { pattern: '* * * * *' }, // Every minute
   });
 
   logger.info('Cron jobs registered');

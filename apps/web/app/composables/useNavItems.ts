@@ -5,6 +5,7 @@ import {
   FolderClockIcon,
   HomeIcon,
   ImageIcon,
+  ListTodoIcon,
   MessagesSquareIcon,
   PlusCircleIcon,
   Share2Icon,
@@ -38,6 +39,13 @@ const homeItem: NavItemConfig = {
 };
 
 const defaultItems: NavItemConfig[] = [
+  {
+    id: 'tasks',
+    path: '/tasks',
+    icon: ListTodoIcon,
+    labelKey: 'nav.tasks',
+    children: [],
+  },
   {
     id: 'workflow',
     path: '/workflow',

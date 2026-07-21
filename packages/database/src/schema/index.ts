@@ -12,6 +12,7 @@ export * from './notification.schema';
 export * from './relations';
 export * from './session.schema';
 export * from './social-post.schema';
+export * from './task.schema';
 export * from './user.schema';
 export * from './verification.schema';
 export * from './workflow.schema';

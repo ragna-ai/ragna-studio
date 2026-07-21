@@ -34,6 +34,15 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
     params: { name: data.workflowName },
     to: `/workflow/${data.workflowId}`,
   }),
+  task_reminder_due: (data) => ({
+    titleKey: 'notification.taskReminderDue.title',
+    messageKey: 'notification.taskReminderDue.message',
+    params: {
+      displayId: `TSK-${data.taskNumber}`,
+      title: data.taskTitle,
+    },
+    to: `/tasks/${data.taskId}`,
+  }),
 };
 
 const fallbackTemplate: NotificationTemplate = {
