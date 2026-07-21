@@ -725,7 +725,7 @@
     },
     "status": {
       "backlog": "Backlog",
-      "todo": "Zu erledigen",
+      "todo": "Als nächstes",
       "in_progress": "In Bearbeitung",
       "done": "Erledigt",
       "canceled": "Abgebrochen"

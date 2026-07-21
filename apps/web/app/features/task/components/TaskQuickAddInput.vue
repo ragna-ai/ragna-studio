@@ -34,9 +34,15 @@ function submit() {
       v-model="title"
       :placeholder="props.placeholder"
       autocomplete="off"
-      class="h-8 flex-1 text-sm"
+      class="h-8 flex-1 border-0 text-sm shadow-none"
     />
-    <Button type="submit" size="icon" variant="ghost" class="size-8 shrink-0" :disabled="props.pending">
+    <Button
+      type="submit"
+      size="icon"
+      variant="ghost"
+      class="size-8 shrink-0"
+      :disabled="props.pending"
+    >
       <PlusIcon class="size-4" />
     </Button>
   </form>
