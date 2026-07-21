@@ -38,7 +38,9 @@ const renamingDocumentId = ref<string | null>(null);
 const renameValue = ref('');
 
 // Composables
-const { data, isPending: isLoading } = useGetAgentContextDocuments(() => props.agentId);
+const { data, isPending: isLoading } = useGetAgentContextDocuments(
+  () => props.agentId,
+);
 const { isPending: isUploading, mutate: uploadDocuments } =
   useUploadAgentContextDocuments();
 const { mutate: renameDocument } = useRenameAgentContextDocument();
@@ -51,7 +53,9 @@ const { isOverDropZone } = useDropZone(dropZoneRef, {
 });
 
 // Computed
-const documents = computed<AgentContextDocument[]>(() => data.value?.documents ?? []);
+const documents = computed<AgentContextDocument[]>(
+  () => data.value?.documents ?? [],
+);
 
 // Functions
 function formatFileSize(bytes: number): string {
@@ -74,7 +78,10 @@ function uploadFiles(files: File[] | null) {
     return;
   }
 
-  if (documents.value.length + files.length > AGENT_CONTEXT_DOCUMENT_MAX_FILES) {
+  if (
+    documents.value.length + files.length >
+    AGENT_CONTEXT_DOCUMENT_MAX_FILES
+  ) {
     toast.error(
       `An agent can have at most ${AGENT_CONTEXT_DOCUMENT_MAX_FILES} documents`,
     );
@@ -140,46 +147,6 @@ function handleDelete(document: AgentContextDocument) {
 
 <template>
   <div class="space-y-4">
-    <div
-      ref="dropZoneRef"
-      role="button"
-      tabindex="0"
-      class="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors"
-      :class="
-        isOverDropZone
-          ? 'border-primary bg-primary/5'
-          : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-      "
-      @click="openUploadPicker"
-      @keydown.enter="openUploadPicker"
-      @keydown.space.prevent="openUploadPicker"
-    >
-      <UploadIcon class="size-6 text-muted-foreground" />
-      <p class="text-sm text-muted-foreground">
-        Drag and drop files here, or click to browse.
-      </p>
-      <p class="text-xs text-muted-foreground">
-        PDF, DOCX, TXT or MD, up to 10 MB each.
-      </p>
-    </div>
-    <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a
-         file input is never nested inside another interactive element. -->
-    <input
-      ref="uploadInputRef"
-      type="file"
-      multiple
-      class="hidden"
-      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
-      @change="handleUploadInputChange"
-    />
-    <input
-      ref="replaceInputRef"
-      type="file"
-      class="hidden"
-      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
-      @change="handleReplaceInputChange"
-    />
-
     <div v-if="isLoading" class="flex items-center justify-center py-8">
       <Spinner />
     </div>
@@ -237,7 +204,9 @@ function handleDelete(document: AgentContextDocument) {
               <Tooltip>
                 <TooltipTrigger as-child>
                   <span>
-                    <AgentContextDocumentStatusBadge :status="document.status" />
+                    <AgentContextDocumentStatusBadge
+                      :status="document.status"
+                    />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -296,5 +265,45 @@ function handleDelete(document: AgentContextDocument) {
       <Spinner class="size-4" />
       Uploading...
     </p>
+
+    <div
+      ref="dropZoneRef"
+      role="button"
+      tabindex="0"
+      class="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors"
+      :class="
+        isOverDropZone
+          ? 'border-primary bg-primary/5'
+          : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+      "
+      @click="openUploadPicker"
+      @keydown.enter="openUploadPicker"
+      @keydown.space.prevent="openUploadPicker"
+    >
+      <UploadIcon class="size-6 text-muted-foreground" />
+      <p class="text-sm text-muted-foreground">
+        Drag and drop files here, or click to browse.
+      </p>
+      <p class="text-xs text-muted-foreground">
+        PDF, DOCX, TXT or MD, up to 10 MB each.
+      </p>
+    </div>
+    <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a
+         file input is never nested inside another interactive element. -->
+    <input
+      ref="uploadInputRef"
+      type="file"
+      multiple
+      class="hidden"
+      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
+      @change="handleUploadInputChange"
+    />
+    <input
+      ref="replaceInputRef"
+      type="file"
+      class="hidden"
+      :accept="AGENT_CONTEXT_DOCUMENT_ACCEPT"
+      @change="handleReplaceInputChange"
+    />
   </div>
 </template>

@@ -8,7 +8,7 @@ import {
   ImageIcon,
   ListTodoIcon,
   NotebookPenIcon,
-  PencilLineIcon,
+  RepeatIcon,
   Share2Icon,
   type LucideIcon,
 } from '@lucide/vue';
@@ -63,7 +63,7 @@ interface UiAgentTool {
 const availableTools: UiAgentTool[] = [
   {
     id: 'think',
-    icon: PencilLineIcon,
+    icon: RepeatIcon,
     titleKey: 'agent.tool.think.label',
     descriptionKey: 'agent.tool.think.description',
   },
@@ -98,12 +98,6 @@ const availableTools: UiAgentTool[] = [
     descriptionKey: 'agent.tool.linkedinDraft.description',
   },
   {
-    id: 'datasets',
-    icon: DatabaseIcon,
-    titleKey: 'agent.tool.datasets.label',
-    descriptionKey: 'agent.tool.datasets.description',
-  },
-  {
     id: 'documents',
     icon: FileTextIcon,
     titleKey: 'agent.tool.documents.label',
@@ -114,6 +108,12 @@ const availableTools: UiAgentTool[] = [
     icon: ListTodoIcon,
     titleKey: 'agent.tool.tasks.label',
     descriptionKey: 'agent.tool.tasks.description',
+  },
+  {
+    id: 'datasets',
+    icon: DatabaseIcon,
+    titleKey: 'agent.tool.datasets.label',
+    descriptionKey: 'agent.tool.datasets.description',
   },
 ];
 
@@ -158,7 +158,9 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
       </div>
       <div class="space-y-1">
         <p class="text-sm">{{ $t(tool.titleKey) }}</p>
-        <p class="text-xs opacity-75">{{ $t(tool.descriptionKey) }}</p>
+        <p class="text-xs font-normal opacity-75">
+          {{ $t(tool.descriptionKey) }}
+        </p>
       </div>
     </Label>
   </div>
@@ -173,17 +175,24 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
     <Select
       :model-value="defaultDatasetId ?? NO_DATASET"
       @update:model-value="
-        (v) => emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
+        (v) =>
+          emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
       "
     >
       <SelectTrigger class="w-full">
-        <SelectValue :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')" />
+        <SelectValue
+          :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')"
+        />
       </SelectTrigger>
       <SelectContent>
         <SelectItem :value="NO_DATASET">
           {{ $t('agent.tool.datasets.defaultDatasetNone') }}
         </SelectItem>
-        <SelectItem v-for="dataset in pickerDatasets" :key="dataset.id" :value="dataset.id">
+        <SelectItem
+          v-for="dataset in pickerDatasets"
+          :key="dataset.id"
+          :value="dataset.id"
+        >
           {{ dataset.name }}
         </SelectItem>
       </SelectContent>

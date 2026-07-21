@@ -132,6 +132,19 @@ export function useCreateChat() {
   });
 }
 
+export function useCreateChatAndNavigate() {
+  const { mutateAsync: createChat, ...rest } = useCreateChat();
+
+  const createChatAndNavigate = async (agentId: string) => {
+    if (!agentId) throw new Error('Cannot create new chat without agentId');
+    const { chat } = await createChat({ agentId });
+    if (!chat || !chat.id) throw new Error('Chat object empty');
+    await navigateTo(`/chat/${chat.id}`);
+  };
+
+  return { createChatAndNavigate, ...rest };
+}
+
 interface UpdateChatTitleVariables {
   chatId: string;
   title: string;

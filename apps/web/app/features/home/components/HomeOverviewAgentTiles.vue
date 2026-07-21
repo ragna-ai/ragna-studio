@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { BotIcon, PlusIcon } from '@lucide/vue';
+import { useCreateChatAndNavigate } from '~/features/chat/composables/useChatApi';
 import type { HomeOverviewAgentItem } from '~/features/home/types';
 
 // Props
@@ -7,6 +8,7 @@ defineProps<{ agents: HomeOverviewAgentItem[] }>();
 
 // Composables
 const { t } = useI18n();
+const { createChatAndNavigate } = useCreateChatAndNavigate();
 </script>
 
 <template>
@@ -14,10 +16,11 @@ const { t } = useI18n();
        The dashed create tile is always rendered, so an empty list still
        shows a single actionable tile instead of a bare empty message. -->
   <div class="grid grid-cols-2 gap-3">
-    <NuxtLinkLocale
+    <button
       v-for="agent in agents"
       :key="agent.id"
-      :to="`/agent/${agent.id}`"
+      type="button"
+      @click="() => createChatAndNavigate(agent.id)"
       class="flex flex-col gap-2 rounded-xl border border-border p-3 hover:border-foreground/10 hover:bg-accent"
     >
       <div
@@ -25,7 +28,7 @@ const { t } = useI18n();
       >
         <BotIcon class="size-4 stroke-1.5" />
       </div>
-      <div class="min-w-0">
+      <div class="min-w-0 text-left">
         <p class="truncate text-sm font-medium text-foreground">
           {{ agent.name }}
         </p>
@@ -33,7 +36,7 @@ const { t } = useI18n();
           {{ agent.modelName }}
         </p>
       </div>
-    </NuxtLinkLocale>
+    </button>
     <NuxtLinkLocale
       to="/agent/create"
       class="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border p-3 text-muted-foreground hover:border-foreground/20 hover:text-foreground"
