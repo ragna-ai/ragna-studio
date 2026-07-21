@@ -330,7 +330,9 @@ export async function getDatasetRows({
           }
         : {}),
     },
-    orderBy: (c, { asc }) => [asc(c.sortOrder)],
+    // `id` breaks ties: sort keys are unique for rows created under the
+    // dataset lock, but backfilled rows may share one.
+    orderBy: (c, { asc }) => [asc(c.sortOrder), asc(c.id)],
     limit: cappedLimit,
   });
 }

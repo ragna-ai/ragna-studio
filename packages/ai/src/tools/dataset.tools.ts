@@ -125,13 +125,19 @@ const datasetRowLocks = new Map<string, Promise<unknown>>();
 function withDatasetRowLock<T>(datasetId: string, fn: () => Promise<T>): Promise<T> {
   const previous = datasetRowLocks.get(datasetId) ?? Promise.resolve();
   const next = previous.then(fn, fn);
-  datasetRowLocks.set(
-    datasetId,
-    next.then(
-      () => undefined,
-      () => undefined,
-    ),
+  const tail = next.then(
+    () => undefined,
+    () => undefined,
   );
+  datasetRowLocks.set(datasetId, tail);
+  // Drop the entry once the queue drains, so the map doesn't grow with
+  // every dataset ever appended to. Only if this tail is still current:
+  // a call chained meanwhile has replaced it and owns the entry now.
+  tail.then(() => {
+    if (datasetRowLocks.get(datasetId) === tail) {
+      datasetRowLocks.delete(datasetId);
+    }
+  });
   return next;
 }
 
