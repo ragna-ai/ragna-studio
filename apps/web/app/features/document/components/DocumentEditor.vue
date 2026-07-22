@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownloadIcon } from '@lucide/vue';
+import { DownloadIcon, SaveCheckIcon, SavePenIcon } from '@lucide/vue';
 import { EditorContent, focusEnd } from '@repo/editor';
 import EditorMenu from '~/features/document/components/EditorMenu.vue';
 import {
@@ -108,13 +108,13 @@ onBeforeUnmount(() => {
         </template>
       </PageBreadcrumb>
       <div class="flex shrink-0 items-center gap-3">
-        <p class="text-xs text-muted-foreground">
-          {{
-            saveStatus === 'saving'
-              ? t('document.editor.saveStatus.saving')
-              : t('document.editor.saveStatus.saved')
-          }}
-        </p>
+        <div class="text-muted-foreground">
+          <SavePenIcon
+            v-if="saveStatus === 'saving'"
+            class="size-4 stroke-1.5"
+          />
+          <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button variant="outline" size="sm" :disabled="isExporting">

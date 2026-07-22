@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SaveCheckIcon, SavePenIcon } from '@lucide/vue';
 import { EditorContent, focusEnd } from '@repo/editor';
 import EditorMenu from '~/features/document/components/EditorMenu.vue';
 import { useUpdateTask } from '~/features/task/composables/useTaskApi';
@@ -69,13 +70,10 @@ defineExpose({ focus: focusEditorEnd });
   <div class="flex flex-col">
     <div class="flex items-center justify-between">
       <EditorMenu :controller="controller" class="px-0 py-0" />
-      <p class="pr-4 text-xs text-muted-foreground">
-        {{
-          saveStatus === 'saving'
-            ? t('document.editor.saveStatus.saving')
-            : t('document.editor.saveStatus.saved')
-        }}
-      </p>
+      <div class="text-muted-foreground">
+        <SavePenIcon v-if="saveStatus === 'saving'" class="size-4 stroke-1.5" />
+        <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+      </div>
     </div>
     <div
       class="document-sheet min-h-80 cursor-text rounded-md border-0 bg-white px-0 py-5"

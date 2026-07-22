@@ -27,6 +27,7 @@ import { cn } from '~/lib/utils';
 // Props
 const props = defineProps<{
   controller: DocumentEditorController;
+  showWordCount?: boolean;
   class?: string;
 }>();
 
@@ -334,7 +335,10 @@ function submitImage() {
         <Redo2Icon class="size-4! bg-transparent" />
       </Button>
     </div>
-    <p class="self-center text-xs whitespace-nowrap text-muted-foreground">
+    <p
+      v-if="props.showWordCount"
+      class="self-center text-xs whitespace-nowrap text-muted-foreground"
+    >
       {{ t('document.toolbar.wordCount', { count: controller.wordCount() }) }}
     </p>
   </div>
