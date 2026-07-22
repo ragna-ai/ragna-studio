@@ -33,6 +33,8 @@ export type UpdateDocumentRequest = {
   folderId?: string | null;
 };
 
+export type DocumentExportFormat = 'md' | 'txt' | 'pdf' | 'docx';
+
 export interface Folder {
   id: string;
   workspaceId: string;

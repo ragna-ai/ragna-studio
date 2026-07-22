@@ -27,3 +27,10 @@ export const validUpdateDocumentBody = myzValidator(
     folderId: primaryId.nullish(),
   }),
 );
+
+export const validDocumentExportQuery = myzValidator(
+  'query',
+  z.object({
+    format: z.enum(['md', 'txt', 'pdf', 'docx']),
+  }),
+);

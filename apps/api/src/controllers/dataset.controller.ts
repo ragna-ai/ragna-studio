@@ -6,17 +6,21 @@ import {
   createDatasetRowForUser,
   deleteDataset,
   deleteDatasetRow,
+  exportDataset,
   getDataset,
   listDatasetRows,
   listDatasets,
+  moveDatasetRowForUser,
   updateDatasetForUser,
   updateDatasetRowForUser,
 } from '../services/dataset.service';
 import {
   validCreateDatasetBody,
   validCreateDatasetRowBody,
+  validDatasetExportQuery,
   validDatasetIdParam,
   validDatasetRowIdParam,
+  validMoveDatasetRowBody,
   validPaginationQuery,
   validUpdateDatasetBody,
   validUpdateDatasetRowBody,
@@ -109,6 +113,27 @@ export const datasetController = new Hono()
     return c.json({ message: 'Dataset deleted successfully' });
   })
   /**
+   * [GET] /workspace/:workspaceId/dataset/:datasetId/export
+   * Downloads the dataset as CSV, Excel (xlsx), PDF, or Markdown
+   * (docs/datasets/export-and-row-reorder.md).
+   */
+  .get('/:datasetId/export', validDatasetIdParam, validDatasetExportQuery, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const query = c.req.valid('query');
+
+    const file = await exportDataset({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      format: query.format,
+    });
+
+    return c.body(new Uint8Array(file.bytes), 200, {
+      'Content-Type': file.contentType,
+      'Content-Disposition': `attachment; filename="${file.filename}"`,
+    });
+  })
+  /**
    * [GET] /workspace/:workspaceId/dataset/:datasetId/row
    * Get all (non-deleted) rows of a dataset, oldest first. Unpaginated:
    * rows within one dataset are bounded by MAX_ROWS_PER_DATASET.
@@ -174,4 +199,23 @@ export const datasetController = new Hono()
     });
 
     return c.json({ message: 'Row deleted successfully' });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/dataset/:datasetId/row/:rowId/move
+   * One atomic call per reorder: server computes the new sortOrder from the
+   * dataset's row order. Omitted afterRowId means top of the dataset.
+   */
+  .post('/:datasetId/row/:rowId/move', validDatasetRowIdParam, validMoveDatasetRowBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const row = await moveDatasetRowForUser({
+      workspaceId: workspace.id,
+      datasetId: param.datasetId,
+      rowId: param.rowId,
+      afterRowId: body.afterRowId,
+    });
+
+    return c.json({ row });
   });

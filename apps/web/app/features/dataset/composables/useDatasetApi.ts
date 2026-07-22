@@ -7,14 +7,21 @@ import {
 import { toast } from 'vue-sonner';
 import type {
   CreateDatasetRequest,
+  DatasetExportFormat,
   DatasetManyResponse,
   DatasetResponse,
   DatasetRowData,
   DatasetRowManyResponse,
   DatasetRowResponse,
+  MoveDatasetRowRequest,
   UpdateDatasetRequest,
 } from '~/features/dataset/types';
 import { extractErrorMessage } from '~/lib/api-error';
+import {
+  buildExportFilename,
+  downloadBlob,
+  filenameFromContentDisposition,
+} from '~/lib/file-export';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -232,6 +239,72 @@ export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
     },
     onError: () => {
       toast.error('Failed to delete row');
+    },
+  });
+}
+
+// No optimistic reordering (PRD decision 7): a move just invalidates the
+// rows query, same as every other row mutation above.
+export function useMoveDatasetRow(datasetId: MaybeRefOrGetter<string>) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation<DatasetRowResponse, unknown, MoveDatasetRowRequest>({
+    mutationFn: ({ rowId, afterRowId }) =>
+      $api<DatasetRowResponse>(
+        `/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/row/${rowId}/move`,
+        {
+          method: 'POST',
+          body: { afterRowId },
+        },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: datasetKeys.rows(workspaceId, datasetId),
+      });
+    },
+    onError: () => {
+      toast.error('Failed to move row');
+    },
+  });
+}
+
+interface ExportDatasetVariables {
+  format: DatasetExportFormat;
+}
+
+/**
+ * Downloads the dataset as CSV/Excel/PDF/Markdown. Fetches through the same
+ * authenticated API client as every other dataset call (not `window.open`:
+ * the API is a different origin in dev), then saves the blob via a
+ * temporary object URL.
+ */
+export function useExportDataset(
+  datasetId: MaybeRefOrGetter<string>,
+  datasetName: MaybeRefOrGetter<string>,
+) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<void, unknown, ExportDatasetVariables>({
+    mutationFn: async ({ format }) => {
+      const response = await $api.raw<Blob>(
+        `/workspace/${toValue(workspaceId)}/dataset/${toValue(datasetId)}/export`,
+        {
+          method: 'GET',
+          query: { format },
+          responseType: 'blob',
+        },
+      );
+      if (!response._data) {
+        throw new Error('Empty export response');
+      }
+      const filename =
+        filenameFromContentDisposition(response.headers.get('content-disposition')) ??
+        buildExportFilename(toValue(datasetName), format);
+      downloadBlob(response._data, filename);
+    },
+    onError: () => {
+      toast.error('Failed to export dataset');
     },
   });
 }

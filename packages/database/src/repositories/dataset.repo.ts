@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
@@ -300,12 +300,12 @@ export async function getDatasetRowCount({ datasetId }: { datasetId: string }): 
 export type DatasetRowFilter = { columnId: string; value: string | number | null };
 
 /**
- * Rows for one dataset, in creation order (v1 has no manual reordering; see
- * `sortOrder` on the schema for why this isn't `createdAt`), always
- * excluding soft-deleted rows so an agent can never resurrect or
- * double-process a removed task. `filter` is an equality match on one
- * column's value (v1 scope for the `datasetListRows` tool); `limit` is
- * capped at `MAX_LIST_ROWS_LIMIT` regardless of what's requested.
+ * Rows for one dataset, in dataset order: `sortOrder` (creation order unless
+ * a row has been moved, see `moveDatasetRow`), always excluding soft-deleted
+ * rows so an agent can never resurrect or double-process a removed task.
+ * `filter` is an equality match on one column's value (v1 scope for the
+ * `datasetListRows` tool); `limit` is capped at `MAX_LIST_ROWS_LIMIT`
+ * regardless of what's requested.
  */
 export async function getDatasetRows({
   datasetId,
@@ -410,6 +410,87 @@ export async function createDatasetRow({
 
     return createdRow;
   });
+}
+
+/**
+ * Server-side rank computation for a row reorder
+ * (docs/datasets/export-and-row-reorder.md decision 4): mirrors `moveTask` in
+ * `task.repo.ts`. Locks the parent dataset row for the duration of the
+ * transaction, the same lock `createDatasetRow` takes, so a move serializes
+ * against concurrent appends and against other moves, and sort keys never
+ * collide. `afterRowId` omitted/null means "move to top"; otherwise the row
+ * lands directly after `afterRowId`. Both `rowId` and `afterRowId` must
+ * reference non-deleted rows of this dataset, otherwise this throws. Moving
+ * a row bumps its `updatedAt`.
+ */
+export async function moveDatasetRow({
+  datasetId,
+  userId,
+  rowId,
+  afterRowId,
+}: {
+  datasetId: string;
+  userId: string;
+  rowId: string;
+  afterRowId?: string | null;
+}): Promise<DatasetRow> {
+  return db.transaction(async (tx) => {
+    const [lockedDataset] = await tx
+      .select()
+      .from(dataset)
+      .where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)))
+      .for('update');
+
+    if (!lockedDataset) {
+      throw new Error('Dataset not found');
+    }
+
+    const rows = await tx
+      .select({ id: datasetRow.id, sortOrder: datasetRow.sortOrder })
+      .from(datasetRow)
+      .where(and(eq(datasetRow.datasetId, datasetId), isNull(datasetRow.deletedAt)))
+      .orderBy(asc(datasetRow.sortOrder));
+
+    if (!rows.some((row) => row.id === rowId)) {
+      throw new Error('Dataset row not found');
+    }
+
+    const siblingRows = rows.filter((row) => row.id !== rowId);
+    const sortOrder = resolveMoveSortOrder(siblingRows, afterRowId);
+
+    const [movedRow] = await tx
+      .update(datasetRow)
+      .set({ sortOrder, updatedAt: new Date() })
+      .where(and(eq(datasetRow.id, rowId), eq(datasetRow.datasetId, datasetId)))
+      .returning();
+
+    if (!movedRow) {
+      throw new Error('Failed to move dataset row');
+    }
+
+    return movedRow;
+  });
+}
+
+// `siblingRows` is already scoped to this dataset's non-deleted rows (and
+// excludes the row being moved), so finding `afterRowId` in it is also the
+// "belongs to this dataset and isn't deleted" validation.
+function resolveMoveSortOrder(
+  siblingRows: { id: string; sortOrder: string }[],
+  afterRowId: string | null | undefined,
+): string {
+  if (!afterRowId) {
+    return generateKeyBetween(null, siblingRows[0]?.sortOrder ?? null);
+  }
+
+  const afterIndex = siblingRows.findIndex((row) => row.id === afterRowId);
+  if (afterIndex === -1) {
+    throw new Error('afterRowId does not belong to this dataset');
+  }
+
+  const afterRow = siblingRows[afterIndex];
+  const nextRow = siblingRows[afterIndex + 1];
+  return generateKeyBetween(afterRow?.sortOrder ?? null, nextRow?.sortOrder ?? null);
 }
 
 export async function updateDatasetRow({

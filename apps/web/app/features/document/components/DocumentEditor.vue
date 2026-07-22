@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { DownloadIcon } from '@lucide/vue';
 import { EditorContent, focusEnd } from '@repo/editor';
 import EditorMenu from '~/features/document/components/EditorMenu.vue';
-import { useUpdateDocument } from '~/features/document/composables/useDocumentApi';
+import {
+  useExportDocument,
+  useUpdateDocument,
+} from '~/features/document/composables/useDocumentApi';
 import { useDocumentEditor } from '~/features/document/composables/useDocumentEditor';
-import type { Document } from '~/features/document/types';
+import type { Document, DocumentExportFormat } from '~/features/document/types';
 
 // Props
 const props = defineProps<{ document: Document }>();
@@ -16,6 +20,10 @@ const isDirty = ref(false);
 // Composables
 const { t } = useI18n();
 const { mutate: saveDocument } = useUpdateDocument();
+const { mutate: exportDocument, isPending: isExporting } = useExportDocument(
+  () => props.document.id,
+  title,
+);
 
 const controller = useDocumentEditor({
   content: props.document.content,
@@ -54,6 +62,10 @@ const debouncedSave = useDebounceFn(() => {
 function handleTitleSave() {
   isDirty.value = true;
   debouncedSave();
+}
+
+function handleExport(format: DocumentExportFormat) {
+  exportDocument({ format });
 }
 
 // Presses starting on the sheet's padding (outside the ProseMirror element)
@@ -95,13 +107,37 @@ onBeforeUnmount(() => {
           />
         </template>
       </PageBreadcrumb>
-      <p class="text-xs text-muted-foreground">
-        {{
-          saveStatus === 'saving'
-            ? t('document.editor.saveStatus.saving')
-            : t('document.editor.saveStatus.saved')
-        }}
-      </p>
+      <div class="flex shrink-0 items-center gap-3">
+        <p class="text-xs text-muted-foreground">
+          {{
+            saveStatus === 'saving'
+              ? t('document.editor.saveStatus.saving')
+              : t('document.editor.saveStatus.saved')
+          }}
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" size="sm" :disabled="isExporting">
+              <Spinner v-if="isExporting" class="mr-2" />
+              <DownloadIcon v-else class="size-4 stroke-1.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @click="handleExport('md')">
+              {{ t('document.editor.export.markdown') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('txt')">
+              {{ t('document.editor.export.text') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('pdf')">
+              {{ t('document.editor.export.pdf') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('docx')">
+              {{ t('document.editor.export.word') }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
     <div class="border-b">
       <EditorMenu :controller="controller" />
