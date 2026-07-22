@@ -1,12 +1,30 @@
 import {
+  addColumnAfter as addColumnAfterCommand,
+  addColumnBefore as addColumnBeforeCommand,
+  addRowAfter as addRowAfterCommand,
+  addRowBefore as addRowBeforeCommand,
   createDocumentEditor,
   cycleList as cycleListCommand,
   cycleTextOrientation as cycleTextOrientationCommand,
+  deleteColumn as deleteColumnCommand,
+  deleteRow as deleteRowCommand,
+  deleteTable as deleteTableCommand,
   formatText as formatTextCommand,
+  getCharacterCount,
   getDocumentMarkdown,
+  getLinkUrl,
+  getWordCount,
+  insertImage as insertImageCommand,
+  insertTable as insertTableCommand,
+  isInsideTable,
   redo as redoCommand,
+  setLink as setLinkCommand,
+  toggleCodeBlock as toggleCodeBlockCommand,
+  toggleHeaderColumn as toggleHeaderColumnCommand,
+  toggleHeaderRow as toggleHeaderRowCommand,
   toggleTaskList as toggleTaskListCommand,
   undo as undoCommand,
+  unsetLink as unsetLinkCommand,
   type Editor,
   type TextFormat,
 } from '@repo/editor';
@@ -67,6 +85,10 @@ export function useTaskDescriptionEditor(options: UseTaskDescriptionEditorOption
     return toggleTaskListCommand(requireEditor());
   }
 
+  function toggleCodeBlock() {
+    return toggleCodeBlockCommand(requireEditor());
+  }
+
   function undo() {
     return undoCommand(requireEditor());
   }
@@ -79,15 +101,101 @@ export function useTaskDescriptionEditor(options: UseTaskDescriptionEditorOption
     return getDocumentMarkdown(requireEditor());
   }
 
+  function isInTable(): boolean {
+    return isInsideTable(requireEditor());
+  }
+
+  function insertTable() {
+    return insertTableCommand(requireEditor());
+  }
+
+  function addRowBefore() {
+    return addRowBeforeCommand(requireEditor());
+  }
+
+  function addRowAfter() {
+    return addRowAfterCommand(requireEditor());
+  }
+
+  function deleteRow() {
+    return deleteRowCommand(requireEditor());
+  }
+
+  function addColumnBefore() {
+    return addColumnBeforeCommand(requireEditor());
+  }
+
+  function addColumnAfter() {
+    return addColumnAfterCommand(requireEditor());
+  }
+
+  function deleteColumn() {
+    return deleteColumnCommand(requireEditor());
+  }
+
+  function deleteTable() {
+    return deleteTableCommand(requireEditor());
+  }
+
+  function toggleHeaderRow() {
+    return toggleHeaderRowCommand(requireEditor());
+  }
+
+  function toggleHeaderColumn() {
+    return toggleHeaderColumnCommand(requireEditor());
+  }
+
+  function getLink(): string {
+    return getLinkUrl(requireEditor());
+  }
+
+  function setLink(url: string) {
+    return setLinkCommand(requireEditor(), url);
+  }
+
+  function unsetLink() {
+    return unsetLinkCommand(requireEditor());
+  }
+
+  function insertImage(url: string) {
+    return insertImageCommand(requireEditor(), url);
+  }
+
+  function characterCount(): number {
+    return getCharacterCount(requireEditor());
+  }
+
+  function wordCount(): number {
+    return getWordCount(requireEditor());
+  }
+
   return {
     editor,
     formatText,
     cycleList,
     cycleTextOrientation,
     toggleTaskList,
+    toggleCodeBlock,
     undo,
     redo,
     getMarkdown,
+    isInTable,
+    insertTable,
+    addRowBefore,
+    addRowAfter,
+    deleteRow,
+    addColumnBefore,
+    addColumnAfter,
+    deleteColumn,
+    deleteTable,
+    toggleHeaderRow,
+    toggleHeaderColumn,
+    getLink,
+    setLink,
+    unsetLink,
+    insertImage,
+    characterCount,
+    wordCount,
   };
 }
 

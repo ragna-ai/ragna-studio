@@ -683,8 +683,33 @@
       "list": "List",
       "taskList": "Task list",
       "highlight": "Highlight",
+      "codeBlock": "Code block",
       "undo": "Undo",
-      "redo": "Redo"
+      "redo": "Redo",
+      "wordCount": "{count} words",
+      "link": {
+        "label": "Link",
+        "placeholder": "https://example.com",
+        "apply": "Apply",
+        "remove": "Remove"
+      },
+      "image": {
+        "label": "Image",
+        "placeholder": "https://example.com/image.png",
+        "insert": "Insert"
+      },
+      "table": {
+        "insert": "Insert table",
+        "addRowBefore": "Add row above",
+        "addRowAfter": "Add row below",
+        "deleteRow": "Delete row",
+        "addColumnBefore": "Add column before",
+        "addColumnAfter": "Add column after",
+        "deleteColumn": "Delete column",
+        "toggleHeaderRow": "Toggle header row",
+        "toggleHeaderColumn": "Toggle header column",
+        "deleteTable": "Delete table"
+      }
     }
   },
   "folder": {

@@ -689,8 +689,33 @@
       "list": "Liste",
       "taskList": "Aufgabenliste",
       "highlight": "Markieren",
+      "codeBlock": "Codeblock",
       "undo": "Rückgängig",
-      "redo": "Wiederholen"
+      "redo": "Wiederholen",
+      "wordCount": "{count} Wörter",
+      "link": {
+        "label": "Link",
+        "placeholder": "https://beispiel.de",
+        "apply": "Übernehmen",
+        "remove": "Entfernen"
+      },
+      "image": {
+        "label": "Bild",
+        "placeholder": "https://beispiel.de/bild.png",
+        "insert": "Einfügen"
+      },
+      "table": {
+        "insert": "Tabelle einfügen",
+        "addRowBefore": "Zeile darüber einfügen",
+        "addRowAfter": "Zeile darunter einfügen",
+        "deleteRow": "Zeile löschen",
+        "addColumnBefore": "Spalte davor einfügen",
+        "addColumnAfter": "Spalte danach einfügen",
+        "deleteColumn": "Spalte löschen",
+        "toggleHeaderRow": "Kopfzeile umschalten",
+        "toggleHeaderColumn": "Kopfspalte umschalten",
+        "deleteTable": "Tabelle löschen"
+      }
     }
   },
   "folder": {

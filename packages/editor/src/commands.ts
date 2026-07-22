@@ -73,3 +73,81 @@ export function redo(editor: Editor): boolean {
 export function focusEnd(editor: Editor): boolean {
   return editor.chain().focus('end').run();
 }
+
+/** Whether the caret is inside a table, for toggling table-editing UI. */
+export function isInsideTable(editor: Editor): boolean {
+  return editor.can().deleteTable();
+}
+
+export function insertTable(editor: Editor): boolean {
+  return editor
+    .chain()
+    .focus()
+    .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+    .run();
+}
+
+export function addRowBefore(editor: Editor): boolean {
+  return editor.chain().focus().addRowBefore().run();
+}
+
+export function addRowAfter(editor: Editor): boolean {
+  return editor.chain().focus().addRowAfter().run();
+}
+
+export function deleteRow(editor: Editor): boolean {
+  return editor.chain().focus().deleteRow().run();
+}
+
+export function addColumnBefore(editor: Editor): boolean {
+  return editor.chain().focus().addColumnBefore().run();
+}
+
+export function addColumnAfter(editor: Editor): boolean {
+  return editor.chain().focus().addColumnAfter().run();
+}
+
+export function deleteColumn(editor: Editor): boolean {
+  return editor.chain().focus().deleteColumn().run();
+}
+
+export function deleteTable(editor: Editor): boolean {
+  return editor.chain().focus().deleteTable().run();
+}
+
+export function toggleHeaderRow(editor: Editor): boolean {
+  return editor.chain().focus().toggleHeaderRow().run();
+}
+
+export function toggleHeaderColumn(editor: Editor): boolean {
+  return editor.chain().focus().toggleHeaderColumn().run();
+}
+
+/** Current link URL at the caret, or an empty string when not on a link. */
+export function getLinkUrl(editor: Editor): string {
+  return editor.getAttributes('link').href ?? '';
+}
+
+export function setLink(editor: Editor, url: string): boolean {
+  return editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+}
+
+export function unsetLink(editor: Editor): boolean {
+  return editor.chain().focus().extendMarkRange('link').unsetLink().run();
+}
+
+export function insertImage(editor: Editor, url: string): boolean {
+  return editor.chain().focus().setImage({ src: url }).run();
+}
+
+export function toggleCodeBlock(editor: Editor): boolean {
+  return editor.chain().focus().toggleCodeBlock().run();
+}
+
+export function getCharacterCount(editor: Editor): number {
+  return editor.storage.characterCount.characters();
+}
+
+export function getWordCount(editor: Editor): number {
+  return editor.storage.characterCount.words();
+}
