@@ -14,12 +14,26 @@ import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 
-const lowlight = createLowlight(common);
-
 export interface DocumentEditorKitOptions {
   /** Shown when the editor has no content. */
   placeholder?: string;
 }
+
+const lowlight = createLowlight(common);
+
+/**
+ * `Link`'s `addPasteRules()` registers an unconditional paste rule that
+ * scans *all* pasted text with linkifyjs's TLD-aware matcher and wraps any
+ * recognized substring in a link, e.g. "linear.app" or "B.Sc" (`.sc` is a
+ * real ccTLD) — independent of the `autolink`/`linkOnPaste` options below,
+ * which only cover typing and pasting a bare URL over a selection. There's
+ * no option to turn this rule off, so it's dropped by extending the node.
+ */
+const LinkWithoutPasteRule = Link.extend({
+  addPasteRules() {
+    return [];
+  },
+});
 
 /**
  * Extension lineup for the documents editor (ported from the prior-art
@@ -48,7 +62,7 @@ export function createDocumentEditorExtensions(
     }),
     Highlight,
     Underline,
-    Link.configure({
+    LinkWithoutPasteRule.configure({
       openOnClick: false,
       autolink: false,
       linkOnPaste: false,
@@ -65,12 +79,6 @@ export function createDocumentEditorExtensions(
     TableKit.configure({
       table: { resizable: true },
     }),
-    Markdown.configure({
-      markedOptions: {
-        // tokenizer: {
-        //   url: (src) => undefined, // disable autolinking of URLs
-        // },
-      },
-    }),
+    Markdown,
   ];
 }
