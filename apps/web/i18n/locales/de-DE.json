@@ -566,7 +566,14 @@
       "rename": "Datensatz umbenennen",
       "settings": "Datensatz-Einstellungen",
       "descriptionPlaceholder": "Beschreibung hinzufügen...",
-      "closeSettings": "Einstellungen schließen"
+      "closeSettings": "Einstellungen schließen",
+      "export": {
+        "button": "Exportieren",
+        "csv": "CSV",
+        "excel": "Excel",
+        "pdf": "PDF",
+        "markdown": "Markdown"
+      }
     },
     "grid": {
       "empty": "Noch keine Zeilen. Füge unten eine hinzu.",
@@ -577,7 +584,9 @@
         "title": "Zeile löschen",
         "message": "Möchtest du diese Zeile wirklich löschen?"
       },
-      "expandRow": "Zeile erweitern"
+      "expandRow": "Zeile erweitern",
+      "moveRowUp": "Zeile nach oben verschieben",
+      "moveRowDown": "Zeile nach unten verschieben"
     },
     "columnManager": {
       "title": "Spalten",
@@ -660,6 +669,13 @@
       "saveStatus": {
         "saved": "Gespeichert",
         "saving": "Speichert..."
+      },
+      "export": {
+        "button": "Exportieren",
+        "markdown": "Markdown",
+        "text": "Text",
+        "pdf": "PDF",
+        "word": "Word"
       }
     },
     "toolbar": {

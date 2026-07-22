@@ -560,7 +560,14 @@
       "rename": "Rename dataset",
       "settings": "Dataset settings",
       "descriptionPlaceholder": "Add a description...",
-      "closeSettings": "Close settings"
+      "closeSettings": "Close settings",
+      "export": {
+        "button": "Export",
+        "csv": "CSV",
+        "excel": "Excel",
+        "pdf": "PDF",
+        "markdown": "Markdown"
+      }
     },
     "grid": {
       "empty": "No rows yet. Add one below.",
@@ -571,7 +578,9 @@
         "title": "Delete row",
         "message": "Are you sure you want to delete this row?"
       },
-      "expandRow": "Expand row"
+      "expandRow": "Expand row",
+      "moveRowUp": "Move row up",
+      "moveRowDown": "Move row down"
     },
     "columnManager": {
       "title": "Columns",
@@ -654,6 +663,13 @@
       "saveStatus": {
         "saved": "Saved",
         "saving": "Saving..."
+      },
+      "export": {
+        "button": "Export",
+        "markdown": "Markdown",
+        "text": "Text",
+        "pdf": "PDF",
+        "word": "Word"
       }
     },
     "toolbar": {

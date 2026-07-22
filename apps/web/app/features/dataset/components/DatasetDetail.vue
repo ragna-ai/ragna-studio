@@ -5,6 +5,7 @@ import DatasetRowPanel from '~/features/dataset/components/DatasetRowPanel.vue';
 import {
   useCreateDatasetRow,
   useDeleteDatasetRow,
+  useMoveDatasetRow,
   useUpdateDataset,
   useUpdateDatasetRow,
 } from '~/features/dataset/composables/useDatasetApi';
@@ -70,6 +71,7 @@ const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateData
 const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(datasetId);
 const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
 const { mutateAsync: deleteRow } = useDeleteDatasetRow(datasetId);
+const { mutate: moveRow, isPending: isMovingRow } = useMoveDatasetRow(datasetId);
 const { confirm } = useConfirmDialog();
 
 // Functions
@@ -110,6 +112,28 @@ function handleExpandRow(rowId: string) {
   settingsOpen.value = false;
 }
 
+// Moving up means "place this row after the one two positions above it"
+// (or at the top, once fewer than two rows separate it from the top).
+// docs/datasets/export-and-row-reorder.md, user experience section.
+function handleMoveRowUp(rowId: string) {
+  const index = props.rows.findIndex((row) => row.id === rowId);
+  if (index <= 0) {
+    return;
+  }
+  const afterRowId = index >= 2 ? (props.rows[index - 2]?.id ?? null) : null;
+  moveRow({ rowId, afterRowId });
+}
+
+// Moving down means "place this row after the one currently below it".
+function handleMoveRowDown(rowId: string) {
+  const index = props.rows.findIndex((row) => row.id === rowId);
+  if (index === -1 || index >= props.rows.length - 1) {
+    return;
+  }
+  const afterRowId = props.rows[index + 1]?.id ?? null;
+  moveRow({ rowId, afterRowId });
+}
+
 async function handleDeleteRow(rowId: string) {
   const confirmed = await confirm({
     title: t('dataset.grid.deleteRowConfirm.title'),
@@ -135,11 +159,14 @@ async function handleDeleteRow(rowId: string) {
         :columns="dataset.columns"
         :rows="rows"
         :is-adding-row="isAddingRow"
+        :is-moving-row="isMovingRow"
         :expanded-row-id="selectedRowId"
         @update-cell="handleUpdateCell"
         @add-row="handleAddRow"
         @delete-row="handleDeleteRow"
         @expand-row="handleExpandRow"
+        @move-row-up="handleMoveRowUp"
+        @move-row-down="handleMoveRowDown"
       />
     </div>
 

@@ -67,3 +67,11 @@ export type UpdateDatasetRequest = {
   description?: string | null;
   columns?: DatasetColumn[];
 };
+
+export type DatasetExportFormat = 'csv' | 'xlsx' | 'pdf' | 'md';
+
+// `afterRowId` omitted or null moves the row to the top.
+export type MoveDatasetRowRequest = {
+  rowId: string;
+  afterRowId?: string | null;
+};

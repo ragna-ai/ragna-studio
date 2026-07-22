@@ -6,6 +6,7 @@ import {
   getDatasetFindTool,
   getDatasetGetRowTool,
   getDatasetListRowsTool,
+  getDatasetMoveRowTool,
   getDatasetUpdateRowTool,
 } from './dataset.tools';
 import {
@@ -59,6 +60,7 @@ const toolsets: Record<AgentTool, ToolsetFactory> = {
     datasetGetRow: getDatasetGetRowTool(writer, ctx.userId, ctx.workspaceId),
     datasetAppendRow: getDatasetAppendRowTool(writer, ctx.userId, ctx.workspaceId),
     datasetUpdateRow: getDatasetUpdateRowTool(writer, ctx.userId, ctx.workspaceId),
+    datasetMoveRow: getDatasetMoveRowTool(writer, ctx.userId, ctx.workspaceId),
   }),
   documents: (writer, ctx) => ({
     listDocuments: getListDocumentsTool(writer, ctx.workspaceId),

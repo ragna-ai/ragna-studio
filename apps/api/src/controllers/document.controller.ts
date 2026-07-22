@@ -4,11 +4,17 @@ import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   createDocumentForUser,
   deleteDocument,
+  exportDocument,
   getDocument,
   listDocuments,
   updateDocumentForUser,
 } from '../services/document.service';
-import { validCreateDocumentBody, validDocumentIdParam, validUpdateDocumentBody } from '../validation';
+import {
+  validCreateDocumentBody,
+  validDocumentExportQuery,
+  validDocumentIdParam,
+  validUpdateDocumentBody,
+} from '../validation';
 
 export const documentController = new Hono()
   .basePath('/workspace/:workspaceId/document')
@@ -91,4 +97,25 @@ export const documentController = new Hono()
     });
 
     return c.json({ message: 'Document deleted successfully' });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/document/:documentId/export
+   * Downloads the document as Markdown, plain text, PDF, or Word (docx)
+   * (docs/datasets/export-and-row-reorder.md "Document export").
+   */
+  .get('/:documentId/export', validDocumentIdParam, validDocumentExportQuery, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const query = c.req.valid('query');
+
+    const file = await exportDocument({
+      workspaceId: workspace.id,
+      documentId: param.documentId,
+      format: query.format,
+    });
+
+    return c.body(new Uint8Array(file.bytes), 200, {
+      'Content-Type': file.contentType,
+      'Content-Disposition': `attachment; filename="${file.filename}"`,
+    });
   });

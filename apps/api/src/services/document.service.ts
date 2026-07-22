@@ -6,6 +6,8 @@ import {
   getDocumentsByWorkspaceId,
   updateDocument,
 } from '@repo/database';
+import type { DocumentExport } from '@repo/export';
+import { toDocumentDocx, toDocumentMarkdown, toDocumentPdf, toDocumentText } from '@repo/export';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -105,6 +107,85 @@ export async function getDocument({
   documentId: string;
 }): Promise<DocumentResponse> {
   return loadDocumentResponse({ workspaceId, documentId });
+}
+
+// EXPORT (docs/datasets/export-and-row-reorder.md "Document export")
+
+export type DocumentExportFormat = 'md' | 'txt' | 'pdf' | 'docx';
+
+export interface DocumentExportFile {
+  bytes: Uint8Array;
+  contentType: string;
+  filename: string;
+}
+
+const DOCUMENT_EXPORT_WRITERS: Record<
+  DocumentExportFormat,
+  (input: DocumentExport) => Promise<{ bytes: Uint8Array; contentType: string }>
+> = {
+  md: toDocumentMarkdown,
+  txt: toDocumentText,
+  pdf: toDocumentPdf,
+  docx: toDocumentDocx,
+};
+
+const DOCUMENT_EXPORT_FILE_EXTENSION: Record<DocumentExportFormat, string> = {
+  md: 'md',
+  txt: 'txt',
+  pdf: 'pdf',
+  docx: 'docx',
+};
+
+// Same slug rule as dataset export (docs/datasets/export-and-row-reorder.md
+// "User experience", Export): lowercase, ASCII, hyphen-separated, no leading
+// or trailing hyphens. Kept local to this service rather than shared with
+// `dataset.service.ts`: datasets and documents deliberately share no access
+// logic or mapping code (decision "A generic /export endpoint", rejected).
+function slugifyDocumentTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug.length > 0 ? slug : 'document';
+}
+
+function toDocumentExportFilename(title: string, format: DocumentExportFormat): string {
+  const exportDate = new Date().toISOString().slice(0, 10);
+  return `${slugifyDocumentTitle(title)}-${exportDate}.${DOCUMENT_EXPORT_FILE_EXTENSION[format]}`;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/document/:documentId/export
+ * `content` is already canonical markdown (documents/prd.md), so the
+ * mapping to `DocumentExport` is a straight pass-through; every writer
+ * parses it once inside `@repo/export`. An empty document still exports a
+ * title-only file (docs/datasets/export-and-row-reorder.md "Document
+ * export" decision 3).
+ */
+export async function exportDocument({
+  workspaceId,
+  documentId,
+  format,
+}: {
+  workspaceId: string;
+  documentId: string;
+  format: DocumentExportFormat;
+}): Promise<DocumentExportFile> {
+  const documentRecord = await loadDocumentResponse({ workspaceId, documentId });
+
+  const { bytes, contentType } = await DOCUMENT_EXPORT_WRITERS[format]({
+    title: documentRecord.title,
+    markdown: documentRecord.content,
+  });
+
+  return {
+    bytes,
+    contentType,
+    filename: toDocumentExportFilename(documentRecord.title, format),
+  };
 }
 
 /**

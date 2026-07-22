@@ -1,0 +1,33 @@
+{
+  "name": "@repo/export",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CSV, xlsx and PDF export writers",
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/ts-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pdfmake": "0.3.3",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "docx": "9.7.1",
+    "marked": "18.0.7",
+    "pdfmake": "0.3.11",
+    "write-excel-file": "4.1.1"
+  }
+}

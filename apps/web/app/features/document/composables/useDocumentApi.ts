@@ -7,11 +7,17 @@ import {
 import { toast } from 'vue-sonner';
 import type {
   CreateDocumentRequest,
+  DocumentExportFormat,
   DocumentManyResponse,
   DocumentResponse,
   UpdateDocumentRequest,
 } from '~/features/document/types';
 import { extractErrorMessage } from '~/lib/api-error';
+import {
+  buildExportFilename,
+  downloadBlob,
+  filenameFromContentDisposition,
+} from '~/lib/file-export';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -137,6 +143,46 @@ export function useDeleteDocument() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to delete document'));
+    },
+  });
+}
+
+interface ExportDocumentVariables {
+  format: DocumentExportFormat;
+}
+
+/**
+ * Downloads the document as Markdown/Text/PDF/Word, same mechanics as
+ * `useExportDataset`: fetch through the authenticated API client as a blob
+ * (not `window.open`), name it from Content-Disposition when present, then
+ * save it via a temporary object URL.
+ */
+export function useExportDocument(
+  documentId: MaybeRefOrGetter<string>,
+  documentTitle: MaybeRefOrGetter<string>,
+) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<void, unknown, ExportDocumentVariables>({
+    mutationFn: async ({ format }) => {
+      const response = await $api.raw<Blob>(
+        `/workspace/${toValue(workspaceId)}/document/${toValue(documentId)}/export`,
+        {
+          method: 'GET',
+          query: { format },
+          responseType: 'blob',
+        },
+      );
+      if (!response._data) {
+        throw new Error('Empty export response');
+      }
+      const filename =
+        filenameFromContentDisposition(response.headers.get('content-disposition')) ??
+        buildExportFilename(toValue(documentTitle), format);
+      downloadBlob(response._data, filename);
+    },
+    onError: () => {
+      toast.error('Failed to export document');
     },
   });
 }

@@ -7,6 +7,7 @@ import {
   getDatasetRows,
   MAX_COLUMNS_PER_DATASET,
   MAX_LIST_ROWS_LIMIT,
+  moveDatasetRow,
   updateDatasetRow,
 } from '@repo/database';
 import { tryCatch } from '@repo/utils';
@@ -22,8 +23,9 @@ import { tool } from 'ai';
 import * as z from 'zod';
 import { createDatasetForAgent } from '../services/dataset.service';
 
-// Six tools, one family (docs/datasets.md decision 3/4): the agent tool
-// picker shows a single "Datasets" toggle that expands to all of these at
+// Seven tools, one family (docs/datasets.md decision 3/4,
+// docs/datasets/export-and-row-reorder.md decision 6): the agent tool picker
+// shows a single "Datasets" toggle that expands to all of these at
 // tool-build time (see agent.tools.ts).
 
 // Every schema here is a flat top-level z.object: Anthropic's tool
@@ -113,13 +115,16 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-// When a model appends several rows in one turn (e.g. a multi-step plan),
-// the AI SDK runs those tool calls concurrently, so their DB writes can
-// land out of the order the model intended. The dataset-row lock inside
-// `createDatasetRow` keeps the sort key itself correct, but only if calls
-// reach it in the right order in the first place. This in-process FIFO
-// queue provides that: each call's turn starts only after the previous
-// one (for the same dataset) has finished, matching call/emission order.
+// When a model appends or moves several rows in one turn (e.g. a multi-step
+// plan, or a batch of reprioritizations), the AI SDK runs those tool calls
+// concurrently, so their DB writes can land out of the order the model
+// intended. The dataset-row lock inside `createDatasetRow`/`moveDatasetRow`
+// keeps sort keys themselves collision-free, but only if calls reach the
+// database in the right order in the first place. This in-process FIFO
+// queue provides that: each call's turn starts only after the previous one
+// (for the same dataset) has finished, matching call/emission order. Shared
+// between `datasetAppendRow` and `datasetMoveRow`
+// (docs/datasets/export-and-row-reorder.md decision 6).
 const datasetRowLocks = new Map<string, Promise<unknown>>();
 
 function withDatasetRowLock<T>(datasetId: string, fn: () => Promise<T>): Promise<T> {
@@ -281,7 +286,7 @@ export const getDatasetListRowsTool = (
 ): Tool<DatasetListRowsInput, DatasetListRowsOutput> =>
   tool({
     description:
-      'List the (non-deleted) rows of a dataset, oldest first, optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
+      'List the (non-deleted) rows of a dataset, in dataset order (creation order unless rearranged), optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
     inputSchema: datasetListRowsInputSchema,
     execute: async (input) => {
       writer.write({
@@ -470,6 +475,62 @@ export const getDatasetUpdateRowTool = (
     },
   });
 
+// datasetMoveRow
+
+const datasetMoveRowInputSchema = z.object({
+  datasetId: z.string(),
+  rowId: z.string(),
+  afterRowId: z
+    .string()
+    .optional()
+    .describe('Id of the row this one should land directly after. Omit to move it to the top.'),
+});
+
+type DatasetMoveRowInput = z.infer<typeof datasetMoveRowInputSchema>;
+type DatasetMoveRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+
+export const getDatasetMoveRowTool = (
+  writer: UIMessageStreamWriter<UIMessage<never, any>>,
+  userId: string,
+  workspaceId: string,
+): Tool<DatasetMoveRowInput, DatasetMoveRowOutput> =>
+  tool({
+    description:
+      'Reprioritize a dataset row by changing its position, e.g. "move the research step before the drafting step". Omit afterRowId to move the row to the top; otherwise it lands directly after the row with that id.',
+    inputSchema: datasetMoveRowInputSchema,
+    execute: async (input) => {
+      writer.write({
+        type: 'data-dataset',
+        data: { action: 'moveRow', datasetId: input.datasetId, rowId: input.rowId },
+        transient: true,
+      });
+
+      return withDatasetRowLock(input.datasetId, async () => {
+        const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
+        if ('error' in scoped) {
+          return scoped;
+        }
+
+        const { error, data: row } = await tryCatch(
+          () =>
+            moveDatasetRow({
+              datasetId: input.datasetId,
+              userId,
+              rowId: input.rowId,
+              afterRowId: input.afterRowId,
+            }),
+          { retryOnFailure: false },
+        );
+
+        if (error !== null || !row) {
+          return { error: toErrorMessage(error, 'Failed to move dataset row.') };
+        }
+
+        return { row: toRowOutput(row) };
+      });
+    },
+  });
+
 export type DatasetCreateToolInput = InferToolInput<ReturnType<typeof getDatasetCreateTool>>;
 export type DatasetCreateToolOutput = InferToolOutput<ReturnType<typeof getDatasetCreateTool>>;
 export type DatasetCreateUiTool = InferUITool<ReturnType<typeof getDatasetCreateTool>>;
@@ -497,3 +558,7 @@ export type DatasetUpdateRowToolOutput = InferToolOutput<
   ReturnType<typeof getDatasetUpdateRowTool>
 >;
 export type DatasetUpdateRowUiTool = InferUITool<ReturnType<typeof getDatasetUpdateRowTool>>;
+
+export type DatasetMoveRowToolInput = InferToolInput<ReturnType<typeof getDatasetMoveRowTool>>;
+export type DatasetMoveRowToolOutput = InferToolOutput<ReturnType<typeof getDatasetMoveRowTool>>;
+export type DatasetMoveRowUiTool = InferUITool<ReturnType<typeof getDatasetMoveRowTool>>;

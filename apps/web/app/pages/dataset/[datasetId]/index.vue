@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Columns3Icon, SettingsIcon } from '@lucide/vue';
+import { Columns3Icon, DownloadIcon, SettingsIcon } from '@lucide/vue';
 import DatasetDetail from '~/features/dataset/components/DatasetDetail.vue';
 import {
+  useExportDataset,
   useGetDataset,
   useGetDatasetRows,
   useUpdateDataset,
 } from '~/features/dataset/composables/useDatasetApi';
+import type { DatasetExportFormat } from '~/features/dataset/types';
 
 definePageMeta({
   validate: (route) => hasValidDatasetId(route.params),
@@ -28,6 +30,11 @@ const name = ref('');
 const { data: datasetData, error: datasetError } = useGetDataset(datasetId);
 const { data: rowsData } = useGetDatasetRows(datasetId);
 const { mutate: renameDataset } = useUpdateDataset();
+const datasetName = computed(() => datasetData.value?.dataset.name ?? '');
+const { mutate: exportDataset, isPending: isExporting } = useExportDataset(
+  datasetId,
+  datasetName,
+);
 const { t } = useI18n();
 
 useHead({
@@ -64,6 +71,10 @@ const loadingItems = computed(() => [
 function handleRename() {
   renameDataset({ datasetId: datasetId.value, name: name.value });
 }
+
+function handleExport(format: DatasetExportFormat) {
+  exportDataset({ format });
+}
 </script>
 
 <template>
@@ -85,6 +96,32 @@ function handleRename() {
         </p>
       </div>
       <div class="flex shrink-0 items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="!datasetData?.dataset || isExporting"
+            >
+              <Spinner v-if="isExporting" class="mr-2" />
+              <DownloadIcon v-else class="size-4 stroke-1.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @click="handleExport('csv')">
+              {{ t('dataset.detail.export.csv') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('xlsx')">
+              {{ t('dataset.detail.export.excel') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('pdf')">
+              {{ t('dataset.detail.export.pdf') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="handleExport('md')">
+              {{ t('dataset.detail.export.markdown') }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="outline"
           size="sm"

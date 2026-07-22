@@ -63,3 +63,19 @@ export const validUpdateDatasetRowBody = myzValidator(
     data: datasetRowDataSchema,
   }),
 );
+
+// Omitted = top of the dataset (docs/datasets/export-and-row-reorder.md
+// decision 5, mirroring validMoveTaskBody).
+export const validMoveDatasetRowBody = myzValidator(
+  'json',
+  z.object({
+    afterRowId: primaryId.nullish(),
+  }),
+);
+
+export const validDatasetExportQuery = myzValidator(
+  'query',
+  z.object({
+    format: z.enum(['csv', 'xlsx', 'pdf', 'md']),
+  }),
+);

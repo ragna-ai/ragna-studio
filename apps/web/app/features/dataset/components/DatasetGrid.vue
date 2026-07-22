@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Maximize2Icon, PlusIcon, Trash2Icon } from '@lucide/vue';
+import { ArrowDownIcon, ArrowUpIcon, Maximize2Icon, PlusIcon, Trash2Icon } from '@lucide/vue';
 import type { DatasetColumn, DatasetRow } from '~/features/dataset/types';
 
 interface Props {
@@ -9,11 +9,15 @@ interface Props {
   // Row whose panel is currently open; its expand button renders active
   // (the button is a toggle).
   expandedRowId?: string | null;
+  // No optimistic reordering (PRD decision 7): while a move request is in
+  // flight, every up/down button is disabled rather than just one row's.
+  isMovingRow?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isAddingRow: false,
   expandedRowId: null,
+  isMovingRow: false,
 });
 
 const emit = defineEmits<{
@@ -23,6 +27,8 @@ const emit = defineEmits<{
   // Opens DatasetRowPanel for this row. A dedicated leading-cell button,
   // not a row click, so it doesn't fight with clicking into a cell to edit it.
   (e: 'expand-row', rowId: string): void;
+  (e: 'move-row-up', rowId: string): void;
+  (e: 'move-row-down', rowId: string): void;
 }>();
 
 // Composables
@@ -71,22 +77,44 @@ function inputValueOf(event: Event): string {
         <TableEmpty v-if="rows.length === 0" :colspan="columnCount">
           {{ t('dataset.grid.empty') }}
         </TableEmpty>
-        <TableRow v-for="row in rows" :key="row.id">
-          <TableCell class="w-8">
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-7"
-              :class="{ 'bg-accent': row.id === expandedRowId }"
-              :aria-label="t('dataset.grid.expandRow')"
-              :aria-pressed="row.id === expandedRowId"
-              @click="emit('expand-row', row.id)"
-            >
-              <Maximize2Icon
-                class="size-3.5 stroke-1.5"
-                :class="row.id === expandedRowId ? 'text-foreground' : 'text-muted-foreground'"
-              />
-            </Button>
+        <TableRow v-for="(row, index) in rows" :key="row.id" class="group">
+          <TableCell class="w-24">
+            <div class="flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7"
+                :class="{ 'bg-accent': row.id === expandedRowId }"
+                :aria-label="t('dataset.grid.expandRow')"
+                :aria-pressed="row.id === expandedRowId"
+                @click="emit('expand-row', row.id)"
+              >
+                <Maximize2Icon
+                  class="size-3.5 stroke-1.5"
+                  :class="row.id === expandedRowId ? 'text-foreground' : 'text-muted-foreground'"
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 opacity-0 group-hover:opacity-100"
+                :disabled="index === 0 || isMovingRow"
+                :aria-label="t('dataset.grid.moveRowUp')"
+                @click="emit('move-row-up', row.id)"
+              >
+                <ArrowUpIcon class="size-3.5 stroke-1.5 text-muted-foreground" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 opacity-0 group-hover:opacity-100"
+                :disabled="index === rows.length - 1 || isMovingRow"
+                :aria-label="t('dataset.grid.moveRowDown')"
+                @click="emit('move-row-down', row.id)"
+              >
+                <ArrowDownIcon class="size-3.5 stroke-1.5 text-muted-foreground" />
+              </Button>
+            </div>
           </TableCell>
           <TableCell v-for="column in columns" :key="column.id">
             <Select
