@@ -1,4 +1,9 @@
-import type { AgentContextDocumentForPrompt, AgentSettings, Dataset } from '@repo/database';
+import type {
+  AgentContextDocumentForPrompt,
+  AgentReasoningEffort,
+  AgentSettings,
+  Dataset,
+} from '@repo/database';
 import { getDatasetById, getMemoryByAgentId, getReadyAgentContextDocumentsForPrompt } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
@@ -219,6 +224,7 @@ export function normalizeAgentContext(context: string | null | undefined): strin
 export function toModelSettings(settings: AgentSettings | null | undefined): {
   temperature: number | undefined;
   maxOutputTokens: number | undefined;
+  reasoning: AgentReasoningEffort | undefined;
 } {
   return {
     // Temperature 0 means "disabled", not "sample at 0" (the settings form
@@ -226,5 +232,10 @@ export function toModelSettings(settings: AgentSettings | null | undefined): {
     // models reject the parameter outright, so 0 must not be sent either.
     temperature: settings?.temperature || undefined,
     maxOutputTokens: settings?.maxOutputTokens ?? undefined,
+    // Unset/null: nothing sent, provider default applies. 'none' is sent
+    // through to explicitly disable reasoning; 'low'/'medium'/'high' map
+    // onto each provider's own mechanism (Anthropic thinking budget, OpenAI
+    // reasoningEffort, Google thinkingConfig).
+    reasoning: settings?.reasoning ?? undefined,
   };
 }

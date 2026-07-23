@@ -5,7 +5,7 @@ import { agent } from '../schema';
 import type { ICreateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
 
-export type { Agent, AgentSettings, AgentTool, AgentTools } from '../schema';
+export type { Agent, AgentReasoningEffort, AgentSettings, AgentTool, AgentTools } from '../schema';
 
 type AgentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

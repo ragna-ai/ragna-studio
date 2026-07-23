@@ -4,9 +4,12 @@ export interface AgentAiModelRef {
   displayName: string;
 }
 
+export type AgentReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+
 export interface AgentSettings {
   temperature?: number | null;
   maxOutputTokens?: number | null;
+  reasoning?: AgentReasoningEffort | null;
 }
 
 export interface Agent {

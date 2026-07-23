@@ -133,8 +133,16 @@
       "defaultAgentLabel": "Diesen Agenten als Standard festlegen",
       "temperatureLabel": "Temperatur",
       "temperatureDisabled": "Deaktiviert",
+      "temperatureHint": "Setze die Temperatur auf 0, um sie zu deaktivieren.",
       "maxOutputTokensLabel": "Maximale Ausgabe-Tokens",
-      "settingsHint": "Setze die Temperatur auf 0, um sie zu deaktivieren. Lasse die maximalen Ausgabe-Tokens leer, um den Standardwert des Modells zu verwenden."
+      "maxOutputTokensHint": "Leer lassen, um den Standardwert des Modells zu verwenden.",
+      "reasoningLabel": "Reasoning",
+      "reasoningDefault": "Standard",
+      "reasoningOff": "Aus",
+      "reasoningLow": "Niedrig",
+      "reasoningMedium": "Mittel",
+      "reasoningHigh": "Hoch",
+      "reasoningHint": "Lässt das Modell nachdenken, bevor es antwortet. \"Standard\" überlässt die Entscheidung dem Modell; \"Aus\" deaktiviert Reasoning explizit, was bei Modellen wichtig ist, die standardmäßig reasonen. Nur Modelle mit Reasoning-Unterstützung nutzen dies, andere ignorieren es."
     },
     "tool": {
       "think": {

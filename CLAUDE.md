@@ -86,4 +86,12 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 Always use the clean-code skill.
 
-**Skip self-verification of changes** unless explicitly asked, means: no type-check at all, no visual confirmation, no git status/diff check, no git commit, no browser verification. The user handles verification and commits.
+**Skip self-verification of changes** unless explicitly asked, means:
+
+- no type-check at all,
+- no visual confirmation,
+- no git status/diff check,
+- no git commit,
+- no browser verification
+
+The user handles verification and commits.

@@ -104,7 +104,7 @@ const getToolIcon = (part: ToolPart) => {
         <MessageResponse v-if="part.type === 'text'" :content="part.text" />
 
         <Reasoning
-          v-else-if="part.type === 'reasoning'"
+          v-else-if="part.type === 'reasoning' && (part.state === 'streaming' || part.text.trim())"
           :is-streaming="part.state === 'streaming'"
         >
           <ReasoningTrigger />

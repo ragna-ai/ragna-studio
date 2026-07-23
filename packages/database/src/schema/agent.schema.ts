@@ -6,9 +6,22 @@ import { dataset } from './dataset.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
+// AI SDK's unified reasoning-effort levels (ai-sdk.dev/docs/ai-sdk-core/reasoning),
+// trimmed to the levels worth exposing in the UI. Each provider adapter maps
+// these onto its own mechanism (Anthropic thinking budget, OpenAI
+// reasoningEffort, Google thinkingConfig). 'none' is included and distinct
+// from unset/null: 'none' is sent to the provider to explicitly turn
+// reasoning off (needed for models that reason by default), while
+// unset/null sends nothing and leaves the choice to the provider.
+export const agentReasoningEffortValues = ['none', 'low', 'medium', 'high'] as const;
+export type AgentReasoningEffort = (typeof agentReasoningEffortValues)[number];
+
 export interface AgentSettings {
   temperature?: number | null;
   maxOutputTokens?: number | null;
+  // Unset/null: no reasoning param sent, so the provider's own default
+  // applies. Set to 'none' to explicitly disable reasoning instead.
+  reasoning?: AgentReasoningEffort | null;
 }
 
 // Single source of truth for the enum: drizzle-orm/zod can't derive a

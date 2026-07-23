@@ -35,6 +35,12 @@ type UpsertAgentProps = {
 // stored temperature (or one dragged back to 0) sends nothing to the model.
 const DISABLED_TEMPERATURE = 0;
 
+// shadcn's Select can't use an empty string or null as an item value, so
+// "unset" (provider default, nothing sent) needs its own sentinel, mapped
+// back to null on change. Distinct from the 'none' option, which is sent to
+// the provider to explicitly turn reasoning off.
+const REASONING_DEFAULT = 'default';
+
 // Props
 const props = defineProps<UpsertAgentProps>();
 // Emits
@@ -51,6 +57,7 @@ const { t } = useI18n();
 const agentSettingsSchema = z.object({
   temperature: z.number().min(0).max(1).nullable(),
   maxOutputTokens: z.number().int().min(1).max(64_000).nullable(),
+  reasoning: z.enum(['none', 'low', 'medium', 'high']).nullable(),
 });
 
 const agentUpsertSchema = z.object({
@@ -79,6 +86,7 @@ const form = useForm({
     settings: {
       temperature: props.settings?.temperature ?? null,
       maxOutputTokens: props.settings?.maxOutputTokens ?? null,
+      reasoning: props.settings?.reasoning ?? null,
     },
     defaultDatasetId: props.defaultDatasetId ?? null,
   },
@@ -355,6 +363,9 @@ const siderBarTabs = computed(() => [
                       (v) => field.handleChange(v?.[0] ? v[0] : null)
                     "
                   />
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    {{ t('agent.upsert.temperatureHint') }}
+                  </p>
                   <FormFieldInfo :state="state" />
                 </div>
               </template>
@@ -381,13 +392,58 @@ const siderBarTabs = computed(() => [
                     @blur="field.handleBlur"
                     autocomplete="off"
                   />
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    {{ t('agent.upsert.maxOutputTokensHint') }}
+                  </p>
                   <FormFieldInfo :state="state" />
                 </div>
               </template>
             </form.Field>
-            <p class="text-sm text-muted-foreground">
-              {{ t('agent.upsert.settingsHint') }}
-            </p>
+            <form.Field name="settings.reasoning">
+              <template v-slot="{ field, state }">
+                <div>
+                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                    {{ t('agent.upsert.reasoningLabel') }}
+                  </Label>
+                  <Select
+                    :model-value="state.value ?? REASONING_DEFAULT"
+                    @update:model-value="
+                      (v) =>
+                        field.handleChange(
+                          v === REASONING_DEFAULT
+                            ? null
+                            : (v as 'none' | 'low' | 'medium' | 'high'),
+                        )
+                    "
+                  >
+                    <SelectTrigger :id="field.name" class="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem :value="REASONING_DEFAULT">
+                        {{ t('agent.upsert.reasoningDefault') }}
+                      </SelectItem>
+                      <SelectItem value="none">
+                        {{ t('agent.upsert.reasoningOff') }}
+                      </SelectItem>
+                      <SelectItem value="low">
+                        {{ t('agent.upsert.reasoningLow') }}
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        {{ t('agent.upsert.reasoningMedium') }}
+                      </SelectItem>
+                      <SelectItem value="high">
+                        {{ t('agent.upsert.reasoningHigh') }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    {{ t('agent.upsert.reasoningHint') }}
+                  </p>
+                  <FormFieldInfo :state="state" />
+                </div>
+              </template>
+            </form.Field>
           </div>
         </div>
       </template>
