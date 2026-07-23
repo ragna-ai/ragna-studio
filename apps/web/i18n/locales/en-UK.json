@@ -803,6 +803,8 @@
     "property": {
       "priority": "Priority",
       "dueDate": "Due date",
+      "pickDueDate": "Pick a date",
+      "clearDueDate": "Clear due date",
       "assignee": "Assignee",
       "unassigned": "Unassigned",
       "labels": "Labels",

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Trash2Icon } from '@lucide/vue';
+import { CalendarIcon, Trash2Icon, XIcon } from '@lucide/vue';
+import { parseDate, type DateValue } from '@internationalized/date';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { useUpdateTask, useMoveTask } from '~/features/task/composables/useTaskApi';
 import {
@@ -24,14 +25,21 @@ const props = defineProps<{ task: TaskWithDetails; labels: TaskLabel[] }>();
 const emit = defineEmits<{ delete: [] }>();
 
 // Composables
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const { formatDate } = useDateTimeFormat();
 const { data: agentsData } = useGetAllAgents();
 const { mutate: updateTask } = useUpdateTask();
 const { mutate: moveTask } = useMoveTask();
 
+// Refs
+const isDueDatePopoverOpen = ref(false);
+
 // Computed
 const agents = computed(() => agentsData.value?.agents ?? []);
 const selectedLabelIds = computed(() => new Set(props.task.labels.map((label) => label.id)));
+const dueDateValue = computed<DateValue | undefined>(() =>
+  props.task.dueDate ? parseDate(props.task.dueDate.slice(0, 10)) : undefined,
+);
 
 // Reminder select's current value: a preset offset, the custom sentinel, or
 // off. Disabled entirely without a due date (docs/tasks/prd.md, task detail).
@@ -66,9 +74,13 @@ function updatePriority(value: unknown) {
   updateTask({ taskId: props.task.id, priority: value });
 }
 
-function updateDueDate(event: Event) {
-  const value = (event.target as HTMLInputElement).value;
-  updateTask({ taskId: props.task.id, dueDate: value === '' ? null : value });
+function updateDueDate(value: DateValue | undefined) {
+  updateTask({ taskId: props.task.id, dueDate: value ? value.toString() : null });
+  isDueDatePopoverOpen.value = false;
+}
+
+function clearDueDate() {
+  updateTask({ taskId: props.task.id, dueDate: null });
 }
 
 function updateAssignee(value: string) {
@@ -134,11 +146,35 @@ function commitCustomDays() {
 
     <div class="space-y-1.5">
       <Label class="text-xs text-muted-foreground">{{ t('task.property.dueDate') }}</Label>
-      <Input
-        type="date"
-        :model-value="task.dueDate ? task.dueDate.slice(0, 10) : ''"
-        @change="updateDueDate"
-      />
+      <div class="flex items-center gap-1">
+        <Popover v-model:open="isDueDatePopoverOpen">
+          <PopoverTrigger as-child>
+            <Button variant="outline" class="w-full justify-start font-normal">
+              <CalendarIcon class="mr-2 size-4 stroke-1.5" />
+              <span v-if="task.dueDate">{{ formatDate(task.dueDate) }}</span>
+              <span v-else class="text-muted-foreground">{{ t('task.property.pickDueDate') }}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0" align="start">
+            <Calendar
+              :model-value="dueDateValue"
+              :locale="locale"
+              :week-starts-on="1"
+              @update:model-value="updateDueDate"
+            />
+          </PopoverContent>
+        </Popover>
+        <Button
+          v-if="task.dueDate"
+          variant="ghost"
+          size="icon"
+          :aria-label="t('task.property.clearDueDate')"
+          :title="t('task.property.clearDueDate')"
+          @click="clearDueDate"
+        >
+          <XIcon class="size-4" />
+        </Button>
+      </div>
     </div>
 
     <div class="space-y-1.5">

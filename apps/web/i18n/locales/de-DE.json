@@ -809,6 +809,8 @@
     "property": {
       "priority": "Priorität",
       "dueDate": "Fällig am",
+      "pickDueDate": "Datum wählen",
+      "clearDueDate": "Fälligkeitsdatum entfernen",
       "assignee": "Zugewiesen an",
       "unassigned": "Nicht zugewiesen",
       "labels": "Labels",
