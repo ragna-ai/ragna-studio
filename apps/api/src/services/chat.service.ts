@@ -334,13 +334,9 @@ export type ChatStreamChunkSink = (chunk: ChatStreamChunk) => void;
 export type RunChatStreamParams = {
   chatId: string;
   userId: string;
-  messages: unknown[];
-  // Accepted for parity with the client payload (mirrors the AI SDK's
-  // regenerate request shape); unused today because, same as the HTTP
-  // endpoint this replaces, the trimmed `messages` array alone determines
-  // what gets (re)generated.
-  trigger?: string;
-  messageId?: string;
+  // Only the newest UIMessage; the rest of the conversation is rebuilt from
+  // `userChat.messages` (the persisted history) below.
+  message: unknown;
 };
 
 // One in-flight run per chat: `abortChatRun` looks a chat up here to cancel it.
@@ -366,7 +362,7 @@ export function abortChatRun(chatId: string): boolean {
  * response).
  */
 export async function runChatStream(
-  { chatId, userId, messages }: RunChatStreamParams,
+  { chatId, userId, message }: RunChatStreamParams,
   onChunk: ChatStreamChunkSink,
 ): Promise<void> {
   if (inFlightRunsByChatId.has(chatId)) {
@@ -394,7 +390,11 @@ export async function runChatStream(
       throw new NotFoundException('Chat not found');
     }
 
-    const validated = await safeValidateUIMessages({ messages });
+    // Rebuild the full conversation from persisted history plus the one new
+    // message the client sent, rather than trusting a client-sent history.
+    const validated = await safeValidateUIMessages({
+      messages: [...userChat.messages, message],
+    });
 
     if (!validated.success) {
       logger.warn(`Invalid messages for chat ${chatId}`, validated.error);

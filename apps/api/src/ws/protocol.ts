@@ -14,15 +14,11 @@ export const wsEnvelopeSchema = z.object({
 
 export type WsEnvelope = z.infer<typeof wsEnvelopeSchema>;
 
-// Mirrors today's POST /chat/:chatId body so regeneration keeps working.
-// Deep UIMessage validation happens in chat.service via safeValidateUIMessages;
-// `trigger`/`messageId` are accepted for parity with that payload but, like
-// the HTTP endpoint they replace, are not read server-side today: the
-// trimmed `messages` array alone determines what gets (re)generated.
+// The client sends only the newest UIMessage; the server rebuilds the rest
+// of the conversation from its own persisted history (chat.service.ts).
+// Deep UIMessage validation happens in chat.service via safeValidateUIMessages.
 export const messageFramePayloadSchema = z.object({
-  messages: z.array(z.unknown()),
-  trigger: z.string().optional(),
-  messageId: z.string().optional(),
+  message: z.unknown(),
 });
 
 export type MessageFramePayload = z.infer<typeof messageFramePayloadSchema>;

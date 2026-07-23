@@ -20,15 +20,17 @@ One row per message, not one JSON blob per chat. This keeps appends cheap, allow
 
 ## Write path (API)
 
-`POST /chat/:chatId` in `apps/api/src/controllers/chat.controller.ts`:
+Chat streaming lives on the WS `chat:<chatId>` channel (`apps/api/src/controllers/ws.controller.ts`, see `docs/team-chat/prd.md`), which calls `runChatStream` in `apps/api/src/services/chat.service.ts`:
 
-1. The incoming `body.messages` are validated with `safeValidateUIMessages`. Invalid payloads fail fast with a 400 before the stream opens.
-2. The stream is built with `createUIMessageStream({ originalMessages, ... })`. Passing `originalMessages` puts the SDK into persistence mode: the assistant response gets a stable message id.
+1. The client sends only the newest `UIMessage`, not the full history. The server already fetched `userChat.messages` (the persisted history) for the channel-ownership check, so it rebuilds the full conversation as `[...userChat.messages, message]` and validates that combined array with `safeValidateUIMessages`. The DB, not the client, is authoritative for history; invalid payloads fail fast with a 400 before the stream opens.
+2. The stream is built with `createUIMessageStream({ originalMessages, ... })`, passing the rebuilt array. Passing `originalMessages` puts the SDK into persistence mode: the assistant response gets a stable message id.
 3. Persistence happens in the stream's `onEnd` callback. It receives the finished `responseMessage` as a `UIMessage`, so nothing has to be converted back from model messages.
 4. `upsertChatMessages` (in `packages/database/src/repositories/chat.repo.ts`) upserts by message id. Retries and regenerations replace the existing row instead of duplicating it.
 5. Persistence is skipped when the stream was aborted or finished with an error. Persistence failures are logged but do not break the response stream.
 
 The new user message and the assistant response are saved together in one batch.
+
+This means edit-and-regenerate-from-an-earlier-message isn't supported by the wire protocol today, only appending a new message onto the end of the persisted history — the UI has no affordance for it either.
 
 ## Read path (API)
 

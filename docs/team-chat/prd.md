@@ -78,7 +78,7 @@ phase 2 adds `room:`.
 | --------------- | ------------- | ---------------------------------------------- |
 | client → server | `subscribe`   | none (channel in envelope)                     |
 | client → server | `unsubscribe` | none                                           |
-| client → server | `message`     | `{ messages: UIMessage[], trigger, messageId }` (mirrors today's POST body, keeps regeneration working) |
+| client → server | `message`     | `{ message: UIMessage }` (only the newest message; the server rebuilds the rest of the conversation from its own persisted history) |
 | client → server | `abort`       | none                                           |
 | server → client | `subscribed`  | none (ack)                                     |
 | server → client | `chunk`       | one UIMessage stream chunk, format unchanged   |
@@ -144,11 +144,20 @@ re-validates the session. Admin revocation before expiry is accepted lag.
   helper (the single seam for a later Redis bridge).
 - **Extract the chat streaming pipeline** from `chat.controller.ts` (the
   ~150-line `POST /:chatId` handler) into `chat.service.ts`, per the
-  thin-controller rule. The service takes `{ chatId, userId, messages }`
-  plus a chunk sink and keeps everything that exists today: message
-  validation, `buildAgentInstructions`, title generation (including the
-  transient `data-chat-title` part), `streamText`, persistence in `onEnd`.
-  The WS chat handler calls it and publishes each chunk on `chat:<chatId>`.
+  thin-controller rule. The service takes `{ chatId, userId, message }`
+  (the single newest `UIMessage`) plus a chunk sink and keeps everything
+  that exists today: message validation, `buildAgentInstructions`, title
+  generation (including the transient `data-chat-title` part), `streamText`,
+  persistence in `onEnd`. The WS chat handler calls it and publishes each
+  chunk on `chat:<chatId>`.
+  - `runChatStream` rebuilds the conversation server-side as
+    `[...userChat.messages, message]` (the DB history it already fetched for
+    the ownership check, plus the new message) before validating and
+    converting to model messages. The client is no longer trusted to send
+    the full history; the DB is authoritative. This also means
+    edit-and-regenerate-from-an-earlier-message isn't supported by this
+    protocol today, only appending a new message — matches the UI, which
+    has no such affordance.
 - In-flight run registry per chat holding the `AbortController`, so `abort`
   frames can find and cancel the run. HTTP request teardown no longer
   cancels for free.
@@ -164,9 +173,10 @@ re-validates the session. Admin revocation before expiry is accepted lag.
   not the app's chat id. The transport therefore takes a
   `getChatId: () => string | null` callback wired to the component's chat id
   ref, the same source the old `prepareSendMessagesRequest` used.
-  - `sendMessages`: publish the `message` frame (including `trigger` and
-    `messageId`, so regeneration works), return a `ReadableStream` filled
-    from incoming `chunk` frames until the finish chunk. Listens on the
+  - `sendMessages`: publish the `message` frame with only `messages.at(-1)`
+    (the newest message `useChat` appended; the server rebuilds the rest of
+    the history from its own DB), return a `ReadableStream` filled from
+    incoming `chunk` frames until the finish chunk. Listens on the
     `abortSignal` that `useChat`'s stop button triggers and sends the
     `abort` frame, so the client-side stop UX needs no changes.
   - `reconnectToStream`: stubbed (returns no stream) until resumable

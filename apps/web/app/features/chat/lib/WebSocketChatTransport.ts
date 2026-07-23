@@ -2,9 +2,7 @@ import type { ChatTransport, UIMessage, UIMessageChunk } from 'ai';
 import { useWebSocketChannel } from '~/composables/useWebSocketChannel';
 
 interface ChatMessageFramePayload {
-  messages: UIMessage[];
-  trigger: 'submit-message' | 'regenerate-message';
-  messageId: string | undefined;
+  message: UIMessage;
 }
 
 interface ChatErrorFramePayload {
@@ -33,8 +31,6 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
   constructor(private readonly getChatId: () => string | null) {}
 
   async sendMessages({
-    trigger,
-    messageId,
     messages,
     abortSignal,
   }: SendMessagesOptions): Promise<ReadableStream<UIMessageChunk>> {
@@ -43,6 +39,14 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
       throw new Error(
         'WebSocketChatTransport: no chat id available to send messages',
       );
+    }
+
+    // The server rebuilds the rest of the conversation from its own
+    // persisted history, so only the newest message needs to go over the
+    // wire (docs/team-chat/prd.md).
+    const message = messages.at(-1);
+    if (!message) {
+      throw new Error('WebSocketChatTransport: no message to send');
     }
 
     const channel = `chat:${chatId}`;
@@ -113,11 +117,7 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
     send({
       channel,
       type: 'message',
-      payload: {
-        messages,
-        trigger,
-        messageId,
-      } satisfies ChatMessageFramePayload,
+      payload: { message } satisfies ChatMessageFramePayload,
     });
 
     return stream;

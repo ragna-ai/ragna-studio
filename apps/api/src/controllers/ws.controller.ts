@@ -160,9 +160,7 @@ export const wsController = new Hono()
                   {
                     chatId,
                     userId: user.id,
-                    messages: messagePayload.messages,
-                    trigger: messagePayload.trigger,
-                    messageId: messagePayload.messageId,
+                    message: messagePayload.message,
                   },
                   (chunk) => publishFrame(raw, { channel, type: 'chunk', payload: chunk }),
                 );
