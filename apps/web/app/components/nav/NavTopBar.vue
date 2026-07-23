@@ -41,11 +41,10 @@ const onExpandClick = () => {
       <ChatCreateButton v-if="chatStore.agent" :agent-id="chatStore.agent.id" />
       <NavNotifications />
       <div>
-        <NavHelpMenu />
+        <button @click="onExpandClick">
+          <MaximizeIcon class="size-5 stroke-1 hover:stroke-1.5" />
+        </button>
       </div>
-      <button @click="onExpandClick">
-        <MaximizeIcon class="size-5 stroke-1 hover:stroke-1.5" />
-      </button>
       <div class="pr-5">
         <NavUserMenu :size-full="false" />
       </div>
