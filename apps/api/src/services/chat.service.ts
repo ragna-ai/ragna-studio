@@ -423,7 +423,7 @@ export async function runChatStream(
 
     logger.debug(`Processing messages for chat ${chatId}`, { messages: validUiMessages });
 
-    const stream = createUIMessageStream({
+    const uiMessageStream = createUIMessageStream({
       originalMessages: validUiMessages,
       execute: ({ writer: dataStream }) => {
         // Handle title generation in parallel
@@ -520,13 +520,8 @@ export async function runChatStream(
       },
     });
 
-    const reader = stream.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      onChunk(value);
+    for await (const uiMessageChunk of uiMessageStream) {
+      onChunk(uiMessageChunk);
     }
   } finally {
     inFlightRunsByChatId.delete(chatId);
