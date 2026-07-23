@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Background } from '@vue-flow/background';
-import type { FlowEmits, FlowProps, FlowSlots } from '@vue-flow/core';
+import type {
+  ConnectionLineProps,
+  EdgeProps,
+  FlowEmits,
+  FlowProps,
+  FlowSlots,
+  NodeProps,
+} from '@vue-flow/core';
 import { VueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
@@ -19,6 +26,17 @@ const emits = defineEmits<FlowEmits>();
 const slots = defineSlots<FlowSlots>();
 // @ts-expect-error: VueFlow has a lot of dynamic slots that TypeScript can't know about
 const forwarded = useForwardPropsEmits(props, emits);
+
+// VueFlow's dynamic slots each carry a different, mutually incompatible props
+// shape, so the union can't be assigned to any single slot's expected type.
+// Casting through the intersection <slot> actually expects keeps this typed
+// without resorting to `any`.
+type ForwardedSlotProps = NodeProps<any, object, string> &
+  EdgeProps<any, object, string> &
+  ConnectionLineProps;
+function forwardSlotProps(slotProps: unknown) {
+  return slotProps as ForwardedSlotProps;
+}
 </script>
 
 <template>
@@ -36,7 +54,7 @@ const forwarded = useForwardPropsEmits(props, emits);
       :key="slotName"
       #[slotName]="slotProps"
     >
-      <slot :name="slotName" v-bind="slotProps ?? {}" />
+      <slot :name="slotName" v-bind="forwardSlotProps(slotProps) ?? {}" />
     </template>
   </VueFlow>
 </template>
