@@ -455,6 +455,7 @@
       "duration": "Dauer",
       "durationSeconds": "{seconds}s",
       "generateAudio": "Audio generieren",
+      "advancedOptions": "Erweiterte Optionen",
       "negativePrompt": "Negativer Prompt",
       "negativePromptPlaceholder": "Beschreibe, was im Video vermieden werden soll...",
       "seed": "Seed",

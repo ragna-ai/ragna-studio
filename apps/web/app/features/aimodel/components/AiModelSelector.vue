@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { HTMLAttributes } from 'vue';
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
 import { firstToUpperCase } from '~/lib/utils';
 
@@ -13,6 +14,7 @@ interface AiModelOption {
 interface Props {
   /** Only models with this modality are listed. */
   modality?: string;
+  class?: HTMLAttributes['class'];
 }
 
 // Props
@@ -23,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 const modelValue = defineModel<string>();
 
 // Composables
-const { data, isLoading, isError } = useGetAllAiModels();
+const { data, isError } = useGetAllAiModels();
 
 // Computed
 const models = computed<AiModelOption[]>(
@@ -32,23 +34,26 @@ const models = computed<AiModelOption[]>(
       (model: AiModelOption) => model.modality === props.modality,
     ) ?? [],
 );
+
+const normalizeModelProvider = (provider: string) => {
+  const split = provider.split('-')[0];
+  return firstToUpperCase(split ? split : provider);
+};
 </script>
 
 <template>
   <div>
-    <p v-if="isLoading" class="text-sm text-muted-foreground">
-      Loading AI models...
-    </p>
-    <p v-else-if="isError" class="text-sm text-destructive">
+    <p v-if="isError" class="text-sm text-destructive">
       Error loading AI models.
     </p>
     <Select v-else v-model="modelValue">
-      <SelectTrigger>
+      <SelectTrigger :class="props.class">
         <SelectValue placeholder="Select an AI model" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem v-for="model in models" :key="model.id" :value="model.id">
-          {{ firstToUpperCase(model.provider) }} - {{ model.displayName }}
+          {{ normalizeModelProvider(model.provider) }} -
+          {{ model.displayName }}
         </SelectItem>
       </SelectContent>
     </Select>

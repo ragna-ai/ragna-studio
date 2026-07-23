@@ -449,6 +449,7 @@
       "duration": "Duration",
       "durationSeconds": "{seconds}s",
       "generateAudio": "Generate audio",
+      "advancedOptions": "Advanced options",
       "negativePrompt": "Negative prompt",
       "negativePromptPlaceholder": "Describe what to avoid in the video...",
       "seed": "Seed",

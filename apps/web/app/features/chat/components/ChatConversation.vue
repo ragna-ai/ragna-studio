@@ -204,7 +204,7 @@ onMounted(() => {
             v-model="inputText"
             :placeholder="$t('chat.input.placeholder')"
             name="message"
-            class="min-h-12 resize-none rounded-xl py-3"
+            class="min-h-12 resize-none rounded-xl bg-stone-50 py-3 shadow-inner!"
             @keydown.enter.exact.prevent="onSubmit"
           />
           <PromptInputSubmit

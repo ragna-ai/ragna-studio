@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UploadIcon, VideoIcon, XIcon } from '@lucide/vue';
+import { ChevronDownIcon, UploadIcon, VideoIcon, XIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
@@ -38,6 +38,7 @@ const { modelId, aspectRatio, resolution, duration, generateAudio } =
 
 // Refs
 const fileInputRef = useTemplateRef<HTMLInputElement>('fileInputRef');
+const advancedOptionsOpen = ref(false);
 const frameEnabled = ref(false);
 const frameMode = ref<FrameMode>('genImage');
 const selectedGenImageId = ref<string | null>(null);
@@ -101,7 +102,10 @@ const genImages = computed(() => genImageData.value?.genImages ?? []);
 function resolveFrame() {
   if (!frameEnabled.value) return undefined;
   if (frameMode.value === 'genImage' && selectedGenImageId.value) {
-    return { origin: 'genImage' as const, genImageId: selectedGenImageId.value };
+    return {
+      origin: 'genImage' as const,
+      genImageId: selectedGenImageId.value,
+    };
   }
   if (frameMode.value === 'upload' && uploadedFrame.value) {
     return {
@@ -143,7 +147,10 @@ function handleFileChange(event: Event) {
   uploadFrame(file, {
     onSuccess: ({ storageKey }) => {
       clearUploadedFrame();
-      uploadedFrame.value = { storageKey, previewUrl: URL.createObjectURL(file) };
+      uploadedFrame.value = {
+        storageKey,
+        previewUrl: URL.createObjectURL(file),
+      };
     },
   });
 }
@@ -177,7 +184,7 @@ watch(
 
 <template>
   <form
-    class="space-y-4 rounded-xl border p-4"
+    class="space-y-4 rounded-xl border p-4 shadow"
     @submit.prevent.stop="form.handleSubmit"
   >
     <form.Field name="prompt">
@@ -193,6 +200,7 @@ watch(
               (v: string | number) => field.handleChange(String(v))
             "
             @blur="field.handleBlur"
+            class="border-0 shadow-none"
           />
           <FormFieldInfo :state="state" />
         </div>
@@ -200,12 +208,16 @@ watch(
     </form.Field>
 
     <div class="flex flex-wrap items-center gap-3">
-      <div class="w-48">
-        <AiModelSelector v-model="modelId" modality="video" />
+      <div>
+        <AiModelSelector
+          v-model="modelId"
+          modality="video"
+          class="border-0 shadow-none"
+        />
       </div>
 
       <Select v-model="aspectRatio">
-        <SelectTrigger class="w-32">
+        <SelectTrigger class="w-28 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.aspectRatio')" />
         </SelectTrigger>
         <SelectContent>
@@ -220,7 +232,7 @@ watch(
       </Select>
 
       <Select v-model="resolution">
-        <SelectTrigger class="w-28">
+        <SelectTrigger class="w-28 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.resolution')" />
         </SelectTrigger>
         <SelectContent>
@@ -236,7 +248,7 @@ watch(
       </Select>
 
       <Select v-model="duration">
-        <SelectTrigger class="w-24">
+        <SelectTrigger class="w-24 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.duration')" />
         </SelectTrigger>
         <SelectContent>
@@ -258,47 +270,62 @@ watch(
       </div>
     </div>
 
-    <form.Field name="negativePrompt">
-      <template v-slot="{ field, state }">
-        <div>
-          <Label class="mb-2 block text-sm font-medium" :for="field.name">
-            {{ t('videogen.form.negativePrompt') }}
-          </Label>
-          <Textarea
-            :id="field.name"
-            rows="2"
-            :placeholder="t('videogen.form.negativePromptPlaceholder')"
-            :model-value="state.value"
-            @update:model-value="
-              (v: string | number) => field.handleChange(String(v))
-            "
-            @blur="field.handleBlur"
-          />
-          <FormFieldInfo :state="state" />
-        </div>
-      </template>
-    </form.Field>
+    <Collapsible v-model:open="advancedOptionsOpen">
+      <CollapsibleTrigger
+        class="group/advanced ml-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
+        {{ t('videogen.form.advancedOptions') }}
+        <ChevronDownIcon
+          class="size-4 transition-transform group-data-[state=open]/advanced:rotate-180"
+        />
+      </CollapsibleTrigger>
 
-    <form.Field name="seed">
-      <template v-slot="{ field, state }">
-        <div class="max-w-40">
-          <Label class="mb-2 block text-sm font-medium" :for="field.name">
-            {{ t('videogen.form.seed') }}
-          </Label>
-          <Input
-            :id="field.name"
-            type="number"
-            :model-value="state.value ?? ''"
-            @update:model-value="
-              (v: string | number) =>
-                field.handleChange(v === '' ? null : Number(v))
-            "
-            @blur="field.handleBlur"
-          />
-          <FormFieldInfo :state="state" />
-        </div>
-      </template>
-    </form.Field>
+      <CollapsibleContent class="space-y-4 p-3">
+        <form.Field name="negativePrompt">
+          <template v-slot="{ field, state }">
+            <div>
+              <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                {{ t('videogen.form.negativePrompt') }}
+              </Label>
+              <Textarea
+                :id="field.name"
+                rows="2"
+                :placeholder="t('videogen.form.negativePromptPlaceholder')"
+                :model-value="state.value"
+                @update:model-value="
+                  (v: string | number) => field.handleChange(String(v))
+                "
+                @blur="field.handleBlur"
+                class="shadow-none"
+              />
+              <FormFieldInfo :state="state" />
+            </div>
+          </template>
+        </form.Field>
+
+        <form.Field name="seed">
+          <template v-slot="{ field, state }">
+            <div class="max-w-40">
+              <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                {{ t('videogen.form.seed') }}
+              </Label>
+              <Input
+                :id="field.name"
+                type="number"
+                :model-value="state.value ?? ''"
+                @update:model-value="
+                  (v: string | number) =>
+                    field.handleChange(v === '' ? null : Number(v))
+                "
+                @blur="field.handleBlur"
+                class="shadow-none"
+              />
+              <FormFieldInfo :state="state" />
+            </div>
+          </template>
+        </form.Field>
+      </CollapsibleContent>
+    </Collapsible>
 
     <div class="space-y-3 border-t pt-4">
       <div class="flex items-center gap-2">
