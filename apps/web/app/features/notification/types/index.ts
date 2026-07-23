@@ -20,6 +20,18 @@ export interface NotificationDataMap {
     taskNumber: number;
     taskTitle: string;
   };
+  // `prompt` is snapshotted at emit time so the presenter can render without
+  // a lookup; truncated for display in the presenter, not here.
+  video_generation_succeeded: {
+    genVideoId: string;
+    workspaceId: string;
+    prompt: string;
+  };
+  video_generation_failed: {
+    genVideoId: string;
+    workspaceId: string;
+    prompt: string;
+  };
 }
 
 export type NotificationType = keyof NotificationDataMap;

@@ -33,6 +33,7 @@
     "docs": "Docs",
     "tasks": "Tasks",
     "image": "Images",
+    "video": "Videos",
     "social": "Social",
     "more": "More",
     "new": "New",
@@ -90,6 +91,14 @@
     "taskReminderDue": {
       "title": "Task reminder",
       "message": "{displayId} \"{title}\" is due soon."
+    },
+    "videoGenerationSucceeded": {
+      "title": "Video ready",
+      "message": "Your video for \"{prompt}\" is ready."
+    },
+    "videoGenerationFailed": {
+      "title": "Video generation failed",
+      "message": "Your video for \"{prompt}\" could not be generated."
     },
     "unknown": {
       "title": "Notification",
@@ -159,7 +168,13 @@
       },
       "imageGen": {
         "label": "Image Generation",
-        "description": "Create images from text prompts."
+        "description": "Create images from text prompts.",
+        "generating": "Generating image: \"{prompt}\"..."
+      },
+      "videoGen": {
+        "label": "Video Generation",
+        "description": "Create videos from text prompts, optionally animating a generated image.",
+        "generating": "Generating video: \"{prompt}\"..."
       },
       "linkedinDraft": {
         "label": "LinkedIn Draft",
@@ -422,6 +437,42 @@
       "copyPrompt": "Copy prompt",
       "download": "Download",
       "downloadError": "Failed to download image"
+    }
+  },
+  "videogen": {
+    "title": "Text to Video",
+    "form": {
+      "promptPlaceholder": "Describe the video you want to generate...",
+      "promptRequired": "Describe the video you want to generate.",
+      "aspectRatio": "Aspect ratio",
+      "resolution": "Resolution",
+      "duration": "Duration",
+      "durationSeconds": "{seconds}s",
+      "generateAudio": "Generate audio",
+      "negativePrompt": "Negative prompt",
+      "negativePromptPlaceholder": "Describe what to avoid in the video...",
+      "seed": "Seed",
+      "animateImage": "Animate an image",
+      "frameFromGallery": "From gallery",
+      "frameUpload": "Upload",
+      "frameGalleryEmpty": "No generated images yet.",
+      "frameUploadButton": "Upload image",
+      "submit": "Generate video"
+    },
+    "grid": {
+      "loadError": "Failed to load generated videos.",
+      "empty": "No videos yet. Describe a video above to generate one.",
+      "failed": "Video generation failed."
+    },
+    "preview": {
+      "title": "Generated video",
+      "copyPrompt": "Copy prompt",
+      "download": "Download",
+      "downloadError": "Failed to download video",
+      "aspectRatio": "Aspect ratio",
+      "resolution": "Resolution",
+      "duration": "Duration",
+      "model": "Model"
     }
   },
   "user": {

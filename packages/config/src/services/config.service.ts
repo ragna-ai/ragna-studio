@@ -170,8 +170,10 @@ const ConfigSchema = z.object({
   ANTHROPIC_API_BASE_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   GOOGLE_VERTEX_API_BASE_URL: z.string().optional(),
-  GOOGLE_VERTEX_PROJECT: z.string().optional().default(''),
+  GOOGLE_VERTEX_PROJECT_ID: z.string().optional().default(''),
   GOOGLE_VERTEX_LOCATION: z.string().optional().default(''),
+  GOOGLE_VERTEX_CLIENT_EMAIL: z.string().optional().default(''),
+  GOOGLE_VERTEX_PRIVATE_KEY: z.string().optional().default(''),
   GOOGLE_GENAI_API_BASE_URL: z.string().optional(),
   GOOGLE_GENAI_API_KEY: z.string().optional().default(''),
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
@@ -363,8 +365,8 @@ export class ConfigService {
     return this._config.GOOGLE_VERTEX_API_BASE_URL;
   }
 
-  get googleVertexProject(): string {
-    return this._config.GOOGLE_VERTEX_PROJECT;
+  get googleVertexProjectId(): string {
+    return this._config.GOOGLE_VERTEX_PROJECT_ID;
   }
 
   get googleVertexLocation(): string {
@@ -431,6 +433,8 @@ export class ConfigService {
   getSecret(key: 'ANTHROPIC_API_KEY'): string;
   getSecret(key: 'GOOGLE_GENAI_API_KEY'): string;
   getSecret(key: 'GOOGLE_CLIENT_SECRET'): string;
+  getSecret(key: 'GOOGLE_VERTEX_CLIENT_EMAIL'): string;
+  getSecret(key: 'GOOGLE_VERTEX_PRIVATE_KEY'): string;
   getSecret(key: 'LINKEDIN_CLIENT_SECRET'): string;
   getSecret(key: 'MICROSOFT_CLIENT_SECRET'): string;
   getSecret(key: 'APPLE_PRIVATE_KEY'): string;

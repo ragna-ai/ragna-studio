@@ -85,6 +85,27 @@ async function seedAiModels() {
       displayName: 'GPT Image 1',
       description: 'Versatile image generation by OpenAI.',
     },
+    // Listed first: getDefaultAiModelByModality() has no isDefault flag, it
+    // just returns the first row matching the modality, so insertion order
+    // decides the default (same convention the image rows above rely on).
+    {
+      provider: 'google-vertex',
+      model: 'veo-3.1-fast-generate-preview',
+      modality: 'video',
+      family: 'video',
+      size: 'small',
+      displayName: 'Veo 3.1 Fast',
+      description: 'Fast video generation by Google Veo.',
+    },
+    {
+      provider: 'google-vertex',
+      model: 'veo-3.1-generate-preview',
+      modality: 'video',
+      family: 'video',
+      size: 'medium',
+      displayName: 'Veo 3.1',
+      description: 'High-quality video generation by Google Veo.',
+    },
   ]);
 }
 

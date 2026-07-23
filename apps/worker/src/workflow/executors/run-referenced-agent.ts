@@ -180,7 +180,16 @@ export async function runReferencedAgent({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions,
     prompt,
-    tools: buildAgentToolset(agent.tools, noopWriter, { userId, agentId, workspaceId }),
+    tools: buildAgentToolset(agent.tools, noopWriter, {
+      userId,
+      agentId,
+      workspaceId,
+      // Workflows already run inside the worker process and need the video
+      // to exist before downstream steps run, so the video-gen tool awaits
+      // the render inline instead of the chat fire-and-forget path
+      // (docs/videogen/prd.md decision 2).
+      awaitGeneration: true,
+    }),
     // A plan-executing agent node can exhaust the chat-level step budget
     // immediately (schema read + row list + work + row update already
     // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow

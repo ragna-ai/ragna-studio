@@ -7,6 +7,7 @@ import {
   NotebookTextIcon,
   PencilLineIcon,
   SearchIcon,
+  VideoIcon,
 } from '@lucide/vue';
 import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai';
 import type { UIMessage } from 'ai';
@@ -54,6 +55,7 @@ const toolNames: Record<string, string> = {
   'tool-think': t('agent.tool.think.label'),
   'tool-linkedinDraft': t('agent.tool.linkedinDraft.label'),
   'tool-imageGen': t('agent.tool.imageGen.label'),
+  'tool-videoGen': t('agent.tool.videoGen.label'),
   'tool-webSearch': t('agent.tool.webSearch.label'),
   'tool-webBrowser': t('agent.tool.webBrowser.label'),
   'tool-listDocuments': t('agent.tool.listDocuments.label'),
@@ -75,6 +77,8 @@ const getToolIcon = (part: ToolPart) => {
       return FileTextIcon;
     case 'tool-imageGen':
       return ImageIcon;
+    case 'tool-videoGen':
+      return VideoIcon;
     case 'tool-webSearch':
       return SearchIcon;
     case 'tool-webBrowser':

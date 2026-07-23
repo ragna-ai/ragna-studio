@@ -5,6 +5,7 @@ export * from './dataset.schema';
 export * from './document.schema';
 export * from './folder.schema';
 export * from './gen-image.schema';
+export * from './gen-video.schema';
 export * from './notification.schema';
 export * from './pagination.schema';
 export * from './social-post.schema';

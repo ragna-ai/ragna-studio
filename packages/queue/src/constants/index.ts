@@ -5,6 +5,7 @@ export const NOTIFICATIONS_QUEUE = 'notifications-queue';
 export const WORKFLOWS_QUEUE = 'workflows-queue';
 export const WORKFLOW_SCHEDULES_QUEUE = 'workflow-schedules-queue';
 export const AGENT_CONTEXT_DOCUMENTS_QUEUE = 'agent-context-documents-queue';
+export const GEN_VIDEOS_QUEUE = 'gen-videos-queue';
 
 // The set of notification kinds and the data payload each one carries. This is
 // the single source of truth: adding a new notification scenario is one entry
@@ -16,6 +17,10 @@ export interface NotificationDataMap {
   workflow_run_succeeded: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
   workflow_run_failed: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
   task_reminder_due: { taskId: string; workspaceId: string; taskNumber: number; taskTitle: string };
+  // `prompt` is snapshotted at emit time so the presenter can render without
+  // a lookup; truncate it for display in the presenter, not here.
+  video_generation_succeeded: { genVideoId: string; workspaceId: string; prompt: string };
+  video_generation_failed: { genVideoId: string; workspaceId: string; prompt: string };
 }
 
 export type NotificationType = keyof NotificationDataMap;

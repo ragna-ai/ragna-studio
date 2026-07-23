@@ -8,6 +8,7 @@ export * from './dataset.repo';
 export * from './document.repo';
 export * from './folder.repo';
 export * from './gen-image.repo';
+export * from './gen-video.repo';
 export * from './memory.repo';
 export * from './notification.repo';
 export * from './overview.repo';

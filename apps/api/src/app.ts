@@ -19,6 +19,7 @@ import { socialPostController } from './controllers/social-post.controller';
 import { taskLabelController } from './controllers/task-label.controller';
 import { taskController } from './controllers/task.controller';
 import { userController } from './controllers/user.controller';
+import { genVideoController } from './controllers/videogen.controller';
 import { workflowController } from './controllers/workflow.controller';
 import { workspaceController } from './controllers/workspace.controller';
 import { wsController } from './controllers/ws.controller';
@@ -52,6 +53,7 @@ export const app = new Hono()
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)
   .route('/', genImageController)
+  .route('/', genVideoController)
   .route('/', workflowController)
   .route('/', socialPostController)
   .route('/', notificationController)

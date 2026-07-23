@@ -38,16 +38,70 @@ const initialMessages = props.initialMessages
   ? structuredClone(toRaw(props.initialMessages))
   : undefined;
 
+// The imageGen/videoGen tools write a transient `data-imageGen` /
+// `data-videoGen` chunk the moment generation starts. Transient chunks never
+// land in message.parts (ai's stream reducer routes them straight to
+// `onData` and drops them), so this is the only place they're observable,
+// display-only, never persisted.
+type ActiveGeneration = {
+  kind: 'imageGen' | 'videoGen';
+  prompt: string;
+};
+
+function extractGenerationPrompt(data: unknown): string {
+  return (data as { prompt?: string } | undefined)?.prompt ?? '';
+}
+
+// Set by onData below, latest generation wins. Read through the
+// `activeGeneration` computed, which is what actually clears it.
+const lastGenerationEvent = ref<ActiveGeneration | null>(null);
+
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
   generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: new WebSocketChatTransport(() => chatId.value),
+  onData: (dataPart) => {
+    if (dataPart.type === 'data-imageGen') {
+      lastGenerationEvent.value = {
+        kind: 'imageGen',
+        prompt: extractGenerationPrompt(dataPart.data),
+      };
+    } else if (dataPart.type === 'data-videoGen') {
+      lastGenerationEvent.value = {
+        kind: 'videoGen',
+        prompt: extractGenerationPrompt(dataPart.data),
+      };
+    }
+  },
 });
 
 const isBusy = computed(
   () => status.value === 'submitted' || status.value === 'streaming',
 );
+
+// Derived, not mutated directly: clears itself once the stream leaves
+// 'streaming' (finish, error, abort) or once the matching tool part
+// resolves, so the indicator never lingers next to an already-rendered
+// result. Doesn't distinguish multiple same-kind calls in one turn, an edge
+// case rare enough to skip for v1.
+const activeGeneration = computed<ActiveGeneration | null>(() => {
+  const generation = lastGenerationEvent.value;
+  if (!generation || status.value !== 'streaming') return null;
+
+  const last = messages.value.at(-1);
+  if (last?.role !== 'assistant') return generation;
+
+  const toolType = `tool-${generation.kind}`;
+  const hasResolved = last.parts.some(
+    (part) =>
+      part.type === toolType &&
+      'state' in part &&
+      (part.state === 'output-available' || part.state === 'output-error'),
+  );
+
+  return hasResolved ? null : generation;
+});
 
 // The server opens the stream before the first token arrives, so the status
 // flips to 'streaming' while there is still nothing to show. Keep the shimmer
@@ -120,8 +174,16 @@ onMounted(() => {
               <ChatMessage :key="message.id" :message="message" />
               <!-- end chat message -->
             </MessageScrollerItem>
+            <!-- Generating image/video -->
+            <Shimmer v-if="activeGeneration" class="text-sm">
+              {{
+                $t(`agent.tool.${activeGeneration.kind}.generating`, {
+                  prompt: activeGeneration.prompt,
+                })
+              }}
+            </Shimmer>
             <!-- Thinking -->
-            <Shimmer v-if="isBusy && !hasVisibleReply" class="text-sm">
+            <Shimmer v-else-if="isBusy && !hasVisibleReply" class="text-sm">
               Thinking...
             </Shimmer>
             <p v-if="error" class="text-sm text-destructive">

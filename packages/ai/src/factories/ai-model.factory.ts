@@ -38,9 +38,14 @@ const bflAuthOptions: BlackForestLabsProviderSettings = {
 
 const vertexAuthOptions: GoogleVertexProviderSettings = {
   baseURL: config.googleVertexApiBaseUrl,
-  project: config.googleVertexProject,
+  project: config.googleVertexProjectId,
   location: config.googleVertexLocation,
-  googleAuthOptions: undefined,
+  googleAuthOptions: {
+    credentials: {
+      client_email: config.getSecret('GOOGLE_VERTEX_CLIENT_EMAIL'),
+      private_key: config.getSecret('GOOGLE_VERTEX_PRIVATE_KEY'),
+    },
+  },
 };
 
 const openAiAuthOptions: OpenAIProviderSettings = {

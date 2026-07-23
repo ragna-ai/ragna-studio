@@ -169,6 +169,11 @@ async function resolveReferencedLead(
       userId: ctx.userId,
       agentId: leadAgentId,
       workspaceId: ctx.workspaceId,
+      // Workflows already run inside the worker process and need the video
+      // to exist before downstream steps run, so the video-gen tool awaits
+      // the render inline instead of the chat fire-and-forget path
+      // (docs/videogen/prd.md decision 2).
+      awaitGeneration: true,
     }),
     modelSettings: toModelSettings(lead.settings),
   };

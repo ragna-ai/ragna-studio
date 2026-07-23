@@ -23,6 +23,16 @@ type TemplateBuilder<T extends NotificationType> = (
   data: NotificationDataMap[T],
 ) => NotificationTemplate;
 
+// Prompts can run to 5000 chars (generateVideoSchema); a notification title
+// or toast has room for a line, not a paragraph.
+const PROMPT_PREVIEW_LENGTH = 60;
+
+function truncatePrompt(prompt: string): string {
+  return prompt.length > PROMPT_PREVIEW_LENGTH
+    ? `${prompt.slice(0, PROMPT_PREVIEW_LENGTH).trimEnd()}…`
+    : prompt;
+}
+
 const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
   workflow_run_succeeded: (data) => ({
     titleKey: 'notification.workflowRunSucceeded.title',
@@ -46,6 +56,20 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
       title: data.taskTitle,
     },
     to: `/tasks/${data.taskId}`,
+    workspaceId: data.workspaceId,
+  }),
+  video_generation_succeeded: (data) => ({
+    titleKey: 'notification.videoGenerationSucceeded.title',
+    messageKey: 'notification.videoGenerationSucceeded.message',
+    params: { prompt: truncatePrompt(data.prompt) },
+    to: '/text-to-video',
+    workspaceId: data.workspaceId,
+  }),
+  video_generation_failed: (data) => ({
+    titleKey: 'notification.videoGenerationFailed.title',
+    messageKey: 'notification.videoGenerationFailed.message',
+    params: { prompt: truncatePrompt(data.prompt) },
+    to: '/text-to-video',
     workspaceId: data.workspaceId,
   }),
 };

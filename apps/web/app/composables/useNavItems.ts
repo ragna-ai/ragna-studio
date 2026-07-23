@@ -9,6 +9,7 @@ import {
   MessagesSquareIcon,
   PlusCircleIcon,
   Share2Icon,
+  VideoIcon,
   WorkflowIcon,
 } from '@lucide/vue';
 import type { Component } from 'vue';
@@ -86,6 +87,13 @@ const defaultItems: NavItemConfig[] = [
     path: '/text-to-image',
     icon: ImageIcon,
     labelKey: 'nav.image',
+    children: [],
+  },
+  {
+    id: 'text-to-video',
+    path: '/text-to-video',
+    icon: VideoIcon,
+    labelKey: 'nav.video',
     children: [],
   },
   {

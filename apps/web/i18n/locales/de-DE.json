@@ -33,6 +33,7 @@
     "docs": "Dokumente",
     "tasks": "Aufgaben",
     "image": "Bilder",
+    "video": "Videos",
     "social": "Social",
     "more": "Mehr",
     "new": "Neu",
@@ -57,6 +58,14 @@
     "taskReminderDue": {
       "title": "Aufgaben-Erinnerung",
       "message": "{displayId} „{title}“ ist bald fällig."
+    },
+    "videoGenerationSucceeded": {
+      "title": "Video fertig",
+      "message": "Ihr Video für „{prompt}“ ist fertig."
+    },
+    "videoGenerationFailed": {
+      "title": "Videoerstellung fehlgeschlagen",
+      "message": "Ihr Video für „{prompt}“ konnte nicht erstellt werden."
     },
     "unknown": {
       "title": "Benachrichtigung",
@@ -159,7 +168,13 @@
       },
       "imageGen": {
         "label": "Bild generieren",
-        "description": "Erstellt Bilder aus Textbeschreibungen."
+        "description": "Erstellt Bilder aus Textbeschreibungen.",
+        "generating": "Bild wird generiert: „{prompt}“ ..."
+      },
+      "videoGen": {
+        "label": "Video generieren",
+        "description": "Erstellt Videos aus Textbeschreibungen, optional animiert aus einem generierten Bild.",
+        "generating": "Video wird generiert: „{prompt}“ ..."
       },
       "linkedinDraft": {
         "label": "LinkedIn-Beitrag",
@@ -428,6 +443,42 @@
       "copyPrompt": "Prompt kopieren",
       "download": "Herunterladen",
       "downloadError": "Bild konnte nicht heruntergeladen werden"
+    }
+  },
+  "videogen": {
+    "title": "Text zu Video",
+    "form": {
+      "promptPlaceholder": "Beschreibe das Video, das du generieren möchtest...",
+      "promptRequired": "Beschreibe das Video, das du generieren möchtest.",
+      "aspectRatio": "Seitenverhältnis",
+      "resolution": "Auflösung",
+      "duration": "Dauer",
+      "durationSeconds": "{seconds}s",
+      "generateAudio": "Audio generieren",
+      "negativePrompt": "Negativer Prompt",
+      "negativePromptPlaceholder": "Beschreibe, was im Video vermieden werden soll...",
+      "seed": "Seed",
+      "animateImage": "Ein Bild animieren",
+      "frameFromGallery": "Aus Galerie",
+      "frameUpload": "Hochladen",
+      "frameGalleryEmpty": "Noch keine generierten Bilder.",
+      "frameUploadButton": "Bild hochladen",
+      "submit": "Video generieren"
+    },
+    "grid": {
+      "loadError": "Generierte Videos konnten nicht geladen werden.",
+      "empty": "Noch keine Videos. Beschreibe oben ein Video, um eines zu generieren.",
+      "failed": "Videoerstellung fehlgeschlagen."
+    },
+    "preview": {
+      "title": "Generiertes Video",
+      "copyPrompt": "Prompt kopieren",
+      "download": "Herunterladen",
+      "downloadError": "Video konnte nicht heruntergeladen werden",
+      "aspectRatio": "Seitenverhältnis",
+      "resolution": "Auflösung",
+      "duration": "Dauer",
+      "model": "Modell"
     }
   },
   "user": {

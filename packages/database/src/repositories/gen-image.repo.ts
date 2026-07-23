@@ -59,3 +59,20 @@ export async function getGenImagesByIds({
     where: { id: { in: ids }, userId },
   });
 }
+
+// Workspace-scoped lookup, for the video-gen tool's "animate this image"
+// input (genImageId): resolves the storage key while rejecting an id that
+// belongs to another workspace.
+export async function getGenImageByIdAndWorkspaceId({
+  id,
+  workspaceId,
+}: {
+  id: string;
+  workspaceId: string;
+}): Promise<GenImage | null> {
+  const found = await db.query.genImage.findFirst({
+    where: { id, workspaceId },
+  });
+
+  return found ?? null;
+}

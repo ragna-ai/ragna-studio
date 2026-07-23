@@ -8,6 +8,7 @@ import { dataset, datasetRow } from './dataset.schema';
 import { document } from './document.schema';
 import { folder } from './folder.schema';
 import { genImage } from './genimage.schema';
+import { genVideo } from './genvideo.schema';
 import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
 import { session } from './session.schema';
@@ -35,6 +36,7 @@ const schema = {
   document,
   folder,
   genImage,
+  genVideo,
   socialPost,
   socialPostMedia,
   workflow,
@@ -54,6 +56,7 @@ export const relations = defineRelations(schema, (r) => ({
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
+    genVideos: r.many.genVideo(),
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
@@ -214,6 +217,18 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
   },
+  genVideo: {
+    user: r.one.user({
+      from: r.genVideo.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.genVideo.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+  },
   socialPost: {
     user: r.one.user({
       from: r.socialPost.userId,
@@ -326,6 +341,7 @@ export const relations = defineRelations(schema, (r) => ({
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
+    genVideos: r.many.genVideo(),
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     datasets: r.many.dataset(),

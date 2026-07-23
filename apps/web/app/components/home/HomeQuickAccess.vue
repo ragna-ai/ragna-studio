@@ -7,6 +7,7 @@ import {
   ListTodoIcon,
   MessagesSquareIcon,
   Share2Icon,
+  VideoIcon,
   WorkflowIcon,
 } from '@lucide/vue';
 
@@ -52,6 +53,13 @@ const quickAccessItems = [
     class: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     labelKey: 'nav.image',
     route: '/text-to-image',
+  },
+  {
+    id: 'video',
+    icon: VideoIcon,
+    class: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    labelKey: 'nav.video',
+    route: '/text-to-video',
   },
   // {
   //   id: 10,

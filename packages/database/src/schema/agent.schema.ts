@@ -33,6 +33,7 @@ export const agentToolValues = [
   'webSearch',
   'webBrowser',
   'imageGen',
+  'videoGen',
   'linkedinDraft',
   'memory',
   'datasets',

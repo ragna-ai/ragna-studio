@@ -1,6 +1,7 @@
 import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
   EMAILS_QUEUE,
+  GEN_VIDEOS_QUEUE,
   NOTIFICATIONS_QUEUE,
   ONBOARDINGS_QUEUE,
   WORKFLOWS_QUEUE,
@@ -17,4 +18,5 @@ export const queue = {
   notification: () => getOrCreateQueue({ name: NOTIFICATIONS_QUEUE }),
   workflow: () => getOrCreateQueue({ name: WORKFLOWS_QUEUE }),
   agentContextDocument: () => getOrCreateQueue({ name: AGENT_CONTEXT_DOCUMENTS_QUEUE }),
+  genVideo: () => getOrCreateQueue({ name: GEN_VIDEOS_QUEUE }),
 } as const;

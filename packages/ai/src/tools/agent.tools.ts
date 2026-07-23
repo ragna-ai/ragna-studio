@@ -26,6 +26,7 @@ import {
   getUpdateTaskTool,
 } from './task.tools';
 import { getThoughts } from './think.tool';
+import { getGeneratedVideo } from './video-gen.tool';
 import { getWebBrowserResults } from './web-browser.tool';
 import { getWebSearchResults } from './web-search.tool';
 
@@ -33,6 +34,12 @@ export type AgentToolContext = {
   userId: string;
   agentId: string;
   workspaceId: string;
+  // Chat wiring passes false (or omits it): the tool enqueues and returns a
+  // pending id. Workflow executors (team.executor.ts,
+  // run-referenced-agent.ts) pass true: they already run inside the worker
+  // and need the finished video for downstream steps, so the tool awaits
+  // runGenVideo inline instead (docs/videogen/prd.md decision 2).
+  awaitGeneration?: boolean;
 };
 
 type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
@@ -48,6 +55,9 @@ const toolsets: Record<AgentTool, ToolsetFactory> = {
   webBrowser: (writer) => ({ webBrowser: getWebBrowserResults(writer) }),
   imageGen: (writer, ctx) => ({
     imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId),
+  }),
+  videoGen: (writer, ctx) => ({
+    videoGen: getGeneratedVideo(writer, ctx.userId, ctx.workspaceId, ctx.awaitGeneration ?? false),
   }),
   linkedinDraft: (writer, ctx) => ({
     linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),

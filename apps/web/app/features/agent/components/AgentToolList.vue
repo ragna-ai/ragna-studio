@@ -10,6 +10,7 @@ import {
   NotebookPenIcon,
   RepeatIcon,
   Share2Icon,
+  VideoIcon,
   type LucideIcon,
 } from '@lucide/vue';
 import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDatasetApi';
@@ -90,6 +91,12 @@ const availableTools: UiAgentTool[] = [
     icon: ImageIcon,
     titleKey: 'agent.tool.imageGen.label',
     descriptionKey: 'agent.tool.imageGen.description',
+  },
+  {
+    id: 'videoGen',
+    icon: VideoIcon,
+    titleKey: 'agent.tool.videoGen.label',
+    descriptionKey: 'agent.tool.videoGen.description',
   },
   {
     id: 'linkedinDraft',
