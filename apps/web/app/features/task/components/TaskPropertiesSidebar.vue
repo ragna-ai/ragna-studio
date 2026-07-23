@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { CalendarIcon, Trash2Icon, XIcon } from '@lucide/vue';
-import { parseDate, type DateValue } from '@internationalized/date';
+import { Trash2Icon } from '@lucide/vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
-import { useUpdateTask, useMoveTask } from '~/features/task/composables/useTaskApi';
+import {
+  useMoveTask,
+  useUpdateTask,
+} from '~/features/task/composables/useTaskApi';
 import {
   isTaskPriority,
   isTaskStatus,
@@ -31,14 +33,10 @@ const { data: agentsData } = useGetAllAgents();
 const { mutate: updateTask } = useUpdateTask();
 const { mutate: moveTask } = useMoveTask();
 
-// Refs
-const isDueDatePopoverOpen = ref(false);
-
 // Computed
 const agents = computed(() => agentsData.value?.agents ?? []);
-const selectedLabelIds = computed(() => new Set(props.task.labels.map((label) => label.id)));
-const dueDateValue = computed<DateValue | undefined>(() =>
-  props.task.dueDate ? parseDate(props.task.dueDate.slice(0, 10)) : undefined,
+const selectedLabelIds = computed(
+  () => new Set(props.task.labels.map((label) => label.id)),
 );
 
 // Reminder select's current value: a preset offset, the custom sentinel, or
@@ -74,17 +72,15 @@ function updatePriority(value: unknown) {
   updateTask({ taskId: props.task.id, priority: value });
 }
 
-function updateDueDate(value: DateValue | undefined) {
-  updateTask({ taskId: props.task.id, dueDate: value ? value.toString() : null });
-  isDueDatePopoverOpen.value = false;
-}
-
-function clearDueDate() {
-  updateTask({ taskId: props.task.id, dueDate: null });
+function updateDueDate(value: string | null) {
+  updateTask({ taskId: props.task.id, dueDate: value });
 }
 
 function updateAssignee(value: string) {
-  updateTask({ taskId: props.task.id, assignedAgentId: value === NO_AGENT ? null : value });
+  updateTask({
+    taskId: props.task.id,
+    assignedAgentId: value === NO_AGENT ? null : value,
+  });
 }
 
 function toggleLabel(labelId: string, checked: boolean) {
@@ -100,7 +96,10 @@ function updateReminder(value: string) {
     return;
   }
   if (value === REMINDER_CUSTOM) {
-    updateTask({ taskId: props.task.id, remindDaysBeforeDue: customDays.value });
+    updateTask({
+      taskId: props.task.id,
+      remindDaysBeforeDue: customDays.value,
+    });
     return;
   }
   updateTask({ taskId: props.task.id, remindDaysBeforeDue: Number(value) });
@@ -117,13 +116,19 @@ function commitCustomDays() {
 <template>
   <aside class="flex w-72 shrink-0 flex-col gap-5 border-l p-4">
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('common.status') }}</Label>
+      <Label class="text-xs text-muted-foreground">{{
+        t('common.status')
+      }}</Label>
       <Select :model-value="task.status" @update:model-value="updateStatus">
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="column in STATUS_COLUMNS" :key="column.value" :value="column.value">
+          <SelectItem
+            v-for="column in STATUS_COLUMNS"
+            :key="column.value"
+            :value="column.value"
+          >
             {{ t(column.labelKey) }}
           </SelectItem>
         </SelectContent>
@@ -131,13 +136,19 @@ function commitCustomDays() {
     </div>
 
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('task.property.priority') }}</Label>
+      <Label class="text-xs text-muted-foreground">{{
+        t('task.property.priority')
+      }}</Label>
       <Select :model-value="task.priority" @update:model-value="updatePriority">
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="option in PRIORITY_OPTIONS" :key="option.value" :value="option.value">
+          <SelectItem
+            v-for="option in PRIORITY_OPTIONS"
+            :key="option.value"
+            :value="option.value"
+          >
             {{ t(option.labelKey) }}
           </SelectItem>
         </SelectContent>
@@ -145,40 +156,24 @@ function commitCustomDays() {
     </div>
 
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('task.property.dueDate') }}</Label>
-      <div class="flex items-center gap-1">
-        <Popover v-model:open="isDueDatePopoverOpen">
-          <PopoverTrigger as-child>
-            <Button variant="outline" class="w-full justify-start font-normal">
-              <CalendarIcon class="mr-2 size-4 stroke-1.5" />
-              <span v-if="task.dueDate">{{ formatDate(task.dueDate) }}</span>
-              <span v-else class="text-muted-foreground">{{ t('task.property.pickDueDate') }}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-auto p-0" align="start">
-            <Calendar
-              :model-value="dueDateValue"
-              :locale="locale"
-              :week-starts-on="1"
-              @update:model-value="updateDueDate"
-            />
-          </PopoverContent>
-        </Popover>
-        <Button
-          v-if="task.dueDate"
-          variant="ghost"
-          size="icon"
-          :aria-label="t('task.property.clearDueDate')"
-          :title="t('task.property.clearDueDate')"
-          @click="clearDueDate"
-        >
-          <XIcon class="size-4" />
-        </Button>
-      </div>
+      <Label class="text-xs text-muted-foreground">{{
+        t('task.property.dueDate')
+      }}</Label>
+      <DatePicker
+        :model-value="task.dueDate"
+        :placeholder="t('task.property.pickDueDate')"
+        :clear-label="t('task.property.clearDueDate')"
+        :locale="locale"
+        :week-starts-on="1"
+        :format-date="formatDate"
+        @update:model-value="updateDueDate"
+      />
     </div>
 
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('task.property.assignee') }}</Label>
+      <Label class="text-xs text-muted-foreground">{{
+        t('task.property.assignee')
+      }}</Label>
       <Select
         :model-value="task.assignedAgentId ?? NO_AGENT"
         @update:model-value="(v) => updateAssignee(String(v))"
@@ -187,7 +182,9 @@ function commitCustomDays() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem :value="NO_AGENT">{{ t('task.property.unassigned') }}</SelectItem>
+          <SelectItem :value="NO_AGENT">{{
+            t('task.property.unassigned')
+          }}</SelectItem>
           <SelectItem v-for="agent in agents" :key="agent.id" :value="agent.id">
             {{ agent.name }}
           </SelectItem>
@@ -196,7 +193,9 @@ function commitCustomDays() {
     </div>
 
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('task.property.labels') }}</Label>
+      <Label class="text-xs text-muted-foreground">{{
+        t('task.property.labels')
+      }}</Label>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="outline" class="w-full justify-start font-normal">
@@ -222,7 +221,10 @@ function commitCustomDays() {
             :model-value="selectedLabelIds.has(label.id)"
             @update:model-value="(checked) => toggleLabel(label.id, checked)"
           >
-            <span class="mr-2 inline-block size-2.5 rounded-full" :style="{ backgroundColor: label.color }" />
+            <span
+              class="mr-2 inline-block size-2.5 rounded-full"
+              :style="{ backgroundColor: label.color }"
+            />
             {{ label.name }}
           </DropdownMenuCheckboxItem>
           <DropdownMenuItem v-if="props.labels.length === 0" disabled>
@@ -233,7 +235,9 @@ function commitCustomDays() {
     </div>
 
     <div class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">{{ t('task.property.reminder') }}</Label>
+      <Label class="text-xs text-muted-foreground">{{
+        t('task.property.reminder')
+      }}</Label>
       <Select
         :model-value="reminderSelectValue"
         :disabled="!task.dueDate"
@@ -243,17 +247,28 @@ function commitCustomDays() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem :value="REMINDER_OFF">{{ t('task.reminder.off') }}</SelectItem>
-          <SelectItem v-for="preset in REMINDER_PRESETS" :key="preset.value" :value="String(preset.value)">
+          <SelectItem :value="REMINDER_OFF">{{
+            t('task.reminder.off')
+          }}</SelectItem>
+          <SelectItem
+            v-for="preset in REMINDER_PRESETS"
+            :key="preset.value"
+            :value="String(preset.value)"
+          >
             {{ t(preset.labelKey) }}
           </SelectItem>
-          <SelectItem :value="REMINDER_CUSTOM">{{ t('task.reminder.custom') }}</SelectItem>
+          <SelectItem :value="REMINDER_CUSTOM">{{
+            t('task.reminder.custom')
+          }}</SelectItem>
         </SelectContent>
       </Select>
       <p v-if="!task.dueDate" class="text-xs text-muted-foreground">
         {{ t('task.reminder.needsDueDateHint') }}
       </p>
-      <div v-else-if="reminderSelectValue === REMINDER_CUSTOM" class="flex items-center gap-2">
+      <div
+        v-else-if="reminderSelectValue === REMINDER_CUSTOM"
+        class="flex items-center gap-2"
+      >
         <Input
           type="number"
           min="0"
@@ -262,7 +277,9 @@ function commitCustomDays() {
           @update:model-value="(v) => (customDays = Number(v))"
           @change="commitCustomDays"
         />
-        <span class="text-xs text-muted-foreground">{{ t('task.reminder.daysBeforeSuffix') }}</span>
+        <span class="text-xs text-muted-foreground">{{
+          t('task.reminder.daysBeforeSuffix')
+        }}</span>
       </div>
     </div>
 
