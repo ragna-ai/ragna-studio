@@ -339,6 +339,29 @@ export type RunChatStreamParams = {
   message: unknown;
 };
 
+// A turn that errored or was aborted persists its user message but no
+// assistant response, so history can contain consecutive user messages.
+// Providers like Anthropic and Google reject non-alternating turns, so each
+// run of user messages is collapsed into one message with the parts
+// concatenated. Only the model-facing view is merged; the persisted rows and
+// the UI keep the messages separate.
+function mergeConsecutiveUserMessages(messages: UIMessage[]): UIMessage[] {
+  const merged: UIMessage[] = [];
+
+  for (const message of messages) {
+    const previous = merged.at(-1);
+
+    if (message.role === 'user' && previous?.role === 'user') {
+      merged[merged.length - 1] = { ...previous, parts: [...previous.parts, ...message.parts] };
+      continue;
+    }
+
+    merged.push(message);
+  }
+
+  return merged;
+}
+
 function toChatMessageRow(message: UIMessage, chatId: string) {
   return {
     id: message.id,
@@ -414,7 +437,9 @@ export async function runChatStream(
     const { agent } = userChat;
 
     const validUiMessages = validated.data;
-    const modelMessages = await convertToModelMessages(validUiMessages);
+    const modelMessages = await convertToModelMessages(
+      mergeConsecutiveUserMessages(validUiMessages),
+    );
     const instructions = await buildAgentInstructions({
       agentId: agent.id,
       userId,

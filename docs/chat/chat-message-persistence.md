@@ -38,6 +38,8 @@ Since the client only sends the newest message, the server-side history must con
 
 By the time the server accepts the next turn, `getChatByIdForUser` sees the previous turn's rows. If persistence is ever moved out of `onEnd` (for example into a fire-and-forget queue), this guarantee is lost and needs a replacement.
 
+A turn that errors or is aborted therefore leaves a user message with no assistant reply, so history can contain consecutive `user` rows. Providers like Anthropic and Google reject non-alternating turns, so `runChatStream` collapses each run of consecutive user messages into one message (parts concatenated) before `convertToModelMessages`. Only the model-facing view is merged; the DB rows and the UI keep the messages separate, and existing histories with stacked user rows are healed without a migration.
+
 This means edit-and-regenerate-from-an-earlier-message isn't supported by the wire protocol today, only appending a new message onto the end of the persisted history — the UI has no affordance for it either.
 
 ## Read path (API)
