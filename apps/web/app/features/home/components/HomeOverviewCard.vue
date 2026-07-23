@@ -52,7 +52,15 @@ const quickCreate = computed(() => {
         >
           <component :is="icon" class="size-4 stroke-1.5" />
         </div>
-        <CardTitle class="truncate text-base">{{ title }}</CardTitle>
+        <CardTitle class="truncate">
+          <NuxtLinkLocale
+            :to="viewAllTo"
+            :title="$t('home.overview.viewAll')"
+            class="text-base hover:underline"
+          >
+            {{ title }}
+          </NuxtLinkLocale>
+        </CardTitle>
         <Badge variant="outline" class="text-xxs opacity-75">{{ total }}</Badge>
       </div>
       <NuxtLinkLocale
