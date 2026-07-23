@@ -18,7 +18,11 @@ export type WsEnvelope = z.infer<typeof wsEnvelopeSchema>;
 // of the conversation from its own persisted history (chat.service.ts).
 // Deep UIMessage validation happens in chat.service via safeValidateUIMessages.
 export const messageFramePayloadSchema = z.object({
-  message: z.unknown(),
+  // Zod treats an unknown field as optional, so a bare z.unknown() would let
+  // a frame without a message through and only fail deep validation later
+  // with a generic error. Rejecting missing/null here keeps the failure at
+  // the protocol boundary.
+  message: z.unknown().refine((value) => value != null, 'message is required'),
 });
 
 export type MessageFramePayload = z.infer<typeof messageFramePayloadSchema>;

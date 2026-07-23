@@ -23,12 +23,20 @@ One row per message, not one JSON blob per chat. This keeps appends cheap, allow
 Chat streaming lives on the WS `chat:<chatId>` channel (`apps/api/src/controllers/ws.controller.ts`, see `docs/team-chat/prd.md`), which calls `runChatStream` in `apps/api/src/services/chat.service.ts`:
 
 1. The client sends only the newest `UIMessage`, not the full history. The server already fetched `userChat.messages` (the persisted history) for the channel-ownership check, so it rebuilds the full conversation as `[...userChat.messages, message]` and validates that combined array with `safeValidateUIMessages`. The DB, not the client, is authoritative for history; invalid payloads fail fast with a 400 before the stream opens.
-2. The stream is built with `createUIMessageStream({ originalMessages, ... })`, passing the rebuilt array. Passing `originalMessages` puts the SDK into persistence mode: the assistant response gets a stable message id.
-3. Persistence happens in the stream's `onEnd` callback. It receives the finished `responseMessage` as a `UIMessage`, so nothing has to be converted back from model messages.
-4. `upsertChatMessages` (in `packages/database/src/repositories/chat.repo.ts`) upserts by message id. Retries and regenerations replace the existing row instead of duplicating it.
-5. Persistence is skipped when the stream was aborted or finished with an error. Persistence failures are logged but do not break the response stream.
+2. The new user message is persisted right after validation, before the stream opens. `onEnd` skips persistence on abort/error (see below), so saving the user message only on success would silently drop it from the DB-rebuilt history while the client still shows it. A failed write here fails the whole turn before anything streams.
+3. The stream is built with `createUIMessageStream({ originalMessages, ... })`, passing the rebuilt array. Passing `originalMessages` puts the SDK into persistence mode: the assistant response gets a stable message id.
+4. The assistant response is persisted in the stream's `onEnd` callback. It receives the finished `responseMessage` as a `UIMessage`, so nothing has to be converted back from model messages.
+5. `upsertChatMessages` (in `packages/database/src/repositories/chat.repo.ts`) upserts by message id. Retries and regenerations replace the existing row instead of duplicating it.
+6. The assistant response is not persisted when the stream was aborted or finished with an error; the turn's user message already is (step 2), so it survives reloads and stays in the model's context on the next turn. Persistence failures in `onEnd` are logged but do not break the response stream.
 
-The new user message and the assistant response are saved together in one batch.
+### Why rebuilding history from the DB cannot race persistence
+
+Since the client only sends the newest message, the server-side history must contain the previous turn before the next `message` frame is processed. That ordering is guaranteed:
+
+1. The AI SDK awaits `onEnd` inside the final stream transform's `flush()` before the UI message stream closes (verified in `ai@7.0.29`, `handleUIMessageStreamFinish`). So the `for await` loop in `runChatStream` only finishes after the `upsertChatMessages` write has resolved.
+2. The per-chat in-flight slot (`inFlightRunsByChatId`) is released in the `finally` after that loop, and a new `message` frame for the same chat is rejected with a conflict while the slot is held.
+
+By the time the server accepts the next turn, `getChatByIdForUser` sees the previous turn's rows. If persistence is ever moved out of `onEnd` (for example into a fire-and-forget queue), this guarantee is lost and needs a replacement.
 
 This means edit-and-regenerate-from-an-earlier-message isn't supported by the wire protocol today, only appending a new message onto the end of the persisted history — the UI has no affordance for it either.
 
@@ -36,7 +44,7 @@ This means edit-and-regenerate-from-an-earlier-message isn't supported by the wi
 
 `GET /chat/:chatId` returns messages strictly UIMessage-shaped: `{ id, role, parts, metadata? }`. DB-only fields (`createdAt`, null `metadata`) are stripped in the DTO. The client can feed the array into `useChat` without any mapping.
 
-Ordering relies on `createdAt` (second precision) with SQLite rowid as the effective tie-break within a turn. If ordering within a turn ever becomes a problem, add a sequence column.
+Ordering relies on `createdAt` (second precision) with the time-ordered uuidv7 message id as tie-break for rows sharing a timestamp.
 
 ## Rehydration (web) and the vue-query readonly gotcha
 

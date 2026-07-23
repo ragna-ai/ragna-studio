@@ -339,6 +339,16 @@ export type RunChatStreamParams = {
   message: unknown;
 };
 
+function toChatMessageRow(message: UIMessage, chatId: string) {
+  return {
+    id: message.id,
+    chatId,
+    role: message.role,
+    parts: message.parts,
+    metadata: message.metadata ?? null,
+  };
+}
+
 // One in-flight run per chat: `abortChatRun` looks a chat up here to cancel it.
 const inFlightRunsByChatId = new Map<string, AbortController>();
 
@@ -415,6 +425,21 @@ export async function runChatStream(
     });
 
     const lastUiMessage = validUiMessages.at(-1);
+
+    // Persist the user message before streaming starts. `onEnd` skips
+    // persistence on abort/error, and the next turn rebuilds history from the
+    // DB alone, so saving it only on success would silently drop the message
+    // from the conversation (docs/chat/chat-message-persistence.md).
+    if (lastUiMessage?.role === 'user') {
+      const { error: persistError } = await tryCatch(() =>
+        upsertChatMessages([toChatMessageRow(lastUiMessage, userChat.id)]),
+      );
+
+      if (persistError !== null) {
+        logger.error(`Failed to persist user message for chat ${userChat.id}`, persistError);
+        throw new InternalServerErrorException('Failed to persist message');
+      }
+    }
 
     let titlePromise: Promise<string> | null = null;
     if (userChat.messages.length === 0 && lastUiMessage?.role === 'user') {
@@ -496,22 +521,11 @@ export async function runChatStream(
           return;
         }
 
-        // Persist the new user message and the assistant response as UIMessages.
-        // Upsert by message id so retries and regenerations replace instead of duplicate.
-
-        const messagesToSave =
-          lastUiMessage?.role === 'user' ? [lastUiMessage, responseMessage] : [responseMessage];
-
+        // The user message was already persisted before streaming; only the
+        // assistant response is saved here. Upsert by message id so retries
+        // replace instead of duplicate.
         const { error } = await tryCatch(() =>
-          upsertChatMessages(
-            messagesToSave.map((message) => ({
-              id: message.id,
-              chatId: userChat.id,
-              role: message.role,
-              parts: message.parts,
-              metadata: message.metadata ?? null,
-            })),
-          ),
+          upsertChatMessages([toChatMessageRow(responseMessage, userChat.id)]),
         );
 
         if (error !== null) {
@@ -520,6 +534,10 @@ export async function runChatStream(
       },
     });
 
+    // This loop only ends after `onEnd` above has resolved: the SDK awaits it
+    // in the stream's flush. Releasing the in-flight slot below therefore
+    // guarantees the next turn's history fetch sees this turn's persisted
+    // messages (docs/chat/chat-message-persistence.md).
     for await (const uiMessageChunk of uiMessageStream) {
       onChunk(uiMessageChunk);
     }

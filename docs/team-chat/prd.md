@@ -148,8 +148,9 @@ re-validates the session. Admin revocation before expiry is accepted lag.
   (the single newest `UIMessage`) plus a chunk sink and keeps everything
   that exists today: message validation, `buildAgentInstructions`, title
   generation (including the transient `data-chat-title` part), `streamText`,
-  persistence in `onEnd`. The WS chat handler calls it and publishes each
-  chunk on `chat:<chatId>`.
+  persistence (the user message up front, the assistant response in
+  `onEnd`; see `docs/chat/chat-message-persistence.md`). The WS chat
+  handler calls it and publishes each chunk on `chat:<chatId>`.
   - `runChatStream` rebuilds the conversation server-side as
     `[...userChat.messages, message]` (the DB history it already fetched for
     the ownership check, plus the new message) before validating and

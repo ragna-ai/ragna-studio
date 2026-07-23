@@ -53,8 +53,8 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
           metadata: true,
           createdAt: true,
         },
-        // A turn's user and assistant message are upserted in one insert and
-        // share createdAt; the time-ordered uuidv7 id breaks the tie.
+        // Rows within a turn can share createdAt (second precision); the
+        // time-ordered uuidv7 id breaks the tie.
         orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
       },
     },
@@ -96,8 +96,8 @@ export async function getChatByIdForWorkspace(payload: { chatId: string; workspa
           metadata: true,
           createdAt: true,
         },
-        // A turn's user and assistant message are upserted in one insert and
-        // share createdAt; the time-ordered uuidv7 id breaks the tie.
+        // Rows within a turn can share createdAt (second precision); the
+        // time-ordered uuidv7 id breaks the tie.
         orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
       },
     },
