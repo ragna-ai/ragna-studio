@@ -1,5 +1,8 @@
 # Notifications
 
+> Decision 4 (delivery by polling) is superseded by `ws-push-prd.md`
+> (WebSocket push, proposed 2026-07-23).
+
 In-app notification system: a workflow run finishing (or any future event)
 produces a persisted notification row that the web app surfaces in a nav bell
 dropdown with an unread badge.
