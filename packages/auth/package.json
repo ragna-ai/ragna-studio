@@ -26,8 +26,8 @@
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/queue": "workspace:*",
-    "better-auth": "^1.6.23",
-    "jose": "^6.2.3"
+    "better-auth": "^1.6.24",
+    "jose": "^6.2.4"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

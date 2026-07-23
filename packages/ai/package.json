@@ -21,12 +21,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.15",
-    "@ai-sdk/black-forest-labs": "^2.0.10",
-    "@ai-sdk/google": "^4.0.17",
-    "@ai-sdk/google-vertex": "^5.0.21",
-    "@ai-sdk/mcp": "^2.0.14",
-    "@ai-sdk/openai": "^4.0.15",
+    "@ai-sdk/anthropic": "^4.0.18",
+    "@ai-sdk/black-forest-labs": "^2.0.12",
+    "@ai-sdk/google": "^4.0.21",
+    "@ai-sdk/google-vertex": "^5.0.25",
+    "@ai-sdk/mcp": "^2.0.16",
+    "@ai-sdk/openai": "^4.0.17",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",

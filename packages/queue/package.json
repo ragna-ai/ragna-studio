@@ -19,7 +19,7 @@
   "dependencies": {
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
-    "bullmq": "^5.80.5"
+    "bullmq": "^5.80.10"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
