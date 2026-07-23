@@ -100,26 +100,6 @@ export default defineNuxtConfig({
   // VITE
   vite: {
     plugins: [tailwindcss()],
-    optimizeDeps: {
-      include: [
-        '@lucide/vue',
-        '@tanstack/vue-query',
-        '@tanstack/vue-form',
-        'class-variance-authority',
-        'clsx',
-        'reka-ui',
-        'tailwind-merge',
-        'vue-sonner',
-        'zod',
-        '@ai-sdk/vue',
-        'ai',
-        'nanoid',
-        'motion-v',
-        'vue-stream-markdown',
-        'shiki',
-        'vue-draggable-plus',
-      ],
-    },
     // Pre-transform pages/components at dev startup so navigation doesn't
     // stall on first-visit compilation.
     server: {
