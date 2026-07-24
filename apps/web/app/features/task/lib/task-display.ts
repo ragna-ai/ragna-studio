@@ -23,6 +23,7 @@ export const STATUS_COLUMNS: { value: TaskStatus; labelKey: string }[] = [
   { value: 'backlog', labelKey: 'task.status.backlog' },
   { value: 'todo', labelKey: 'task.status.todo' },
   { value: 'in_progress', labelKey: 'task.status.in_progress' },
+  { value: 'in_review', labelKey: 'task.status.in_review' },
   { value: 'done', labelKey: 'task.status.done' },
   { value: 'canceled', labelKey: 'task.status.canceled' },
 ];

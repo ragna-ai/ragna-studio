@@ -7,7 +7,7 @@ import { task } from '../schema';
 // The only statuses the tasks card shows (docs/home/prd.md, "Task
 // statuses"): the overview is about work needing attention, so done,
 // canceled, and the potentially large backlog stay out.
-const OVERVIEW_TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress'];
+const OVERVIEW_TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review'];
 
 // Home overview (docs/home/prd.md): small, purpose-built reads for the home
 // page's dashboard cards. Distinct from the paginated list functions in
@@ -25,8 +25,8 @@ export type RecentTask = {
 };
 
 /**
- * Latest tasks for the tasks card, newest first. Only todo and in-progress
- * tasks are included (docs/home/prd.md, "Task statuses").
+ * Latest tasks for the tasks card, newest first. Only todo, in-progress,
+ * and in-review tasks are included (docs/home/prd.md, "Task statuses").
  */
 export async function getRecentTasksByWorkspaceId({
   workspaceId,
@@ -52,8 +52,8 @@ export async function getRecentTasksByWorkspaceId({
 }
 
 /**
- * Workspace task total for the tasks card. Counts only todo and
- * in-progress tasks, the same rule `getRecentTasksByWorkspaceId` applies
+ * Workspace task total for the tasks card. Counts only todo, in-progress,
+ * and in-review tasks, the same rule `getRecentTasksByWorkspaceId` applies
  * to its list (docs/home/prd.md, "Task statuses").
  */
 export async function getActiveTaskCountByWorkspaceId({

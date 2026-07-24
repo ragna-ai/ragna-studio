@@ -33,7 +33,7 @@ import * as z from 'zod';
 // No delete tool: the Canceled status covers abandonment (docs/tasks/prd.md,
 // "Agent tools").
 
-const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'done', 'canceled'] as const satisfies readonly TaskStatus[];
+const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'canceled'] as const satisfies readonly TaskStatus[];
 const TASK_PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'] as const satisfies readonly TaskPriority[];
 
 function toTaskDisplayId(taskNumber: number): string {

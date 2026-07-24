@@ -25,7 +25,7 @@ Settled in discussion on 2026-07-21.
 | **DTOs**          | Slim projections, only what the card renders. Never full rows.                                            |
 | **Caching**       | None in v1. `cache.service.ts` exists if it's ever measurably needed.                                     |
 | **Indexes**       | Existing `workspace_id` indexes suffice at current scale. No composite `(workspace_id, updated_at)` index in v1. |
-| **Task statuses** | The tasks card only shows `todo` and `in_progress`, in both `items` and `total`. Canceled is noise, backlog can be substantial, and done needs no attention; the card is about actionable work (decided 2026-07-21). |
+| **Task statuses** | The tasks card only shows `todo`, `in_progress`, and `in_review`, in both `items` and `total`. Canceled is noise, backlog can be substantial, and done needs no attention; the card is about actionable work (decided 2026-07-21, `in_review` added 2026-07-24). |
 | **Card order**    | Tasks, Chats, Workflows, Agents (most action-oriented first).                                             |
 | **Tasks grouping** | Display-only, client-side, same pattern as `TaskListView.vue`. API returns a flat recency-sorted list.   |
 

@@ -828,6 +828,7 @@
       "backlog": "Backlog",
       "todo": "Als nächstes",
       "in_progress": "In Bearbeitung",
+      "in_review": "In Prüfung",
       "done": "Erledigt",
       "canceled": "Abgebrochen"
     },

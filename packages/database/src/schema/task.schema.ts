@@ -13,7 +13,7 @@ import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
-export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'done' | 'canceled';
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 export type TaskPriority = 'none' | 'urgent' | 'high' | 'medium' | 'low';
 
 // TASK
