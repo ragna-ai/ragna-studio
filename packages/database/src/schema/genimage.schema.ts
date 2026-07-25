@@ -1,7 +1,18 @@
-import { index, integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
+
+// 'upload' rows own their object under <userId>/images/references/; 'genImage'
+// rows reference a gen_images object they don't own (no copy). Same split
+// as gen_videos.frameOrigin (genvideo.schema.ts) and social_post_media's
+// origin (social-post.schema.ts).
+export type GenImageReferenceOrigin = 'upload' | 'genImage';
+
+export interface GenImageReference {
+  origin: GenImageReferenceOrigin;
+  storageKey: string;
+}
 
 // GENERATED IMAGE
 export const genImage = pgTable(
@@ -23,6 +34,7 @@ export const genImage = pgTable(
     resolution: text('resolution'),
     seed: integer('seed'),
     negativePrompt: text('negative_prompt'),
+    referenceImages: jsonb('reference_images').$type<GenImageReference[]>().default([]).notNull(),
     ...timestamps,
   },
   (table) => [

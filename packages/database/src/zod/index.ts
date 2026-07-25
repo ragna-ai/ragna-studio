@@ -47,6 +47,11 @@ const aiModelCapabilitiesSchema = z.object({
   canGenerateImage: z.boolean().optional(),
   canGenerateVideo: z.boolean().optional(),
   canGenerateAudio: z.boolean().optional(),
+  // Image-generation inputs. Absent means unsupported (fail closed).
+  supportsNegativePrompt: z.boolean().optional(),
+  supportsSeed: z.boolean().optional(),
+  supportsReferenceImages: z.boolean().optional(),
+  maxReferenceImages: z.number().optional(),
 });
 const aiModelMetaSchema = z.record(z.string(), z.any());
 const aiModelRefine = { capabilities: aiModelCapabilitiesSchema, meta: aiModelMetaSchema };

@@ -414,19 +414,27 @@
   },
   "imagen": {
     "title": "Text to Image",
-    "input": {
-      "placeholder": "Describe the image you want to generate..."
-    },
-    "aspectRatio": {
-      "title": "Aspect ratio"
-    },
-    "resolution": {
-      "title": "Resolution"
-    },
-    "count": {
-      "title": "Number of images",
-      "singular": "image",
-      "plural": "images"
+    "form": {
+      "promptPlaceholder": "Describe the image you want to generate...",
+      "promptRequired": "Describe the image you want to generate.",
+      "aspectRatio": "Aspect ratio",
+      "resolution": "Resolution",
+      "count": "Number of images",
+      "countSingular": "image",
+      "countPlural": "images",
+      "advancedOptions": "Advanced options",
+      "negativePrompt": "Negative prompt",
+      "negativePromptPlaceholder": "Describe what to avoid in the image...",
+      "negativePromptUnsupported": "{model} does not support a negative prompt.",
+      "seed": "Seed",
+      "seedUnsupported": "{model} does not support a seed.",
+      "referenceImages": "Use reference images",
+      "referenceImagesFromGallery": "From gallery",
+      "referenceImagesUpload": "Upload",
+      "referenceImagesGalleryEmpty": "No generated images yet.",
+      "referenceImagesUploadButton": "Upload image",
+      "referenceImagesCount": "{count} / {max} selected",
+      "submit": "Generate image"
     },
     "grid": {
       "loadError": "Failed to load generated images.",
@@ -436,7 +444,14 @@
       "title": "Generated image",
       "copyPrompt": "Copy prompt",
       "download": "Download",
-      "downloadError": "Failed to download image"
+      "downloadError": "Failed to download image",
+      "model": "Model",
+      "aspectRatio": "Aspect ratio",
+      "resolution": "Resolution",
+      "seed": "Seed",
+      "negativePrompt": "Negative prompt",
+      "referenceImages": "Reference images",
+      "reuseSettings": "Reuse settings"
     }
   },
   "videogen": {
@@ -822,6 +837,7 @@
       "backlog": "Backlog",
       "todo": "Todo",
       "in_progress": "In Progress",
+      "in_review": "In Review",
       "done": "Done",
       "canceled": "Canceled"
     },

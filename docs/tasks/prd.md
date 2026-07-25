@@ -19,7 +19,7 @@ Settled 2026-07-21. Do not re-open.
 
 | Decision        | Choice                                                                                             |
 | --------------- | -------------------------------------------------------------------------------------------------- |
-| **Columns**     | Fixed Linear-style statuses: Backlog, Todo, In Progress, Done, Canceled. Enum, no columns table.    |
+| **Columns**     | Fixed Linear-style statuses: Backlog, Todo, In Progress, In Review, Done, Canceled. Enum, no columns table.    |
 | **Boards**      | One board per workspace. The workspace *is* the board. No board entity.                             |
 | **Agent role**  | CRUD tools in chat, plus tasks are assignable to agents (`assignedAgentId`). Assignment is metadata only in v1; autonomous execution is a later phase. |
 | **V1 fields**   | Due date, labels (workspace-scoped, colored, many-to-many), subtasks (one level), markdown description edited via `@repo/editor`. |
@@ -59,7 +59,7 @@ Settled 2026-07-21. Do not re-open.
 | `number`           | integer   | per-workspace sequence, displayed as `TSK-<number>`; unique `(workspaceId, number)` |
 | `title`            | text      | not null                                                              |
 | `description`      | text      | markdown, not null, default `''`                                      |
-| `status`           | text enum | `backlog` \| `todo` \| `in_progress` \| `done` \| `canceled`, default `todo` |
+| `status`           | text enum | `backlog` \| `todo` \| `in_progress` \| `in_review` \| `done` \| `canceled`, default `todo` |
 | `priority`         | text enum | `none` \| `urgent` \| `high` \| `medium` \| `low`, default `none`     |
 | `sortOrder`        | text      | fractional-index rank within the status column, not null              |
 | `dueDate`          | timestamp | nullable                                                              |
@@ -210,7 +210,7 @@ call the task service directly (same process), not the HTTP API.
   data queries are shared: switching views never refetches differently.
   Calendar is a later third view; the switcher is built as an extensible
   segmented control, not a boolean toggle.
-- **Board view**: five fixed status columns. Drag-and-drop via
+- **Board view**: six fixed status columns. Drag-and-drop via
   `vue-draggable-plus`, optimistic move with rollback, query invalidation
   on settle. Card shows `TSK-<number>`, title, priority icon, labels,
   due date (overdue styling), assigned agent, and subtask progress

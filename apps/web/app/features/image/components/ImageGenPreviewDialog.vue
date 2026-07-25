@@ -3,7 +3,10 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import type { GeneratedImage } from '~/features/image/composables/useImageGenApi';
+import type {
+  GeneratedImage,
+  ReuseImageSettings,
+} from '~/features/image/composables/useImageGenApi';
 
 interface Props {
   image: GeneratedImage | null;
@@ -15,6 +18,7 @@ const props = defineProps<Props>();
 // Emits
 const emit = defineEmits<{
   close: [];
+  reuse: [settings: ReuseImageSettings];
 }>();
 
 // Refs
@@ -47,6 +51,25 @@ async function downloadImage() {
   } finally {
     isDownloading.value = false;
   }
+}
+
+function reuseSettings() {
+  const image = props.image;
+  if (!image) return;
+
+  // Reference images don't round-trip from this response: 'upload' entries
+  // only carry a display URL (no storage key to resubmit), and 'genImage'
+  // entries would need a lookup back to their source row. Everything else
+  // reuses cleanly, so only that subset is emitted.
+  emit('reuse', {
+    provider: image.provider,
+    model: image.model,
+    aspectRatio: image.aspectRatio,
+    resolution: image.resolution,
+    seed: image.seed,
+    negativePrompt: image.negativePrompt,
+  });
+  emit('close');
 }
 </script>
 
@@ -87,15 +110,60 @@ async function downloadImage() {
             </DialogDescription>
           </div>
 
-          <Button
-            class="mt-auto"
-            :disabled="isDownloading"
-            @click="downloadImage"
+          <dl
+            v-if="image"
+            class="grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-muted-foreground"
           >
-            <Spinner v-if="isDownloading" class="mr-2" />
-            <DownloadIcon v-else class="mr-2 size-4" />
-            {{ $t('imagen.preview.download') }}
-          </Button>
+            <template v-if="image.model">
+              <dt>{{ $t('imagen.preview.model') }}</dt>
+              <dd class="truncate">{{ image.model }}</dd>
+            </template>
+            <template v-if="image.aspectRatio">
+              <dt>{{ $t('imagen.preview.aspectRatio') }}</dt>
+              <dd>{{ image.aspectRatio }}</dd>
+            </template>
+            <template v-if="image.resolution">
+              <dt>{{ $t('imagen.preview.resolution') }}</dt>
+              <dd>{{ image.resolution }}</dd>
+            </template>
+            <template v-if="image.seed != null">
+              <dt>{{ $t('imagen.preview.seed') }}</dt>
+              <dd>{{ image.seed }}</dd>
+            </template>
+            <template v-if="image.negativePrompt">
+              <dt>{{ $t('imagen.preview.negativePrompt') }}</dt>
+              <dd class="truncate">{{ image.negativePrompt }}</dd>
+            </template>
+          </dl>
+
+          <div
+            v-if="image && image.referenceImages.length > 0"
+            class="space-y-1"
+          >
+            <p class="text-sm text-muted-foreground">
+              {{ $t('imagen.preview.referenceImages') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <img
+                v-for="(reference, index) in image.referenceImages"
+                :key="`${reference.origin}-${index}`"
+                :src="reference.imgUrl"
+                alt=""
+                class="size-12 rounded-md border object-cover"
+              />
+            </div>
+          </div>
+
+          <div class="mt-auto flex flex-col gap-2">
+            <Button variant="outline" @click="reuseSettings">
+              {{ $t('imagen.preview.reuseSettings') }}
+            </Button>
+            <Button :disabled="isDownloading" @click="downloadImage">
+              <Spinner v-if="isDownloading" class="mr-2" />
+              <DownloadIcon v-else class="mr-2 size-4" />
+              {{ $t('imagen.preview.download') }}
+            </Button>
+          </div>
         </div>
       </div>
     </DialogContent>

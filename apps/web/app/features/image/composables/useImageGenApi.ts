@@ -21,6 +21,7 @@ export const genImageKeys = {
   list: (workspaceId: WorkspaceId, params: GenImageListParams) =>
     ['gen-images', workspaceId, 'list', params] as const,
   create: () => ['gen-images', 'create'] as const,
+  referenceUpload: () => ['gen-images', 'reference-upload'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -31,12 +32,30 @@ export type ImageAspectRatio = (typeof imageAspectRatios)[number];
 export const imageResolutions = ['1K', '2K'] as const;
 export type ImageResolution = (typeof imageResolutions)[number];
 
+export type ImageReferenceInput =
+  | { origin: 'genImage'; genImageId: string }
+  | { origin: 'upload'; storageKey: string };
+
+export interface GeneratedImageReference {
+  origin: 'upload' | 'genImage';
+  imgUrl: string;
+}
+
 export interface GeneratedImage {
   id: string;
   prompt: string;
   rawUrl: string;
   imgUrl: string;
   createdAt: string;
+  // Nullable on the wire (the DB columns have no default), even though
+  // createGenImages always fills them in for a completed row.
+  aspectRatio: ImageAspectRatio | null;
+  resolution: ImageResolution | null;
+  seed: number | null;
+  negativePrompt: string | null;
+  model: string;
+  provider: string;
+  referenceImages: GeneratedImageReference[];
 }
 
 export interface GenImagesResponse {
@@ -50,13 +69,32 @@ export interface GenerateImagesResponse {
 
 export interface GenerateImagesBody {
   prompt: string;
-  provider: string;
-  model: string;
+  aiModelId: string;
   resolution?: ImageResolution;
   aspectRatio?: ImageAspectRatio;
   n?: number;
   seed?: number;
   negativePrompt?: string;
+  referenceImages?: ImageReferenceInput[];
+}
+
+export interface ReferenceUploadResponse {
+  storageKey: string;
+}
+
+/**
+ * The subset of a generated image's settings the preview dialog can hand
+ * back to the form. Reference images are deliberately excluded: the response
+ * only carries a display `imgUrl` for each one, not the `genImageId` /
+ * `storageKey` a new request would need to resubmit it.
+ */
+export interface ReuseImageSettings {
+  provider: string;
+  model: string;
+  aspectRatio: ImageAspectRatio | null;
+  resolution: ImageResolution | null;
+  seed: number | null;
+  negativePrompt: string | null;
 }
 
 export function useGetGenImages(
@@ -96,6 +134,27 @@ export function useGenerateImages() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to generate images'));
+    },
+  });
+}
+
+export function useUploadImageReference() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<ReferenceUploadResponse, unknown, File>({
+    mutationKey: genImageKeys.referenceUpload(),
+    mutationFn: (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return $api<ReferenceUploadResponse>(
+        `/workspace/${toValue(workspaceId)}/gen-image/reference-upload`,
+        { method: 'POST', body: formData },
+      );
+    },
+    onError: (error) => {
+      toast.error(
+        extractErrorMessage(error, 'Failed to upload reference image'),
+      );
     },
   });
 }

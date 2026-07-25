@@ -3,7 +3,7 @@ import { myzValidator } from '../utils/validator-wrapper';
 
 const primaryId = z.uuidv7();
 
-const taskStatus = z.enum(['backlog', 'todo', 'in_progress', 'done', 'canceled']);
+const taskStatus = z.enum(['backlog', 'todo', 'in_progress', 'in_review', 'done', 'canceled']);
 const taskPriority = z.enum(['none', 'urgent', 'high', 'medium', 'low']);
 
 export const validTaskIdParam = myzValidator(

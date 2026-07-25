@@ -4,7 +4,14 @@
 // instead of widening to `string` and forcing a cast at every call site.
 // Fixed Linear-style columns (docs/tasks/prd.md, "Decisions"): no columns
 // table, this order drives both the board and the list view's grouping.
-export const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'done', 'canceled'] as const;
+export const TASK_STATUSES = [
+  'backlog',
+  'todo',
+  'in_progress',
+  'in_review',
+  'done',
+  'canceled',
+] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'] as const;

@@ -30,6 +30,20 @@ const imageGenInputSchema = z.object({
     .max(4)
     .optional()
     .describe('The number of images to generate. Defaults to 1.'),
+  seed: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      'Seed for reproducible generations. Silently ignored if the selected model does not support it.',
+    ),
+  negativePrompt: z
+    .string()
+    .max(5000)
+    .optional()
+    .describe(
+      'Content to exclude from the image. Silently ignored if the selected model does not support it.',
+    ),
 });
 
 type ImageGenInput = z.infer<typeof imageGenInputSchema>;
@@ -58,6 +72,11 @@ export const getGeneratedImages = (
         transient: true,
       });
 
+      // seed/negativePrompt pass straight through: this tool resolves its
+      // model via getDefaultAiModelByModality and never sees
+      // ai_models.capabilities, so createGenImagesWithDefaultModel is what
+      // drops either field for a model that doesn't support it (fail
+      // closed, docs/imagegen/prd.md decision 7) rather than erroring.
       const { error, data: generated } = await tryCatch(
         () => createGenImagesWithDefaultModel({ ...input, userId, workspaceId }),
         { retryOnFailure: false },

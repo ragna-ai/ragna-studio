@@ -3,7 +3,7 @@ import { db } from '../db';
 import type { GenImage, NewGenImage } from '../schema';
 import { genImage } from '../schema';
 
-export type { GenImage } from '../schema';
+export type { GenImage, GenImageReference } from '../schema';
 
 export async function createGenImageRecords(records: NewGenImage[]): Promise<GenImage[]> {
   return db.insert(genImage).values(records).returning();
