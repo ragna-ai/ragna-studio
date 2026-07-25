@@ -6,6 +6,11 @@ export interface AiModelCapabilities {
   canGenerateImage?: boolean;
   canGenerateVideo?: boolean;
   canGenerateAudio?: boolean;
+  // Image-generation inputs. Absent means unsupported (fail closed).
+  supportsNegativePrompt?: boolean;
+  supportsSeed?: boolean;
+  supportsReferenceImages?: boolean;
+  maxReferenceImages?: number;
 }
 
 export interface AiModelMeta {
@@ -41,8 +46,8 @@ export const aiModel = pgTable('ai_models', {
   size: pgSizeEnum().notNull(),
   displayName: text('display_name').notNull(),
   description: text('description').notNull(),
-  capabilities: jsonb('capabilities').default('{}').$type<AiModelCapabilities>(),
-  meta: jsonb('meta').default('{}').$type<AiModelMeta>(),
+  capabilities: jsonb('capabilities').default({}).notNull().$type<AiModelCapabilities>(),
+  meta: jsonb('meta').default({}).notNull().$type<AiModelMeta>(),
   ...timestamps,
 });
 

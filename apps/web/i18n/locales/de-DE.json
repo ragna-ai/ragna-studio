@@ -420,19 +420,27 @@
   },
   "imagen": {
     "title": "Text zu Bild",
-    "input": {
-      "placeholder": "Beschreibe das Bild, das du generieren möchtest..."
-    },
-    "aspectRatio": {
-      "title": "Seitenverhältnis"
-    },
-    "resolution": {
-      "title": "Auflösung"
-    },
-    "count": {
-      "title": "Anzahl der Bilder",
-      "singular": "Bild",
-      "plural": "Bilder"
+    "form": {
+      "promptPlaceholder": "Beschreibe das Bild, das du generieren möchtest...",
+      "promptRequired": "Beschreibe das Bild, das du generieren möchtest.",
+      "aspectRatio": "Seitenverhältnis",
+      "resolution": "Auflösung",
+      "count": "Anzahl der Bilder",
+      "countSingular": "Bild",
+      "countPlural": "Bilder",
+      "advancedOptions": "Erweiterte Optionen",
+      "negativePrompt": "Negativer Prompt",
+      "negativePromptPlaceholder": "Beschreibe, was im Bild vermieden werden soll...",
+      "negativePromptUnsupported": "{model} unterstützt keinen negativen Prompt.",
+      "seed": "Seed",
+      "seedUnsupported": "{model} unterstützt keinen Seed.",
+      "referenceImages": "Referenzbilder verwenden",
+      "referenceImagesFromGallery": "Aus Galerie",
+      "referenceImagesUpload": "Hochladen",
+      "referenceImagesGalleryEmpty": "Noch keine generierten Bilder.",
+      "referenceImagesUploadButton": "Bild hochladen",
+      "referenceImagesCount": "{count} / {max} ausgewählt",
+      "submit": "Bild generieren"
     },
     "grid": {
       "loadError": "Generierte Bilder konnten nicht geladen werden.",
@@ -442,7 +450,14 @@
       "title": "Generiertes Bild",
       "copyPrompt": "Prompt kopieren",
       "download": "Herunterladen",
-      "downloadError": "Bild konnte nicht heruntergeladen werden"
+      "downloadError": "Bild konnte nicht heruntergeladen werden",
+      "model": "Modell",
+      "aspectRatio": "Seitenverhältnis",
+      "resolution": "Auflösung",
+      "seed": "Seed",
+      "negativePrompt": "Negativer Prompt",
+      "referenceImages": "Referenzbilder",
+      "reuseSettings": "Einstellungen übernehmen"
     }
   },
   "videogen": {

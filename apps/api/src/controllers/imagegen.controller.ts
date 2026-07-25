@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
+import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
-import { generateImagesForWorkspace, listGenImages } from '../services/imagegen.service';
+import {
+  generateImagesForWorkspace,
+  listGenImages,
+  uploadGenImageReference,
+} from '../services/imagegen.service';
 import { validGenerateImagesBody, validGenImageListQuery } from '../validation';
 
 export const genImageController = new Hono()
@@ -41,4 +46,23 @@ export const genImageController = new Hono()
     });
 
     return c.json({ genImages }, 201);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/gen-image/reference-upload
+   * Uploads a reference image ahead of a generate request that conditions
+   * on it. Multipart upload: a `file` field. PNG/JPEG/WEBP only, 10 MB cap.
+   */
+  .post('/reference-upload', async (c) => {
+    const user = c.get('user');
+
+    const body = await c.req.parseBody();
+    const file = body.file;
+
+    if (!(file instanceof File)) {
+      throw new BadRequestException('A file is required');
+    }
+
+    const { storageKey } = await uploadGenImageReference({ userId: user.id, file });
+
+    return c.json({ storageKey }, 201);
   });

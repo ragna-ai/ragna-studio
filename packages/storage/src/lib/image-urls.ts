@@ -10,6 +10,16 @@ export function getImgGenBucketNameForUser(userId: string): {
   };
 }
 
+export function getImgRefBucketNameForUser(userId: string): {
+  bucketName: string;
+  prefix: string;
+} {
+  return {
+    bucketName: config.cfImagesBucketName,
+    prefix: `${userId}/images/references`,
+  };
+}
+
 export function buildImageUrls({ userId, key }: { userId: string; key: string }): {
   rawUrl: string;
   imgUrl: string;

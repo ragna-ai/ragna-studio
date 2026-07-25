@@ -1,28 +1,40 @@
 <script setup lang="ts">
 // Imports
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
-import type { GeneratedImage } from '~/features/image/composables/useImageGenApi';
-import {
-  useGetGenImages,
-  usePendingGenImageCount,
+import type {
+  GeneratedImage,
+  ReuseImageSettings,
 } from '~/features/image/composables/useImageGenApi';
+import { usePendingGenImageCount } from '~/features/image/composables/useImageGenApi';
+
+interface Props {
+  // Fetched once by the /text-to-image page and shared with the form's
+  // reference picker, rather than this grid running its own query for the
+  // same list (docs/imagegen/prd.md).
+  genImages: GeneratedImage[];
+  isError: boolean;
+}
+
+// Props
+const props = defineProps<Props>();
+
+// Emits
+// Relayed up to the /text-to-image page, which owns the form ref that
+// applies these settings; the grid and the dialog have no direct access
+// to the form.
+const emit = defineEmits<{
+  reuse: [settings: ReuseImageSettings];
+}>();
 
 // Refs
 const previewImage = ref<GeneratedImage | null>(null);
 
 // Composables
-// No pager in this grid yet: request a high limit so it still reads as
-// "all of the workspace's images" under the paginated endpoint.
-const { data, isLoading, isError } = useGetGenImages({
-  limit: 100,
-});
 const pendingCount = usePendingGenImageCount();
 
 // Computed
-const images = computed(() => data.value?.genImages ?? []);
-
 const isEmpty = computed(
-  () => images.value.length === 0 && pendingCount.value === 0,
+  () => props.genImages.length === 0 && pendingCount.value === 0,
 );
 </script>
 
@@ -43,7 +55,7 @@ const isEmpty = computed(
       class="mb-4 aspect-square w-full animate-pulse rounded-lg bg-muted"
     />
     <button
-      v-for="image in images"
+      v-for="image in genImages"
       :key="image.id"
       type="button"
       class="group mb-4 block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-ring"
@@ -58,5 +70,9 @@ const isEmpty = computed(
     </button>
   </div>
 
-  <ImageGenPreviewDialog :image="previewImage" @close="previewImage = null" />
+  <ImageGenPreviewDialog
+    :image="previewImage"
+    @close="previewImage = null"
+    @reuse="(settings) => emit('reuse', settings)"
+  />
 </template>
