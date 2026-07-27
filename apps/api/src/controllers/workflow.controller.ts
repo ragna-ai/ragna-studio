@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { creditGuard } from '../middlewares/creditGuard';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   validCreateWorkflowBody,
@@ -149,9 +150,12 @@ export const workflowController = new Hono()
   })
   /**
    * [POST] /workspace/:workspaceId/workflow/:workflowId/run
-   * Enqueues a run of the workflow's published definition.
+   * Enqueues a run of the workflow's published definition. Gated by
+   * creditGuard: this is the one route in this controller that spends
+   * credits, so the guard is mounted here only, not with `.use()` on the
+   * whole controller (docs/credits/prd.md, "creditGuard").
    */
-  .post('/:workflowId/run', validWorkflowIdParam, validRunWorkflowBody, async (c) => {
+  .post('/:workflowId/run', creditGuard, validWorkflowIdParam, validRunWorkflowBody, async (c) => {
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');

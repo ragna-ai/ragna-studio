@@ -4,6 +4,7 @@ export * from './agent-template.repo';
 export * from './agent.repo';
 export * from './ai-model.repo';
 export * from './chat.repo';
+export * from './credit.repo';
 export * from './dataset.repo';
 export * from './document.repo';
 export * from './folder.repo';

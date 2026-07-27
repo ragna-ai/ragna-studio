@@ -16,8 +16,10 @@ import { noopWriter } from './noop-writer';
 import type { DelegateCallMeta } from './run-referenced-agent';
 import {
   collectTrace,
+  gateCreditSpend,
   logTraceStepDebug,
   runReferencedAgent,
+  settleWorkflowUsage,
   withAiModel,
 } from './run-referenced-agent';
 import type { Executor, ExecutorContext } from './types';
@@ -93,14 +95,18 @@ function buildTeamBriefing(members: ResolvedMember[]): string {
 }
 
 // One delegate tool per member. Running a member reuses the same
-// referenced-agent path as the agent node (full toolset, stepCountIs(15)).
-// Each call's duration, usage, and member tool calls (kept flat, not a
-// nested trace) are recorded by toolCallId so they can be attached to the
-// lead's own trace once the lead's loop finishes.
+// referenced-agent path as the agent node (full toolset, stepCountIs(15)),
+// including its credit gate and settlement. Each call's duration, usage, and
+// member tool calls (kept flat, not a nested trace) are recorded by
+// toolCallId so they can be attached to the lead's own trace once the
+// lead's loop finishes; the same toolCallId also makes this call's charge
+// unique among the node's other delegate calls (docs/credits/prd.md, "Call
+// sites").
 function buildDelegateTools(
   members: ResolvedMember[],
   toolNames: string[],
   ctx: ExecutorContext,
+  nodeId: string,
   delegateCallMetaByToolCallId: Map<string, DelegateCallMeta>,
 ): ToolSet {
   const entries = members.map((member, index) => {
@@ -117,6 +123,10 @@ function buildDelegateTools(
           userId: ctx.userId,
           workspaceId: ctx.workspaceId,
           prompt: task,
+          runId: ctx.runId,
+          nodeId,
+          callId: toolCallId,
+          feature: 'team',
         });
         const memberToolCalls = trace.flatMap((step) => step.toolCalls);
         delegateCallMetaByToolCallId.set(toolCallId, {
@@ -138,6 +148,12 @@ type LeadSetup = {
   instructions: string;
   ownTools: ToolSet;
   modelSettings: ReturnType<typeof toModelSettings>;
+  // Carried alongside `model` (rather than re-derived from it) so the lead's
+  // own generateText call can be settled the same way runReferencedAgent
+  // settles a member call: settleWorkflowUsage needs the model id and
+  // provider string as plain values, not baked into the SDK's model object.
+  aiModelId: string;
+  provider: string;
 };
 
 async function resolveReferencedLead(
@@ -176,6 +192,8 @@ async function resolveReferencedLead(
       awaitGeneration: true,
     }),
     modelSettings: toModelSettings(lead.settings),
+    aiModelId: lead.aiModelId,
+    provider: lead.aiModel.provider,
   };
 }
 
@@ -192,6 +210,8 @@ async function resolveDefaultLead(briefing: string): Promise<LeadSetup> {
     // agent runs plain, same as the agent node's inline path.
     ownTools: {},
     modelSettings: toModelSettings(undefined),
+    aiModelId: defaultAgent.aiModelId,
+    provider: defaultAgent.aiModel.provider,
   };
 }
 
@@ -199,17 +219,32 @@ export const executeTeam: Executor = async (node, ctx) => {
   const config = node.data.config as TeamConfig;
   const prompt = resolveTemplate(config.prompt, ctx);
 
+  // Gate the lead's own call up front, before any member/lead setup work.
+  // Each member's delegate call gets its own independent gate inside
+  // runReferencedAgent; this one covers the lead's own generateText call
+  // below, which is a separate spend (docs/credits/prd.md: "Every text LLM
+  // call made on a user's behalf in chat and workflows debits their credit
+  // account").
+  const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId });
+
   const members = await resolveMembers(config.members, ctx);
   const toolNames = assignToolNames(members);
   const briefing = buildTeamBriefing(members);
 
   const delegateCallMetaByToolCallId = new Map<string, DelegateCallMeta>();
-  const delegateTools = buildDelegateTools(members, toolNames, ctx, delegateCallMetaByToolCallId);
+  const delegateTools = buildDelegateTools(
+    members,
+    toolNames,
+    ctx,
+    node.id,
+    delegateCallMetaByToolCallId,
+  );
 
-  const { model, instructions, ownTools, modelSettings } = config.leadAgentId
+  const { model, instructions, ownTools, modelSettings, aiModelId, provider } = config.leadAgentId
     ? await resolveReferencedLead(config.leadAgentId, ctx, briefing)
     : await resolveDefaultLead(briefing);
 
+  const startedAt = Date.now();
   const result = await generateText({
     model,
     instructions,
@@ -223,6 +258,23 @@ export const executeTeam: Executor = async (node, ctx) => {
     stopWhen: stepCountIs(12),
     onStepFinish: logTraceStepDebug('team lead', delegateCallMetaByToolCallId),
     ...modelSettings,
+  });
+
+  await settleWorkflowUsage({
+    spendState,
+    workspaceId: ctx.workspaceId,
+    userId: ctx.userId,
+    aiModelId,
+    provider,
+    steps: result.steps,
+    feature: 'team',
+    runId: ctx.runId,
+    nodeId: node.id,
+    // Distinguishes the lead's own charge from its members' delegate calls
+    // under the same runId/nodeId; a fixed literal is safe here since it
+    // can never collide with an AI SDK toolCallId.
+    callId: 'lead',
+    durationMs: Date.now() - startedAt,
   });
 
   const trace = collectTrace(result.steps, delegateCallMetaByToolCallId);

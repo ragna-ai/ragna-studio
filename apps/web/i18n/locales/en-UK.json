@@ -43,7 +43,8 @@
       "account": "Account",
       "statistics": "Statistics",
       "settings": "Settings",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "credits": "{count} credits"
     }
   },
   "home": {
@@ -491,11 +492,34 @@
       "model": "Model"
     }
   },
+  "credit": {
+    "usage": {
+      "title": "Credit usage",
+      "subtitle": "What your credits have been spent on.",
+      "empty": "No usage yet.",
+      "loadError": "Failed to load credit usage.",
+      "table": {
+        "model": "Model",
+        "provider": "Provider",
+        "feature": "Feature",
+        "inputTokens": "Input",
+        "outputTokens": "Output",
+        "credits": "Credits",
+        "date": "Date"
+      },
+      "feature": {
+        "chat": "Chat",
+        "workflow": "Workflow",
+        "team": "Team"
+      }
+    }
+  },
   "user": {
     "tabs": {
       "profile": "Profile",
       "social": "Connected accounts",
-      "language": "Language"
+      "language": "Language",
+      "credits": "Credits"
     },
     "language": {
       "title": "Language",

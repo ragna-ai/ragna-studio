@@ -4,6 +4,7 @@ import { agentContextDocument } from './agent-context-document.schema';
 import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
+import { creditAccount, creditLedger, creditUsageEvent } from './credit.schema';
 import { dataset, datasetRow } from './dataset.schema';
 import { document } from './document.schema';
 import { folder } from './folder.schema';
@@ -31,6 +32,9 @@ const schema = {
   agentContextDocument,
   chat,
   chatMessage,
+  creditAccount,
+  creditLedger,
+  creditUsageEvent,
   dataset,
   datasetRow,
   document,
@@ -63,6 +67,14 @@ export const relations = defineRelations(schema, (r) => ({
     workspaces: r.many.workspace(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
+    // Optional: not every user has a credit account yet, since accounts are
+    // created only by grantCredits, never lazily (docs/credits/prd.md,
+    // "Account creation").
+    creditAccount: r.one.creditAccount({
+      from: r.user.id,
+      to: r.creditAccount.userId,
+      optional: true,
+    }),
   },
   account: {
     user: r.one.user({
@@ -81,6 +93,7 @@ export const relations = defineRelations(schema, (r) => ({
   aiModel: {
     agents: r.many.agent(),
     agentTemplates: r.many.agentTemplate(),
+    usageEvents: r.many.creditUsageEvent(),
   },
   agent: {
     user: r.one.user({
@@ -153,6 +166,52 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.chat.id,
       optional: false,
     }),
+  },
+  creditAccount: {
+    user: r.one.user({
+      from: r.creditAccount.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    ledgerEntries: r.many.creditLedger(),
+    usageEvents: r.many.creditUsageEvent(),
+  },
+  creditLedger: {
+    creditAccount: r.one.creditAccount({
+      from: r.creditLedger.creditAccountId,
+      to: r.creditAccount.id,
+      optional: false,
+    }),
+    // Nullable: lets a ledger row be traced to its detail when debugging,
+    // not used to power any list view (docs/credits/prd.md, "Schema").
+    usageEvent: r.one.creditUsageEvent({
+      from: r.creditLedger.usageEventId,
+      to: r.creditUsageEvent.id,
+      optional: true,
+    }),
+  },
+  creditUsageEvent: {
+    creditAccount: r.one.creditAccount({
+      from: r.creditUsageEvent.creditAccountId,
+      to: r.creditAccount.id,
+      optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.creditUsageEvent.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.creditUsageEvent.userId,
+      to: r.user.id,
+      optional: true,
+    }),
+    aiModel: r.one.aiModel({
+      from: r.creditUsageEvent.aiModelId,
+      to: r.aiModel.id,
+      optional: true,
+    }),
+    ledgerEntries: r.many.creditLedger(),
   },
   dataset: {
     user: r.one.user({
@@ -349,5 +408,9 @@ export const relations = defineRelations(schema, (r) => ({
     folders: r.many.folder(),
     tasks: r.many.task(),
     taskLabels: r.many.taskLabel(),
+    // The account that pays for work done here is resolved through
+    // `ownerId`, not this relation; it exists for the audit trail only
+    // (docs/credits/prd.md, "Billing entity resolution").
+    creditUsageEvents: r.many.creditUsageEvent(),
   },
 }));

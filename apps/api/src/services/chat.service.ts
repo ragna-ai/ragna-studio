@@ -6,6 +6,7 @@ import {
   createUIMessageStream,
   generateText,
   getLanguageModel,
+  normalizeUsage,
   safeValidateUIMessages,
   stepCountIs,
   streamText,
@@ -21,6 +22,7 @@ import {
   getChatCountByWorkspaceId,
   getChatsByWorkspaceId,
   getOrCreateDefaultAgentForUser,
+  settleCreditUsage,
   updateChatTitleById,
   updateChatTitleByWorkspaceId,
   upsertChatMessages,
@@ -33,6 +35,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { assertCanSpend } from './credit.service';
 
 // CHAT CRUD (docs/api-standards/prd.md, WP4)
 //
@@ -423,6 +426,13 @@ export async function runChatStream(
       throw new NotFoundException('Chat not found');
     }
 
+    // Refuse before any model call happens if the workspace owner is out of
+    // credits (docs/credits/prd.md, "The WS chat path"). Throws
+    // PaymentRequiredException, which ws.controller.ts already maps to an
+    // error frame. `null` means CREDITS_ENABLED is off; settlement in
+    // streamText's onEnd below is skipped together with this gate.
+    const creditSpendState = await assertCanSpend({ workspaceId: userChat.workspaceId });
+
     // Rebuild the full conversation from persisted history plus the one new
     // message the client sent, rather than trusting a client-sent history.
     const validated = await safeValidateUIMessages({
@@ -488,6 +498,8 @@ export async function runChatStream(
           });
         }
 
+        const streamStartedAt = Date.now();
+
         // Stream the response from the language model
         const result = streamText({
           abortSignal: abortController.signal,
@@ -516,12 +528,57 @@ export async function runChatStream(
               instructions: st.instructions,
             });
           },
-          onEnd(res) {
+          async onEnd(res) {
             logger.debug('Request finished', {
               callId: res.callId,
               finishReason: res.finishReason,
               usage: res.usage,
             });
+
+            // No gate result means CREDITS_ENABLED is off: gating and
+            // settling are always skipped together, or accounts that were
+            // never checked would get charged (docs/credits/prd.md,
+            // "Call sites"). A provider-side error mid-generation still
+            // consumes input tokens, but V1 charges nothing for it, same as
+            // the persistence onEnd below skips isAborted/'error' turns
+            // (docs/credits/prd.md, "Non-goals": "Failed and aborted runs").
+            if (!creditSpendState || res.finishReason === 'error') {
+              return;
+            }
+
+            // Settlement must never break a finished turn: the response is
+            // already streamed by then. A dropped charge is a bug to fix in
+            // reconciliation, not a reason to fail a completed chat turn
+            // (docs/credits/prd.md, "Settlement transaction").
+            const normUsage = normalizeUsage(agent.aiModel.provider, res.steps);
+            const { error: creditUsageError } = await tryCatch(() =>
+              settleCreditUsage({
+                userId,
+                workspaceId: userChat.workspaceId,
+                creditAccountId: creditSpendState.creditAccountId,
+                aiModelId: agent.aiModel.id,
+                feature: 'chat',
+                refType: 'chat',
+                refId: userChat.id,
+                durationMs: Date.now() - streamStartedAt,
+                idempotencyKey: `chat:${res.callId}`,
+                billableInputTokens: normUsage.billableInputTokens,
+                billableOutputTokens: normUsage.billableOutputTokens,
+                inputTokens: normUsage.inputTokens,
+                outputTokens: normUsage.outputTokens,
+                reasoningTokens: normUsage.reasoningTokens,
+                // noCacheInputTokens: normUsage.noCacheInputTokens,
+                cacheReadTokens: normUsage.cacheReadTokens,
+                cacheWriteTokens: normUsage.cacheWriteTokens,
+              }),
+            );
+
+            if (creditUsageError !== null) {
+              logger.error(
+                `Failed to settle credit usage for chat ${userChat.id}`,
+                creditUsageError,
+              );
+            }
           },
           onAbort() {
             logger.warn('Request aborted by user');

@@ -25,6 +25,7 @@ These are settled (discussed 2026-07-19). Do not re-open them.
 | **Workspace delete**  | Cascades: contained resources are deleted with the workspace (FK changes from `set null` to `cascade`). Deleting the last workspace is rejected. |
 | **Migration**         | Big bang. All controllers, repos, schema, and frontend composables move in one effort. No transition period.                        |
 | **Access model**      | Workspace ownership is the access boundary. A shared guard verifies the user owns `:workspaceId`, then queries scope by `workspaceId`. Resource `userId` columns remain as authorship metadata only. |
+| **Scope carrier**     | The URL. The active workspace is never read from the session or from server-side user state. See [Active workspace is carried by the URL](#active-workspace-is-carried-by-the-url). |
 
 ## Route structure
 
@@ -102,6 +103,63 @@ whether it is creating or editing; the API should not guess from the body.
   They are stamped on create and never used for access checks.
 - When multi-user workspaces land, only the workspace guard changes
   (ownership check becomes membership check). Nothing else moves.
+
+### Active workspace is carried by the URL
+
+Reviewed 2026-07-25. Decision: keep it as is, no session storage.
+
+Two things look alike but are not. **Authorization** is "may this user touch
+workspace X", answered per request by `workspaceGuard` against the DB.
+**Selection** is "which workspace is the user looking at right now", a UI
+concern. The session is not involved in either.
+
+Today selection lives in `localStorage` (`workspace-scope`, see
+[Frontend](#frontend)) and travels to the API as the `:workspaceId` path
+param. Every request therefore states its own scope, and the guard
+re-verifies it. There is exactly one source of truth.
+
+Storing an active workspace on the session row (the better-auth
+`activeOrganizationId` pattern) was considered and rejected:
+
+- **Two sources of truth.** When the URL says workspace A and the session
+  says B, every handler needs a precedence rule. The container model exists
+  to remove that ambiguity, which is also why "All items" was dropped.
+- **It cannot replace the guard.** A session field is written by a
+  client-triggered switch, so it still needs an ownership check at write
+  time, and it goes stale when a workspace is deleted or access is revoked.
+  It adds a code path without removing one.
+- **Cache staleness.** Each switch becomes a session write. If better-auth's
+  `cookieCache` is ever enabled (currently commented out in
+  `packages/auth/src/server/auth.ts`), a stale active workspace becomes a
+  live class of bug.
+- **Multi-tab regresses.** A session value is global per browser, so two
+  tabs in different workspaces fight over it. Only a per-tab carrier (the
+  URL) is actually correct here.
+- **It does not help the worker.** Queue jobs have no session. They carry
+  `workspaceId` in their DTOs and must continue to.
+
+Rules that follow from this, for any new endpoint:
+
+- Workspace-scoped resources nest under `/workspace/:workspaceId/...` and
+  read the workspace from `c.get('workspace')`. Never infer scope from
+  session or user state.
+- Server-initiated contexts (websocket subscriptions, notification pushes)
+  take the workspace from the client that subscribes, or from the job DTO.
+  The subscribing tab knows its own scope; the session does not.
+
+Known gaps that this leaves open, accepted for now:
+
+- **Not deep-linkable.** Because selection is in `localStorage` rather than
+  the Nuxt route, a shared URL opens in whatever workspace the recipient
+  last used, and browser back/forward does not undo a switch. Fixing this
+  means moving selection into the frontend route and touching every
+  composable that interpolates `useActiveWorkspaceId()`.
+- **No cross-device default.** A fresh browser falls back to
+  `workspaces[0]` via `ensureActiveWorkspace()`. If landing in the last-used
+  workspace becomes desirable, add `lastActiveWorkspaceId` to the `user`
+  row, not the session: it survives session rotation, syncs across devices,
+  and is readable by server-initiated contexts. It stays a bootstrap
+  preference only, never an authorization or scoping input.
 
 ## Controller and service layering
 

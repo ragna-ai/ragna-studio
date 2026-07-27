@@ -3,6 +3,7 @@ export * from './agent-context-document.schema';
 export * from './agent.schema';
 export * from './aimodel.schema';
 export * from './chat.schema';
+export * from './credit.schema';
 export * from './dataset.schema';
 export * from './document.schema';
 export * from './folder.schema';
