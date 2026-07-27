@@ -1,6 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const isAuthRoute = to.path === '/auth' || to.path.startsWith('/auth/');
-  if (isAuthRoute) {
+  const toPath = to.path.toLowerCase();
+  // is auth route, don't check auth session
+  if (toPath === '/auth' || toPath.startsWith('/auth/')) {
     return;
   }
 
