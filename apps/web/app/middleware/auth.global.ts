@@ -1,6 +1,7 @@
+// Global auth middleware
 export default defineNuxtRouteMiddleware(async (to) => {
   const toPath = to.path.toLowerCase();
-  // is auth route, don't check auth session
+  // if is auth route, don't check auth session
   if (toPath === '/auth' || toPath.startsWith('/auth/')) {
     return;
   }
