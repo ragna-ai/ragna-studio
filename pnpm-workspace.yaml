@@ -12,10 +12,10 @@ packageExtensions:
 
 minimumReleaseAgeExclude:
   - 'nuxt'
-  - '@nuxt/kit@4.5.0'
-  - '@nuxt/nitro-server@4.5.0'
-  - '@nuxt/schema@4.5.0'
-  - '@nuxt/vite-builder@4.5.0'
+  - '@nuxt/kit@4.5.0 || 4.5.1'
+  - '@nuxt/nitro-server@4.5.0 || 4.5.1'
+  - '@nuxt/schema@4.5.0 || 4.5.1'
+  - '@nuxt/vite-builder@4.5.0 || 4.5.1'
 
 allowBuilds:
   '@parcel/watcher': false
@@ -30,12 +30,12 @@ catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.1.0
   tailwindcss: ^4.3.3
-  tsdown: ^0.22.13
+  tsdown: ^0.22.14
   typescript: 6.0.3
   zod: 4.4.3
   oxfmt: ^0.60.0
   oxlint: ^1.75.0
-  ai: ^7.0.34
+  ai: ^7.0.37
 
 updateConfig:
   ignoreDependencies:
