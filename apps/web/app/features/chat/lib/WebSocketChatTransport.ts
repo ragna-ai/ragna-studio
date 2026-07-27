@@ -6,8 +6,16 @@ interface ChatMessageFramePayload {
 }
 
 interface ChatErrorFramePayload {
-  code: string;
+  code: number;
   message: string;
+}
+
+// Thrown for a `code: 402` frame so call sites can distinguish "out of
+// credits" (docs/credits/prd.md) from any other stream error without parsing
+// `error.message`. `isOutOfCreditsError` (~/lib/api-error) reads `code`
+// directly off the error for this reason.
+export interface ChatStreamError extends Error {
+  code?: number;
 }
 
 type SendMessagesOptions = Parameters<
@@ -86,7 +94,10 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
           break;
         case 'error': {
           const payload = frame.payload as ChatErrorFramePayload | undefined;
-          const error = new Error(payload?.message ?? 'Chat stream error');
+          const error: ChatStreamError = Object.assign(
+            new Error(payload?.message ?? 'Chat stream error'),
+            { code: payload?.code },
+          );
           settleAck?.(error);
           settleAck = null;
           streamController?.error(error);

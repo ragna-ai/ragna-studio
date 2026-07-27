@@ -9,6 +9,7 @@ import { agentContextDocumentController } from './controllers/agent-context-docu
 import { agentController } from './controllers/agent.controller';
 import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
+import { creditController } from './controllers/credit.controller';
 import { datasetController } from './controllers/dataset.controller';
 import { documentController } from './controllers/document.controller';
 import { folderController } from './controllers/folder.controller';
@@ -49,6 +50,7 @@ export const app = new Hono()
   // Controllers
   .route('/', userController)
   .route('/', chatController)
+  .route('/', creditController)
   .route('/', agentController)
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)

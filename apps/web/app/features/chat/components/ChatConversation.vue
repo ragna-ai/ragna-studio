@@ -10,9 +10,12 @@ import {
   type UIMessagePart,
   type UITools,
 } from 'ai';
+import { toast } from 'vue-sonner';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
+import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
+import { isOutOfCreditsError, OUT_OF_CREDITS_MESSAGE } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -32,6 +35,7 @@ const inputText = ref('');
 
 // Composables
 const { mutateAsync: createNewChat } = useCreateChat();
+const invalidateCreditBalance = useInvalidateCreditBalance();
 
 // Computed
 const initialMessages = props.initialMessages
@@ -72,6 +76,21 @@ const { messages, sendMessage, status, error } = useChat({
         kind: 'videoGen',
         prompt: extractGenerationPrompt(dataPart.data),
       };
+    }
+  },
+  // A turn that wasn't aborted just settled a charge server-side
+  // (docs/credits/prd.md, "Frontend"), so the cached balance is stale.
+  // Aborted turns charge nothing (onEnd's early return on `isAborted`), so
+  // there's nothing new to fetch.
+  onFinish: ({ isAbort }) => {
+    if (!isAbort) invalidateCreditBalance();
+  },
+  // The WS transport carries `code: 402` on an out-of-credits refusal
+  // (WebSocketChatTransport.ts); everything else is left to the inline
+  // `error.message` rendering below.
+  onError: (streamError) => {
+    if (isOutOfCreditsError(streamError)) {
+      toast.error(OUT_OF_CREDITS_MESSAGE);
     }
   },
 });

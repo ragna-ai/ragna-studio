@@ -54,7 +54,28 @@ const aiModelCapabilitiesSchema = z.object({
   maxReferenceImages: z.number().optional(),
 });
 const aiModelMetaSchema = z.record(z.string(), z.any());
-const aiModelRefine = { capabilities: aiModelCapabilitiesSchema, meta: aiModelMetaSchema };
+// Pricing (docs/credits/prd.md, "Pricing"): discriminated by `kind`, same
+// shape as AiModelPricing in aimodel.schema.ts. V1 only implements `token`;
+// `image`/`video` are declared so v2 is additive.
+const aiModelPricingSchema = z
+  .discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('token'),
+      nanoUsdPerInputToken: z.number(),
+      nanoUsdPerOutputToken: z.number(),
+      nanoUsdPerCacheReadToken: z.number().optional(),
+      nanoUsdPerCacheWriteToken: z.number().optional(),
+      markupBps: z.number().optional(),
+    }),
+    z.object({ kind: z.literal('image'), nanoUsdPerImage: z.number() }),
+    z.object({ kind: z.literal('video'), nanoUsdPerSecond: z.number() }),
+  ])
+  .nullable();
+const aiModelRefine = {
+  capabilities: aiModelCapabilitiesSchema,
+  meta: aiModelMetaSchema,
+  pricing: aiModelPricingSchema,
+};
 
 export const aiModelSelectSchema = createSelectSchema(aiModel, aiModelRefine);
 export type AiModelSelectSchema = z.infer<typeof aiModelSelectSchema>;

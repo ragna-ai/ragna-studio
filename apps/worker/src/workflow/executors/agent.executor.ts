@@ -2,7 +2,12 @@ import { generateText, getLanguageModel } from '@repo/ai';
 import { getDefaultAgent } from '@repo/database';
 import type { AgentConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
-import { runReferencedAgent, withAiModel } from './run-referenced-agent';
+import {
+  gateCreditSpend,
+  runReferencedAgent,
+  settleWorkflowUsage,
+  withAiModel,
+} from './run-referenced-agent';
 import type { Executor } from './types';
 
 export const executeAgent: Executor = async (node, ctx) => {
@@ -11,11 +16,17 @@ export const executeAgent: Executor = async (node, ctx) => {
 
   // A referenced agent runs exactly like it does in chat: same tool loop,
   // temperature, and step budget (see chat.controller.ts). Inline nodes
-  // (no agentId) have no tools/settings to run with, so they stay plain.
+  // (no agentId) have no tools/settings to run with, so they stay plain,
+  // but it is still an LLM call spent on the user's behalf, so it is gated
+  // and charged the same as the referenced-agent path below
+  // (docs/credits/prd.md: "Every text LLM call made on a user's behalf in
+  // chat and workflows debits their credit account").
   if (!config.agentId) {
+    const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId });
     const defaultAgent = withAiModel(await getDefaultAgent());
 
-    const { text } = await generateText({
+    const startedAt = Date.now();
+    const result = await generateText({
       model: getLanguageModel({
         provider: defaultAgent.aiModel.provider,
         model: defaultAgent.aiModel.model,
@@ -24,7 +35,22 @@ export const executeAgent: Executor = async (node, ctx) => {
       prompt,
     });
 
-    return { output: text };
+    await settleWorkflowUsage({
+      spendState,
+      workspaceId: ctx.workspaceId,
+      userId: ctx.userId,
+      aiModelId: defaultAgent.aiModelId,
+      provider: defaultAgent.aiModel.provider,
+      steps: result.steps,
+      feature: 'workflow',
+      runId: ctx.runId,
+      nodeId: node.id,
+      // One call per node, same as the referenced-agent path.
+      callId: 'agent',
+      durationMs: Date.now() - startedAt,
+    });
+
+    return { output: result.text };
   }
 
   const { text, trace } = await runReferencedAgent({
@@ -32,6 +58,12 @@ export const executeAgent: Executor = async (node, ctx) => {
     userId: ctx.userId,
     workspaceId: ctx.workspaceId,
     prompt,
+    runId: ctx.runId,
+    nodeId: node.id,
+    // One call per agent node, so a fixed suffix is enough to make the
+    // idempotencyKey unique per node (docs/credits/prd.md, "Call sites").
+    callId: 'agent',
+    feature: 'workflow',
   });
 
   return { output: text, trace: trace.length > 0 ? trace : undefined };

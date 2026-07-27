@@ -43,7 +43,8 @@
       "account": "Konto",
       "statistics": "Statistiken",
       "settings": "Einstellungen",
-      "signOut": "Abmelden"
+      "signOut": "Abmelden",
+      "credits": "{count} Credits"
     }
   },
   "notification": {
@@ -497,11 +498,34 @@
       "model": "Modell"
     }
   },
+  "credit": {
+    "usage": {
+      "title": "Guthabennutzung",
+      "subtitle": "Wofür deine Credits ausgegeben wurden.",
+      "empty": "Noch keine Nutzung.",
+      "loadError": "Guthabennutzung konnte nicht geladen werden.",
+      "table": {
+        "model": "Modell",
+        "provider": "Anbieter",
+        "feature": "Funktion",
+        "inputTokens": "Eingabe",
+        "outputTokens": "Ausgabe",
+        "credits": "Credits",
+        "date": "Datum"
+      },
+      "feature": {
+        "chat": "Chat",
+        "workflow": "Workflow",
+        "team": "Team"
+      }
+    }
+  },
   "user": {
     "tabs": {
       "profile": "Profil",
       "social": "Verbundene Konten",
-      "language": "Sprache"
+      "language": "Sprache",
+      "credits": "Credits"
     },
     "language": {
       "title": "Sprache",

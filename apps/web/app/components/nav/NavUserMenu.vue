@@ -2,17 +2,29 @@
 import {
   ChartColumnIcon,
   ChevronsUpDownIcon,
+  CoinsIcon,
   LogOutIcon,
   SettingsIcon,
   SparklesIcon,
   UserIcon,
 } from '@lucide/vue';
+import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
 
 defineProps<{
   sizeFull: boolean;
 }>();
 
 const session = useAuthSession();
+
+// Fetched once per session (staleTime: Infinity in the composable) and
+// refetched by ChatConversation.vue after a chat turn ends
+// (docs/credits/prd.md, "Frontend"). Rounded to whole credits for display;
+// the exact fractional amount only matters on the usage table.
+const { data: creditBalance } = useGetCreditBalance();
+const displayedCredits = computed(() => {
+  const credits = creditBalance.value?.credit.balanceCredits;
+  return credits === undefined ? null : Math.round(credits);
+});
 
 function createInitials(name: string) {
   if (!name) return '?';
@@ -91,6 +103,14 @@ async function signOut() {
             {{ session?.user?.email }}
           </p>
         </div>
+      </div>
+      <DropdownMenuSeparator />
+      <div
+        v-if="displayedCredits !== null"
+        class="flex items-center gap-2 px-4 py-2 text-xs text-muted-foreground"
+      >
+        <CoinsIcon class="size-4 stroke-1.5" />
+        {{ $t('nav.userMenu.credits', { count: displayedCredits }) }}
       </div>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>

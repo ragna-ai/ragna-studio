@@ -139,6 +139,18 @@ const ConfigSchema = z.object({
         }),
     ),
 
+  // Credits (docs/credits/prd.md): markup in basis points, and the master
+  // switch that gates the whole system so it can ship dark.
+  CREDIT_MARKUP_BPS: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 15_000),
+  CREDITS_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val === 'true')
+    .default(false),
+
   // Payment URLs - validate as URLs if provided
   PAYMENT_SUCCESS_URL: z.string().optional().default(''),
   PAYMENT_CANCEL_URL: z.string().optional().default(''),
@@ -314,6 +326,14 @@ export class ConfigService {
 
   get trustedOrigins(): string[] {
     return this._config.TRUSTED_ORIGINS;
+  }
+
+  get creditMarkupBps(): number {
+    return this._config.CREDIT_MARKUP_BPS;
+  }
+
+  get creditsEnabled(): boolean {
+    return this._config.CREDITS_ENABLED;
   }
 
   get paymentSuccessUrl(): string {

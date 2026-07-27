@@ -3,14 +3,29 @@ import {
   buildAgentToolset,
   generateText,
   getLanguageModel,
+  normalizeUsage,
   stepCountIs,
   toModelSettings,
 } from '@repo/ai';
-import type { AgentSettings, AgentTools } from '@repo/database';
-import { getAgentById } from '@repo/database';
+import { config } from '@repo/config';
+import type { AgentSettings, AgentTools, CreditSpendState, CreditUsageFeature } from '@repo/database';
+import { getAgentById, resolveCreditSpendState, settleCreditUsage } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { WorkflowAgentTraceStep, WorkflowTokenUsage, WorkflowToolCall } from '@repo/workflow';
 import { noopWriter } from './noop-writer';
+
+// Thrown when the pre-run gate refuses a run for lack of credits. A distinct
+// class (rather than a plain Error) so the step's recorded error message
+// reads as "Insufficient credits", distinguishable from a generic run
+// failure once it reaches upsertRunStep's `error` text column
+// (docs/credits/prd.md, "Call sites": "A run refused mid-execution fails the
+// run with a reason the UI can distinguish from a generic error").
+export class InsufficientCreditsError extends Error {
+  constructor(workspaceId: string) {
+    super(`Insufficient credits: workspace ${workspaceId}'s billing account has no positive balance`);
+    this.name = 'InsufficientCreditsError';
+  }
+}
 
 export type AiModelRef = { provider: string; model: string };
 type AgentSettingsRef = AgentSettings | null;
@@ -147,6 +162,98 @@ export type ReferencedAgentRun = {
   usage: WorkflowTokenUsage;
 };
 
+// Pre-run gate, shared by every LLM call a workflow run makes on a user's
+// behalf: the agent node's referenced-agent path, its inline default-agent
+// path, the team node's lead call, and each team member's delegate call
+// (docs/credits/prd.md: "Every text LLM call made on a user's behalf in
+// chat and workflows debits their credit account"). Returns null both when
+// credits are off (skipped entirely, no query) and when the billing entity
+// has no account; either way the caller's later settleWorkflowUsage call
+// must also skip, so gating and settling can never happen independently.
+export async function gateCreditSpend({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<CreditSpendState | null> {
+  if (!config.creditsEnabled) {
+    return null;
+  }
+
+  const spendState = await resolveCreditSpendState({ workspaceId });
+  if (!spendState?.allowed) {
+    throw new InsufficientCreditsError(workspaceId);
+  }
+
+  return spendState;
+}
+
+// Post-run settlement, paired with gateCreditSpend above. `spendState` is
+// whatever the matching gate call returned: null short-circuits this to a
+// no-op, so a caller can always call both unconditionally without its own
+// creditsEnabled check.
+//
+// The agent's output is already final by the time this runs; a settlement
+// failure (a transient DB error, say) must not throw away a completed run
+// over a bookkeeping problem, same reasoning as the chat path
+// (docs/credits/prd.md, "Settlement transaction"). A dropped charge is a
+// reconciliation bug to fix later, not a reason to fail the node.
+export async function settleWorkflowUsage({
+  spendState,
+  workspaceId,
+  userId,
+  aiModelId,
+  provider,
+  steps,
+  feature,
+  runId,
+  nodeId,
+  callId,
+  durationMs,
+}: {
+  spendState: CreditSpendState | null;
+  workspaceId: string;
+  userId: string;
+  aiModelId: string;
+  provider: string;
+  steps: GenerateTextSteps;
+  feature: CreditUsageFeature;
+  // Identifies the charge for settlement's idempotencyKey and
+  // refType/refId: the run and node this call belongs to, plus a per-call
+  // discriminator. Stable across a BullMQ retry of this same run/node/call,
+  // since runId and nodeId don't change across attempts. callId varies by
+  // caller: a fixed constant for calls that happen once per node ('agent',
+  // 'lead'), or the AI SDK's own per-call toolCallId for a team node's
+  // several member delegate calls.
+  runId: string;
+  nodeId: string;
+  callId: string;
+  durationMs: number;
+}): Promise<void> {
+  if (!spendState) {
+    return;
+  }
+
+  try {
+    await settleCreditUsage({
+      creditAccountId: spendState.creditAccountId,
+      workspaceId,
+      userId,
+      aiModelId,
+      feature,
+      refType: 'workflowRun',
+      refId: runId,
+      durationMs,
+      idempotencyKey: `workflow:${runId}:${nodeId}:${callId}`,
+      ...normalizeUsage(provider, steps),
+    });
+  } catch (error) {
+    logger.error(
+      `Failed to settle credit usage for workflow run ${runId}, node ${nodeId}, call ${callId}:`,
+      error,
+    );
+  }
+}
+
 // Runs a referenced agent exactly like it does in chat: same instructions,
 // full toolset (noop writer, workflow runs have no chat UI to stream to),
 // temperature, and step budget. Shared by the agent node (one agent) and
@@ -156,12 +263,22 @@ export async function runReferencedAgent({
   userId,
   workspaceId,
   prompt,
+  runId,
+  nodeId,
+  callId,
+  feature,
 }: {
   agentId: string;
   userId: string;
   workspaceId: string;
   prompt: string;
+  runId: string;
+  nodeId: string;
+  callId: string;
+  feature: CreditUsageFeature;
 }): Promise<ReferencedAgentRun> {
+  const spendState = await gateCreditSpend({ workspaceId });
+
   const agentRecord = await getAgentById({ agentId, userId });
   if (!agentRecord) {
     throw new Error(`Agent "${agentId}" not found for this user`);
@@ -176,6 +293,7 @@ export async function runReferencedAgent({
     defaultDatasetId: agentRecord.defaultDatasetId,
   });
 
+  const startedAt = Date.now();
   const result = await generateText({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions,
@@ -197,6 +315,20 @@ export async function runReferencedAgent({
     stopWhen: stepCountIs(15),
     onStepFinish: logTraceStepDebug(`agent "${agentRecord.name}"`),
     ...toModelSettings(agent.settings),
+  });
+
+  await settleWorkflowUsage({
+    spendState,
+    workspaceId,
+    userId,
+    aiModelId: agentRecord.aiModelId,
+    provider: agent.aiModel.provider,
+    steps: result.steps,
+    feature,
+    runId,
+    nodeId,
+    callId,
+    durationMs: Date.now() - startedAt,
   });
 
   return {

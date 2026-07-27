@@ -17,6 +17,27 @@ export interface AiModelMeta {
   [key: string]: any; // Allow any additional metadata fields
 }
 
+// Discriminated by `kind` so v2 (image/video) is additive, no migration
+// needed (docs/credits/prd.md, "Pricing"). V1 only implements `token`; a
+// model with no pricing, or a `kind` the charger doesn't implement yet, is
+// not chargeable and the credit gate refuses to start a run on it, same as
+// the `capabilities` fail-closed convention above.
+export type AiModelPricing =
+  | {
+      kind: 'token';
+      nanoUsdPerInputToken: number;
+      nanoUsdPerOutputToken: number;
+      // Real platform cost of a cache hit / write. Used only for margin
+      // analytics, never for what the user is charged. Absent means caching
+      // is not modeled for this model.
+      nanoUsdPerCacheReadToken?: number;
+      nanoUsdPerCacheWriteToken?: number;
+      // Overrides config.creditMarkupBps for this model.
+      markupBps?: number;
+    }
+  | { kind: 'image'; nanoUsdPerImage: number } // v2
+  | { kind: 'video'; nanoUsdPerSecond: number }; // v2
+
 export const aiModelModalities = ['text', 'image', 'video', 'audio'] as const;
 export type AiModelModality = (typeof aiModelModalities)[number];
 
@@ -48,6 +69,9 @@ export const aiModel = pgTable('ai_models', {
   description: text('description').notNull(),
   capabilities: jsonb('capabilities').default({}).notNull().$type<AiModelCapabilities>(),
   meta: jsonb('meta').default({}).notNull().$type<AiModelMeta>(),
+  // Set by hand, same as capabilities: no seeding here (docs/credits/prd.md,
+  // "Pricing"). Null means "not chargeable".
+  pricing: jsonb('pricing').$type<AiModelPricing>(),
   ...timestamps,
 });
 

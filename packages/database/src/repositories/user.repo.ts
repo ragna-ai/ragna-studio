@@ -27,6 +27,18 @@ export async function getUserById({ userId }: { userId: string }): Promise<User 
   return userRecord || null;
 }
 
+/**
+ * Get user by email. Used by the credits grant script (docs/credits/prd.md,
+ * "Grants") to resolve a human-provided email to a userId before granting.
+ */
+export async function getUserByEmail({ email }: { email: string }): Promise<User | null> {
+  const userRecord = await db.query.user.findFirst({
+    where: { email },
+  });
+
+  return userRecord || null;
+}
+
 // export async function getUserCreditBalance({ userId }: { userId: string }): Promise<number> {
 //   const userRecord = await db.query.user.findFirst({
 //     columns: { creditBalance: true },

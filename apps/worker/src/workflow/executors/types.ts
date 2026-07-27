@@ -6,6 +6,11 @@ export type ExecutorContext = {
   input: string;
   userId: string;
   workspaceId: string;
+  // The workflow run this node belongs to. Combined with the node's own id
+  // (available to every Executor as its first argument), this is what makes
+  // a credit charge's idempotencyKey stable across a BullMQ retry of the
+  // same run (docs/credits/prd.md, "Call sites").
+  runId: string;
 };
 
 // `trace` is only ever set by executors that run a referenced agent's tool
