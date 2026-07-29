@@ -9,6 +9,7 @@ import {
   z,
 } from '@repo/ai';
 import type { ToolSet } from '@repo/ai';
+import type { AiModelPricing } from '@repo/database';
 import { getAgentById, getDefaultAgent } from '@repo/database';
 import type { TeamConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
@@ -17,7 +18,9 @@ import type { DelegateCallMeta } from './run-referenced-agent';
 import {
   collectTrace,
   gateCreditSpend,
+  InsufficientCreditsError,
   logTraceStepDebug,
+  ModelNotChargeableError,
   runReferencedAgent,
   settleWorkflowUsage,
   withAiModel,
@@ -102,12 +105,22 @@ function buildTeamBriefing(members: ResolvedMember[]): string {
 // lead's loop finishes; the same toolCallId also makes this call's charge
 // unique among the node's other delegate calls (docs/credits/prd.md, "Call
 // sites").
+//
+// A member's `runReferencedAgent` call can throw InsufficientCreditsError or
+// ModelNotChargeableError from its own gate. Left alone, the AI SDK turns
+// that into a 'tool-error' content part and the lead's loop just keeps
+// going, degrading the run instead of failing it. So the error is also
+// stashed via `onCreditError` and `abortController` is aborted, which stops
+// the lead's own generateText call; the tool still rethrows so the failed
+// delegate call is visible in the trace either way.
 function buildDelegateTools(
   members: ResolvedMember[],
   toolNames: string[],
   ctx: ExecutorContext,
   nodeId: string,
   delegateCallMetaByToolCallId: Map<string, DelegateCallMeta>,
+  abortController: AbortController,
+  onCreditError: (error: InsufficientCreditsError | ModelNotChargeableError) => void,
 ): ToolSet {
   const entries = members.map((member, index) => {
     const toolName = toolNames[index];
@@ -118,23 +131,31 @@ function buildDelegateTools(
       inputSchema: z.object({ task: z.string() }),
       execute: async ({ task }, { toolCallId }) => {
         const startedAt = Date.now();
-        const { text, trace, usage } = await runReferencedAgent({
-          agentId: member.agentId,
-          userId: ctx.userId,
-          workspaceId: ctx.workspaceId,
-          prompt: task,
-          runId: ctx.runId,
-          nodeId,
-          callId: toolCallId,
-          feature: 'team',
-        });
-        const memberToolCalls = trace.flatMap((step) => step.toolCalls);
-        delegateCallMetaByToolCallId.set(toolCallId, {
-          calls: memberToolCalls.length > 0 ? memberToolCalls : undefined,
-          durationMs: Date.now() - startedAt,
-          usage,
-        });
-        return text;
+        try {
+          const { text, trace, usage } = await runReferencedAgent({
+            agentId: member.agentId,
+            userId: ctx.userId,
+            workspaceId: ctx.workspaceId,
+            prompt: task,
+            runId: ctx.runId,
+            nodeId,
+            callId: toolCallId,
+            feature: 'team',
+          });
+          const memberToolCalls = trace.flatMap((step) => step.toolCalls);
+          delegateCallMetaByToolCallId.set(toolCallId, {
+            calls: memberToolCalls.length > 0 ? memberToolCalls : undefined,
+            durationMs: Date.now() - startedAt,
+            usage,
+          });
+          return text;
+        } catch (error) {
+          if (error instanceof InsufficientCreditsError || error instanceof ModelNotChargeableError) {
+            onCreditError(error);
+            abortController.abort();
+          }
+          throw error;
+        }
       },
     });
     return [toolName, delegateTool] as const;
@@ -154,6 +175,10 @@ type LeadSetup = {
   // provider string as plain values, not baked into the SDK's model object.
   aiModelId: string;
   provider: string;
+  // The lead's model pricing, so the lead's own gate call can refuse an
+  // unpriced model before generateText runs (docs/credits/prd.md,
+  // "Pricing"), same reasoning as `aiModelId`/`provider` above.
+  pricing: AiModelPricing | null;
 };
 
 async function resolveReferencedLead(
@@ -194,6 +219,7 @@ async function resolveReferencedLead(
     modelSettings: toModelSettings(lead.settings),
     aiModelId: lead.aiModelId,
     provider: lead.aiModel.provider,
+    pricing: lead.aiModel.pricing,
   };
 }
 
@@ -212,6 +238,7 @@ async function resolveDefaultLead(briefing: string): Promise<LeadSetup> {
     modelSettings: toModelSettings(undefined),
     aiModelId: defaultAgent.aiModelId,
     provider: defaultAgent.aiModel.provider,
+    pricing: defaultAgent.aiModel.pricing,
   };
 }
 
@@ -219,46 +246,70 @@ export const executeTeam: Executor = async (node, ctx) => {
   const config = node.data.config as TeamConfig;
   const prompt = resolveTemplate(config.prompt, ctx);
 
-  // Gate the lead's own call up front, before any member/lead setup work.
-  // Each member's delegate call gets its own independent gate inside
-  // runReferencedAgent; this one covers the lead's own generateText call
-  // below, which is a separate spend (docs/credits/prd.md: "Every text LLM
-  // call made on a user's behalf in chat and workflows debits their credit
-  // account").
-  const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId });
-
   const members = await resolveMembers(config.members, ctx);
   const toolNames = assignToolNames(members);
   const briefing = buildTeamBriefing(members);
 
+  const { model, instructions, ownTools, modelSettings, aiModelId, provider, pricing } =
+    config.leadAgentId
+      ? await resolveReferencedLead(config.leadAgentId, ctx, briefing)
+      : await resolveDefaultLead(briefing);
+
+  // Gate the lead's own call once its model (and pricing) is known. Each
+  // member's delegate call gets its own independent gate inside
+  // runReferencedAgent; this one covers the lead's own generateText call
+  // below, which is a separate spend (docs/credits/prd.md: "Every text LLM
+  // call made on a user's behalf in chat and workflows debits their credit
+  // account").
+  const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId, pricing });
+
   const delegateCallMetaByToolCallId = new Map<string, DelegateCallMeta>();
+  // Aborts the lead's own generateText loop the moment a delegate call hits
+  // its credit gate mid-run, so the run fails with a distinguishable reason
+  // instead of the lead looping over failing delegates and burning more of
+  // the user's balance (see buildDelegateTools above).
+  const abortController = new AbortController();
+  let creditError: InsufficientCreditsError | ModelNotChargeableError | undefined;
   const delegateTools = buildDelegateTools(
     members,
     toolNames,
     ctx,
     node.id,
     delegateCallMetaByToolCallId,
+    abortController,
+    (error) => {
+      creditError = error;
+    },
   );
 
-  const { model, instructions, ownTools, modelSettings, aiModelId, provider } = config.leadAgentId
-    ? await resolveReferencedLead(config.leadAgentId, ctx, briefing)
-    : await resolveDefaultLead(briefing);
-
   const startedAt = Date.now();
-  const result = await generateText({
-    model,
-    instructions,
-    prompt,
-    // No collision risk: delegate tool names all carry the delegate_to_
-    // prefix, which no agent tool id uses.
-    tools: { ...ownTools, ...delegateTools },
-    // Worst case is large (12 lead steps, each fanning out to members that
-    // each get their own 15-step budget); acceptable for now, quotas come
-    // later with billing.
-    stopWhen: stepCountIs(12),
-    onStepFinish: logTraceStepDebug('team lead', delegateCallMetaByToolCallId),
-    ...modelSettings,
-  });
+  let result: Awaited<ReturnType<typeof generateText>>;
+  try {
+    result = await generateText({
+      model,
+      instructions,
+      prompt,
+      // No collision risk: delegate tool names all carry the delegate_to_
+      // prefix, which no agent tool id uses.
+      tools: { ...ownTools, ...delegateTools },
+      // Worst case is large (12 lead steps, each fanning out to members that
+      // each get their own 15-step budget); acceptable for now, quotas come
+      // later with billing.
+      stopWhen: stepCountIs(12),
+      abortSignal: abortController.signal,
+      onStepFinish: logTraceStepDebug('team lead', delegateCallMetaByToolCallId),
+      ...modelSettings,
+    });
+  } catch (error) {
+    // A credit error aborts the signal above, which makes generateText
+    // reject; surface the original credit error rather than an AbortError so
+    // the run step's message is distinguishable (docs/credits/prd.md, "Call
+    // sites"). Any other rejection (no credit error captured) is rethrown
+    // as-is. Either way, settleWorkflowUsage below is never reached, so the
+    // lead's aborted partial run is not settled: v1 charges nothing for
+    // aborted/failed runs (docs/credits/prd.md, "Non-goals").
+    throw creditError ?? error;
+  }
 
   await settleWorkflowUsage({
     spendState,

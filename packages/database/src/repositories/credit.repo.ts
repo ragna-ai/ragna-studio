@@ -10,7 +10,13 @@ import type {
 } from '../schema';
 import { creditAccount, creditLedger, creditUsageEvent, workspace } from '../schema';
 
-export type { CreditAccount, CreditLedgerKind, CreditUsageEvent, CreditUsageFeature } from '../schema';
+export type {
+  AiModelPricing,
+  CreditAccount,
+  CreditLedgerKind,
+  CreditUsageEvent,
+  CreditUsageFeature,
+} from '../schema';
 
 export interface CreditSpendState {
   creditAccountId: string;

@@ -8,7 +8,13 @@ import {
   toModelSettings,
 } from '@repo/ai';
 import { config } from '@repo/config';
-import type { AgentSettings, AgentTools, CreditSpendState, CreditUsageFeature } from '@repo/database';
+import type {
+  AgentSettings,
+  AgentTools,
+  AiModelPricing,
+  CreditSpendState,
+  CreditUsageFeature,
+} from '@repo/database';
 import { getAgentById, resolveCreditSpendState, settleCreditUsage } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { WorkflowAgentTraceStep, WorkflowTokenUsage, WorkflowToolCall } from '@repo/workflow';
@@ -27,7 +33,23 @@ export class InsufficientCreditsError extends Error {
   }
 }
 
-export type AiModelRef = { provider: string; model: string };
+// Thrown when the pre-run gate refuses a run because the target model has
+// no chargeable pricing: no `pricing` jsonb, or a `kind` the charger doesn't
+// implement yet (v1 only implements 'token'). A distinct class from
+// InsufficientCreditsError because this is a platform configuration
+// problem, not something the user can fix by buying credits, so the run
+// step's error text should read as a config bug rather than "out of
+// credits" (docs/credits/prd.md, "Pricing").
+export class ModelNotChargeableError extends Error {
+  constructor(workspaceId: string) {
+    super(
+      `Model is not chargeable: workspace ${workspaceId}'s run targets a model with no token pricing configured`,
+    );
+    this.name = 'ModelNotChargeableError';
+  }
+}
+
+export type AiModelRef = { provider: string; model: string; pricing: AiModelPricing | null };
 type AgentSettingsRef = AgentSettings | null;
 
 // getAgentById/getDefaultAgent both load the `aiModel` relation, but their
@@ -170,13 +192,32 @@ export type ReferencedAgentRun = {
 // credits are off (skipped entirely, no query) and when the billing entity
 // has no account; either way the caller's later settleWorkflowUsage call
 // must also skip, so gating and settling can never happen independently.
+//
+// `pricing` is the target model's pricing. Every call site in this file
+// knows its model by the time it gates (the gate runs after the agent
+// record is loaded, see runReferencedAgent below), so `pricing` is passed
+// there rather than left undefined, unlike apps/api's `assertCanSpend`
+// which also serves the enqueue-time `creditGuard` that doesn't know the
+// model yet. A model with no pricing, or a `kind` the charger doesn't
+// implement (v1 only implements 'token'), is not chargeable, so the run is
+// refused here rather than left to fail inside settlement after the model
+// call already ran (docs/credits/prd.md, "Pricing").
 export async function gateCreditSpend({
   workspaceId,
+  pricing,
 }: {
   workspaceId: string;
+  pricing?: AiModelPricing | null;
 }): Promise<CreditSpendState | null> {
   if (!config.creditsEnabled) {
     return null;
+  }
+
+  if (pricing !== undefined && pricing?.kind !== 'token') {
+    logger.error(
+      `Refusing to start run for workspace ${workspaceId}: model has no chargeable token pricing`,
+    );
+    throw new ModelNotChargeableError(workspaceId);
   }
 
   const spendState = await resolveCreditSpendState({ workspaceId });
@@ -277,13 +318,17 @@ export async function runReferencedAgent({
   callId: string;
   feature: CreditUsageFeature;
 }): Promise<ReferencedAgentRun> {
-  const spendState = await gateCreditSpend({ workspaceId });
-
   const agentRecord = await getAgentById({ agentId, userId });
   if (!agentRecord) {
     throw new Error(`Agent "${agentId}" not found for this user`);
   }
   const agent = withAgentConfig(agentRecord);
+
+  // Gated after the agent (and its model's pricing) is known, so an
+  // unpriced model is refused here rather than at the end of a run
+  // (docs/credits/prd.md, "Pricing").
+  const spendState = await gateCreditSpend({ workspaceId, pricing: agent.aiModel.pricing });
+
   const instructions = await buildAgentInstructions({
     agentId,
     userId,

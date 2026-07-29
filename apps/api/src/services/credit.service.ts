@@ -1,5 +1,10 @@
 import { config } from '@repo/config';
-import type { CreditSpendState, CreditUsageEvent, CreditUsageFeature } from '@repo/database';
+import type {
+  AiModelPricing,
+  CreditSpendState,
+  CreditUsageEvent,
+  CreditUsageFeature,
+} from '@repo/database';
 import {
   countCreditUsageEvents,
   getCreditSpendStateForUser,
@@ -49,14 +54,36 @@ export interface CreditUsageListResponse {
  * off, so the system can ship dark. Otherwise throws `PaymentRequiredException`
  * when the workspace's owner has no credit account, or its balance is not
  * positive (docs/credits/prd.md, "Overdraft": gate on `balance > 0`).
+ *
+ * `pricing` is the target model's pricing, when the caller already knows
+ * which model it's about to spend on. A model with no pricing, or a `kind`
+ * the charger doesn't implement (v1 only implements `token`), is not
+ * chargeable, so the run is refused here rather than left to fail inside
+ * settlement after the model call already ran (docs/credits/prd.md,
+ * "Pricing"). That's a platform configuration problem, not the user being
+ * out of credits, hence `InternalServerErrorException` rather than
+ * `PaymentRequiredException`. `pricing === undefined` means the caller
+ * cannot know the model yet (`creditGuard` at workflow-run enqueue, before
+ * any node's model is resolved), so this check is skipped and only the
+ * balance is checked; the worker's per-node gate covers pricing once the
+ * model is known.
  */
 export async function assertCanSpend({
   workspaceId,
+  pricing,
 }: {
   workspaceId: string;
+  pricing?: AiModelPricing | null;
 }): Promise<CreditSpendState | null> {
   if (!config.creditsEnabled) {
     return null;
+  }
+
+  if (pricing !== undefined && pricing?.kind !== 'token') {
+    logger.error(
+      `Refusing to start run for workspace ${workspaceId}: model has no chargeable token pricing`,
+    );
+    throw new InternalServerErrorException('Model is not chargeable: no token pricing configured');
   }
 
   const { error, data: spendState } = await tryCatch(() =>

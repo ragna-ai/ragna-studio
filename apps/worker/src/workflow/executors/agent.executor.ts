@@ -22,8 +22,14 @@ export const executeAgent: Executor = async (node, ctx) => {
   // (docs/credits/prd.md: "Every text LLM call made on a user's behalf in
   // chat and workflows debits their credit account").
   if (!config.agentId) {
-    const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId });
     const defaultAgent = withAiModel(await getDefaultAgent());
+    // Gated after the default agent (and its model's pricing) is known, so
+    // an unpriced model is refused here rather than at the end of a run
+    // (docs/credits/prd.md, "Pricing").
+    const spendState = await gateCreditSpend({
+      workspaceId: ctx.workspaceId,
+      pricing: defaultAgent.aiModel.pricing,
+    });
 
     const startedAt = Date.now();
     const result = await generateText({

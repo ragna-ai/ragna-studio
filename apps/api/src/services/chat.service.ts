@@ -426,12 +426,19 @@ export async function runChatStream(
       throw new NotFoundException('Chat not found');
     }
 
+    const { agent } = userChat;
+
     // Refuse before any model call happens if the workspace owner is out of
-    // credits (docs/credits/prd.md, "The WS chat path"). Throws
-    // PaymentRequiredException, which ws.controller.ts already maps to an
-    // error frame. `null` means CREDITS_ENABLED is off; settlement in
-    // streamText's onEnd below is skipped together with this gate.
-    const creditSpendState = await assertCanSpend({ workspaceId: userChat.workspaceId });
+    // credits, or if the chat's model has no chargeable pricing
+    // (docs/credits/prd.md, "The WS chat path" and "Pricing"). Throws
+    // PaymentRequiredException or InternalServerErrorException, which
+    // ws.controller.ts already maps to an error frame. `null` means
+    // CREDITS_ENABLED is off; settlement in streamText's onEnd below is
+    // skipped together with this gate.
+    const creditSpendState = await assertCanSpend({
+      workspaceId: userChat.workspaceId,
+      pricing: agent.aiModel.pricing,
+    });
 
     // Rebuild the full conversation from persisted history plus the one new
     // message the client sent, rather than trusting a client-sent history.
@@ -443,8 +450,6 @@ export async function runChatStream(
       logger.warn(`Invalid messages for chat ${chatId}`, validated.error);
       throw new BadRequestException('Invalid messages format');
     }
-
-    const { agent } = userChat;
 
     const validUiMessages = validated.data;
     const modelMessages = await convertToModelMessages(
