@@ -1,5 +1,6 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
+import { setTimeout } from 'node:timers/promises';
 import { app } from './app';
 import { websocket } from './ws/socket';
 
@@ -31,7 +32,13 @@ function main() {
 async function gracefulShutdown(signal: string) {
   logger.info(`Received ${signal}, shutting down gracefully...`);
   if (server) {
-    await server.stop();
+    // server.stop() waits for open connections (WS, streaming responses) to
+    // close on their own, which can hang forever. Racing it against a
+    // timeout is required: calling server.stop(true) later does NOT resolve
+    // an already-pending server.stop() promise, so awaiting both in sequence
+    // still hangs.
+    await Promise.race([server.stop(), setTimeout(2000)]);
+    await server.stop(true);
   }
   process.exit(0);
 }
