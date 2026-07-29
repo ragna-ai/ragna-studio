@@ -141,10 +141,28 @@ const ConfigSchema = z.object({
 
   // Credits (docs/credits/prd.md): markup in basis points, and the master
   // switch that gates the whole system so it can ship dark.
-  CREDIT_MARKUP_BPS: z
-    .string()
-    .optional()
-    .transform((val) => Number(val) || 15_000),
+  //
+  // An unset var (undefined) or dotenv's empty-string form of "unset" both
+  // preprocess to undefined so `.default()` applies; anything else must
+  // coerce to a positive integer or startup fails with a clear validation
+  // error. This replaces `Number(val) || 15_000`, which silently turned an
+  // explicit "0" or any typo that parses to NaN into the default instead of
+  // failing.
+  //
+  // "NULL" (any case) disables the markup. It normalizes to 10_000 bps
+  // (1.0x, cost price) here at the boundary rather than flowing as null
+  // through the money path: the charge math is exactly identity at 10_000
+  // (docs/credits/prd.md, "The charge formula"), so downstream code and the
+  // usage rows' `markupBps` snapshot stay unchanged and truthful. Per-model
+  // `pricing.markupBps` overrides still apply on top of a disabled global.
+  CREDIT_MARKUP_BPS: z.preprocess(
+    (val) => {
+      if (val === '') return undefined;
+      if (typeof val === 'string' && val.toLowerCase() === 'null') return 10_000;
+      return val;
+    },
+    z.coerce.number().int().positive().default(15_000),
+  ),
   CREDITS_ENABLED: z
     .string()
     .optional()
