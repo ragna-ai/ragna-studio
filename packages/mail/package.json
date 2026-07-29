@@ -19,7 +19,7 @@
     "maizzle:build": "maizzle build --config maizzle.config.ts"
   },
   "dependencies": {
-    "@maizzle/framework": "6.0.6",
+    "@maizzle/framework": "6.0.7",
     "@maizzle/tailwindcss": "1.5.5",
     "@repo/config": "workspace:*",
     "nodemailer": "^9.0.3",

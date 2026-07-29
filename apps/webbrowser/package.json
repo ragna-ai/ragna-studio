@@ -23,7 +23,7 @@
     "@repo/logger": "workspace:*",
     "hono": "^4.12.32",
     "http-status-codes": "^2.3.0",
-    "puppeteer": "^25.3.0",
+    "puppeteer": "^25.4.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-adblocker": "^2.13.6",
     "puppeteer-extra-plugin-anonymize-ua": "^2.4.6",
