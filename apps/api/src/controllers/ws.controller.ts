@@ -8,13 +8,13 @@ import { StatusCodes } from 'http-status-codes';
 import type { AuthEnv } from '../middlewares/authMiddleware';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { requireAllowedOrigin } from '../middlewares/originMiddleware';
-import { abortChatRun, runChatStream } from '../services/chat.service';
 import {
   authorizeChannel,
   chatIdFromChannel,
   publishFrame,
   sendFrame,
 } from '../services/channel.service';
+import { abortChatRun, runChatStream } from '../services/chat.service';
 import type { MessageFramePayload } from '../ws/protocol';
 import { messageFramePayloadSchema, parseWsEnvelope } from '../ws/protocol';
 import type { ChatServerWebSocket } from '../ws/socket';
@@ -162,7 +162,8 @@ export const wsController = new Hono()
                     userId: user.id,
                     message: messagePayload.message,
                   },
-                  (chunk) => publishFrame(raw, { channel, type: 'chunk', payload: chunk }),
+                  (uiMsgChunk) =>
+                    publishFrame(raw, { channel, type: 'chunk', payload: uiMsgChunk }),
                 );
                 publishFrame(raw, { channel, type: 'done' });
               } catch (error) {

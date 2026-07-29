@@ -452,7 +452,7 @@ export async function runChatStream(
     }
 
     const validUiMessages = validated.data;
-    const modelMessages = await convertToModelMessages(
+    const validModelMessages = await convertToModelMessages(
       mergeConsecutiveUserMessages(validUiMessages),
     );
     const instructions = await buildAgentInstructions({
@@ -504,6 +504,7 @@ export async function runChatStream(
         }
 
         const streamStartedAt = Date.now();
+        const modelSettings = toModelSettings(agent.settings);
 
         // Stream the response from the language model
         const result = streamText({
@@ -512,19 +513,21 @@ export async function runChatStream(
             totalMs: 600_000, // whole multi-step run; image tools can take minutes
             toolMs: 180_000, // single tool call (e.g. generating up to 4 images)
           },
+          instructions,
+          messages: validModelMessages,
           model: getLanguageModel({
             provider: agent.aiModel.provider,
             model: agent.aiModel.model,
           }),
-          instructions,
-          messages: modelMessages,
+          temperature: modelSettings.temperature,
+          maxOutputTokens: modelSettings.maxOutputTokens,
+          reasoning: modelSettings.reasoning,
           tools: buildAgentToolset(agent.tools, dataStream, {
             userId,
             agentId: agent.id,
             workspaceId: userChat.workspaceId,
           }),
           stopWhen: stepCountIs(5),
-          ...toModelSettings(agent.settings),
           onStart(st) {
             logger.debug('Request started', {
               callId: st.callId,
