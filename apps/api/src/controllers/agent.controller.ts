@@ -30,15 +30,11 @@ export const agentController = new Hono()
     const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
-    const sort = query.sort ?? 'desc';
-
     const { agents, totalCount } = await listAgentsForWorkspace({
       workspaceId: workspace.id,
-      page,
-      limit,
-      sort,
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
     });
 
     return c.json({ agents, meta: { totalCount } });

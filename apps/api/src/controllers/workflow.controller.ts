@@ -3,14 +3,6 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { creditGuard } from '../middlewares/creditGuard';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
-  validCreateWorkflowBody,
-  validPaginationQuery,
-  validRunWorkflowBody,
-  validUpdateWorkflowBody,
-  validWorkflowIdParam,
-  validWorkflowRunIdParam,
-} from '../validation';
-import {
   cancelWorkflowRun,
   createWorkflowForUser,
   deleteWorkflowForWorkspace,
@@ -22,6 +14,14 @@ import {
   startWorkflowRun,
   updateWorkflowForWorkspace,
 } from '../services/workflow.service';
+import {
+  validCreateWorkflowBody,
+  validPaginationQuery,
+  validRunWorkflowBody,
+  validUpdateWorkflowBody,
+  validWorkflowIdParam,
+  validWorkflowRunIdParam,
+} from '../validation';
 
 export const workflowController = new Hono()
   .basePath('/workspace/:workspaceId/workflow')
@@ -37,9 +37,9 @@ export const workflowController = new Hono()
 
     const { workflows, meta } = await listWorkflows({
       workspaceId: workspace.id,
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
-      sort: query.sort ?? 'desc',
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
     });
 
     return c.json({ workflows, meta });

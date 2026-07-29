@@ -2,18 +2,18 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
-  validChatIdParam,
-  validCreateChatBody,
-  validPaginationQuery,
-  validUpdateChatTitleBody,
-} from '../validation';
-import {
   createChatForWorkspace,
   deleteChatForWorkspace,
   getChatForWorkspace,
   listChatsForWorkspace,
   renameChatForWorkspace,
 } from '../services/chat.service';
+import {
+  validChatIdParam,
+  validCreateChatBody,
+  validPaginationQuery,
+  validUpdateChatTitleBody,
+} from '../validation';
 
 export const chatController = new Hono()
   .basePath('/workspace/:workspaceId/chat')
@@ -29,9 +29,9 @@ export const chatController = new Hono()
 
     const { chats, totalCount } = await listChatsForWorkspace({
       workspaceId: workspace.id,
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
-      sort: query.sort ?? 'desc',
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
     });
 
     return c.json({ chats, meta: { totalCount } });

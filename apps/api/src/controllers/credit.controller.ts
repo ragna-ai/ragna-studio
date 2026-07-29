@@ -29,9 +29,9 @@ export const creditController = new Hono()
 
     const { usages, totalCount } = await listCreditUsageForUser({
       userId: user.id,
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
-      sort: query.sort ?? 'desc',
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
     });
 
     return c.json({ usages, meta: { totalCount } });

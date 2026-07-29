@@ -3,14 +3,6 @@ import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
-  validCreateSocialPostBody,
-  validPaginationQuery,
-  validSocialPostIdParam,
-  validSocialPostMediaParams,
-  validUpdateSocialPostBody,
-  validUpdateSocialPostMediaBody,
-} from '../validation';
-import {
   attachSocialPostMedia,
   createSocialPostForUser,
   deleteSocialPost,
@@ -22,6 +14,14 @@ import {
   updateSocialPostForUser,
   updateSocialPostMediaAltTextForUser,
 } from '../services/social-post.service';
+import {
+  validCreateSocialPostBody,
+  validPaginationQuery,
+  validSocialPostIdParam,
+  validSocialPostMediaParams,
+  validUpdateSocialPostBody,
+  validUpdateSocialPostMediaBody,
+} from '../validation';
 
 export const socialPostController = new Hono()
   .basePath('/workspace/:workspaceId/social-post')
@@ -37,9 +37,9 @@ export const socialPostController = new Hono()
 
     const { posts, meta } = await listSocialPosts({
       workspaceId: workspace.id,
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
-      sort: query.sort ?? 'desc',
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
     });
 
     return c.json({ posts, meta });

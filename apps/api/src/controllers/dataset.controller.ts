@@ -40,8 +40,8 @@ export const datasetController = new Hono()
 
     const { datasets, meta } = await listDatasets({
       workspaceId: workspace.id,
-      page: query.page || 1,
-      limit: query.limit || 10,
+      page: query.page,
+      limit: query.limit,
       sort: query.sort,
     });
 
@@ -205,17 +205,22 @@ export const datasetController = new Hono()
    * One atomic call per reorder: server computes the new sortOrder from the
    * dataset's row order. Omitted afterRowId means top of the dataset.
    */
-  .post('/:datasetId/row/:rowId/move', validDatasetRowIdParam, validMoveDatasetRowBody, async (c) => {
-    const workspace = c.get('workspace');
-    const param = c.req.valid('param');
-    const body = c.req.valid('json');
+  .post(
+    '/:datasetId/row/:rowId/move',
+    validDatasetRowIdParam,
+    validMoveDatasetRowBody,
+    async (c) => {
+      const workspace = c.get('workspace');
+      const param = c.req.valid('param');
+      const body = c.req.valid('json');
 
-    const row = await moveDatasetRowForUser({
-      workspaceId: workspace.id,
-      datasetId: param.datasetId,
-      rowId: param.rowId,
-      afterRowId: body.afterRowId,
-    });
+      const row = await moveDatasetRowForUser({
+        workspaceId: workspace.id,
+        datasetId: param.datasetId,
+        rowId: param.rowId,
+        afterRowId: body.afterRowId,
+      });
 
-    return c.json({ row });
-  });
+      return c.json({ row });
+    },
+  );

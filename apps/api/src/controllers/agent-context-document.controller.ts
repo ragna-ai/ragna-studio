@@ -91,13 +91,13 @@ export const agentContextDocumentController = new Hono()
     async (c) => {
       const workspace = c.get('workspace');
       const param = c.req.valid('param');
-      const { name } = c.req.valid('json');
+      const body = c.req.valid('json');
 
       const document = await renameAgentContextDocument({
         agentId: param.agentId,
         workspaceId: workspace.id,
         documentId: param.documentId,
-        name,
+        name: body.name,
       });
 
       return c.json({ document });

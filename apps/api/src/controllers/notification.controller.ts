@@ -24,11 +24,8 @@ export const notificationController = new Hono()
     const user = c.get('user');
     const query = c.req.valid('query');
 
-    const page = query.page ? Number(query.page) : 1;
-    const limit = query.limit ? Number(query.limit) : 10;
-
     // Calculate offset for pagination ((page number - 1) * page size)
-    const offset = page && limit ? (page - 1) * limit : undefined;
+    const offset = query.page && query.limit ? (query.page - 1) * query.limit : undefined;
 
     // Get unread count and fail gracefully
     const { data: unreadCount } = await tryCatch(() =>
@@ -36,7 +33,7 @@ export const notificationController = new Hono()
     );
 
     const { error, data: notifications } = await tryCatch(() =>
-      listNotifications({ userId: user.id, limit, offset }),
+      listNotifications({ userId: user.id, limit: query.limit, offset }),
     );
 
     if (error !== null) {
