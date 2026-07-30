@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Share2Icon, Trash2Icon } from '@lucide/vue';
+import { MoreVerticalIcon, PencilIcon, Share2Icon, Trash2Icon } from '@lucide/vue';
 import SocialPostStatusBadge from '~/features/social/components/SocialPostStatusBadge.vue';
 import type { SocialPost } from '~/features/social/composables/useSocialPostApi';
 
@@ -67,18 +67,30 @@ const { formatDateTime } = useDateTimeFormat();
           {{ formatDateTime(post.createdAt) }}
         </TableCell>
         <!-- Actions -->
-        <TableCell
-          class="flex justify-end space-x-2 text-right whitespace-nowrap"
-          @click.stop
-        >
-          <Button
-            variant="outline"
-            size="icon"
-            :aria-label="t('common.delete')"
-            @click="() => emit('delete-post', post.id)"
-          >
-            <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-          </Button>
+        <TableCell class="text-right whitespace-nowrap" @click.stop>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                <MoreVerticalIcon class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem as-child>
+                <NuxtLinkLocale :to="`/social/${post.id}`">
+                  <PencilIcon class="size-4 stroke-1.5" />
+                  {{ t('common.edit') }}
+                </NuxtLinkLocale>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                @click="() => emit('delete-post', post.id)"
+              >
+                <Trash2Icon class="size-4 stroke-1.5" />
+                {{ t('common.delete') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </TableBody>

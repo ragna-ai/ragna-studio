@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { MessageSquareIcon, StarIcon, Trash2Icon } from '@lucide/vue';
+import {
+  MessageSquareIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  StarIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import type { Agent } from '~/features/agent/types';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
@@ -35,6 +41,7 @@ const emit = defineEmits<{
 // Composables
 
 // Computed
+
 // Functions
 
 const handleNewChat = async (agentId: string) => {
@@ -127,13 +134,29 @@ const handleDeleteFavorite = (agentId: string) => {
               />
             </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              @click="() => emit('delete-agent', agent.id)"
-            >
-              <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                  <MoreVerticalIcon class="size-4 stroke-1.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem as-child>
+                  <NuxtLinkLocale :to="`/agent/${agent.id}`">
+                    <PencilIcon class="size-4 stroke-1.5" />
+                    {{ t('common.edit') }}
+                  </NuxtLinkLocale>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  @click="() => emit('delete-agent', agent.id)"
+                >
+                  <Trash2Icon class="size-4 stroke-1.5" />
+                  {{ t('common.delete') }}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </TableCell>
         </TableRow>
       </TableBody>

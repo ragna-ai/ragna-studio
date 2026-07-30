@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DatabaseIcon, Trash2Icon } from '@lucide/vue';
+import { DatabaseIcon, MoreVerticalIcon, PencilIcon, Trash2Icon } from '@lucide/vue';
 import type { DatasetListItem } from '~/features/dataset/types';
 
 interface Props {
@@ -13,9 +13,13 @@ const emit = defineEmits<{
   (e: 'delete-dataset', datasetId: string): void;
 }>();
 
+// Refs
+
 // Composables
 const { t } = useI18n();
 const { formatDateTime } = useDateTimeFormat();
+
+// Computed
 
 const columnCount = 6;
 </script>
@@ -61,13 +65,29 @@ const columnCount = 6;
           {{ formatDateTime(dataset.updatedAt) }}
         </TableCell>
         <TableCell class="text-right whitespace-nowrap" @click.stop>
-          <Button
-            variant="outline"
-            size="icon"
-            @click="() => emit('delete-dataset', dataset.id)"
-          >
-            <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                <MoreVerticalIcon class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem as-child>
+                <NuxtLinkLocale :to="`/dataset/${dataset.id}`">
+                  <PencilIcon class="size-4 stroke-1.5" />
+                  {{ t('common.edit') }}
+                </NuxtLinkLocale>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                @click="() => emit('delete-dataset', dataset.id)"
+              >
+                <Trash2Icon class="size-4 stroke-1.5" />
+                {{ t('common.delete') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </TableBody>

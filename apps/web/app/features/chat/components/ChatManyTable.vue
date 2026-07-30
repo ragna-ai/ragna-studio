@@ -2,6 +2,8 @@
 import {
   MessageCircleMoreIcon,
   MessagesSquareIcon,
+  MoreVerticalIcon,
+  PencilIcon,
   Trash2Icon,
 } from '@lucide/vue';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
@@ -86,13 +88,29 @@ const { t } = useI18n();
             </NuxtLinkLocale>
           </Button>
 
-          <Button
-            variant="outline"
-            size="icon"
-            @click="() => emit('delete-chat', chat.id)"
-          >
-            <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                <MoreVerticalIcon class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem as-child>
+                <NuxtLinkLocale :to="`/chat/${chat.id}`">
+                  <PencilIcon class="size-4 stroke-1.5" />
+                  {{ t('common.edit') }}
+                </NuxtLinkLocale>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                @click="() => emit('delete-chat', chat.id)"
+              >
+                <Trash2Icon class="size-4 stroke-1.5" />
+                {{ t('common.delete') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </TableBody>

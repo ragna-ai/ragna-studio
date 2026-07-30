@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ClockIcon, Trash2Icon, WorkflowIcon } from '@lucide/vue';
+import {
+  ClockIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  Trash2Icon,
+  WorkflowIcon,
+} from '@lucide/vue';
 import type { Workflow } from '~/features/workflow/types';
 
 // Imports
@@ -102,17 +108,30 @@ const { formatDateTime } = useDateTimeFormat();
           {{ formatDateTime(workflow.updatedAt) }}
         </TableCell>
         <!-- Actions -->
-        <TableCell
-          class="flex justify-end space-x-2 text-right whitespace-nowrap"
-          @click.stop
-        >
-          <Button
-            variant="outline"
-            size="icon"
-            @click="() => emit('delete-workflow', workflow.id)"
-          >
-            <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-          </Button>
+        <TableCell class="text-right whitespace-nowrap" @click.stop>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                <MoreVerticalIcon class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem as-child>
+                <NuxtLinkLocale :to="`/workflow/${workflow.id}`">
+                  <PencilIcon class="size-4 stroke-1.5" />
+                  {{ t('common.edit') }}
+                </NuxtLinkLocale>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                @click="() => emit('delete-workflow', workflow.id)"
+              >
+                <Trash2Icon class="size-4 stroke-1.5" />
+                {{ t('common.delete') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </TableBody>
