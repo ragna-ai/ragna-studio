@@ -53,8 +53,8 @@ describe('computeCharge', () => {
   // packages/config/src/services/config.service.ts (commit 651c7d2): a
   // "NULL" env value now disables markup, normalizing to exactly 10_000 bps
   // (1.0x, cost price) rather than falling back to the 15_000 default. The
-  // test process pins CREDIT_MARKUP_BPS="NULL" (apps/api/test/utils/
-  // preload.ts) precisely so this is the state under test.
+  // test process pins CREDIT_MARKUP_BPS="NULL" (root .env.testing)
+  // precisely so this is the state under test.
   test('falls back to config.creditMarkupBps (pinned "NULL"/disabled) when pricing has no override', () => {
     expect(config.creditMarkupBps).toBe(10_000);
 

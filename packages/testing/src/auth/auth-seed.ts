@@ -29,8 +29,8 @@ async function getTestHelpers(): Promise<TestHelpers> {
   if (!test) {
     throw new Error(
       'auth.$context.test is undefined: the testUtils plugin only registers when config.isTest ' +
-        'is true, so NODE_ENV must be "test" before @repo/auth loads (see the consuming app\'s ' +
-        'test preload script, e.g. apps/api/test/support/preload.ts).',
+        'is true, so NODE_ENV must be "test" before @repo/auth loads (Bun sets this ' +
+        'automatically for `bun test`; see apps/api/test/README.md).',
     );
   }
 

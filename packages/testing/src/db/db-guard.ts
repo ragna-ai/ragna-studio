@@ -1,7 +1,7 @@
 import { db, sql } from '@repo/database';
 
-// Keep in sync with the DB_DATABASE override in the consuming app's test
-// preload (e.g. apps/api/test/support/preload.ts).
+// Keep in sync with DB_DATABASE in the root .env.testing (loaded by
+// @repo/config whenever NODE_ENV=test).
 const TEST_DATABASE_NAME = 'studio_test';
 
 export interface ConnectedDatabaseName {
@@ -21,7 +21,7 @@ export async function getConnectedDatabaseName(): Promise<ConnectedDatabaseName>
 
 /**
  * Every helper that mutates rows across the whole schema (truncate, seeding)
- * calls this first. Without it, a preload misconfiguration would silently
+ * calls this first. Without it, an env misconfiguration would silently
  * point tests at the dev database, and a truncate-between-tests strategy
  * would wipe real data.
  */
@@ -31,7 +31,7 @@ export async function assertConnectedToTestDatabase(): Promise<void> {
   if (name !== TEST_DATABASE_NAME) {
     throw new Error(
       `Refusing to continue: expected the "${TEST_DATABASE_NAME}" database but connected to "${name}". ` +
-        'Check that the app under test preloads DB_DATABASE=studio_test before any other import.',
+        'Check that NODE_ENV=test is set before any other import (Bun sets this automatically for `bun test`).',
     );
   }
 }

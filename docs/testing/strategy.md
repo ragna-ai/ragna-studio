@@ -19,11 +19,10 @@ registered in `turbo.json`.
 Layout: tests are grouped by domain folder, one folder per feature area.
 `test/credit/` for everything credit-related, `test/user/` for user routes,
 and so on. Cross-cutting harness tests (health check, DB safety guard) live
-in `test/smoke/`. Non-test plumbing (the bun preload, the one-off DB setup
-script) stays in `test/utils/`, kept separate from the domain folders so
-`test/`'s top level reads as "tests, plus one utils folder" rather than a
-flat mix of feature folders and infra scripts. bun discovers `*.test.ts`
-recursively, so new folders need no config.
+in `test/smoke/`. bun discovers `*.test.ts` recursively, so new folders need
+no config. The one-off DB setup script lives in `@repo/testing`
+(`packages/testing/scripts/setup-test-db.ts`), not in `apps/api`, since it's
+db-agnostic and every consuming app runs the same `test:setup` command.
 
 ### Style: route-level through `app.request()`
 
@@ -44,10 +43,13 @@ Schema is pushed with drizzle (`db:push` with overridden env). Mocking Drizzle
 is a maintenance tarpit and silently misses relation and constraint bugs.
 
 Env override mechanics: `@repo/config` is a singleton that loads the root
-`.env` via dotenv. dotenv does not overwrite already-set env vars. A bun test
-preload script (via `bunfig.toml`) sets `DB_DATABASE=studio_test` (and any
-other overrides) before any module imports `@repo/config`, so the override
-wins.
+`.env.testing` (test DB name, credits flags) ahead of `.env` via dotenv
+whenever `NODE_ENV=test`, since dotenv processes paths in order and never
+overwrites a var already set by an earlier one. Bun sets `NODE_ENV=test`
+automatically for every `bun test` run, before any module imports
+`@repo/config`, so the test profile wins with no extra wiring. The one-off
+`test:setup` script (not run via `bun test`) sets `NODE_ENV=test` explicitly
+in its `package.json` invocation instead.
 
 ### Isolation: truncate between tests
 
@@ -79,8 +81,8 @@ attach that cookie and the real auth middleware runs.
 
 ### Shared helpers: `@repo/testing`
 
-All reusable helpers (auth seeding, truncate, DB guard, and later queue
-assertions and provider mocks) live in a dedicated private package,
+All reusable helpers (auth seeding, truncate, DB guard, external-provider
+mocks, and later queue assertions) live in a dedicated private package,
 `packages/testing`. Seeding uses the production auth instance's `ctx.test`
 (the gated plugin), so seeded users run the real signup `databaseHooks`,
 including personal-workspace creation. Reason: Phase 2 Playwright in
@@ -91,8 +93,9 @@ so apps only take a single `@repo/testing` devDependency.
 Unlike other `@repo/*` packages it has no tsdown build and exports TS source
 directly. Only test runners consume it (bun test, later Playwright) and both
 execute TS natively, so there is no dist to rebuild after helper edits.
-App-specific bits stay local to each app: the bun preload script that sets
-`DB_DATABASE=studio_test` and `NODE_ENV=test`, and the test files themselves.
+App-specific bits stay local to each app: just the test files themselves,
+which register the external-provider mocks by importing `@repo/testing`
+before anything that transitively imports the real packages.
 
 This matters because authorization bugs (cross-workspace access) are exactly
 what API tests should catch. The same helper becomes the seam Playwright
@@ -102,9 +105,19 @@ reuses in Phase 2.
 
 - **Redis / BullMQ:** real docker Redis on `localhost:6381`. The API mostly
   enqueues; asserting "job landed in queue X with DTO Y" is cheap and real.
-- **AI providers, R2 storage, mail, LinkedIn:** mocked at the package
-  boundary (`@repo/ai`, `@repo/storage`, `@repo/mail`, `@repo/linkedin`).
-  Tests never hit real providers.
+- **AI providers, R2 storage, LinkedIn:** faked with Bun's `mock.module()`,
+  registered in `packages/testing/src/mocks/` and detailed in
+  `apps/api/test/README.md`'s "External-provider mocks" section. Not
+  literally `@repo/ai` at the package boundary as originally planned here:
+  it's bundled by tsdown, so mocking it wouldn't reach a call from one of
+  its own functions to another. The `ai` npm package underneath it is
+  mocked instead (an external, unbundled import even after `@repo/ai` is
+  built), which has the added benefit of keeping `@repo/ai`'s own real
+  orchestration — including DB persistence — under test, not faked away.
+  `@repo/storage` and `@repo/linkedin` are mocked at the package boundary as
+  originally planned, since apps/api imports them directly and they're thin
+  wrappers with no internal logic worth preserving. `@repo/mail` turned out
+  to need no mock: nothing in `apps/api/src` imports it directly.
 
 ### Priorities
 

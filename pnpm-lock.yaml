@@ -774,9 +774,21 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../auth
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/linkedin':
+        specifier: workspace:*
+        version: link:../linkedin
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
+      ai:
+        specifier: 'catalog:'
+        version: 7.0.40(zod@4.4.3)
       better-auth:
         specifier: ^1.6.25
         version: 1.6.25(better-sqlite3@12.11.1)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.0)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.0)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(vue@3.5.40(typescript@6.0.3))
@@ -784,6 +796,9 @@ importers:
       '@repo/ts-config':
         specifier: workspace:*
         version: link:../ts-config
+      '@types/bun':
+        specifier: 1.3.14
+        version: 1.3.14
       '@types/node':
         specifier: 'catalog:'
         version: 24.1.0

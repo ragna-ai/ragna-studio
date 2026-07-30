@@ -23,32 +23,26 @@ appending.
 - [x] **workflow** (metadata + run listing) — CRUD, publish, run
       history/cancel, and `creditGuard` (402 with no credits, passes through
       once funded). Actual run execution is a worker concern, out of scope
+- [x] **imagegen** — list, create (real DB persistence, faked `ai`-package
+      provider call), reference-upload (faked R2 upload), capability gating
+- [x] **videogen** — list, create, frame-upload. No AI-provider mock needed:
+      `POST /` only inserts a pending row and enqueues a real BullMQ job,
+      the actual provider call happens in `apps/worker`'s processor
+- [x] **social-post** — CRUD (no mock needed) + `/publish` (faked
+      `@repo/linkedin` client, including a proven failure-path override)
+- [x] **agent-context-document** — upload/list/rename/retry/delete (faked
+      R2 upload)
 
-## Blocked on mock infrastructure
+External-provider mocks (`ai`-package `generateImage`, `@repo/storage`,
+`@repo/linkedin`, via Bun's `mock.module()`) live in
+`packages/testing/src/mocks/`, documented in full in
+`apps/api/test/README.md`'s "External-provider mocks" section.
 
-`docs/testing/strategy.md`'s "External boundaries" section calls for AI
-providers, R2 storage, mail, and LinkedIn to be mocked at the package
-boundary (`@repo/ai`, `@repo/storage`, `@repo/mail`, `@repo/linkedin`).
-None of those mocks exist yet in `@repo/testing`.
-
-- [ ] **imagegen** — `POST /` calls `createGenImages` from `@repo/ai`
-      synchronously in-request; `reference-upload` hits `@repo/storage`.
-      `GET /` (list) needs no mock and could be tested today.
-- [ ] **videogen** — same shape as imagegen (`@repo/ai` + `@repo/storage`).
-- [ ] **social-post** — CRUD is a cheap win today; `/publish` hits
-      `@repo/linkedin`'s real client and needs a mock.
-- [ ] **agent-context-document** — every document is created via a `POST /`
-      multipart file upload that goes through `@repo/storage`
-      (`uploadAgentContextDocuments`, `apps/api/src/services/agent-context-
-      document.service.ts`); there's no metadata-only creation path, so
-      list/rename/retry/delete are blocked too, not just the file-replace
-      route. (Corrects an earlier note in this file that assumed only
-      `PUT /:documentId/file` needed the mock.)
-
-Building the `@repo/ai` mock is the single biggest unlock here: it's what
-blocks imagegen, videogen, and (once chat streaming is in scope) chat
-sending. Worth its own session rather than bolting one mock on ad hoc for a
-single domain.
+`@repo/mail` was in the original "External boundaries" list
+(`docs/testing/strategy.md`) but turned out not to need a mock: nothing in
+`apps/api/src` imports it directly (email only goes out via a BullMQ job
+`apps/worker` processes), so there's no `apps/api` route to mock it for.
+Relevant if `apps/worker` gets its own test suite later.
 
 ## Deferred (strategy doc, priority 4)
 
@@ -57,11 +51,16 @@ single domain.
 
 ## Suggested order
 
-1. ~~Agent, notification, overview, aimodel, chat-metadata, workflow-metadata
-   + `creditGuard`~~ — done 2026-07-30.
-2. Build `@repo/ai` / `@repo/storage` / `@repo/linkedin` mocks in
-   `@repo/testing`.
-3. Imagegen, videogen, social-post, agent-context-document (all of it, not
-   just the file-replace route).
-4. Chat streaming / WebSockets (Phase 2 territory, may fold into Playwright
-   e2e instead of an `apps/api` unit test).
+Every domain from the original checklist is now covered except the
+deferred one above. Next candidates, in rough order of value:
+
+1. Chat streaming / WebSockets (Phase 2 territory — may fold into
+   Playwright e2e against the real running app instead of an `apps/api`
+   `mock.module()`-based unit test, since a live socket is hard to fake
+   convincingly at that boundary).
+2. `apps/worker` processor tests, now that `packages/testing/src/mocks/`
+   is built to be reused there (`ai-provider.mock.ts`'s `generateImage` fake
+   plus the not-yet-built `experimental_generateVideo` one, `@repo/storage`'s
+   `extractDocumentText` path) — a natural "Phase 1.5" the strategy doc
+   didn't originally scope.
+3. Phase 2: Playwright e2e for `apps/web` (see `docs/testing/strategy.md`).

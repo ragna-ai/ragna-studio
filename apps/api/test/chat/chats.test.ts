@@ -203,6 +203,19 @@ describe('GET /workspace/:workspaceId/chat/:chatId', () => {
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });
+
+  test("404s when a user requests another user's chat via their own workspace", async () => {
+    const userA = await seedAuthenticatedUser();
+    const userB = await seedAuthenticatedUser();
+    const agentIdB = await createAgent(userB.cookieHeader, userB.workspaceId);
+    const { chat: chatB } = await createChat(userB.cookieHeader, userB.workspaceId, agentIdB);
+
+    const response = await app.request(`/workspace/${userA.workspaceId}/chat/${chatB.id}`, {
+      headers: { cookie: userA.cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
 });
 
 describe('PATCH /workspace/:workspaceId/chat/:chatId', () => {
