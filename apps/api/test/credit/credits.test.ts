@@ -99,7 +99,7 @@ describe('GET /credit/balance', () => {
 
     const body = balanceResponseSchema.parse(await response.json());
     // CREDIT_MARKUP_BPS is pinned to "NULL" (disabled, 1.0x) for this test
-    // process (apps/api/test/support/preload.ts), so charged == cost:
+    // process (apps/api/test/utils/preload.ts), so charged == cost:
     // 3000 * 3000 + 800 * 15000 = 21,000,000 nanoUSD.
     expect(body.credit.balanceMicroCredits).toBe((100_000_000n - 21_000_000n).toString());
   });

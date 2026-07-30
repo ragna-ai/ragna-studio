@@ -19,9 +19,11 @@ registered in `turbo.json`.
 Layout: tests are grouped by domain folder, one folder per feature area.
 `test/credit/` for everything credit-related, `test/user/` for user routes,
 and so on. Cross-cutting harness tests (health check, DB safety guard) live
-in `test/smoke/`. App-local plumbing (the bun preload) stays in
-`test/support/`. bun discovers `*.test.ts` recursively, so new folders need
-no config.
+in `test/smoke/`. Non-test plumbing (the bun preload, the one-off DB setup
+script) stays in `test/utils/`, kept separate from the domain folders so
+`test/`'s top level reads as "tests, plus one utils folder" rather than a
+flat mix of feature folders and infra scripts. bun discovers `*.test.ts`
+recursively, so new folders need no config.
 
 ### Style: route-level through `app.request()`
 

@@ -10,7 +10,7 @@ import { $, SQL } from 'bun';
 // Must happen before importing @repo/config: dotenv (inside @repo/config)
 // never overwrites a variable that's already set, so this is what makes the
 // composed DATABASE_URL point at studio_test instead of the dev database.
-// Same trick as test/support/preload.ts, which does this for `bun test`.
+// Same trick as test/utils/preload.ts, which does this for `bun test`.
 process.env.DB_DATABASE = 'studio_test';
 
 const { config } = await import('@repo/config');

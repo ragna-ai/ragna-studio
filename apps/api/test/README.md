@@ -55,9 +55,11 @@ Tests are grouped by domain folder, one folder per feature area:
   so the service can tell "deleted" from "nothing matched").
 - `test/smoke/` — cross-cutting harness tests: the health check and the DB
   safety guard (`db-safety.test.ts`), not tied to any one feature.
-- `test/support/` — app-local test plumbing (the bun preload script), not
-  test files.
-- `test/scripts/` — one-off scripts (`test:setup`), not test files.
+- `test/utils/` — everything that isn't a test: the bun preload script
+  (`preload.ts`) and the one-off DB setup script (`setup-test-db.ts`, run via
+  `test:setup`). Kept out of the domain folders above so `test/`'s top level
+  reads as "tests, plus one utils folder" rather than a flat mix of feature
+  folders and infra scripts.
 
 bun discovers `*.test.ts` recursively, so a new domain gets its own folder
 with no config changes. Add new feature areas as their own top-level folder
@@ -85,7 +87,7 @@ bun test
 
 ## How isolation works
 
-- `bunfig.toml` preloads `test/support/preload.ts`, which sets
+- `bunfig.toml` preloads `test/utils/preload.ts`, which sets
   `DB_DATABASE=studio_test` before any test file (or the app) imports
   `@repo/config`. `@repo/config` loads the root `.env` via dotenv, and
   dotenv never overwrites a variable that's already set, so this override
