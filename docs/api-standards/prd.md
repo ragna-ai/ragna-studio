@@ -395,8 +395,9 @@ pages/components. See that section for details.
 
 - Multi-user workspaces (membership, roles, invites). This standard is the
   seam that makes them additive: only the workspace guard changes.
-- Moving resources between workspaces. Now that containers are hard
-  boundaries and delete cascades, a "move to workspace" action is the
-  natural fast-follow.
+- Moving resources between workspaces. Deferred 2026-07-30 as too complex
+  for the value: agents and workflows, the two resources worth moving, need
+  duplicate-with-remap rather than a move. See
+  [docs/workspaces/moving-resources.md](../workspaces/moving-resources.md).
 - Workspace-scoped notifications and websocket channel scoping.
 - API versioning. Pre-production showcase app, no compatibility promises.

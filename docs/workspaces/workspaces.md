@@ -170,5 +170,5 @@ See [workspaces-known-issues.md](./workspaces-known-issues.md): agent-tool-creat
 
 ## Future phases (not built here)
 
-- **Move items**: a "move to workspace" action (bulk and single) on scoped resources.
+- **Move items**: a "move to workspace" action (bulk and single) on scoped resources. Analysed and deferred 2026-07-30, see [moving-resources.md](./moving-resources.md).
 - **Shared workspaces**: promote to a multi-user model via a `workspace_users` pivot table (owner + members with roles), or the better-auth organization plugin (members, roles, invites, active-org-in-session). The `ownerId` naming on `workspace` is the seam that makes this additive rather than a rename. This would change the security boundary and is a separate, larger effort.
