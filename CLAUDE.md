@@ -26,6 +26,9 @@ pnpm --filter @repo/database db:generate   # generate migration from schema chan
 pnpm --filter @repo/database db:push       # push schema directly to DB (dev only)
 pnpm --filter @repo/database db:pull       # introspect DB into schema
 
+# API integration tests (see apps/api/test/README.md; one-time `pnpm --filter @repo/api test:setup` first)
+pnpm test:api
+
 # Run a specific app or package task
 pnpm --filter @repo/web dev
 pnpm --filter @repo/worker dev
