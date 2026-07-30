@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  MessageSquareIcon,
-  SettingsIcon,
-  StarIcon,
-  Trash2Icon,
-} from '@lucide/vue';
+import { MessageSquareIcon, StarIcon, Trash2Icon } from '@lucide/vue';
 import type { Agent } from '~/features/agent/types';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
@@ -130,15 +125,6 @@ const handleDeleteFavorite = (agentId: string) => {
               <MessageSquareIcon
                 class="ml-2 size-4 shrink-0 stroke-1.5 text-primary"
               />
-            </Button>
-            <Button as-child variant="outline" size="icon">
-              <NuxtLinkLocale
-                :to="`/agent/${agent.id}`"
-                variant="outline"
-                size="icon"
-              >
-                <SettingsIcon class="size-4 stroke-1.5 text-primary" />
-              </NuxtLinkLocale>
             </Button>
 
             <Button

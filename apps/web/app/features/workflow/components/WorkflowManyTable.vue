@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ClockIcon, SettingsIcon, Trash2Icon, WorkflowIcon } from '@lucide/vue';
+import { ClockIcon, Trash2Icon, WorkflowIcon } from '@lucide/vue';
 import type { Workflow } from '~/features/workflow/types';
 
 // Imports
@@ -70,7 +70,11 @@ const { formatDateTime } = useDateTimeFormat();
             <Badge
               :variant="workflow.publishedDefinition ? 'default' : 'secondary'"
             >
-              {{ workflow.publishedDefinition ? t('workflow.list.status.published') : t('workflow.list.status.draft') }}
+              {{
+                workflow.publishedDefinition
+                  ? t('workflow.list.status.published')
+                  : t('workflow.list.status.draft')
+              }}
             </Badge>
             <TooltipProvider v-if="workflow.scheduleCron">
               <Tooltip>
@@ -102,11 +106,6 @@ const { formatDateTime } = useDateTimeFormat();
           class="flex justify-end space-x-2 text-right whitespace-nowrap"
           @click.stop
         >
-          <Button as-child variant="outline" size="icon">
-            <NuxtLinkLocale :to="`/workflow/${workflow.id}`">
-              <SettingsIcon class="size-4 stroke-1.5 text-primary" />
-            </NuxtLinkLocale>
-          </Button>
           <Button
             variant="outline"
             size="icon"
