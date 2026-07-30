@@ -77,13 +77,20 @@ export async function updateWorkspace({
 // Resources scoped to this workspace are deleted with it: their workspaceId
 // FK is onDelete: 'cascade' (docs/api-standards/prd.md). Callers must reject
 // deleting a user's last workspace before calling this (see WP1's
-// workspace.service.ts).
+// workspace.service.ts). Returns the deleted row (or null if `id` didn't
+// belong to `ownerId`), mirroring `updateWorkspace`, so the caller can 404
+// instead of a silent no-op.
 export async function deleteWorkspaceById({
   id,
   ownerId,
 }: {
   id: string;
   ownerId: string;
-}): Promise<void> {
-  await db.delete(workspace).where(and(eq(workspace.id, id), eq(workspace.ownerId, ownerId)));
+}): Promise<Workspace | null> {
+  const [deletedWorkspace] = await db
+    .delete(workspace)
+    .where(and(eq(workspace.id, id), eq(workspace.ownerId, ownerId)))
+    .returning();
+
+  return deletedWorkspace ?? null;
 }

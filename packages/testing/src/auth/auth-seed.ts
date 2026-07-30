@@ -14,6 +14,30 @@ interface AuthContextWithTestHelpers {
 }
 
 /**
+ * `auth` is exported `as unknown as ReturnType<typeof betterAuth>`
+ * (packages/auth/src/server/auth.ts) to sidestep a better-auth type
+ * inference issue, which also erases the plugin-specific `ctx.test` type
+ * even though testUtils() is registered whenever config.isTest is true.
+ * Reconstituting just that slice, typed against better-auth's own
+ * TestHelpers, keeps this test-only and avoids an `any`. Shared by every
+ * helper in this file that needs `ctx.test`.
+ */
+async function getTestHelpers(): Promise<TestHelpers> {
+  const context = await auth.$context;
+  const { test } = context as unknown as AuthContextWithTestHelpers;
+
+  if (!test) {
+    throw new Error(
+      'auth.$context.test is undefined: the testUtils plugin only registers when config.isTest ' +
+        'is true, so NODE_ENV must be "test" before @repo/auth loads (see the consuming app\'s ' +
+        'test preload script, e.g. apps/api/test/support/preload.ts).',
+    );
+  }
+
+  return test;
+}
+
+/**
  * Seeds everything an authenticated, workspace-scoped request needs: a
  * user, a session, and that user's personal workspace.
  *
@@ -33,23 +57,7 @@ interface AuthContextWithTestHelpers {
  * created rather than creating a second one.
  */
 export async function seedAuthenticatedUser(): Promise<SeededAuthenticatedUser> {
-  const context = await auth.$context;
-
-  // `auth` is exported `as unknown as ReturnType<typeof betterAuth>`
-  // (packages/auth/src/server/auth.ts) to sidestep a better-auth type
-  // inference issue, which also erases the plugin-specific `ctx.test` type
-  // even though testUtils() is registered whenever config.isTest is true.
-  // Reconstituting just that slice, typed against better-auth's own
-  // TestHelpers, keeps this test-only and avoids an `any`.
-  const { test } = context as unknown as AuthContextWithTestHelpers;
-
-  if (!test) {
-    throw new Error(
-      'auth.$context.test is undefined: the testUtils plugin only registers when config.isTest ' +
-        'is true, so NODE_ENV must be "test" before @repo/auth loads (see the consuming app\'s ' +
-        'test preload script, e.g. apps/api/test/support/preload.ts).',
-    );
-  }
+  const test = await getTestHelpers();
 
   const draftUser = test.createUser({ email: `test-${crypto.randomUUID()}@example.com` });
   const seededUser = await test.saveUser(draftUser);
@@ -74,4 +82,16 @@ export async function seedAuthenticatedUser(): Promise<SeededAuthenticatedUser> 
     workspaceId: workspace.id,
     cookieHeader,
   };
+}
+
+/**
+ * Deletes a seeded user, cascading to their sessions (`onDelete: 'cascade'`
+ * on `sessions.user_id`, packages/database/src/schema/session.schema.ts).
+ * For tests that need a cookie which was valid when minted but no longer
+ * resolves to anything, e.g. simulating account deletion out from under an
+ * open session.
+ */
+export async function deleteSeededUser({ userId }: { userId: string }): Promise<void> {
+  const test = await getTestHelpers();
+  await test.deleteUser(userId);
 }

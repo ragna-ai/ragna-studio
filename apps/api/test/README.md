@@ -8,9 +8,27 @@ dedicated Postgres database (`studio_test`) and the real docker Redis.
 
 Tests are grouped by domain folder, one folder per feature area:
 
+- `test/auth/` — `authMiddleware` (session verification) and `workspaceGuard`
+  (workspace-scoped authorization), tested against minimal vehicle routes
+  rather than any one feature's controller. `route-sweep.test.ts` also walks
+  every registered route (via `app.routes`) and asserts each one rejects an
+  unauthenticated request, so a controller missing `.use(authMiddleware)`
+  fails a test instead of shipping.
 - `test/credit/` — the credit system (balance/usage routes, the
   `assertCanSpend` gate, and the repo's charge math and settlement logic).
 - `test/user/` — user routes.
+- `test/folder/` — folder CRUD, including the "documents move to root, not
+  deleted" cascade on folder delete.
+- `test/task/` — task CRUD (filters, subtask/reminder business rules, move)
+  and task-label CRUD.
+- `test/dataset/` — dataset CRUD, export, and row CRUD/reorder (soft delete,
+  pagination, `afterRowId` ordering).
+- `test/workspace/` — workspace CRUD. Unlike the other domains, ownership is
+  checked by the controller itself (`ownerId`, not `workspaceGuard`), and
+  delete has two extra rules: rejecting the user's last workspace, and 404ing
+  a cross-user delete rather than silently no-oping (`deleteWorkspaceById`
+  in `packages/database/src/repositories/workspace.repo.ts` now `.returning()`s
+  so the service can tell "deleted" from "nothing matched").
 - `test/smoke/` — cross-cutting harness tests: the health check and the DB
   safety guard (`db-safety.test.ts`), not tied to any one feature.
 - `test/support/` — app-local test plumbing (the bun preload script), not
@@ -79,6 +97,12 @@ bun test
     real signup would (workspace creation). See the doc comment in
     `auth-seed.ts` for details, including why the personal workspace is
     fetched rather than created a second time.
+  - `deleteSeededUser()` (`packages/testing/src/auth/auth-seed.ts`) and
+    `expireSession()` (`packages/testing/src/auth/session-fixtures.ts`)
+    invalidate an already-minted cookie two different ways (deleted user,
+    cascading to their sessions; backdated `expiresAt`), for
+    `test/auth/session.test.ts`'s coverage of session checks that only show
+    up once a session has gone stale, not just "cookie missing or forged".
 
 ## Production code touched
 

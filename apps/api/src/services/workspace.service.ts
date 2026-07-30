@@ -110,12 +110,16 @@ export async function deleteWorkspaceForUser({
     throw new BadRequestException('Cannot delete your only workspace');
   }
 
-  const { error: deleteError } = await tryCatch(() =>
+  const { error: deleteError, data: deletedWorkspace } = await tryCatch(() =>
     deleteWorkspaceById({ id: workspaceId, ownerId: userId }),
   );
 
   if (deleteError !== null) {
     logger.error('Failed to delete workspace', deleteError);
     throw new InternalServerErrorException('Failed to delete workspace');
+  }
+
+  if (!deletedWorkspace) {
+    throw new NotFoundException('Workspace not found');
   }
 }

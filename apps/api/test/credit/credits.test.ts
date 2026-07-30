@@ -6,6 +6,7 @@ import {
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
@@ -45,7 +46,7 @@ describe('GET /credit/balance', () => {
   test('rejects the request when no session cookie is sent', async () => {
     const response = await app.request('/credit/balance');
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
   });
 
   test('reads as a zero balance for a user with no credit account yet', async () => {
@@ -55,7 +56,7 @@ describe('GET /credit/balance', () => {
       headers: { cookie: cookieHeader },
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(StatusCodes.OK);
 
     const body = balanceResponseSchema.parse(await response.json());
     expect(body.credit.balanceCredits).toBe(0);
@@ -112,7 +113,7 @@ describe('GET /credit/usage', () => {
   test('rejects the request when no session cookie is sent', async () => {
     const response = await app.request('/credit/usage');
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
   });
 
   test('returns an empty page for a user with no usage yet', async () => {
@@ -122,7 +123,7 @@ describe('GET /credit/usage', () => {
       headers: { cookie: cookieHeader },
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(StatusCodes.OK);
 
     const body = usageResponseSchema.parse(await response.json());
     expect(body.usages).toEqual([]);

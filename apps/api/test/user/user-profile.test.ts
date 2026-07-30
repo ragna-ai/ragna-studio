@@ -1,5 +1,6 @@
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
@@ -22,7 +23,7 @@ describe('GET /user/profile', () => {
       headers: { cookie: cookieHeader },
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(StatusCodes.OK);
 
     const body = userProfileResponseSchema.parse(await response.json());
     expect(body.user.id).toBe(userId);
@@ -31,6 +32,6 @@ describe('GET /user/profile', () => {
   test('rejects the request when no session cookie is sent', async () => {
     const response = await app.request('/user/profile');
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
   });
 });
