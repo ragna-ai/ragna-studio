@@ -1,0 +1,7 @@
+{
+  "extends": "@repo/ts-config/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"]
+}

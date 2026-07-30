@@ -266,6 +266,10 @@ export class ConfigService {
   }
 
   // Public getters for non-sensitive data
+  get isTest(): boolean {
+    return this._config.NODE_ENV === 'test';
+  }
+
   get appPort(): string {
     return this._config.APP_PORT.toString();
   }

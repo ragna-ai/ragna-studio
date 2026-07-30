@@ -1,0 +1,7 @@
+[test]
+# Runs before any test file is imported. @repo/config is a singleton that
+# loads the root .env via dotenv, and dotenv never overwrites a variable
+# that's already set. That's what makes DB_DATABASE=studio_test win over
+# the .env value. See test/support/preload.ts and docs/testing/strategy.md.
+preload = ["./test/support/preload.ts"]
+maxConcurrency = 1

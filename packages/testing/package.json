@@ -1,0 +1,24 @@
+{
+  "name": "@repo/testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared test helpers (db truncate/guard, auth seeding)",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/auth": "workspace:*",
+    "@repo/database": "workspace:*",
+    "better-auth": "^1.6.25"
+  },
+  "devDependencies": {
+    "@repo/ts-config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
