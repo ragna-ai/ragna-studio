@@ -3,6 +3,8 @@ import { db } from '../db';
 import type { NewNotification, Notification } from '../schema';
 import { notification } from '../schema';
 
+export type { NewNotification, Notification } from '../schema';
+
 export async function createNotification(payload: NewNotification): Promise<Notification> {
   const [createdNotification] = await db.insert(notification).values(payload).returning();
 

@@ -25,6 +25,25 @@ Tests are grouped by domain folder, one folder per feature area:
   and task-label CRUD.
 - `test/dataset/` — dataset CRUD, export, and row CRUD/reorder (soft delete,
   pagination, `afterRowId` ordering).
+- `test/agent/` — agent CRUD and the `/memory` GET/PUT endpoints.
+- `test/notification/` — notification list/unread-count/read/read-all/delete.
+  User-scoped, not workspace-scoped, and has no `POST` route (notifications
+  are created by other flows); fixtures are seeded directly via
+  `createNotification` from `@repo/database`.
+- `test/overview/` — the aggregated `GET /workspace/:workspaceId/overview`
+  read (five capped-at-5 sections plus totals).
+- `test/aimodel/` — the single `GET /aimodel` route (models + deduped
+  provider list), not workspace-scoped.
+- `test/chat/` — chat metadata CRUD only (list/create/rename/delete).
+  Sending a message is WebSocket-only and explicitly deferred; every test
+  here creates and passes an explicit `agentId` rather than relying on the
+  no-`agentId` default-agent fallback, which depends on an `agent_templates`
+  seed row the test database doesn't have.
+- `test/workflow/` — workflow CRUD, publish, and run listing/cancel, plus
+  `creditGuard` (distinct from `workspaceGuard`, mounted only on
+  `POST /:workflowId/run`): 402 with no credit account, passes through once
+  `seedCreditAccount()` funds one. Actually executing an enqueued run is a
+  worker concern, out of scope for `apps/api`'s Phase 1.
 - `test/workspace/` — `workspaceGuard` authorization (`workspace-
   authorization.test.ts`) and workspace CRUD (`workspaces.test.ts`). Unlike
   the other CRUD domains, ownership on the CRUD routes is checked by the
@@ -119,10 +138,17 @@ Two small, test-gated additions, both required for `auth-seed.ts`:
   plugin only when `config.isTest` is true. It adds no HTTP routes; the
   plugin's only effect is exposing `ctx.test` on `auth.$context`.
 
-Plus one always-on re-export, `export { sql } from 'drizzle-orm';` in
-`packages/database/src/index.ts`, so test helpers never need their own
-`drizzle-orm` dependency (a second copy at a different version would build
-query fragments against the wrong instance).
+Plus two always-on re-exports:
+
+- `export { sql } from 'drizzle-orm';` in `packages/database/src/index.ts`,
+  so test helpers never need their own `drizzle-orm` dependency (a second
+  copy at a different version would build query fragments against the wrong
+  instance).
+- `export type { NewNotification, Notification } from '../schema';` in
+  `packages/database/src/repositories/notification.repo.ts`, mirroring the
+  `Workspace` re-export in `workspace.repo.ts` — needed so
+  `test/notification/notifications.test.ts` can type its `createNotification`
+  fixture without reaching into `@repo/database`'s internal schema module.
 
 After editing `@repo/config` or `@repo/auth`, rebuild before running tests
 (`@repo/testing` itself has no build step: it exports TS source directly):
