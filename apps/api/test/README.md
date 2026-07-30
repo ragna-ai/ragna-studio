@@ -8,12 +8,14 @@ dedicated Postgres database (`studio_test`) and the real docker Redis.
 
 Tests are grouped by domain folder, one folder per feature area:
 
-- `test/auth/` — `authMiddleware` (session verification) and `workspaceGuard`
-  (workspace-scoped authorization), tested against minimal vehicle routes
-  rather than any one feature's controller. `route-sweep.test.ts` also walks
-  every registered route (via `app.routes`) and asserts each one rejects an
+- `test/auth/` — `authMiddleware` (session verification: missing/forged/
+  expired/revoked cookies), tested against a minimal vehicle route rather
+  than any one feature's controller. `route-sweep.test.ts` also walks every
+  registered route (via `app.routes`) and asserts each one rejects an
   unauthenticated request, so a controller missing `.use(authMiddleware)`
-  fails a test instead of shipping.
+  fails a test instead of shipping. `workspaceGuard` (workspace-scoped
+  authorization) is tested in `test/workspace/` instead, grouped with the
+  rest of the workspace domain rather than split out by middleware.
 - `test/credit/` — the credit system (balance/usage routes, the
   `assertCanSpend` gate, and the repo's charge math and settlement logic).
 - `test/user/` — user routes.
@@ -23,11 +25,14 @@ Tests are grouped by domain folder, one folder per feature area:
   and task-label CRUD.
 - `test/dataset/` — dataset CRUD, export, and row CRUD/reorder (soft delete,
   pagination, `afterRowId` ordering).
-- `test/workspace/` — workspace CRUD. Unlike the other domains, ownership is
-  checked by the controller itself (`ownerId`, not `workspaceGuard`), and
-  delete has two extra rules: rejecting the user's last workspace, and 404ing
-  a cross-user delete rather than silently no-oping (`deleteWorkspaceById`
-  in `packages/database/src/repositories/workspace.repo.ts` now `.returning()`s
+- `test/workspace/` — `workspaceGuard` authorization (`workspace-
+  authorization.test.ts`) and workspace CRUD (`workspaces.test.ts`). Unlike
+  the other CRUD domains, ownership on the CRUD routes is checked by the
+  controller itself (`ownerId`, not `workspaceGuard`, since a workspace has
+  to exist before it can be guarded), and delete has two extra rules:
+  rejecting the user's last workspace, and 404ing a cross-user delete rather
+  than silently no-oping (`deleteWorkspaceById` in
+  `packages/database/src/repositories/workspace.repo.ts` now `.returning()`s
   so the service can tell "deleted" from "nothing matched").
 - `test/smoke/` — cross-cutting harness tests: the health check and the DB
   safety guard (`db-safety.test.ts`), not tied to any one feature.

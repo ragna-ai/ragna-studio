@@ -12,7 +12,8 @@ import { app } from '../../src/app';
 // authMiddleware tests (docs/testing/strategy.md, "Auth"). GET /workspace is
 // the vehicle: authMiddleware only, no workspaceGuard, so a pass/fail here
 // isolates session handling from workspace authorization
-// (test/auth/workspace-authorization.test.ts covers that layer).
+// (test/workspace/workspace-authorization.test.ts covers that layer, grouped
+// with the rest of the workspace domain rather than here).
 
 const workspaceListResponseSchema = z.object({
   workspaces: z.array(

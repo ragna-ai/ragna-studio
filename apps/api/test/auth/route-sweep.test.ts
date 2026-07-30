@@ -6,9 +6,9 @@ import { allowedOrigins } from '../../src/utils/allowed-origins';
 // Sweeps every registered route and asserts it rejects an unauthenticated
 // request, so a controller that forgets `.use(authMiddleware)` fails a test
 // instead of shipping (docs/testing/strategy.md, "Auth"). Complements
-// session.test.ts and workspace-authorization.test.ts, which test the
-// middlewares themselves against one vehicle route each; this test checks
-// that every controller actually wires them in.
+// session.test.ts and test/workspace/workspace-authorization.test.ts, which
+// test the middlewares themselves against one vehicle route each; this test
+// checks that every controller actually wires them in.
 //
 // Routes are read from `app.routes` (Hono's own introspection, also used by
 // the commented-out `showRoutes()` in app.ts) rather than hand-maintained,
