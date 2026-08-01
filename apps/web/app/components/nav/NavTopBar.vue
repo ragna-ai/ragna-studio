@@ -24,10 +24,6 @@ const onExpandClick = () => {
         <NavTopPopover />
       </div>
       <div class="flex items-center space-x-2 pl-2 text-sm">
-        <div class="">
-          <BrandLogo :text-visible="true" />
-        </div>
-        <div></div>
         <div>
           <WorkspaceSwitcher />
         </div>

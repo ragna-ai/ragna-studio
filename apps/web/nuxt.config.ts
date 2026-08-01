@@ -1,4 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
+import { createResolver } from 'nuxt/kit';
+
+const { resolve } = createResolver(import.meta.url);
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -44,6 +47,12 @@ export default defineNuxtConfig({
     clientBundle: {
       scan: true,
     },
+    customCollections: [
+      {
+        prefix: 'rg-icon',
+        dir: resolve('./app/assets/rg-icons'),
+      },
+    ],
   },
   // IMAGE
   image: {
