@@ -81,6 +81,11 @@ export const auth = betterAuth({
           // docs/api-standards/prd.md: workspaceId is a required container).
           await createWorkspace({ ownerId: user.id, name: 'Personal' });
 
+          // Integration tests seed users through this same hook (see
+          // packages/testing/src/auth/auth-seed.ts), which would otherwise
+          // flood the real Redis-backed email queue on every test run.
+          if (config.isTest) return;
+
           await queue.email().add(
             WELCOME_EMAIL_JOB,
             WelcomeEmailJobDto.fromJSON({
