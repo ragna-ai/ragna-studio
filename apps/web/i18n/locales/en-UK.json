@@ -39,6 +39,8 @@
     "more": "More",
     "new": "New",
     "history": "History",
+    "hideLabels": "Hide labels",
+    "showLabels": "Show labels",
     "userMenu": {
       "upgrade": "Upgrade to Pro",
       "account": "Account",

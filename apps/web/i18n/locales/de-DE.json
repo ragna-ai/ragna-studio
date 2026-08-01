@@ -39,6 +39,8 @@
     "more": "Mehr",
     "new": "Neu",
     "history": "Verlauf",
+    "hideLabels": "Beschriftungen ausblenden",
+    "showLabels": "Beschriftungen einblenden",
     "userMenu": {
       "upgrade": "Auf Pro upgraden",
       "account": "Konto",

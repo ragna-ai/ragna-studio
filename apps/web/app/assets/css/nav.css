@@ -11,6 +11,18 @@
 .nav-icon {
   width: 1.4rem;
   height: 1.4rem;
+  transition:
+    width 0.2s ease-out,
+    height 0.2s ease-out;
+}
+
+.nav-labels-hidden .nav-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.nav-labels-hidden .nav-icon-wrapper {
+  @apply px-2 py-1.5;
 }
 
 .nav-link-active {
@@ -24,6 +36,14 @@
   @apply flex min-h-8 flex-col justify-center border-0 px-2 py-0 text-sm;
 }
 
+.nav-labels-hidden .nav-item {
+  @apply min-h-0;
+}
+
 .nav-item-child {
   @apply pt-0 pl-4;
+}
+
+.nav-labels-hidden .nav-icon-text {
+  display: none;
 }
