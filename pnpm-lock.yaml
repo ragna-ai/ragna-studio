@@ -740,6 +740,9 @@ importers:
 
   packages/storage:
     dependencies:
+      '@firecrawl/pdf-inspector':
+        specifier: ^1.11.2
+        version: 1.11.2
       '@repo/config':
         specifier: workspace:*
         version: link:../config
@@ -749,9 +752,6 @@ importers:
       s3mini:
         specifier: ^0.9.5
         version: 0.9.5
-      unpdf:
-        specifier: ^1.8.0
-        version: 1.8.0
       unstorage:
         specifier: ^1.17.5
         version: 1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.0)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))
@@ -1887,6 +1887,29 @@ packages:
   '@eslint/plugin-kit@0.7.2':
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@firecrawl/pdf-inspector-darwin-arm64@1.11.2':
+    resolution: {integrity: sha512-L2Ict3j2V51cBxiCg4Q8AWXwKhMO46It/o1NdHgBwYeHf8tCBxhrts4YGHq9tYmMxFYo3g5E5jAk7pkjMmzlJg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@firecrawl/pdf-inspector-linux-x64-gnu@1.11.2':
+    resolution: {integrity: sha512-nTeFUvZODi0aDZHhDv1B3U6k9J9hHvRYLuzbh1CMl9PR9h5muxlUpQLHVslhQXsRdVwdA32TZTPE+Ziuw39ttA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@firecrawl/pdf-inspector-win32-x64-msvc@1.11.2':
+    resolution: {integrity: sha512-Kl9/i814dpygPbC8/seiJyANO6440QC2ZLAsPVn2TsvXwaGe2IZQFnWaQn4o1qGiCX7cQOsinZSlWp2tvAuOyQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@firecrawl/pdf-inspector@1.11.2':
+    resolution: {integrity: sha512-Sqb071LRCj/AffWHWgXNt49nQHVrEooAfglniV3PbJ1/AplNJaTqjYZ7HN6jAyzrPGCdZ4+/CQOuVu+fO9NGIQ==}
+    hasBin: true
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -9399,15 +9422,6 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
-  unpdf@1.8.0:
-    resolution: {integrity: sha512-jQlkckbe5nKxRHQdbvo9IKHlU6Cjq00UlxxB8lrCIxvS2o5IbAL1wM+4a1Yc3+BIohg9p5AsoaftwO+G4Aq/qQ==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@napi-rs/canvas': ^0.1.69 || ^1.0.0
-    peerDependenciesMeta:
-      '@napi-rs/canvas':
-        optional: true
-
   unplugin-auto-import@21.0.0:
     resolution: {integrity: sha512-vWuC8SwqJmxZFYwPojhOhOXDb5xFhNNcEVb9K/RFkyk/3VnfaOjzitWN7v+8DEKpMjSsY2AEGXNgt6I0yQrhRQ==}
     engines: {node: '>=20.19.0'}
@@ -10801,6 +10815,21 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@firecrawl/pdf-inspector-darwin-arm64@1.11.2':
+    optional: true
+
+  '@firecrawl/pdf-inspector-linux-x64-gnu@1.11.2':
+    optional: true
+
+  '@firecrawl/pdf-inspector-win32-x64-msvc@1.11.2':
+    optional: true
+
+  '@firecrawl/pdf-inspector@1.11.2':
+    optionalDependencies:
+      '@firecrawl/pdf-inspector-darwin-arm64': 1.11.2
+      '@firecrawl/pdf-inspector-linux-x64-gnu': 1.11.2
+      '@firecrawl/pdf-inspector-win32-x64-msvc': 1.11.2
 
   '@floating-ui/core@1.8.0':
     dependencies:
@@ -19231,8 +19260,6 @@ snapshots:
       unist-util-visit-parents: 6.0.2
 
   universalify@2.0.1: {}
-
-  unpdf@1.8.0: {}
 
   unplugin-auto-import@21.0.0(@nuxt/kit@4.5.1(magic-string@1.0.0)(magicast@0.5.3)(oxc-parser@0.141.0)(rolldown@1.2.0)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.2)(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.0))))(@vueuse/core@14.4.0(vue@3.5.40(typescript@6.0.3))):
     dependencies:

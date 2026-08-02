@@ -1,6 +1,5 @@
 import { config } from '@repo/config';
 import mammoth from 'mammoth';
-import { extractText as extractPdfText, getDocumentProxy } from 'unpdf';
 import { MIME_TYPE_BY_KIND, type BucketDocument, type SupportedDocumentKind } from '../types';
 import { downloadObjectBuffer } from './bucket.service';
 
@@ -8,9 +7,10 @@ export async function extractDocumentText(document: BucketDocument): Promise<str
   const { buffer } = await downloadObjectBuffer(config.cfDocumentsBucketName, document.storageKey);
 
   if (document.mimeType === 'application/pdf') {
-    const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const { text } = await extractPdfText(pdf, { mergePages: true });
-    return text;
+    // Lazy-imported: this native napi module ships glibc-only binaries, and
+    // @repo/storage is also imported by the API, which runs on Alpine Bun.
+    const { extractText } = await import('@firecrawl/pdf-inspector');
+    return extractText(buffer);
   }
 
   if (document.mimeType === MIME_TYPE_BY_KIND.docx) {

@@ -3,14 +3,13 @@
 # ============================================================
 # Base — node + pnpm + turbo
 # ============================================================
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV TURBO_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache libc6-compat \
-  && corepack enable \
+RUN corepack enable \
   && npm install -g turbo
 
 WORKDIR /app
@@ -45,14 +44,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # ============================================================
 # Runner — minimal image with the deployed worker
 # ============================================================
-FROM oven/bun:alpine AS runner
+FROM node:24-slim AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder --chown=bun:bun /prod/worker .
+COPY --from=builder --chown=node:node /prod/worker .
 
-USER bun
+USER node
 
-CMD ["bun", "dist/index.mjs"]
+CMD ["node", "dist/index.mjs"]
