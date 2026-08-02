@@ -2,7 +2,7 @@ import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import type {
   ConnectionOptions,
-  FlowChildJob,
+  FlowJobNode,
   JobSchedulerJson,
   JobSchedulerTemplateOptions,
   JobsOptions,
@@ -314,7 +314,7 @@ export async function createFlow({
 }: {
   parentName: string;
   parentQueueName: string;
-  flowChildJobs: FlowChildJob[];
+  flowChildJobs: FlowJobNode[];
 }) {
   const producer = getFlowProducer();
   const queue = getOrCreateQueue({ name: parentQueueName });
@@ -332,7 +332,7 @@ export async function createFlow({
 export async function queueHealthCheck(): Promise<boolean> {
   try {
     const testQueue = getOrCreateQueue({ name: '__health_check__' });
-    await testQueue.client;
+    await testQueue.waitUntilReady();
     return true;
   } catch (error) {
     logger.error('Queue health check failed:', error);
