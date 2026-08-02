@@ -21,6 +21,7 @@ export const videoGenKeys = {
     ['gen-videos', workspaceId, 'list', params] as const,
   create: () => ['gen-videos', 'create'] as const,
   frameUpload: () => ['gen-videos', 'frame-upload'] as const,
+  delete: () => ['gen-videos', 'delete'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -178,6 +179,27 @@ export function useUploadVideoFrame() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to upload frame image'));
+    },
+  });
+}
+
+export function useDeleteGenVideo() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, string>({
+    mutationKey: videoGenKeys.delete(),
+    mutationFn: (genVideoId) =>
+      $api<void>(`/workspace/${toValue(workspaceId)}/gen-video/${genVideoId}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: videoGenKeys.all(workspaceId),
+      });
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, 'Failed to delete video'));
     },
   });
 }

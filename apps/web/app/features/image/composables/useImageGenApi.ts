@@ -22,6 +22,7 @@ export const genImageKeys = {
     ['gen-images', workspaceId, 'list', params] as const,
   create: () => ['gen-images', 'create'] as const,
   referenceUpload: () => ['gen-images', 'reference-upload'] as const,
+  delete: () => ['gen-images', 'delete'] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -155,6 +156,27 @@ export function useUploadImageReference() {
       toast.error(
         extractErrorMessage(error, 'Failed to upload reference image'),
       );
+    },
+  });
+}
+
+export function useDeleteGenImage() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, string>({
+    mutationKey: genImageKeys.delete(),
+    mutationFn: (genImageId) =>
+      $api<void>(`/workspace/${toValue(workspaceId)}/gen-image/${genImageId}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: genImageKeys.all(workspaceId),
+      });
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, 'Failed to delete image'));
     },
   });
 }

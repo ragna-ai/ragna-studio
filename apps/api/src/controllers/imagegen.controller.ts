@@ -3,11 +3,16 @@ import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
+  deleteGenImage,
   generateImagesForWorkspace,
   listGenImages,
   uploadGenImageReference,
 } from '../services/imagegen.service';
-import { validGenerateImagesBody, validGenImageListQuery } from '../validation';
+import {
+  validGenerateImagesBody,
+  validGenImageIdParam,
+  validGenImageListQuery,
+} from '../validation';
 
 export const genImageController = new Hono()
   .basePath('/workspace/:workspaceId/gen-image')
@@ -65,4 +70,15 @@ export const genImageController = new Hono()
     const { storageKey } = await uploadGenImageReference({ userId: user.id, file });
 
     return c.json({ storageKey }, 201);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/gen-image/:genImageId
+   */
+  .delete('/:genImageId', validGenImageIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    await deleteGenImage({ workspaceId: workspace.id, genImageId: param.genImageId });
+
+    return c.json({ message: 'Generated image deleted successfully' });
   });

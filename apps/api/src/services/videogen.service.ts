@@ -2,13 +2,20 @@ import type { GenerateVideoInput } from '@repo/ai';
 import { requestGenVideo } from '@repo/ai';
 import type { GenVideo } from '@repo/database';
 import {
+  deleteGenVideoByIdAndWorkspaceId,
   getGenImageByIdAndWorkspaceId,
   getGenVideoById,
   getGenVideoCountByWorkspaceId,
   getGenVideosByWorkspaceId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { buildVideoUrls, getVideoFrameBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
+import {
+  buildVideoUrls,
+  deleteObjects,
+  getVideoFrameBucketNameForUser,
+  getVideoGenBucketNameForUser,
+  uploadObjectBuffer,
+} from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -173,6 +180,58 @@ export async function generateVideoForWorkspace({
   }
 
   return { genVideo: toGenVideoResponse(record) };
+}
+
+/**
+ * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId
+ * Deletes the row, then best-effort deletes its own storage objects from
+ * R2: the rendered clip, plus the first-frame image only if this row
+ * uploaded it itself ('upload' origin). A 'genImage' frame belongs to a
+ * gen_images row and is left alone.
+ */
+export async function deleteGenVideo({
+  workspaceId,
+  genVideoId,
+}: {
+  workspaceId: string;
+  genVideoId: string;
+}): Promise<void> {
+  const { error, data: deleted } = await tryCatch(() =>
+    deleteGenVideoByIdAndWorkspaceId({ id: genVideoId, workspaceId }),
+  );
+
+  if (error !== null) {
+    logger.error('Failed to delete generated video', error);
+    throw new InternalServerErrorException('Failed to delete generated video');
+  }
+
+  if (!deleted) {
+    throw new NotFoundException('Generated video not found');
+  }
+
+  const keys = [
+    deleted.storageKey,
+    deleted.frameOrigin === 'upload' ? deleted.frameStorageKey : null,
+  ].filter((key): key is string => !!key);
+
+  if (keys.length === 0) {
+    return;
+  }
+
+  const { bucketName } = getVideoGenBucketNameForUser(deleted.userId);
+  const { error: storageError, data } = await tryCatch(() => deleteObjects(bucketName, keys));
+
+  if (storageError !== null) {
+    logger.error('Failed to delete generated video objects from R2', {
+      error: storageError,
+      keys,
+    });
+    return;
+  }
+
+  if (data && data.errors.length > 0) {
+    logger.error('Failed to delete some generated video objects from R2', { keys: data.errors });
+  }
 }
 
 // Same 10 MB cap as social-post media uploads

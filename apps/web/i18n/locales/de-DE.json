@@ -455,6 +455,8 @@
       "copyPrompt": "Prompt kopieren",
       "download": "Herunterladen",
       "downloadError": "Bild konnte nicht heruntergeladen werden",
+      "delete": "Löschen",
+      "deleteSuccess": "Bild gelöscht",
       "model": "Modell",
       "aspectRatio": "Seitenverhältnis",
       "resolution": "Auflösung",
@@ -462,6 +464,10 @@
       "negativePrompt": "Negativer Prompt",
       "referenceImages": "Referenzbilder",
       "reuseSettings": "Einstellungen übernehmen"
+    },
+    "deleteConfirm": {
+      "title": "Bild löschen",
+      "message": "Möchtest du dieses Bild wirklich löschen?"
     }
   },
   "videogen": {
@@ -495,10 +501,16 @@
       "copyPrompt": "Prompt kopieren",
       "download": "Herunterladen",
       "downloadError": "Video konnte nicht heruntergeladen werden",
+      "delete": "Löschen",
+      "deleteSuccess": "Video gelöscht",
       "aspectRatio": "Seitenverhältnis",
       "resolution": "Auflösung",
       "duration": "Dauer",
       "model": "Modell"
+    },
+    "deleteConfirm": {
+      "title": "Video löschen",
+      "message": "Möchtest du dieses Video wirklich löschen?"
     }
   },
   "credit": {

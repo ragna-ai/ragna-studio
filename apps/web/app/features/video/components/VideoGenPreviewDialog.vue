@@ -1,8 +1,9 @@
 <script setup lang="ts">
 // Imports
-import { CheckIcon, CopyIcon, DownloadIcon } from '@lucide/vue';
+import { CheckIcon, CopyIcon, DownloadIcon, Trash2Icon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { useDeleteGenVideo } from '~/features/video/composables/useVideoGenApi';
 import type { GeneratedVideo } from '~/features/video/composables/useVideoGenApi';
 
 interface Props {
@@ -23,6 +24,8 @@ const isDownloading = ref(false);
 // Composables
 const { copy: copyPrompt, copied: isPromptCopied } = useClipboard();
 const { t } = useI18n();
+const { confirm } = useConfirmDialog();
+const { mutateAsync: deleteGenVideo, isPending: isDeleting } = useDeleteGenVideo();
 
 // Functions
 function handleOpenChange(open: boolean) {
@@ -46,6 +49,28 @@ async function downloadVideo() {
     toast.error(t('videogen.preview.downloadError'));
   } finally {
     isDownloading.value = false;
+  }
+}
+
+async function deleteVideo() {
+  const video = props.video;
+  if (!video) return;
+
+  const confirmed = await confirm({
+    title: t('videogen.deleteConfirm.title'),
+    message: t('videogen.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) return;
+
+  try {
+    await deleteGenVideo(video.id);
+    toast.success(t('videogen.preview.deleteSuccess'));
+    emit('close');
+  } catch {
+    // useDeleteGenVideo already toasts the error.
   }
 }
 </script>
@@ -106,15 +131,25 @@ async function downloadVideo() {
             <dd class="truncate">{{ video.model }}</dd>
           </dl>
 
-          <Button
-            class="mt-auto"
-            :disabled="isDownloading || !video?.videoUrl"
-            @click="downloadVideo"
-          >
-            <Spinner v-if="isDownloading" class="mr-2" />
-            <DownloadIcon v-else class="mr-2 size-4" />
-            {{ $t('videogen.preview.download') }}
-          </Button>
+          <div class="mt-auto flex flex-col gap-2">
+            <Button
+              :disabled="isDownloading || !video?.videoUrl"
+              @click="downloadVideo"
+            >
+              <Spinner v-if="isDownloading" class="mr-2" />
+              <DownloadIcon v-else class="mr-2 size-4" />
+              {{ $t('videogen.preview.download') }}
+            </Button>
+            <Button
+              variant="destructive"
+              :disabled="isDeleting"
+              @click="deleteVideo"
+            >
+              <Spinner v-if="isDeleting" class="mr-2" />
+              <Trash2Icon v-else class="mr-2 size-4" />
+              {{ $t('videogen.preview.delete') }}
+            </Button>
+          </div>
         </div>
       </div>
     </DialogContent>

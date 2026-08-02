@@ -2,6 +2,7 @@ import type { GenerateImagesInput } from '@repo/ai';
 import { createGenImages, imageGenProviders } from '@repo/ai';
 import type { GenImage } from '@repo/database';
 import {
+  deleteGenImageByIdAndWorkspaceId,
   getAiModelById,
   getGenImageByIdAndWorkspaceId,
   getGenImageCountByWorkspaceId,
@@ -9,7 +10,13 @@ import {
 } from '@repo/database';
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import { buildImageUrls, getImgRefBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
+import {
+  buildImageUrls,
+  deleteObjects,
+  getImgGenBucketNameForUser,
+  getImgRefBucketNameForUser,
+  uploadObjectBuffer,
+} from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -123,6 +130,51 @@ export async function listGenImages({
   }
 
   return { genImages: records.map(toGenImageResponse), meta: { totalCount } };
+}
+
+/**
+ * [DELETE] /workspace/:workspaceId/gen-image/:genImageId
+ * Deletes the row, then best-effort deletes its own output object from R2.
+ * Reference images used as this row's generation input are left alone:
+ * an 'upload' reference may be shared by sibling rows from the same batch
+ * request, and a 'genImage' reference belongs to another row entirely.
+ */
+export async function deleteGenImage({
+  workspaceId,
+  genImageId,
+}: {
+  workspaceId: string;
+  genImageId: string;
+}): Promise<void> {
+  const { error, data: deleted } = await tryCatch(() =>
+    deleteGenImageByIdAndWorkspaceId({ id: genImageId, workspaceId }),
+  );
+
+  if (error !== null) {
+    logger.error('Failed to delete generated image', error);
+    throw new InternalServerErrorException('Failed to delete generated image');
+  }
+
+  if (!deleted) {
+    throw new NotFoundException('Generated image not found');
+  }
+
+  const { bucketName } = getImgGenBucketNameForUser(deleted.userId);
+  const { error: storageError, data } = await tryCatch(() =>
+    deleteObjects(bucketName, [deleted.storageKey]),
+  );
+
+  if (storageError !== null) {
+    logger.error('Failed to delete generated image object from R2', {
+      error: storageError,
+      key: deleted.storageKey,
+    });
+    return;
+  }
+
+  if (data && data.errors.length > 0) {
+    logger.error('Failed to delete generated image object from R2', { keys: data.errors });
+  }
 }
 
 // Not exported from @repo/ai (it's a private guard for imagen.service.ts's

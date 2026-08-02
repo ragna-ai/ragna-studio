@@ -1,4 +1,6 @@
+import { getImgGenBucketNameForUser } from '@repo/storage';
 import {
+  deleteObjectsMock,
   generateImageMock,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -33,6 +35,31 @@ const listResponseSchema = z.object({
   genImages: z.array(genImageSchema),
   meta: z.object({ totalCount: z.number() }),
 });
+
+async function generateOneImage(cookieHeader: string, workspaceId: string) {
+  const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
+
+  const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
+    method: 'POST',
+    headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+    body: JSON.stringify({ aiModelId, prompt: 'a red bicycle', n: 1 }),
+  });
+  const body = generateResponseSchema.parse(await response.json());
+  const genImage = body.genImages[0];
+
+  if (!genImage) {
+    throw new Error('Expected the fake provider to return one generated image');
+  }
+
+  return genImage;
+}
+
+// buildImageUrls (packages/storage/src/lib/image-urls.ts) formats imgUrl as
+// `https://images.ragna.io/${key}`, so this reverses it back to the R2
+// object key the delete route is expected to pass to deleteObjects.
+function storageKeyFromImgUrl(imgUrl: string): string {
+  return imgUrl.replace('https://images.ragna.io/', '');
+}
 
 describe('GET /workspace/:workspaceId/gen-image', () => {
   beforeEach(async () => {
@@ -166,5 +193,98 @@ describe('POST /workspace/:workspaceId/gen-image/reference-upload', () => {
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  });
+});
+
+describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
+
+  test('rejects the request when no session cookie is sent', async () => {
+    const response = await app.request(
+      '/workspace/any-workspace-id/gen-image/019fb2d8-0000-7000-8000-000000000000',
+      { method: 'DELETE' },
+    );
+
+    expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
+  });
+
+  test('404s for a genImageId that does not exist', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/gen-image/019fb2d8-0000-7000-8000-000000000000`,
+      { method: 'DELETE', headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
+
+  test('404s for a genImageId that belongs to another workspace', async () => {
+    const owner = await seedAuthenticatedUser();
+    const image = await generateOneImage(owner.cookieHeader, owner.workspaceId);
+    const otherUser = await seedAuthenticatedUser();
+
+    const response = await app.request(
+      `/workspace/${otherUser.workspaceId}/gen-image/${image.id}`,
+      { method: 'DELETE', headers: { cookie: otherUser.cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+
+    // Proves the mismatched workspace was rejected before touching R2 or
+    // the row, not just before returning it in the response.
+    expect(deleteObjectsMock).not.toHaveBeenCalled();
+    const listResponse = await app.request(`/workspace/${owner.workspaceId}/gen-image`, {
+      headers: { cookie: owner.cookieHeader },
+    });
+    const listBody = listResponseSchema.parse(await listResponse.json());
+    expect(listBody.genImages.map((genImage) => genImage.id)).toEqual([image.id]);
+  });
+
+  test('deletes the row and its R2 object, removing it from the list', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const image = await generateOneImage(cookieHeader, workspaceId);
+    const expectedKey = storageKeyFromImgUrl(image.imgUrl);
+    const { bucketName } = getImgGenBucketNameForUser(userId);
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image/${image.id}`, {
+      method: 'DELETE',
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(deleteObjectsMock).toHaveBeenCalledTimes(1);
+    expect(deleteObjectsMock.mock.calls[0]).toEqual([bucketName, [expectedKey]]);
+
+    const listResponse = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      headers: { cookie: cookieHeader },
+    });
+    const listBody = listResponseSchema.parse(await listResponse.json());
+    expect(listBody.genImages).toEqual([]);
+  });
+
+  test('still deletes the row when the R2 delete fails (best-effort cleanup)', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const image = await generateOneImage(cookieHeader, workspaceId);
+
+    deleteObjectsMock.mockImplementationOnce(() => {
+      throw new Error('R2 is down');
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image/${image.id}`, {
+      method: 'DELETE',
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+
+    const listResponse = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      headers: { cookie: cookieHeader },
+    });
+    const listBody = listResponseSchema.parse(await listResponse.json());
+    expect(listBody.genImages).toEqual([]);
   });
 });

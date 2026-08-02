@@ -1,8 +1,9 @@
 <script setup lang="ts">
 // Imports
-import { CheckIcon, CopyIcon, DownloadIcon } from '@lucide/vue';
+import { CheckIcon, CopyIcon, DownloadIcon, Trash2Icon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { useDeleteGenImage } from '~/features/image/composables/useImageGenApi';
 import type {
   GeneratedImage,
   ReuseImageSettings,
@@ -27,6 +28,8 @@ const isDownloading = ref(false);
 // Composables
 const { copy: copyPrompt, copied: isPromptCopied } = useClipboard();
 const { t } = useI18n();
+const { confirm } = useConfirmDialog();
+const { mutateAsync: deleteGenImage, isPending: isDeleting } = useDeleteGenImage();
 
 // Functions
 function handleOpenChange(open: boolean) {
@@ -70,6 +73,28 @@ function reuseSettings() {
     negativePrompt: image.negativePrompt,
   });
   emit('close');
+}
+
+async function deleteImage() {
+  const image = props.image;
+  if (!image) return;
+
+  const confirmed = await confirm({
+    title: t('imagen.deleteConfirm.title'),
+    message: t('imagen.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) return;
+
+  try {
+    await deleteGenImage(image.id);
+    toast.success(t('imagen.preview.deleteSuccess'));
+    emit('close');
+  } catch {
+    // useDeleteGenImage already toasts the error.
+  }
 }
 </script>
 
@@ -162,6 +187,15 @@ function reuseSettings() {
               <Spinner v-if="isDownloading" class="mr-2" />
               <DownloadIcon v-else class="mr-2 size-4" />
               {{ $t('imagen.preview.download') }}
+            </Button>
+            <Button
+              variant="destructive"
+              :disabled="isDeleting"
+              @click="deleteImage"
+            >
+              <Spinner v-if="isDeleting" class="mr-2" />
+              <Trash2Icon v-else class="mr-2 size-4" />
+              {{ $t('imagen.preview.delete') }}
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { GenImage, NewGenImage } from '../schema';
 import { genImage } from '../schema';
@@ -75,4 +75,21 @@ export async function getGenImageByIdAndWorkspaceId({
   });
 
   return found ?? null;
+}
+
+// Workspace-scoped delete-and-return: the service needs the deleted row's
+// storageKey afterward to best-effort clean up its R2 object.
+export async function deleteGenImageByIdAndWorkspaceId({
+  id,
+  workspaceId,
+}: {
+  id: string;
+  workspaceId: string;
+}): Promise<GenImage | null> {
+  const [deleted] = await db
+    .delete(genImage)
+    .where(and(eq(genImage.id, id), eq(genImage.workspaceId, workspaceId)))
+    .returning();
+
+  return deleted ?? null;
 }

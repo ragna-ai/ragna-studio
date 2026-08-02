@@ -3,11 +3,16 @@ import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
+  deleteGenVideo,
   generateVideoForWorkspace,
   listGenVideos,
   uploadGenVideoFrame,
 } from '../services/videogen.service';
-import { validGenerateVideoBody, validGenVideoListQuery } from '../validation';
+import {
+  validGenerateVideoBody,
+  validGenVideoIdParam,
+  validGenVideoListQuery,
+} from '../validation';
 
 export const genVideoController = new Hono()
   .basePath('/workspace/:workspaceId/gen-video')
@@ -67,4 +72,15 @@ export const genVideoController = new Hono()
     const { storageKey } = await uploadGenVideoFrame({ userId: user.id, file });
 
     return c.json({ storageKey }, 201);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId
+   */
+  .delete('/:genVideoId', validGenVideoIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    await deleteGenVideo({ workspaceId: workspace.id, genVideoId: param.genVideoId });
+
+    return c.json({ message: 'Generated video deleted successfully' });
   });

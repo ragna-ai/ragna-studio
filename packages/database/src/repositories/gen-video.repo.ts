@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { GenVideo, GenVideoStatus, NewGenVideo } from '../schema';
 import { genVideo } from '../schema';
@@ -62,6 +62,23 @@ export async function getGenVideoById({ id }: { id: string }): Promise<GenVideo 
   });
 
   return found ?? null;
+}
+
+// Workspace-scoped delete-and-return: the service needs the deleted row's
+// storageKey/frameStorageKey afterward to best-effort clean up its R2 objects.
+export async function deleteGenVideoByIdAndWorkspaceId({
+  id,
+  workspaceId,
+}: {
+  id: string;
+  workspaceId: string;
+}): Promise<GenVideo | null> {
+  const [deleted] = await db
+    .delete(genVideo)
+    .where(and(eq(genVideo.id, id), eq(genVideo.workspaceId, workspaceId)))
+    .returning();
+
+  return deleted ?? null;
 }
 
 type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'storageKey' | 'error'>>;
