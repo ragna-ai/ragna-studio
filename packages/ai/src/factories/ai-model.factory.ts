@@ -9,7 +9,7 @@ import { createVertex } from '@ai-sdk/google-vertex';
 import type { OpenAIProviderSettings } from '@ai-sdk/openai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { config } from '@repo/config';
-import type { ImageModel, LanguageModel } from 'ai';
+import type { EmbeddingModel, ImageModel, LanguageModel } from 'ai';
 
 type VideoModel = ReturnType<ReturnType<typeof createVertex>['videoModel']>;
 
@@ -26,6 +26,12 @@ interface GetImageModelPayload {
 }
 
 interface GetVideoModelPayload {
+  provider: string;
+  model: string;
+  credentials?: any;
+}
+
+interface GetEmbeddingModelPayload {
   provider: string;
   model: string;
   credentials?: any;
@@ -103,6 +109,19 @@ export function getImageModel(payload: GetImageModelPayload): ImageModel {
     case 'openai': {
       const openai = createOpenAI(openAiAuthOptions);
       return openai.image(model);
+    }
+    default:
+      throw new Error(`Unsupported provider: ${provider}`);
+  }
+}
+
+export function getEmbeddingModel(payload: GetEmbeddingModelPayload): EmbeddingModel {
+  const { provider = 'openai', model = 'text-embedding-3-small' } = payload;
+
+  switch (provider) {
+    case 'openai': {
+      const openai = createOpenAI(openAiAuthOptions);
+      return openai.embedding(model);
     }
     default:
       throw new Error(`Unsupported provider: ${provider}`);

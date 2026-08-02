@@ -28,12 +28,12 @@ export const agentContextDocumentController = new Hono()
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const documents = await listAgentContextDocuments({
+    const result = await listAgentContextDocuments({
       agentId: param.agentId,
       workspaceId: workspace.id,
     });
 
-    return c.json({ documents });
+    return c.json(result);
   })
   /**
    * [POST] /workspace/:workspaceId/agent/:agentId/context-document

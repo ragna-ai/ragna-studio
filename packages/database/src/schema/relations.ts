@@ -1,5 +1,6 @@
 import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
+import { agentContextDocumentChunk } from './agent-context-document-chunk.schema';
 import { agentContextDocument } from './agent-context-document.schema';
 import { agent, agentTemplate } from './agent.schema';
 import { aiModel } from './aimodel.schema';
@@ -30,6 +31,7 @@ const schema = {
   agentTemplate,
   agentMemory,
   agentContextDocument,
+  agentContextDocumentChunk,
   chat,
   chatMessage,
   creditAccount,
@@ -119,6 +121,7 @@ export const relations = defineRelations(schema, (r) => ({
     chats: r.many.chat(),
     memory: r.one.agentMemory(),
     contextDocuments: r.many.agentContextDocument(),
+    contextDocumentChunks: r.many.agentContextDocumentChunk(),
     documents: r.many.document(),
   },
   agentMemory: {
@@ -131,6 +134,19 @@ export const relations = defineRelations(schema, (r) => ({
   agentContextDocument: {
     agent: r.one.agent({
       from: r.agentContextDocument.agentId,
+      to: r.agent.id,
+      optional: false,
+    }),
+    chunks: r.many.agentContextDocumentChunk(),
+  },
+  agentContextDocumentChunk: {
+    document: r.one.agentContextDocument({
+      from: r.agentContextDocumentChunk.documentId,
+      to: r.agentContextDocument.id,
+      optional: false,
+    }),
+    agent: r.one.agent({
+      from: r.agentContextDocumentChunk.agentId,
       to: r.agent.id,
       optional: false,
     }),

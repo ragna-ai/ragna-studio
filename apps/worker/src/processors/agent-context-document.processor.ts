@@ -1,7 +1,9 @@
+import { embedTexts } from '@repo/ai';
 import type { AgentContextDocument } from '@repo/database';
 import {
   getAgentContextDocumentById,
   getReadyAgentContextDocumentsForPrompt,
+  replaceAgentContextDocumentChunksAndMarkReady,
   updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -14,17 +16,19 @@ import {
 } from '@repo/queue';
 import { extractDocumentText } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
+import { chunkText } from './agent-context-chunker';
 
-// Limits from docs/agent-context-documents.md: hard-truncate any single
+// Limits from docs/agent/agent-context-retrieval.md: hard-truncate any single
 // document's extracted text, and never let an agent's ready documents add up
-// to more than the total budget a prompt can spend on them.
-const MAX_DOCUMENT_CHARS = 100_000;
-const MAX_AGENT_TOTAL_CHARS = 200_000;
+// to more than the total storage quota a search corpus can hold.
+const MAX_DOCUMENT_CHARS = 500_000;
+const MAX_AGENT_TOTAL_CHARS = 5_000_000;
 
 const BUDGET_EXCEEDED_ERROR = 'agent context budget exceeded, remove or shrink other documents';
 const NO_TEXT_FOUND_ERROR =
   'No extractable text was found in this file (it may be scanned or empty)';
 const EXTRACTION_FAILED_ERROR = 'Failed to extract text from the file';
+const EMBEDDING_FAILED_ERROR = 'Failed to generate embeddings for the document';
 
 export function registerAgentContextDocumentJobProcessor(): Worker<any, any, string> {
   const agentContextDocumentWorker = createWorker({
@@ -107,13 +111,26 @@ async function extractAgentContextDocument(documentId: string): Promise<void> {
     return;
   }
 
-  await updateAgentContextDocument({
-    id: agentContextDocument.id,
+  const chunks = chunkText(extractedText);
+
+  const { error: embedError, data: embeddings } = await tryCatch(() => embedTexts(chunks));
+
+  if (embedError !== null || embeddings === null) {
+    logger.error(`Failed to generate embeddings for agent document ${documentId}`, embedError);
+    await markDocumentFailed(agentContextDocument, EMBEDDING_FAILED_ERROR);
+    return;
+  }
+
+  await replaceAgentContextDocumentChunksAndMarkReady({
+    documentId: agentContextDocument.id,
     agentId: agentContextDocument.agentId,
-    status: 'ready',
     extractedText,
     isTruncated,
-    errorMessage: null,
+    chunks: chunks.map((content, chunkIndex) => ({
+      chunkIndex,
+      content,
+      embedding: embeddings[chunkIndex],
+    })),
   });
 }
 

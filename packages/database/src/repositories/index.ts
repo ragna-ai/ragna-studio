@@ -1,4 +1,5 @@
 export * from './account.repo';
+export * from './agent-context-document-chunk.repo';
 export * from './agent-context-document.repo';
 export * from './agent-template.repo';
 export * from './agent.repo';

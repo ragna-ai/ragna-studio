@@ -1,3 +1,4 @@
+export * from './agent-context.tool';
 export * from './agent.tools';
 export * from './dataset.tools';
 export * from './document.tools';

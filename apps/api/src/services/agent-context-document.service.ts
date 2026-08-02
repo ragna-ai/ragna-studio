@@ -1,8 +1,10 @@
+import { AGENT_CONTEXT_INJECTION_THRESHOLD } from '@repo/ai';
 import { config } from '@repo/config';
 import type { Agent, AgentContextDocument, AgentContextDocumentStatus } from '@repo/database';
 import {
   createAgentContextDocuments,
   deleteAgentContextDocumentById,
+  deleteAgentContextDocumentChunksByDocumentId,
   getAgentByIdAndWorkspaceId,
   getAgentContextDocumentByIdAndAgentId,
   getAgentContextDocumentsByAgentId,
@@ -26,7 +28,7 @@ import {
 } from '../exceptions';
 
 const MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 10;
+const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 25;
 
 type AgentContextDocumentValidation =
   | { kind: SupportedDocumentKind; mimeType: string }
@@ -141,6 +143,20 @@ export async function deleteAgentContextDocumentsForAgent({
   }
 }
 
+/**
+ * Deletes a document's chunks. Best-effort, mirroring
+ * `deleteAgentContextDocumentObjects`: hygiene only (the ready-join already
+ * hides a non-ready document's chunks from search), so a failure here must
+ * never block the retry/replace action that triggered it.
+ */
+async function deleteAgentContextDocumentChunks(documentId: string): Promise<void> {
+  const { error } = await tryCatch(() => deleteAgentContextDocumentChunksByDocumentId({ documentId }));
+
+  if (error !== null) {
+    logger.error(`Failed to delete chunks for agent document ${documentId}`, error);
+  }
+}
+
 /** Loads an agent scoped to its workspace, throwing the appropriate HTTP
  * exception if it doesn't exist there. Shared by every function below that
  * needs to resolve the agent before touching a document. Callers rely on
@@ -239,11 +255,14 @@ export interface AgentContextDocumentResponse {
   isTruncated: boolean;
   errorMessage: string | null;
   updatedAt: Date;
+  charCount: number;
 }
 
-// Never includes `extractedText` (can be up to 100k chars, see the PRD's
-// limits table) or `storageKey` (an internal R2 detail): no route in the Web
-// UI needs either.
+// Never includes `extractedText` itself (can be up to 500k chars, see the
+// PRD's limits table) or `storageKey` (an internal R2 detail), only its
+// length: no route in the Web UI needs the full text, but the panel needs
+// the size to show the inject-vs-retrieval mode (docs/agent/
+// agent-context-retrieval.md, "Web UI").
 function toDocumentResponse(document: AgentContextDocument): AgentContextDocumentResponse {
   return {
     id: document.id,
@@ -254,12 +273,27 @@ function toDocumentResponse(document: AgentContextDocument): AgentContextDocumen
     isTruncated: document.isTruncated,
     errorMessage: document.errorMessage,
     updatedAt: document.updatedAt,
+    charCount: document.extractedText?.length ?? 0,
   };
+}
+
+export interface AgentContextDocumentListSummary {
+  totalReadyChars: number;
+  injectionThreshold: number;
+  mode: 'inject' | 'retrieval';
+}
+
+export interface AgentContextDocumentListResponse {
+  documents: AgentContextDocumentResponse[];
+  summary: AgentContextDocumentListSummary;
 }
 
 /**
  * [GET] /workspace/:workspaceId/agent/:agentId/context-document
- * List an agent's documents, oldest first. Never returns extractedText.
+ * List an agent's documents, oldest first, plus a summary of the total ready
+ * text and which prompting mode it puts the agent in (docs/agent/
+ * agent-context-retrieval.md, "Prompt injection changes"). Never returns
+ * extractedText.
  */
 export async function listAgentContextDocuments({
   agentId,
@@ -267,7 +301,7 @@ export async function listAgentContextDocuments({
 }: {
   agentId: string;
   workspaceId: string;
-}): Promise<AgentContextDocumentResponse[]> {
+}): Promise<AgentContextDocumentListResponse> {
   const agent = await loadOwnedAgent({ agentId, workspaceId });
 
   const { error, data: documents } = await tryCatch(() =>
@@ -279,7 +313,18 @@ export async function listAgentContextDocuments({
     throw new InternalServerErrorException('Failed to list documents');
   }
 
-  return documents.map(toDocumentResponse);
+  const totalReadyChars = documents
+    .filter((document) => document.status === 'ready')
+    .reduce((sum, document) => sum + (document.extractedText?.length ?? 0), 0);
+
+  return {
+    documents: documents.map(toDocumentResponse),
+    summary: {
+      totalReadyChars,
+      injectionThreshold: AGENT_CONTEXT_INJECTION_THRESHOLD,
+      mode: totalReadyChars > AGENT_CONTEXT_INJECTION_THRESHOLD ? 'retrieval' : 'inject',
+    },
+  };
 }
 
 /**
@@ -445,6 +490,12 @@ export async function replaceAgentContextDocumentFile({
     logger.error('Failed to save replaced agent document', updateError);
     throw new InternalServerErrorException('Failed to replace document');
   }
+
+  // Hygiene: the ready-join already hides a pending document's old chunks
+  // from search, but this drops them outright instead of leaving them for
+  // the next successful extraction's transaction to replace
+  // (docs/agent/agent-context-retrieval.md, "Pipeline changes").
+  await deleteAgentContextDocumentChunks(document.id);
 
   // Only delete the previous object once the row safely points at the new
   // one, and only that one key: other documents are untouched.
