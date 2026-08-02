@@ -7,6 +7,7 @@ import {
   normalizeUsage,
   stepCountIs,
   toModelSettings,
+  type ToolSet,
 } from '@repo/ai';
 import { config } from '@repo/config';
 import type {
@@ -339,28 +340,35 @@ export async function runReferencedAgent({
     defaultDatasetId: agentRecord.defaultDatasetId,
   });
 
+  // Explicitly typed so the object literal's index signature survives the
+  // conditional spread below; without this annotation TS infers a fresh
+  // literal type that drops ToolSet's index signature and keeps only
+  // `searchContextDocuments`, which then makes `onStepFinish` (typed against
+  // the full ToolSet) fail to type-check against this narrower tools type.
+  const tools: ToolSet = {
+    ...buildAgentToolset(agent.tools, noopWriter, {
+      userId,
+      agentId,
+      workspaceId,
+      // Workflows already run inside the worker process and need the video
+      // to exist before downstream steps run, so the video-gen tool awaits
+      // the render inline instead of the chat fire-and-forget path
+      // (docs/videogen/prd.md decision 2).
+      awaitGeneration: true,
+    }),
+    // Wired automatically in retrieval mode, not part of the agent's own
+    // tool checklist (docs/agent/agent-context-retrieval.md, "Search tool").
+    ...(retrievalMode
+      ? { searchContextDocuments: getSearchContextDocumentsTool(noopWriter, agentId) }
+      : {}),
+  };
+
   const startedAt = Date.now();
   const result = await generateText({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions,
     prompt,
-    tools: {
-      ...buildAgentToolset(agent.tools, noopWriter, {
-        userId,
-        agentId,
-        workspaceId,
-        // Workflows already run inside the worker process and need the video
-        // to exist before downstream steps run, so the video-gen tool awaits
-        // the render inline instead of the chat fire-and-forget path
-        // (docs/videogen/prd.md decision 2).
-        awaitGeneration: true,
-      }),
-      // Wired automatically in retrieval mode, not part of the agent's own
-      // tool checklist (docs/agent/agent-context-retrieval.md, "Search tool").
-      ...(retrievalMode
-        ? { searchContextDocuments: getSearchContextDocumentsTool(noopWriter, agentId) }
-        : {}),
-    },
+    tools,
     // A plan-executing agent node can exhaust the chat-level step budget
     // immediately (schema read + row list + work + row update already
     // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow
