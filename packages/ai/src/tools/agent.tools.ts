@@ -1,5 +1,6 @@
 import type { AgentTool } from '@repo/database';
 import type { ToolSet, UIMessageStreamWriter } from 'ai';
+import { getSearchContextDocumentsTool } from './agent-context.tool';
 import {
   getDatasetAppendRowTool,
   getDatasetCreateTool,
@@ -40,6 +41,10 @@ export type AgentToolContext = {
   // and need the finished video for downstream steps, so the tool awaits
   // runGenVideo inline instead (docs/videogen/prd.md decision 2).
   awaitGeneration?: boolean;
+  // Wired automatically when buildAgentInstructions decides the agent's
+  // context needs retrieval, not part of the agent's own tool checklist
+  // (docs/agent/agent-context-retrieval.md, "Search tool").
+  retrievalMode?: boolean;
 };
 
 type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
@@ -102,5 +107,11 @@ export function buildAgentToolset(
     const factory = toolsets[toolId];
     return factory ? Object.entries(factory(writer, ctx)) : [];
   });
-  return Object.fromEntries(toolEntries);
+  const tools: ToolSet = Object.fromEntries(toolEntries);
+
+  if (ctx.retrievalMode) {
+    tools.searchContextDocuments = getSearchContextDocumentsTool(writer, ctx.agentId);
+  }
+
+  return tools;
 }

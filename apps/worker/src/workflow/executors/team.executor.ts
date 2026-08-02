@@ -3,7 +3,6 @@ import {
   buildAgentToolset,
   generateText,
   getLanguageModel,
-  getSearchContextDocumentsTool,
   stepCountIs,
   tool,
   toModelSettings,
@@ -207,23 +206,17 @@ async function resolveReferencedLead(
     // The lead keeps its own configured toolset next to the delegate tools,
     // so it can e.g. read its pinned dataset to plan and route work instead
     // of delegating reads to members that lack access.
-    ownTools: {
-      ...buildAgentToolset(lead.tools, noopWriter, {
-        userId: ctx.userId,
-        agentId: leadAgentId,
-        workspaceId: ctx.workspaceId,
-        // Workflows already run inside the worker process and need the video
-        // to exist before downstream steps run, so the video-gen tool awaits
-        // the render inline instead of the chat fire-and-forget path
-        // (docs/videogen/prd.md decision 2).
-        awaitGeneration: true,
-      }),
-      // Wired automatically in retrieval mode, not part of the agent's own
-      // tool checklist (docs/agent/agent-context-retrieval.md, "Search tool").
-      ...(retrievalMode
-        ? { searchContextDocuments: getSearchContextDocumentsTool(noopWriter, leadAgentId) }
-        : {}),
-    },
+    ownTools: buildAgentToolset(lead.tools, noopWriter, {
+      userId: ctx.userId,
+      agentId: leadAgentId,
+      workspaceId: ctx.workspaceId,
+      // Workflows already run inside the worker process and need the video
+      // to exist before downstream steps run, so the video-gen tool awaits
+      // the render inline instead of the chat fire-and-forget path
+      // (docs/videogen/prd.md decision 2).
+      awaitGeneration: true,
+      retrievalMode,
+    }),
     modelSettings: toModelSettings(lead.settings),
     aiModelId: lead.aiModelId,
     provider: lead.aiModel.provider,
