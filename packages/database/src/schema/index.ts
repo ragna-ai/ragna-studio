@@ -1,4 +1,5 @@
 export * from './account.schema';
+export * from './agent-context-document-chunk.schema';
 export * from './agent-context-document.schema';
 export * from './agent.schema';
 export * from './aimodel.schema';

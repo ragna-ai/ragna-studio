@@ -90,14 +90,35 @@ No `userId`: ownership checks go through the agent
    name constant, DTO `{ documentId: string }`, processor, register in
    `processors/index.ts`). The processor:
    - loads the row, downloads the object (`downloadObjectBuffer`),
-   - extracts text: `unpdf` (pdf), `mammoth` (docx), utf-8 passthrough
-     (txt/md) — deterministic libs, no LLM (new deps in `apps/worker`),
+   - extracts text: `@firecrawl/pdf-inspector` (pdf), `mammoth` (docx),
+     utf-8 passthrough (txt/md) — deterministic libs, no LLM (deps live in
+     `@repo/storage`, `extract.service.ts`),
    - truncates to the per-document cap, setting `isTruncated`,
    - **budget check**: if this text plus the agent's other `ready`
      documents would exceed the per-agent total, set `status: 'failed'`
      with a clear `errorMessage` ("agent context budget exceeded, remove or
      shrink other documents") — never truncate to fit the budget silently,
    - otherwise store `extractedText`, set `status: 'ready'`.
+
+   **Library choice (2026-08-02, revised same day):** pdf extraction was
+   first `unpdf`, because `@firecrawl/pdf-inspector` (native Rust/napi-rs,
+   plus scanned-vs-text classification and per-page OCR routing) ships no
+   musl binaries and the runner images are Alpine. Decision reversed: the
+   **worker's runner stage moves from `oven/bun:alpine` to `node:24-slim`**
+   (glibc, first-class napi), and pdf extraction is a clean swap to
+   `@firecrawl/pdf-inspector`; `unpdf` is dropped. Consequences:
+
+   - The extraction code sits in `@repo/storage` (`extract.service.ts`),
+     which the API also imports for `BucketService`. The API's runner stays
+     `oven/bun:alpine`, so the native module must be **lazy-imported inside
+     the pdf branch**; the API process must never load it.
+   - Prebuilds (v1.11.2, checked 2026-08-02): `linux-x64-gnu`,
+     `darwin-arm64`, `win32-x64-msvc`. **No `linux-arm64`**: production
+     images must be built `linux/amd64`, and the compose prod profile does
+     not run on Apple Silicon. Accepted trade-off; local dev (`pnpm dev`,
+     native darwin-arm64) is unaffected.
+   - The classification/OCR-routing capability makes the OCR non-goal
+     below a realistic later feature.
 3. **Replace**: new file to a new key, old object deleted after success,
    `status` back to `'pending'`, `extractedText` kept but irrelevant (not
    `ready`), job re-enqueued.

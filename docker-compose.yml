@@ -59,7 +59,7 @@ services:
       - app_net
 
   postgres:
-    image: postgres:18.4-alpine3.24
+    image: pgvector/pgvector:0.8.6-pg18-trixie
     container_name: ragna_studio_postgresql
     restart: always
     environment:
@@ -69,6 +69,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-vector.sql:ro
     security_opt:
       - no-new-privileges:true
     networks:

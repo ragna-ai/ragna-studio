@@ -100,6 +100,19 @@ export async function deleteAgentContextDocumentById({
     .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)));
 }
 
+// Every non-`pending` document across all agents, for the chunk backfill
+// script (docs/agent/agent-context-retrieval.md, "Migration / backfill"):
+// re-running extraction on these produces chunks for documents that predate
+// the chunk table, or re-embeds them if the embedding model ever changes.
+export async function getNonPendingAgentContextDocumentIds(): Promise<string[]> {
+  const rows = await db.query.agentContextDocument.findMany({
+    where: { status: { ne: 'pending' } },
+    columns: { id: true },
+  });
+
+  return rows.map((row) => row.id);
+}
+
 export type AgentContextDocumentForPrompt = { name: string; extractedText: string };
 
 // Lean query for prompt assembly: only `ready` documents, oldest first, only

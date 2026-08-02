@@ -70,14 +70,26 @@ export interface AgentContextDocument {
   name: string;
   mimeType: string;
   fileSize: number;
+  charCount: number;
   status: AgentContextDocumentStatus;
   isTruncated: boolean;
   errorMessage: string | null;
   updatedAt: string;
 }
 
+// The mode the agent's prompt pipeline picks based on total ready extracted
+// text vs. injectionThreshold (docs/agent/agent-context-retrieval.md).
+export type AgentContextDocumentMode = 'inject' | 'retrieval';
+
+export interface AgentContextDocumentSummary {
+  totalReadyChars: number;
+  injectionThreshold: number;
+  mode: AgentContextDocumentMode;
+}
+
 export interface AgentContextDocumentManyResponse {
   documents: AgentContextDocument[];
+  summary: AgentContextDocumentSummary;
 }
 
 export interface AgentContextDocumentResponse {

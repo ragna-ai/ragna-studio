@@ -183,7 +183,7 @@ export function useDeleteAgent() {
 // Client-side mirror of the API's limits
 // (apps/api/src/services/agent-context-document.service.ts), so invalid attachments
 // are rejected before a request is even sent.
-export const AGENT_CONTEXT_DOCUMENT_MAX_FILES = 10;
+export const AGENT_CONTEXT_DOCUMENT_MAX_FILES = 25;
 export const AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.txt,.md';
 

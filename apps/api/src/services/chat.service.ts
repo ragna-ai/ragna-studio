@@ -6,6 +6,7 @@ import {
   createUIMessageStream,
   generateText,
   getLanguageModel,
+  getSearchContextDocumentsTool,
   normalizeUsage,
   safeValidateUIMessages,
   stepCountIs,
@@ -455,7 +456,7 @@ export async function runChatStream(
     const validModelMessages = await convertToModelMessages(
       mergeConsecutiveUserMessages(validUiMessages),
     );
-    const instructions = await buildAgentInstructions({
+    const { instructions, retrievalMode } = await buildAgentInstructions({
       agentId: agent.id,
       userId,
       tools: agent.tools,
@@ -522,11 +523,19 @@ export async function runChatStream(
           temperature: modelSettings.temperature,
           maxOutputTokens: modelSettings.maxOutputTokens,
           reasoning: modelSettings.reasoning,
-          tools: buildAgentToolset(agent.tools, dataStream, {
-            userId,
-            agentId: agent.id,
-            workspaceId: userChat.workspaceId,
-          }),
+          tools: {
+            ...buildAgentToolset(agent.tools, dataStream, {
+              userId,
+              agentId: agent.id,
+              workspaceId: userChat.workspaceId,
+            }),
+            // Wired automatically in retrieval mode, not part of the agent's
+            // own tool checklist (docs/agent/agent-context-retrieval.md,
+            // "Search tool").
+            ...(retrievalMode
+              ? { searchContextDocuments: getSearchContextDocumentsTool(dataStream, agent.id) }
+              : {}),
+          },
           stopWhen: stepCountIs(5),
           onStart(st) {
             logger.debug('Request started', {

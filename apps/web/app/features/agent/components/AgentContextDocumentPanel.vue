@@ -56,6 +56,17 @@ const { isOverDropZone } = useDropZone(dropZoneRef, {
 const documents = computed<AgentContextDocument[]>(
   () => data.value?.documents ?? [],
 );
+const summaryText = computed<string | null>(() => {
+  const summary = data.value?.summary;
+  if (!summary) return null;
+
+  const totalChars = `${summary.totalReadyChars.toLocaleString()} chars`;
+  if (summary.mode === 'retrieval') {
+    const threshold = summary.injectionThreshold.toLocaleString();
+    return `${totalChars} · searched on demand (over ${threshold})`;
+  }
+  return `${totalChars} · injected into every prompt`;
+});
 
 // Functions
 function formatFileSize(bytes: number): string {
@@ -147,6 +158,12 @@ function handleDelete(document: AgentContextDocument) {
 
 <template>
   <div class="space-y-4">
+    <p
+      v-if="!isLoading && documents.length > 0 && summaryText"
+      class="text-sm text-muted-foreground"
+    >
+      {{ summaryText }}
+    </p>
     <div v-if="isLoading" class="flex items-center justify-center py-8">
       <Spinner />
     </div>
