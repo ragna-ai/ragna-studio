@@ -265,6 +265,18 @@ Minimal changes to `AgentDocumentPanel.vue`:
 
 - Hybrid search (tsvector FTS + RRF) and reranking. The chunk table is
   designed so an FTS column can be added later without a schema break.
+- Distance-based result filtering. The search tool returns each chunk's
+  cosine distance and the agent loop judges usefulness itself (it can
+  discount weak matches, re-query, or answer "not found"), which already
+  covers the "topically related but doesn't answer" failure mode better
+  than a fixed cutoff. If real usage shows weak chunks reaching prompts:
+  first cheap step is stating the distance semantics in the tool
+  description (0 = near-identical, higher = weaker); second is a cutoff
+  **calibrated on our own corpus**. Absolute cosine values are
+  model-specific, so published thresholds do not transfer (reviewed
+  2026-08-02 against a "semantic stress" article in docs/Scrapings, whose
+  metric is just 1 − cosine, i.e. exactly what pgvector's `<=>` already
+  returns, and whose hard thresholds come from a different model).
 - HNSW/IVFFlat indexes (revisit at fleet scale).
 - OCR for scanned PDFs (unchanged from Phase 2).
 - Retrieval over chat-message attachments or workspace documents

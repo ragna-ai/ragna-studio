@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "workflow/workflows-human-in-the-loop.md",
-                "mode": "preview",
+                "file": "Scrapings/Why Cosine Similarity Fails in RAG (And What to Use Instead).md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "workflows-human-in-the-loop"
+              "title": "Why Cosine Similarity Fails in RAG (And What to Use Instead)"
             }
           }
         ]
@@ -183,13 +183,14 @@
       "bases:Create new base": false
     }
   },
-  "active": "0a41f36b81eb8e7c",
+  "active": "7296e6db342a6aea",
   "lastOpenFiles": [
+    "workflow/workflows-human-in-the-loop.md",
+    "Scrapings/Why Cosine Similarity Fails in RAG (And What to Use Instead).md",
     "prd-template/Free Product Requirements Document (PRD) Template.md",
     "prd-template",
     "api-standards/prd.md",
     "api-standards",
-    "workflow/workflows-human-in-the-loop.md",
     "Scrapings",
     "datasets.md",
     "workflow/workflows-email-trigger.md",
