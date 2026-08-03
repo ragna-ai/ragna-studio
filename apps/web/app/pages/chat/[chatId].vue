@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
+import ChatHeading from '~/features/chat/components/ChatHeading.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
 import { useChatStore } from '~/features/chat/stores/chat.store';
@@ -16,10 +17,6 @@ const chatId = computed(() => route.params.chatId as string);
 const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
 const chatStore = useChatStore();
-
-useHead({
-  title: t('chat.conversation.title'),
-});
 
 // Computed
 
@@ -47,7 +44,12 @@ watch(
 
 watch(
   () => data.value?.chat,
-  (chat) => chatStore.setChat(chat),
+  (chat) => {
+    chatStore.setChat(chat);
+    useHead({
+      title: chat?.title ?? t('chat.conversation.title'),
+    });
+  },
   { immediate: true },
 );
 
@@ -56,6 +58,9 @@ onScopeDispose(() => chatStore.setChat());
 
 <template>
   <ChatHistoryToggle class="absolute top-2 left-2 z-10" />
+  <div class="absolute top-2 right-5 z-10">
+    <ChatHeading v-if="chatStore.id" />
+  </div>
   <ChatConversation
     v-if="data?.chat"
     :key="data.chat.id"

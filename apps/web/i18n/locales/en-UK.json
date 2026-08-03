@@ -220,7 +220,8 @@
   "chat": {
     "conversation": {
       "title": "Chat Conversation",
-      "subtitle": "Chat with your AI agent."
+      "subtitle": "Chat with your AI agent.",
+      "disclaimer": "AI generated. Responses may be incorrect. Verify important information."
     },
     "input": {
       "placeholder": "How can I help you?"

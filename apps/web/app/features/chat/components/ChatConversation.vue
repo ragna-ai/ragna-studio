@@ -181,7 +181,7 @@ onMounted(() => {
         <MessageScrollerViewport>
           <MessageScrollerContent
             :aria-busy="isBusy"
-            class="mx-auto max-w-3xl pb-8"
+            class="mx-auto max-w-3xl pb-4"
           >
             <MessageScrollerItem
               v-for="message in messages"
@@ -208,12 +208,18 @@ onMounted(() => {
             <p v-if="error" class="text-sm text-destructive">
               {{ error.message }}
             </p>
-            <!-- -->
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton direction="end" />
       </MessageScroller>
     </MessageScrollerProvider>
+
+    <!-- Disclaimer -->
+    <div class="mt-auto border-0">
+      <p class="pt-8 pb-2 text-center text-xs text-muted-foreground/75">
+        {{ $t('chat.conversation.disclaimer') }}
+      </p>
+    </div>
 
     <!-- input -->
     <div class="mx-auto w-full max-w-4xl">
@@ -223,7 +229,7 @@ onMounted(() => {
             v-model="inputText"
             :placeholder="$t('chat.input.placeholder')"
             name="message"
-            class="min-h-12 resize-none rounded-xl bg-stone-50 py-3 shadow-inner!"
+            class="min-h-12 resize-none rounded-xl bg-stone-50 py-3 pr-10 shadow-inner!"
             @keydown.enter.exact.prevent="onSubmit"
           />
           <PromptInputSubmit

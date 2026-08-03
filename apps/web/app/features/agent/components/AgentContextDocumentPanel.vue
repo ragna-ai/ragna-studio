@@ -61,11 +61,11 @@ const summaryText = computed<string | null>(() => {
   if (!summary) return null;
 
   const totalChars = `${summary.totalReadyChars.toLocaleString()} chars`;
-  if (summary.mode === 'retrieval') {
-    const threshold = summary.injectionThreshold.toLocaleString();
-    return `${totalChars} · searched on demand (over ${threshold})`;
-  }
-  return `${totalChars} · injected into every prompt`;
+  // if (summary.mode === 'retrieval') {
+  //   const threshold = summary.injectionThreshold.toLocaleString();
+  //   return `${totalChars} · indexed`;
+  // }
+  return `${totalChars}`;
 });
 
 // Functions

@@ -86,7 +86,7 @@ async function signOut() {
     </DropdownMenuTrigger>
     <DropdownMenuContent
       class="w-[15.6rem] overflow-hidden rounded-2xl p-0"
-      side="bottom"
+      side="left"
       align="end"
     >
       <div class="flex items-center gap-3 p-4">

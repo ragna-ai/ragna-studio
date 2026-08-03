@@ -226,7 +226,8 @@
     },
     "conversation": {
       "title": "Chat-Konversation",
-      "subtitle": "Unterhalte dich mit deinem KI-Agenten."
+      "subtitle": "Unterhalte dich mit deinem KI-Agenten.",
+      "disclaimer": "KI Generiert. Antworten können fehlerhaft sein. Überprüfe wichtige Informationen."
     },
     "input": {
       "placeholder": "Wie kann ich dir helfen?"

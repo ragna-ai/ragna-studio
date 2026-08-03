@@ -7,8 +7,10 @@ const head = useLocaleHead();
 <template>
   <Html :lang="head.htmlAttrs.lang" :dir="head.htmlAttrs.dir" class="light">
     <Body class="bg-stone-50">
+      <!-- 
       <NavTopBar />
-      <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+      -->
+      <div class="flex h-screen overflow-hidden">
         <NavSidebar />
         <SidePanelHost />
         <main

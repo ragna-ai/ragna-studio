@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  EllipsisIcon,
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
-} from '@lucide/vue';
+import { EllipsisIcon } from '@lucide/vue';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,8 +30,8 @@ const navSidebarStore = useNavSidebarStore();
     <div
       class="relative h-full overflow-y-hidden transition-opacity duration-200 ease-in-out"
     >
-      <div id="spacer" class="h-2"></div>
-      <div class="flex h-full flex-col">
+      <div id="spacer" class="h-3"></div>
+      <div class="flex grow flex-col">
         <ul
           class="overflow-hidden"
           :class="navSidebarStore.showLabels ? 'space-y-2' : 'space-y-1.5'"
@@ -121,25 +117,10 @@ const navSidebarStore = useNavSidebarStore();
         </ul>
       </div>
     </div>
-    <div class="flex w-full flex-col items-center pb-4">
-      <button
-        type="button"
-        class="nav-item flex items-center justify-center"
-        :title="
-          navSidebarStore.showLabels
-            ? $t('nav.hideLabels')
-            : $t('nav.showLabels')
-        "
-        @click="navSidebarStore.toggleLabels()"
-      >
-        <div class="nav-icon-wrapper opacity-50 hover:opacity-100">
-          <PanelLeftCloseIcon
-            v-if="navSidebarStore.showLabels"
-            class="size-4 stroke-1.5"
-          />
-          <PanelLeftOpenIcon v-else class="size-4 stroke-1.5" />
-        </div>
-      </button>
+    <div class="flex w-full flex-col items-center space-y-3 pb-4">
+      <NavSideToggle />
+      <NavNotifications />
+      <NavUserMenu :size-full="false" />
     </div>
   </div>
 </template>
