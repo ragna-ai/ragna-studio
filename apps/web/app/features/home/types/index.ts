@@ -18,6 +18,18 @@ export interface HomeOverviewTaskItem {
   updatedAt: string;
 }
 
+/** Row shown in the Calendar card for a selected day. Same status rule as
+ * `HomeOverviewTaskItem`, plus the assigned agent for the row's avatar. */
+export interface HomeOverviewCalendarTaskItem {
+  id: string;
+  number: number;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string | null;
+  assignedAgent: { id: string; name: string } | null;
+}
+
 export interface HomeOverviewChatItem {
   id: string;
   title: string;
@@ -62,4 +74,7 @@ export interface HomeOverviewResponse {
   workflows: HomeOverviewSection<HomeOverviewWorkflowItem>;
   agents: HomeOverviewSection<HomeOverviewAgentItem>;
   documents: HomeOverviewSection<HomeOverviewDocumentItem>;
+  // Not a section: the calendar card pages through this bounded window
+  // client-side instead of paginating against a workspace total.
+  calendarTasks: HomeOverviewCalendarTaskItem[];
 }

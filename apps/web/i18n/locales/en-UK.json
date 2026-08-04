@@ -80,6 +80,14 @@
         "title": "Documents",
         "empty": "No documents yet.",
         "quickCreate": "New document"
+      },
+      "calendar": {
+        "title": "Calendar",
+        "today": "Today",
+        "empty": "No tasks due.",
+        "previousWeek": "Previous week",
+        "nextWeek": "Next week",
+        "resetToToday": "Reset to today"
       }
     }
   },

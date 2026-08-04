@@ -67,6 +67,50 @@ export async function getActiveTaskCountByWorkspaceId({
   );
 }
 
+export type CalendarTask = {
+  id: string;
+  number: number;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: Date | null;
+  assignedAgent: { id: string; name: string } | null;
+};
+
+/**
+ * Tasks due inside [start, end] for the calendar card, due-date ascending.
+ * Same status rule as the tasks card (docs/home/prd.md, "Task statuses"):
+ * only work still needing attention shows up. Includes the assigned agent
+ * so the calendar can render its avatar per task.
+ */
+export async function getTasksByWorkspaceIdAndDueDateRange({
+  workspaceId,
+  start,
+  end,
+}: {
+  workspaceId: string;
+  start: Date;
+  end: Date;
+}): Promise<CalendarTask[]> {
+  return db.query.task.findMany({
+    columns: {
+      id: true,
+      number: true,
+      title: true,
+      status: true,
+      priority: true,
+      dueDate: true,
+    },
+    with: { assignedAgent: { columns: { id: true, name: true } } },
+    where: {
+      workspaceId,
+      status: { in: OVERVIEW_TASK_STATUSES },
+      dueDate: { gte: start, lte: end },
+    },
+    orderBy: (t, { asc }) => asc(t.dueDate),
+  });
+}
+
 export type RecentChat = {
   id: string;
   title: string;

@@ -110,6 +110,14 @@
         "title": "Dokumente",
         "empty": "Noch keine Dokumente.",
         "quickCreate": "Neues Dokument"
+      },
+      "calendar": {
+        "title": "Kalender",
+        "today": "Heute",
+        "empty": "Keine Aufgaben fällig.",
+        "previousWeek": "Vorherige Woche",
+        "nextWeek": "Nächste Woche",
+        "resetToToday": "Auf heute zurücksetzen"
       }
     }
   },

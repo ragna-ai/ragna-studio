@@ -9,6 +9,7 @@ import {
   getRecentDocumentsByWorkspaceId,
   getRecentTasksByWorkspaceId,
   getRecentWorkflowsByWorkspaceId,
+  getTasksByWorkspaceIdAndDueDateRange,
   getWorkflowCountByWorkspaceId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -25,6 +26,26 @@ import { InternalServerErrorException } from '../exceptions';
 
 const RECENT_ITEM_LIMIT = 5;
 
+// Calendar window (docs/home/prd.md, "Calendar card"): a fixed range instead
+// of an open-ended date param, so the calendar card stays a single read
+// inside this one aggregated overview fetch. The day strip's prev/next
+// arrows page within this window on the client; they don't trigger a
+// refetch.
+const CALENDAR_DAYS_BEFORE = 7;
+const CALENDAR_DAYS_AFTER = 21;
+
+function getCalendarWindow(): { start: Date; end: Date } {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - CALENDAR_DAYS_BEFORE);
+
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  end.setDate(end.getDate() + CALENDAR_DAYS_AFTER);
+
+  return { start, end };
+}
+
 export interface OverviewTaskItem {
   id: string;
   number: number;
@@ -33,6 +54,16 @@ export interface OverviewTaskItem {
   priority: TaskPriority;
   dueDate: Date | null;
   updatedAt: Date;
+}
+
+export interface OverviewCalendarTaskItem {
+  id: string;
+  number: number;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: Date | null;
+  assignedAgent: { id: string; name: string } | null;
 }
 
 export interface OverviewChatItem {
@@ -74,15 +105,21 @@ export interface WorkspaceOverview {
   workflows: OverviewSection<OverviewWorkflowItem>;
   agents: OverviewSection<OverviewAgentItem>;
   documents: OverviewSection<OverviewDocumentItem>;
+  // Not a section: the calendar card pages through this bounded window
+  // client-side instead of paginating against a workspace total.
+  calendarTasks: OverviewCalendarTaskItem[];
 }
 
 /**
  * [GET] /workspace/:workspaceId/overview
- * One round trip for the home page's five overview cards: tasks, chats,
- * workflows, agents, documents, each capped at 5 recent items plus a
- * workspace total (docs/home/prd.md).
+ * One round trip for the home page's overview cards: tasks, chats,
+ * workflows, agents, documents (each capped at 5 recent items plus a
+ * workspace total), and the calendar's tasks due inside a fixed window
+ * around today (docs/home/prd.md).
  */
 export async function getWorkspaceOverview(workspaceId: string): Promise<WorkspaceOverview> {
+  const { start, end } = getCalendarWindow();
+
   const { error, data } = await tryCatch(() =>
     Promise.all([
       getRecentTasksByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),
@@ -95,6 +132,7 @@ export async function getWorkspaceOverview(workspaceId: string): Promise<Workspa
       getAgentCountByWorkspaceId({ workspaceId }),
       getRecentDocumentsByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),
       getDocumentCountByWorkspaceId({ workspaceId }),
+      getTasksByWorkspaceIdAndDueDateRange({ workspaceId, start, end }),
     ]),
   );
 
@@ -114,6 +152,7 @@ export async function getWorkspaceOverview(workspaceId: string): Promise<Workspa
     agentTotal,
     documentRows,
     documentTotal,
+    calendarTaskRows,
   ] = data;
 
   return {
@@ -153,5 +192,6 @@ export async function getWorkspaceOverview(workspaceId: string): Promise<Workspa
       items: documentRows,
       total: documentTotal,
     },
+    calendarTasks: calendarTaskRows,
   };
 }

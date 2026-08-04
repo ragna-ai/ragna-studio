@@ -7,6 +7,7 @@ import {
   WorkflowIcon,
 } from '@lucide/vue';
 import HomeOverviewAgentTiles from '~/features/home/components/HomeOverviewAgentTiles.vue';
+import HomeOverviewCalendar from '~/features/home/components/HomeOverviewCalendar.vue';
 import HomeOverviewCard from '~/features/home/components/HomeOverviewCard.vue';
 import HomeOverviewChatRows from '~/features/home/components/HomeOverviewChatRows.vue';
 import HomeOverviewDocumentRows from '~/features/home/components/HomeOverviewDocumentRows.vue';
@@ -32,15 +33,16 @@ const agents = computed(() => data.value?.agents.items ?? []);
 const agentsTotal = computed(() => data.value?.agents.total ?? 0);
 const documents = computed(() => data.value?.documents.items ?? []);
 const documentsTotal = computed(() => data.value?.documents.total ?? 0);
+const calendarTasks = computed(() => data.value?.calendarTasks ?? []);
 </script>
 
 <template>
   <!-- Two independent flex columns instead of a grid: cards differ in
        height, and grid rows would align tracks and leave a gap under the
        shorter card of each row (docs/home/prd.md, "UI design"). Desktop
-       placement matches the PRD order (Tasks, Agents / Workflows, Chats,
-       Documents); on mobile the columns stack, so the order becomes Tasks,
-       Workflows, Agents, Chats, Documents. -->
+       placement matches the PRD order (Tasks, Agents / Workflows, Calendar,
+       Chats, Documents); on mobile the columns stack, so the order becomes
+       Tasks, Documents, Workflows, Calendar, Agents, Chats. -->
   <div class="flex flex-col gap-6 md:flex-row">
     <div class="flex min-w-0 flex-1 flex-col gap-6">
       <HomeOverviewCard
@@ -90,6 +92,8 @@ const documentsTotal = computed(() => data.value?.documents.total ?? 0);
     </div>
 
     <div class="flex min-w-0 flex-1 flex-col gap-6">
+      <HomeOverviewCalendar :tasks="calendarTasks" :loading="pending" />
+
       <!-- Agents card skips the shell's quick-create footer: its tile grid
            already includes a dashed "create agent" tile that covers both
            the create action and the empty state (docs/home/prd.md, "Agents

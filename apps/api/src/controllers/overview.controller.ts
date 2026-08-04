@@ -9,8 +9,9 @@ export const overviewController = new Hono()
   .use(workspaceGuard)
   /**
    * [GET] /workspace/:workspaceId/overview
-   * The home page's four overview cards in one round trip: the latest 5
-   * tasks, chats, workflows, and agents, each with its workspace total
+   * The home page's overview cards in one round trip: the latest 5 tasks,
+   * chats, workflows, agents, and documents, each with its workspace
+   * total, plus the calendar's tasks due in a fixed window around today
    * (docs/home/prd.md).
    */
   .get('/', async (c) => {
