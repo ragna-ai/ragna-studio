@@ -8,7 +8,9 @@ import {
   listChatsForWorkspace,
   renameChatForWorkspace,
 } from '../services/chat.service';
+import { removeChatAttachment, uploadChatAttachments } from '../services/media.service';
 import {
+  validChatAttachmentParams,
   validChatIdParam,
   validCreateChatBody,
   validPaginationQuery,
@@ -92,6 +94,44 @@ export const chatController = new Hono()
     await deleteChatForWorkspace({ workspaceId: workspace.id, chatId: param.chatId });
 
     return c.json({ message: 'Chat deleted successfully' });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/chat/:chatId/attachments
+   * Upload one or more files in a single multipart request (`files` field)
+   * and attach them to the chat.
+   */
+  .post('/:chatId/attachments', validChatIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const body = await c.req.parseBody({ all: true });
+    const filesField = body.files;
+    const files = Array.isArray(filesField) ? filesField : filesField ? [filesField] : [];
+    const uploadedFiles = files.filter((file): file is File => file instanceof File);
+
+    const result = await uploadChatAttachments({
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+      files: uploadedFiles,
+    });
+
+    return c.json(result, 201);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId
+   * Detaches a file from the chat and deletes its media once unreferenced.
+   */
+  .delete('/:chatId/attachments/:attachmentId', validChatAttachmentParams, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    await removeChatAttachment({
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+      attachmentId: param.attachmentId,
+    });
+
+    return c.json({ message: 'Attachment deleted successfully' });
   });
 // Chat message streaming (previously [POST] /chat/:chatId) lives on the WS
 // `chat:<chatId>` channel (see ws.controller.ts + services/chat.service.ts's

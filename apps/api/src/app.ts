@@ -14,6 +14,7 @@ import { datasetController } from './controllers/dataset.controller';
 import { documentController } from './controllers/document.controller';
 import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
+import { mediaController } from './controllers/media.controller';
 import { notificationController } from './controllers/notification.controller';
 import { overviewController } from './controllers/overview.controller';
 import { socialPostController } from './controllers/social-post.controller';
@@ -56,6 +57,7 @@ export const app = new Hono()
   .route('/', aiModelController)
   .route('/', genImageController)
   .route('/', genVideoController)
+  .route('/', mediaController)
   .route('/', workflowController)
   .route('/', socialPostController)
   .route('/', notificationController)

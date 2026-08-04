@@ -187,3 +187,72 @@ export function useDeleteChat() {
     },
   });
 }
+
+function attachmentsBasePath(
+  workspaceId: WorkspaceId,
+  chatId: MaybeRefOrGetter<string>,
+) {
+  return `/workspace/${toValue(workspaceId)}/chat/${toValue(chatId)}/attachments`;
+}
+
+// One uploaded file, as returned by the attachments endpoint
+// (docs/media-library/prd.md, decision 4). `url` is a public CDN url for
+// images and an authenticated API download path for documents.
+export interface ChatAttachment {
+  id: string;
+  mediaId: string;
+  filename: string;
+  mediaType: string;
+  size: number;
+  url: string;
+}
+
+export interface UploadChatAttachmentsResponse {
+  attachments: ChatAttachment[];
+}
+
+export interface UploadChatAttachmentsVariables {
+  chatId: string;
+  files: File[];
+}
+
+// Error handling is left to the caller (~/features/chat/composables/useChatAttachments.ts):
+// it renders a per-item retry/dismiss state instead of a toast, so a
+// generic `onError` here would double-report the same failure.
+export function useUploadChatAttachments() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<
+    UploadChatAttachmentsResponse,
+    unknown,
+    UploadChatAttachmentsVariables
+  >({
+    mutationFn: ({ chatId, files }) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('files', file));
+      return $api<UploadChatAttachmentsResponse>(
+        attachmentsBasePath(workspaceId, chatId),
+        { method: 'POST', body: formData },
+      );
+    },
+  });
+}
+
+export interface DeleteChatAttachmentVariables {
+  chatId: string;
+  attachmentId: string;
+}
+
+// Also left to the caller to report, for the same reason as the upload
+// mutation above.
+export function useDeleteChatAttachment() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<void, unknown, DeleteChatAttachmentVariables>({
+    mutationFn: ({ chatId, attachmentId }) =>
+      $api<void>(
+        `${attachmentsBasePath(workspaceId, chatId)}/${attachmentId}`,
+        { method: 'DELETE' },
+      ),
+  });
+}

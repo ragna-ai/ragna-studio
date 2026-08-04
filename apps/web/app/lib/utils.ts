@@ -13,3 +13,17 @@ export function firstToUpperCase(str: string) {
 }
 
 export const createPrimaryId = () => uuidv7();
+
+export function createInitials(
+  name: string | undefined,
+  options: { firstNameOnly?: boolean } = {},
+): string {
+  if (!name) return '?';
+  if (options.firstNameOnly) {
+    return name.slice(0, 2);
+  }
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
+}

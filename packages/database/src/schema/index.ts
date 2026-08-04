@@ -10,6 +10,7 @@ export * from './document.schema';
 export * from './folder.schema';
 export * from './genimage.schema';
 export * from './genvideo.schema';
+export * from './media.schema';
 export * from './memory.schema';
 export * from './notification.schema';
 export * from './relations';

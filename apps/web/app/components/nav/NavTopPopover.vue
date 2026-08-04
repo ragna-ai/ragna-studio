@@ -11,7 +11,7 @@ const setClose = () => (open.value = false);
     <PopoverTrigger class="group h-full">
       <Icon
         name="rg-icon:ragna"
-        class="nav-icon stroke-1.5 drop-shadow-sm transition-transform group-hover:scale-105 group-hover:stroke-2"
+        class="size-[1.4rem] stroke-1.5 drop-shadow-sm transition-transform group-hover:scale-105 group-hover:stroke-2"
       />
     </PopoverTrigger>
     <PopoverContent align="start" class="size-96 p-5">

@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { CoinsIcon, LanguagesIcon, Link2Icon, UserIcon } from '@lucide/vue';
+import {
+  CoinsIcon,
+  LanguagesIcon,
+  Link2Icon,
+  PanelLeftIcon,
+  UserIcon,
+} from '@lucide/vue';
 import UserCreditSettings from '~/features/credit/components/UserCreditSettings.vue';
 import UserLanguageSettings from '~/features/user/components/UserLanguageSettings.vue';
 import UserProfileSettings from '~/features/user/components/UserProfileSettings.vue';
+import UserSidebarSettings from '~/features/user/components/UserSidebarSettings.vue';
 import UserSocialSettings from '~/features/user/components/UserSocialSettings.vue';
 
 // Props
@@ -23,6 +30,7 @@ const sideBarTabs = computed(() => [
   { id: 'profile', icon: UserIcon, label: t('user.tabs.profile') },
   { id: 'social', icon: Link2Icon, label: t('user.tabs.social') },
   { id: 'language', icon: LanguagesIcon, label: t('user.tabs.language') },
+  { id: 'sidebar', icon: PanelLeftIcon, label: t('user.tabs.sidebar') },
   { id: 'credits', icon: CoinsIcon, label: t('user.tabs.credits') },
 ]);
 // Functions
@@ -51,6 +59,9 @@ const sideBarTabs = computed(() => [
         </template>
         <template #language>
           <UserLanguageSettings />
+        </template>
+        <template #sidebar>
+          <UserSidebarSettings />
         </template>
         <template #credits>
           <UserCreditSettings />
