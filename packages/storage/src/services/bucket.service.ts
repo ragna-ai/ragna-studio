@@ -6,6 +6,31 @@ export interface R2Object {
   size?: number;
 }
 
+export interface ObjectStat {
+  exists: boolean;
+  // Byte size, or 0 when the object doesn't exist.
+  size: number;
+}
+
+// HEAD-only lookup: existence plus byte size, without downloading the
+// object. Used by one-off backfill/maintenance scripts (e.g.
+// apps/api/scripts/backfill-media.ts) that need to size an already-uploaded
+// object for a new media row.
+export async function getObjectStat(bucketName: string, key: string): Promise<ObjectStat> {
+  if (!bucketName) throw new Error('Bucket name is required');
+  if (!key) throw new Error('Object key is required');
+
+  const s3 = createS3Client(bucketName);
+  const exists = await s3.objectExists(key);
+
+  if (exists === false) {
+    return { exists: false, size: 0 };
+  }
+
+  const size = await s3.getContentLength(key);
+  return { exists: true, size };
+}
+
 export async function listObjects(bucketName: string, prefix = '', cursor?: string) {
   if (!bucketName) throw new Error('Bucket name is required');
 

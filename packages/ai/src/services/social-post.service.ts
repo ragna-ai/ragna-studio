@@ -1,9 +1,12 @@
 import type { SocialPost, SocialPostMedia } from '@repo/database';
 import {
+  countMediaReferences,
   createSocialPost,
   createSocialPostMediaRecords,
+  deleteMediaById,
   deleteSocialPostMediaByPostId,
   getGenImagesByIds,
+  getMediaById,
   getSocialPostById,
   updateSocialPostContent,
 } from '@repo/database';
@@ -42,10 +45,6 @@ const LINKEDIN_MAX_IMAGES = 9;
 // gen_images table doesn't store a mime type, so this mirrors that fact
 // rather than guessing from the file extension.
 const GEN_IMAGE_MIME_TYPE = 'image/png';
-
-// Same bucket packages/ai's imagen.service.ts uploads generated images to,
-// and where apps/api stores user uploads under a `social/{userId}/` prefix.
-const MEDIA_BUCKET_NAME = 'ragna-cloud-images';
 
 function validatePostText(text: string): string | null {
   if (text.length < 1) {
@@ -161,35 +160,57 @@ async function reviseDraft({
 }
 
 /**
- * Deletes the R2 objects for `upload`-origin media that is about to lose its
- * DB row. `genImage`-origin media is skipped: its object belongs to the
- * gen_images row, not to this media row. Mirrors
- * apps/api's social-post-media.service.ts `deleteUploadedMediaObjects`;
- * kept separate because a package can't reach into an app, but the rule
- * (only 'upload' objects die with the row) must stay identical.
+ * Deletes a media row and its R2 object once nothing references it anymore
+ * (refcount rule, docs/media-library/migration-prd.md decision 4). Mirrors
+ * apps/api's media.service.ts `deleteMediaIfUnreferenced`; kept separate
+ * because a package can't reach into an app, but the rule must stay
+ * identical: reference count decides deletion now, not the `upload` vs.
+ * `genImage` origin split this used to branch on.
  *
- * Best-effort: a failed R2 delete is logged, not thrown, so it never blocks
- * the draft revision that triggered it.
+ * Best-effort on the R2 side: a failed delete is logged, not thrown, so it
+ * never blocks the draft revision that triggered it.
  */
-async function deleteUploadedMediaObjects(media: SocialPostMedia[]): Promise<void> {
-  const keys = media.filter((item) => item.origin === 'upload').map((item) => item.storageKey);
+async function deleteMediaIfUnreferenced(mediaId: string): Promise<void> {
+  const { error: countError, data: referenceCount } = await tryCatch(() =>
+    countMediaReferences({ mediaId }),
+  );
 
-  if (keys.length === 0) {
+  // referenceCount can legitimately be 0, so this must check `=== null`,
+  // not falsy, or a genuinely unreferenced row would be skipped.
+  if (countError !== null || referenceCount === null || referenceCount > 0) {
+    if (countError !== null) {
+      logger.error(`Failed to count references for media ${mediaId}`, countError);
+    }
     return;
   }
 
-  const { error, data } = await tryCatch(() => deleteObjects(MEDIA_BUCKET_NAME, keys));
+  const { error: mediaError, data: mediaRow } = await tryCatch(() => getMediaById({ id: mediaId }));
 
-  if (error !== null) {
-    logger.error('Failed to delete LinkedIn draft image objects from R2', { error, keys });
+  if (mediaError !== null || !mediaRow) {
+    logger.error(`Failed to load media ${mediaId} for deletion`, mediaError);
     return;
   }
 
-  if (data && data.errors.length > 0) {
-    logger.error('Failed to delete some LinkedIn draft image objects from R2', {
-      keys: data.errors,
+  const { error: deleteError, data } = await tryCatch(() =>
+    deleteObjects(mediaRow.bucket, [mediaRow.storageKey]),
+  );
+
+  if (deleteError !== null) {
+    logger.error('Failed to delete LinkedIn draft image object from R2', {
+      error: deleteError,
+      key: mediaRow.storageKey,
+    });
+  } else if (data && data.errors.length > 0) {
+    logger.error('Failed to delete a LinkedIn draft image object from R2', {
+      key: mediaRow.storageKey,
     });
   }
+
+  await deleteMediaById({ id: mediaId });
+}
+
+async function refcountDeleteMedia(mediaIds: string[]): Promise<void> {
+  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced(mediaId)));
 }
 
 /**
@@ -198,8 +219,8 @@ async function deleteUploadedMediaObjects(media: SocialPostMedia[]): Promise<voi
  * a gen_images row belonging to userId fails the whole call instead of
  * silently attaching someone else's image. `existingMedia` is the draft's
  * media set before this call, passed in by the caller (already loaded to
- * check draft status) so any `upload`-origin rows being replaced can have
- * their R2 objects cleaned up too.
+ * check draft status) so its media rows can be refcount-deleted once the
+ * links replacing them are written.
  */
 async function attachImagesToDraft({
   postId,
@@ -218,7 +239,7 @@ async function attachImagesToDraft({
       logger.error('Failed to clear LinkedIn draft images', { error });
       return 'Failed to update the draft images.';
     }
-    await deleteUploadedMediaObjects(existingMedia);
+    await refcountDeleteMedia(existingMedia.map((item) => item.mediaId));
     return null;
   }
 
@@ -246,7 +267,7 @@ async function attachImagesToDraft({
     return 'Failed to update the draft images.';
   }
 
-  await deleteUploadedMediaObjects(existingMedia);
+  await refcountDeleteMedia(existingMedia.map((item) => item.mediaId));
 
   const { error: createError } = await tryCatch(() =>
     createSocialPostMediaRecords(
@@ -260,7 +281,7 @@ async function attachImagesToDraft({
         }
         return {
           socialPostId: postId,
-          storageKey: genImage.storageKey,
+          mediaId: genImage.mediaId,
           mimeType: GEN_IMAGE_MIME_TYPE,
           origin: 'genImage' as const,
           sortOrder: index,

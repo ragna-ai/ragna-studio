@@ -1,5 +1,7 @@
 import { index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
+import type { Media } from './media.schema';
+import { media } from './media.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -43,9 +45,9 @@ export type NewSocialPost = typeof socialPost.$inferInsert;
 
 // SOCIAL POST MEDIA
 // One row per image attached to a post. Agent-attached images reuse a
-// gen_images storage key directly (no file copy); user uploads get their own
-// key under `social/{userId}/`. See social-post.repo.ts and
-// @repo/ai's social-post.service.ts for how each path writes this table.
+// gen_images output's media row directly (no file copy); user uploads get
+// their own media row. See social-post.repo.ts and @repo/ai's
+// social-post.service.ts for how each path writes this table.
 export const socialPostMedia = pgTable(
   'social_post_media',
   {
@@ -53,23 +55,30 @@ export const socialPostMedia = pgTable(
     socialPostId: text('social_post_id')
       .notNull()
       .references(() => socialPost.id, { onDelete: 'cascade' }),
-    // Object key in the image bucket (ragna-cloud-images).
-    storageKey: text('storage_key').notNull(),
+    // No onDelete action, same as chat_attachment.media_id: the DB refuses
+    // to delete a media row while a social post still points at it.
+    mediaId: text('media_id')
+      .notNull()
+      .references(() => media.id),
     mimeType: text('mime_type').notNull(),
-    // 'upload' rows own their R2 object and lose it when the row is deleted.
-    // 'genImage' rows point at a gen_images object they don't own, so only
-    // the row is removed. See social-post-media.service.ts (apps/api) and
-    // social-post.service.ts (@repo/ai) for the delete call sites.
+    // 'upload' rows own their R2 object and lose it once refcount hits zero.
+    // 'genImage' rows point at a gen_images object they don't own; kept as
+    // provenance metadata only, refcount deletion no longer branches on it.
+    // See media.service.ts (apps/api) for the delete call sites.
     origin: text('origin').notNull().$type<SocialPostMediaOrigin>(),
     altText: text('alt_text'),
     // Display order within the post, 0-based.
     sortOrder: integer('sort_order').notNull().default(0),
     ...timestamps,
   },
-  (table) => [index('socialPostMedia_socialPostId_idx').on(table.socialPostId)],
+  (table) => [
+    index('socialPostMedia_socialPostId_idx').on(table.socialPostId),
+    index('socialPostMedia_mediaId_idx').on(table.mediaId),
+  ],
 );
 
 export type SocialPostMedia = typeof socialPostMedia.$inferSelect;
 export type NewSocialPostMedia = typeof socialPostMedia.$inferInsert;
 
-export type SocialPostWithMedia = SocialPost & { media: SocialPostMedia[] };
+export type SocialPostMediaWithMedia = SocialPostMedia & { media: Media };
+export type SocialPostWithMedia = SocialPost & { media: SocialPostMediaWithMedia[] };

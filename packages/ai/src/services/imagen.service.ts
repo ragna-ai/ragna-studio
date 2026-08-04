@@ -2,8 +2,14 @@ import type { BlackForestLabsImageProviderOptions } from '@ai-sdk/black-forest-l
 import type { GoogleVertexImageProviderOptions } from '@ai-sdk/google-vertex';
 import type { OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
 import { config } from '@repo/config';
-import type { GenImage, GenImageReference } from '@repo/database';
-import { createGenImageRecords, getDefaultAiModelByModality } from '@repo/database';
+import type { GenImage } from '@repo/database';
+import {
+  createGenImageReferences,
+  createGenImageRecords,
+  createMedia,
+  getDefaultAiModelByModality,
+} from '@repo/database';
+import type { GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import {
   buildImageUrls,
@@ -42,10 +48,18 @@ export const generateImagesSchema = z.object({
   // bfl + openai only (docs/imagegen/prd.md decision 3); enforcing that is
   // capability-driven and lives in apps/api, not here (see the vertex
   // branch of configProviderParams below).
+  //
+  // Both mediaId and storageKey travel together (docs/media-library/
+  // migration-prd.md): storageKey downloads the bytes to condition the
+  // generation on, mediaId is the link this call writes into
+  // gen_image_reference once the output rows exist. apps/api's
+  // imagegen.service.ts resolves both from the HTTP-level {origin, id}
+  // union before calling in here.
   referenceImages: z
     .array(
       z.object({
         origin: z.enum(['upload', 'genImage']),
+        mediaId: z.string().min(1),
         storageKey: z.string().min(1),
       }),
     )
@@ -250,13 +264,15 @@ export async function createGenImages({
 
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
-  const uploadPromises = genImages.map((image) => {
-    return uploadObjectBuffer({
+  const uploadPromises = genImages.map(async (image) => {
+    const { key } = await uploadObjectBuffer({
       bucketName,
       key: `${prefix}/${randomUUID()}.png`,
       buffer: image.uint8Array,
       contentType: 'image/png',
     });
+
+    return { key, size: image.uint8Array.byteLength };
   });
 
   // upload images to bucket
@@ -269,13 +285,37 @@ export async function createGenImages({
     throw new Error('Failed to upload generated images');
   }
 
+  // One media row per generated output (docs/media-library/migration-prd.md
+  // decision 6), minted before the gen_images rows so each can point at its
+  // own media.id via a not-null FK.
+  const { error: mediaError, data: mediaRows } = await tryCatch(() =>
+    Promise.all(
+      uploadData.map((upload) =>
+        createMedia({
+          ownerWorkspaceId: workspaceId,
+          bucket: bucketName,
+          storageKey: upload.key,
+          filename: upload.key.split('/').pop() ?? upload.key,
+          mimeType: 'image/png',
+          size: upload.size,
+          origin: 'generated',
+        }),
+      ),
+    ),
+  );
+
+  if (mediaError !== null || !mediaRows) {
+    logger.error('Failed to save generated image media rows', { mediaError });
+    throw new Error('Failed to save generated images');
+  }
+
   // persist the generation so prompt and settings can be shown later
   const { error: recordError, data: records } = await tryCatch(() =>
     createGenImageRecords(
-      uploadData.map(({ key }) => ({
+      mediaRows.map((mediaRow) => ({
         userId,
         workspaceId,
-        storageKey: key,
+        mediaId: mediaRow.id,
         prompt,
         provider,
         model,
@@ -283,7 +323,6 @@ export async function createGenImages({
         resolution,
         seed,
         negativePrompt,
-        referenceImages: referenceImages ?? [],
       })),
     ),
   );
@@ -293,7 +332,40 @@ export async function createGenImages({
     throw new Error('Failed to save generated images');
   }
 
-  return { images: records.map(toGenImageDto) };
+  // Every created row shares the same reference set (one (genImageId,
+  // reference) pair per row, gen-image.repo.ts's createGenImageReferences
+  // contract), since a batch request generates several outputs from one
+  // set of inputs.
+  const { error: referenceError } = await tryCatch(() =>
+    createGenImageReferences(
+      records.flatMap((record) =>
+        (referenceImages ?? []).map((reference, sortOrder) => ({
+          genImageId: record.id,
+          mediaId: reference.mediaId,
+          origin: reference.origin,
+          sortOrder,
+        })),
+      ),
+    ),
+  );
+
+  if (referenceError !== null) {
+    logger.error('Failed to save generated image references', { referenceError });
+    throw new Error('Failed to save generated images');
+  }
+
+  const referenceImageDtos: GenImageReferenceDto[] = (referenceImages ?? []).map((reference) => ({
+    origin: reference.origin,
+    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
+  }));
+
+  return {
+    // records and mediaRows come from the same 1:1 mapping above, so
+    // record[i]'s output object is always mediaRows[i]'s storage key.
+    images: records.map((record, index) =>
+      toGenImageDto({ record, storageKey: mediaRows[index].storageKey, referenceImageDtos }),
+    ),
+  };
 }
 
 type CreateImagesWithDefaultModelParams = {
@@ -351,26 +423,41 @@ function isImageGenProvider(provider: string): provider is GenerateImagesInput['
   return (imageGenProviders as readonly string[]).includes(provider);
 }
 
-type GenImageReferenceDto = { origin: GenImageReference['origin']; imgUrl: string };
-
-// Reference thumbnails resolve through buildImageUrls the same way the
-// generated image itself does: it works for any key regardless of prefix,
-// so 'upload' and 'genImage' references (different owners, same bucket)
-// need no special-casing here.
-function toGenImageReferenceDto(
-  reference: GenImageReference,
-  userId: string,
-): GenImageReferenceDto {
-  return {
-    origin: reference.origin,
-    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
-  };
-}
+type GenImageReferenceDto = { origin: GenImageReferenceOrigin; imgUrl: string };
 
 // Widened for the preview dialog (docs/imagegen/prd.md): it shows the
 // settings behind a generation and can load them back into the form, so the
 // dto needs to carry those settings, not just the prompt and image URLs.
-function toGenImageDto(record: GenImage) {
+export type GenImageDto = {
+  id: string;
+  prompt: string;
+  createdAt: Date;
+  aspectRatio: string | null;
+  resolution: string | null;
+  seed: number | null;
+  negativePrompt: string | null;
+  provider: string;
+  model: string;
+  referenceImages: GenImageReferenceDto[];
+  rawUrl: string;
+  imgUrl: string;
+};
+
+// Every row from one createGenImages call shares the same reference set
+// (docs/media-library/migration-prd.md decision 6), so the caller builds
+// the reference DTOs once and passes them in rather than this function
+// re-deriving them per record; storageKey is likewise passed in since a
+// plain GenImage row (from createGenImageRecords) carries only mediaId, not
+// the joined media row's storage key.
+function toGenImageDto({
+  record,
+  storageKey,
+  referenceImageDtos,
+}: {
+  record: GenImage;
+  storageKey: string;
+  referenceImageDtos: GenImageReferenceDto[];
+}): GenImageDto {
   return {
     id: record.id,
     prompt: record.prompt,
@@ -381,9 +468,7 @@ function toGenImageDto(record: GenImage) {
     negativePrompt: record.negativePrompt,
     provider: record.provider,
     model: record.model,
-    referenceImages: record.referenceImages.map((reference) =>
-      toGenImageReferenceDto(reference, record.userId),
-    ),
-    ...buildImageUrls({ userId: record.userId, key: record.storageKey }),
+    referenceImages: referenceImageDtos,
+    ...buildImageUrls({ userId: record.userId, key: storageKey }),
   };
 }

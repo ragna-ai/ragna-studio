@@ -1,7 +1,7 @@
-import { and, eq, isNull, lt } from 'drizzle-orm';
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { db } from '../db';
 import type { ChatAttachment, ChatAttachmentWithMedia, Media, NewChatAttachment, NewMedia } from '../schema';
-import { chatAttachment, media } from '../schema';
+import { chatAttachment, genImage, genImageReference, genVideo, media, socialPostMedia } from '../schema';
 
 export type { ChatAttachment, ChatAttachmentWithMedia, Media, MediaOrigin, NewChatAttachment, NewMedia } from '../schema';
 
@@ -33,16 +33,43 @@ export async function getMediaByWorkspaceId({ workspaceId }: { workspaceId: stri
   return db.query.media.findMany({ where: { ownerWorkspaceId: workspaceId } });
 }
 
-// Number of chat_attachment rows still pointing at this media. The single
-// source of truth for refcount deletion (docs/media-library/prd.md); every
-// future link table must be added to this count.
-export async function countChatAttachmentReferences({ mediaId }: { mediaId: string }): Promise<number> {
-  return db.$count(chatAttachment, eq(chatAttachment.mediaId, mediaId));
+// Number of rows still pointing at this media, across every link point in
+// the schema (docs/media-library/migration-prd.md decision 4). This and
+// findUnreferencedMediaOlderThan below are the ONLY two places allowed to
+// know the link-point list; every future consumer extends exactly these two
+// functions, nowhere else.
+export async function countMediaReferences({ mediaId }: { mediaId: string }): Promise<number> {
+  const [
+    chatAttachmentCount,
+    genImageCount,
+    genImageReferenceCount,
+    genVideoCount,
+    genVideoFrameCount,
+    socialPostMediaCount,
+  ] = await Promise.all([
+    db.$count(chatAttachment, eq(chatAttachment.mediaId, mediaId)),
+    db.$count(genImage, eq(genImage.mediaId, mediaId)),
+    db.$count(genImageReference, eq(genImageReference.mediaId, mediaId)),
+    db.$count(genVideo, eq(genVideo.mediaId, mediaId)),
+    db.$count(genVideo, eq(genVideo.frameMediaId, mediaId)),
+    db.$count(socialPostMedia, eq(socialPostMedia.mediaId, mediaId)),
+  ]);
+
+  return (
+    chatAttachmentCount +
+    genImageCount +
+    genImageReferenceCount +
+    genVideoCount +
+    genVideoFrameCount +
+    socialPostMediaCount
+  );
 }
 
-// Safety-net query for the worker sweep cron: media with zero chat_attachment
-// references, created more than `hours` ago (covers races and failed
-// best-effort R2 deletes at the detach call sites).
+// Safety-net query for the worker sweep cron: media unreferenced by every
+// link point above, created more than `hours` ago (covers races and failed
+// best-effort R2 deletes at the detach call sites). See the comment on
+// countMediaReferences: these two functions are the only ones allowed to
+// know the link-point list.
 export async function findUnreferencedMediaOlderThan({ hours }: { hours: number }): Promise<Media[]> {
   const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
 
@@ -50,7 +77,20 @@ export async function findUnreferencedMediaOlderThan({ hours }: { hours: number 
     .select({ media })
     .from(media)
     .leftJoin(chatAttachment, eq(chatAttachment.mediaId, media.id))
-    .where(and(isNull(chatAttachment.id), lt(media.createdAt, cutoff)));
+    .leftJoin(genImage, eq(genImage.mediaId, media.id))
+    .leftJoin(genImageReference, eq(genImageReference.mediaId, media.id))
+    .leftJoin(genVideo, or(eq(genVideo.mediaId, media.id), eq(genVideo.frameMediaId, media.id)))
+    .leftJoin(socialPostMedia, eq(socialPostMedia.mediaId, media.id))
+    .where(
+      and(
+        isNull(chatAttachment.id),
+        isNull(genImage.id),
+        isNull(genImageReference.id),
+        isNull(genVideo.id),
+        isNull(socialPostMedia.id),
+        lt(media.createdAt, cutoff),
+      ),
+    );
 
   return rows.map((row) => row.media);
 }

@@ -1,6 +1,7 @@
 import type { GenerateVideoInput } from '@repo/ai';
 import { requestGenVideo } from '@repo/ai';
-import type { GenVideo } from '@repo/database';
+import { config } from '@repo/config';
+import type { GenVideo, GenVideoWithMedia } from '@repo/database';
 import {
   deleteGenVideoByIdAndWorkspaceId,
   getGenImageByIdAndWorkspaceId,
@@ -8,17 +9,13 @@ import {
   getGenVideoCountByWorkspaceId,
   getGenVideosByWorkspaceId,
 } from '@repo/database';
+import type { GenVideoFrameOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import {
-  buildVideoUrls,
-  deleteObjects,
-  getVideoFrameBucketNameForUser,
-  getVideoGenBucketNameForUser,
-  uploadObjectBuffer,
-} from '@repo/storage';
+import { buildVideoUrls, getVideoFrameBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import { createMediaForExistingObject, deleteMediaIfUnreferenced } from './media.service';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -41,7 +38,7 @@ export interface GenVideoResponse {
   videoUrl?: string;
 }
 
-function toGenVideoResponse(record: GenVideo): GenVideoResponse {
+function toGenVideoResponse(record: GenVideoWithMedia): GenVideoResponse {
   return {
     id: record.id,
     prompt: record.prompt,
@@ -54,8 +51,8 @@ function toGenVideoResponse(record: GenVideo): GenVideoResponse {
     model: record.model,
     createdAt: record.createdAt,
     videoUrl:
-      record.status === 'completed' && record.storageKey
-        ? buildVideoUrls({ userId: record.userId, key: record.storageKey }).videoUrl
+      record.status === 'completed' && record.media
+        ? buildVideoUrls({ userId: record.userId, key: record.media.storageKey }).videoUrl
         : undefined,
   };
 }
@@ -102,11 +99,40 @@ export async function listGenVideos({
 }
 
 /**
+ * Mints a media row for an uploaded frame: the frame-upload endpoint below
+ * already put the bytes in R2 and handed the client back a bare storage key
+ * (docs/media-library/migration-prd.md non-goal: zero frontend changes), so
+ * this is where that key finally gets its media row, mime type inferred
+ * from the key's own extension (the same mapping the upload endpoint used
+ * to name the file).
+ */
+async function createUploadedFrameMedia({
+  workspaceId,
+  storageKey,
+}: {
+  workspaceId: string;
+  storageKey: string;
+}): Promise<{ id: string }> {
+  const extension = storageKey.split('.').pop() ?? '';
+  const mimeType = FRAME_MIME_TYPE_BY_EXTENSION[extension] ?? 'application/octet-stream';
+
+  return createMediaForExistingObject({
+    workspaceId,
+    bucket: config.cfImagesBucketName,
+    storageKey,
+    mimeType,
+    origin: 'uploaded',
+  });
+}
+
+/**
  * Resolves the optional first-frame input into the `frameOrigin` /
- * `frameStorageKey` pair `requestGenVideo` (@repo/ai) expects. An `upload`
- * frame already owns its storage key (the frame-upload endpoint below wrote
- * it); a `genImage` frame is a workspace-scoped lookup so a caller can't
- * animate another workspace's image (docs/videogen/prd.md decision 3).
+ * `frameMediaId` pair `requestGenVideo` (@repo/ai) expects. An `upload`
+ * frame mints its own media row (its object already exists, from the
+ * frame-upload endpoint below); a `genImage` frame links the referenced gen
+ * image's existing media row (no copy), and is a workspace-scoped lookup so
+ * a caller can't animate another workspace's image (docs/videogen/prd.md
+ * decision 3).
  */
 async function resolveFrame({
   frame,
@@ -114,13 +140,14 @@ async function resolveFrame({
 }: {
   frame?: GenVideoFrameInput;
   workspaceId: string;
-}): Promise<{ frameOrigin?: 'upload' | 'genImage'; frameStorageKey?: string }> {
+}): Promise<{ frameOrigin?: GenVideoFrameOrigin; frameMediaId?: string }> {
   if (!frame) {
     return {};
   }
 
   if (frame.origin === 'upload') {
-    return { frameOrigin: 'upload', frameStorageKey: frame.storageKey };
+    const mediaRow = await createUploadedFrameMedia({ workspaceId, storageKey: frame.storageKey });
+    return { frameOrigin: 'upload', frameMediaId: mediaRow.id };
   }
 
   const { error, data: genImage } = await tryCatch(() =>
@@ -136,7 +163,7 @@ async function resolveFrame({
     throw new NotFoundException('Frame image not found in this workspace');
   }
 
-  return { frameOrigin: 'genImage', frameStorageKey: genImage.storageKey };
+  return { frameOrigin: 'genImage', frameMediaId: genImage.mediaId };
 }
 
 /**
@@ -184,10 +211,12 @@ export async function generateVideoForWorkspace({
 
 /**
  * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId
- * Deletes the row, then best-effort deletes its own storage objects from
- * R2: the rendered clip, plus the first-frame image only if this row
- * uploaded it itself ('upload' origin). A 'genImage' frame belongs to a
- * gen_images row and is left alone.
+ * Deletes the row, then refcount-deletes its output media and its frame
+ * media (docs/media-library/migration-prd.md decision 5): a 'genImage'
+ * frame shares its media row with that gen_images row, so it only
+ * disappears once nothing references it anymore, mirroring imagegen's
+ * deleteGenImage. Either mediaId may be null (a pending row has no output
+ * yet; a text-to-video request has no frame at all).
  */
 export async function deleteGenVideo({
   workspaceId,
@@ -209,29 +238,11 @@ export async function deleteGenVideo({
     throw new NotFoundException('Generated video not found');
   }
 
-  const keys = [
-    deleted.storageKey,
-    deleted.frameOrigin === 'upload' ? deleted.frameStorageKey : null,
-  ].filter((key): key is string => !!key);
+  const mediaIds = [deleted.mediaId, deleted.frameMediaId].filter(
+    (mediaId): mediaId is string => mediaId !== null,
+  );
 
-  if (keys.length === 0) {
-    return;
-  }
-
-  const { bucketName } = getVideoGenBucketNameForUser(deleted.userId);
-  const { error: storageError, data } = await tryCatch(() => deleteObjects(bucketName, keys));
-
-  if (storageError !== null) {
-    logger.error('Failed to delete generated video objects from R2', {
-      error: storageError,
-      keys,
-    });
-    return;
-  }
-
-  if (data && data.errors.length > 0) {
-    logger.error('Failed to delete some generated video objects from R2', { keys: data.errors });
-  }
+  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
 }
 
 // Same 10 MB cap as social-post media uploads
@@ -244,6 +255,15 @@ const FRAME_EXTENSION_BY_MIME_TYPE = {
 } as const;
 type AllowedFrameMimeType = keyof typeof FRAME_EXTENSION_BY_MIME_TYPE;
 const MAX_FRAME_FILE_BYTES = 10 * 1024 * 1024;
+
+// Reverse of the map above, for resolveFrame's 'upload' branch: by the time
+// a generate request resolves an uploaded frame, only the storage key (and
+// thus its extension) survives the round trip to the client and back.
+const FRAME_MIME_TYPE_BY_EXTENSION: Record<string, AllowedFrameMimeType> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  webp: 'image/webp',
+};
 
 function isAllowedFrameMimeType(mimeType: string): mimeType is AllowedFrameMimeType {
   return mimeType in FRAME_EXTENSION_BY_MIME_TYPE;

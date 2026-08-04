@@ -1,7 +1,7 @@
 import { config } from '@repo/config';
 import type { ChatAttachment, Media } from '@repo/database';
 import {
-  countChatAttachmentReferences,
+  countMediaReferences,
   createChatAttachment,
   createMedia,
   deleteChatAttachmentById,
@@ -11,6 +11,7 @@ import {
   getMediaById,
   getMediaByWorkspaceId,
 } from '@repo/database';
+import type { MediaOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import {
   buildChatUploadImageUrls,
@@ -19,6 +20,7 @@ import {
   extractDocumentTextFromBuffer,
   getChatUploadImageKey,
   getMediaDocumentKey,
+  getObjectStat,
   sniffChatMediaKind,
   uploadObjectBuffer,
   type ChatMediaKind,
@@ -315,6 +317,42 @@ export async function uploadChatAttachments({
   };
 }
 
+/**
+ * Mints a media row for an object that was already uploaded to R2 by a
+ * separate, earlier request (docs/media-library/migration-prd.md decision
+ * 6): imagegen's reference-upload and videogen's frame-upload endpoints
+ * hand the client back a bare storage key (no frontend changes), so by the
+ * time a generate request resolves that key into a reference/frame, the
+ * original upload's buffer is long gone. The byte size comes from a HEAD
+ * request instead; the caller still has to work out the mime type itself
+ * (from the key's extension), since a HEAD doesn't reliably return one.
+ */
+export async function createMediaForExistingObject({
+  workspaceId,
+  bucket,
+  storageKey,
+  mimeType,
+  origin,
+}: {
+  workspaceId: string;
+  bucket: string;
+  storageKey: string;
+  mimeType: string;
+  origin: MediaOrigin;
+}): Promise<Media> {
+  const { size } = await getObjectStat(bucket, storageKey);
+
+  return createMedia({
+    ownerWorkspaceId: workspaceId,
+    bucket,
+    storageKey,
+    filename: storageKey.split('/').pop() ?? storageKey,
+    mimeType,
+    size,
+    origin,
+  });
+}
+
 // DELETION (docs/media-library/prd.md, decision 2)
 
 async function deleteMediaObjects(objects: { bucket: string; storageKey: string }[]): Promise<void> {
@@ -352,7 +390,7 @@ async function deleteMediaObjects(objects: { bucket: string; storageKey: string 
  */
 export async function deleteMediaIfUnreferenced({ mediaId }: { mediaId: string }): Promise<void> {
   const { error: countError, data: referenceCount } = await tryCatch(() =>
-    countChatAttachmentReferences({ mediaId }),
+    countMediaReferences({ mediaId }),
   );
 
   // referenceCount can legitimately be 0, so the check must be against

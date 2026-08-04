@@ -1,5 +1,7 @@
 import { boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
+import type { Media } from './media.schema';
+import { media } from './media.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -23,8 +25,10 @@ export const genVideo = pgTable(
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
     status: text('status').notNull().$type<GenVideoStatus>().default('pending'),
-    // Object key in the video bucket. Null until the worker uploads the mp4.
-    storageKey: text('storage_key'),
+    // The rendered output's media row. Null until the worker uploads the mp4
+    // and creates it (docs/media-library/migration-prd.md); no onDelete
+    // action, same as chat_attachment.media_id.
+    mediaId: text('media_id').references(() => media.id),
     // Set on failure, cleared on a retry.
     error: text('error'),
     prompt: text('prompt').notNull(),
@@ -38,15 +42,20 @@ export const genVideo = pgTable(
     generateAudio: boolean('generate_audio').notNull().default(true),
     seed: integer('seed'),
     frameOrigin: text('frame_origin').$type<GenVideoFrameOrigin>(),
-    // Object key of the first-frame image. Set together with frameOrigin.
-    frameStorageKey: text('frame_storage_key'),
+    // The first-frame image's media row. Set together with frameOrigin; no
+    // onDelete action, same as mediaId above.
+    frameMediaId: text('frame_media_id').references(() => media.id),
     ...timestamps,
   },
   (table) => [
     index('genVideo_userId_idx').on(table.userId),
     index('genVideo_workspaceId_idx').on(table.workspaceId),
+    index('genVideo_mediaId_idx').on(table.mediaId),
+    index('genVideo_frameMediaId_idx').on(table.frameMediaId),
   ],
 );
 
 export type GenVideo = typeof genVideo.$inferSelect;
 export type NewGenVideo = typeof genVideo.$inferInsert;
+
+export type GenVideoWithMedia = GenVideo & { media: Media | null; frameMedia: Media | null };

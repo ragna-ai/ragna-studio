@@ -1,5 +1,5 @@
 import {
-  countChatAttachmentReferences,
+  countMediaReferences,
   createChatAttachment,
   getChatAttachmentById,
   getMediaById,
@@ -241,7 +241,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
 
   test('deletes media once its reference count is a genuine zero, not null', async () => {
     // Pins deleteMediaIfUnreferenced's `referenceCount === null` check
-    // (media.service.ts): countChatAttachmentReferences legitimately
+    // (media.service.ts): countMediaReferences legitimately
     // returns 0 once the last link is gone, and a `!referenceCount` check
     // would wrongly treat that as "count unknown" and skip the delete.
     const { workspaceId, cookieHeader, chatId } = await seedChat();
@@ -250,7 +250,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
     ]);
     const attachment = attachments[0]!;
 
-    expect(await countChatAttachmentReferences({ mediaId: attachment.mediaId })).toBe(1);
+    expect(await countMediaReferences({ mediaId: attachment.mediaId })).toBe(1);
 
     const response = await app.request(
       `/workspace/${workspaceId}/chat/${chatId}/attachments/${attachment.id}`,
@@ -258,7 +258,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
     );
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(await countChatAttachmentReferences({ mediaId: attachment.mediaId })).toBe(0);
+    expect(await countMediaReferences({ mediaId: attachment.mediaId })).toBe(0);
     expect(await getMediaById({ id: attachment.mediaId })).toBeNull();
   });
 

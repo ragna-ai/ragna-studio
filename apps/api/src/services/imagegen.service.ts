@@ -1,25 +1,22 @@
 import type { GenerateImagesInput } from '@repo/ai';
 import { createGenImages, imageGenProviders } from '@repo/ai';
-import type { GenImage } from '@repo/database';
+import { config } from '@repo/config';
+import type { GenImageReferenceWithMedia, GenImageWithMedia } from '@repo/database';
 import {
   deleteGenImageByIdAndWorkspaceId,
   getAiModelById,
   getGenImageByIdAndWorkspaceId,
   getGenImageCountByWorkspaceId,
+  getGenImageReferenceMediaIds,
   getGenImagesByWorkspaceId,
 } from '@repo/database';
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import {
-  buildImageUrls,
-  deleteObjects,
-  getImgGenBucketNameForUser,
-  getImgRefBucketNameForUser,
-  uploadObjectBuffer,
-} from '@repo/storage';
+import { buildImageUrls, getImgRefBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import { createMediaForExistingObject, deleteMediaIfUnreferenced } from './media.service';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -58,14 +55,16 @@ export interface GenImageResponse {
 // Reference thumbnails resolve through buildImageUrls the same way the
 // generated image itself does: it works for any key regardless of prefix,
 // so 'upload' and 'genImage' references (different owners, same bucket)
-// need no special-casing here.
+// need no special-casing here. The storage key comes off the reference's
+// joined media row now (docs/media-library/migration-prd.md), not a jsonb
+// column.
 function toReferenceImageResponse(
-  reference: GenImage['referenceImages'][number],
+  reference: GenImageReferenceWithMedia,
   userId: string,
 ): { origin: GenImageReferenceOrigin; imgUrl: string } {
   return {
     origin: reference.origin,
-    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
+    imgUrl: buildImageUrls({ userId, key: reference.media.storageKey }).imgUrl,
   };
 }
 
@@ -73,7 +72,7 @@ function toReferenceImageResponse(
 // imagen.service.ts): the list endpoint reads raw GenImage rows straight
 // from the DB, while the generate endpoint gets already-shaped DTOs back
 // from createGenImages, so both need to end up at the same response shape.
-function toGenImageResponse(record: GenImage): GenImageResponse {
+function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
   return {
     id: record.id,
     prompt: record.prompt,
@@ -84,10 +83,10 @@ function toGenImageResponse(record: GenImage): GenImageResponse {
     negativePrompt: record.negativePrompt,
     provider: record.provider,
     model: record.model,
-    referenceImages: record.referenceImages.map((reference) =>
+    referenceImages: record.references.map((reference) =>
       toReferenceImageResponse(reference, record.userId),
     ),
-    ...buildImageUrls({ userId: record.userId, key: record.storageKey }),
+    ...buildImageUrls({ userId: record.userId, key: record.media.storageKey }),
   };
 }
 
@@ -134,10 +133,12 @@ export async function listGenImages({
 
 /**
  * [DELETE] /workspace/:workspaceId/gen-image/:genImageId
- * Deletes the row, then best-effort deletes its own output object from R2.
- * Reference images used as this row's generation input are left alone:
- * an 'upload' reference may be shared by sibling rows from the same batch
- * request, and a 'genImage' reference belongs to another row entirely.
+ * Deletes the row (its gen_image_reference links cascade with it), then
+ * refcount-deletes the output media and every referenced media
+ * (docs/media-library/migration-prd.md decision 5): a reference may still
+ * be shared by a sibling row from the same batch request, another gen_images
+ * row entirely, or a social post, so only a zero reference count actually
+ * removes the R2 object.
  */
 export async function deleteGenImage({
   workspaceId,
@@ -146,6 +147,17 @@ export async function deleteGenImage({
   workspaceId: string;
   genImageId: string;
 }): Promise<void> {
+  // Read before deleting: the delete below cascades gen_image_reference rows
+  // away, so their media ids must be collected first (gen-image.repo.ts).
+  const { error: refError, data: referenceMediaIds } = await tryCatch(() =>
+    getGenImageReferenceMediaIds({ genImageId }),
+  );
+
+  if (refError !== null || referenceMediaIds === null) {
+    logger.error('Failed to load generated image references', refError);
+    throw new InternalServerErrorException('Failed to delete generated image');
+  }
+
   const { error, data: deleted } = await tryCatch(() =>
     deleteGenImageByIdAndWorkspaceId({ id: genImageId, workspaceId }),
   );
@@ -159,22 +171,9 @@ export async function deleteGenImage({
     throw new NotFoundException('Generated image not found');
   }
 
-  const { bucketName } = getImgGenBucketNameForUser(deleted.userId);
-  const { error: storageError, data } = await tryCatch(() =>
-    deleteObjects(bucketName, [deleted.storageKey]),
+  await Promise.all(
+    [deleted.mediaId, ...referenceMediaIds].map((mediaId) => deleteMediaIfUnreferenced({ mediaId })),
   );
-
-  if (storageError !== null) {
-    logger.error('Failed to delete generated image object from R2', {
-      error: storageError,
-      key: deleted.storageKey,
-    });
-    return;
-  }
-
-  if (data && data.errors.length > 0) {
-    logger.error('Failed to delete generated image object from R2', { keys: data.errors });
-  }
 }
 
 // Not exported from @repo/ai (it's a private guard for imagen.service.ts's
@@ -266,11 +265,46 @@ function assertCapabilitiesSupportRequest({
   }
 }
 
+interface ResolvedReferenceImage {
+  origin: GenImageReferenceOrigin;
+  mediaId: string;
+  storageKey: string;
+}
+
 /**
- * Resolves one reference entry into the storage key createGenImages
- * (@repo/ai) expects. An 'upload' entry already owns its storage key (the
- * reference-upload endpoint below wrote it); a 'genImage' entry is a
- * workspace-scoped lookup so a caller can't condition on another
+ * Mints a media row for an 'upload' reference: the reference-upload endpoint
+ * below already put the bytes in R2 and handed the client back a bare
+ * storage key (docs/media-library/migration-prd.md non-goal: zero frontend
+ * changes), so this is where that key finally gets its media row, mime type
+ * inferred from the key's own extension (the same mapping the upload
+ * endpoint used to name the file).
+ */
+async function createUploadedReferenceMedia({
+  workspaceId,
+  storageKey,
+}: {
+  workspaceId: string;
+  storageKey: string;
+}): Promise<ResolvedReferenceImage> {
+  const extension = storageKey.split('.').pop() ?? '';
+  const mimeType = REFERENCE_MIME_TYPE_BY_EXTENSION[extension] ?? 'application/octet-stream';
+
+  const mediaRow = await createMediaForExistingObject({
+    workspaceId,
+    bucket: config.cfImagesBucketName,
+    storageKey,
+    mimeType,
+    origin: 'uploaded',
+  });
+
+  return { origin: 'upload', mediaId: mediaRow.id, storageKey };
+}
+
+/**
+ * Resolves one reference entry into the mediaId/storageKey pair createGenImages
+ * (@repo/ai) expects: mediaId to link once the output rows exist, storageKey
+ * to download the bytes to condition the generation on. A 'genImage' entry
+ * is a workspace-scoped lookup so a caller can't condition on another
  * workspace's image (docs/imagegen/prd.md decision 4).
  */
 async function resolveReferenceImage({
@@ -279,9 +313,9 @@ async function resolveReferenceImage({
 }: {
   reference: GenImageReferenceInput;
   workspaceId: string;
-}): Promise<{ origin: 'upload' | 'genImage'; storageKey: string }> {
+}): Promise<ResolvedReferenceImage> {
   if (reference.origin === 'upload') {
-    return { origin: 'upload', storageKey: reference.storageKey };
+    return createUploadedReferenceMedia({ workspaceId, storageKey: reference.storageKey });
   }
 
   const { error, data: genImage } = await tryCatch(() =>
@@ -297,7 +331,7 @@ async function resolveReferenceImage({
     throw new NotFoundException('Reference image not found in this workspace');
   }
 
-  return { origin: 'genImage', storageKey: genImage.storageKey };
+  return { origin: 'genImage', mediaId: genImage.mediaId, storageKey: genImage.media.storageKey };
 }
 
 /**
@@ -312,7 +346,7 @@ async function resolveReferenceImages({
 }: {
   referenceImages?: GenImageReferenceInput[];
   workspaceId: string;
-}): Promise<{ origin: 'upload' | 'genImage'; storageKey: string }[] | undefined> {
+}): Promise<ResolvedReferenceImage[] | undefined> {
   if (!referenceImages || referenceImages.length === 0) {
     return undefined;
   }
@@ -378,6 +412,15 @@ const REFERENCE_EXTENSION_BY_MIME_TYPE = {
 } as const;
 type AllowedReferenceMimeType = keyof typeof REFERENCE_EXTENSION_BY_MIME_TYPE;
 const MAX_REFERENCE_FILE_BYTES = 10 * 1024 * 1024;
+
+// Reverse of the map above, for createUploadedReferenceMedia: by the time a
+// generate request resolves an 'upload' reference, only the storage key
+// (and thus its extension) survives the round trip to the client and back.
+const REFERENCE_MIME_TYPE_BY_EXTENSION: Record<string, AllowedReferenceMimeType> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  webp: 'image/webp',
+};
 
 function isAllowedReferenceMimeType(mimeType: string): mimeType is AllowedReferenceMimeType {
   return mimeType in REFERENCE_EXTENSION_BY_MIME_TYPE;
