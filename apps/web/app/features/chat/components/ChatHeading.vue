@@ -25,7 +25,7 @@ const props = defineProps<{
       </p>
       <p class="">/</p>
       -->
-      <p class="max-w-40 truncate text-muted-foreground">
+      <p class="max-w-40 truncate text-foreground">
         {{ chatStore.agent?.name ?? 'Default Agent' }}
       </p>
     </div>

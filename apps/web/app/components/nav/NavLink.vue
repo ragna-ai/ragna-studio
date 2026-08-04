@@ -40,7 +40,7 @@ const isActive = computed(() => {
           exactActiveClass="nav-link-active"
         >
           <div class="nav-icon-wrapper">
-            <component :is="props.icon" class="nav-icon stroke-1.5" />
+            <component :is="props.icon" class="nav-icon" />
           </div>
           <span class="nav-icon-text truncate px-4 pt-0 text-foreground">
             {{ props.label }}
