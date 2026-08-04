@@ -1,4 +1,5 @@
 import type { ChatTransport, UIMessage, UIMessageChunk } from 'ai';
+import { ref } from 'vue';
 import { useWebSocketChannel } from '~/composables/useWebSocketChannel';
 
 interface ChatMessageFramePayload {
@@ -36,6 +37,12 @@ type ReconnectToStreamOptions = Parameters<
  * reads the real id from the component instead of trusting that field.
  */
 export class WebSocketChatTransport implements ChatTransport<UIMessage> {
+  // True from the moment the `subscribe` frame goes out for a turn until the
+  // matching `unsubscribe` fires (on `done`, `error`, or abort). Distinct
+  // from useChat's `status`, which tracks the AI SDK stream state rather
+  // than the WS channel lifecycle.
+  readonly isSubscribed = ref(false);
+
   constructor(private readonly getChatId: () => string | null) {}
 
   async sendMessages({
@@ -76,9 +83,11 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
 
     const finish = () => {
       finished = true;
+      this.isSubscribed.value = false;
       unsubscribe?.();
     };
 
+    this.isSubscribed.value = true;
     unsubscribe = subscribe(channel, (frame) => {
       switch (frame.type) {
         case 'subscribed':

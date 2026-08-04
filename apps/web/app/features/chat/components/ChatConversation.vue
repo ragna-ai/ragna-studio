@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Loader } from '@/components/ai-elements/loader';
 import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
@@ -60,11 +61,14 @@ function extractGenerationPrompt(data: unknown): string {
 // `activeGeneration` computed, which is what actually clears it.
 const lastGenerationEvent = ref<ActiveGeneration | null>(null);
 
+const chatTransport = new WebSocketChatTransport(() => chatId.value);
+const { isSubscribed } = chatTransport;
+
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
   generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-  transport: new WebSocketChatTransport(() => chatId.value),
+  transport: chatTransport,
   onData: (dataPart) => {
     if (dataPart.type === 'data-imageGen') {
       lastGenerationEvent.value = {
@@ -202,9 +206,9 @@ onMounted(() => {
               }}
             </Shimmer>
             <!-- Thinking -->
-            <Shimmer v-else-if="isBusy && !hasVisibleReply" class="text-sm">
-              Thinking...
-            </Shimmer>
+            <div v-else-if="isSubscribed" class="flex items-center gap-2">
+              <Loader />
+            </div>
             <p v-if="error" class="text-sm text-destructive">
               {{ error.message }}
             </p>
