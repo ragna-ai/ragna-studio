@@ -232,7 +232,20 @@
       "disclaimer": "AI generated. Responses may be incorrect. Verify important information."
     },
     "input": {
-      "placeholder": "How can I help you?"
+      "placeholder": "How can I help you?",
+      "attach": "Attach files",
+      "errors": {
+        "unsupportedType": "\"{name}\" isn't a supported file type.",
+        "tooLarge": "\"{name}\" is larger than 10 MB."
+      }
+    },
+    "attachment": {
+      "dropHint": "Drop files to attach them",
+      "uploadFailed": "Upload failed",
+      "removeFailed": "Failed to remove attachment",
+      "chatUnavailable": "Couldn't start the chat. Try again.",
+      "retry": "Retry upload",
+      "remove": "Remove attachment"
     },
     "history": {
       "title": "Chat history",

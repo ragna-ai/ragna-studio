@@ -10,6 +10,14 @@ export const validChatIdParam = myzValidator(
   }),
 );
 
+export const validChatAttachmentParams = myzValidator(
+  'param',
+  z.object({
+    chatId: primaryId,
+    attachmentId: primaryId,
+  }),
+);
+
 // workspaceId comes from the path (`/workspace/:workspaceId/chat`, guarded by
 // workspaceGuard), never the body.
 export const validCreateChatBody = myzValidator(

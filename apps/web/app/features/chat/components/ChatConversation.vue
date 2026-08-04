@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { Loader } from '@/components/ai-elements/loader';
-import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import {
   isToolUIPart,
   lastAssistantMessageIsCompleteWithToolCalls,
+  type FileUIPart,
   type UIDataTypes,
   type UIMessage,
   type UIMessagePart,
   type UITools,
 } from 'ai';
 import { toast } from 'vue-sonner';
+import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
-import { useCreateChat } from '~/features/chat/composables/useChatApi';
+import {
+  type ChatAttachment,
+  useCreateChat,
+} from '~/features/chat/composables/useChatApi';
+import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { isOutOfCreditsError, OUT_OF_CREDITS_MESSAGE } from '~/lib/api-error';
@@ -30,13 +35,22 @@ const props = defineProps<Props>();
 // Emits
 
 // Refs
-const inputContainerRef = useTemplateRef<HTMLDivElement>('inputContainerRef');
+const conversationRef = useTemplateRef<HTMLDivElement>('conversationRef');
 const chatId = ref(props.chatId ?? null);
 const inputText = ref('');
 
 // Composables
 const { mutateAsync: createNewChat } = useCreateChat();
 const invalidateCreditBalance = useInvalidateCreditBalance();
+const chatAttachments = useChatAttachments(ensureChat);
+// Drop anywhere over the conversation, not just the input (decision 7):
+// the overlay covers the whole container while a drag is over it.
+const { isOverDropZone } = useDropZone(conversationRef, {
+  multiple: true,
+  onDrop: (files) => {
+    if (files) chatAttachments.handleFiles(files);
+  },
+});
 
 // Computed
 const initialMessages = props.initialMessages
@@ -148,43 +162,52 @@ const hasVisibleReply = computed(() => {
 });
 
 // Functions
-async function handleSubmit(message: { text: string }) {
-  const text = message.text.trim();
-  if (!text) {
+
+// Chat creation is lazy: the first attachment or the first sent message is
+// what actually creates the chat. Both the attachments composable and
+// handleSubmit below call this, and it's a no-op once chatId is set.
+async function ensureChat(): Promise<string> {
+  if (chatId.value) return chatId.value;
+
+  const { chat } = await createNewChat({ agentId: undefined });
+  if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
+  chatId.value = chat.id;
+  return chatId.value;
+}
+
+function toFilePart(attachment: ChatAttachment): FileUIPart {
+  return {
+    type: 'file',
+    mediaType: attachment.mediaType,
+    url: attachment.url,
+    filename: attachment.filename,
+  };
+}
+
+async function handleSubmit(text: string) {
+  try {
+    await ensureChat();
+  } catch {
     return;
   }
 
-  if (!chatId.value) {
-    try {
-      const { chat } = await createNewChat({ agentId: undefined });
-      if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
-      chatId.value = chat.id;
-    } catch {
-      return;
-    }
-  }
-
-  sendMessage({ text });
+  const files = chatAttachments.finishedAttachments.value.map(toFilePart);
+  chatAttachments.clear();
+  sendMessage({ text, files: files.length > 0 ? files : undefined });
 }
-
-function onSubmit(e: Event) {
-  e.preventDefault();
-  const text = inputText.value.trim();
-  if (!text) return;
-  inputText.value = '';
-  handleSubmit({ text });
-}
-
-// Hooks
-onMounted(() => {
-  const textarea = inputContainerRef.value?.querySelector('textarea');
-  if (!textarea) return;
-  textarea.focus();
-});
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col p-4">
+  <div ref="conversationRef" class="relative flex h-full w-full flex-col p-4">
+    <!-- Drag-n-drop overlay, covers the whole conversation while dragging -->
+    <div
+      v-if="isOverDropZone"
+      class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-background/80 backdrop-blur-sm"
+    >
+      <p class="text-sm font-medium text-primary">
+        {{ $t('chat.attachment.dropHint') }}
+      </p>
+    </div>
     <MessageScrollerProvider auto-scroll default-scroll-position="last-anchor">
       <MessageScroller>
         <MessageScrollerViewport>
@@ -234,22 +257,16 @@ onMounted(() => {
 
     <!-- input -->
     <div class="mx-auto w-full max-w-4xl">
-      <form @submit.prevent="onSubmit" class="w-full">
-        <div ref="inputContainerRef" class="relative">
-          <Textarea
-            v-model="inputText"
-            :placeholder="$t('chat.input.placeholder')"
-            name="message"
-            class="min-h-12 resize-none rounded-xl bg-stone-50 py-3 pr-10 shadow-inner!"
-            @keydown.enter.exact.prevent="onSubmit"
-          />
-          <PromptInputSubmit
-            class="absolute right-2 bottom-2"
-            :status="status"
-            :disabled="isBusy"
-          />
-        </div>
-      </form>
+      <ChatInput
+        v-model="inputText"
+        :items="chatAttachments.items.value"
+        :status="status"
+        :is-busy="isBusy"
+        @submit="handleSubmit"
+        @files="chatAttachments.handleFiles"
+        @retry="chatAttachments.retry"
+        @remove="chatAttachments.remove"
+      />
     </div>
   </div>
 </template>

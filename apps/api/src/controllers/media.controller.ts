@@ -1,0 +1,28 @@
+import { Hono } from 'hono';
+import { authMiddleware } from '../middlewares/authMiddleware';
+import { workspaceGuard } from '../middlewares/workspaceGuard';
+import { downloadMedia } from '../services/media.service';
+import { validMediaIdParam } from '../validation';
+
+export const mediaController = new Hono()
+  .basePath('/workspace/:workspaceId/media')
+  .use(authMiddleware)
+  .use(workspaceGuard)
+  /**
+   * [GET] /workspace/:workspaceId/media/:mediaId/download
+   * Streams a workspace-owned media object from R2 with its content-type
+   * and a content-disposition filename. Images also have a public CDN URL
+   * (@repo/storage's buildChatUploadImageUrls); every other kind lives in
+   * the private documents bucket and is only reachable through this route.
+   */
+  .get('/:mediaId/download', validMediaIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const file = await downloadMedia({ workspaceId: workspace.id, mediaId: param.mediaId });
+
+    return c.body(new Uint8Array(file.bytes), 200, {
+      'Content-Type': file.contentType,
+      'Content-Disposition': `attachment; filename="${file.filename}"`,
+    });
+  });

@@ -13,10 +13,11 @@ import {
   toModelSettings,
   toUIMessageStream,
 } from '@repo/ai';
-import type { Chat } from '@repo/database';
+import type { Chat, Media } from '@repo/database';
 import {
   createChat,
   deleteChatByWorkspaceId,
+  getChatAttachmentsByChatId,
   getChatByIdForUser,
   getChatByIdForWorkspace,
   getChatCountByWorkspaceId,
@@ -28,6 +29,7 @@ import {
   upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { downloadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -36,6 +38,7 @@ import {
   NotFoundException,
 } from '../exceptions';
 import { assertCanSpend } from './credit.service';
+import { deleteMediaIfUnreferenced } from './media.service';
 
 // CHAT CRUD (docs/api-standards/prd.md, WP4)
 //
@@ -274,6 +277,9 @@ export async function renameChatForWorkspace({
 
 /**
  * [DELETE] /workspace/:workspaceId/chat/:chatId
+ * The chat_attachment rows cascade-delete with the chat row, so their
+ * mediaIds must be captured before the delete to run the refcount check
+ * afterwards (docs/media-library/prd.md, decision 2).
  */
 export async function deleteChatForWorkspace({
   workspaceId,
@@ -282,11 +288,24 @@ export async function deleteChatForWorkspace({
   workspaceId: string;
   chatId: string;
 }): Promise<void> {
+  const { error: attachmentsError, data: attachments } = await tryCatch(() =>
+    getChatAttachmentsByChatId({ chatId }),
+  );
+
+  if (attachmentsError !== null) {
+    logger.error(`Failed to load attachments for chat ${chatId} before delete`, attachmentsError);
+  }
+
   const { error } = await tryCatch(() => deleteChatByWorkspaceId({ chatId, workspaceId }));
 
   if (error !== null) {
     logger.error(`Error deleting chat ${chatId}`, error);
     throw new InternalServerErrorException('Failed to delete chat');
+  }
+
+  const mediaIds = new Set((attachments ?? []).map((attachment) => attachment.mediaId));
+  for (const mediaId of mediaIds) {
+    await deleteMediaIfUnreferenced({ mediaId });
   }
 }
 
@@ -363,6 +382,112 @@ function mergeConsecutiveUserMessages(messages: UIMessage[]): UIMessage[] {
   }
 
   return merged;
+}
+
+// CHAT ATTACHMENT MODEL RESOLUTION (docs/media-library/prd.md, decision 5)
+//
+// File parts carry URLs the client got back from the upload/download routes.
+// The persisted UIMessage rows always keep those original parts unchanged,
+// so message history renders the same chips/images it always has; only the
+// copy handed to convertToModelMessages below is transformed:
+//   - image parts pass through untouched (the public CDN URL is
+//     model-fetchable directly);
+//   - pdf parts are re-downloaded from the private documents bucket and
+//     inlined as a base64 data URL, since no URL would work for the model;
+//   - docx/xlsx/csv/txt/md parts are replaced with a text part holding the
+//     extraction done at upload time;
+//   - a file part whose mediaId isn't among the chat's current attachments
+//     (e.g. removed since) is dropped instead of sent to the model broken.
+
+type UIMessagePartLike = UIMessage['parts'][number];
+type FilePartLike = Extract<UIMessagePartLike, { type: 'file' }>;
+
+const MEDIA_DOWNLOAD_URL_PATTERN = /\/media\/([^/]+)\/download/;
+
+function extractMediaIdFromDownloadUrl(url: string): string | null {
+  return MEDIA_DOWNLOAD_URL_PATTERN.exec(url)?.[1] ?? null;
+}
+
+function toExtractedTextPart(part: FilePartLike, media: Media): UIMessagePartLike {
+  const filename = part.filename ?? media.filename;
+
+  return {
+    type: 'text',
+    text: `<attached-file name="${filename}">\n${media.extractedText ?? ''}\n</attached-file>`,
+  };
+}
+
+async function inlinePdfFilePart(part: FilePartLike, media: Media): Promise<UIMessagePartLike | null> {
+  const { error, data: object } = await tryCatch(() =>
+    downloadObjectBuffer(media.bucket, media.storageKey),
+  );
+
+  if (error !== null || !object) {
+    logger.error(`Failed to download pdf attachment ${media.id} for model input`, error);
+    return null;
+  }
+
+  return { ...part, url: `data:application/pdf;base64,${object.buffer.toString('base64')}` };
+}
+
+async function resolveModelFacingFilePart(
+  part: UIMessagePartLike,
+  attachmentsByMediaId: Map<string, Media>,
+): Promise<UIMessagePartLike | null> {
+  if (part.type !== 'file') {
+    return part;
+  }
+
+  if (part.mediaType.startsWith('image/')) {
+    return part;
+  }
+
+  const mediaId = extractMediaIdFromDownloadUrl(part.url);
+  const media = mediaId ? attachmentsByMediaId.get(mediaId) : undefined;
+
+  if (!media) {
+    return null;
+  }
+
+  return media.mimeType === 'application/pdf'
+    ? inlinePdfFilePart(part, media)
+    : toExtractedTextPart(part, media);
+}
+
+async function resolveModelFacingUserMessage(
+  message: UIMessage,
+  attachmentsByMediaId: Map<string, Media>,
+): Promise<UIMessage> {
+  if (!message.parts.some((part) => part.type === 'file')) {
+    return message;
+  }
+
+  const resolvedParts = await Promise.all(
+    message.parts.map((part) => resolveModelFacingFilePart(part, attachmentsByMediaId)),
+  );
+
+  return {
+    ...message,
+    parts: resolvedParts.filter((part): part is UIMessagePartLike => part !== null),
+  };
+}
+
+// Resolves every user message's file parts against the chat's current
+// attachments. Never mutates `messages`; the caller persists that original
+// array as-is.
+async function resolveModelFacingMessages(
+  messages: UIMessage[],
+  attachmentsByMediaId: Map<string, Media>,
+): Promise<UIMessage[]> {
+  if (attachmentsByMediaId.size === 0) {
+    return messages;
+  }
+
+  return Promise.all(
+    messages.map((message) =>
+      message.role === 'user' ? resolveModelFacingUserMessage(message, attachmentsByMediaId) : message,
+    ),
+  );
 }
 
 function toChatMessageRow(message: UIMessage, chatId: string) {
@@ -452,9 +577,25 @@ export async function runChatStream(
     }
 
     const validUiMessages = validated.data;
-    const validModelMessages = await convertToModelMessages(
-      mergeConsecutiveUserMessages(validUiMessages),
+
+    const { error: attachmentsError, data: chatAttachments } = await tryCatch(() =>
+      getChatAttachmentsByChatId({ chatId: userChat.id }),
     );
+
+    if (attachmentsError !== null || !chatAttachments) {
+      logger.error(`Failed to load attachments for chat ${userChat.id}`, attachmentsError);
+      throw new InternalServerErrorException('Failed to load chat attachments');
+    }
+
+    const attachmentsByMediaId = new Map(
+      chatAttachments.map((attachment): [string, Media] => [attachment.mediaId, attachment.media]),
+    );
+
+    const modelFacingMessages = await resolveModelFacingMessages(
+      mergeConsecutiveUserMessages(validUiMessages),
+      attachmentsByMediaId,
+    );
+    const validModelMessages = await convertToModelMessages(modelFacingMessages);
     const { instructions, retrievalMode } = await buildAgentInstructions({
       agentId: agent.id,
       userId,

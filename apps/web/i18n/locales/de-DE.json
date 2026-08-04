@@ -238,7 +238,20 @@
       "disclaimer": "KI Generiert. Antworten können fehlerhaft sein. Überprüfe wichtige Informationen."
     },
     "input": {
-      "placeholder": "Wie kann ich dir helfen?"
+      "placeholder": "Wie kann ich dir helfen?",
+      "attach": "Dateien anhängen",
+      "errors": {
+        "unsupportedType": "„{name}“ ist kein unterstützter Dateityp.",
+        "tooLarge": "„{name}“ ist größer als 10 MB."
+      }
+    },
+    "attachment": {
+      "dropHint": "Dateien hier ablegen, um sie anzuhängen",
+      "uploadFailed": "Hochladen fehlgeschlagen",
+      "removeFailed": "Anhang konnte nicht entfernt werden",
+      "chatUnavailable": "Chat konnte nicht gestartet werden. Versuche es erneut.",
+      "retry": "Hochladen wiederholen",
+      "remove": "Anhang entfernen"
     },
     "history": {
       "title": "Chat-Verlauf",

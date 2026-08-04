@@ -9,6 +9,7 @@ import {
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import { deleteWorkspaceMediaObjects } from './media.service';
 
 /**
  * [GET] /workspace
@@ -109,6 +110,11 @@ export async function deleteWorkspaceForUser({
   if (workspaceCount <= 1) {
     throw new BadRequestException('Cannot delete your only workspace');
   }
+
+  // Best-effort R2 cleanup for every media row this workspace owns, before
+  // the FK cascade below wipes the rows for free but leaves the objects
+  // orphaned (docs/media-library/prd.md, decision 2).
+  await deleteWorkspaceMediaObjects({ workspaceId });
 
   const { error: deleteError, data: deletedWorkspace } = await tryCatch(() =>
     deleteWorkspaceById({ id: workspaceId, ownerId: userId }),

@@ -11,6 +11,7 @@ import { document } from './document.schema';
 import { folder } from './folder.schema';
 import { genImage } from './genimage.schema';
 import { genVideo } from './genvideo.schema';
+import { chatAttachment, media } from './media.schema';
 import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
 import { session } from './session.schema';
@@ -43,6 +44,8 @@ const schema = {
   folder,
   genImage,
   genVideo,
+  media,
+  chatAttachment,
   socialPost,
   socialPostMedia,
   workflow,
@@ -69,6 +72,9 @@ export const relations = defineRelations(schema, (r) => ({
     workspaces: r.many.workspace(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
+    // Personal-library flow (docs/media-library/prd.md); unused until v2
+    // starts writing ownerUserId.
+    media: r.many.media(),
     // Optional: not every user has a credit account yet, since accounts are
     // created only by grantCredits, never lazily (docs/credits/prd.md,
     // "Account creation").
@@ -175,11 +181,24 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
     messages: r.many.chatMessage(),
+    attachments: r.many.chatAttachment(),
   },
   chatMessage: {
     chat: r.one.chat({
       from: r.chatMessage.chatId,
       to: r.chat.id,
+      optional: false,
+    }),
+  },
+  chatAttachment: {
+    chat: r.one.chat({
+      from: r.chatAttachment.chatId,
+      to: r.chat.id,
+      optional: false,
+    }),
+    media: r.one.media({
+      from: r.chatAttachment.mediaId,
+      to: r.media.id,
       optional: false,
     }),
   },
@@ -304,6 +323,19 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
   },
+  media: {
+    ownerUser: r.one.user({
+      from: r.media.ownerUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    ownerWorkspace: r.one.workspace({
+      from: r.media.ownerWorkspaceId,
+      to: r.workspace.id,
+      optional: true,
+    }),
+    chatAttachments: r.many.chatAttachment(),
+  },
   socialPost: {
     user: r.one.user({
       from: r.socialPost.userId,
@@ -422,6 +454,8 @@ export const relations = defineRelations(schema, (r) => ({
     datasets: r.many.dataset(),
     documents: r.many.document(),
     folders: r.many.folder(),
+    // Chat attachments write ownerWorkspaceId in v1 (docs/media-library/prd.md).
+    media: r.many.media(),
     tasks: r.many.task(),
     taskLabels: r.many.taskLabel(),
     // The account that pays for work done here is resolved through
