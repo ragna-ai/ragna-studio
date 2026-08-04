@@ -61,8 +61,13 @@ function extractGenerationPrompt(data: unknown): string {
 // `activeGeneration` computed, which is what actually clears it.
 const lastGenerationEvent = ref<ActiveGeneration | null>(null);
 
-const chatTransport = new WebSocketChatTransport(() => chatId.value);
-const { isSubscribed } = chatTransport;
+const isSubscribed = ref(false);
+const chatTransport = new WebSocketChatTransport(
+  () => chatId.value,
+  (subscribed) => {
+    isSubscribed.value = subscribed;
+  },
+);
 
 const { messages, sendMessage, status, error } = useChat({
   messages: initialMessages,
@@ -205,7 +210,7 @@ onMounted(() => {
                 })
               }}
             </Shimmer>
-            <!-- Thinking -->
+            <!-- Loading -->
             <div v-else-if="isSubscribed" class="flex items-center gap-2">
               <Loader />
             </div>
