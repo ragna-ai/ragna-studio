@@ -38,10 +38,6 @@ type ReconnectToStreamOptions = Parameters<
 export class WebSocketChatTransport implements ChatTransport<UIMessage> {
   constructor(
     private readonly getChatId: () => string | null,
-    // Called with `true` the moment the `subscribe` frame goes out for a
-    // turn, and `false` once the matching `unsubscribe` fires (on `done`,
-    // `error`, or abort). Distinct from useChat's `status`, which tracks the
-    // AI SDK stream state rather than the WS channel lifecycle.
     private readonly onSubscribedChange?: (isSubscribed: boolean) => void,
   ) {}
 
