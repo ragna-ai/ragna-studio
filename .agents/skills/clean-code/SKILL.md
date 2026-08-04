@@ -42,6 +42,9 @@ Write code the next person can read and change without asking you. Assume that p
 8. **`computed` over methods** for derived state. Keep watchers for side effects only.
 9. **Forms = TanStack Form + Zod** (repo standard). Share the Zod schema with the backend; don't re-validate by hand.
 10. **Stable `:key` in lists.** Use a real id, never the array index.
+11. **No `v-if` on the same element as `v-for`.** Wrap the `v-for` in a `<template>` or `<div>` and put the `v-if` on that wrapper.
+12. **No inline styles.** Use Tailwind classes or shadcn-vue variants. No `style="..."` attributes.
+13. **No scoped CSS.** Use Tailwind classes, shadcn-vue variants, or add custom classes. Pure utility classes with no `<style>` block or inline styles are preferred. If you must add a `<style>` block, use global styles and avoid `scoped`.
 
 ## shadcn-vue
 
