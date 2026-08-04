@@ -18,6 +18,10 @@ const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
 const chatStore = useChatStore();
 
+useHead({
+  title: () => data.value?.chat?.title ?? t('chat.conversation.title'),
+});
+
 // Computed
 
 // if the chat is taking longer than 500ms to load, show a loading state
@@ -46,9 +50,6 @@ watch(
   () => data.value?.chat,
   (chat) => {
     chatStore.setChat(chat);
-    useHead({
-      title: chat?.title ?? t('chat.conversation.title'),
-    });
   },
   { immediate: true },
 );

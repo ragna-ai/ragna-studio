@@ -219,7 +219,7 @@
   },
   "chat": {
     "conversation": {
-      "title": "Chat Conversation",
+      "title": "Chat",
       "subtitle": "Chat with your AI agent.",
       "disclaimer": "AI generated. Responses may be incorrect. Verify important information."
     },

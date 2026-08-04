@@ -181,7 +181,7 @@ onMounted(() => {
         <MessageScrollerViewport>
           <MessageScrollerContent
             :aria-busy="isBusy"
-            class="mx-auto max-w-3xl pb-4"
+            class="mx-auto max-w-3xl pb-8"
           >
             <MessageScrollerItem
               v-for="message in messages"
@@ -215,11 +215,13 @@ onMounted(() => {
     </MessageScrollerProvider>
 
     <!-- Disclaimer -->
+    <!-- 
     <div class="mt-auto border-0">
       <p class="pt-8 pb-2 text-center text-xs text-muted-foreground/75">
         {{ $t('chat.conversation.disclaimer') }}
       </p>
     </div>
+    -->
 
     <!-- input -->
     <div class="mx-auto w-full max-w-4xl">
