@@ -9,6 +9,7 @@ import {
   UserIcon,
 } from '@lucide/vue';
 import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
+import { createInitials } from '~/lib/utils';
 
 defineProps<{
   sizeFull: boolean;
@@ -26,17 +27,7 @@ const displayedCredits = computed(() => {
   return credits === undefined ? null : Math.round(credits);
 });
 
-function createInitials(name: string) {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('');
-}
-
-const initials = computed(() =>
-  createInitials(session.value?.user?.name ?? '?'),
-);
+const initials = computed(() => createInitials(session.value?.user?.name));
 
 async function signOut() {
   await useAuth().signOut();

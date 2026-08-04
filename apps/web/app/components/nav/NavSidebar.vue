@@ -14,27 +14,46 @@ import {
   TooltipTrigger,
 } from '~/components/ui/tooltip';
 import { useNavItems } from '~/composables/useNavItems';
+import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
 import { useNavSidebarStore } from '~/stores/navsidebar.store';
 
 const navBarRef = useTemplateRef('navBarRef');
 const { dynamicNavItems } = useNavItems();
 const navSidebarStore = useNavSidebarStore();
+
+// Tooltips (and the compact icon dock) only apply when the sidebar is
+// collapsed and the "show labels when collapsed" account setting is off.
+const labelsVisible = computed(
+  () => navSidebarStore.expanded || navSidebarStore.showLabelsWhenCollapsed,
+);
 </script>
 
 <template>
   <div
     ref="navBarRef"
     class="relative flex shrink-0 flex-col justify-between transition-all duration-300 ease-out"
-    :class="navSidebarStore.showLabels ? 'w-18' : 'nav-labels-hidden w-14'"
+    :class="
+      navSidebarStore.expanded
+        ? 'w-56'
+        : navSidebarStore.showLabelsWhenCollapsed
+          ? 'w-18'
+          : 'nav-labels-hidden w-14'
+    "
   >
     <div
       class="relative h-full overflow-y-hidden transition-opacity duration-200 ease-in-out"
     >
       <div id="spacer" class="h-3"></div>
+      <div
+        class="flex justify-center px-2 pb-3"
+        :class="{ 'justify-start': navSidebarStore.expanded }"
+      >
+        <WorkspaceSwitcher size="sm" :size-full="navSidebarStore.expanded" />
+      </div>
       <div class="flex grow flex-col">
         <ul
           class="overflow-hidden"
-          :class="navSidebarStore.showLabels ? 'space-y-2' : 'space-y-1.5'"
+          :class="labelsVisible ? 'space-y-2' : 'space-y-1.5'"
         >
           <template v-for="item in dynamicNavItems" :key="item.id">
             <li v-if="item.path" class="nav-item">
@@ -42,23 +61,19 @@ const navSidebarStore = useNavSidebarStore();
                 :to="item.path"
                 :icon="item.icon!"
                 :label="item.label!"
-                :label-visible="navSidebarStore.showLabels"
+                :expanded="navSidebarStore.expanded"
+                :label-visible="navSidebarStore.showLabelsWhenCollapsed"
               />
             </li>
             <li v-else-if="item.children.length > 0" class="nav-item">
               <DropdownMenu>
-                <TooltipProvider
-                  v-if="!navSidebarStore.showLabels"
-                  :delay-duration="300"
-                >
+                <TooltipProvider v-if="!labelsVisible" :delay-duration="300">
                   <Tooltip>
                     <TooltipTrigger as-child>
                       <DropdownMenuTrigger>
-                        <div
-                          class="group flex flex-col items-center rounded-lg border border-transparent px-4 transition-colors"
-                        >
+                        <div class="nav-link group">
                           <div class="nav-icon-wrapper">
-                            <EllipsisIcon class="size-4" />
+                            <EllipsisIcon class="nav-icon" />
                           </div>
                           <span
                             class="nav-icon-text truncate px-4 pt-0 text-foreground"
@@ -74,10 +89,11 @@ const navSidebarStore = useNavSidebarStore();
                 </TooltipProvider>
                 <DropdownMenuTrigger v-else>
                   <div
-                    class="group flex flex-col items-center rounded-lg border border-transparent px-4 transition-colors"
+                    class="nav-link group"
+                    :class="{ 'nav-link-expanded': navSidebarStore.expanded }"
                   >
                     <div class="nav-icon-wrapper">
-                      <EllipsisIcon class="size-4" />
+                      <EllipsisIcon class="nav-icon" />
                     </div>
                     <span
                       class="nav-icon-text truncate px-4 pt-0 text-foreground"
@@ -118,7 +134,9 @@ const navSidebarStore = useNavSidebarStore();
       </div>
     </div>
     <div class="flex w-full flex-col items-center space-y-3 pb-4">
+      <!-- 
       <NavSideToggle />
+      -->
       <NavNotifications />
       <NavUserMenu :size-full="false" />
     </div>

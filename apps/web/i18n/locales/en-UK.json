@@ -39,8 +39,8 @@
     "more": "More",
     "new": "New",
     "history": "History",
-    "hideLabels": "Hide labels",
-    "showLabels": "Show labels",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
     "userMenu": {
       "upgrade": "Upgrade to Pro",
       "account": "Account",
@@ -543,11 +543,17 @@
       "profile": "Profile",
       "social": "Connected accounts",
       "language": "Language",
+      "sidebar": "Sidebar",
       "credits": "Credits"
     },
     "language": {
       "title": "Language",
       "subtitle": "Choose the language used across the interface."
+    },
+    "sidebar": {
+      "title": "Sidebar",
+      "subtitle": "Choose how the navigation sidebar behaves when collapsed.",
+      "showLabelsWhenCollapsed": "Show labels when collapsed"
     },
     "profile": {
       "title": "Profile",

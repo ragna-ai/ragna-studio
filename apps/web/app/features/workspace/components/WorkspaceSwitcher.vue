@@ -3,14 +3,19 @@ import { CheckIcon, ChevronsUpDownIcon, SettingsIcon } from '@lucide/vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
-import { cn } from '~/lib/utils';
+import { cn, createInitials } from '~/lib/utils';
 
 interface WorkspaceSwitcherProps {
   size?: 'sm' | 'md' | 'lg';
+  // When false, renders an icon-only trigger (initials in a circle) instead
+  // of the full pill with name + chevron. Used in the collapsed nav sidebar.
+  sizeFull?: boolean;
 }
 
 // Props
-const props = defineProps<WorkspaceSwitcherProps>();
+const props = withDefaults(defineProps<WorkspaceSwitcherProps>(), {
+  sizeFull: true,
+});
 
 // Refs
 const isManageDialogOpen = ref(false);
@@ -43,6 +48,9 @@ const activeLabel = computed(() => {
   const active = workspaces.value.find((workspace) => isActive(workspace.id));
   return active?.name ?? '';
 });
+const initials = computed(() =>
+  createInitials(activeLabel.value, { firstNameOnly: true }),
+);
 
 // Hooks
 // A workspace is always active once the list has loaded: fall back to the
@@ -58,6 +66,7 @@ watch(data, (result) => {
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
       <button
+        v-if="sizeFull"
         type="button"
         :class="
           cn(
@@ -70,6 +79,14 @@ watch(data, (result) => {
           activeLabel
         }}</span>
         <ChevronsUpDownIcon class="size-3 shrink-0 opacity-50" />
+      </button>
+      <button
+        v-else
+        type="button"
+        :title="activeLabel"
+        class="flex size-8 shrink-0 items-center justify-center rounded-full border border-stone-400 bg-muted"
+      >
+        <span class="text-sm font-medium">{{ initials }}</span>
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start" class="w-56">

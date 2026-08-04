@@ -22,13 +22,15 @@ const navSidebarStore = useNavSidebarStore();
     type="button"
     class="nav-item flex items-center justify-center"
     :title="
-      navSidebarStore.showLabels ? $t('nav.hideLabels') : $t('nav.showLabels')
+      navSidebarStore.expanded
+        ? $t('nav.collapseSidebar')
+        : $t('nav.expandSidebar')
     "
-    @click="navSidebarStore.toggleLabels()"
+    @click="navSidebarStore.toggleExpanded()"
   >
     <div class="nav-icon-wrapper opacity-50 hover:opacity-100">
       <PanelLeftCloseIcon
-        v-if="navSidebarStore.showLabels"
+        v-if="navSidebarStore.expanded"
         class="size-4 stroke-1.5"
       />
       <PanelLeftOpenIcon v-else class="size-4 stroke-1.5" />

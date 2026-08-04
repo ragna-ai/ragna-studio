@@ -39,8 +39,8 @@
     "more": "Mehr",
     "new": "Neu",
     "history": "Verlauf",
-    "hideLabels": "Beschriftungen ausblenden",
-    "showLabels": "Beschriftungen einblenden",
+    "expandSidebar": "Seitenleiste ausklappen",
+    "collapseSidebar": "Seitenleiste einklappen",
     "userMenu": {
       "upgrade": "Auf Pro upgraden",
       "account": "Konto",
@@ -549,11 +549,17 @@
       "profile": "Profil",
       "social": "Verbundene Konten",
       "language": "Sprache",
+      "sidebar": "Seitenleiste",
       "credits": "Credits"
     },
     "language": {
       "title": "Sprache",
       "subtitle": "Wähle die Sprache für die Benutzeroberfläche."
+    },
+    "sidebar": {
+      "title": "Seitenleiste",
+      "subtitle": "Lege fest, wie sich die Navigationsleiste im eingeklappten Zustand verhält.",
+      "showLabelsWhenCollapsed": "Beschriftungen im eingeklappten Zustand anzeigen"
     },
     "profile": {
       "title": "Mein Profil",

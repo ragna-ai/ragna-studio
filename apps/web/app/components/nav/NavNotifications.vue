@@ -99,7 +99,7 @@ function handleClearAllClick() {
     </DropdownMenuTrigger>
     <DropdownMenuContent
       class="w-88 overflow-hidden rounded-2xl p-0"
-      side="bottom"
+      side="right"
       align="end"
     >
       <div class="flex items-center justify-between p-4">
