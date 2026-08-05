@@ -22,6 +22,7 @@ import { generateImage } from 'ai';
 import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
 import { getImageModel } from '../factories';
+import { applyImageWatermark } from './watermark.service';
 
 export const imageGenProviders = ['bfl', 'google-vertex', 'openai'] as const;
 export const imageGenAspectRatios = ['1:1', '4:3', '16:9'] as const;
@@ -65,6 +66,10 @@ export const generateImagesSchema = z.object({
     )
     .max(4)
     .optional(),
+  // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2).
+  // Default off; applied after generation, before upload, by
+  // applyImageWatermark below.
+  visibleWatermark: z.boolean().optional(),
 });
 
 export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
@@ -132,6 +137,7 @@ export async function createGenImages({
   seed = undefined,
   negativePrompt = undefined,
   referenceImages = undefined,
+  visibleWatermark = false,
 }: CreateImageParams) {
   type GenerateImageParams = Parameters<typeof generateImage>[0];
   type GenerateImageProviderOptions = GenerateImageParams['providerOptions'];
@@ -143,7 +149,7 @@ export async function createGenImages({
 
   const configProviderParams = (): Pick<
     GenerateImageParams,
-    'aspectRatio' | 'size' | 'providerOptions'
+    'aspectRatio' | 'size' | 'seed' | 'providerOptions'
   > => {
     switch (provider) {
       case 'bfl': {
@@ -153,6 +159,7 @@ export async function createGenImages({
         );
         return {
           aspectRatio,
+          seed,
           providerOptions: toProviderOptions({
             blackForestLabs: {
               width,
@@ -176,12 +183,26 @@ export async function createGenImages({
         // inpainting, not the subject/style conditioning bfl and openai
         // give us. Nothing below reads referenceImages, so there is
         // nothing to disable here; this comment is the guardrail.
+        //
+        // EU AI Act Art. 50(2) guardrail (docs/ai-labeling/prd.md part 1):
+        // addWatermark controls Imagen's SynthID marking. Never set it to
+        // false here, now or in any future edit of this branch, even to
+        // unblock a seed request. Imagen rejects `seed` while addWatermark
+        // is on, so the watermark wins: seed is dropped for this provider
+        // below instead, the same way OpenAI silently ignores it.
+        if (seed !== undefined) {
+          logger.warn(
+            'Seed dropped for Vertex Imagen: SynthID marking stays on and Imagen rejects seed while it is enabled',
+            { provider, model },
+          );
+        }
+
         return {
           aspectRatio,
+          seed: undefined,
           providerOptions: toProviderOptions({
             vertex: {
               negativePrompt,
-              addWatermark: false,
               personGeneration: 'allow_all',
               safetySetting: 'block_medium_and_above',
               sampleImageSize: resolution === '1K' ? '1K' : '2K',
@@ -192,6 +213,7 @@ export async function createGenImages({
       case 'openai': {
         return {
           size: openAiSizeMap[aspectRatio],
+          seed,
           providerOptions: toProviderOptions({
             openai: {
               quality: resolution === '2K' ? 'high' : 'medium',
@@ -201,7 +223,7 @@ export async function createGenImages({
         };
       }
       default:
-        return {};
+        return { seed: undefined };
     }
   };
 
@@ -240,7 +262,7 @@ export async function createGenImages({
       }),
       prompt: generateImagePrompt,
       n,
-      seed,
+      seed: providerParams.seed,
       aspectRatio: providerParams.aspectRatio,
       size: providerParams.size,
       providerOptions: providerParams.providerOptions,
@@ -266,17 +288,44 @@ export async function createGenImages({
 
   const { images: genImages } = imageGenResult;
 
+  // Explicit user intent (docs/ai-labeling/prd.md "Failure semantics"): a
+  // failed watermark step fails the whole generation rather than silently
+  // delivering an unlabeled file, so this runs before upload, not after.
+  const { error: watermarkError, data: outputBuffers } = await tryCatch(() =>
+    Promise.all(
+      genImages.map(async (image) => {
+        const buffer = Buffer.from(image.uint8Array);
+
+        if (!visibleWatermark) {
+          return buffer;
+        }
+
+        const { buffer: watermarked } = await applyImageWatermark({
+          buffer,
+          mimeType: 'image/png',
+        });
+
+        return watermarked;
+      }),
+    ),
+  );
+
+  if (watermarkError !== null || !outputBuffers) {
+    logger.error('Failed to apply visible watermark', { watermarkError });
+    throw new Error('Failed to apply visible watermark');
+  }
+
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
-  const uploadPromises = genImages.map(async (image) => {
+  const uploadPromises = outputBuffers.map(async (buffer) => {
     const { key } = await uploadObjectBuffer({
       bucketName,
       key: `${prefix}/${randomUUID()}.png`,
-      buffer: image.uint8Array,
+      buffer,
       contentType: 'image/png',
     });
 
-    return { key, size: image.uint8Array.byteLength };
+    return { key, size: buffer.byteLength };
   });
 
   // upload images to bucket
@@ -327,6 +376,7 @@ export async function createGenImages({
         resolution,
         seed,
         negativePrompt,
+        visibleWatermark,
       })),
     ),
   );
@@ -440,6 +490,7 @@ export type GenImageDto = {
   resolution: string | null;
   seed: number | null;
   negativePrompt: string | null;
+  visibleWatermark: boolean;
   provider: string;
   model: string;
   referenceImages: GenImageReferenceDto[];
@@ -472,6 +523,7 @@ function toGenImageDto({
     resolution: record.resolution,
     seed: record.seed,
     negativePrompt: record.negativePrompt,
+    visibleWatermark: record.visibleWatermark,
     provider: record.provider,
     model: record.model,
     referenceImages: referenceImageDtos,

@@ -71,6 +71,7 @@ function reuseSettings() {
     resolution: image.resolution,
     seed: image.seed,
     negativePrompt: image.negativePrompt,
+    visibleWatermark: image.visibleWatermark,
   });
   emit('close');
 }
@@ -158,6 +159,10 @@ async function deleteImage() {
             <template v-if="image.negativePrompt">
               <dt>{{ $t('imagen.preview.negativePrompt') }}</dt>
               <dd class="truncate">{{ image.negativePrompt }}</dd>
+            </template>
+            <template v-if="image.visibleWatermark">
+              <dt>{{ $t('imagen.preview.visibleWatermark') }}</dt>
+              <dd>{{ $t('imagen.preview.visibleWatermarkApplied') }}</dd>
             </template>
           </dl>
 

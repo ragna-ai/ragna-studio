@@ -466,6 +466,7 @@
       "referenceImagesGalleryEmpty": "Noch keine generierten Bilder.",
       "referenceImagesUploadButton": "Bild hochladen",
       "referenceImagesCount": "{count} / {max} ausgewählt",
+      "visibleWatermark": "Wasserzeichen",
       "submit": "Bild generieren"
     },
     "grid": {
@@ -485,6 +486,8 @@
       "seed": "Seed",
       "negativePrompt": "Negativer Prompt",
       "referenceImages": "Referenzbilder",
+      "visibleWatermark": "KI-Kennzeichnung",
+      "visibleWatermarkApplied": "Angewendet",
       "reuseSettings": "Einstellungen übernehmen"
     },
     "deleteConfirm": {
@@ -512,6 +515,7 @@
       "frameGalleryEmpty": "Noch keine generierten Bilder.",
       "frameUploadButton": "Bild hochladen",
       "draft": "Entwurf (schnelle Vorschau)",
+      "visibleWatermark": "Wasserzeichen",
       "submit": "Video generieren"
     },
     "grid": {
@@ -532,7 +536,9 @@
       "aspectRatio": "Seitenverhältnis",
       "resolution": "Auflösung",
       "duration": "Dauer",
-      "model": "Modell"
+      "model": "Modell",
+      "visibleWatermark": "KI-Kennzeichnung",
+      "visibleWatermarkApplied": "Angewendet"
     },
     "deleteConfirm": {
       "title": "Video löschen",

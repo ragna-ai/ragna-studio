@@ -460,6 +460,7 @@
       "referenceImagesGalleryEmpty": "No generated images yet.",
       "referenceImagesUploadButton": "Upload image",
       "referenceImagesCount": "{count} / {max} selected",
+      "visibleWatermark": "Label as AI generated",
       "submit": "Generate image"
     },
     "grid": {
@@ -479,6 +480,8 @@
       "seed": "Seed",
       "negativePrompt": "Negative prompt",
       "referenceImages": "Reference images",
+      "visibleWatermark": "AI label",
+      "visibleWatermarkApplied": "Applied",
       "reuseSettings": "Reuse settings"
     },
     "deleteConfirm": {
@@ -506,6 +509,7 @@
       "frameGalleryEmpty": "No generated images yet.",
       "frameUploadButton": "Upload image",
       "draft": "Draft (fast preview)",
+      "visibleWatermark": "Label as AI generated",
       "submit": "Generate video"
     },
     "grid": {
@@ -526,7 +530,9 @@
       "aspectRatio": "Aspect ratio",
       "resolution": "Resolution",
       "duration": "Duration",
-      "model": "Model"
+      "model": "Model",
+      "visibleWatermark": "AI label",
+      "visibleWatermarkApplied": "Applied"
     },
     "deleteConfirm": {
       "title": "Delete video",

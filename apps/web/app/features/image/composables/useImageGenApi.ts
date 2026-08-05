@@ -57,6 +57,7 @@ export interface GeneratedImage {
   model: string;
   provider: string;
   referenceImages: GeneratedImageReference[];
+  visibleWatermark: boolean;
 }
 
 export interface GenImagesResponse {
@@ -77,6 +78,7 @@ export interface GenerateImagesBody {
   seed?: number;
   negativePrompt?: string;
   referenceImages?: ImageReferenceInput[];
+  visibleWatermark?: boolean;
 }
 
 export interface ReferenceUploadResponse {
@@ -96,6 +98,7 @@ export interface ReuseImageSettings {
   resolution: ImageResolution | null;
   seed: number | null;
   negativePrompt: string | null;
+  visibleWatermark: boolean;
 }
 
 export function useGetGenImages(

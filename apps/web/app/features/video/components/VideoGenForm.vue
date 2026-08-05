@@ -26,8 +26,15 @@ const { data: genImageData } = useGetGenImages({ limit: 100 });
 const { mutate: generateVideo, isPending } = useGenerateVideo();
 const { mutate: uploadFrame, isPending: isUploadingFrame } =
   useUploadVideoFrame();
-const { modelId, aspectRatio, resolution, duration, generateAudio, draft } =
-  storeToRefs(useVideoGenSettingsStore());
+const {
+  modelId,
+  aspectRatio,
+  resolution,
+  duration,
+  generateAudio,
+  draft,
+  visibleWatermark,
+} = storeToRefs(useVideoGenSettingsStore());
 
 // Refs
 const fileInputRef = useTemplateRef<HTMLInputElement>('fileInputRef');
@@ -76,6 +83,7 @@ const form = useForm({
         seed: capability.value.supportsSeed ? (value.seed ?? undefined) : undefined,
         draft: capability.value.supportsDraft ? draft.value : undefined,
         frame: resolveFrame(),
+        visibleWatermark: visibleWatermark.value,
       },
       { onSuccess: resetOptionalFields },
     );
@@ -329,6 +337,13 @@ watch(
         <Switch id="draft-mode" v-model="draft" />
         <Label for="draft-mode" class="text-sm">
           {{ t('videogen.form.draft') }}
+        </Label>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <Switch id="visible-watermark" v-model="visibleWatermark" />
+        <Label for="visible-watermark" class="text-sm">
+          {{ t('videogen.form.visibleWatermark') }}
         </Label>
       </div>
     </div>

@@ -4,3 +4,4 @@ export * from './embedding.service';
 export * from './imagen.service';
 export * from './social-post.service';
 export * from './videogen.service';
+export * from './watermark.service';

@@ -54,6 +54,14 @@ const ConfigSchema = z.object({
 
   // Logging
   LOG_LEVEL: z.enum(['trace', 'normal', 'debug', 'info', 'warn', 'error']).default('info'),
+  // Set to "false" to silence the AI SDK's own console warning logging
+  // (@repo/ai maps this onto the SDK's AI_SDK_LOG_WARNINGS global at import
+  // time; it is a JS global, not something the SDK reads from the env).
+  AI_SDK_LOG_WARNINGS: z
+    .string()
+    .optional()
+    .transform((val) => val !== 'false')
+    .default(true),
 
   // Encryption
   ENCRYPTION_PASSWORD: z
@@ -308,6 +316,10 @@ export class ConfigService {
 
   get logLevel(): string {
     return this._config.LOG_LEVEL;
+  }
+
+  get aiSdkLogWarnings(): boolean {
+    return this._config.AI_SDK_LOG_WARNINGS;
   }
 
   get dbSSL(): boolean {

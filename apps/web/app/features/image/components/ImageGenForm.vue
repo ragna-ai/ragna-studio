@@ -35,9 +35,8 @@ const { data: aiModelData } = useGetAllAiModels();
 const { mutate: generateImages, isPending } = useGenerateImages();
 const { mutate: uploadReference, isPending: isUploadingReference } =
   useUploadImageReference();
-const { modelId, aspectRatio, resolution, count } = storeToRefs(
-  useImageGenSettingsStore(),
-);
+const { modelId, aspectRatio, resolution, count, visibleWatermark } =
+  storeToRefs(useImageGenSettingsStore());
 
 // Refs
 const referenceFileInputRef = useTemplateRef<HTMLInputElement>(
@@ -79,6 +78,7 @@ const form = useForm({
           : undefined,
         seed: supportsSeed.value ? (value.seed ?? undefined) : undefined,
         referenceImages: resolveReferenceImages(),
+        visibleWatermark: visibleWatermark.value,
       },
       { onSuccess: resetOptionalFields },
     );
@@ -206,6 +206,7 @@ function applyReusedSettings(settings: ReuseImageSettings) {
 
   if (settings.aspectRatio) aspectRatio.value = settings.aspectRatio;
   if (settings.resolution) resolution.value = settings.resolution;
+  visibleWatermark.value = settings.visibleWatermark;
 
   form.setFieldValue(
     'negativePrompt',
@@ -306,6 +307,13 @@ watch(
           </SelectItem>
         </SelectContent>
       </Select>
+
+      <div class="flex items-center gap-2">
+        <Switch id="visible-watermark" v-model="visibleWatermark" />
+        <Label for="visible-watermark" class="text-sm">
+          {{ t('imagen.form.visibleWatermark') }}
+        </Label>
+      </div>
     </div>
 
     <Collapsible v-model:open="advancedOptionsOpen">
