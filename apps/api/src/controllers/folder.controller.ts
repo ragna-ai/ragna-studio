@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -37,7 +38,7 @@ export const folderController = new Hono()
       name: body.name,
     });
 
-    return c.json({ folder: folderRecord }, 201);
+    return c.json({ folder: folderRecord }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId/folder/:folderId

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -65,7 +66,7 @@ export const taskController = new Hono()
       labelIds: body.labelIds,
     });
 
-    return c.json({ task: taskRecord }, 201);
+    return c.json({ task: taskRecord }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/task/:taskId

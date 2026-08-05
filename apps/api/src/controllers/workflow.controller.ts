@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { creditGuard } from '../middlewares/creditGuard';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -61,7 +62,7 @@ export const workflowController = new Hono()
       definition: body.definition,
     });
 
-    return c.json({ workflow }, 201);
+    return c.json({ workflow }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/workflow/:workflowId

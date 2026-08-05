@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -53,7 +54,7 @@ export const chatController = new Hono()
       agentId: body.agentId,
     });
 
-    return c.json({ chat }, 201);
+    return c.json({ chat }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/chat/:chatId
@@ -115,7 +116,7 @@ export const chatController = new Hono()
       files: uploadedFiles,
     });
 
-    return c.json(result, 201);
+    return c.json(result, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId

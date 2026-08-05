@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -52,7 +53,7 @@ export const genVideoController = new Hono()
       input: body,
     });
 
-    return c.json({ genVideo }, 201);
+    return c.json({ genVideo }, StatusCodes.CREATED);
   })
   /**
    * [POST] /workspace/:workspaceId/gen-video/frame-upload
@@ -71,7 +72,7 @@ export const genVideoController = new Hono()
 
     const { storageKey } = await uploadGenVideoFrame({ userId: user.id, file });
 
-    return c.json({ storageKey }, 201);
+    return c.json({ storageKey }, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   createWorkspaceForUser,
@@ -36,7 +37,7 @@ export const workspaceController = new Hono()
 
     const workspace = await createWorkspaceForUser({ userId: user.id, name: body.name });
 
-    return c.json({ workspace }, 201);
+    return c.json({ workspace }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId

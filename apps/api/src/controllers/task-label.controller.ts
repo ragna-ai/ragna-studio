@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -39,7 +40,7 @@ export const taskLabelController = new Hono()
       color: body.color,
     });
 
-    return c.json({ taskLabel }, 201);
+    return c.json({ taskLabel }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId/task-label/:taskLabelId

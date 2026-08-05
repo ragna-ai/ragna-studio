@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -48,7 +49,7 @@ export const documentController = new Hono()
       folderId: body.folderId,
     });
 
-    return c.json({ document: documentRecord }, 201);
+    return c.json({ document: documentRecord }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/document/:documentId

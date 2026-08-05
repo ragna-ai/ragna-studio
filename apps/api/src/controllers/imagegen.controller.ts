@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -50,7 +51,7 @@ export const genImageController = new Hono()
       input: body,
     });
 
-    return c.json({ genImages }, 201);
+    return c.json({ genImages }, StatusCodes.CREATED);
   })
   /**
    * [POST] /workspace/:workspaceId/gen-image/reference-upload
@@ -69,7 +70,7 @@ export const genImageController = new Hono()
 
     const { storageKey } = await uploadGenImageReference({ userId: user.id, file });
 
-    return c.json({ storageKey }, 201);
+    return c.json({ storageKey }, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/gen-image/:genImageId

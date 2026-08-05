@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -54,7 +55,7 @@ export const agentContextDocumentController = new Hono()
       files: uploadedFiles,
     });
 
-    return c.json({ documents }, 201);
+    return c.json({ documents }, StatusCodes.CREATED);
   })
   /**
    * [PUT] /workspace/:workspaceId/agent/:agentId/context-document/:documentId/file

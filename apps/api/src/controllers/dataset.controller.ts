@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -64,7 +65,7 @@ export const datasetController = new Hono()
       columns: body.columns,
     });
 
-    return c.json({ dataset: createdDataset }, 201);
+    return c.json({ dataset: createdDataset }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/dataset/:datasetId
@@ -164,7 +165,7 @@ export const datasetController = new Hono()
       data: body.data,
     });
 
-    return c.json({ row: createdRow }, 201);
+    return c.json({ row: createdRow }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId/dataset/:datasetId/row/:rowId

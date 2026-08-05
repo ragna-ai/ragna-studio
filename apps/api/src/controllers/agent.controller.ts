@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
@@ -62,7 +63,7 @@ export const agentController = new Hono()
       settings: body.settings,
     });
 
-    return c.json({ agent }, 201);
+    return c.json({ agent }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/agent/:agentId

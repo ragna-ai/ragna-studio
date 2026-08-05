@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -60,7 +61,7 @@ export const socialPostController = new Hono()
       content: body.content,
     });
 
-    return c.json({ post }, 201);
+    return c.json({ post }, StatusCodes.CREATED);
   })
   /**
    * [GET] /workspace/:workspaceId/social-post/:socialPostId
@@ -134,7 +135,7 @@ export const socialPostController = new Hono()
       altText,
     });
 
-    return c.json({ media }, 201);
+    return c.json({ media }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId/social-post/:socialPostId/media/:mediaId
