@@ -1,6 +1,13 @@
 import { auth } from '@repo/auth/server';
 import { config } from '@repo/config';
-import type { SocialPost, SocialPostMedia, SocialPostMediaWithMedia, SocialPostWithMedia } from '@repo/database';
+import type {
+  Media,
+  SocialPost,
+  SocialPostMedia,
+  SocialPostMediaWithMedia,
+  SocialPostWithMedia,
+} from '@repo/database';
+import type { SocialPlatform, SocialPostSource, SocialPostStatus } from '@repo/database/schema';
 import {
   createMedia,
   createSocialPost,
@@ -19,7 +26,7 @@ import {
 import { createLinkedinClient } from '@repo/linkedin';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
-import { uploadObjectBuffer } from '@repo/storage';
+import { getPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -52,23 +59,70 @@ function isAllowedMediaMimeType(mimeType: string): mimeType is AllowedMediaMimeT
 // storageKey lives on the joined media row now (docs/media-library/
 // migration-prd.md), not directly on social_post_media; added back onto the
 // flat response here since the frontend DTO still expects it alongside
-// mediaId (external DTOs unchanged).
-export type SocialPostMediaResponse = SocialPostMedia & { storageKey: string; imageUrl: string };
+// mediaId (external DTOs unchanged). Field set matches the frontend's
+// SocialPostMedia interface (useSocialPostApi.ts) exactly: workspace-internal
+// columns (socialPostId, mediaId, origin, timestamps) stay server-side.
+export interface SocialPostMediaResponse {
+  id: string;
+  storageKey: string;
+  mimeType: string;
+  altText: string | null;
+  sortOrder: number;
+  imageUrl: string;
+}
 
-// Images are served through the same public CDN domain imagen.service.ts
-// uses for generated images, since both live in the same R2 bucket.
-function toMediaResponse({ media, ...rest }: SocialPostMediaWithMedia): SocialPostMediaResponse {
+// Takes the link row and its joined media row as two separate parameters
+// instead of one `SocialPostMediaWithMedia`, so a call site with only the
+// link row and a separately-fetched media row (attachSocialPostMedia,
+// updateSocialPostMediaAltTextForUser) never has to fake the joined shape
+// with `{ ...row, media }`.
+function toMediaResponse(row: SocialPostMedia, media: Media): SocialPostMediaResponse {
   return {
-    ...rest,
+    id: row.id,
     storageKey: media.storageKey,
-    imageUrl: `https://images.ragna.app/${media.storageKey}`,
+    mimeType: row.mimeType,
+    altText: row.altText,
+    sortOrder: row.sortOrder,
+    imageUrl: getPublicMediaUrl(media.storageKey),
   };
 }
 
-function toPostResponse(post: SocialPostWithMedia) {
+// Field set matches the frontend's SocialPost interface (useSocialPostApi.ts)
+// exactly: userId, workspaceId and deletedAt stay server-side.
+export interface SocialPostResponse {
+  id: string;
+  platform: SocialPlatform;
+  content: string;
+  status: SocialPostStatus;
+  source: SocialPostSource;
+  externalId: string | null;
+  externalUrl: string | null;
+  publishedAt: Date | null;
+  publishError: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  media: SocialPostMediaResponse[];
+}
+
+// Takes the post row and its media rows as two separate parameters instead
+// of one `SocialPostWithMedia`, so a call site whose post and media come
+// from different queries (publishSocialPost re-uses media loaded earlier;
+// createSocialPostForUser has none yet) never has to fake the joined shape
+// with `{ ...post, media }`.
+function toPostResponse(post: SocialPost, media: SocialPostMediaWithMedia[]): SocialPostResponse {
   return {
-    ...post,
-    media: post.media.map(toMediaResponse),
+    id: post.id,
+    platform: post.platform,
+    content: post.content,
+    status: post.status,
+    source: post.source,
+    externalId: post.externalId,
+    externalUrl: post.externalUrl,
+    publishedAt: post.publishedAt,
+    publishError: post.publishError,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    media: media.map((item) => toMediaResponse(item, item.media)),
   };
 }
 
@@ -97,7 +151,7 @@ async function loadOwnedPost({
 }
 
 export interface ListSocialPostsResult {
-  posts: ReturnType<typeof toPostResponse>[];
+  posts: SocialPostResponse[];
   meta: { totalCount: number };
 }
 
@@ -137,7 +191,7 @@ export async function listSocialPosts({
   }
 
   return {
-    posts: posts.map(toPostResponse),
+    posts: posts.map((post) => toPostResponse(post, post.media)),
     meta: { totalCount: totalCount ?? 0 },
   };
 }
@@ -155,7 +209,7 @@ export async function createSocialPostForUser({
   workspaceId: string;
   userId: string;
   content: string;
-}): Promise<ReturnType<typeof toPostResponse>> {
+}): Promise<SocialPostResponse> {
   const { error, data: created } = await tryCatch(() =>
     createSocialPost({ userId, workspaceId, platform: 'linkedin', content, source: 'user' }),
   );
@@ -165,7 +219,7 @@ export async function createSocialPostForUser({
     throw new InternalServerErrorException('Failed to create social post');
   }
 
-  return toPostResponse({ ...created, media: [] });
+  return toPostResponse(created, []);
 }
 
 /**
@@ -177,9 +231,9 @@ export async function getSocialPost({
 }: {
   workspaceId: string;
   socialPostId: string;
-}): Promise<ReturnType<typeof toPostResponse>> {
+}): Promise<SocialPostResponse> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
-  return toPostResponse(post);
+  return toPostResponse(post, post.media);
 }
 
 /**
@@ -194,7 +248,7 @@ export async function updateSocialPostForUser({
   workspaceId: string;
   socialPostId: string;
   content: string;
-}): Promise<SocialPost> {
+}): Promise<SocialPostResponse> {
   const { error, data: updated } = await tryCatch(() =>
     updateSocialPostContent({ id: socialPostId, workspaceId, content }),
   );
@@ -208,7 +262,11 @@ export async function updateSocialPostForUser({
     throw new NotFoundException('Draft not found');
   }
 
-  return updated;
+  // updateSocialPostContent only writes the content column and has no media
+  // join, so the response is built from a fresh read instead (matches the
+  // re-read pattern in videogen.service.ts's generateVideoForWorkspace).
+  const post = await loadOwnedPost({ workspaceId, socialPostId });
+  return toPostResponse(post, post.media);
 }
 
 /**
@@ -329,7 +387,7 @@ export async function attachSocialPostMedia({
     throw new InternalServerErrorException('Failed to save image');
   }
 
-  return toMediaResponse({ ...createdMedia, media: mediaRow });
+  return toMediaResponse(createdMedia, mediaRow);
 }
 
 /**
@@ -376,7 +434,7 @@ export async function updateSocialPostMediaAltTextForUser({
     throw new InternalServerErrorException('Failed to update image');
   }
 
-  return toMediaResponse({ ...updated, media });
+  return toMediaResponse(updated, media);
 }
 
 /**
@@ -412,7 +470,7 @@ export async function removeSocialPostMedia({
 
 export type PublishSocialPostResult =
   | { linkedinNotConnected: true }
-  | { linkedinNotConnected: false; post: SocialPost };
+  | { linkedinNotConnected: false; post: SocialPostResponse };
 
 /**
  * [POST] /workspace/:workspaceId/social-post/:socialPostId/publish
@@ -520,5 +578,11 @@ export async function publishSocialPost({
     throw new InternalServerErrorException('Post was published but failed to save');
   }
 
-  return { linkedinNotConnected: false, post: publishedPost };
+  // Publishing only changes status/externalId/externalUrl/publishedAt; it
+  // never touches social_post_media, so the media already loaded at the top
+  // of this function (`post.media`) is still accurate, no re-read needed.
+  return {
+    linkedinNotConnected: false,
+    post: toPostResponse(publishedPost, post.media),
+  };
 }

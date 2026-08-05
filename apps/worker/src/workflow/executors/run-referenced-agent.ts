@@ -277,6 +277,8 @@ export async function settleWorkflowUsage({
   }
 
   try {
+    const normUsage = normalizeUsage(provider, steps);
+
     await settleCreditUsage({
       creditAccountId: spendState.creditAccountId,
       workspaceId,
@@ -287,7 +289,16 @@ export async function settleWorkflowUsage({
       refId: runId,
       durationMs,
       idempotencyKey: `workflow:${runId}:${nodeId}:${callId}`,
-      ...normalizeUsage(provider, steps),
+      billableInputTokens: normUsage.billableInputTokens,
+      billableOutputTokens: normUsage.billableOutputTokens,
+      inputTokens: normUsage.inputTokens,
+      outputTokens: normUsage.outputTokens,
+      reasoningTokens: normUsage.reasoningTokens,
+      // Deliberately no noCacheInputTokens: it's a display-only breakdown of
+      // inputTokens (usage.ts), excluded from NormalizedUsageFields by
+      // design, and derivable as inputTokens - cacheReadTokens.
+      cacheReadTokens: normUsage.cacheReadTokens,
+      cacheWriteTokens: normUsage.cacheWriteTokens,
     });
   } catch (error) {
     logger.error(

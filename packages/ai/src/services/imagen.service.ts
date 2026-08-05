@@ -229,6 +229,8 @@ export async function createGenImages({
     generateImagePrompt = { text: prompt, images: referenceBuffers };
   }
 
+  const providerParams = configProviderParams();
+
   // generate image(s)
   const { error: imageGenError, data: imageGenResult } = await tryCatch(() =>
     generateImage({
@@ -239,7 +241,9 @@ export async function createGenImages({
       prompt: generateImagePrompt,
       n,
       seed,
-      ...configProviderParams(),
+      aspectRatio: providerParams.aspectRatio,
+      size: providerParams.size,
+      providerOptions: providerParams.providerOptions,
     }),
   );
 
@@ -458,6 +462,8 @@ function toGenImageDto({
   storageKey: string;
   referenceImageDtos: GenImageReferenceDto[];
 }): GenImageDto {
+  const { rawUrl, imgUrl } = buildImageUrls({ userId: record.userId, key: storageKey });
+
   return {
     id: record.id,
     prompt: record.prompt,
@@ -469,6 +475,7 @@ function toGenImageDto({
     provider: record.provider,
     model: record.model,
     referenceImages: referenceImageDtos,
-    ...buildImageUrls({ userId: record.userId, key: storageKey }),
+    rawUrl,
+    imgUrl,
   };
 }

@@ -1,4 +1,5 @@
 import { config } from '@repo/config';
+import { getPublicMediaUrl } from './image-urls';
 
 // Same bucket as generated images, new prefix. Serves mp4s from the
 // existing public domain instead of a dedicated video bucket.
@@ -30,6 +31,6 @@ export function buildVideoUrls({ userId, key }: { userId: string; key: string })
 } {
   return {
     rawUrl: `https://${config.cfImagesBucketName}.${userId}.r2.cloudflarestorage.com/${key}`,
-    videoUrl: `https://images.ragna.io/${key}`,
+    videoUrl: getPublicMediaUrl(key),
   };
 }

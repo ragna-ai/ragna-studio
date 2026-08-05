@@ -720,7 +720,10 @@ export async function runChatStream(
                 inputTokens: normUsage.inputTokens,
                 outputTokens: normUsage.outputTokens,
                 reasoningTokens: normUsage.reasoningTokens,
-                // noCacheInputTokens: normUsage.noCacheInputTokens,
+                // Deliberately no noCacheInputTokens: it's a display-only
+                // breakdown of inputTokens (usage.ts), excluded from
+                // NormalizedUsageFields by design, and derivable as
+                // inputTokens - cacheReadTokens.
                 cacheReadTokens: normUsage.cacheReadTokens,
                 cacheWriteTokens: normUsage.cacheWriteTokens,
               }),

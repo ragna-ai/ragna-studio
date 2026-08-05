@@ -17,16 +17,27 @@ import { app } from '../../src/app';
 // `/publish` needs the LinkedIn client faked (@repo/testing's
 // linkedin-provider.mock.ts).
 
-// PATCH and publish return the raw `SocialPost` row (no `media`); list/get/
-// create return `toPostResponse`'s shape, which adds it. `media` is
-// optional here so one schema covers every route's response.
-const postSchema = z.object({
-  id: z.string(),
-  workspaceId: z.string(),
-  content: z.string(),
-  status: z.enum(['draft', 'published', 'failed']),
-  media: z.array(z.object({ id: z.string() })).optional(),
-});
+// Every route (list/get/create/PATCH/publish) now returns `toPostResponse`'s
+// shape (social-post.service.ts): `media` is always present, and
+// userId/workspaceId/deletedAt never leave the API, since the frontend's
+// SocialPost DTO (useSocialPostApi.ts) never declares them. `.strict()`
+// catches a future spread silently reintroducing one of those.
+const postSchema = z
+  .object({
+    id: z.string(),
+    platform: z.string(),
+    content: z.string(),
+    status: z.enum(['draft', 'published', 'failed']),
+    source: z.string(),
+    externalId: z.string().nullable(),
+    externalUrl: z.string().nullable(),
+    publishedAt: z.string().nullable(),
+    publishError: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    media: z.array(z.object({ id: z.string() })),
+  })
+  .strict();
 
 const postResponseSchema = z.object({ post: postSchema });
 const listResponseSchema = z.object({

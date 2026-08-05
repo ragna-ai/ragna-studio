@@ -184,12 +184,37 @@ export async function generateVideoForWorkspace({
   workspaceId: string;
   input: GenerateVideoInput & { frame?: GenVideoFrameInput };
 }): Promise<{ genVideo: GenVideoResponse }> {
-  const { frame, ...rest } = input;
+  const {
+    frame,
+    prompt,
+    provider,
+    model,
+    aspectRatio,
+    resolution,
+    duration,
+    generateAudio,
+    seed,
+    negativePrompt,
+  } = input;
 
-  const frameFields = await resolveFrame({ frame, workspaceId });
+  const { frameOrigin, frameMediaId } = await resolveFrame({ frame, workspaceId });
 
   const { error, data: created } = await tryCatch(() =>
-    requestGenVideo({ ...rest, ...frameFields, userId, workspaceId }),
+    requestGenVideo({
+      prompt,
+      provider,
+      model,
+      aspectRatio,
+      resolution,
+      duration,
+      generateAudio,
+      seed,
+      negativePrompt,
+      frameOrigin,
+      frameMediaId,
+      userId,
+      workspaceId,
+    }),
   );
 
   if (error !== null || !created) {

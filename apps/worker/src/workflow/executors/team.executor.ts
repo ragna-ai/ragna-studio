@@ -299,7 +299,9 @@ export const executeTeam: Executor = async (node, ctx) => {
       stopWhen: stepCountIs(12),
       abortSignal: abortController.signal,
       onStepFinish: logTraceStepDebug('team lead', delegateCallMetaByToolCallId),
-      ...modelSettings,
+      temperature: modelSettings.temperature,
+      maxOutputTokens: modelSettings.maxOutputTokens,
+      reasoning: modelSettings.reasoning,
     });
   } catch (error) {
     // A credit error aborts the signal above, which makes generateText

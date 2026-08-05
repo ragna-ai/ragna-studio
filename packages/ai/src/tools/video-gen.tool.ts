@@ -113,7 +113,8 @@ export const getGeneratedVideo = (
         aspectRatio: input.aspectRatio,
         duration: input.duration,
         generateAudio: input.generateAudio,
-        ...frame,
+        frameOrigin: frame?.frameOrigin,
+        frameMediaId: frame?.frameMediaId,
       };
 
       if (awaitGeneration) {

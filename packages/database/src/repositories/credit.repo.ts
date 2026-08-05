@@ -32,9 +32,12 @@ export interface CreditSettlement {
 
 // Mirrors NormalizedUsage from packages/ai/src/usage.ts, duplicated rather
 // than imported: @repo/database must not depend on @repo/ai's AI-SDK types
-// (docs/credits/prd.md, "Code placement"). The field names match exactly, so
-// `{ ...normalizeUsage(provider, steps), ... }` satisfies this structurally
-// at every call site without a formal `extends`.
+// (docs/credits/prd.md, "Code placement"). The field names match exactly by
+// convention. Call sites must map the fields EXPLICITLY (see chat.service.ts),
+// not spread `...normalizeUsage(...)`: normalizeUsage also returns
+// noCacheInputTokens, which is display-only and deliberately absent here, and
+// a spread would forward it (and any future extra field) silently since TS
+// excess-property checks never apply to spread properties.
 interface NormalizedUsageFields {
   billableInputTokens: number;
   billableOutputTokens: number;

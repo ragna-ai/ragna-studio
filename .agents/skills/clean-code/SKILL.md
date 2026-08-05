@@ -29,6 +29,7 @@ Write code the next person can read and change without asking you. Assume that p
 6. **Make illegal states unrepresentable.** Use unions/optional fields so bad combinations don't typecheck, instead of guarding at runtime.
 7. **`readonly` and `const` by default.** Mutate only when needed.
 8. **No non-null `!`.** Narrow with a check or early return instead.
+9. **No object spreads across serialization boundaries.** Where an object leaves the process or its shape becomes a contract — HTTP response/DTO builders, queue job payloads, JSONB column writes, external API/SDK calls — name every field explicitly instead of `{ ...rest }`. TS's excess property check only covers literal keys, never spread properties, so a spread silently forwards any extra field into the payload (data leakage, payload drift); an explicit key is compile-checked. Spreads stay fine for internal plumbing between same-domain types, and Drizzle `.values()`/`.set()` are safe targets (column-mapped, extras dropped).
 
 ## Vue / Nuxt
 

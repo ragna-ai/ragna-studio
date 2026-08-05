@@ -73,6 +73,8 @@ function toReferenceImageResponse(
 // from the DB, while the generate endpoint gets already-shaped DTOs back
 // from createGenImages, so both need to end up at the same response shape.
 function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
+  const { rawUrl, imgUrl } = buildImageUrls({ userId: record.userId, key: record.media.storageKey });
+
   return {
     id: record.id,
     prompt: record.prompt,
@@ -86,7 +88,8 @@ function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
     referenceImages: record.references.map((reference) =>
       toReferenceImageResponse(reference, record.userId),
     ),
-    ...buildImageUrls({ userId: record.userId, key: record.media.storageKey }),
+    rawUrl,
+    imgUrl,
   };
 }
 
@@ -369,14 +372,15 @@ export async function generateImagesForWorkspace({
   workspaceId: string;
   input: GenerateImagesForWorkspaceInput;
 }): Promise<{ genImages: GenImageResponse[] }> {
-  const { aiModelId, referenceImages, ...rest } = input;
+  const { aiModelId, referenceImages, prompt, resolution, aspectRatio, n, seed, negativePrompt } =
+    input;
 
   const aiModel = await loadImageAiModel(aiModelId);
 
   assertCapabilitiesSupportRequest({
     aiModel,
-    seed: rest.seed,
-    negativePrompt: rest.negativePrompt,
+    seed,
+    negativePrompt,
     referenceImages,
   });
 
@@ -385,7 +389,12 @@ export async function generateImagesForWorkspace({
 
   const { error, data: generated } = await tryCatch(() =>
     createGenImages({
-      ...rest,
+      prompt,
+      resolution,
+      aspectRatio,
+      n,
+      seed,
+      negativePrompt,
       provider,
       model: aiModel.model,
       referenceImages: resolvedReferenceImages,
