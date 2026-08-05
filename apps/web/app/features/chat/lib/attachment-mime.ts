@@ -11,6 +11,7 @@ const CHAT_ATTACHMENT_ACCEPT_EXTENSIONS = [
   '.webp',
   '.pdf',
   '.docx',
+  '.pptx',
   '.xlsx',
   '.csv',
   '.txt',

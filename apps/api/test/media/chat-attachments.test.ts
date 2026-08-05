@@ -13,19 +13,21 @@ import {
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Chat attachment upload/delete (docs/media-library/prd.md). Auth/
-// authorization for /workspace/:workspaceId/* in general are covered
-// exhaustively in test/auth/ and test/workspace/workspace-authorization.
-// test.ts; this file checks the feature's own behavior, including the
-// media.service.ts-level "chat belongs to this workspace" check, which is
-// distinct from workspaceGuard (that only checks the workspaceId itself).
-// Every route goes through the faked storage upload/download
-// (@repo/testing's storage-provider.mock.ts); extraction for txt/csv is a
-// real, pure passthrough (no lazy import), so tier-2 text storage is
-// exercised for real too.
+// Chat attachment upload/delete (docs/media-library/prd.md,
+// unified-media-prd.md). Auth/authorization for /workspace/:workspaceId/*
+// in general are covered exhaustively in test/auth/ and
+// test/workspace/workspace-authorization.test.ts; this file checks the
+// feature's own behavior, including the media.service.ts-level "chat
+// belongs to this workspace" check, which is distinct from workspaceGuard
+// (that only checks the workspaceId itself). Every route goes through the
+// faked storage upload/download (@repo/testing's storage-provider.mock.ts);
+// extraction itself (@repo/media's extractText) is real and unmocked (pure,
+// local, no network), so tier-2 text storage is exercised for real too.
 
 // Smallest possible valid 1x1 transparent PNG (67 bytes) — a real fixture
 // file rather than a mock, per docs/testing/strategy.md.
@@ -38,6 +40,18 @@ function pngFile(name = 'pixel.png'): File {
 
 function csvFile(name = 'data.csv', content = 'name,age\nAda,36\nGrace,85\n'): File {
   return new File([content], name, { type: 'text/csv' });
+}
+
+// A real one-slide .pptx (generated with pptxgenjs), not a hand-rolled zip:
+// anydoc's toMarkdownBytes parses the actual OOXML package, so the fixture
+// needs to be one, per docs/testing/strategy.md's "real fixture" preference.
+const PPTX_FIXTURE_PATH = join(import.meta.dir, 'fixtures', 'sample.pptx');
+
+function pptxFile(name = 'slides.pptx'): File {
+  const bytes = readFileSync(PPTX_FIXTURE_PATH);
+  return new File([bytes], name, {
+    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  });
 }
 
 const chatAttachmentSchema = z.object({
@@ -138,8 +152,7 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
 
   test('uploads a tier-2 document and stores its extracted text', async () => {
     const { workspaceId, cookieHeader, chatId } = await seedChat();
-    const csvContent = 'name,age\nAda,36\nGrace,85\n';
-    const file = csvFile('data.csv', csvContent);
+    const file = csvFile('data.csv', 'name,age\nAda,36\nGrace,85\n');
 
     const { status, attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
       file,
@@ -153,8 +166,33 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
     // Documents have no public URL; only the private download route.
     expect(attachment?.url).toBe(`/workspace/${workspaceId}/media/${attachment?.mediaId}/download`);
 
+    // @repo/media's extractText runs csv through anydoc now, not a raw
+    // passthrough (unified-media-prd.md, decision 3), so the stored text is
+    // a GitHub-flavored markdown table rather than the original csv bytes.
     const mediaRow = await getMediaById({ id: attachment!.mediaId });
-    expect(mediaRow?.extractedText).toBe(csvContent);
+    expect(mediaRow?.extractedText).toContain('| Ada | 36 |');
+    expect(mediaRow?.extractedText).toContain('| Grace | 85 |');
+  });
+
+  test('uploads a pptx and stores its extracted text (docs/media-library/unified-media-prd.md, pptx addition)', async () => {
+    const { workspaceId, cookieHeader, chatId } = await seedChat();
+    const file = pptxFile();
+
+    const { status, attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
+      file,
+    ]);
+
+    expect(status).toBe(StatusCodes.CREATED);
+    const attachment = attachments[0];
+    expect(attachment?.filename).toBe('slides.pptx');
+    expect(attachment?.mediaType).toBe(
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    );
+    // Documents have no public URL; only the private download route.
+    expect(attachment?.url).toBe(`/workspace/${workspaceId}/media/${attachment?.mediaId}/download`);
+
+    const mediaRow = await getMediaById({ id: attachment!.mediaId });
+    expect(mediaRow?.extractedText).toContain('Hello from a test pptx');
   });
 
   test('rejects a file type it cannot sniff', async () => {

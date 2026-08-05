@@ -11,14 +11,9 @@ import {
   updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { DOCUMENT_KINDS, MIME_TYPE_BY_MEDIA_KIND, sniffMediaKind, type MediaKind } from '@repo/media';
 import { EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, ExtractAgentContextDocumentJobDto, queue } from '@repo/queue';
-import {
-  deleteObjects,
-  MIME_TYPE_BY_KIND,
-  sniffAgentContextDocumentKind,
-  uploadObjectBuffer,
-  type SupportedDocumentKind,
-} from '@repo/storage';
+import { deleteObjects, uploadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import {
@@ -30,19 +25,13 @@ import {
 const MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 25;
 
-type AgentContextDocumentValidation =
-  | { kind: SupportedDocumentKind; mimeType: string }
-  | { error: string };
+type AgentContextDocumentValidation = { kind: MediaKind; mimeType: string } | { error: string };
 
 /**
  * Validates one uploaded file: size, non-empty, and type by content
- * sniffing (never the client-sent `file.type`). Mirrors the checks in
- * docs/agent-context-documents.md's Pipeline section:
- *   - `%PDF` magic bytes for pdf,
- *   - ZIP magic (`PK`) plus a `.docx` extension for docx (a bare ZIP magic
- *     also matches xlsx/pptx/plain zips, so the extension disambiguates),
- *   - valid UTF-8 for txt/md, disambiguated from each other by extension
- *     since content alone can't tell them apart.
+ * sniffing (never the client-sent `file.type`), scoped to every document
+ * kind chat attachments accept (unified-media-prd.md decision 2 and 6):
+ * pdf, docx, pptx, xlsx, csv, txt, md.
  */
 function validateAgentContextDocumentFile({
   filename,
@@ -61,13 +50,15 @@ function validateAgentContextDocumentFile({
     return { error: `"${filename}" is larger than 10 MB` };
   }
 
-  const kind = sniffAgentContextDocumentKind(buffer, filename);
+  const sniffed = sniffMediaKind(buffer, filename, { accept: DOCUMENT_KINDS });
 
-  if (!kind) {
-    return { error: `"${filename}" is not a supported file type (pdf, docx, txt, md)` };
+  if (!sniffed) {
+    return {
+      error: `"${filename}" is not a supported file type (pdf, docx, pptx, xlsx, csv, txt, md)`,
+    };
   }
 
-  return { kind, mimeType: MIME_TYPE_BY_KIND[kind] };
+  return { kind: sniffed.kind, mimeType: MIME_TYPE_BY_MEDIA_KIND[sniffed.kind] };
 }
 
 /**

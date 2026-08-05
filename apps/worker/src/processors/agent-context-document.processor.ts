@@ -1,4 +1,5 @@
 import { embedTexts } from '@repo/ai';
+import { config } from '@repo/config';
 import type { AgentContextDocument } from '@repo/database';
 import {
   getAgentContextDocumentById,
@@ -7,6 +8,7 @@ import {
   updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
 import type { Worker } from '@repo/queue';
 import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
@@ -14,7 +16,7 @@ import {
   EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB,
   ExtractAgentContextDocumentJobDto,
 } from '@repo/queue';
-import { extractDocumentText } from '@repo/storage';
+import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { chunkText } from './agent-context-chunker';
 
@@ -29,6 +31,23 @@ const NO_TEXT_FOUND_ERROR =
   'No extractable text was found in this file (it may be scanned or empty)';
 const EXTRACTION_FAILED_ERROR = 'Failed to extract text from the file';
 const EMBEDDING_FAILED_ERROR = 'Failed to generate embeddings for the document';
+
+// Reverse of @repo/media's MIME_TYPE_BY_MEDIA_KIND. Total over every stored
+// document: the row's mimeType is always written from that same canonical
+// map at upload time, so every value here is guaranteed a hit.
+const MEDIA_KIND_BY_MIME_TYPE: Record<string, MediaKind> = Object.fromEntries(
+  Object.entries(MIME_TYPE_BY_MEDIA_KIND).map(([kind, mimeType]) => [mimeType, kind as MediaKind]),
+);
+
+function mediaKindForMimeType(mimeType: string): MediaKind {
+  const kind = MEDIA_KIND_BY_MIME_TYPE[mimeType];
+
+  if (!kind) {
+    throw new Error(`No media kind registered for mime type "${mimeType}"`);
+  }
+
+  return kind;
+}
 
 export function registerAgentContextDocumentJobProcessor(): Worker<any, any, string> {
   const agentContextDocumentWorker = createWorker({
@@ -74,12 +93,14 @@ async function extractAgentContextDocument(documentId: string): Promise<void> {
     return;
   }
 
-  const { error: extractError, data: text } = await tryCatch(() =>
-    extractDocumentText({
-      storageKey: agentContextDocument.storageKey,
-      mimeType: agentContextDocument.mimeType,
-    }),
-  );
+  const { error: extractError, data: text } = await tryCatch(async () => {
+    const { buffer } = await downloadObjectBuffer(
+      config.cfDocumentsBucketName,
+      agentContextDocument.storageKey,
+    );
+    const kind = mediaKindForMimeType(agentContextDocument.mimeType);
+    return extractText({ buffer, kind });
+  });
 
   if (extractError !== null || text === null) {
     logger.error(`Failed to extract text for agent document ${documentId}`, extractError);

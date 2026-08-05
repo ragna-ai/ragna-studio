@@ -29,6 +29,7 @@
     "@repo/export": "workspace:*",
     "@repo/linkedin": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",

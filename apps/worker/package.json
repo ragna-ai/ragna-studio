@@ -23,6 +23,7 @@
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",
+    "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",

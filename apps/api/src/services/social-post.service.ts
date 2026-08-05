@@ -18,11 +18,11 @@ import {
 } from '@repo/database';
 import { createLinkedinClient } from '@repo/linkedin';
 import { logger } from '@repo/logger';
+import { deleteMediaIfUnreferenced } from '@repo/media';
 import { uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
-import { deleteMediaIfUnreferenced } from './media.service';
 import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 
 // Returned instead of a generic 400 so the web app can show a "connect

@@ -1,17 +1,14 @@
 import type { SocialPost, SocialPostMedia } from '@repo/database';
 import {
-  countMediaReferences,
   createSocialPost,
   createSocialPostMediaRecords,
-  deleteMediaById,
   deleteSocialPostMediaByPostId,
   getGenImagesByIds,
-  getMediaById,
   getSocialPostById,
   updateSocialPostContent,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { deleteObjects } from '@repo/storage';
+import { deleteMediaIfUnreferenced } from '@repo/media';
 import { tryCatch } from '@repo/utils';
 
 export type DraftLinkedInPostInput = {
@@ -159,58 +156,14 @@ async function reviseDraft({
   return { id: updated.id, status: updated.status };
 }
 
-/**
- * Deletes a media row and its R2 object once nothing references it anymore
- * (refcount rule, docs/media-library/migration-prd.md decision 4). Mirrors
- * apps/api's media.service.ts `deleteMediaIfUnreferenced`; kept separate
- * because a package can't reach into an app, but the rule must stay
- * identical: reference count decides deletion now, not the `upload` vs.
- * `genImage` origin split this used to branch on.
- *
- * Best-effort on the R2 side: a failed delete is logged, not thrown, so it
- * never blocks the draft revision that triggered it.
- */
-async function deleteMediaIfUnreferenced(mediaId: string): Promise<void> {
-  const { error: countError, data: referenceCount } = await tryCatch(() =>
-    countMediaReferences({ mediaId }),
-  );
-
-  // referenceCount can legitimately be 0, so this must check `=== null`,
-  // not falsy, or a genuinely unreferenced row would be skipped.
-  if (countError !== null || referenceCount === null || referenceCount > 0) {
-    if (countError !== null) {
-      logger.error(`Failed to count references for media ${mediaId}`, countError);
-    }
-    return;
-  }
-
-  const { error: mediaError, data: mediaRow } = await tryCatch(() => getMediaById({ id: mediaId }));
-
-  if (mediaError !== null || !mediaRow) {
-    logger.error(`Failed to load media ${mediaId} for deletion`, mediaError);
-    return;
-  }
-
-  const { error: deleteError, data } = await tryCatch(() =>
-    deleteObjects(mediaRow.bucket, [mediaRow.storageKey]),
-  );
-
-  if (deleteError !== null) {
-    logger.error('Failed to delete LinkedIn draft image object from R2', {
-      error: deleteError,
-      key: mediaRow.storageKey,
-    });
-  } else if (data && data.errors.length > 0) {
-    logger.error('Failed to delete a LinkedIn draft image object from R2', {
-      key: mediaRow.storageKey,
-    });
-  }
-
-  await deleteMediaById({ id: mediaId });
-}
-
+// Refcounted deletion (docs/media-library/unified-media-prd.md decision 1)
+// now lives in @repo/media's `deleteMediaIfUnreferenced`: reference count
+// decides deletion, not the `upload` vs. `genImage` origin split this used
+// to branch on. A package couldn't reach into apps/api's media.service.ts
+// before this package existed, which is why this used to be duplicated
+// here rather than shared.
 async function refcountDeleteMedia(mediaIds: string[]): Promise<void> {
-  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced(mediaId)));
+  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
 }
 
 /**

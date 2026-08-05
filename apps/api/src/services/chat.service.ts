@@ -29,6 +29,7 @@ import {
   upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { deleteMediaIfUnreferenced } from '@repo/media';
 import { downloadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import {
@@ -38,7 +39,6 @@ import {
   NotFoundException,
 } from '../exceptions';
 import { assertCanSpend } from './credit.service';
-import { deleteMediaIfUnreferenced } from './media.service';
 
 // CHAT CRUD (docs/api-standards/prd.md, WP4)
 //
@@ -394,8 +394,9 @@ function mergeConsecutiveUserMessages(messages: UIMessage[]): UIMessage[] {
 //     model-fetchable directly);
 //   - pdf parts are re-downloaded from the private documents bucket and
 //     inlined as a base64 data URL, since no URL would work for the model;
-//   - docx/xlsx/csv/txt/md parts are replaced with a text part holding the
-//     extraction done at upload time;
+//   - docx/pptx/xlsx/csv/txt/md parts are replaced with a text part holding
+//     the extraction done at upload time (mimeType-driven, not a hand-listed
+//     kind set, so a newly extractable document kind needs no change here);
 //   - a file part whose mediaId isn't among the chat's current attachments
 //     (e.g. removed since) is dropped instead of sent to the model broken.
 

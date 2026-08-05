@@ -1,25 +1,27 @@
 # syntax=docker/dockerfile:1
 
 # Build from the repo root:
-#   docker build -f apps/api/docker/Dockerfile .
+#   docker build -f apps/api/Dockerfile .
 
 # ============================================================
-# Base: node + pnpm + turbo
+# Base — node + pnpm + turbo. Debian slim, not Alpine: @repo/media
+# depends on @firecrawl/anydoc, a Rust Node-API addon whose install-time
+# platform binary is glibc-linked, so every build stage (and the runner
+# below) must share libc with it, matching apps/worker/Dockerfile.
 # ============================================================
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV TURBO_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache libc6-compat \
-  && corepack enable \
+RUN corepack enable \
   && npm install -g turbo
 
 WORKDIR /app
 
 # ============================================================
-# Pruner: extract only what @repo/api and its deps need
+# Pruner — extract only what @repo/api and its deps need
 # ============================================================
 FROM base AS pruner
 
@@ -27,7 +29,7 @@ COPY . .
 RUN turbo prune @repo/api --docker
 
 # ============================================================
-# Builder: install deps, build, then drop dev dependencies
+# Builder — install deps, build, then drop dev dependencies
 # ============================================================
 FROM base AS builder
 
@@ -45,11 +47,19 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   pnpm --filter @repo/api deploy --prod --legacy /prod/api
 
 # ============================================================
-# Runner: Bun runtime (src/index.ts uses Bun.serve)
+# Runner — Bun on Debian (src/index.ts uses Bun.serve). The alpine tag
+# can't load anydoc's glibc-linked binary, hence oven/bun:debian, the same
+# runner apps/webbrowser uses and for the same glibc reason.
 # ============================================================
-FROM oven/bun:alpine AS runner
+FROM oven/bun:debian AS runner
 
 WORKDIR /app
+
+# wget for the HEALTHCHECK below: unlike the old alpine/busybox image,
+# Debian's base ships neither wget nor curl.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends wget \
+  && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV API_PORT=3010

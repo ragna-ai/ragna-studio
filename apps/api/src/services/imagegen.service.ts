@@ -12,11 +12,11 @@ import {
 } from '@repo/database';
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
+import { createMediaForObject, deleteMediaIfUnreferenced } from '@repo/media';
 import { buildImageUrls, getImgRefBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
-import { createMediaForExistingObject, deleteMediaIfUnreferenced } from './media.service';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -289,8 +289,8 @@ async function createUploadedReferenceMedia({
   const extension = storageKey.split('.').pop() ?? '';
   const mimeType = REFERENCE_MIME_TYPE_BY_EXTENSION[extension] ?? 'application/octet-stream';
 
-  const mediaRow = await createMediaForExistingObject({
-    workspaceId,
+  const mediaRow = await createMediaForObject({
+    owner: { workspaceId },
     bucket: config.cfImagesBucketName,
     storageKey,
     mimeType,

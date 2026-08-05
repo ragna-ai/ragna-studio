@@ -1,11 +1,12 @@
 {
-  "name": "@repo/storage",
+  "name": "@repo/media",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "description": "media domain: type registry, sniffing, extraction, refcounted deletion",
   "files": [
     "dist"
   ],
-  "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
@@ -17,9 +18,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@firecrawl/anydoc": "^0.1.3",
     "@repo/config": "workspace:*",
-    "s3mini": "^0.9.5",
-    "unstorage": "^1.17.5"
+    "@repo/database": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/storage": "workspace:*",
+    "@repo/utils": "workspace:*"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
