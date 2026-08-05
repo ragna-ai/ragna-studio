@@ -13,6 +13,7 @@ export type {
   SocialPost,
   SocialPostMedia,
   SocialPostMediaOrigin,
+  SocialPostMediaWithMedia,
   SocialPostSource,
   SocialPostStatus,
   SocialPostWithMedia,
@@ -40,7 +41,7 @@ export async function getSocialPostById({
   const post = await db.query.socialPost.findFirst({
     where: { id, workspaceId },
     with: {
-      media: { orderBy: (t, { asc }) => asc(t.sortOrder) },
+      media: { orderBy: (t, { asc }) => asc(t.sortOrder), with: { media: true } },
     },
   });
 
@@ -72,7 +73,7 @@ export async function getAllSocialPostsByWorkspaceId({
     offset,
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
     with: {
-      media: { orderBy: (t, { asc }) => asc(t.sortOrder) },
+      media: { orderBy: (t, { asc }) => asc(t.sortOrder), with: { media: true } },
     },
   });
 }

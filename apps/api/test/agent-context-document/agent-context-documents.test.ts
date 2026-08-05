@@ -51,6 +51,10 @@ function textFile(name: string, content = 'Some agent context.') {
   return new File([content], name, { type: 'text/plain' });
 }
 
+function csvFile(name: string, content = 'name,age\nAda,36\n') {
+  return new File([content], name, { type: 'text/csv' });
+}
+
 async function seedAgent() {
   const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
   const { aiModelId } = await seedTokenPricedAiModel();
@@ -155,6 +159,27 @@ describe('POST /workspace/:workspaceId/agent/:agentId/context-document', () => {
 
     expect(status).toBe(StatusCodes.BAD_REQUEST);
     expect(uploadObjectBufferMock).not.toHaveBeenCalled();
+  });
+
+  // Agent context documents now accept every DOCUMENT_KINDS entry, not just
+  // pdf/docx/txt/md (unified-media-prd.md, decision 6): a csv that the old,
+  // narrower sniffAgentContextDocumentKind would have rejected must now be
+  // accepted.
+  test('accepts a csv, widened from DOCUMENT_KINDS (unified-media-prd.md decision 6)', async () => {
+    const { workspaceId, agentId, cookieHeader } = await seedAgent();
+
+    const { status, documents } = await uploadDocument(
+      cookieHeader,
+      workspaceId,
+      agentId,
+      csvFile('rows.csv'),
+    );
+
+    expect(status).toBe(StatusCodes.CREATED);
+    expect(documents).toHaveLength(1);
+    expect(documents[0]?.name).toBe('rows.csv');
+    expect(documents[0]?.mimeType).toBe('text/csv');
+    expect(uploadObjectBufferMock).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -1,8 +1,15 @@
 import type { GoogleVertexVideoModelOptions } from '@ai-sdk/google-vertex';
 import { config } from '@repo/config';
-import type { GenVideo, GenVideoAspectRatio, GenVideoResolution } from '@repo/database';
+import type {
+  GenVideo,
+  GenVideoAspectRatio,
+  GenVideoResolution,
+  GenVideoWithMedia,
+  Media,
+} from '@repo/database';
 import {
   createGenVideoRecord as insertGenVideoRecord,
+  createMedia,
   getDefaultAiModelByModality,
   getGenVideoById,
   updateGenVideoStatus,
@@ -47,9 +54,10 @@ export const generateVideoSchema = z.object({
 export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
 
 // Same ownership split as social_post_media (social-post.schema.ts): a
-// 'genImage' frame references a gen_images object the caller doesn't own,
-// an 'upload' frame owns its own object under <userId>/videos/frames/.
-type FrameInput = { frameOrigin: 'upload' | 'genImage'; frameStorageKey: string };
+// 'genImage' frame references a gen_images object's existing media row (no
+// copy), an 'upload' frame's media row was already created for its own
+// object under <userId>/videos/frames/.
+type FrameInput = { frameOrigin: 'upload' | 'genImage'; frameMediaId: string };
 
 type CreateGenVideoParams = GenerateVideoInput &
   Partial<FrameInput> & { userId: string; workspaceId: string };
@@ -63,14 +71,17 @@ export type GenVideoDto = {
   createdAt: Date;
 };
 
-function toGenVideoDto(record: GenVideo): GenVideoDto {
+// media is only ever set for a completed row; both call sites below hand in
+// a just-created pending row or a just-failed row, neither of which has one
+// yet, so the default keeps videoUrl undefined for them.
+function toGenVideoDto(record: GenVideo, media: Media | null = null): GenVideoDto {
   return {
     id: record.id,
     status: record.status,
     prompt: record.prompt,
     error: record.error,
-    videoUrl: record.storageKey
-      ? buildVideoUrls({ userId: record.userId, key: record.storageKey }).videoUrl
+    videoUrl: media
+      ? buildVideoUrls({ userId: record.userId, key: media.storageKey }).videoUrl
       : undefined,
     createdAt: record.createdAt,
   };
@@ -122,7 +133,7 @@ export async function createGenVideoRecord(params: CreateGenVideoParams): Promis
     generateAudio,
     seed,
     frameOrigin,
-    frameStorageKey,
+    frameMediaId,
   } = params;
 
   const { provider, model } = await resolveVideoModel(params);
@@ -141,7 +152,7 @@ export async function createGenVideoRecord(params: CreateGenVideoParams): Promis
     generateAudio: generateAudio ?? true,
     seed,
     frameOrigin,
-    frameStorageKey,
+    frameMediaId,
   });
 }
 
@@ -227,16 +238,19 @@ const toProviderOptions = (opts: unknown): GenerateVideoProviderOptions =>
 /**
  * Runs the actual generation for one row: downloads the first-frame image
  * when set, calls Veo, and uploads the resulting mp4. Returns the storage
- * key on success; throws on any failure, `runGenVideo` below is what
- * records the failure on the row.
+ * key and byte size on success (the caller turns that into a media row);
+ * throws on any failure, `runGenVideo` below is what records the failure on
+ * the row.
  */
-async function generateAndUploadVideo(record: GenVideo): Promise<{ storageKey: string }> {
+async function generateAndUploadVideo(
+  record: GenVideoWithMedia,
+): Promise<{ storageKey: string; size: number }> {
   let frameImages: { image: Buffer; frameType: 'first_frame' }[] | undefined;
 
-  if (record.frameStorageKey) {
+  if (record.frameMedia?.storageKey) {
     const { buffer } = await downloadObjectBuffer(
       config.cfImagesBucketName,
-      record.frameStorageKey,
+      record.frameMedia.storageKey,
     );
     frameImages = [{ image: buffer, frameType: 'first_frame' }];
   }
@@ -283,18 +297,29 @@ async function generateAndUploadVideo(record: GenVideo): Promise<{ storageKey: s
     contentType: video.mediaType || 'video/mp4',
   });
 
-  return { storageKey: key };
+  return { storageKey: key, size: video.uint8Array.byteLength };
 }
+
+// runGenVideo's success path needs to hand the caller the freshly created
+// media row (for the video URL) alongside the updated GenVideo row;
+// updateGenVideoStatus itself only ever returns the plain row (no join), so
+// this is the one case where the two travel together (docs/media-library/
+// migration-prd.md decision 6).
+export type RunGenVideoResult = GenVideo & { media: Media | null };
 
 /**
  * Run side (docs/videogen/prd.md): loads the row, flips it to processing,
- * generates and uploads the video, then flips it to completed with the
- * storage key. Any failure flips it to failed with the error and rethrows.
- * Called from the gen-video processor (async path) and the awaiting tool
- * variant in workflows (inline path). Notification enqueueing happens only
- * in the processor, never here.
+ * generates and uploads the video, creates its media row, then flips the
+ * row to completed pointing at that media. Any failure flips it to failed
+ * with the error and rethrows. Called from the gen-video processor (async
+ * path) and the awaiting tool variant in workflows (inline path).
+ * Notification enqueueing happens only in the processor, never here.
  */
-export async function runGenVideo({ genVideoId }: { genVideoId: string }): Promise<GenVideo> {
+export async function runGenVideo({
+  genVideoId,
+}: {
+  genVideoId: string;
+}): Promise<RunGenVideoResult> {
   const record = await getGenVideoById({ id: genVideoId });
 
   if (!record) {
@@ -315,9 +340,21 @@ export async function runGenVideo({ genVideoId }: { genVideoId: string }): Promi
     throw error ?? new Error('Video generation failed');
   }
 
-  return updateGenVideoStatus({
+  const createdMedia = await createMedia({
+    ownerWorkspaceId: record.workspaceId,
+    bucket: config.cfImagesBucketName,
+    storageKey: result.storageKey,
+    filename: result.storageKey.split('/').pop() ?? result.storageKey,
+    mimeType: 'video/mp4',
+    size: result.size,
+    origin: 'generated',
+  });
+
+  const updated = await updateGenVideoStatus({
     id: genVideoId,
     status: 'completed',
-    storageKey: result.storageKey,
+    mediaId: createdMedia.id,
   });
+
+  return { ...updated, media: createdMedia };
 }

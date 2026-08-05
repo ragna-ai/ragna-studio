@@ -16,6 +16,14 @@ minimumReleaseAgeExclude:
   - '@nuxt/nitro-server@4.5.0 || 4.5.1'
   - '@nuxt/schema@4.5.0 || 4.5.1'
   - '@nuxt/vite-builder@4.5.0 || 4.5.1'
+  - '@firecrawl/anydoc-darwin-arm64@0.1.3'
+  - '@firecrawl/anydoc-darwin-x64@0.1.3'
+  - '@firecrawl/anydoc-linux-arm64-gnu@0.1.3'
+  - '@firecrawl/anydoc-linux-arm64-musl@0.1.3'
+  - '@firecrawl/anydoc-linux-x64-gnu@0.1.3'
+  - '@firecrawl/anydoc-linux-x64-musl@0.1.3'
+  - '@firecrawl/anydoc-win32-x64-msvc@0.1.3'
+  - '@firecrawl/anydoc@0.1.3'
 
 allowBuilds:
   '@parcel/watcher': false

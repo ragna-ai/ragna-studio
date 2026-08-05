@@ -302,7 +302,7 @@ function handleDelete(document: AgentContextDocument) {
         Drag and drop files here, or click to browse.
       </p>
       <p class="text-xs text-muted-foreground">
-        PDF, DOCX, TXT or MD, up to 10 MB each.
+        PDF, DOCX, PPTX, XLSX, CSV, TXT or MD, up to 10 MB each.
       </p>
     </div>
     <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a

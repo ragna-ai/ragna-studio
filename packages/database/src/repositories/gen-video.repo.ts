@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
-import type { GenVideo, GenVideoStatus, NewGenVideo } from '../schema';
+import type { GenVideo, GenVideoStatus, GenVideoWithMedia, NewGenVideo } from '../schema';
 import { genVideo } from '../schema';
 
 export type {
@@ -9,6 +9,7 @@ export type {
   GenVideoFrameOrigin,
   GenVideoResolution,
   GenVideoStatus,
+  GenVideoWithMedia,
   NewGenVideo,
 } from '../schema';
 
@@ -24,7 +25,10 @@ export async function createGenVideoRecord(record: NewGenVideo): Promise<GenVide
 
 // Workspace-scoped list, newest first by default. Access is gated by the
 // workspace guard upstream (docs/api-standards/prd.md), so this doesn't
-// filter by userId.
+// filter by userId. Joins the output and first-frame media rows (both
+// nullable: the pending/processing lifecycle means no object exists yet),
+// so callers never need a second round trip to resolve a storage key
+// (docs/media-library/migration-prd.md decision 6).
 export async function getGenVideosByWorkspaceId({
   workspaceId,
   limit,
@@ -35,12 +39,13 @@ export async function getGenVideosByWorkspaceId({
   limit: number;
   offset: number;
   sort?: 'asc' | 'desc';
-}): Promise<GenVideo[]> {
+}): Promise<GenVideoWithMedia[]> {
   return db.query.genVideo.findMany({
     where: { workspaceId },
     orderBy: (t, { asc, desc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
     limit,
     offset,
+    with: { media: true, frameMedia: true },
   });
 }
 
@@ -55,17 +60,20 @@ export async function getGenVideoCountByWorkspaceId({
 
 // Plain lookup by id, no ownership scoping. Used by the gen-video worker and
 // the awaited inline workflow path, both of which only ever receive a
-// trusted genVideoId (their own job data or a row they just created).
-export async function getGenVideoById({ id }: { id: string }): Promise<GenVideo | null> {
+// trusted genVideoId (their own job data or a row they just created). Joined
+// the same way as getGenVideosByWorkspaceId, for the same reason.
+export async function getGenVideoById({ id }: { id: string }): Promise<GenVideoWithMedia | null> {
   const found = await db.query.genVideo.findFirst({
     where: { id },
+    with: { media: true, frameMedia: true },
   });
 
   return found ?? null;
 }
 
 // Workspace-scoped delete-and-return: the service needs the deleted row's
-// storageKey/frameStorageKey afterward to best-effort clean up its R2 objects.
+// mediaId/frameMediaId afterward to refcount-delete their media
+// (docs/media-library/migration-prd.md decision 5), so this stays unjoined.
 export async function deleteGenVideoByIdAndWorkspaceId({
   id,
   workspaceId,
@@ -81,7 +89,7 @@ export async function deleteGenVideoByIdAndWorkspaceId({
   return deleted ?? null;
 }
 
-type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'storageKey' | 'error'>>;
+type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'mediaId' | 'error'>>;
 
 export async function updateGenVideoStatus({
   id,

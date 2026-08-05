@@ -12,7 +12,7 @@ export const mediaController = new Hono()
    * [GET] /workspace/:workspaceId/media/:mediaId/download
    * Streams a workspace-owned media object from R2 with its content-type
    * and a content-disposition filename. Images also have a public CDN URL
-   * (@repo/storage's buildChatUploadImageUrls); every other kind lives in
+   * (@repo/media's buildChatUploadImageUrls); every other kind lives in
    * the private documents bucket and is only reachable through this route.
    */
   .get('/:mediaId/download', validMediaIdParam, async (c) => {

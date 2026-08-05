@@ -6,9 +6,13 @@
 // preserving in tests, matching docs/testing/strategy.md's "External
 // boundaries" (mocked at the package boundary). Everything else the
 // package exports (`buildImageUrls`, `buildVideoUrls`, the bucket-name
-// helpers, `sniffAgentContextDocumentKind`) is a pure function with no I/O,
-// so it stays real via the spread below rather than being reimplemented
-// here.
+// helpers) is a pure function with no I/O, so it stays real via the spread
+// below rather than being reimplemented here.
+//
+// `@repo/media`'s sniffing/extraction (`sniffMediaKind`, `extractText`) are
+// also pure/local (anydoc runs on the libuv threadpool, not over the
+// network) and stay real and unmocked; only `@repo/storage`'s bytes-over-
+// the-wire calls need faking.
 //
 // Lives here (not app-local) so both apps/api and apps/worker's test
 // suites can register the same fake: apps/worker's agent-context-document

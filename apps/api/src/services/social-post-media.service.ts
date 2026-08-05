@@ -1,13 +1,8 @@
-import type { SocialPostMedia } from '@repo/database';
+import type { SocialPostMediaWithMedia } from '@repo/database';
 import { createLinkedinClient, LinkedinApiError } from '@repo/linkedin';
 import { logger } from '@repo/logger';
-import { deleteObjects, downloadObjectBuffer } from '@repo/storage';
+import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
-
-// Same bucket packages/ai's imagen.service.ts uploads generated images to.
-// User-uploaded social media also lands here, under a `social/{userId}/`
-// prefix (see the media upload route in social-post.controller.ts).
-const IMAGE_BUCKET_NAME = 'ragna-cloud-images';
 
 // LinkedIn can take a little while to finish processing an uploaded image.
 const IMAGE_AVAILABLE_TIMEOUT_MS = 45_000;
@@ -15,37 +10,6 @@ const IMAGE_AVAILABLE_TIMEOUT_MS = 45_000;
 export type PublishableImage = { urn: string; altText?: string };
 
 export type UploadPostMediaResult = { imageUrns: PublishableImage[] } | { error: string };
-
-/**
- * Deletes the R2 objects for `upload`-origin media rows. `genImage`-origin
- * rows are skipped: their object belongs to the gen_images row, not to this
- * media row, so only the caller's DB delete should touch them. The single
- * entry point for this rule, called from every route that removes media
- * rows (media delete, post delete), so the two can't drift apart.
- *
- * Best-effort: a failed R2 delete is logged, not thrown, so a stray object
- * never blocks the user-facing delete action that triggered it.
- */
-export async function deleteUploadedMediaObjects(media: SocialPostMedia[]): Promise<void> {
-  const keys = media.filter((item) => item.origin === 'upload').map((item) => item.storageKey);
-
-  if (keys.length === 0) {
-    return;
-  }
-
-  const { error, data } = await tryCatch(() => deleteObjects(IMAGE_BUCKET_NAME, keys));
-
-  if (error !== null) {
-    logger.error('Failed to delete social post media objects from R2', { error, keys });
-    return;
-  }
-
-  if (data && data.errors.length > 0) {
-    logger.error('Failed to delete some social post media objects from R2', {
-      keys: data.errors,
-    });
-  }
-}
 
 /**
  * Uploads a draft's attached media to LinkedIn ahead of publishing. For each
@@ -59,7 +23,7 @@ export async function uploadPostMediaToLinkedIn({
   accessToken,
   authorId,
 }: {
-  media: SocialPostMedia[];
+  media: SocialPostMediaWithMedia[];
   accessToken: string;
   authorId: string;
 }): Promise<UploadPostMediaResult> {
@@ -94,10 +58,10 @@ async function uploadOneImageToLinkedIn({
   authorId,
 }: {
   linkedin: ReturnType<typeof createLinkedinClient>;
-  media: SocialPostMedia;
+  media: SocialPostMediaWithMedia;
   authorId: string;
 }): Promise<string> {
-  const { buffer, contentType } = await downloadObjectBuffer(IMAGE_BUCKET_NAME, media.storageKey);
+  const { buffer, contentType } = await downloadObjectBuffer(media.media.bucket, media.media.storageKey);
 
   const { uploadUrl, imageUrn } = await linkedin.initializeImageUpload({ authorId });
 

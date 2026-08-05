@@ -9,7 +9,7 @@ import { creditAccount, creditLedger, creditUsageEvent } from './credit.schema';
 import { dataset, datasetRow } from './dataset.schema';
 import { document } from './document.schema';
 import { folder } from './folder.schema';
-import { genImage } from './genimage.schema';
+import { genImage, genImageReference } from './genimage.schema';
 import { genVideo } from './genvideo.schema';
 import { chatAttachment, media } from './media.schema';
 import { agentMemory } from './memory.schema';
@@ -43,6 +43,7 @@ const schema = {
   document,
   folder,
   genImage,
+  genImageReference,
   genVideo,
   media,
   chatAttachment,
@@ -310,6 +311,25 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.workspace.id,
       optional: false,
     }),
+    // The generated output's media row (docs/media-library/migration-prd.md).
+    media: r.one.media({
+      from: r.genImage.mediaId,
+      to: r.media.id,
+      optional: false,
+    }),
+    references: r.many.genImageReference(),
+  },
+  genImageReference: {
+    genImage: r.one.genImage({
+      from: r.genImageReference.genImageId,
+      to: r.genImage.id,
+      optional: false,
+    }),
+    media: r.one.media({
+      from: r.genImageReference.mediaId,
+      to: r.media.id,
+      optional: false,
+    }),
   },
   genVideo: {
     user: r.one.user({
@@ -321,6 +341,20 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.genVideo.workspaceId,
       to: r.workspace.id,
       optional: false,
+    }),
+    // Two distinct FKs to media (output vs. first frame), so the reverse
+    // "many" side on media below needs an alias per FK to disambiguate.
+    media: r.one.media({
+      from: r.genVideo.mediaId,
+      to: r.media.id,
+      optional: true,
+      alias: 'genVideoMedia',
+    }),
+    frameMedia: r.one.media({
+      from: r.genVideo.frameMediaId,
+      to: r.media.id,
+      optional: true,
+      alias: 'genVideoFrameMedia',
     }),
   },
   media: {
@@ -335,6 +369,11 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
     }),
     chatAttachments: r.many.chatAttachment(),
+    genImages: r.many.genImage(),
+    genImageReferences: r.many.genImageReference(),
+    genVideos: r.many.genVideo({ alias: 'genVideoMedia' }),
+    genVideoFrames: r.many.genVideo({ alias: 'genVideoFrameMedia' }),
+    socialPostMedia: r.many.socialPostMedia(),
   },
   socialPost: {
     user: r.one.user({
@@ -353,6 +392,11 @@ export const relations = defineRelations(schema, (r) => ({
     post: r.one.socialPost({
       from: r.socialPostMedia.socialPostId,
       to: r.socialPost.id,
+      optional: false,
+    }),
+    media: r.one.media({
+      from: r.socialPostMedia.mediaId,
+      to: r.media.id,
       optional: false,
     }),
   },

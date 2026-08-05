@@ -1,6 +1,12 @@
-import type { NewGenVideo } from '@repo/database';
-import { createGenVideoRecord } from '@repo/database';
-import { getVideoGenBucketNameForUser } from '@repo/storage';
+import type { GenVideoStatus } from '@repo/database';
+import {
+  createGenImageRecords,
+  createGenVideoRecord,
+  createMedia,
+  getMediaById,
+} from '@repo/database';
+import type { GenVideoFrameOrigin } from '@repo/database/schema';
+import { getImgGenBucketNameForUser, getVideoFrameBucketNameForUser, getVideoGenBucketNameForUser } from '@repo/storage';
 import {
   deleteObjectsMock,
   resetProviderMocks,
@@ -43,18 +49,60 @@ const listResponseSchema = z.object({
 });
 
 // The render is done by apps/worker's gen-video processor (out of scope
-// here, see the top-of-file comment), so a "completed" row with a
-// storageKey/frameStorageKey is seeded directly via the repo rather than
-// waiting on a real render.
-function seedCompletedVideo(
-  overrides: Partial<NewGenVideo> & Pick<NewGenVideo, 'userId' | 'workspaceId'>,
-) {
+// here, see the top-of-file comment), so a "completed" row with a media/
+// frame media row is seeded directly via the repo rather than waiting on a
+// real render. storageKey/frameStorageKey are convenience params: each one
+// present mints its own media row (docs/media-library/migration-prd.md)
+// before the gen_videos row is created.
+async function seedCompletedVideo({
+  userId,
+  workspaceId,
+  status = 'completed',
+  storageKey,
+  frameOrigin,
+  frameStorageKey,
+}: {
+  userId: string;
+  workspaceId: string;
+  status?: GenVideoStatus;
+  storageKey?: string;
+  frameOrigin?: GenVideoFrameOrigin;
+  frameStorageKey?: string;
+}) {
+  const outputMedia = storageKey
+    ? await createMedia({
+        ownerWorkspaceId: workspaceId,
+        bucket: getVideoGenBucketNameForUser(userId).bucketName,
+        storageKey,
+        filename: storageKey.split('/').pop() ?? storageKey,
+        mimeType: 'video/mp4',
+        size: 1024,
+        origin: 'generated',
+      })
+    : undefined;
+
+  const frameMedia = frameStorageKey
+    ? await createMedia({
+        ownerWorkspaceId: workspaceId,
+        bucket: getVideoFrameBucketNameForUser(userId).bucketName,
+        storageKey: frameStorageKey,
+        filename: frameStorageKey.split('/').pop() ?? frameStorageKey,
+        mimeType: 'image/png',
+        size: 1024,
+        origin: 'uploaded',
+      })
+    : undefined;
+
   return createGenVideoRecord({
     prompt: 'a drone shot over a city',
     provider: 'google-vertex',
     model: 'veo-3.1-generate-001',
-    status: 'completed',
-    ...overrides,
+    status,
+    userId,
+    workspaceId,
+    mediaId: outputMedia?.id,
+    frameOrigin,
+    frameMediaId: frameMedia?.id,
   });
 }
 
@@ -261,20 +309,69 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(deleteObjectsMock).toHaveBeenCalledTimes(1);
-    expect(deleteObjectsMock.mock.calls[0]).toEqual([bucketName, [storageKey, frameStorageKey]]);
+    // Each media row is refcount-deleted independently
+    // (docs/media-library/migration-prd.md decision 5), so the output and
+    // the frame come off in two separate deleteObjects calls, not one
+    // combined call.
+    expect(deleteObjectsMock).toHaveBeenCalledTimes(2);
+    const deletedKeys = deleteObjectsMock.mock.calls.flatMap(([calledBucket, keys]) => {
+      expect(calledBucket).toBe(bucketName);
+      return keys;
+    });
+    expect(deletedKeys.sort()).toEqual([frameStorageKey, storageKey].sort());
   });
 
-  test("leaves a 'genImage'-origin frame's object alone, since it belongs to that image row", async () => {
+  test("leaves a shared media object alone while a gen_images row still references it", async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const storageKey = `${userId}/videos/generated/clip.mp4`;
     const imageStorageKey = `${userId}/images/generated/source.png`;
-    const video = await seedCompletedVideo({
+
+    const imageMedia = await createMedia({
+      ownerWorkspaceId: workspaceId,
+      bucket: getImgGenBucketNameForUser(userId).bucketName,
+      storageKey: imageStorageKey,
+      filename: 'source.png',
+      mimeType: 'image/png',
+      size: 1024,
+      origin: 'generated',
+    });
+    // A real gen_images row keeps this media referenced after the video row
+    // is deleted, proving a 'genImage'-origin frame link doesn't own the
+    // object it points at (docs/media-library/migration-prd.md decision 5):
+    // deleting the video must not delete media another row still needs.
+    await createGenImageRecords([
+      {
+        userId,
+        workspaceId,
+        mediaId: imageMedia.id,
+        prompt: 'source image',
+        provider: 'bfl',
+        model: 'flux-pro',
+      },
+    ]);
+
+    const clipMedia = await createMedia({
+      ownerWorkspaceId: workspaceId,
+      bucket: getVideoGenBucketNameForUser(userId).bucketName,
+      storageKey,
+      filename: 'clip.mp4',
+      mimeType: 'video/mp4',
+      size: 1024,
+      origin: 'generated',
+    });
+    // The frame links straight at the gen_images row's own media (no copy),
+    // so the video row is created directly here instead of through
+    // seedCompletedVideo, which always mints a fresh frame media row.
+    const video = await createGenVideoRecord({
+      prompt: 'a drone shot over a city',
+      provider: 'google-vertex',
+      model: 'veo-3.1-generate-001',
+      status: 'completed',
       userId,
       workspaceId,
-      storageKey,
+      mediaId: clipMedia.id,
       frameOrigin: 'genImage',
-      frameStorageKey: imageStorageKey,
+      frameMediaId: imageMedia.id,
     });
     const { bucketName } = getVideoGenBucketNameForUser(userId);
 
@@ -286,6 +383,7 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     expect(response.status).toBe(StatusCodes.OK);
     expect(deleteObjectsMock).toHaveBeenCalledTimes(1);
     expect(deleteObjectsMock.mock.calls[0]).toEqual([bucketName, [storageKey]]);
+    expect(await getMediaById({ id: imageMedia.id })).not.toBeNull();
   });
 
   test('still deletes the row when the R2 delete fails (best-effort cleanup)', async () => {

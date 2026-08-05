@@ -91,7 +91,7 @@ export const getGeneratedVideo = (
         transient: true,
       });
 
-      let frame: { frameOrigin: 'genImage'; frameStorageKey: string } | undefined;
+      let frame: { frameOrigin: 'genImage'; frameMediaId: string } | undefined;
 
       if (input.genImageId) {
         const { error, data: genImage } = await tryCatch(
@@ -103,7 +103,7 @@ export const getGeneratedVideo = (
           return { error: 'The referenced image was not found in this workspace.' };
         }
 
-        frame = { frameOrigin: 'genImage', frameStorageKey: genImage.storageKey };
+        frame = { frameOrigin: 'genImage', frameMediaId: genImage.mediaId };
       }
 
       const params = {
@@ -135,8 +135,8 @@ export const getGeneratedVideo = (
           return { error: 'Video generation failed. Service currently unavailable.' };
         }
 
-        const videoUrl = completed.storageKey
-          ? buildVideoUrls({ userId, key: completed.storageKey }).videoUrl
+        const videoUrl = completed.media
+          ? buildVideoUrls({ userId, key: completed.media.storageKey }).videoUrl
           : undefined;
 
         return { video: { id: completed.id, status: 'completed', videoUrl } };

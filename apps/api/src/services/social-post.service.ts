@@ -1,6 +1,8 @@
 import { auth } from '@repo/auth/server';
-import type { SocialPost, SocialPostMedia, SocialPostWithMedia } from '@repo/database';
+import { config } from '@repo/config';
+import type { SocialPost, SocialPostMedia, SocialPostMediaWithMedia, SocialPostWithMedia } from '@repo/database';
 import {
+  createMedia,
   createSocialPost,
   createSocialPostMediaRecords,
   deleteSocialPostById,
@@ -16,14 +18,12 @@ import {
 } from '@repo/database';
 import { createLinkedinClient } from '@repo/linkedin';
 import { logger } from '@repo/logger';
+import { deleteMediaIfUnreferenced } from '@repo/media';
 import { uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
-import {
-  deleteUploadedMediaObjects,
-  uploadPostMediaToLinkedIn,
-} from './social-post-media.service';
+import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 
 // Returned instead of a generic 400 so the web app can show a "connect
 // LinkedIn" hint rather than a plain error toast. Bypasses the normal
@@ -32,10 +32,9 @@ import {
 // as a sentinel result instead of throwing.
 export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
 
-// Same bucket packages/ai's imagen.service.ts uploads generated images to.
-// User uploads live under a `social/{userId}/` prefix so they don't collide
-// with generated-image keys.
-const MEDIA_BUCKET_NAME = 'ragna-cloud-images';
+// Same bucket packages/ai's imagen.service.ts uploads generated images to
+// (config.cfImagesBucketName). User uploads live under a `social/{userId}/`
+// prefix so they don't collide with generated-image keys.
 const MAX_MEDIA_PER_POST = 9;
 const MAX_MEDIA_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -50,11 +49,18 @@ function isAllowedMediaMimeType(mimeType: string): mimeType is AllowedMediaMimeT
   return mimeType in MEDIA_EXTENSION_BY_MIME_TYPE;
 }
 
+// storageKey lives on the joined media row now (docs/media-library/
+// migration-prd.md), not directly on social_post_media; added back onto the
+// flat response here since the frontend DTO still expects it alongside
+// mediaId (external DTOs unchanged).
+export type SocialPostMediaResponse = SocialPostMedia & { storageKey: string; imageUrl: string };
+
 // Images are served through the same public CDN domain imagen.service.ts
 // uses for generated images, since both live in the same R2 bucket.
-function toMediaResponse(media: SocialPostMedia) {
+function toMediaResponse({ media, ...rest }: SocialPostMediaWithMedia): SocialPostMediaResponse {
   return {
-    ...media,
+    ...rest,
+    storageKey: media.storageKey,
     imageUrl: `https://images.ragna.app/${media.storageKey}`,
   };
 }
@@ -207,8 +213,11 @@ export async function updateSocialPostForUser({
 
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId
- * Cleans up any uploaded media objects in R2 before the row (and its media
- * rows, via cascade) is deleted.
+ * Deletes the row (its social_post_media links cascade with it), then
+ * refcount-deletes each attached media (docs/media-library/migration-prd.md
+ * decision 5): an image may still be shared by another post or the
+ * gen_images row it came from, so only a zero reference count actually
+ * removes the R2 object.
  */
 export async function deleteSocialPost({
   workspaceId,
@@ -226,11 +235,11 @@ export async function deleteSocialPost({
     throw new InternalServerErrorException('Failed to load social post');
   }
 
-  if (post) {
-    await deleteUploadedMediaObjects(post.media);
-  }
+  const mediaIds = post?.media.map((item) => item.mediaId) ?? [];
 
   await deleteSocialPostById({ id: socialPostId, workspaceId });
+
+  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
 }
 
 /**
@@ -250,7 +259,7 @@ export async function attachSocialPostMedia({
   userId: string;
   file: File;
   altText?: string;
-}): Promise<ReturnType<typeof toMediaResponse>> {
+}): Promise<SocialPostMediaResponse> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
 
   if (post.status !== 'draft') {
@@ -275,7 +284,7 @@ export async function attachSocialPostMedia({
   const key = `social/${userId}/${randomUUID()}.${MEDIA_EXTENSION_BY_MIME_TYPE[file.type]}`;
 
   const { error: uploadError } = await tryCatch(() =>
-    uploadObjectBuffer({ bucketName: MEDIA_BUCKET_NAME, key, buffer, contentType: file.type }),
+    uploadObjectBuffer({ bucketName: config.cfImagesBucketName, key, buffer, contentType: file.type }),
   );
 
   if (uploadError !== null) {
@@ -283,11 +292,28 @@ export async function attachSocialPostMedia({
     throw new InternalServerErrorException('Failed to upload image');
   }
 
+  const { error: mediaError, data: mediaRow } = await tryCatch(() =>
+    createMedia({
+      ownerWorkspaceId: workspaceId,
+      bucket: config.cfImagesBucketName,
+      storageKey: key,
+      filename: key.split('/').pop() ?? key,
+      mimeType: file.type,
+      size: file.size,
+      origin: 'uploaded',
+    }),
+  );
+
+  if (mediaError !== null || !mediaRow) {
+    logger.error('Failed to save social post image media row', mediaError);
+    throw new InternalServerErrorException('Failed to save image');
+  }
+
   const { error: createError, data: created } = await tryCatch(() =>
     createSocialPostMediaRecords([
       {
         socialPostId: post.id,
-        storageKey: key,
+        mediaId: mediaRow.id,
         mimeType: file.type,
         origin: 'upload',
         altText: resolvedAltText,
@@ -303,7 +329,7 @@ export async function attachSocialPostMedia({
     throw new InternalServerErrorException('Failed to save image');
   }
 
-  return toMediaResponse(createdMedia);
+  return toMediaResponse({ ...createdMedia, media: mediaRow });
 }
 
 /**
@@ -320,7 +346,7 @@ export async function updateSocialPostMediaAltTextForUser({
   socialPostId: string;
   mediaId: string;
   altText: string;
-}): Promise<ReturnType<typeof toMediaResponse>> {
+}): Promise<SocialPostMediaResponse> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
 
   if (post.status !== 'draft') {
@@ -340,13 +366,24 @@ export async function updateSocialPostMediaAltTextForUser({
     throw new NotFoundException('Image not found');
   }
 
-  return toMediaResponse(updated);
+  // The alt-text update doesn't touch which media row this link points at,
+  // so the joined media from the already-loaded post covers the response
+  // without a second query.
+  const media = post.media.find((item) => item.id === mediaId)?.media;
+
+  if (!media) {
+    logger.error(`Media row missing for social post media ${mediaId}`);
+    throw new InternalServerErrorException('Failed to update image');
+  }
+
+  return toMediaResponse({ ...updated, media });
 }
 
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId/media/:mediaId
- * Removes the media row and, for uploaded (not agent-attached) media, its
- * R2 object too.
+ * Removes the link, then refcount-deletes the underlying media
+ * (docs/media-library/migration-prd.md decision 5): unlink first, so the
+ * count no longer includes the link being removed.
  */
 export async function removeSocialPostMedia({
   workspaceId,
@@ -369,8 +406,8 @@ export async function removeSocialPostMedia({
     throw new NotFoundException('Image not found');
   }
 
-  await deleteUploadedMediaObjects([media]);
   await deleteSocialPostMediaById({ id: mediaId, socialPostId: post.id });
+  await deleteMediaIfUnreferenced({ mediaId: media.mediaId });
 }
 
 export type PublishSocialPostResult =
