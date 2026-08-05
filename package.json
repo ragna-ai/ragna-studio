@@ -14,10 +14,10 @@
     "db:push": "pnpm --filter @repo/database db:push"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.10.7",
+    "@turbo/gen": "^2.10.8",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "^2.10.7",
+    "turbo": "^2.10.8",
     "typescript": "catalog:"
   },
   "engines": {
