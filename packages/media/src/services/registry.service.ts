@@ -50,8 +50,11 @@ function hasPdfMagicBytes(buffer: Buffer): boolean {
   return buffer.subarray(0, 4).toString('latin1') === '%PDF';
 }
 
+// Full ZIP local-file-header signature, not just 'PK': a real docx/pptx/xlsx
+// always starts with a local file header, and the two extra bytes keep plain
+// text that happens to start with "PK" from sniffing as an Office file.
 function hasZipMagicBytes(buffer: Buffer): boolean {
-  return buffer[0] === 0x50 && buffer[1] === 0x4b; // 'P' 'K'
+  return buffer.subarray(0, 4).toString('latin1') === 'PK\x03\x04';
 }
 
 function isValidUtf8(buffer: Buffer): boolean {
@@ -88,13 +91,20 @@ function zipFamilyMatcher(
 }
 
 // Plain-text kinds (txt/md/csv) have no magic bytes at all: any valid UTF-8
-// buffer qualifies, so the extension is again the only signal.
+// buffer qualifies, so the extension is again the only signal. The cheap
+// extension check runs first so the full-buffer UTF-8 decode only happens
+// for files whose name already claims to be text.
 function utf8FamilyMatcher(
   extensions: readonly string[],
 ): (buffer: Buffer, lowerFilename: string) => boolean {
-  return (buffer, lowerFilename) => isValidUtf8(buffer) && hasExtension(lowerFilename, extensions);
+  return (buffer, lowerFilename) => hasExtension(lowerFilename, extensions) && isValidUtf8(buffer);
 }
 
+// Key order is the sniffing priority: content-signature kinds (images, pdf,
+// zip containers) come before the extension-only UTF-8 kinds. A crafted file
+// can satisfy both a magic-byte matcher and the UTF-8 matcher (e.g. a valid
+// UTF-8 buffer starting with %PDF, named report.csv); listing signature
+// kinds first means content always wins over the filename.
 const REGISTRY: Record<MediaKind, MediaKindDefinition> = {
   png: {
     kind: 'png',
@@ -192,9 +202,9 @@ export function getMediaKindDefinition(kind: MediaKind): MediaKindDefinition {
  * Identifies a media kind from file content (see the SECURITY note above).
  * `accept` scopes which kinds are considered, named after the HTML file
  * input's `accept` attribute: normally `IMAGE_KINDS`, `DOCUMENT_KINDS`, or
- * `[...IMAGE_KINDS, ...DOCUMENT_KINDS]`. Each kind's matcher already folds
- * in its own extension disambiguation, so the result never depends on the
- * order of `accept`.
+ * `[...IMAGE_KINDS, ...DOCUMENT_KINDS]`. Matching always runs in registry
+ * order (see the note on REGISTRY), so the result never depends on the
+ * order of `accept`; `accept` is purely a filter.
  */
 export function sniffMediaKind(
   buffer: Buffer,
@@ -202,9 +212,12 @@ export function sniffMediaKind(
   { accept }: { accept: readonly MediaKind[] },
 ): SniffedMedia | null {
   const lowerFilename = filename.toLowerCase();
+  const acceptedKinds = new Set(accept);
 
-  for (const kind of accept) {
-    const definition = REGISTRY[kind];
+  for (const definition of Object.values(REGISTRY)) {
+    if (!acceptedKinds.has(definition.kind)) {
+      continue;
+    }
     if (definition.matches(buffer, lowerFilename)) {
       return { kind: definition.kind, mimeType: definition.mimeType };
     }
