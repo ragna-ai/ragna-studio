@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Imports
+import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
 import { PaperclipIcon } from '@lucide/vue';
 import type { ChatStatus } from 'ai';
-import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
 import { Button } from '~/components/ui/button';
 import { Textarea } from '~/components/ui/textarea';
 import ChatPendingAttachment from '~/features/chat/components/ChatPendingAttachment.vue';
@@ -107,7 +107,7 @@ onMounted(() => {
           :title="t('chat.input.attach')"
           @click="openFilePicker()"
         >
-          <PaperclipIcon class="size-4" />
+          <PaperclipIcon class="size-4 stroke-1.5 opacity-75" />
         </Button>
         <PromptInputSubmit :status="status" :disabled="isBusy || !canSubmit" />
       </div>

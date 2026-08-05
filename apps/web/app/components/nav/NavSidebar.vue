@@ -43,9 +43,8 @@ const labelsVisible = computed(
     <div
       class="relative h-full overflow-y-hidden transition-opacity duration-200 ease-in-out"
     >
-      <div id="spacer" class="h-3"></div>
       <div
-        class="flex justify-center px-2 pb-3"
+        class="flex justify-center px-2 pt-4 pb-3"
         :class="{ 'justify-start': navSidebarStore.expanded }"
       >
         <WorkspaceSwitcher size="sm" :size-full="navSidebarStore.expanded" />

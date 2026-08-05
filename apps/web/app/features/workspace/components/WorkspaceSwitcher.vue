@@ -84,7 +84,7 @@ watch(data, (result) => {
         v-else
         type="button"
         :title="activeLabel"
-        class="flex size-8 shrink-0 items-center justify-center rounded-full border border-stone-400 bg-muted"
+        class="flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-400 bg-muted"
       >
         <span class="text-sm font-medium">{{ initials }}</span>
       </button>
