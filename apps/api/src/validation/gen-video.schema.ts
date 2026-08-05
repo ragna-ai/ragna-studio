@@ -21,12 +21,24 @@ const genVideoFrameSchema = z.discriminatedUnion('origin', [
   z.object({ origin: z.literal('upload'), storageKey: z.string().min(1) }),
 ]);
 
-// Veo only documents 1080p for 16:9; 9:16 stays at 720p
+// Veo (google-vertex) only documents 1080p for 16:9; 9:16 stays at 720p
 // (packages/ai/src/services/videogen.service.ts,
-// supportedResolutionsByAspectRatio). Reject the invalid combination here
-// instead of letting it silently downgrade deep inside the AI package.
-function isValidAspectResolutionCombo(data: { aspectRatio?: string; resolution?: string }) {
-  return !(data.aspectRatio === '9:16' && data.resolution === '1080p');
+// supportedResolutionsByAspectRatio). BFL has no such restriction: both
+// tiers are available at every one of its ratios, including 9:16
+// (videoGenCapabilities.bfl.resolutionsByAspectRatio), so this check must
+// stay provider-aware now that the schema is shared (docs/videogen/prd-v2.md
+// decision 5). No provider means the request falls back to the default
+// video model, which is Veo (goal: "Veo stays the default-by-modality"), so
+// the vertex rule applies to the unset case too. Reject the invalid
+// combination here instead of letting it silently downgrade deep inside the
+// AI package.
+function isValidAspectResolutionCombo(data: {
+  provider?: string;
+  aspectRatio?: string;
+  resolution?: string;
+}) {
+  const isVertex = data.provider === undefined || data.provider === 'google-vertex';
+  return !(isVertex && data.aspectRatio === '9:16' && data.resolution === '1080p');
 }
 
 export const validGenerateVideoBody = myzValidator(
@@ -34,7 +46,7 @@ export const validGenerateVideoBody = myzValidator(
   generateVideoSchema
     .extend({ frame: genVideoFrameSchema.optional() })
     .refine(isValidAspectResolutionCombo, {
-      message: '1080p is only available for 16:9 videos',
+      message: '1080p is only available for 16:9 videos on the Veo (google-vertex) provider',
       path: ['resolution'],
     }),
 );

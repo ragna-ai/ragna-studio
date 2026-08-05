@@ -106,6 +106,18 @@ async function seedAiModels() {
       displayName: 'Veo 3.1',
       description: 'High-quality video generation by Google Veo.',
     },
+    // Listed after the Veo rows so it is never the modality default
+    // (docs/videogen/prd-v2.md goals). Adds draft mode, see
+    // videoGenCapabilities in @repo/ai's videogen.service.ts.
+    {
+      provider: 'bfl',
+      model: 'flux-3-video',
+      modality: 'video',
+      family: 'video',
+      size: 'medium',
+      displayName: 'FLUX 3 Video',
+      description: 'Video generation with draft/enhance by Black Forest Labs.',
+    },
   ]);
 }
 

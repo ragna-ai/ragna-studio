@@ -5,6 +5,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   deleteGenVideo,
+  enhanceGenVideoForWorkspace,
   generateVideoForWorkspace,
   listGenVideos,
   uploadGenVideoFrame,
@@ -73,6 +74,25 @@ export const genVideoController = new Hono()
     const { storageKey } = await uploadGenVideoFrame({ userId: user.id, file });
 
     return c.json({ storageKey }, StatusCodes.CREATED);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/gen-video/:genVideoId/enhance
+   * Re-renders a completed BFL draft at full quality as a new pending row
+   * (docs/videogen/prd-v2.md). One enhance per draft; a failed enhance may
+   * be retried.
+   */
+  .post('/:genVideoId/enhance', validGenVideoIdParam, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const { genVideo } = await enhanceGenVideoForWorkspace({
+      genVideoId: param.genVideoId,
+      userId: user.id,
+      workspaceId: workspace.id,
+    });
+
+    return c.json({ genVideo }, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId

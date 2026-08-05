@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import type {
   VideoGenAspectRatio,
-  VideoGenDuration,
   VideoGenResolution,
 } from '~/features/video/composables/useVideoGenApi';
 
@@ -18,9 +17,15 @@ export const useVideoGenSettingsStore = defineStore(
       'video-gen-resolution',
       '720p',
     );
-    const duration = useLocalStorage<VideoGenDuration>('video-gen-duration', 4);
+    // A plain number now: Veo keeps its fixed 4/6/8s picker, BFL drives a
+    // 5-20s slider off videoGenCapabilities (docs/videogen/prd-v2.md).
+    const duration = useLocalStorage('video-gen-duration', 4);
     const generateAudio = useLocalStorage('video-gen-generate-audio', true);
+    // BFL-only draft toggle (docs/videogen/prd-v2.md); reconciled back to
+    // false in VideoGenForm.vue when the selected model's provider doesn't
+    // support it.
+    const draft = useLocalStorage('video-gen-draft', false);
 
-    return { modelId, aspectRatio, resolution, duration, generateAudio };
+    return { modelId, aspectRatio, resolution, duration, generateAudio, draft };
   },
 );

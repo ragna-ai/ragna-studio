@@ -356,6 +356,15 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
       alias: 'genVideoFrameMedia',
     }),
+    // Self-relation for draft/enhance (docs/videogen/prd-v2.md decision 1).
+    // Same alias pairing as task.schema.ts's parentTask/subtasks.
+    parentGenVideo: r.one.genVideo({
+      from: r.genVideo.parentGenVideoId,
+      to: r.genVideo.id,
+      optional: true,
+      alias: 'genVideoParentEnhances',
+    }),
+    enhances: r.many.genVideo({ alias: 'genVideoParentEnhances' }),
   },
   media: {
     ownerUser: r.one.user({

@@ -4,25 +4,18 @@ import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
+import type { AiModelListItem } from '~/features/aimodel/composables/useAiModelList';
 import { useGetAllAiModels } from '~/features/aimodel/composables/useAiModelList';
 import { useGetGenImages } from '~/features/image/composables/useImageGenApi';
 import {
   getSupportedResolutions,
+  getVideoGenCapability,
   useGenerateVideo,
   useUploadVideoFrame,
-  videoGenAspectRatios,
   videoGenDurations,
   videoGenResolutions,
 } from '~/features/video/composables/useVideoGenApi';
 import { useVideoGenSettingsStore } from '~/features/video/stores/videogensettings.store';
-
-interface VideoModel {
-  id: string;
-  provider: string;
-  model: string;
-  displayName: string;
-  modality: string;
-}
 
 type FrameMode = 'genImage' | 'upload';
 
@@ -33,7 +26,7 @@ const { data: genImageData } = useGetGenImages({ limit: 100 });
 const { mutate: generateVideo, isPending } = useGenerateVideo();
 const { mutate: uploadFrame, isPending: isUploadingFrame } =
   useUploadVideoFrame();
-const { modelId, aspectRatio, resolution, duration, generateAudio } =
+const { modelId, aspectRatio, resolution, duration, generateAudio, draft } =
   storeToRefs(useVideoGenSettingsStore());
 
 // Refs
@@ -71,8 +64,17 @@ const form = useForm({
         resolution: resolution.value,
         duration: duration.value,
         generateAudio: generateAudio.value,
-        negativePrompt: value.negativePrompt.trim() || undefined,
-        seed: value.seed ?? undefined,
+        // The form only ever renders/mutates these when the selected
+        // provider's capability allows it (see the template and the
+        // reconciliation watcher below), but a model swap can leave stale
+        // form/store state around, so gate here too: the server rejects an
+        // unsupported combination outright, the form should never send one
+        // (docs/videogen/prd-v2.md "Web (apps/web)").
+        negativePrompt: capability.value.supportsNegativePrompt
+          ? value.negativePrompt.trim() || undefined
+          : undefined,
+        seed: capability.value.supportsSeed ? (value.seed ?? undefined) : undefined,
+        draft: capability.value.supportsDraft ? draft.value : undefined,
         frame: resolveFrame(),
       },
       { onSuccess: resetOptionalFields },
@@ -81,10 +83,10 @@ const form = useForm({
 });
 
 // Computed
-const videoModels = computed<VideoModel[]>(
+const videoModels = computed<AiModelListItem[]>(
   () =>
     aiModelData.value?.models.filter(
-      (model: VideoModel) => model.modality === 'video',
+      (model: AiModelListItem) => model.modality === 'video',
     ) ?? [],
 );
 
@@ -92,8 +94,20 @@ const selectedModel = computed(() =>
   videoModels.value.find((model) => model.id === modelId.value),
 );
 
+// Per-provider constraints for the selected model (docs/videogen/prd-v2.md
+// decision 5): Veo and BFL disagree on aspect ratios, duration range, seed/
+// negative-prompt, and draft support, so the form renders and reconciles
+// against this rather than a single fixed set of controls.
+const capability = computed(() =>
+  getVideoGenCapability(selectedModel.value?.provider),
+);
+
 const availableResolutions = computed(() =>
-  getSupportedResolutions(aspectRatio.value),
+  getSupportedResolutions(selectedModel.value?.provider, aspectRatio.value),
+);
+
+const showAdvancedOptions = computed(
+  () => capability.value.supportsNegativePrompt || capability.value.supportsSeed,
 );
 
 const genImages = computed(() => genImageData.value?.genImages ?? []);
@@ -169,8 +183,29 @@ watch(
   { immediate: true },
 );
 
-// 1080p only exists for 16:9 (docs/videogen/prd.md); clamp a persisted or
-// user-picked combination that's no longer valid.
+// Reconciles persisted settings that are no longer valid when the selected
+// model's provider changes (docs/videogen/prd-v2.md "Web (apps/web)"): the
+// server rejects an out-of-capability combination outright, so the form
+// never submits one instead of leaving it to a 4xx round trip.
+watch(
+  capability,
+  (cap) => {
+    if (!cap.aspectRatios.includes(aspectRatio.value)) {
+      aspectRatio.value = cap.aspectRatios[0] ?? '16:9';
+    }
+    if (duration.value < cap.durationRange.min || duration.value > cap.durationRange.max) {
+      duration.value = cap.durationRange.min;
+    }
+    if (!cap.supportsDraft && draft.value) {
+      draft.value = false;
+    }
+  },
+  { immediate: true },
+);
+
+// 1080p only exists for 16:9 on Veo (docs/videogen/prd.md); clamp a
+// persisted or user-picked combination that's no longer valid. Runs after
+// the watcher above, which is what may have just changed aspectRatio.
 watch(
   [aspectRatio, availableResolutions],
   ([, supported]) => {
@@ -222,7 +257,7 @@ watch(
         </SelectTrigger>
         <SelectContent>
           <SelectItem
-            v-for="ratio in videoGenAspectRatios"
+            v-for="ratio in capability.aspectRatios"
             :key="ratio"
             :value="ratio"
           >
@@ -247,7 +282,9 @@ watch(
         </SelectContent>
       </Select>
 
-      <Select v-model="duration">
+      <!-- Veo keeps today's fixed 4/6/8s picker; BFL's 5-20s range drives a
+      slider instead (docs/videogen/prd-v2.md "Web (apps/web)"). -->
+      <Select v-if="!capability.supportsDraft" v-model="duration">
         <SelectTrigger class="w-24 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.duration')" />
         </SelectTrigger>
@@ -262,15 +299,41 @@ watch(
         </SelectContent>
       </Select>
 
+      <div v-else class="flex w-52 flex-col gap-1.5">
+        <Label class="text-sm text-muted-foreground">
+          {{ t('videogen.form.duration') }}:
+          {{ t('videogen.form.durationSeconds', { seconds: duration }) }}
+        </Label>
+        <Slider
+          :model-value="[duration]"
+          :min="capability.durationRange.min"
+          :max="capability.durationRange.max"
+          :step="1"
+          :aria-label="t('videogen.form.duration')"
+          @update:model-value="
+            (value) => {
+              duration = value?.[0] ?? capability.durationRange.min;
+            }
+          "
+        />
+      </div>
+
       <div class="flex items-center gap-2">
         <Switch id="generate-audio" v-model="generateAudio" />
         <Label for="generate-audio" class="text-sm">
           {{ t('videogen.form.generateAudio') }}
         </Label>
       </div>
+
+      <div v-if="capability.supportsDraft" class="flex items-center gap-2">
+        <Switch id="draft-mode" v-model="draft" />
+        <Label for="draft-mode" class="text-sm">
+          {{ t('videogen.form.draft') }}
+        </Label>
+      </div>
     </div>
 
-    <Collapsible v-model:open="advancedOptionsOpen">
+    <Collapsible v-if="showAdvancedOptions" v-model:open="advancedOptionsOpen">
       <CollapsibleTrigger
         class="group/advanced ml-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
@@ -281,7 +344,7 @@ watch(
       </CollapsibleTrigger>
 
       <CollapsibleContent class="space-y-4 p-3">
-        <form.Field name="negativePrompt">
+        <form.Field v-if="capability.supportsNegativePrompt" name="negativePrompt">
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">
@@ -303,7 +366,7 @@ watch(
           </template>
         </form.Field>
 
-        <form.Field name="seed">
+        <form.Field v-if="capability.supportsSeed" name="seed">
           <template v-slot="{ field, state }">
             <div class="max-w-40">
               <Label class="mb-2 block text-sm font-medium" :for="field.name">

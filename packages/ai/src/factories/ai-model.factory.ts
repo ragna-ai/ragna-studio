@@ -8,10 +8,13 @@ import type { GoogleVertexProviderSettings } from '@ai-sdk/google-vertex';
 import { createVertex } from '@ai-sdk/google-vertex';
 import type { OpenAIProviderSettings } from '@ai-sdk/openai';
 import { createOpenAI } from '@ai-sdk/openai';
+import type { Experimental_VideoModelV4 } from '@ai-sdk/provider';
 import { config } from '@repo/config';
 import type { EmbeddingModel, ImageModel, LanguageModel } from 'ai';
 
-type VideoModel = ReturnType<ReturnType<typeof createVertex>['videoModel']>;
+// Both vertex.videoModel() and bfl.video() return this, so the factory
+// return type no longer has to be derived from one provider's ReturnType.
+type VideoModel = Experimental_VideoModelV4;
 
 interface GetLanguageModelPayload {
   provider: string;
@@ -135,6 +138,10 @@ export function getVideoModel(payload: GetVideoModelPayload): VideoModel {
     case 'google-vertex': {
       const vertex = createVertex(vertexAuthOptions);
       return vertex.videoModel(model);
+    }
+    case 'bfl': {
+      const bfl = createBlackForestLabs(bflAuthOptions);
+      return bfl.video(model);
     }
     default:
       throw new Error(`Unsupported provider: ${provider}`);

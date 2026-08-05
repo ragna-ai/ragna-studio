@@ -511,12 +511,16 @@
       "frameUpload": "Hochladen",
       "frameGalleryEmpty": "Noch keine generierten Bilder.",
       "frameUploadButton": "Bild hochladen",
+      "draft": "Entwurf (schnelle Vorschau)",
       "submit": "Video generieren"
     },
     "grid": {
       "loadError": "Generierte Videos konnten nicht geladen werden.",
       "empty": "Noch keine Videos. Beschreibe oben ein Video, um eines zu generieren.",
-      "failed": "Videoerstellung fehlgeschlagen."
+      "failed": "Videoerstellung fehlgeschlagen.",
+      "draftBadge": "Entwurf",
+      "enhance": "Verbessern",
+      "enhanceDisabledReason": "Für diesen Entwurf läuft bereits eine Verbesserung."
     },
     "preview": {
       "title": "Generiertes Video",
