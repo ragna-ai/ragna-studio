@@ -25,6 +25,20 @@ export function getVideoFrameBucketNameForUser(userId: string): {
   };
 }
 
+// Persisted BFL draft bundles (docs/videogen/prd-v2.md decision 3). No
+// public URL helper: the encrypted .bin is never served to the browser, the
+// worker is the only reader (it downloads its own upload for the enhance
+// path).
+export function getVideoDraftBucketNameForUser(userId: string): {
+  bucketName: string;
+  prefix: string;
+} {
+  return {
+    bucketName: config.cfImagesBucketName,
+    prefix: `${userId}/videos/drafts`,
+  };
+}
+
 export function buildVideoUrls({ userId, key }: { userId: string; key: string }): {
   rawUrl: string;
   videoUrl: string;

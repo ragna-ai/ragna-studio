@@ -1,6 +1,9 @@
 # Video generation (PRD)
 
-> **Status: proposed** (2026-07-23). Mirrors the image generation feature
+> **Status: superseded** by `prd-v2.md` (2026-08-05), which adds the BFL
+> `flux-3-video` provider and draft/enhance on top of the architecture
+> described here. Originally proposed 2026-07-23 and implemented as written.
+> Mirrors the image generation feature
 > (`packages/ai/src/services/imagen.service.ts`, `apps/web/app/features/image/`)
 > wherever possible; deviates only where video latency forces it.
 

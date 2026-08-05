@@ -1,5 +1,5 @@
 import type { GenerateVideoInput } from '@repo/ai';
-import { requestGenVideo } from '@repo/ai';
+import { requestEnhanceGenVideo, requestGenVideo } from '@repo/ai';
 import { config } from '@repo/config';
 import type { GenVideo, GenVideoWithMedia } from '@repo/database';
 import {
@@ -15,7 +15,12 @@ import { createMediaForObject, deleteMediaIfUnreferenced } from '@repo/media';
 import { buildVideoUrls, getVideoFrameBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -34,6 +39,8 @@ export interface GenVideoResponse {
   duration: number | null;
   generateAudio: boolean;
   model: string;
+  isDraft: boolean;
+  parentGenVideoId: string | null;
   createdAt: Date;
   videoUrl?: string;
 }
@@ -49,6 +56,8 @@ function toGenVideoResponse(record: GenVideoWithMedia): GenVideoResponse {
     duration: record.duration,
     generateAudio: record.generateAudio,
     model: record.model,
+    isDraft: record.isDraft,
+    parentGenVideoId: record.parentGenVideoId,
     createdAt: record.createdAt,
     videoUrl:
       record.status === 'completed' && record.media
@@ -166,6 +175,19 @@ async function resolveFrame({
   return { frameOrigin: 'genImage', frameMediaId: genImage.mediaId };
 }
 
+// createGenVideoRecord (@repo/ai) throws a plain Error (repo convention,
+// no typed error classes there) when the resolved provider's capability map
+// rejects the request: unsupported aspect ratio, out-of-range duration, or
+// a seed/negativePrompt/draft the provider doesn't support
+// (docs/videogen/prd-v2.md decision 5). All of these messages start with
+// "Provider ", which is the only signal available to tell them apart from
+// a genuine infra failure, mirroring isInvalidAfterTaskIdError in
+// task.service.ts. They are a bad request, not a server error, so they
+// surface as 400 instead of falling into the generic 500 below.
+function isCapabilityViolationError(error: Error): boolean {
+  return error.message.startsWith('Provider ');
+}
+
 /**
  * [POST] /workspace/:workspaceId/gen-video
  * Requests a video generation: inserts a pending row and enqueues the
@@ -195,6 +217,7 @@ export async function generateVideoForWorkspace({
     generateAudio,
     seed,
     negativePrompt,
+    draft,
   } = input;
 
   const { frameOrigin, frameMediaId } = await resolveFrame({ frame, workspaceId });
@@ -210,6 +233,7 @@ export async function generateVideoForWorkspace({
       generateAudio,
       seed,
       negativePrompt,
+      draft,
       frameOrigin,
       frameMediaId,
       userId,
@@ -218,6 +242,10 @@ export async function generateVideoForWorkspace({
   );
 
   if (error !== null || !created) {
+    if (error !== null && isCapabilityViolationError(error)) {
+      throw new BadRequestException(error.message);
+    }
+
     logger.error('Failed to request video generation', error);
     throw new InternalServerErrorException('Failed to request video generation');
   }
@@ -229,6 +257,80 @@ export async function generateVideoForWorkspace({
   if (loadError !== null || !record) {
     logger.error('Failed to load the created gen video', loadError);
     throw new InternalServerErrorException('Failed to request video generation');
+  }
+
+  return { genVideo: toGenVideoResponse(record) };
+}
+
+// requestEnhanceGenVideo (@repo/ai) throws a plain Error for each of its
+// three failure cases (repo convention, no typed error classes there);
+// matched by message the same way, since that is the only signal available
+// (docs/videogen/prd-v2.md "API (apps/api)"):
+// - not found in the caller's workspace -> 404, same as any other
+//   workspace-scoped lookup miss in this file.
+// - not a completed BFL draft -> 400, an invalid-state request, mirroring
+//   isInvalidAfterTaskIdError/isInvalidAfterRowIdError in task.service.ts
+//   and dataset.service.ts.
+// - already has a pending/completed enhance -> 409, the same conflict
+//   status runChatStream uses for its own one-in-flight check.
+function isEnhanceTargetNotFoundError(error: Error): boolean {
+  return error.message.includes('not found in workspace');
+}
+
+function isEnhanceAlreadyExistsError(error: Error): boolean {
+  return error.message.includes('already has a pending or completed enhance');
+}
+
+function isNotEnhanceableDraftError(error: Error): boolean {
+  return error.message.includes('is not a BFL draft') || error.message.includes('is not a completed draft');
+}
+
+/**
+ * [POST] /workspace/:workspaceId/gen-video/:genVideoId/enhance
+ * Turns a completed BFL draft into a new pending row that re-renders it at
+ * full quality (requestEnhanceGenVideo in @repo/ai), then responds
+ * immediately like generateVideoForWorkspace above. Reloads the full row
+ * for the same reason: requestEnhanceGenVideo's own GenVideoDto only
+ * carries a few fields, and the response contract needs
+ * aspectRatio/resolution/duration/generateAudio/model too.
+ */
+export async function enhanceGenVideoForWorkspace({
+  genVideoId,
+  userId,
+  workspaceId,
+}: {
+  genVideoId: string;
+  userId: string;
+  workspaceId: string;
+}): Promise<{ genVideo: GenVideoResponse }> {
+  const { error, data: enhanced } = await tryCatch(() =>
+    requestEnhanceGenVideo({ genVideoId, userId, workspaceId }),
+  );
+
+  if (error !== null || !enhanced) {
+    if (error !== null && isEnhanceTargetNotFoundError(error)) {
+      throw new NotFoundException(error.message);
+    }
+
+    if (error !== null && isEnhanceAlreadyExistsError(error)) {
+      throw new ConflictException(error.message);
+    }
+
+    if (error !== null && isNotEnhanceableDraftError(error)) {
+      throw new BadRequestException(error.message);
+    }
+
+    logger.error('Failed to request video enhance', error);
+    throw new InternalServerErrorException('Failed to request video enhance');
+  }
+
+  const { error: loadError, data: record } = await tryCatch(() =>
+    getGenVideoById({ id: enhanced.id }),
+  );
+
+  if (loadError !== null || !record) {
+    logger.error('Failed to load the created enhance gen video', loadError);
+    throw new InternalServerErrorException('Failed to request video enhance');
   }
 
   return { genVideo: toGenVideoResponse(record) };

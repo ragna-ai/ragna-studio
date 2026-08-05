@@ -71,6 +71,22 @@ export async function getGenVideoById({ id }: { id: string }): Promise<GenVideoW
   return found ?? null;
 }
 
+// One-enhance-per-draft check (docs/videogen/prd-v2.md decision 2): a
+// pending/processing/completed enhance already covers the draft, only a
+// failed one may be retried, so failed rows are excluded here rather than
+// left for the caller to filter.
+export async function getEnhanceForGenVideo({
+  parentGenVideoId,
+}: {
+  parentGenVideoId: string;
+}): Promise<GenVideo | null> {
+  const found = await db.query.genVideo.findFirst({
+    where: { parentGenVideoId, status: { ne: 'failed' } },
+  });
+
+  return found ?? null;
+}
+
 // Workspace-scoped delete-and-return: the service needs the deleted row's
 // mediaId/frameMediaId afterward to refcount-delete their media
 // (docs/media-library/migration-prd.md decision 5), so this stays unjoined.
@@ -89,7 +105,7 @@ export async function deleteGenVideoByIdAndWorkspaceId({
   return deleted ?? null;
 }
 
-type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'mediaId' | 'error'>>;
+type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'mediaId' | 'error' | 'draftCacheKey'>>;
 
 export async function updateGenVideoStatus({
   id,

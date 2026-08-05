@@ -505,12 +505,16 @@
       "frameUpload": "Upload",
       "frameGalleryEmpty": "No generated images yet.",
       "frameUploadButton": "Upload image",
+      "draft": "Draft (fast preview)",
       "submit": "Generate video"
     },
     "grid": {
       "loadError": "Failed to load generated videos.",
       "empty": "No videos yet. Describe a video above to generate one.",
-      "failed": "Video generation failed."
+      "failed": "Video generation failed.",
+      "draftBadge": "Draft",
+      "enhance": "Enhance",
+      "enhanceDisabledReason": "This draft already has an enhance in progress."
     },
     "preview": {
       "title": "Generated video",

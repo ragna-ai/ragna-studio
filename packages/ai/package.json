@@ -22,11 +22,12 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.29",
-    "@ai-sdk/black-forest-labs": "^2.0.20",
+    "@ai-sdk/black-forest-labs": "^2.0.22",
     "@ai-sdk/google": "^4.0.33",
     "@ai-sdk/google-vertex": "^5.0.40",
     "@ai-sdk/mcp": "^2.0.24",
     "@ai-sdk/openai": "^4.0.29",
+    "@ai-sdk/provider": "^4.0.5",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",

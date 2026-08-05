@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import type { Media } from './media.schema';
 import { media } from './media.schema';
@@ -6,7 +6,17 @@ import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 export type GenVideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type GenVideoAspectRatio = '16:9' | '9:16';
+// '16:9' / '9:16' are Veo's ratios; the rest are BFL flux-3-video's
+// (docs/videogen/prd-v2.md schema section).
+export type GenVideoAspectRatio =
+  | '21:9'
+  | '2:1'
+  | '16:9'
+  | '4:3'
+  | '1:1'
+  | '3:4'
+  | '9:16'
+  | 'auto';
 export type GenVideoResolution = '720p' | '1080p';
 // 'upload' rows own their object under <userId>/videos/frames/; 'genImage'
 // rows reference a gen_images object they don't own (no copy). Same split
@@ -45,6 +55,20 @@ export const genVideo = pgTable(
     // The first-frame image's media row. Set together with frameOrigin; no
     // onDelete action, same as mediaId above.
     frameMediaId: text('frame_media_id').references(() => media.id),
+    // Draft/enhance (docs/videogen/prd-v2.md decision 1). A draft is a normal
+    // row with isDraft: true; enhance is a separate row pointing back at it
+    // via parentGenVideoId, never an in-place upgrade.
+    isDraft: boolean('is_draft').notNull().default(false),
+    // R2 key of the persisted encrypted .bin bundle, set when a draft
+    // completes. The enhance path downloads it from here instead of BFL's
+    // time-limited draftCache URL.
+    draftCacheKey: text('draft_cache_key'),
+    // Nullable self-FK, set only on enhance rows. The AnyPgColumn return-type
+    // annotation breaks the circular type reference (`genVideo` referring to
+    // itself), same as task.schema.ts's parentTaskId.
+    parentGenVideoId: text('parent_gen_video_id').references((): AnyPgColumn => genVideo.id, {
+      onDelete: 'set null',
+    }),
     ...timestamps,
   },
   (table) => [
@@ -52,6 +76,7 @@ export const genVideo = pgTable(
     index('genVideo_workspaceId_idx').on(table.workspaceId),
     index('genVideo_mediaId_idx').on(table.mediaId),
     index('genVideo_frameMediaId_idx').on(table.frameMediaId),
+    index('genVideo_parentGenVideoId_idx').on(table.parentGenVideoId),
   ],
 );
 

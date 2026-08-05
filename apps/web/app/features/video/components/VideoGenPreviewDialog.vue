@@ -1,13 +1,27 @@
 <script setup lang="ts">
 // Imports
-import { CheckIcon, CopyIcon, DownloadIcon, Trash2Icon } from '@lucide/vue';
+import {
+  CheckIcon,
+  CopyIcon,
+  DownloadIcon,
+  SparklesIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import { useDeleteGenVideo } from '~/features/video/composables/useVideoGenApi';
+import {
+  useDeleteGenVideo,
+  useEnhanceGenVideo,
+} from '~/features/video/composables/useVideoGenApi';
 import type { GeneratedVideo } from '~/features/video/composables/useVideoGenApi';
 
 interface Props {
   video: GeneratedVideo | null;
+  // Whether an enhance already exists (non-failed) for this draft, so the
+  // Enhance button here can carry the same disabled state as the grid tile
+  // it was opened from (docs/videogen/prd-v2.md decision 2). The server
+  // check is still authoritative on submit.
+  hasActiveEnhance?: boolean;
 }
 
 // Props
@@ -26,10 +40,27 @@ const { copy: copyPrompt, copied: isPromptCopied } = useClipboard();
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
 const { mutateAsync: deleteGenVideo, isPending: isDeleting } = useDeleteGenVideo();
+const { mutate: enhanceVideo, isPending: isEnhancing } = useEnhanceGenVideo();
+
+// Computed
+const isEnhanceableDraft = computed(
+  () => props.video?.isDraft === true && props.video.status === 'completed',
+);
+const isEnhanceDisabled = computed(
+  () => isEnhancing.value || props.hasActiveEnhance === true,
+);
 
 // Functions
 function handleOpenChange(open: boolean) {
   if (!open) emit('close');
+}
+
+function handleEnhance() {
+  const video = props.video;
+  if (!video || isEnhanceDisabled.value) return;
+
+  // useEnhanceGenVideo already toasts on error and refreshes the list.
+  enhanceVideo(video.id);
 }
 
 async function downloadVideo() {
@@ -79,7 +110,12 @@ async function deleteVideo() {
   <Dialog :open="video !== null" @update:open="handleOpenChange">
     <DialogContent class="max-h-[85vh] sm:max-w-3xl lg:max-w-4xl">
       <DialogHeader>
-        <DialogTitle>{{ $t('videogen.preview.title') }}</DialogTitle>
+        <DialogTitle class="flex items-center gap-2">
+          {{ $t('videogen.preview.title') }}
+          <Badge v-if="video?.isDraft" variant="secondary">
+            {{ $t('videogen.grid.draftBadge') }}
+          </Badge>
+        </DialogTitle>
       </DialogHeader>
 
       <div class="flex flex-col gap-4 overflow-hidden lg:flex-row">
@@ -132,6 +168,28 @@ async function deleteVideo() {
           </dl>
 
           <div class="mt-auto flex flex-col gap-2">
+            <TooltipProvider v-if="isEnhanceableDraft">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span>
+                    <Button
+                      class="w-full"
+                      variant="secondary"
+                      :disabled="isEnhanceDisabled"
+                      @click="handleEnhance"
+                    >
+                      <Spinner v-if="isEnhancing" class="mr-2" />
+                      <SparklesIcon v-else class="mr-2 size-4" />
+                      {{ $t('videogen.grid.enhance') }}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent v-if="isEnhanceDisabled && !isEnhancing">
+                  {{ $t('videogen.grid.enhanceDisabledReason') }}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <Button
               :disabled="isDownloading || !video?.videoUrl"
               @click="downloadVideo"
