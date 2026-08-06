@@ -1,3 +1,5 @@
+import { getGenImageRowsByIds } from '@repo/database';
+import { buildImageUrls } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import type {
   InferToolInput,
@@ -9,7 +11,11 @@ import type {
 } from 'ai';
 import { tool } from 'ai';
 import * as z from 'zod';
-import { createGenImagesWithDefaultModel, imageGenAspectRatios } from '../services/imagen.service';
+import {
+  createGenImagesWithDefaultModel,
+  imageGenAspectRatios,
+  requestGenImagesWithDefaultModel,
+} from '../services/imagen.service';
 
 const imageGenInputSchema = z.object({
   prompt: z
@@ -53,16 +59,128 @@ export type GeneratedAgentImage = {
   imgUrl: string;
 };
 
-type ImageGenOutput = { images: GeneratedAgentImage[] } | { error: string };
+// The pending branch is decision 6's poll-cap fallback (docs/imagegen/
+// worker-execution-prd.md): the chat path waited up to POLL_TIMEOUT_MS and
+// the batch still hadn't settled, so the ids are handed back instead of a
+// URL the model doesn't have yet, the same degrade-to-pending shape the
+// video tool always returns.
+type ImageGenOutput =
+  | { images: GeneratedAgentImage[] }
+  | { pending: { ids: string[] } }
+  | { error: string };
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Chat-path poll cap (docs/imagegen/worker-execution-prd.md decision 6): a
+// batch normally settles in a few seconds, so 1s steps keep the poll
+// responsive without hammering the DB, and 60s is far above a realistic
+// batch's ceiling before degrading to the pending-ids fallback.
+const POLL_INTERVAL_MS = 1000;
+const POLL_TIMEOUT_MS = 60_000;
+
+function isSettled(status: string): boolean {
+  return status === 'completed' || status === 'failed';
+}
+
+/**
+ * Polls gen_images rows by status until every row in the batch reaches a
+ * terminal state or the cap is hit, reading the same rows the web grid polls
+ * (docs/imagegen/worker-execution-prd.md decision 6): no QueueEvents, no
+ * awaited job, just the pending-row model videogen already ships.
+ */
+async function pollGenImagesUntilSettled(genImageIds: string[]) {
+  const deadline = Date.now() + POLL_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const rows = await getGenImageRowsByIds({ ids: genImageIds });
+
+    if (rows.every((row) => isSettled(row.status))) {
+      return rows;
+    }
+
+    await sleep(POLL_INTERVAL_MS);
+  }
+
+  return getGenImageRowsByIds({ ids: genImageIds });
+}
+
+function toGeneratedAgentImages(
+  rows: { id: string; userId: string; media: { storageKey: string } | null }[],
+): GeneratedAgentImage[] {
+  // Defensive filter, not an expected branch: a 'completed' row always has
+  // its media set by runGenImages before the status flips
+  // (imagen.service.ts), so this only ever drops rows in the (unreachable in
+  // practice) case where that invariant doesn't hold.
+  return rows.flatMap((row) => {
+    if (!row.media) return [];
+    const { imgUrl } = buildImageUrls({ userId: row.userId, key: row.media.storageKey });
+    return [{ id: row.id, imgUrl }];
+  });
+}
+
+// runsInWorker (already inside the worker: workflow executors) inserts the
+// batch and runs it inline, no queue hop. Otherwise (chat, running in the
+// API process) the request side enqueues the batch onto the worker and this
+// polls the rows until they settle or the cap is hit
+// (docs/imagegen/worker-execution-prd.md decision 6): the one deviation from
+// videogen's tool, since inline images are this tool's whole point and a
+// batch only takes seconds, not minutes.
+async function generateAgentImages({
+  input,
+  userId,
+  workspaceId,
+  runsInWorker,
+}: {
+  input: ImageGenInput;
+  userId: string;
+  workspaceId: string;
+  runsInWorker: boolean;
+}): Promise<ImageGenOutput> {
+  if (runsInWorker) {
+    const rows = await createGenImagesWithDefaultModel({ ...input, userId, workspaceId });
+    return { images: toGeneratedAgentImages(rows) };
+  }
+
+  const pending = await requestGenImagesWithDefaultModel({ ...input, userId, workspaceId });
+  const genImageIds = pending.map((row) => row.id);
+  const settled = await pollGenImagesUntilSettled(genImageIds);
+
+  const failed = settled.find((row) => row.status === 'failed');
+  if (failed) {
+    return { error: failed.error ?? 'Image generation failed.' };
+  }
+
+  if (settled.every((row) => row.status === 'completed')) {
+    return { images: toGeneratedAgentImages(settled) };
+  }
+
+  // Cap reached with the batch still pending/processing: degrade to
+  // videogen's pending-ids behavior, the images will show up in the library
+  // once the worker finishes.
+  return { pending: { ids: genImageIds } };
+}
+
+const awaitedDescription =
+  'Use this tool to generate one or more images from a text prompt. This call waits for the ' +
+  'render to finish and returns the image URLs.';
+
+const asyncDescription =
+  'Use this tool to generate one or more images from a text prompt. It returns URLs of the ' +
+  'generated images, which are also shown to the user directly. Generation usually finishes in ' +
+  'a few seconds; in the rare case it takes longer than a minute, this tool returns pending ' +
+  "image ids instead and the images appear in the user's image library shortly after. Tell the " +
+  "user the images are still being generated in that case, don't claim they're ready.";
 
 export const getGeneratedImages = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
   workspaceId: string,
+  runsInWorker: boolean,
 ): Tool<ImageGenInput, ImageGenOutput> =>
   tool({
-    description:
-      'Use this tool to generate one or more images from a text prompt. It returns URLs of the generated images, which are also shown to the user directly.',
+    description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: imageGenInputSchema,
     execute: async (input) => {
       // emit tool usage message
@@ -74,20 +192,19 @@ export const getGeneratedImages = (
 
       // seed/negativePrompt pass straight through: this tool resolves its
       // model via getDefaultAiModelByModality and never sees
-      // ai_models.capabilities, so createGenImagesWithDefaultModel is what
-      // drops either field for a model that doesn't support it (fail
+      // ai_models.capabilities, so generateAgentImages' underlying calls are
+      // what drop either field for a model that doesn't support it (fail
       // closed, docs/imagegen/prd.md decision 7) rather than erroring.
-      const { error, data: generated } = await tryCatch(
-        () => createGenImagesWithDefaultModel({ ...input, userId, workspaceId }),
+      const { error, data: output } = await tryCatch(
+        () => generateAgentImages({ input, userId, workspaceId, runsInWorker }),
         { retryOnFailure: false },
       );
 
-      if (error !== null || generated === null) {
+      if (error !== null || output === null) {
         return { error: 'Image generation failed. Service currently unavailable.' };
       }
 
-      // only id and URL go back into the model context; the full record stays in the DB
-      return { images: generated.images.map(({ id, imgUrl }) => ({ id, imgUrl })) };
+      return output;
     },
   });
 

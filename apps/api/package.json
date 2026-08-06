@@ -18,7 +18,8 @@
     "check-types": "tsc --noEmit && tsc --noEmit -p test && tsc --noEmit -p scripts",
     "test": "bun test",
     "test:setup": "pnpm --filter @repo/testing test:setup",
-    "backfill:media": "bun scripts/backfill-media.ts"
+    "backfill:media": "bun scripts/backfill-media.ts",
+    "backfill:gen-images-status": "bun scripts/backfill-gen-images-status.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.0",

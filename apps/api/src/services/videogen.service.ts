@@ -170,7 +170,10 @@ async function resolveFrame({
     throw new InternalServerErrorException('Failed to load frame image');
   }
 
-  if (!genImage) {
+  // mediaId is null for a pending/processing/failed row
+  // (docs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // hasn't produced an object yet has no frame to animate.
+  if (!genImage || !genImage.mediaId) {
     throw new NotFoundException('Frame image not found in this workspace');
   }
 

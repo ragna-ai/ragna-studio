@@ -3,14 +3,17 @@
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
 import type {
   GeneratedImage,
+  ImageAspectRatio,
   ReuseImageSettings,
 } from '~/features/image/composables/useImageGenApi';
-import { usePendingGenImageCount } from '~/features/image/composables/useImageGenApi';
 
 interface Props {
   // Fetched once by the /text-to-image page and shared with the form's
   // reference picker, rather than this grid running its own query for the
-  // same list (docs/imagegen/prd.md).
+  // same list (docs/imagegen/prd.md). Already includes pending/processing/
+  // failed rows: the form's mutation prepends them into the cached list on
+  // submit, and useGetGenImages polls while any are unfinished
+  // (docs/imagegen/worker-execution-prd.md decision 7).
   genImages: GeneratedImage[];
   isError: boolean;
 }
@@ -29,13 +32,29 @@ const emit = defineEmits<{
 // Refs
 const previewImage = ref<GeneratedImage | null>(null);
 
-// Composables
-const pendingCount = usePendingGenImageCount();
-
 // Computed
-const isEmpty = computed(
-  () => props.genImages.length === 0 && pendingCount.value === 0,
-);
+const isEmpty = computed(() => props.genImages.length === 0);
+
+// Functions
+// A pending/processing/failed tile has no image to preview yet.
+function openPreview(image: GeneratedImage) {
+  if (image.status === 'completed') {
+    previewImage.value = image;
+  }
+}
+
+// Placeholder tiles (pending/processing/failed) don't have a real image to
+// size themselves off of yet, so they fall back to the settings the request
+// was made with, the same way VideoGenGrid.vue's TILE_ASPECT_CLASS does.
+const TILE_ASPECT_CLASS: Record<ImageAspectRatio, string> = {
+  '1:1': 'aspect-square',
+  '4:3': 'aspect-[4/3]',
+  '16:9': 'aspect-video',
+};
+
+function tileAspectClass(image: GeneratedImage) {
+  return image.aspectRatio ? TILE_ASPECT_CLASS[image.aspectRatio] : 'aspect-square';
+}
 </script>
 
 <template>
@@ -50,24 +69,46 @@ const isEmpty = computed(
   </p>
   <div v-else class="columns-2 gap-4 lg:columns-3">
     <div
-      v-for="placeholder in pendingCount"
-      :key="`pending-${placeholder}`"
-      class="mb-4 aspect-square w-full animate-pulse rounded-lg bg-muted"
-    />
-    <button
       v-for="image in genImages"
       :key="image.id"
-      type="button"
-      class="group mb-4 block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-ring"
-      @click="previewImage = image"
+      class="mb-4 break-inside-avoid"
     >
-      <img
-        :src="image.imgUrl"
-        :alt="image.imgUrl"
-        loading="lazy"
-        class="w-full rounded-lg group-hover:shadow-md group-hover:shadow-black/30"
-      />
-    </button>
+      <button
+        v-if="image.status === 'completed' && image.imgUrl"
+        type="button"
+        class="group block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-ring"
+        @click="openPreview(image)"
+      >
+        <img
+          :src="image.imgUrl"
+          :alt="image.imgUrl"
+          loading="lazy"
+          class="w-full rounded-lg group-hover:shadow-md group-hover:shadow-black/30"
+        />
+      </button>
+
+      <div
+        v-else-if="image.status === 'failed'"
+        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :class="tileAspectClass(image)"
+      >
+        <p class="line-clamp-4 text-sm">{{ image.prompt }}</p>
+        <p class="text-xs text-destructive">
+          {{ image.error ?? $t('imagen.grid.failed') }}
+        </p>
+      </div>
+
+      <div
+        v-else
+        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :class="tileAspectClass(image)"
+      >
+        <p class="line-clamp-4 text-sm text-muted-foreground">
+          {{ image.prompt }}
+        </p>
+        <Spinner class="size-4" />
+      </div>
+    </div>
   </div>
 
   <ImageGenPreviewDialog

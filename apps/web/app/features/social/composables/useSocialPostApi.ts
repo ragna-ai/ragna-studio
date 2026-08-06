@@ -262,9 +262,8 @@ export function useUploadSocialPostMedia() {
 
 /**
  * Files currently uploading for a given post. Reads the shared mutation
- * cache (like usePendingGenImageCount does for image generation) instead of
- * local state, so it stays correct even if several files are attached at
- * once from `SocialPostMediaList.vue`.
+ * cache instead of local state, so it stays correct even if several files
+ * are attached at once from `SocialPostMediaList.vue`.
  */
 export function usePendingSocialPostMediaUploads(postId: string) {
   const pending = useMutationState({

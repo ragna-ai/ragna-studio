@@ -53,10 +53,15 @@ Tests are grouped by domain folder, one folder per feature area:
   than silently no-oping (`deleteWorkspaceById` in
   `packages/database/src/repositories/workspace.repo.ts` now `.returning()`s
   so the service can tell "deleted" from "nothing matched").
-- `test/imagegen/` — image generation. `POST /` really persists a
-  `genImage` row through the real DB path; only the external provider call
-  (`generateImage` from the `ai` npm package) and the R2 reference-image
-  upload are faked. See "External-provider mocks" below.
+- `test/imagegen/` — image generation CRUD. Like videogen below, the AI
+  provider call happens only in `apps/worker`'s gen-images processor, never
+  synchronously in an `apps/api` request (`POST /` inserts a batch of
+  pending rows and enqueues a real BullMQ job, docs/imagegen/
+  worker-execution-prd.md), so completed/failed rows are seeded directly via
+  the repo for the tests that need one. This domain needs the storage mock
+  (for `reference-upload`) but not the AI one; `generateImageMock` is still
+  asserted un-called in the `POST /` tests, to prove generation was really
+  deferred to the worker.
 - `test/videogen/` — video generation CRUD. The AI provider call happens
   only in `apps/worker`'s processor, never synchronously in an `apps/api`
   request (`POST /` just inserts a pending row and enqueues a real BullMQ
@@ -168,16 +173,21 @@ exports, so everything else the package exports keeps working unmocked:
 
 - **`ai` (the npm package, not `@repo/ai`)** — `generateImage` is faked.
   `@repo/ai` is bundled by tsdown with no `noExternal`, so a call from one
-  function to another inside it (e.g. `createGenImages` calling into the
-  same package's model factory) is just a local call after bundling, not a
+  function to another inside it (e.g. `runGenImages` calling into the same
+  package's model factory) is just a local call after bundling, not a
   re-resolved import — mocking `@repo/ai` at the package-specifier level
   would never reach it. Real npm dependencies like `ai` stay external,
   unbundled imports in `@repo/ai`'s dist output, so mocking `ai` itself
   works: Bun's module registry is global, and `@repo/ai`'s dist and the
-  test process both resolve `ai` to the same real npm package. This also
-  means `@repo/ai`'s own orchestration (DB persistence via
-  `createGenImageRecords`, etc.) stays real — only the literal provider
-  HTTP call is faked (see `test/imagegen/`'s "persists it for real" test).
+  test process both resolve `ai` to the same real npm package. Neither
+  `test/imagegen/` nor `test/videogen/` exercises this mock today: both
+  domains' `POST /` routes only insert pending rows and enqueue a job
+  (docs/imagegen/worker-execution-prd.md, docs/videogen/prd.md), the
+  provider call itself runs from `apps/worker`'s processors instead. Both
+  domains' `POST /` tests assert `generateImageMock` was *not* called, to
+  prove generation was really deferred rather than run inline. It's kept
+  registered here so `apps/worker`'s future test suite can reuse the exact
+  same fake for its processor-level tests instead of duplicating it.
 - **`@repo/storage`** — `uploadObjectBuffer`/`downloadObjectBuffer`/
   `deleteObjects` are faked; pure functions with no I/O (`buildImageUrls`,
   bucket-name helpers, ...) stay real. Unlike `@repo/ai`, apps/api imports

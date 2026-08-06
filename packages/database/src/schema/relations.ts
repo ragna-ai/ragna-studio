@@ -312,10 +312,12 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
     // The generated output's media row (docs/media-library/migration-prd.md).
+    // Optional like genVideo.media below: null until the worker uploads the
+    // output (docs/imagegen/worker-execution-prd.md decision 1).
     media: r.one.media({
       from: r.genImage.mediaId,
       to: r.media.id,
-      optional: false,
+      optional: true,
     }),
     references: r.many.genImageReference(),
   },

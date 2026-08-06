@@ -35,12 +35,16 @@ export type AgentToolContext = {
   userId: string;
   agentId: string;
   workspaceId: string;
-  // Chat wiring passes false (or omits it): the tool enqueues and returns a
-  // pending id. Workflow executors (team.executor.ts,
-  // run-referenced-agent.ts) pass true: they already run inside the worker
-  // and need the finished video for downstream steps, so the tool awaits
-  // runGenVideo inline instead (docs/videogen/prd.md decision 2).
-  awaitGeneration?: boolean;
+  // Chat wiring passes false (or omits it): the API process, not the
+  // worker. Workflow executors (team.executor.ts, run-referenced-agent.ts)
+  // pass true: they already run inside the worker process. The video tool
+  // uses this to skip the queue and await runGenVideo inline
+  // (docs/videogen/prd.md decision 2); the image tool uses it to skip the
+  // queue and insert+run the batch inline (createGenImagesWithDefaultModel)
+  // instead of enqueueing and polling like the chat path, since the API
+  // process is exactly what the queue hop exists to keep out of image
+  // generation (docs/imagegen/worker-execution-prd.md decision 6).
+  runsInWorker?: boolean;
   // Wired automatically when buildAgentInstructions decides the agent's
   // context needs retrieval, not part of the agent's own tool checklist
   // (docs/agent/agent-context-retrieval.md, "Search tool").
@@ -59,10 +63,10 @@ const toolsets: Record<AgentTool, ToolsetFactory> = {
   webSearch: (writer) => ({ webSearch: getWebSearchResults(writer) }),
   webBrowser: (writer) => ({ webBrowser: getWebBrowserResults(writer) }),
   imageGen: (writer, ctx) => ({
-    imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId),
+    imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId, ctx.runsInWorker ?? false),
   }),
   videoGen: (writer, ctx) => ({
-    videoGen: getGeneratedVideo(writer, ctx.userId, ctx.workspaceId, ctx.awaitGeneration ?? false),
+    videoGen: getGeneratedVideo(writer, ctx.userId, ctx.workspaceId, ctx.runsInWorker ?? false),
   }),
   linkedinDraft: (writer, ctx) => ({
     linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),

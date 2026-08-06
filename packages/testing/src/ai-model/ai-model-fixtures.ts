@@ -31,7 +31,7 @@ const defaultCapabilities: AiModelCapabilities = {
 /**
  * Seeds a minimal `ai_models` row with `modality: 'image'`, the row
  * `generateImagesForWorkspace` (apps/api/src/services/imagegen.service.ts)
- * looks up by `aiModelId` before calling `createGenImages` (@repo/ai). No
+ * looks up by `aiModelId` before calling `requestGenImages` (@repo/ai). No
  * pricing: imagegen isn't credit-gated yet, unlike the token-priced models
  * `seedTokenPricedAiModel` (credit-fixtures.ts) seeds for the credit system.
  */

@@ -38,7 +38,11 @@ function handleOpenChange(open: boolean) {
 
 async function downloadImage() {
   const image = props.image;
-  if (!image || isDownloading.value) return;
+  // imgUrl is undefined for a pending/processing/failed row
+  // (docs/imagegen/worker-execution-prd.md decision 7); the grid only ever
+  // opens this dialog for a completed image, but the prop type allows any
+  // status, so this guards the download call itself too.
+  if (!image || !image.imgUrl || isDownloading.value) return;
 
   isDownloading.value = true;
   try {

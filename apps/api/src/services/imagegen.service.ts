@@ -1,7 +1,7 @@
-import type { GenerateImagesInput } from '@repo/ai';
-import { createGenImages, imageGenProviders } from '@repo/ai';
+import type { GenerateImagesInput, GenImageDto } from '@repo/ai';
+import { imageGenProviders, requestGenImages } from '@repo/ai';
 import { config } from '@repo/config';
-import type { GenImageReferenceWithMedia, GenImageWithMedia } from '@repo/database';
+import type { GenImage, GenImageReferenceWithMedia, GenImageWithMedia } from '@repo/database';
 import {
   deleteGenImageByIdAndWorkspaceId,
   getAiModelById,
@@ -28,7 +28,7 @@ export type GenImageReferenceInput =
 // The HTTP body swaps generateImagesSchema's provider + model pair for a
 // single aiModelId, and its resolved-storage-key referenceImages for the
 // origin/id union above (validation/gen-image.schema.ts). Both get resolved
-// back into GenerateImagesInput's shape before calling createGenImages.
+// back into GenerateImagesInput's shape before calling requestGenImages.
 export type GenerateImagesForWorkspaceInput = Omit<
   GenerateImagesInput,
   'provider' | 'model' | 'referenceImages'
@@ -37,8 +37,13 @@ export type GenerateImagesForWorkspaceInput = Omit<
   referenceImages?: GenImageReferenceInput[];
 };
 
+// status/error and the optional urls mirror @repo/ai's GenImageDto
+// (docs/imagegen/worker-execution-prd.md decision 7): rawUrl/imgUrl are
+// undefined until the worker fills the row in.
 export interface GenImageResponse {
   id: string;
+  status: GenImage['status'];
+  error: string | null;
   prompt: string;
   createdAt: Date;
   aspectRatio: string | null;
@@ -49,8 +54,8 @@ export interface GenImageResponse {
   provider: string;
   model: string;
   referenceImages: { origin: GenImageReferenceOrigin; imgUrl: string }[];
-  rawUrl: string;
-  imgUrl: string;
+  rawUrl?: string;
+  imgUrl?: string;
 }
 
 // Reference thumbnails resolve through buildImageUrls the same way the
@@ -69,15 +74,22 @@ function toReferenceImageResponse(
   };
 }
 
-// Mirrors createGenImages' own toGenImageDto (packages/ai/src/services/
-// imagen.service.ts): the list endpoint reads raw GenImage rows straight
-// from the DB, while the generate endpoint gets already-shaped DTOs back
-// from createGenImages, so both need to end up at the same response shape.
+// Mirrors @repo/ai's own toGenImageDto (imagen.service.ts): the list
+// endpoint reads raw GenImage rows straight from the DB, while the generate
+// endpoint gets already-shaped DTOs back from requestGenImages, so both need
+// to end up at the same response shape (toGenImageResponseFromDto below).
+// record.media is null for a pending/processing/failed row
+// (docs/imagegen/worker-execution-prd.md decision 1), so the urls stay
+// undefined until the worker fills the row in.
 function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
-  const { rawUrl, imgUrl } = buildImageUrls({ userId: record.userId, key: record.media.storageKey });
+  const urls = record.media
+    ? buildImageUrls({ userId: record.userId, key: record.media.storageKey })
+    : undefined;
 
   return {
     id: record.id,
+    status: record.status,
+    error: record.error,
     prompt: record.prompt,
     createdAt: record.createdAt,
     aspectRatio: record.aspectRatio,
@@ -90,8 +102,34 @@ function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
     referenceImages: record.references.map((reference) =>
       toReferenceImageResponse(reference, record.userId),
     ),
-    rawUrl,
-    imgUrl,
+    rawUrl: urls?.rawUrl,
+    imgUrl: urls?.imgUrl,
+  };
+}
+
+// requestGenImages (@repo/ai) already returns GenImageDto in the exact
+// shape GenImageResponse needs (decision 4: no reload, every field the
+// response needs is known at request time), so this is a straight
+// pass-through kept as an explicit named mapper rather than relying on
+// structural assignability, so a future @repo/ai DTO change fails here
+// instead of silently changing the public API response.
+function toGenImageResponseFromDto(dto: GenImageDto): GenImageResponse {
+  return {
+    id: dto.id,
+    status: dto.status,
+    error: dto.error,
+    prompt: dto.prompt,
+    createdAt: dto.createdAt,
+    aspectRatio: dto.aspectRatio,
+    resolution: dto.resolution,
+    seed: dto.seed,
+    negativePrompt: dto.negativePrompt,
+    visibleWatermark: dto.visibleWatermark,
+    provider: dto.provider,
+    model: dto.model,
+    referenceImages: dto.referenceImages,
+    rawUrl: dto.rawUrl,
+    imgUrl: dto.imgUrl,
   };
 }
 
@@ -176,14 +214,19 @@ export async function deleteGenImage({
     throw new NotFoundException('Generated image not found');
   }
 
-  await Promise.all(
-    [deleted.mediaId, ...referenceMediaIds].map((mediaId) => deleteMediaIfUnreferenced({ mediaId })),
+  // deleted.mediaId is null for a pending/processing/failed row
+  // (docs/imagegen/worker-execution-prd.md decision 1): nothing to
+  // refcount-delete for those, same filter as videogen's deleteGenVideo.
+  const mediaIds = [deleted.mediaId, ...referenceMediaIds].filter(
+    (mediaId): mediaId is string => mediaId !== null,
   );
+
+  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
 }
 
 // Not exported from @repo/ai (it's a private guard for imagen.service.ts's
 // own provider param), so a request-time equivalent lives here: an
-// ai_models row is free-text on provider/model, but createGenImages only
+// ai_models row is free-text on provider/model, but requestGenImages only
 // accepts the three providers it knows how to call.
 function isImageGenProvider(provider: string): provider is GenerateImagesInput['provider'] {
   return (imageGenProviders as readonly string[]).includes(provider);
@@ -191,7 +234,7 @@ function isImageGenProvider(provider: string): provider is GenerateImagesInput['
 
 /**
  * Narrows an ai_models row's free-text provider down to the literal union
- * createGenImages expects, or 500s. A right-modality image row with a
+ * requestGenImages expects, or 500s. A right-modality image row with a
  * provider outside imageGenProviders is a seed/data problem, not something
  * the caller did wrong, so it isn't a 400.
  */
@@ -306,11 +349,11 @@ async function createUploadedReferenceMedia({
 }
 
 /**
- * Resolves one reference entry into the mediaId/storageKey pair createGenImages
- * (@repo/ai) expects: mediaId to link once the output rows exist, storageKey
- * to download the bytes to condition the generation on. A 'genImage' entry
- * is a workspace-scoped lookup so a caller can't condition on another
- * workspace's image (docs/imagegen/prd.md decision 4).
+ * Resolves one reference entry into the mediaId/storageKey pair
+ * requestGenImages (@repo/ai) expects: mediaId to link once the output rows
+ * exist, storageKey to download the bytes to condition the generation on. A
+ * 'genImage' entry is a workspace-scoped lookup so a caller can't condition
+ * on another workspace's image (docs/imagegen/prd.md decision 4).
  */
 async function resolveReferenceImage({
   reference,
@@ -332,7 +375,11 @@ async function resolveReferenceImage({
     throw new InternalServerErrorException('Failed to load reference image');
   }
 
-  if (!genImage) {
+  // mediaId/media are null for a pending/processing/failed row
+  // (docs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // hasn't produced an object yet has nothing to condition on, so it's
+  // rejected the same as a genImageId that doesn't exist at all.
+  if (!genImage || !genImage.mediaId || !genImage.media) {
     throw new NotFoundException('Reference image not found in this workspace');
   }
 
@@ -361,9 +408,25 @@ async function resolveReferenceImages({
   );
 }
 
+// Mirrors videogen.service.ts's isCapabilityViolationError: any @repo/ai
+// error message starting with "Provider " is a capability violation, not an
+// infra failure, and maps to 400 like assertCapabilitiesSupportRequest's own
+// checks above. imagen.service.ts throws no such error today (its
+// capability gating happens entirely in assertCapabilitiesSupportRequest,
+// before any row is inserted), but keeping the same convention here means a
+// future provider-side check added there surfaces correctly without another
+// API-layer change (docs/imagegen/worker-execution-prd.md decision 4).
+function isCapabilityViolationError(error: Error): boolean {
+  return error.message.startsWith('Provider ');
+}
+
 /**
  * [POST] /workspace/:workspaceId/gen-image
- * Generates image(s) from a prompt and persists them in the workspace.
+ * Requests image generation from a prompt: inserts pending rows and
+ * enqueues the render job (requestGenImages in @repo/ai), then responds
+ * immediately. The worker (gen-images.processor.ts) does the slow part; no
+ * await, no timeout mapping (docs/imagegen/worker-execution-prd.md decision
+ * 4). Mirrors generateVideoForWorkspace's shape.
  */
 export async function generateImagesForWorkspace({
   userId,
@@ -398,8 +461,8 @@ export async function generateImagesForWorkspace({
   const resolvedReferenceImages = await resolveReferenceImages({ referenceImages, workspaceId });
   const provider = assertImageGenProvider(aiModel.provider);
 
-  const { error, data: generated } = await tryCatch(() =>
-    createGenImages({
+  const { error, data: created } = await tryCatch(() =>
+    requestGenImages({
       prompt,
       resolution,
       aspectRatio,
@@ -415,12 +478,16 @@ export async function generateImagesForWorkspace({
     }),
   );
 
-  if (error !== null || !generated) {
-    logger.error('Image generation failed', error);
-    throw new InternalServerErrorException('Image generation failed');
+  if (error !== null || !created) {
+    if (error !== null && isCapabilityViolationError(error)) {
+      throw new BadRequestException(error.message);
+    }
+
+    logger.error('Failed to request image generation', error);
+    throw new InternalServerErrorException('Failed to request image generation');
   }
 
-  return { genImages: generated.images };
+  return { genImages: created.map(toGenImageResponseFromDto) };
 }
 
 // Same 10 MB cap as gen-video's frame upload (videogen.service.ts), PNG/

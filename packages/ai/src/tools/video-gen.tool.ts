@@ -56,12 +56,11 @@ type GeneratedAgentVideo = {
 
 type VideoGenOutput = { video: GeneratedAgentVideo } | { error: string };
 
-// Chat (awaitGeneration: false/undefined) enqueues and returns immediately:
-// the multi-minute render never blocks the stream, and a dropped stream
-// can't orphan a generation. Workflows (awaitGeneration: true) already run
-// inside the worker process and need the finished video for downstream
-// steps, so they await runGenVideo inline instead (docs/videogen/prd.md
-// decision 2).
+// Chat (runsInWorker: false/undefined) enqueues and returns immediately: the
+// multi-minute render never blocks the stream, and a dropped stream can't
+// orphan a generation. Workflows (runsInWorker: true) already run inside the
+// worker process and need the finished video for downstream steps, so they
+// await runGenVideo inline instead (docs/videogen/prd.md decision 2).
 const asyncDescription =
   'Use this tool to generate a video from a text prompt, optionally animating a previously ' +
   'generated image as its first frame. Generation is asynchronous and takes anywhere from ' +
@@ -78,10 +77,10 @@ export const getGeneratedVideo = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
   userId: string,
   workspaceId: string,
-  awaitGeneration: boolean,
+  runsInWorker: boolean,
 ): Tool<VideoGenInput, VideoGenOutput> =>
   tool({
-    description: awaitGeneration ? awaitedDescription : asyncDescription,
+    description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: videoGenInputSchema,
     execute: async (input): Promise<VideoGenOutput> => {
       // emit tool usage message
@@ -99,7 +98,10 @@ export const getGeneratedVideo = (
           { retryOnFailure: false },
         );
 
-        if (error !== null || !genImage) {
+        // mediaId is null for a pending/processing/failed row
+        // (docs/imagegen/worker-execution-prd.md decision 1): a generation
+        // that hasn't produced an object yet has no frame to animate.
+        if (error !== null || !genImage || !genImage.mediaId) {
           return { error: 'The referenced image was not found in this workspace.' };
         }
 
@@ -117,7 +119,7 @@ export const getGeneratedVideo = (
         frameMediaId: frame?.frameMediaId,
       };
 
-      if (awaitGeneration) {
+      if (runsInWorker) {
         const { error: createError, data: record } = await tryCatch(
           () => createGenVideoRecord(params),
           { retryOnFailure: false },

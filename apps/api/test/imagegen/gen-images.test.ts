@@ -1,3 +1,5 @@
+import type { GenImageStatus } from '@repo/database';
+import { createGenImageRecords, createMedia } from '@repo/database';
 import { getImgGenBucketNameForUser } from '@repo/storage';
 import {
   deleteObjectsMock,
@@ -16,17 +18,33 @@ import { app } from '../../src/app';
 // imagegen (docs/testing/strategy.md's "Blocked on mock infrastructure",
 // now unblocked). Auth/authorization are covered exhaustively in test/auth/
 // and test/workspace/workspace-authorization.test.ts; this file only checks
-// the imagegen feature's own behavior, with the AI provider call faked
-// (@repo/testing's ai-provider.mock.ts) and the R2 upload faked
-// (@repo/testing's storage-provider.mock.ts).
+// the imagegen feature's own behavior.
+//
+// Like videogen (test/videogen/gen-videos.test.ts), the create route
+// (`generateImagesForWorkspace` -> `requestGenImages`, @repo/ai) no longer
+// calls the `ai` package: it inserts a batch of pending rows and enqueues a
+// BullMQ job against the real docker Redis (docs/testing/strategy.md's
+// "External boundaries" treats Redis as real, not mocked). The actual
+// provider call (`runGenImages`/`generateAndUploadBatch`) only runs from
+// apps/worker's gen-images processor, out of scope here
+// (docs/imagegen/worker-execution-prd.md), so completed/failed rows are
+// seeded directly via the repo (seedGenImage below) rather than waiting on a
+// real render. `generateImageMock` is still asserted un-called in the POST
+// tests, to prove generation really was deferred to the worker rather than
+// running synchronously. The reference-upload route does need the storage
+// mock.
 
 const genImageSchema = z.object({
   id: z.string(),
+  status: z.enum(['pending', 'processing', 'completed', 'failed']),
+  error: z.string().nullable(),
   prompt: z.string(),
   provider: z.string(),
   model: z.string(),
-  imgUrl: z.string(),
-  rawUrl: z.string(),
+  // Undefined until the row completes (docs/imagegen/worker-execution-prd.md
+  // decision 7).
+  imgUrl: z.string().optional(),
+  rawUrl: z.string().optional(),
   referenceImages: z.array(z.object({ origin: z.string(), imgUrl: z.string() })),
 });
 
@@ -36,29 +54,56 @@ const listResponseSchema = z.object({
   meta: z.object({ totalCount: z.number() }),
 });
 
-async function generateOneImage(cookieHeader: string, workspaceId: string) {
-  const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
+// The render is done by apps/worker's gen-images processor (out of scope
+// here, see the top-of-file comment), so a row at any status is seeded
+// directly via the repo rather than waiting on a real generation.
+// storageKey is a convenience param: when present it mints its own media row
+// (docs/media-library/migration-prd.md) before the gen_images row is
+// created, leaving mediaId null otherwise (a pending/failed row has no
+// object yet, docs/imagegen/worker-execution-prd.md decision 1).
+async function seedGenImage({
+  userId,
+  workspaceId,
+  status = 'completed',
+  storageKey,
+  error,
+}: {
+  userId: string;
+  workspaceId: string;
+  status?: GenImageStatus;
+  storageKey?: string;
+  error?: string;
+}) {
+  const outputMedia = storageKey
+    ? await createMedia({
+        ownerWorkspaceId: workspaceId,
+        bucket: getImgGenBucketNameForUser(userId).bucketName,
+        storageKey,
+        filename: storageKey.split('/').pop() ?? storageKey,
+        mimeType: 'image/png',
+        size: 1024,
+        origin: 'generated',
+      })
+    : undefined;
 
-  const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
-    method: 'POST',
-    headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ aiModelId, prompt: 'a red bicycle', n: 1 }),
-  });
-  const body = generateResponseSchema.parse(await response.json());
-  const genImage = body.genImages[0];
+  const [created] = await createGenImageRecords([
+    {
+      userId,
+      workspaceId,
+      status,
+      mediaId: outputMedia?.id,
+      error,
+      prompt: 'a red bicycle',
+      provider: 'bfl',
+      model: 'flux-pro',
+    },
+  ]);
 
-  if (!genImage) {
-    throw new Error('Expected the fake provider to return one generated image');
+  if (!created) {
+    throw new Error('Failed to seed a gen image row');
   }
 
-  return genImage;
-}
-
-// buildImageUrls (packages/storage/src/lib/image-urls.ts) formats imgUrl as
-// `https://images.ragna.io/${key}`, so this reverses it back to the R2
-// object key the delete route is expected to pass to deleteObjects.
-function storageKeyFromImgUrl(imgUrl: string): string {
-  return imgUrl.replace('https://images.ragna.io/', '');
+  return created;
 }
 
 describe('GET /workspace/:workspaceId/gen-image', () => {
@@ -85,6 +130,46 @@ describe('GET /workspace/:workspaceId/gen-image', () => {
     expect(body.genImages).toEqual([]);
     expect(body.meta.totalCount).toBe(0);
   });
+
+  test('lists completed, pending, and failed rows with the right shape each', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const completed = await seedGenImage({
+      userId,
+      workspaceId,
+      status: 'completed',
+      storageKey: `${userId}/images/generated/done.png`,
+    });
+    const pending = await seedGenImage({ userId, workspaceId, status: 'pending' });
+    const failed = await seedGenImage({
+      userId,
+      workspaceId,
+      status: 'failed',
+      error: 'Image generation failed',
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = listResponseSchema.parse(await response.json());
+    expect(body.meta.totalCount).toBe(3);
+
+    const byId = new Map(body.genImages.map((image) => [image.id, image]));
+
+    expect(byId.get(completed.id)?.status).toBe('completed');
+    expect(byId.get(completed.id)?.imgUrl).toBeDefined();
+    expect(byId.get(completed.id)?.rawUrl).toBeDefined();
+    expect(byId.get(completed.id)?.error).toBeNull();
+
+    expect(byId.get(pending.id)?.status).toBe('pending');
+    expect(byId.get(pending.id)?.imgUrl).toBeUndefined();
+    expect(byId.get(pending.id)?.rawUrl).toBeUndefined();
+
+    expect(byId.get(failed.id)?.status).toBe('failed');
+    expect(byId.get(failed.id)?.error).toBe('Image generation failed');
+    expect(byId.get(failed.id)?.imgUrl).toBeUndefined();
+  });
 });
 
 describe('POST /workspace/:workspaceId/gen-image', () => {
@@ -93,29 +178,39 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     resetProviderMocks();
   });
 
-  test('generates an image through the faked provider and persists it for real', async () => {
+  test('requests a batch of image generations and they show up pending in the list', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
 
     const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ aiModelId, prompt: 'a red bicycle', n: 1 }),
+      body: JSON.stringify({ aiModelId, prompt: 'a red bicycle', n: 2 }),
     });
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = generateResponseSchema.parse(await response.json());
-    expect(body.genImages).toHaveLength(1);
-    expect(body.genImages[0]?.prompt).toBe('a red bicycle');
-    expect(generateImageMock).toHaveBeenCalledTimes(1);
+    expect(body.genImages).toHaveLength(2);
+    for (const image of body.genImages) {
+      expect(image.status).toBe('pending');
+      expect(image.prompt).toBe('a red bicycle');
+      expect(image.imgUrl).toBeUndefined();
+      expect(image.rawUrl).toBeUndefined();
+    }
+    // Proves generation didn't run synchronously in the API process
+    // (docs/imagegen/worker-execution-prd.md): only the worker's gen-images
+    // processor calls the provider.
+    expect(generateImageMock).not.toHaveBeenCalled();
 
-    // Proves the DB path is real, not mocked: the row created above by the
-    // faked provider call is readable back through the real list query.
+    // Proves the DB path is real, not mocked: the rows created above are
+    // readable back through the real list query.
     const listResponse = await app.request(`/workspace/${workspaceId}/gen-image`, {
       headers: { cookie: cookieHeader },
     });
     const listBody = listResponseSchema.parse(await listResponse.json());
-    expect(listBody.genImages.map((image) => image.id)).toEqual([body.genImages[0]?.id]);
+    expect(listBody.genImages.map((image) => image.id).sort()).toEqual(
+      body.genImages.map((image) => image.id).sort(),
+    );
   });
 
   test('404s for an aiModelId that does not exist', async () => {
@@ -131,6 +226,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(generateImageMock).not.toHaveBeenCalled();
   });
 
   test('rejects negativePrompt when the model does not support it', async () => {
@@ -144,6 +240,52 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(generateImageMock).not.toHaveBeenCalled();
+  });
+
+  test('404s when a reference image points at a not-yet-completed gen image', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
+    const pendingReference = await seedGenImage({ userId, workspaceId, status: 'pending' });
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        aiModelId,
+        prompt: 'a red bicycle',
+        referenceImages: [{ origin: 'genImage', genImageId: pendingReference.id }],
+      }),
+    });
+
+    // mediaId is null on a pending row (docs/imagegen/worker-execution-prd.md
+    // decision 1): resolveReferenceImage (apps/api's imagegen.service.ts)
+    // treats that the same as a reference that doesn't exist at all.
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(generateImageMock).not.toHaveBeenCalled();
+  });
+
+  test('404s when a reference image points at a failed gen image', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
+    const failedReference = await seedGenImage({
+      userId,
+      workspaceId,
+      status: 'failed',
+      error: 'Image generation failed',
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        aiModelId,
+        prompt: 'a red bicycle',
+        referenceImages: [{ origin: 'genImage', genImageId: failedReference.id }],
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(generateImageMock).not.toHaveBeenCalled();
   });
 });
@@ -224,7 +366,11 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
 
   test('404s for a genImageId that belongs to another workspace', async () => {
     const owner = await seedAuthenticatedUser();
-    const image = await generateOneImage(owner.cookieHeader, owner.workspaceId);
+    const image = await seedGenImage({
+      userId: owner.userId,
+      workspaceId: owner.workspaceId,
+      storageKey: `${owner.userId}/images/generated/owned.png`,
+    });
     const otherUser = await seedAuthenticatedUser();
 
     const response = await app.request(
@@ -244,10 +390,32 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
     expect(listBody.genImages.map((genImage) => genImage.id)).toEqual([image.id]);
   });
 
+  test('deletes a pending image with no generated object yet, without touching R2', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const image = await seedGenImage({ userId, workspaceId, status: 'pending' });
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image/${image.id}`, {
+      method: 'DELETE',
+      headers: { cookie: cookieHeader },
+    });
+
+    // mediaId is null on a pending row (docs/imagegen/worker-execution-
+    // prd.md decision 1): deleteGenImage's refcount cleanup must skip it
+    // instead of trying to refcount-delete a null media id.
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(deleteObjectsMock).not.toHaveBeenCalled();
+
+    const listResponse = await app.request(`/workspace/${workspaceId}/gen-image`, {
+      headers: { cookie: cookieHeader },
+    });
+    const listBody = listResponseSchema.parse(await listResponse.json());
+    expect(listBody.genImages).toEqual([]);
+  });
+
   test('deletes the row and its R2 object, removing it from the list', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const image = await generateOneImage(cookieHeader, workspaceId);
-    const expectedKey = storageKeyFromImgUrl(image.imgUrl);
+    const storageKey = `${userId}/images/generated/done.png`;
+    const image = await seedGenImage({ userId, workspaceId, storageKey });
     const { bucketName } = getImgGenBucketNameForUser(userId);
 
     const response = await app.request(`/workspace/${workspaceId}/gen-image/${image.id}`, {
@@ -257,7 +425,7 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(deleteObjectsMock).toHaveBeenCalledTimes(1);
-    expect(deleteObjectsMock.mock.calls[0]).toEqual([bucketName, [expectedKey]]);
+    expect(deleteObjectsMock.mock.calls[0]).toEqual([bucketName, [storageKey]]);
 
     const listResponse = await app.request(`/workspace/${workspaceId}/gen-image`, {
       headers: { cookie: cookieHeader },
@@ -267,8 +435,12 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
   });
 
   test('still deletes the row when the R2 delete fails (best-effort cleanup)', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const image = await generateOneImage(cookieHeader, workspaceId);
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const image = await seedGenImage({
+      userId,
+      workspaceId,
+      storageKey: `${userId}/images/generated/done.png`,
+    });
 
     deleteObjectsMock.mockImplementationOnce(() => {
       throw new Error('R2 is down');

@@ -1,6 +1,5 @@
 import {
   useMutation,
-  useMutationState,
   useQuery,
   useQueryClient,
   type UseQueryOptions,
@@ -42,14 +41,23 @@ export interface GeneratedImageReference {
   imgUrl: string;
 }
 
+// Mirrors @repo/database's GenImageStatus (genimage.schema.ts). Kept as a
+// local copy so the web bundle never imports the server database package,
+// the same reasoning as GenVideoStatus in useVideoGenApi.ts.
+export type GenImageStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
 export interface GeneratedImage {
   id: string;
+  status: GenImageStatus;
+  error: string | null;
   prompt: string;
-  rawUrl: string;
-  imgUrl: string;
+  // Undefined until the row completes (docs/imagegen/worker-execution-prd.md
+  // decision 7): a pending/processing/failed row has no object yet.
+  rawUrl?: string;
+  imgUrl?: string;
   createdAt: string;
   // Nullable on the wire (the DB columns have no default), even though
-  // createGenImages always fills them in for a completed row.
+  // createGenImageBatch always fills them in.
   aspectRatio: ImageAspectRatio | null;
   resolution: ImageResolution | null;
   seed: number | null;
@@ -101,6 +109,17 @@ export interface ReuseImageSettings {
   visibleWatermark: boolean;
 }
 
+// The grid polls while any row on the fetched page is still generating: the
+// temporary stand-in for WS push, mirrors useVideoGenApi.ts's own poll
+// (shorter interval since a batch usually finishes in seconds, not minutes).
+const IMAGE_GEN_POLL_INTERVAL_MS = 2000;
+
+function hasInFlightRow(genImages: GeneratedImage[]): boolean {
+  return genImages.some(
+    (image) => image.status === 'pending' || image.status === 'processing',
+  );
+}
+
 export function useGetGenImages(
   params: GenImageListParams = {},
   options: QueryOpts = {},
@@ -116,6 +135,10 @@ export function useGetGenImages(
         signal,
       }),
     enabled: () => !!toValue(workspaceId),
+    refetchInterval: (query) => {
+      const genImages = query.state.data?.genImages ?? [];
+      return hasInFlightRow(genImages) ? IMAGE_GEN_POLL_INTERVAL_MS : false;
+    },
     ...options,
   });
 }
@@ -131,10 +154,21 @@ export function useGenerateImages() {
         `/workspace/${toValue(workspaceId)}/gen-image`,
         { method: 'POST', body },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: genImageKeys.all(workspaceId),
-      });
+    onSuccess: ({ genImages }) => {
+      // Prepend the batch's pending rows straight into every cached list
+      // page so they show up immediately, without waiting for a refetch
+      // round trip. The conditional refetchInterval then takes over polling
+      // them to completion (mirrors useVideoGenApi.ts's useGenerateVideo).
+      queryClient.setQueriesData<GenImagesResponse>(
+        { queryKey: genImageKeys.all(workspaceId) },
+        (old) =>
+          old
+            ? {
+                genImages: [...genImages, ...old.genImages],
+                meta: { totalCount: old.meta.totalCount + genImages.length },
+              }
+            : old,
+      );
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to generate images'));
@@ -182,16 +216,4 @@ export function useDeleteGenImage() {
       toast.error(extractErrorMessage(error, 'Failed to delete image'));
     },
   });
-}
-
-/** Total number of images currently being generated across all in-flight requests. */
-export function usePendingGenImageCount() {
-  const pendingCounts = useMutationState({
-    filters: { mutationKey: genImageKeys.create(), status: 'pending' },
-    select: (mutation) =>
-      (mutation.state.variables as GenerateImagesBody | undefined)?.n ?? 1,
-  });
-  return computed(() =>
-    pendingCounts.value.reduce((total, count) => total + count, 0),
-  );
 }

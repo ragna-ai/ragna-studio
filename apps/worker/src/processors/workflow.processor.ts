@@ -18,7 +18,7 @@ const TERMINAL_RUN_STATUSES: ReadonlySet<WorkflowRunStatus> = new Set([
 ]);
 
 // A workflow's team/agent node can now call the video-gen tool with
-// awaitGeneration: true (docs/videogen/prd.md decision 2), which blocks the
+// runsInWorker: true (docs/videogen/prd.md decision 2), which blocks the
 // run inline on a 1-6 minute Veo render. The default 30s lock would let
 // BullMQ's stalled checker reclaim the job mid-render, so it is stretched
 // the same way as the gen-videos worker (gen-video.processor.ts).
