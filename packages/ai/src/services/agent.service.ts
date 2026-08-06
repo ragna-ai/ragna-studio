@@ -13,6 +13,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
+import type { ModelMessage, SystemModelMessage } from 'ai';
 
 // Above this total of ready document chars, buildAgentInstructions stops
 // injecting full document text and switches to retrieval mode: a document
@@ -333,4 +334,66 @@ export function toModelSettings(settings: AgentSettings | null | undefined): {
     // reasoningEffort, Google thinkingConfig).
     reasoning: settings?.reasoning ?? undefined,
   };
+}
+
+// Anthropic prompt-caching breakpoint (platform.claude.com/docs/en/build-with-claude/prompt-caching).
+// Non-Anthropic providers ignore the `anthropic` providerOptions key, so
+// this is safe to attach regardless of which provider the agent is
+// configured with.
+const ANTHROPIC_CACHE_BREAKPOINT = {
+  anthropic: { cacheControl: { type: 'ephemeral' as const } },
+};
+
+/**
+ * Wraps rendered instructions (system prompt + context + documents + memory
+ * + pinned dataset, from buildAgentInstructions) in a cache breakpoint. The
+ * same agent sends byte-identical instructions on every call within a
+ * conversation/run, so repeat calls read the cached prefix instead of
+ * reprocessing it. Passes `undefined` through unchanged, so callers with an
+ * optional system prompt (e.g. inline workflow nodes with no agent) don't
+ * need a guard of their own.
+ * @param instructions The rendered instructions string, or undefined.
+ * @returns A system message carrying the cache breakpoint, or undefined.
+ */
+export function withCachedInstructions(instructions: string): SystemModelMessage;
+export function withCachedInstructions(
+  instructions: string | undefined,
+): SystemModelMessage | undefined;
+export function withCachedInstructions(
+  instructions: string | undefined,
+): SystemModelMessage | undefined {
+  if (!instructions) {
+    return undefined;
+  }
+
+  return {
+    role: 'system',
+    content: instructions,
+    providerOptions: ANTHROPIC_CACHE_BREAKPOINT,
+  };
+}
+
+/**
+ * Marks the last message of a conversation history with a cache breakpoint,
+ * so the next turn's identical prefix (this message and everything before
+ * it) is read from cache instead of reprocessed. Chat history grows by one
+ * turn at a time and is resent in full on every request, so this is where
+ * the savings compound as a conversation gets longer.
+ * @param messages The conversation history, oldest first.
+ * @returns The same messages, with the last one carrying the cache breakpoint.
+ */
+export function withCachedLastMessage(messages: ModelMessage[]): ModelMessage[] {
+  if (messages.length === 0) {
+    return messages;
+  }
+
+  const lastIndex = messages.length - 1;
+  return messages.map((message, index) =>
+    index === lastIndex
+      ? {
+          ...message,
+          providerOptions: { ...message.providerOptions, ...ANTHROPIC_CACHE_BREAKPOINT },
+        }
+      : message,
+  );
 }

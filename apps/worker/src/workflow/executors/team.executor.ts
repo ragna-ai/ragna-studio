@@ -6,6 +6,7 @@ import {
   stepCountIs,
   tool,
   toModelSettings,
+  withCachedInstructions,
   z,
 } from '@repo/ai';
 import type { ToolSet } from '@repo/ai';
@@ -291,7 +292,7 @@ export const executeTeam: Executor = async (node, ctx) => {
   try {
     result = await generateText({
       model,
-      instructions,
+      instructions: withCachedInstructions(instructions),
       prompt,
       // No collision risk: delegate tool names all carry the delegate_to_
       // prefix, which no agent tool id uses.

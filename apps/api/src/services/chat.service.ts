@@ -12,6 +12,8 @@ import {
   streamText,
   toModelSettings,
   toUIMessageStream,
+  withCachedInstructions,
+  withCachedLastMessage,
 } from '@repo/ai';
 import type { Chat, Media } from '@repo/database';
 import {
@@ -662,8 +664,8 @@ export async function runChatStream(
             totalMs: 600_000, // whole multi-step run; image tools can take minutes
             toolMs: 180_000, // single tool call (e.g. generating up to 4 images)
           },
-          instructions,
-          messages: validModelMessages,
+          instructions: withCachedInstructions(instructions),
+          messages: withCachedLastMessage(validModelMessages),
           model: getLanguageModel({
             provider: agent.aiModel.provider,
             model: agent.aiModel.model,

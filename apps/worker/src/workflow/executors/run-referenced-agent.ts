@@ -6,6 +6,7 @@ import {
   normalizeUsage,
   stepCountIs,
   toModelSettings,
+  withCachedInstructions,
 } from '@repo/ai';
 import { config } from '@repo/config';
 import type {
@@ -370,7 +371,7 @@ export async function runReferencedAgent({
   const modelSettings = toModelSettings(agent.settings);
   const result = await generateText({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
-    instructions,
+    instructions: withCachedInstructions(instructions),
     prompt,
     tools,
     temperature: modelSettings.temperature,
