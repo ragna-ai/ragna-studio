@@ -51,6 +51,10 @@ export const genVideo = pgTable(
     duration: integer('duration'),
     generateAudio: boolean('generate_audio').notNull().default(true),
     seed: integer('seed'),
+    // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2):
+    // whether the "AI generated" badge was burned into this output. Enhance
+    // rows copy this from their parent draft (requestEnhanceGenVideo).
+    visibleWatermark: boolean('visible_watermark').notNull().default(false),
     frameOrigin: text('frame_origin').$type<GenVideoFrameOrigin>(),
     // The first-frame image's media row. Set together with frameOrigin; no
     // onDelete action, same as mediaId above.

@@ -1,4 +1,4 @@
-import { index, integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import type { Media } from './media.schema';
 import { media } from './media.schema';
@@ -29,6 +29,9 @@ export const genImage = pgTable(
     resolution: text('resolution'),
     seed: integer('seed'),
     negativePrompt: text('negative_prompt'),
+    // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2):
+    // whether the "AI generated" badge was burned into this output.
+    visibleWatermark: boolean('visible_watermark').notNull().default(false),
     ...timestamps,
   },
   (table) => [

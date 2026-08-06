@@ -41,6 +41,7 @@ export interface GenVideoResponse {
   model: string;
   isDraft: boolean;
   parentGenVideoId: string | null;
+  visibleWatermark: boolean;
   createdAt: Date;
   videoUrl?: string;
 }
@@ -58,6 +59,7 @@ function toGenVideoResponse(record: GenVideoWithMedia): GenVideoResponse {
     model: record.model,
     isDraft: record.isDraft,
     parentGenVideoId: record.parentGenVideoId,
+    visibleWatermark: record.visibleWatermark,
     createdAt: record.createdAt,
     videoUrl:
       record.status === 'completed' && record.media
@@ -218,6 +220,7 @@ export async function generateVideoForWorkspace({
     seed,
     negativePrompt,
     draft,
+    visibleWatermark,
   } = input;
 
   const { frameOrigin, frameMediaId } = await resolveFrame({ frame, workspaceId });
@@ -234,6 +237,7 @@ export async function generateVideoForWorkspace({
       seed,
       negativePrompt,
       draft,
+      visibleWatermark,
       frameOrigin,
       frameMediaId,
       userId,

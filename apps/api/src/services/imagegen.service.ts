@@ -45,6 +45,7 @@ export interface GenImageResponse {
   resolution: string | null;
   seed: number | null;
   negativePrompt: string | null;
+  visibleWatermark: boolean;
   provider: string;
   model: string;
   referenceImages: { origin: GenImageReferenceOrigin; imgUrl: string }[];
@@ -83,6 +84,7 @@ function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
     resolution: record.resolution,
     seed: record.seed,
     negativePrompt: record.negativePrompt,
+    visibleWatermark: record.visibleWatermark,
     provider: record.provider,
     model: record.model,
     referenceImages: record.references.map((reference) =>
@@ -372,8 +374,17 @@ export async function generateImagesForWorkspace({
   workspaceId: string;
   input: GenerateImagesForWorkspaceInput;
 }): Promise<{ genImages: GenImageResponse[] }> {
-  const { aiModelId, referenceImages, prompt, resolution, aspectRatio, n, seed, negativePrompt } =
-    input;
+  const {
+    aiModelId,
+    referenceImages,
+    prompt,
+    resolution,
+    aspectRatio,
+    n,
+    seed,
+    negativePrompt,
+    visibleWatermark,
+  } = input;
 
   const aiModel = await loadImageAiModel(aiModelId);
 
@@ -395,6 +406,7 @@ export async function generateImagesForWorkspace({
       n,
       seed,
       negativePrompt,
+      visibleWatermark,
       provider,
       model: aiModel.model,
       referenceImages: resolvedReferenceImages,

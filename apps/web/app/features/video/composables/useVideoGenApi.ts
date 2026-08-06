@@ -147,6 +147,10 @@ export interface GeneratedVideo {
   // produced, pointing back at the draft it replays at full quality.
   isDraft: boolean;
   parentGenVideoId: string | null;
+  // Applied to draft rows at generation time and copied from the parent
+  // draft onto its enhance row server-side (docs/ai-labeling/prd.md); the
+  // form has nothing to send on the enhance mutation, this is display only.
+  visibleWatermark: boolean;
 }
 
 export interface GenVideosResponse {
@@ -170,6 +174,7 @@ export interface GenerateVideoBody {
   seed?: number;
   frame?: VideoFrameInput;
   draft?: boolean;
+  visibleWatermark?: boolean;
 }
 
 export interface FrameUploadResponse {

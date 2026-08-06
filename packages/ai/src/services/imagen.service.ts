@@ -11,6 +11,7 @@ import {
 } from '@repo/database';
 import type { GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
+import { applyImageWatermark } from '@repo/media';
 import {
   buildImageUrls,
   downloadObjectBuffer,
@@ -65,6 +66,10 @@ export const generateImagesSchema = z.object({
     )
     .max(4)
     .optional(),
+  // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2).
+  // Default off; applied after generation, before upload, by
+  // applyImageWatermark below.
+  visibleWatermark: z.boolean().optional(),
 });
 
 export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
@@ -132,6 +137,7 @@ export async function createGenImages({
   seed = undefined,
   negativePrompt = undefined,
   referenceImages = undefined,
+  visibleWatermark = false,
 }: CreateImageParams) {
   type GenerateImageParams = Parameters<typeof generateImage>[0];
   type GenerateImageProviderOptions = GenerateImageParams['providerOptions'];
@@ -143,7 +149,7 @@ export async function createGenImages({
 
   const configProviderParams = (): Pick<
     GenerateImageParams,
-    'aspectRatio' | 'size' | 'providerOptions'
+    'aspectRatio' | 'size' | 'seed' | 'providerOptions'
   > => {
     switch (provider) {
       case 'bfl': {
@@ -153,6 +159,7 @@ export async function createGenImages({
         );
         return {
           aspectRatio,
+          seed,
           providerOptions: toProviderOptions({
             blackForestLabs: {
               width,
@@ -176,12 +183,26 @@ export async function createGenImages({
         // inpainting, not the subject/style conditioning bfl and openai
         // give us. Nothing below reads referenceImages, so there is
         // nothing to disable here; this comment is the guardrail.
+        //
+        // EU AI Act Art. 50(2) guardrail (docs/ai-labeling/prd.md part 1):
+        // addWatermark controls Imagen's SynthID marking. Never set it to
+        // false here, now or in any future edit of this branch, even to
+        // unblock a seed request. Imagen rejects `seed` while addWatermark
+        // is on, so the watermark wins: seed is dropped for this provider
+        // below instead, the same way OpenAI silently ignores it.
+        if (seed !== undefined) {
+          logger.warn(
+            'Seed dropped for Vertex Imagen: SynthID marking stays on and Imagen rejects seed while it is enabled',
+            { provider, model },
+          );
+        }
+
         return {
           aspectRatio,
+          seed: undefined,
           providerOptions: toProviderOptions({
             vertex: {
               negativePrompt,
-              addWatermark: false,
               personGeneration: 'allow_all',
               safetySetting: 'block_medium_and_above',
               sampleImageSize: resolution === '1K' ? '1K' : '2K',
@@ -192,6 +213,7 @@ export async function createGenImages({
       case 'openai': {
         return {
           size: openAiSizeMap[aspectRatio],
+          seed,
           providerOptions: toProviderOptions({
             openai: {
               quality: resolution === '2K' ? 'high' : 'medium',
@@ -201,7 +223,7 @@ export async function createGenImages({
         };
       }
       default:
-        return {};
+        return { seed: undefined };
     }
   };
 
@@ -240,7 +262,7 @@ export async function createGenImages({
       }),
       prompt: generateImagePrompt,
       n,
-      seed,
+      seed: providerParams.seed,
       aspectRatio: providerParams.aspectRatio,
       size: providerParams.size,
       providerOptions: providerParams.providerOptions,
@@ -266,17 +288,44 @@ export async function createGenImages({
 
   const { images: genImages } = imageGenResult;
 
+  // Best-effort, per image (docs/ai-labeling/prd.md "Failure semantics"): a
+  // generated image is always saved, the watermark is an addon. A failed
+  // attempt falls back to the raw bytes for that image only, rather than
+  // failing the whole batch; `applied` becomes that image's stored
+  // gen_images.visibleWatermark value below, recording the outcome, not the
+  // request.
+  const watermarkResults = await Promise.all(
+    genImages.map(async (image) => {
+      const buffer = Buffer.from(image.uint8Array);
+
+      if (!visibleWatermark) {
+        return { buffer, applied: false };
+      }
+
+      const { error, data } = await tryCatch(() =>
+        applyImageWatermark({ buffer, mimeType: 'image/png' }),
+      );
+
+      if (error !== null || !data) {
+        logger.warn('Visible watermark failed, storing raw image instead', { error });
+        return { buffer, applied: false };
+      }
+
+      return { buffer: data.buffer, applied: true };
+    }),
+  );
+
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
-  const uploadPromises = genImages.map(async (image) => {
+  const uploadPromises = watermarkResults.map(async ({ buffer }) => {
     const { key } = await uploadObjectBuffer({
       bucketName,
       key: `${prefix}/${randomUUID()}.png`,
-      buffer: image.uint8Array,
+      buffer,
       contentType: 'image/png',
     });
 
-    return { key, size: image.uint8Array.byteLength };
+    return { key, size: buffer.byteLength };
   });
 
   // upload images to bucket
@@ -313,10 +362,14 @@ export async function createGenImages({
     throw new Error('Failed to save generated images');
   }
 
-  // persist the generation so prompt and settings can be shown later
+  // persist the generation so prompt and settings can be shown later. Each
+  // row's visibleWatermark is that image's own actual outcome
+  // (watermarkResults[index].applied), not the shared request flag: two
+  // outputs from the same batch can differ if the watermark attempt fails
+  // for one of them.
   const { error: recordError, data: records } = await tryCatch(() =>
     createGenImageRecords(
-      mediaRows.map((mediaRow) => ({
+      mediaRows.map((mediaRow, index) => ({
         userId,
         workspaceId,
         mediaId: mediaRow.id,
@@ -327,6 +380,7 @@ export async function createGenImages({
         resolution,
         seed,
         negativePrompt,
+        visibleWatermark: watermarkResults[index].applied,
       })),
     ),
   );
@@ -440,6 +494,7 @@ export type GenImageDto = {
   resolution: string | null;
   seed: number | null;
   negativePrompt: string | null;
+  visibleWatermark: boolean;
   provider: string;
   model: string;
   referenceImages: GenImageReferenceDto[];
@@ -472,6 +527,7 @@ function toGenImageDto({
     resolution: record.resolution,
     seed: record.seed,
     negativePrompt: record.negativePrompt,
+    visibleWatermark: record.visibleWatermark,
     provider: record.provider,
     model: record.model,
     referenceImages: referenceImageDtos,

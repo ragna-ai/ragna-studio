@@ -23,7 +23,8 @@
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/storage": "workspace:*",
-    "@repo/utils": "workspace:*"
+    "@repo/utils": "workspace:*",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

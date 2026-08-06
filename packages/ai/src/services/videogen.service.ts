@@ -18,6 +18,7 @@ import {
   updateGenVideoStatus,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { applyVideoWatermark } from '@repo/media';
 import { GEN_VIDEO_JOB, GenVideoJobDto, queue } from '@repo/queue';
 import {
   buildVideoUrls,
@@ -121,6 +122,11 @@ export const generateVideoSchema = z.object({
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
   draft: z.boolean().optional(),
+  // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2).
+  // Default off; applied after render, before upload, by
+  // applyVideoWatermark below (uploadGeneratedVideo). Enhance rows copy it
+  // from the parent draft (requestEnhanceGenVideo).
+  visibleWatermark: z.boolean().optional(),
 });
 
 export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
@@ -176,6 +182,7 @@ export type GenVideoDto = {
   error: string | null;
   isDraft: boolean;
   parentGenVideoId: string | null;
+  visibleWatermark: boolean;
   videoUrl?: string;
   createdAt: Date;
 };
@@ -191,6 +198,7 @@ function toGenVideoDto(record: GenVideo, media: Media | null = null): GenVideoDt
     error: record.error,
     isDraft: record.isDraft,
     parentGenVideoId: record.parentGenVideoId,
+    visibleWatermark: record.visibleWatermark,
     videoUrl: media
       ? buildVideoUrls({ userId: record.userId, key: media.storageKey }).videoUrl
       : undefined,
@@ -244,6 +252,7 @@ export async function createGenVideoRecord(params: CreateGenVideoParams): Promis
     generateAudio,
     seed,
     draft,
+    visibleWatermark,
     frameOrigin,
     frameMediaId,
   } = params;
@@ -267,6 +276,7 @@ export async function createGenVideoRecord(params: CreateGenVideoParams): Promis
     generateAudio: generateAudio ?? true,
     seed,
     isDraft: draft ?? false,
+    visibleWatermark: visibleWatermark ?? false,
     frameOrigin,
     frameMediaId,
   });
@@ -362,6 +372,12 @@ export async function requestEnhanceGenVideo({
     duration: parent.duration,
     generateAudio: parent.generateAudio,
     seed: parent.seed,
+    // Critical (docs/ai-labeling/prd.md "Interaction with videogen v2
+    // draft/enhance"): the badge is burned into what we store, never sent
+    // to BFL, so a draft's badge can't survive into the replayed enhance
+    // bundle. Copying the flag here is what makes uploadGeneratedVideo
+    // re-apply it to the enhanced render below.
+    visibleWatermark: parent.visibleWatermark,
     frameOrigin: parent.frameOrigin,
     frameMediaId: parent.frameMediaId,
     isDraft: false,
@@ -449,23 +465,61 @@ const toProviderOptions = (opts: unknown): GenerateVideoProviderOptions =>
 interface UploadGeneratedVideoResult {
   storageKey: string;
   size: number;
+  // The actual outcome of this upload, not the request: true only when the
+  // watermark attempt below both ran and succeeded. runGenVideo persists
+  // this onto gen_videos.visibleWatermark (docs/ai-labeling/prd.md "Failure
+  // semantics").
+  visibleWatermark: boolean;
 }
 
+// Every generation route (standard, draft, enhance, Veo and BFL alike)
+// funnels its output through here before it reaches storage, so this is the
+// one place that needs to know about visibleWatermark rather than each of
+// the three generate* functions below (docs/ai-labeling/prd.md part 2:
+// provider-independent, applies on every route).
+//
+// Best-effort (docs/ai-labeling/prd.md "Failure semantics"): a render is
+// paid for and must never be lost to a labeling bug, so a failed watermark
+// attempt logs a warning and falls back to the raw bytes instead of failing
+// the generation. The returned visibleWatermark flag is what runGenVideo
+// writes back to the row, so a failure here also flips the row from
+// "requested" to "not applied".
 async function uploadGeneratedVideo(
-  userId: string,
+  record: Pick<GenVideoWithMedia, 'userId' | 'visibleWatermark'>,
   video: { uint8Array: Uint8Array; mediaType?: string },
 ): Promise<UploadGeneratedVideoResult> {
-  const { bucketName, prefix } = getVideoGenBucketNameForUser(userId);
+  const rawBuffer = Buffer.from(video.uint8Array);
+  // Buffer's generic must be widened explicitly: rawBuffer is
+  // Buffer<ArrayBuffer>, but applyVideoWatermark's result comes back through
+  // fs/promises readFile as the broader Buffer<ArrayBufferLike>.
+  let buffer: Buffer = rawBuffer;
+  let visibleWatermark = false;
+
+  if (record.visibleWatermark) {
+    const { error, data } = await tryCatch(() => applyVideoWatermark({ buffer: rawBuffer }));
+
+    if (error !== null || !data) {
+      logger.warn('Visible watermark failed, storing raw video instead', {
+        error,
+        userId: record.userId,
+      });
+    } else {
+      buffer = data.buffer;
+      visibleWatermark = true;
+    }
+  }
+
+  const { bucketName, prefix } = getVideoGenBucketNameForUser(record.userId);
   const key = `${prefix}/${randomUUID()}.mp4`;
 
   await uploadObjectBuffer({
     bucketName,
     key,
-    buffer: video.uint8Array,
+    buffer,
     contentType: video.mediaType || 'video/mp4',
   });
 
-  return { storageKey: key, size: video.uint8Array.byteLength };
+  return { storageKey: key, size: buffer.byteLength, visibleWatermark };
 }
 
 // Narrows the loosely-typed providerMetadata (Record<string, JSONObject>)
@@ -524,12 +578,13 @@ async function persistDraftCache(
 }
 
 // The result of the run side's provider call: the uploaded mp4's key and
-// size, plus the draft bundle's key when the row is a draft (null
-// otherwise). runGenVideo stores all three on the row.
+// size, the draft bundle's key when the row is a draft (null otherwise), and
+// the watermark's actual outcome. runGenVideo stores all four on the row.
 export interface GenerateAndUploadVideoResult {
   storageKey: string;
   size: number;
   draftCacheKey: string | null;
+  visibleWatermark: boolean;
 }
 
 async function downloadFrameImage(
@@ -580,15 +635,15 @@ async function generateBflVideo(record: GenVideoWithMedia): Promise<GenerateAndU
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record.userId, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
   if (!record.isDraft) {
-    return { storageKey, size, draftCacheKey: null };
+    return { storageKey, size, draftCacheKey: null, visibleWatermark };
   }
 
   const draftCacheKey = await persistDraftCache(record.userId, result.providerMetadata);
 
-  return { storageKey, size, draftCacheKey };
+  return { storageKey, size, draftCacheKey, visibleWatermark };
 }
 
 /**
@@ -630,9 +685,9 @@ async function generateEnhanceVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record.userId, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
-  return { storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null, visibleWatermark };
 }
 
 /**
@@ -675,9 +730,9 @@ async function generateVertexVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record.userId, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
-  return { storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null, visibleWatermark };
 }
 
 /**
@@ -759,6 +814,11 @@ export async function runGenVideo({
     status: 'completed',
     mediaId: createdMedia.id,
     draftCacheKey: result.draftCacheKey,
+    // Actual outcome, not the request (docs/ai-labeling/prd.md "Failure
+    // semantics"): overwrites the row's requested value with what the
+    // upload actually stored, flipping it to false if the watermark attempt
+    // failed.
+    visibleWatermark: result.visibleWatermark,
   });
 
   return { ...updated, media: createdMedia };

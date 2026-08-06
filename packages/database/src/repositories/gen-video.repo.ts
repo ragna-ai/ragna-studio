@@ -105,7 +105,13 @@ export async function deleteGenVideoByIdAndWorkspaceId({
   return deleted ?? null;
 }
 
-type UpdateGenVideoFields = Partial<Pick<NewGenVideo, 'mediaId' | 'error' | 'draftCacheKey'>>;
+// visibleWatermark included (docs/ai-labeling/prd.md "Failure semantics"):
+// the completion update flips it from "requested" to "actually applied"
+// when the watermark attempt failed, so runGenVideo (@repo/ai) needs to set
+// it alongside status/mediaId/draftCacheKey on the same call.
+type UpdateGenVideoFields = Partial<
+  Pick<NewGenVideo, 'mediaId' | 'error' | 'draftCacheKey' | 'visibleWatermark'>
+>;
 
 export async function updateGenVideoStatus({
   id,

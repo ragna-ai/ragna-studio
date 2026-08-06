@@ -165,6 +165,10 @@ async function deleteVideo() {
             <dd v-else>—</dd>
             <dt>{{ $t('videogen.preview.model') }}</dt>
             <dd class="truncate">{{ video.model }}</dd>
+            <template v-if="video.visibleWatermark">
+              <dt>{{ $t('videogen.preview.visibleWatermark') }}</dt>
+              <dd>{{ $t('videogen.preview.visibleWatermarkApplied') }}</dd>
+            </template>
           </dl>
 
           <div class="mt-auto flex flex-col gap-2">

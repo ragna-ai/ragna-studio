@@ -25,7 +25,21 @@ export const useVideoGenSettingsStore = defineStore(
     // false in VideoGenForm.vue when the selected model's provider doesn't
     // support it.
     const draft = useLocalStorage('video-gen-draft', false);
+    // Visible "AI generated" badge burn-in (docs/ai-labeling/prd.md), off by
+    // default; provider-independent, so no capability gating in the form.
+    const visibleWatermark = useLocalStorage(
+      'video-gen-visible-watermark',
+      false,
+    );
 
-    return { modelId, aspectRatio, resolution, duration, generateAudio, draft };
+    return {
+      modelId,
+      aspectRatio,
+      resolution,
+      duration,
+      generateAudio,
+      draft,
+      visibleWatermark,
+    };
   },
 );
