@@ -11,6 +11,7 @@ import {
 } from '@repo/database';
 import type { GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
+import { applyImageWatermark } from '@repo/media';
 import {
   buildImageUrls,
   downloadObjectBuffer,
@@ -22,7 +23,6 @@ import { generateImage } from 'ai';
 import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
 import { getImageModel } from '../factories';
-import { applyImageWatermark } from './watermark.service';
 
 export const imageGenProviders = ['bfl', 'google-vertex', 'openai'] as const;
 export const imageGenAspectRatios = ['1:1', '4:3', '16:9'] as const;
@@ -288,36 +288,36 @@ export async function createGenImages({
 
   const { images: genImages } = imageGenResult;
 
-  // Explicit user intent (docs/ai-labeling/prd.md "Failure semantics"): a
-  // failed watermark step fails the whole generation rather than silently
-  // delivering an unlabeled file, so this runs before upload, not after.
-  const { error: watermarkError, data: outputBuffers } = await tryCatch(() =>
-    Promise.all(
-      genImages.map(async (image) => {
-        const buffer = Buffer.from(image.uint8Array);
+  // Best-effort, per image (docs/ai-labeling/prd.md "Failure semantics"): a
+  // generated image is always saved, the watermark is an addon. A failed
+  // attempt falls back to the raw bytes for that image only, rather than
+  // failing the whole batch; `applied` becomes that image's stored
+  // gen_images.visibleWatermark value below, recording the outcome, not the
+  // request.
+  const watermarkResults = await Promise.all(
+    genImages.map(async (image) => {
+      const buffer = Buffer.from(image.uint8Array);
 
-        if (!visibleWatermark) {
-          return buffer;
-        }
+      if (!visibleWatermark) {
+        return { buffer, applied: false };
+      }
 
-        const { buffer: watermarked } = await applyImageWatermark({
-          buffer,
-          mimeType: 'image/png',
-        });
+      const { error, data } = await tryCatch(() =>
+        applyImageWatermark({ buffer, mimeType: 'image/png' }),
+      );
 
-        return watermarked;
-      }),
-    ),
+      if (error !== null || !data) {
+        logger.warn('Visible watermark failed, storing raw image instead', { error });
+        return { buffer, applied: false };
+      }
+
+      return { buffer: data.buffer, applied: true };
+    }),
   );
-
-  if (watermarkError !== null || !outputBuffers) {
-    logger.error('Failed to apply visible watermark', { watermarkError });
-    throw new Error('Failed to apply visible watermark');
-  }
 
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
-  const uploadPromises = outputBuffers.map(async (buffer) => {
+  const uploadPromises = watermarkResults.map(async ({ buffer }) => {
     const { key } = await uploadObjectBuffer({
       bucketName,
       key: `${prefix}/${randomUUID()}.png`,
@@ -362,10 +362,14 @@ export async function createGenImages({
     throw new Error('Failed to save generated images');
   }
 
-  // persist the generation so prompt and settings can be shown later
+  // persist the generation so prompt and settings can be shown later. Each
+  // row's visibleWatermark is that image's own actual outcome
+  // (watermarkResults[index].applied), not the shared request flag: two
+  // outputs from the same batch can differ if the watermark attempt fails
+  // for one of them.
   const { error: recordError, data: records } = await tryCatch(() =>
     createGenImageRecords(
-      mediaRows.map((mediaRow) => ({
+      mediaRows.map((mediaRow, index) => ({
         userId,
         workspaceId,
         mediaId: mediaRow.id,
@@ -376,7 +380,7 @@ export async function createGenImages({
         resolution,
         seed,
         negativePrompt,
-        visibleWatermark,
+        visibleWatermark: watermarkResults[index].applied,
       })),
     ),
   );

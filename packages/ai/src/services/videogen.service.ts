@@ -18,6 +18,7 @@ import {
   updateGenVideoStatus,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { applyVideoWatermark } from '@repo/media';
 import { GEN_VIDEO_JOB, GenVideoJobDto, queue } from '@repo/queue';
 import {
   buildVideoUrls,
@@ -32,7 +33,6 @@ import { experimental_generateVideo as generateVideo } from 'ai';
 import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
 import { getVideoModel } from '../factories';
-import { applyVideoWatermark } from './watermark.service';
 
 // Veo on Vertex and BFL flux-3-video (docs/videogen/prd-v2.md).
 export const videoGenProviders = ['google-vertex', 'bfl'] as const;
@@ -465,24 +465,49 @@ const toProviderOptions = (opts: unknown): GenerateVideoProviderOptions =>
 interface UploadGeneratedVideoResult {
   storageKey: string;
   size: number;
+  // The actual outcome of this upload, not the request: true only when the
+  // watermark attempt below both ran and succeeded. runGenVideo persists
+  // this onto gen_videos.visibleWatermark (docs/ai-labeling/prd.md "Failure
+  // semantics").
+  visibleWatermark: boolean;
 }
 
 // Every generation route (standard, draft, enhance, Veo and BFL alike)
 // funnels its output through here before it reaches storage, so this is the
 // one place that needs to know about visibleWatermark rather than each of
 // the three generate* functions below (docs/ai-labeling/prd.md part 2:
-// provider-independent, applies on every route). Explicit user intent: a
-// failed watermark step throws and fails the whole generation
-// (runGenVideo's tryCatch), rather than silently uploading an unlabeled
-// file.
+// provider-independent, applies on every route).
+//
+// Best-effort (docs/ai-labeling/prd.md "Failure semantics"): a render is
+// paid for and must never be lost to a labeling bug, so a failed watermark
+// attempt logs a warning and falls back to the raw bytes instead of failing
+// the generation. The returned visibleWatermark flag is what runGenVideo
+// writes back to the row, so a failure here also flips the row from
+// "requested" to "not applied".
 async function uploadGeneratedVideo(
   record: Pick<GenVideoWithMedia, 'userId' | 'visibleWatermark'>,
   video: { uint8Array: Uint8Array; mediaType?: string },
 ): Promise<UploadGeneratedVideoResult> {
   const rawBuffer = Buffer.from(video.uint8Array);
-  const buffer = record.visibleWatermark
-    ? (await applyVideoWatermark({ buffer: rawBuffer })).buffer
-    : rawBuffer;
+  // Buffer's generic must be widened explicitly: rawBuffer is
+  // Buffer<ArrayBuffer>, but applyVideoWatermark's result comes back through
+  // fs/promises readFile as the broader Buffer<ArrayBufferLike>.
+  let buffer: Buffer = rawBuffer;
+  let visibleWatermark = false;
+
+  if (record.visibleWatermark) {
+    const { error, data } = await tryCatch(() => applyVideoWatermark({ buffer: rawBuffer }));
+
+    if (error !== null || !data) {
+      logger.warn('Visible watermark failed, storing raw video instead', {
+        error,
+        userId: record.userId,
+      });
+    } else {
+      buffer = data.buffer;
+      visibleWatermark = true;
+    }
+  }
 
   const { bucketName, prefix } = getVideoGenBucketNameForUser(record.userId);
   const key = `${prefix}/${randomUUID()}.mp4`;
@@ -494,7 +519,7 @@ async function uploadGeneratedVideo(
     contentType: video.mediaType || 'video/mp4',
   });
 
-  return { storageKey: key, size: buffer.byteLength };
+  return { storageKey: key, size: buffer.byteLength, visibleWatermark };
 }
 
 // Narrows the loosely-typed providerMetadata (Record<string, JSONObject>)
@@ -553,12 +578,13 @@ async function persistDraftCache(
 }
 
 // The result of the run side's provider call: the uploaded mp4's key and
-// size, plus the draft bundle's key when the row is a draft (null
-// otherwise). runGenVideo stores all three on the row.
+// size, the draft bundle's key when the row is a draft (null otherwise), and
+// the watermark's actual outcome. runGenVideo stores all four on the row.
 export interface GenerateAndUploadVideoResult {
   storageKey: string;
   size: number;
   draftCacheKey: string | null;
+  visibleWatermark: boolean;
 }
 
 async function downloadFrameImage(
@@ -609,15 +635,15 @@ async function generateBflVideo(record: GenVideoWithMedia): Promise<GenerateAndU
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
   if (!record.isDraft) {
-    return { storageKey, size, draftCacheKey: null };
+    return { storageKey, size, draftCacheKey: null, visibleWatermark };
   }
 
   const draftCacheKey = await persistDraftCache(record.userId, result.providerMetadata);
 
-  return { storageKey, size, draftCacheKey };
+  return { storageKey, size, draftCacheKey, visibleWatermark };
 }
 
 /**
@@ -659,9 +685,9 @@ async function generateEnhanceVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
-  return { storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null, visibleWatermark };
 }
 
 /**
@@ -704,9 +730,9 @@ async function generateVertexVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size, visibleWatermark } = await uploadGeneratedVideo(record, video);
 
-  return { storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null, visibleWatermark };
 }
 
 /**
@@ -788,6 +814,11 @@ export async function runGenVideo({
     status: 'completed',
     mediaId: createdMedia.id,
     draftCacheKey: result.draftCacheKey,
+    // Actual outcome, not the request (docs/ai-labeling/prd.md "Failure
+    // semantics"): overwrites the row's requested value with what the
+    // upload actually stored, flipping it to false if the watermark attempt
+    // failed.
+    visibleWatermark: result.visibleWatermark,
   });
 
   return { ...updated, media: createdMedia };

@@ -50,6 +50,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# ffmpeg for @repo/media's watermark service (applyVideoWatermark), spawned
+# via plain PATH lookup (docs/ai-labeling/prd.md). System package, not the
+# ffmpeg-static npm package.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder --chown=node:node /prod/worker .
 
 USER node

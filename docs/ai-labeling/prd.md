@@ -1,9 +1,16 @@
 # AI-generated content labeling (PRD)
 
-> **Status: proposed** (2026-08-05). Covers generated images and videos.
-> Motivated by EU AI Act Art. 50, applicable since 2026-08-02. Implementation
-> must start **after** videogen v2 (`docs/videogen/prd-v2.md`) lands: both
-> touch `videogen.service.ts`, the `gen_videos` schema, and the video form.
+> **Status: implemented** (2026-08-05, PR #18), **revision 1 implemented**
+> (2026-08-06). Covers generated images and videos. Motivated by EU AI Act
+> Art. 50, applicable since 2026-08-02.
+>
+> **Revision 1** reworks the processing layer after Docker testing exposed a
+> black-video bug: (1) the watermark service, sharp, and the badge asset move
+> into the existing `@repo/media` package (already home to the media-library
+> type registry, extraction, and refcounted deletion; there was no need for a
+> second package); (2) system ffmpeg via `FFMPEG_PATH` instead of the
+> `ffmpeg-static` npm package; (3) watermark becomes a best-effort addon,
+> never failing a paid render.
 
 Two obligations, two answers:
 
@@ -79,26 +86,55 @@ No schema, API, or UI change for part 1.
   `visibleWatermark: z.boolean().optional()`.
 - DTOs pass it through.
 
-### Processing
+### Processing (revision 1)
 
-New `packages/ai/src/services/watermark.service.ts` with two exported
-helpers, used by imagen and videogen services (both live in `@repo/ai`, so
-the helpers do too; no new package):
+The watermark service, its native deps, and the badge asset live in the
+existing **`@repo/media`** package, alongside its media-library type
+registry, extraction, and refcounted-deletion services. `@repo/ai`'s imagen
+and videogen services import `applyImageWatermark`/`applyVideoWatermark`
+from it; `@repo/ai` itself drops `sharp` from its dependency list. The badge
+SVG is a real asset file (`packages/media/assets/ai-badge.svg`), copied into
+`dist/assets/` by tsdown's `copy` option and loaded relative to
+`import.meta.url` of the built bundle (proven by a runtime import test; the
+first file-based attempt shipped a path that did not exist in dist).
 
 - `applyImageWatermark({ buffer, mimeType })`: `sharp` composite of the
   rasterized badge onto the image. Runs in the imagegen path (synchronous,
   API process) after generation, before upload. Adds tens of milliseconds.
-- `applyVideoWatermark({ buffer })`: ffmpeg overlay. Runs in the videogen
-  path (worker process, all routes: async job, workflow inline, draft,
-  enhance) after generation, before upload. Video stream re-encodes with
-  the overlay filter (badge scaled relative to the main input); audio
-  stream is copied (`-c:a copy`). Input/output via temp files in
+- `applyVideoWatermark({ buffer })`: ffmpeg overlay, worker process, all
+  routes (async job, workflow inline, draft, enhance), after generation and
+  before upload. Version-proof pipeline in three steps: (1) probe the
+  video's dimensions with a first ffmpeg pass (`ffmpeg -i input`, no
+  ffprobe binary anywhere in this stack), parsing the `Stream #...Video:...`
+  line from stderr for its `WxH` token; (2) compute badge diameter (4% of
+  height, floor 16px; shrunk from 12%/48px after user review, 2026-08-06)
+  and margin (3% of height) in Node and rasterize the badge with sharp; (3) one plain `overlay` filter with the margin as a
+  precomputed integer, video re-encoded to libx264/yuv420p, audio copied
+  (`-c:a copy`, optional stream, `0:a?`). No `scale2ref`, no in-graph
+  scaling of any kind. The args builder (`buildWatermarkFfmpegArgs`) is a
+  pure function, exported standalone for testing. Temp files in
   `os.tmpdir()`, cleaned up in a finally block.
 
-Dependencies added to `@repo/ai`: `sharp` and `ffmpeg-static` (pinned
-binary, spawned via `node:child_process`; no wrapper lib). `ffmpeg-static`
-keeps the worker portable instead of requiring a system ffmpeg. The API
-process never invokes ffmpeg; only sharp.
+**ffmpeg comes from the system, not npm** (decided 2026-08-06). The
+service spawns the plain `ffmpeg` binary via PATH lookup; no config knob
+(an earlier `FFMPEG_PATH` env var was built and then removed as
+unnecessary). Dev machines install it via brew (user-managed);
+`apps/worker/Dockerfile` installs it via apt in its runner stage (the
+worker is the only process that spawns ffmpeg; the API only uses sharp),
+and both put it on PATH.
+The `ffmpeg-static` npm package is dropped entirely, including its
+`allowBuilds` entry.
+
+Why the rework: `ffmpeg-static` ships ffmpeg 6.0 on macOS but 7.0.2 on
+Linux. The original `scale2ref`-based filter graph works on 6.0, but on
+7.0.2 it exits 0 while writing an mp4 with no video stream at all (audio
+only, renders black); ffmpeg 8 removed `scale2ref` entirely, so brew
+ffmpeg would hard-fail too. The probe-plus-plain-overlay pipeline was
+verified 2026-08-06 against local brew ffmpeg 8.1.2 (macOS) and Debian
+bookworm's packaged ffmpeg 5.1.9 (`node:24-slim` + `apt-get install
+ffmpeg`, the same Linux base the Docker image uses): both produce a
+48-frame output with its video and audio streams intact and a non-black
+frame midway through the clip.
 
 ### Interaction with videogen v2 draft/enhance
 
@@ -111,12 +147,17 @@ draft would not survive into the enhanced render. Therefore:
   copied settings per v2 decision 4) and the badge is applied again to the
   enhanced mp4 after download.
 
-### Failure semantics
+### Failure semantics (revision 1)
 
-The toggle is explicit user intent, so a failed watermark step fails the
-generation (row goes to `failed` with the error), rather than silently
-delivering an unlabeled file. The user can retry, with or without the
-toggle.
+Every generated output is saved and accessible; the watermark is a
+best-effort addon (decided 2026-08-06, replacing the original
+fail-the-generation rule). A render is paid for and must never be lost to
+a labeling problem. The watermark is attempted in memory before the single
+upload; on failure the raw bytes are uploaded instead, the calling service
+logs a warning, and the row's `visibleWatermark` flips to false. The
+column thereby records the **outcome** ("the stored file carries the
+badge"), not the request, so the preview dialogs stay truthful with no web
+changes.
 
 ### Sequence (video, delta only)
 
