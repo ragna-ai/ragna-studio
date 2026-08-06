@@ -2,16 +2,20 @@ import type { BlackForestLabsImageProviderOptions } from '@ai-sdk/black-forest-l
 import type { GoogleVertexImageProviderOptions } from '@ai-sdk/google-vertex';
 import type { OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
 import { config } from '@repo/config';
-import type { GenImage } from '@repo/database';
+import type { GenImage, GenImageWithMedia, Media } from '@repo/database';
 import {
   createGenImageReferences,
   createGenImageRecords,
   createMedia,
   getDefaultAiModelByModality,
+  getGenImageRowsByIds,
+  updateGenImageStatus,
+  updateGenImageStatusByIds,
 } from '@repo/database';
-import type { GenImageReferenceOrigin } from '@repo/database/schema';
+import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { applyImageWatermark } from '@repo/media';
+import { GEN_IMAGES_JOB, GenImagesJobDto, queue } from '@repo/queue';
 import {
   buildImageUrls,
   downloadObjectBuffer,
@@ -31,7 +35,7 @@ export const imageGenResolutions = ['1K', '2K'] as const;
 // workspaceId is not part of the request body schema: the HTTP endpoint
 // takes it from the route (`/workspace/:workspaceId/gen-image`), and the
 // chat agent's image tool takes it from the chat. Both pass it separately
-// into createGenImages/createGenImagesWithDefaultModel below.
+// into requestGenImages/createGenImagesWithDefaultModel below.
 //
 // This is the service-level schema: it takes already-resolved storage keys.
 // The HTTP-level schema (apps/api) additionally accepts a genImageId and
@@ -122,30 +126,223 @@ function getDimensionsFromResolutionAndAspectRatio(
   return { width, height };
 }
 
-/**
- * Create an image using the specified AI model and provider
- */
-export async function createGenImages({
-  userId,
-  workspaceId,
-  prompt,
-  provider,
-  model,
-  resolution = '1K',
-  aspectRatio = '1:1',
-  n = 1,
-  seed = undefined,
-  negativePrompt = undefined,
-  referenceImages = undefined,
-  visibleWatermark = false,
-}: CreateImageParams) {
-  type GenerateImageParams = Parameters<typeof generateImage>[0];
-  type GenerateImageProviderOptions = GenerateImageParams['providerOptions'];
+type GenerateImageParams = Parameters<typeof generateImage>[0];
+type GenerateImageProviderOptions = GenerateImageParams['providerOptions'];
 
-  // SDK expects Record<string, JSONObject> but typed provider options lack index signatures;
-  // a single cast from unknown bridges the gap without losing satisfies validation at the call sites.
-  const toProviderOptions = (opts: unknown): GenerateImageProviderOptions =>
-    opts as GenerateImageProviderOptions;
+// SDK expects Record<string, JSONObject> but the typed provider options lack
+// an index signature; a single cast from unknown bridges the gap without
+// losing satisfies validation at the call site below (mirrors
+// videogen.service.ts's toProviderOptions).
+const toProviderOptions = (opts: unknown): GenerateImageProviderOptions =>
+  opts as GenerateImageProviderOptions;
+
+type GenImageReferenceDto = { origin: GenImageReferenceOrigin; imgUrl: string };
+
+// Widened for the preview dialog (docs/imagegen/prd.md): it shows the
+// settings behind a generation and can load them back into the form, so the
+// dto needs to carry those settings, not just the prompt and image URLs.
+// status/error and the optional urls mirror videogen.service.ts's
+// GenVideoDto: rawUrl/imgUrl are undefined until the row completes
+// (docs/imagegen/worker-execution-prd.md decision 7).
+export type GenImageDto = {
+  id: string;
+  status: GenImage['status'];
+  error: string | null;
+  prompt: string;
+  createdAt: Date;
+  aspectRatio: string | null;
+  resolution: string | null;
+  seed: number | null;
+  negativePrompt: string | null;
+  visibleWatermark: boolean;
+  provider: string;
+  model: string;
+  referenceImages: GenImageReferenceDto[];
+  rawUrl?: string;
+  imgUrl?: string;
+};
+
+// media is only set for a completed row; every call site below hands in a
+// just-inserted pending row, a just-failed row, or (from runGenImages) a
+// completed row with its freshly created media, so the default keeps
+// rawUrl/imgUrl undefined for the first two.
+function toGenImageDto(
+  record: GenImage,
+  media: Media | null,
+  referenceImageDtos: GenImageReferenceDto[],
+): GenImageDto {
+  const urls = media ? buildImageUrls({ userId: record.userId, key: media.storageKey }) : undefined;
+
+  return {
+    id: record.id,
+    status: record.status,
+    error: record.error,
+    prompt: record.prompt,
+    createdAt: record.createdAt,
+    aspectRatio: record.aspectRatio,
+    resolution: record.resolution,
+    seed: record.seed,
+    negativePrompt: record.negativePrompt,
+    visibleWatermark: record.visibleWatermark,
+    provider: record.provider,
+    model: record.model,
+    referenceImages: referenceImageDtos,
+    rawUrl: urls?.rawUrl,
+    imgUrl: urls?.imgUrl,
+  };
+}
+
+// Built once per request from the already-resolved reference input (mediaId
+// + storageKey), not re-derived from the DB: every row in a batch shares the
+// same reference set (docs/media-library/migration-prd.md decision 6), so
+// this only needs to run once, the same way the pre-split createGenImages did.
+function buildReferenceImageDtos(
+  userId: string,
+  referenceImages: GenerateImagesInput['referenceImages'],
+): GenImageReferenceDto[] {
+  return (referenceImages ?? []).map((reference) => ({
+    origin: reference.origin,
+    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
+  }));
+}
+
+/**
+ * Inserts a batch of pending gen_images rows (one per requested output) plus
+ * their shared gen_image_reference rows, and reads them back joined with
+ * their reference media (docs/imagegen/worker-execution-prd.md decision 2):
+ * a request creates up to 4 outputs from one prompt/settings/reference set,
+ * so the batch is n rows sharing everything except their eventual mediaId.
+ * Exported standalone (not just used by requestGenImages below) for the
+ * inline workflow path: createGenImagesWithDefaultModel calls this, then
+ * runGenImages, with no queue hop, mirroring createGenVideoRecord.
+ */
+export async function createGenImageBatch(params: CreateImageParams): Promise<GenImageWithMedia[]> {
+  const {
+    userId,
+    workspaceId,
+    prompt,
+    provider,
+    model,
+    resolution = '1K',
+    aspectRatio = '1:1',
+    n = 1,
+    seed,
+    negativePrompt,
+    referenceImages,
+    visibleWatermark = false,
+  } = params;
+
+  const records = await createGenImageRecords(
+    Array.from({ length: n }, () => ({
+      userId,
+      workspaceId,
+      status: 'pending' as const,
+      mediaId: null,
+      prompt,
+      provider,
+      model,
+      aspectRatio,
+      resolution,
+      seed,
+      negativePrompt,
+      visibleWatermark,
+    })),
+  );
+
+  if (referenceImages && referenceImages.length > 0) {
+    await createGenImageReferences(
+      records.flatMap((record) =>
+        referenceImages.map((reference, sortOrder) => ({
+          genImageId: record.id,
+          mediaId: reference.mediaId,
+          origin: reference.origin,
+          sortOrder,
+        })),
+      ),
+    );
+  }
+
+  return getGenImageRowsByIds({ ids: records.map((record) => record.id) });
+}
+
+/**
+ * Enqueues the gen-images job for an already-inserted batch, or marks every
+ * row in it failed if queueing itself fails (e.g. Redis is down), mirroring
+ * gen-video's enqueueGenVideoJob. Shared by requestGenImages below and
+ * (indirectly, through it) the chat tool's enqueue-then-poll path.
+ */
+async function enqueueGenImagesJob(
+  records: GenImageWithMedia[],
+  referenceImageDtos: GenImageReferenceDto[],
+): Promise<GenImageDto[]> {
+  const genImageIds = records.map((record) => record.id);
+
+  const { error } = await tryCatch(() =>
+    queue.genImages().add(GEN_IMAGES_JOB, new GenImagesJobDto({ genImageIds }).toJSON()),
+  );
+
+  if (error === null) {
+    return records.map((record) => toGenImageDto(record, record.media, referenceImageDtos));
+  }
+
+  logger.error('Failed to enqueue gen-images job', { error, genImageIds });
+
+  const failed = await updateGenImageStatusByIds({
+    ids: genImageIds,
+    status: 'failed',
+    error: 'Failed to enqueue image generation',
+  });
+
+  return failed.map((record) => toGenImageDto(record, null, referenceImageDtos));
+}
+
+/**
+ * Request side (API, chat tool, docs/imagegen/worker-execution-prd.md
+ * decision 3): inserts the pending batch and enqueues the gen-images job,
+ * then returns immediately. The worker (gen-images.processor.ts) does the
+ * slow part.
+ */
+export async function requestGenImages(params: CreateImageParams): Promise<GenImageDto[]> {
+  const records = await createGenImageBatch(params);
+  const referenceImageDtos = buildReferenceImageDtos(params.userId, params.referenceImages);
+
+  return enqueueGenImagesJob(records, referenceImageDtos);
+}
+
+interface GeneratedImageUpload {
+  storageKey: string;
+  size: number;
+  // The actual outcome of this image's upload, not the request: true only
+  // when the watermark attempt below both ran and succeeded
+  // (docs/ai-labeling/prd.md "Failure semantics"). runGenImages persists
+  // this onto that image's own gen_images.visibleWatermark.
+  visibleWatermark: boolean;
+}
+
+/**
+ * Runs the provider call for one batch and uploads every output
+ * (docs/imagegen/worker-execution-prd.md decision 2): all rows in the batch
+ * share prompt/settings/provider/model/references (set once at request
+ * time), so this reads them off the batch's first row rather than each one.
+ * The provider call is all-or-nothing: a failure here fails the whole batch,
+ * the caller (runGenImages) doesn't need to know which row would have been
+ * which. On success, returns one upload result per row, in the same order
+ * as `rows` and as the provider's own `images` array.
+ */
+async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<GeneratedImageUpload[]> {
+  const [first] = rows;
+
+  if (!first) {
+    throw new Error('Gen images batch is empty');
+  }
+
+  const { userId, prompt, provider, model, seed, negativePrompt, visibleWatermark } = first;
+  // gen_images.resolution/aspectRatio are typed columns ($type<GenImageResolution
+  // | GenImageAspectRatio>, genimage.schema.ts), structurally identical to
+  // this package's own ImageResolution/AspectRatio aliases, so no cast is
+  // needed to satisfy configProviderParams below.
+  const resolution: ImageResolution = first.resolution ?? '1K';
+  const aspectRatio: AspectRatio = first.aspectRatio ?? '1:1';
 
   const configProviderParams = (): Pick<
     GenerateImageParams,
@@ -153,13 +350,10 @@ export async function createGenImages({
   > => {
     switch (provider) {
       case 'bfl': {
-        const { width, height } = getDimensionsFromResolutionAndAspectRatio(
-          resolution,
-          aspectRatio,
-        );
+        const { width, height } = getDimensionsFromResolutionAndAspectRatio(resolution, aspectRatio);
         return {
           aspectRatio,
-          seed,
+          seed: seed ?? undefined,
           providerOptions: toProviderOptions({
             blackForestLabs: {
               width,
@@ -181,7 +375,7 @@ export async function createGenImages({
         // `prompt: { images }` to Imagen's edit endpoint with a hardcoded
         // `editMode: 'EDIT_MODE_INPAINT_INSERTION'`, i.e. maskless
         // inpainting, not the subject/style conditioning bfl and openai
-        // give us. Nothing below reads referenceImages, so there is
+        // give us. Nothing below reads references, so there is
         // nothing to disable here; this comment is the guardrail.
         //
         // EU AI Act Art. 50(2) guardrail (docs/ai-labeling/prd.md part 1):
@@ -190,7 +384,7 @@ export async function createGenImages({
         // unblock a seed request. Imagen rejects `seed` while addWatermark
         // is on, so the watermark wins: seed is dropped for this provider
         // below instead, the same way OpenAI silently ignores it.
-        if (seed !== undefined) {
+        if (seed !== null) {
           logger.warn(
             'Seed dropped for Vertex Imagen: SynthID marking stays on and Imagen rejects seed while it is enabled',
             { provider, model },
@@ -202,7 +396,7 @@ export async function createGenImages({
           seed: undefined,
           providerOptions: toProviderOptions({
             vertex: {
-              negativePrompt,
+              negativePrompt: negativePrompt ?? undefined,
               personGeneration: 'allow_all',
               safetySetting: 'block_medium_and_above',
               sampleImageSize: resolution === '1K' ? '1K' : '2K',
@@ -213,7 +407,7 @@ export async function createGenImages({
       case 'openai': {
         return {
           size: openAiSizeMap[aspectRatio],
-          seed,
+          seed: seed ?? undefined,
           providerOptions: toProviderOptions({
             openai: {
               quality: resolution === '2K' ? 'high' : 'medium',
@@ -233,11 +427,14 @@ export async function createGenImages({
   // byte-identical to before this feature existed.
   let generateImagePrompt: GenerateImageParams['prompt'] = prompt;
 
-  if (referenceImages && referenceImages.length > 0) {
+  if (first.references.length > 0) {
     const { error: referenceDownloadError, data: referenceBuffers } = await tryCatch(() =>
       Promise.all(
-        referenceImages.map(async ({ storageKey }) => {
-          const { buffer } = await downloadObjectBuffer(config.cfImagesBucketName, storageKey);
+        first.references.map(async (reference) => {
+          const { buffer } = await downloadObjectBuffer(
+            config.cfImagesBucketName,
+            reference.media.storageKey,
+          );
           return buffer;
         }),
       ),
@@ -253,15 +450,11 @@ export async function createGenImages({
 
   const providerParams = configProviderParams();
 
-  // generate image(s)
   const { error: imageGenError, data: imageGenResult } = await tryCatch(() =>
     generateImage({
-      model: getImageModel({
-        provider,
-        model,
-      }),
+      model: getImageModel({ provider, model }),
       prompt: generateImagePrompt,
-      n,
+      n: rows.length,
       seed: providerParams.seed,
       aspectRatio: providerParams.aspectRatio,
       size: providerParams.size,
@@ -291,9 +484,8 @@ export async function createGenImages({
   // Best-effort, per image (docs/ai-labeling/prd.md "Failure semantics"): a
   // generated image is always saved, the watermark is an addon. A failed
   // attempt falls back to the raw bytes for that image only, rather than
-  // failing the whole batch; `applied` becomes that image's stored
-  // gen_images.visibleWatermark value below, recording the outcome, not the
-  // request.
+  // failing the whole batch; the resulting `visibleWatermark` becomes that
+  // row's stored value below, recording the outcome, not the request.
   const watermarkResults = await Promise.all(
     genImages.map(async (image) => {
       const buffer = Buffer.from(image.uint8Array);
@@ -302,9 +494,7 @@ export async function createGenImages({
         return { buffer, applied: false };
       }
 
-      const { error, data } = await tryCatch(() =>
-        applyImageWatermark({ buffer, mimeType: 'image/png' }),
-      );
+      const { error, data } = await tryCatch(() => applyImageWatermark({ buffer, mimeType: 'image/png' }));
 
       if (error !== null || !data) {
         logger.warn('Visible watermark failed, storing raw image instead', { error });
@@ -317,113 +507,94 @@ export async function createGenImages({
 
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
-  const uploadPromises = watermarkResults.map(async ({ buffer }) => {
-    const { key } = await uploadObjectBuffer({
-      bucketName,
-      key: `${prefix}/${randomUUID()}.png`,
-      buffer,
-      contentType: 'image/png',
-    });
+  const uploads = await Promise.all(
+    watermarkResults.map(async ({ buffer, applied }) => {
+      const { key } = await uploadObjectBuffer({
+        bucketName,
+        key: `${prefix}/${randomUUID()}.png`,
+        buffer,
+        contentType: 'image/png',
+      });
 
-    return { key, size: buffer.byteLength };
-  });
-
-  // upload images to bucket
-  const { error: uploadError, data: uploadData } = await tryCatch(() =>
-    Promise.all(uploadPromises),
+      return { storageKey: key, size: buffer.byteLength, visibleWatermark: applied };
+    }),
   );
 
-  if (uploadError !== null || !uploadData) {
-    logger.error('Failed to upload generated images', { uploadError });
-    throw new Error('Failed to upload generated images');
+  return uploads;
+}
+
+/**
+ * Run side (docs/imagegen/worker-execution-prd.md decision 3): loads the
+ * batch's rows, flips them all to processing, runs the provider call and
+ * uploads every output, creates a media row per output, then flips each row
+ * to completed pointing at its own media (or, on any failure, flips every
+ * row in the batch to failed with the same message and rethrows, since the
+ * provider call is all-or-nothing). Called from the gen-images processor
+ * (async path) and the inline workflow path (createGenImagesWithDefaultModel
+ * below). Notification enqueueing happens only in the processor, never here.
+ */
+export async function runGenImages({
+  genImageIds,
+}: {
+  genImageIds: string[];
+}): Promise<GenImageWithMedia[]> {
+  const rows = await getGenImageRowsByIds({ ids: genImageIds });
+
+  if (rows.length === 0) {
+    throw new Error(`No gen images found for ids: ${genImageIds.join(', ')}`);
+  }
+
+  await updateGenImageStatusByIds({ ids: genImageIds, status: 'processing' });
+
+  const { error, data: uploads } = await tryCatch(() => generateAndUploadBatch(rows));
+
+  if (error !== null || !uploads) {
+    logger.error('Image generation failed', { error, genImageIds });
+    await updateGenImageStatusByIds({
+      ids: genImageIds,
+      status: 'failed',
+      error: error?.message ?? 'Image generation failed',
+    });
+    throw error ?? new Error('Image generation failed');
   }
 
   // One media row per generated output (docs/media-library/migration-prd.md
-  // decision 6), minted before the gen_images rows so each can point at its
-  // own media.id via a not-null FK.
-  const { error: mediaError, data: mediaRows } = await tryCatch(() =>
-    Promise.all(
-      uploadData.map((upload) =>
-        createMedia({
-          ownerWorkspaceId: workspaceId,
-          bucket: bucketName,
-          storageKey: upload.key,
-          filename: upload.key.split('/').pop() ?? upload.key,
-          mimeType: 'image/png',
-          size: upload.size,
-          origin: 'generated',
-        }),
-      ),
+  // decision 6), minted before the gen_images rows are flipped to completed
+  // so each row's update can point at its own media.id.
+  const mediaRows = await Promise.all(
+    uploads.map((upload, index) =>
+      createMedia({
+        ownerWorkspaceId: rows[index].workspaceId,
+        bucket: config.cfImagesBucketName,
+        storageKey: upload.storageKey,
+        filename: upload.storageKey.split('/').pop() ?? upload.storageKey,
+        mimeType: 'image/png',
+        size: upload.size,
+        origin: 'generated',
+      }),
     ),
   );
 
-  if (mediaError !== null || !mediaRows) {
-    logger.error('Failed to save generated image media rows', { mediaError });
-    throw new Error('Failed to save generated images');
-  }
-
-  // persist the generation so prompt and settings can be shown later. Each
-  // row's visibleWatermark is that image's own actual outcome
-  // (watermarkResults[index].applied), not the shared request flag: two
-  // outputs from the same batch can differ if the watermark attempt fails
-  // for one of them.
-  const { error: recordError, data: records } = await tryCatch(() =>
-    createGenImageRecords(
-      mediaRows.map((mediaRow, index) => ({
-        userId,
-        workspaceId,
-        mediaId: mediaRow.id,
-        prompt,
-        provider,
-        model,
-        aspectRatio,
-        resolution,
-        seed,
-        negativePrompt,
-        visibleWatermark: watermarkResults[index].applied,
-      })),
+  const updated = await Promise.all(
+    rows.map((row, index) =>
+      updateGenImageStatus({
+        id: row.id,
+        status: 'completed',
+        mediaId: mediaRows[index].id,
+        // Actual outcome, not the request (docs/ai-labeling/prd.md "Failure
+        // semantics"): overwrites the row's requested value with what the
+        // upload actually stored, flipping it to false if the watermark
+        // attempt failed for that image.
+        visibleWatermark: uploads[index].visibleWatermark,
+      }),
     ),
   );
 
-  if (recordError !== null || !records) {
-    logger.error('Failed to save generated image records', { recordError });
-    throw new Error('Failed to save generated images');
-  }
-
-  // Every created row shares the same reference set (one (genImageId,
-  // reference) pair per row, gen-image.repo.ts's createGenImageReferences
-  // contract), since a batch request generates several outputs from one
-  // set of inputs.
-  const { error: referenceError } = await tryCatch(() =>
-    createGenImageReferences(
-      records.flatMap((record) =>
-        (referenceImages ?? []).map((reference, sortOrder) => ({
-          genImageId: record.id,
-          mediaId: reference.mediaId,
-          origin: reference.origin,
-          sortOrder,
-        })),
-      ),
-    ),
-  );
-
-  if (referenceError !== null) {
-    logger.error('Failed to save generated image references', { referenceError });
-    throw new Error('Failed to save generated images');
-  }
-
-  const referenceImageDtos: GenImageReferenceDto[] = (referenceImages ?? []).map((reference) => ({
-    origin: reference.origin,
-    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
+  return updated.map((record, index) => ({
+    ...record,
+    media: mediaRows[index],
+    references: rows[index].references,
   }));
-
-  return {
-    // records and mediaRows come from the same 1:1 mapping above, so
-    // record[i]'s output object is always mediaRows[i]'s storage key.
-    images: records.map((record, index) =>
-      toGenImageDto({ record, storageKey: mediaRows[index].storageKey, referenceImageDtos }),
-    ),
-  };
 }
 
 type CreateImagesWithDefaultModelParams = {
@@ -436,25 +607,19 @@ type CreateImagesWithDefaultModelParams = {
   workspaceId: string;
 };
 
+interface ResolvedDefaultImageModel {
+  provider: GenerateImagesInput['provider'];
+  model: string;
+  capabilities: AiModel['capabilities'];
+}
+
 /**
- * Create images with the first configured image model.
- * Used by the chat agent's image generation tool, where the user picks no model.
- *
- * The tool's inputSchema offers seed/negativePrompt unconditionally (the
- * agent has no way to read ai_models.capabilities), so this is where they
- * get dropped for a model that doesn't support them: fail closed, an absent
- * or false flag means unsupported (docs/imagegen/prd.md decisions 1 and 7).
- * No reference images here, the tool never offers them.
+ * Resolves the first configured image model, shared by
+ * createGenImagesWithDefaultModel and requestGenImagesWithDefaultModel
+ * below: both need the same default-model lookup, they only differ in
+ * whether the generation itself runs inline or through the queue.
  */
-export async function createGenImagesWithDefaultModel({
-  userId,
-  prompt,
-  aspectRatio,
-  n,
-  seed,
-  negativePrompt,
-  workspaceId,
-}: CreateImagesWithDefaultModelParams) {
+async function resolveDefaultImageModel(): Promise<ResolvedDefaultImageModel> {
   const { error, data: imageModel } = await tryCatch(() =>
     getDefaultAiModelByModality({ modality: 'image' }),
   );
@@ -464,74 +629,59 @@ export async function createGenImagesWithDefaultModel({
     throw new Error('No image generation model available');
   }
 
-  return createGenImages({
-    userId,
-    prompt,
-    aspectRatio,
-    n,
-    seed: imageModel.capabilities?.supportsSeed ? seed : undefined,
-    negativePrompt: imageModel.capabilities?.supportsNegativePrompt ? negativePrompt : undefined,
-    provider: imageModel.provider,
-    model: imageModel.model,
-    workspaceId,
+  return { provider: imageModel.provider, model: imageModel.model, capabilities: imageModel.capabilities };
+}
+
+/**
+ * Creates images with the first configured image model and runs them inline
+ * (docs/imagegen/worker-execution-prd.md decision 6): used by the image
+ * generation tool when it already runs inside the worker (workflow
+ * executors), so there's no queue hop, mirroring the video tool's awaited
+ * path (createGenVideoRecord + runGenVideo).
+ *
+ * The tool's inputSchema offers seed/negativePrompt unconditionally (the
+ * agent has no way to read ai_models.capabilities), so this is where they
+ * get dropped for a model that doesn't support them: fail closed, an absent
+ * or false flag means unsupported (docs/imagegen/prd.md decisions 1 and 7).
+ * No reference images here, the tool never offers them.
+ */
+export async function createGenImagesWithDefaultModel(
+  params: CreateImagesWithDefaultModelParams,
+): Promise<GenImageWithMedia[]> {
+  const { provider, model, capabilities } = await resolveDefaultImageModel();
+
+  const rows = await createGenImageBatch({
+    ...params,
+    seed: capabilities?.supportsSeed ? params.seed : undefined,
+    negativePrompt: capabilities?.supportsNegativePrompt ? params.negativePrompt : undefined,
+    provider,
+    model,
+  });
+
+  return runGenImages({ genImageIds: rows.map((row) => row.id) });
+}
+
+/**
+ * Same as createGenImagesWithDefaultModel, but through the request side
+ * (docs/imagegen/worker-execution-prd.md decision 6): used by the chat-path
+ * image tool when it runs in the API process, so generation still happens on
+ * the worker. The tool polls the returned ids until they settle or the poll
+ * cap is reached.
+ */
+export async function requestGenImagesWithDefaultModel(
+  params: CreateImagesWithDefaultModelParams,
+): Promise<GenImageDto[]> {
+  const { provider, model, capabilities } = await resolveDefaultImageModel();
+
+  return requestGenImages({
+    ...params,
+    seed: capabilities?.supportsSeed ? params.seed : undefined,
+    negativePrompt: capabilities?.supportsNegativePrompt ? params.negativePrompt : undefined,
+    provider,
+    model,
   });
 }
 
 function isImageGenProvider(provider: string): provider is GenerateImagesInput['provider'] {
   return (imageGenProviders as readonly string[]).includes(provider);
-}
-
-type GenImageReferenceDto = { origin: GenImageReferenceOrigin; imgUrl: string };
-
-// Widened for the preview dialog (docs/imagegen/prd.md): it shows the
-// settings behind a generation and can load them back into the form, so the
-// dto needs to carry those settings, not just the prompt and image URLs.
-export type GenImageDto = {
-  id: string;
-  prompt: string;
-  createdAt: Date;
-  aspectRatio: string | null;
-  resolution: string | null;
-  seed: number | null;
-  negativePrompt: string | null;
-  visibleWatermark: boolean;
-  provider: string;
-  model: string;
-  referenceImages: GenImageReferenceDto[];
-  rawUrl: string;
-  imgUrl: string;
-};
-
-// Every row from one createGenImages call shares the same reference set
-// (docs/media-library/migration-prd.md decision 6), so the caller builds
-// the reference DTOs once and passes them in rather than this function
-// re-deriving them per record; storageKey is likewise passed in since a
-// plain GenImage row (from createGenImageRecords) carries only mediaId, not
-// the joined media row's storage key.
-function toGenImageDto({
-  record,
-  storageKey,
-  referenceImageDtos,
-}: {
-  record: GenImage;
-  storageKey: string;
-  referenceImageDtos: GenImageReferenceDto[];
-}): GenImageDto {
-  const { rawUrl, imgUrl } = buildImageUrls({ userId: record.userId, key: storageKey });
-
-  return {
-    id: record.id,
-    prompt: record.prompt,
-    createdAt: record.createdAt,
-    aspectRatio: record.aspectRatio,
-    resolution: record.resolution,
-    seed: record.seed,
-    negativePrompt: record.negativePrompt,
-    visibleWatermark: record.visibleWatermark,
-    provider: record.provider,
-    model: record.model,
-    referenceImages: referenceImageDtos,
-    rawUrl,
-    imgUrl,
-  };
 }

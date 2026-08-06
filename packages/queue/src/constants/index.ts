@@ -6,6 +6,7 @@ export const WORKFLOWS_QUEUE = 'workflows-queue';
 export const WORKFLOW_SCHEDULES_QUEUE = 'workflow-schedules-queue';
 export const AGENT_CONTEXT_DOCUMENTS_QUEUE = 'agent-context-documents-queue';
 export const GEN_VIDEOS_QUEUE = 'gen-videos-queue';
+export const GEN_IMAGES_QUEUE = 'gen-images-queue';
 
 // The set of notification kinds and the data payload each one carries. This is
 // the single source of truth: adding a new notification scenario is one entry
@@ -21,6 +22,11 @@ export interface NotificationDataMap {
   // a lookup; truncate it for display in the presenter, not here.
   video_generation_succeeded: { genVideoId: string; workspaceId: string; prompt: string };
   video_generation_failed: { genVideoId: string; workspaceId: string; prompt: string };
+  // One notification per batch (docs/imagegen/worker-execution-prd.md
+  // decision 5): genImageIds carries every row the job filled in, so the
+  // presenter can link straight to the library without a lookup.
+  image_generation_succeeded: { genImageIds: string[]; workspaceId: string; prompt: string };
+  image_generation_failed: { genImageIds: string[]; workspaceId: string; prompt: string };
 }
 
 export type NotificationType = keyof NotificationDataMap;

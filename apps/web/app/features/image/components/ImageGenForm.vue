@@ -97,6 +97,14 @@ const selectedModel = computed(() =>
   imageModels.value.find((model) => model.id === modelId.value),
 );
 
+// Only a completed row has a media object to condition on: the gallery
+// picker below must exclude pending/processing/failed rows, since
+// referencing one of those 404s server-side (apps/api's imagegen.service.ts
+// resolveReferenceImage, docs/imagegen/worker-execution-prd.md decision 1).
+const referenceableGenImages = computed(() =>
+  props.genImages.filter((image) => image.status === 'completed'),
+);
+
 // Fail closed: an absent or falsy capability flag means the input is
 // unavailable, never a fallback default (docs/imagegen/prd.md decision 1).
 const supportsNegativePrompt = computed(
@@ -444,14 +452,14 @@ watch(
 
         <TabsContent value="genImage">
           <p
-            v-if="props.genImages.length === 0"
+            v-if="referenceableGenImages.length === 0"
             class="text-sm text-muted-foreground"
           >
             {{ t('imagen.form.referenceImagesGalleryEmpty') }}
           </p>
           <div v-else class="flex flex-wrap gap-2">
             <button
-              v-for="image in props.genImages"
+              v-for="image in referenceableGenImages"
               :key="image.id"
               type="button"
               class="size-16 shrink-0 overflow-hidden rounded-md border-2 disabled:opacity-40"

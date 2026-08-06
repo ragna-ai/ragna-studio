@@ -72,6 +72,20 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
     to: '/text-to-video',
     workspaceId: data.workspaceId,
   }),
+  image_generation_succeeded: (data) => ({
+    titleKey: 'notification.imageGenerationSucceeded.title',
+    messageKey: 'notification.imageGenerationSucceeded.message',
+    params: { prompt: truncatePrompt(data.prompt) },
+    to: '/text-to-image',
+    workspaceId: data.workspaceId,
+  }),
+  image_generation_failed: (data) => ({
+    titleKey: 'notification.imageGenerationFailed.title',
+    messageKey: 'notification.imageGenerationFailed.message',
+    params: { prompt: truncatePrompt(data.prompt) },
+    to: '/text-to-image',
+    workspaceId: data.workspaceId,
+  }),
 };
 
 const fallbackTemplate: NotificationTemplate = {

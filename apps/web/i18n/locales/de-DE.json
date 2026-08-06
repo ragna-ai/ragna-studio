@@ -71,6 +71,14 @@
       "title": "Videoerstellung fehlgeschlagen",
       "message": "Ihr Video für „{prompt}“ konnte nicht erstellt werden."
     },
+    "imageGenerationSucceeded": {
+      "title": "Bilder fertig",
+      "message": "Ihre Bilder für „{prompt}“ sind fertig."
+    },
+    "imageGenerationFailed": {
+      "title": "Bilderstellung fehlgeschlagen",
+      "message": "Ihre Bilder für „{prompt}“ konnten nicht erstellt werden."
+    },
     "unknown": {
       "title": "Benachrichtigung",
       "message": "Sie haben eine neue Benachrichtigung."
@@ -471,7 +479,8 @@
     },
     "grid": {
       "loadError": "Generierte Bilder konnten nicht geladen werden.",
-      "empty": "Noch keine Bilder. Beschreibe oben ein Bild, um eines zu generieren."
+      "empty": "Noch keine Bilder. Beschreibe oben ein Bild, um eines zu generieren.",
+      "failed": "Bilderstellung fehlgeschlagen."
     },
     "preview": {
       "title": "Generiertes Bild",

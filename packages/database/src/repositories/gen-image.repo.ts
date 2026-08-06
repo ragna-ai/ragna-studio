@@ -1,12 +1,22 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import { db } from '../db';
-import type { GenImage, GenImageReference, GenImageWithMedia, NewGenImage, NewGenImageReference } from '../schema';
+import type {
+  GenImage,
+  GenImageReference,
+  GenImageStatus,
+  GenImageWithMedia,
+  NewGenImage,
+  NewGenImageReference,
+} from '../schema';
 import { genImage, genImageReference } from '../schema';
 
 export type {
   GenImage,
+  GenImageAspectRatio,
   GenImageReference,
   GenImageReferenceWithMedia,
+  GenImageResolution,
+  GenImageStatus,
   GenImageWithMedia,
   NewGenImageReference,
 } from '../schema';
@@ -109,6 +119,104 @@ export async function getGenImageByIdAndWorkspaceId({
   });
 
   return found ?? null;
+}
+
+// Plain lookup by id, no ownership scoping (docs/imagegen/worker-execution-
+// prd.md decision 3): the gen-images worker and the chat tool's inline
+// workflow path both only ever receive ids they created or read off a
+// trusted job payload, never a caller-supplied id, the same trust model as
+// gen-video.repo.ts's getGenVideoById. Joined the same way as
+// getGenImageByIdAndWorkspaceId, so the run side never needs a second round
+// trip to resolve a reference's storage key.
+export async function getGenImageRowsByIds({
+  ids,
+}: {
+  ids: string[];
+}): Promise<GenImageWithMedia[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  return db.query.genImage.findMany({
+    where: { id: { in: ids } },
+    with: {
+      media: true,
+      references: { with: { media: true }, orderBy: (t, { asc }) => asc(t.sortOrder) },
+    },
+  });
+}
+
+// visibleWatermark included (docs/ai-labeling/prd.md "Failure semantics"):
+// the completion update flips it from "requested" to "actually applied"
+// when the watermark attempt failed, so runGenImages (@repo/ai) needs to set
+// it alongside status/mediaId on the same call, mirroring
+// gen-video.repo.ts's updateGenVideoStatus.
+type UpdateGenImageFields = Partial<Pick<NewGenImage, 'mediaId' | 'error' | 'visibleWatermark'>>;
+
+export async function updateGenImageStatus({
+  id,
+  status,
+  ...fields
+}: { id: string; status: GenImageStatus } & UpdateGenImageFields): Promise<GenImage> {
+  const [updated] = await db
+    .update(genImage)
+    .set({ status, ...fields })
+    .where(eq(genImage.id, id))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Failed to update gen image status');
+  }
+
+  return updated;
+}
+
+// Bulk variant of updateGenImageStatus, for the batch-wide transitions a
+// gen-images job goes through as a whole (docs/imagegen/worker-execution-
+// prd.md decision 2): every row moves to 'processing' together before the
+// provider call, and the provider call is all-or-nothing, so a failure marks
+// every row in the batch 'failed' with the same message in one statement.
+// Per-row completion (different mediaId/visibleWatermark per image) still
+// goes through updateGenImageStatus above, one call per row.
+export async function updateGenImageStatusByIds({
+  ids,
+  status,
+  error,
+}: {
+  ids: string[];
+  status: GenImageStatus;
+  error?: string | null;
+}): Promise<GenImage[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  return db
+    .update(genImage)
+    .set({ status, error })
+    .where(inArray(genImage.id, ids))
+    .returning();
+}
+
+// One-time backfill (apps/api/scripts/backfill-gen-images-status.ts,
+// docs/imagegen/worker-execution-prd.md decision 1): every gen_images row
+// that existed before the `status` column was added landed on 'pending',
+// the column's own default, regardless of its real state. Under the old
+// (pre-worker) model a gen_images row only ever existed once its image was
+// uploaded, and mediaId was NOT NULL at the time, so a non-null mediaId on
+// a still-'pending' row is unambiguously a pre-existing completed row, never
+// a genuinely in-flight one (those have a null mediaId until the worker
+// fills them in). The status='pending' guard makes this idempotent: a
+// second run always matches zero rows. Returns the number of rows flipped,
+// for the script's summary output.
+export async function backfillCompletedGenImageStatus(): Promise<number> {
+  const updated = await db
+    .update(genImage)
+    .set({ status: 'completed' })
+    .where(and(isNotNull(genImage.mediaId), eq(genImage.status, 'pending')))
+    .returning({ id: genImage.id });
+
+  return updated.length;
 }
 
 // Reference media ids for a gen image, read BEFORE deleteGenImageByIdAndWorkspaceId

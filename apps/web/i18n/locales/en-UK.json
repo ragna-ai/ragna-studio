@@ -112,6 +112,14 @@
       "title": "Video generation failed",
       "message": "Your video for \"{prompt}\" could not be generated."
     },
+    "imageGenerationSucceeded": {
+      "title": "Images ready",
+      "message": "Your images for \"{prompt}\" are ready."
+    },
+    "imageGenerationFailed": {
+      "title": "Image generation failed",
+      "message": "Your images for \"{prompt}\" could not be generated."
+    },
     "unknown": {
       "title": "Notification",
       "message": "You have a new notification."
@@ -465,7 +473,8 @@
     },
     "grid": {
       "loadError": "Failed to load generated images.",
-      "empty": "No images yet. Describe an image above to generate one."
+      "empty": "No images yet. Describe an image above to generate one.",
+      "failed": "Image generation failed."
     },
     "preview": {
       "title": "Generated image",

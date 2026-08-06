@@ -118,7 +118,12 @@ const showAdvancedOptions = computed(
   () => capability.value.supportsNegativePrompt || capability.value.supportsSeed,
 );
 
-const genImages = computed(() => genImageData.value?.genImages ?? []);
+// Only a completed row has a media object to animate: pending/processing/
+// failed rows 404 server-side (apps/api's videogen.service.ts resolveFrame,
+// docs/imagegen/worker-execution-prd.md decision 1).
+const genImages = computed(
+  () => genImageData.value?.genImages.filter((image) => image.status === 'completed') ?? [],
+);
 
 // Functions
 function resolveFrame() {

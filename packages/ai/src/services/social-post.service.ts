@@ -209,6 +209,13 @@ async function attachImagesToDraft({
     return 'One or more selected images could not be found.';
   }
 
+  // mediaId is null for a pending/processing/failed row
+  // (docs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // hasn't produced an object yet has nothing to attach.
+  if (genImages.some((image) => image.mediaId === null)) {
+    return 'One or more selected images are still generating.';
+  }
+
   const genImageById = new Map(genImages.map((image) => [image.id, image]));
 
   const { error: deleteError } = await tryCatch(() =>
@@ -228,8 +235,11 @@ async function attachImagesToDraft({
       // database query's return order.
       imageIds.map((imageId, index) => {
         const genImage = genImageById.get(imageId);
-        // Unreachable: every id was confirmed present in genImageById above.
-        if (!genImage) {
+        // Unreachable: every id was confirmed present in genImageById, and
+        // every mediaId confirmed non-null, above. The mediaId check is
+        // what narrows it from `string | null` to `string` here without a
+        // cast.
+        if (!genImage || !genImage.mediaId) {
           throw new Error(`Missing generated image ${imageId}`);
         }
         return {

@@ -5,6 +5,16 @@ import { media } from './media.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
+export type GenImageStatus = 'pending' | 'processing' | 'completed' | 'failed';
+// Kept as local literal unions rather than imported from @repo/ai (which
+// depends on @repo/database, so the reverse import would cycle), same
+// reasoning as genvideo.schema.ts's GenVideoAspectRatio/GenVideoResolution.
+// Structurally identical to imagen.service.ts's own AspectRatio/
+// ImageResolution aliases, so a row read off this column needs no cast to
+// satisfy that package's function signatures.
+export type GenImageAspectRatio = '1:1' | '4:3' | '16:9';
+export type GenImageResolution = '1K' | '2K';
+
 // GENERATED IMAGE
 export const genImage = pgTable(
   'gen_images',
@@ -16,17 +26,20 @@ export const genImage = pgTable(
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().$type<GenImageStatus>().default('pending'),
     // The generated output's media row (docs/media-library/migration-prd.md).
-    // No onDelete action, same as chat_attachment.media_id: the DB refuses
-    // to delete a media row while a gen image still points at it.
-    mediaId: text('media_id')
-      .notNull()
-      .references(() => media.id),
+    // Null until the worker uploads the output and mints it
+    // (docs/imagegen/worker-execution-prd.md decision 1). No onDelete
+    // action, same as chat_attachment.media_id: the DB refuses to delete a
+    // media row while a gen image still points at it.
+    mediaId: text('media_id').references(() => media.id),
+    // Set on failure, cleared on a retry (mirrors gen_videos.error).
+    error: text('error'),
     prompt: text('prompt').notNull(),
     provider: text('provider').notNull(),
     model: text('model').notNull(),
-    aspectRatio: text('aspect_ratio'),
-    resolution: text('resolution'),
+    aspectRatio: text('aspect_ratio').$type<GenImageAspectRatio>(),
+    resolution: text('resolution').$type<GenImageResolution>(),
     seed: integer('seed'),
     negativePrompt: text('negative_prompt'),
     // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2):
@@ -79,6 +92,9 @@ export type NewGenImageReference = typeof genImageReference.$inferInsert;
 
 export type GenImageReferenceWithMedia = GenImageReference & { media: Media };
 export type GenImageWithMedia = GenImage & {
-  media: Media;
+  // Nullable like gen_videos' media relation: no object exists yet for a
+  // pending/processing/failed row (docs/imagegen/worker-execution-prd.md
+  // decision 1).
+  media: Media | null;
   references: GenImageReferenceWithMedia[];
 };
