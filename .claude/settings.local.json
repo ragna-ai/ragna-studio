@@ -10,5 +10,18 @@
   "model": "claude-sonnet-5",
   "sandbox": {
     "enabled": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | { read -r cmd; if echo \"$cmd\" | grep -qE '(^|[;&|]|[[:space:]])rm([[:space:]]|$)' && echo \"$cmd\" | grep -qE -- '(-[a-zA-Z]*[rR][a-zA-Z]*\\b|--recursive)' && echo \"$cmd\" | grep -qE -- '(-[a-zA-Z]*f[a-zA-Z]*\\b|--force)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"rm -rf (recursive+force delete) always requires approval\"}}'; fi; }"
+          }
+        ]
+      }
+    ]
   }
 }
