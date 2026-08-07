@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { NewTask, Task, TaskLabel, TaskPriority, TaskStatus } from '../schema';
 import { task, taskToTaskLabel, workspace } from '../schema';
-import { sortOrderAsc, sortOrderDesc } from './sort-order';
+import { sortOrderAsc, sortOrderDesc } from '../utils/sort-order';
 
 export type { NewTask, Task, TaskPriority, TaskStatus } from '../schema';
 

@@ -27,7 +27,7 @@ Drizzle-kit's `db:push`/`db:pull` workflow (see root `CLAUDE.md`) doesn't versio
 
 ## Fix
 
-Force byte order at the query level instead of the column level: `packages/database/src/repositories/sort-order.ts` exports `sortOrderAsc(column)` / `sortOrderDesc(column)`, thin `sql` wrappers that append `COLLATE "C"` to the ordering expression. Every query in `dataset.repo.ts` and `task.repo.ts` that orders by a `sortOrder` column (including relational-query `orderBy` callbacks, which accept raw `SQL` per `DBQueryConfigOrderByCallback`) uses these instead of `asc()`/`desc()`.
+Force byte order at the query level instead of the column level: `packages/database/src/utils/sort-order.ts` exports `sortOrderAsc(column)` / `sortOrderDesc(column)`, thin `sql` wrappers that append `COLLATE "C"` to the ordering expression. Every query in `dataset.repo.ts` and `task.repo.ts` that orders by a `sortOrder` column (including relational-query `orderBy` callbacks, which accept raw `SQL` per `DBQueryConfigOrderByCallback`) uses these instead of `asc()`/`desc()`.
 
 `moveDatasetRow` and `moveTask` also self-heal pre-existing duplicate `sortOrder` values in place (see the `hasDuplicateSortOrder` check in each file) before computing a move, since historical data can still contain them regardless of collation.
 

@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
 import { dataset, datasetRow } from '../schema';
-import { sortOrderAsc, sortOrderDesc } from './sort-order';
+import { sortOrderAsc, sortOrderDesc } from '../utils/sort-order';
 
 export type {
   Dataset,
