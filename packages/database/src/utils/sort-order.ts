@@ -13,11 +13,25 @@ import { sql, type AnyColumn, type SQL } from 'drizzle-orm';
 // both display order and the "neighbor" lookups used to compute a moved
 // row's new key (symptom: a row's key cycles between a few values instead
 // of converging toward the end being moved to). `COLLATE "C"` forces byte
-// order so the DB's ordering matches the library's.
-export function sortOrderAsc(column: AnyColumn): SQL {
+// order so the DB's ordering matches the library's. See
+// docs/database/fractional-indexing-collation.md for the full writeup.
+
+/**
+ * Orders `column` ascending by raw byte value (`COLLATE "C"`), not
+ * Postgres's default locale collation. Drop-in replacement for drizzle's
+ * `asc()` wherever `column` holds a fractional-indexing (or otherwise
+ * byte-order-compared) key.
+ */
+export function byteOrderAsc(column: AnyColumn): SQL {
   return sql`${column} COLLATE "C" ASC`;
 }
 
-export function sortOrderDesc(column: AnyColumn): SQL {
+/**
+ * Orders `column` descending by raw byte value (`COLLATE "C"`), not
+ * Postgres's default locale collation. Drop-in replacement for drizzle's
+ * `desc()` wherever `column` holds a fractional-indexing (or otherwise
+ * byte-order-compared) key.
+ */
+export function byteOrderDesc(column: AnyColumn): SQL {
   return sql`${column} COLLATE "C" DESC`;
 }

@@ -27,8 +27,18 @@ Drizzle-kit's `db:push`/`db:pull` workflow (see root `CLAUDE.md`) doesn't versio
 
 ## Fix
 
-Force byte order at the query level instead of the column level: `packages/database/src/utils/sort-order.ts` exports `sortOrderAsc(column)` / `sortOrderDesc(column)`, thin `sql` wrappers that append `COLLATE "C"` to the ordering expression. Every query in `dataset.repo.ts` and `task.repo.ts` that orders by a `sortOrder` column (including relational-query `orderBy` callbacks, which accept raw `SQL` per `DBQueryConfigOrderByCallback`) uses these instead of `asc()`/`desc()`.
+Force byte order at the query level instead of the column level: `packages/database/src/utils/sort-order.ts` exports `byteOrderAsc(column)` / `byteOrderDesc(column)`, thin `sql` wrappers that append `COLLATE "C"` to the ordering expression. Every query in `dataset.repo.ts` and `task.repo.ts` that orders by a `sortOrder` column (including relational-query `orderBy` callbacks, which accept raw `SQL` per `DBQueryConfigOrderByCallback`) uses these instead of `asc()`/`desc()`.
 
 `moveDatasetRow` and `moveTask` also self-heal pre-existing duplicate `sortOrder` values in place (see the `hasDuplicateSortOrder` check in each file) before computing a move, since historical data can still contain them regardless of collation.
 
-**If a new table/query adds a fractional-indexing `sortOrder` (or similar lexicographically-compared) column**, use `sortOrderAsc`/`sortOrderDesc` for every `ORDER BY` on it, not `asc()`/`desc()` — otherwise the same class of bug reappears.
+**If a new table/query adds a fractional-indexing `sortOrder` (or similar lexicographically-compared) column**, use `byteOrderAsc`/`byteOrderDesc` for every `ORDER BY` on it, not `asc()`/`desc()` — otherwise the same class of bug reappears.
+
+## Performance note
+
+`COLLATE "C"` isn't only more correct here, it's also cheaper: `C`/`POSIX` comparisons are plain byte `memcmp`, while a locale collation (`en_US.utf8`) goes through a locale-aware `strcoll`/ICU call on every comparison. That's a per-comparison win regardless of indexing.
+
+The bigger win, an index that satisfies the `ORDER BY` outright (no separate sort step), needs an index whose collation matches the query's — but neither `dataset_rows` nor `tasks` currently has *any* index on `sort_order` (only `datasetId`/`workspaceId`/`userId` are indexed; see `dataset.schema.ts`/`task.schema.ts`). Every `sortOrder` query today does a sequential scan + in-memory sort regardless of collation. At current caps (`MAX_ROWS_PER_DATASET = 1000`, and `listTasks` is deliberately unpaginated on the assumption that a workspace's task count stays board-sized) that's not a real cost, so no index has been added. If row/task counts grow enough for this to matter, add a `COLLATE "C"` expression index (e.g. `(dataset_id, sort_order)` / `(workspace_id, status, sort_order)`) at that point.
+
+## Other columns checked
+
+Audited 2026-08-07: `sort_order` is the only lexicographically-order-dependent text column in the schema. Also found: `gen_images.sort_order` (`genimage.schema.ts`) and `social_post_media.sort_order` (`social-post.schema.ts`) are `integer`, not `text` — numeric comparison, no collation involved, not affected. No materialized-path, cursor-pagination, or other byte-order-dependent text columns exist elsewhere in the schema. `generateKeyBetween`/`fractional-indexing` is only ever imported in `dataset.repo.ts` and `task.repo.ts` (a third hit in `credit.repo.ts` is just a comment referencing this file, not a real usage).

@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { NewTask, Task, TaskLabel, TaskPriority, TaskStatus } from '../schema';
 import { task, taskToTaskLabel, workspace } from '../schema';
-import { sortOrderAsc, sortOrderDesc } from '../utils/sort-order';
+import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
 export type { NewTask, Task, TaskPriority, TaskStatus } from '../schema';
 
@@ -54,7 +54,7 @@ export async function listTasks({
       labels: true,
       assignedAgent: assignedAgentColumns,
     },
-    orderBy: (t) => sortOrderAsc(t.sortOrder),
+    orderBy: (t) => byteOrderAsc(t.sortOrder),
   });
 
   const subtaskCounts = await getSubtaskCounts({ parentTaskIds: tasks.map((t) => t.id) });
@@ -125,7 +125,7 @@ export async function getTaskById({
     with: {
       labels: true,
       assignedAgent: assignedAgentColumns,
-      subtasks: { orderBy: (t) => sortOrderAsc(t.sortOrder) },
+      subtasks: { orderBy: (t) => byteOrderAsc(t.sortOrder) },
     },
   });
 
@@ -219,7 +219,7 @@ async function sortOrderAtBottomOfColumn(
     .select({ sortOrder: task.sortOrder })
     .from(task)
     .where(and(eq(task.workspaceId, workspaceId), eq(task.status, status)))
-    .orderBy(sortOrderDesc(task.sortOrder))
+    .orderBy(byteOrderDesc(task.sortOrder))
     .limit(1);
 
   return generateKeyBetween(lastTask?.sortOrder ?? null, null);
@@ -359,7 +359,7 @@ export async function moveTask({
       .select({ id: task.id, sortOrder: task.sortOrder })
       .from(task)
       .where(and(eq(task.workspaceId, workspaceId), eq(task.status, status), ne(task.id, id)))
-      .orderBy(sortOrderAsc(task.sortOrder), asc(task.id));
+      .orderBy(byteOrderAsc(task.sortOrder), asc(task.id));
 
     // Pre-existing tasks can share a `sortOrder` (same risk as
     // `moveDatasetRow` in dataset.repo.ts). `generateKeyBetween` throws on

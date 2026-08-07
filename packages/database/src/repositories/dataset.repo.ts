@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
 import { dataset, datasetRow } from '../schema';
-import { sortOrderAsc, sortOrderDesc } from '../utils/sort-order';
+import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
 export type {
   Dataset,
@@ -333,7 +333,7 @@ export async function getDatasetRows({
     },
     // `id` breaks ties: sort keys are unique for rows created under the
     // dataset lock, but backfilled rows may share one.
-    orderBy: (c) => [sortOrderAsc(c.sortOrder), asc(c.id)],
+    orderBy: (c) => [byteOrderAsc(c.sortOrder), asc(c.id)],
     limit: cappedLimit,
   });
 }
@@ -395,7 +395,7 @@ export async function createDatasetRow({
       .select({ sortOrder: datasetRow.sortOrder })
       .from(datasetRow)
       .where(eq(datasetRow.datasetId, datasetId))
-      .orderBy(sortOrderDesc(datasetRow.sortOrder))
+      .orderBy(byteOrderDesc(datasetRow.sortOrder))
       .limit(1);
 
     const sortOrder = generateKeyBetween(lastRow?.sortOrder ?? null, null);
@@ -450,7 +450,7 @@ export async function moveDatasetRow({
       .select({ id: datasetRow.id, sortOrder: datasetRow.sortOrder })
       .from(datasetRow)
       .where(and(eq(datasetRow.datasetId, datasetId), isNull(datasetRow.deletedAt)))
-      .orderBy(sortOrderAsc(datasetRow.sortOrder), asc(datasetRow.id));
+      .orderBy(byteOrderAsc(datasetRow.sortOrder), asc(datasetRow.id));
 
     if (!rows.some((row) => row.id === rowId)) {
       throw new Error('Dataset row not found');
