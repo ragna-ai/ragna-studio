@@ -8,6 +8,14 @@ packages:
 # being copied alone into a Docker runner stage.
 injectWorkspacePackages: true
 
+# Injection means consumers resolve @repo/* through frozen copies under
+# node_modules/.pnpm/ that nothing refreshes on rebuild. This re-syncs a
+# package's injected copies whenever its `build` script runs through pnpm,
+# keeping the edit-then-rebuild workflow correct. See
+# docs/docker-deploy/injected-workspace-packages.md.
+syncInjectedDepsAfterScripts:
+  - build
+
 # drizzle-kit resolves `drizzle-orm/_relations` from its own subtree but declares
 # no drizzle-orm dependency, so pnpm otherwise links the hoisted 0.45.2 (pulled in
 # by db0/nuxt/better-auth) which lacks that subpath. Pin the matching RC here.

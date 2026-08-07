@@ -155,17 +155,29 @@ bun test
 storage, LinkedIn) are faked with Bun's `mock.module()`, registered by
 `packages/testing/src/mocks/` (`ai-provider.mock.ts`,
 `storage-provider.mock.ts`, `linkedin-provider.mock.ts`, combined by
-`provider-mocks.ts`). Every test file that needs a mock already imports
-`@repo/testing` for its fixtures (`seedAuthenticatedUser`,
-`truncateAllTables`, ...), listed before its own `import { app } from
-'../../src/app'` — so no dedicated preload is needed: `@repo/testing`'s
-module body runs every `mock.module()` call as a side effect, and Bun
-finishes importing every test file (running each one's top-level code, mock
-registration included) before executing any test body, so registration
-effectively applies process-wide regardless of which file happens to run
-first. `test/auth/route-sweep.test.ts` and `test/smoke/health.test.ts` are
-the only files that skip the `@repo/testing` import, and neither needs
-it: route-sweep asserts a 401 before any controller logic runs, and health
+`provider-mocks.ts`). Registration happens in two places:
+
+- `test/preload.ts`, wired via `bunfig.toml`'s `[test].preload`,
+  re-registers the `@repo/linkedin` mock from apps/api's own resolution
+  context. This is required: with `injectWorkspacePackages: true`,
+  `@repo/testing` is materialized as a frozen copy under
+  `node_modules/.pnpm/`, and a `mock.module('@repo/linkedin', ...)` call
+  made inside that copy keys on a different resolved path than the one
+  apps/api's code imports, so the mock silently never applied. See
+  `docs/docker-deploy/injected-workspace-packages.md`.
+- `@repo/testing`'s module body still runs every `mock.module()` call as a
+  side effect: every test file that needs a mock imports it for fixtures
+  (`seedAuthenticatedUser`, `truncateAllTables`, ...), listed before its
+  own `import { app } from '../../src/app'`, and Bun finishes importing
+  every test file before executing any test body. This path covers the
+  `ai` and `@repo/storage` mocks, which currently resolve to the same
+  virtual-store slot from both contexts. If one of them ever silently
+  stops mocking after a lockfile change, re-register it in
+  `test/preload.ts` the same way as `@repo/linkedin`.
+
+`test/auth/route-sweep.test.ts` and `test/smoke/health.test.ts` are the
+only files that skip the `@repo/testing` import, and neither needs it:
+route-sweep asserts a 401 before any controller logic runs, and health
 never touches a mocked route.
 
 Each mock spreads the real module and overrides only the network-touching

@@ -32,6 +32,16 @@ pnpm test:api
 # Run a specific app or package task
 pnpm --filter @repo/web dev
 pnpm --filter @repo/worker dev
+
+# After editing any @repo/* package (including @repo/testing, whose build is a no-op sync trigger),
+# rebuild it through pnpm — this also re-syncs the frozen .pnpm copies that injected consumers resolve
+# (syncInjectedDepsAfterScripts in pnpm-workspace.yaml; see packages/testing/README.md)
+pnpm --filter @repo/<pkg> build
+
+# Clean install (wipes node_modules workspace-wide via pnpm's built-in command, not a package.json
+# script). Fallback if something still resolves stale code after a rebuild.
+pnpm clean
+pnpm install
 ```
 
 Formatting uses **oxfmt** (single quotes). Linting uses **oxlint**.

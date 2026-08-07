@@ -9,6 +9,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "true",
     "check-types": "tsc --noEmit",
     "test:setup": "NODE_ENV=test bun scripts/setup-test-db.ts"
   },

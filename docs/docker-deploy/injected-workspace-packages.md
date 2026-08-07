@@ -148,3 +148,173 @@ creates the divergent peer-dependency resolutions; a single app's pruned,
 deploy-scoped subtree doesn't have that problem. `packages/config`'s `.env`
 auto-load is also gated behind `NODE_ENV !== 'production'` and never runs
 in the deployed image at all.
+
+**Caveat on the verification above**: it was done by `rm -rf node_modules`
+at the repo root only. pnpm workspaces keep a *separate* `node_modules/`
+inside every app and package directory (`apps/api/node_modules/`,
+`packages/testing/node_modules/`, etc.) — deleting only the root one leaves
+all of those untouched, so a subsequent `pnpm install` can silently reuse
+stale, pre-`injectWorkspacePackages` per-package symlinks instead of
+re-resolving them under the new setting. The dual-instance conclusion above
+was drawn against that partially-stale state. The bug in the next section
+was found *because* a properly full clean install (every per-package
+`node_modules` removed, not just the root one) produces different, and
+worse, results — so the "harmless, dev-only" verdict above should be
+treated as unconfirmed until re-checked the same thorough way.
+
+## Real bug: `@repo/testing`'s LinkedIn mock silently stops working
+
+Found via a genuinely full clean install (`find . -maxdepth 3 -iname
+node_modules ... -exec rm -rf {} +`, not just the root one — see caveat
+above). `apps/api/test/social-post/social-posts.test.ts`'s "publishes
+through the faked LinkedIn client" test started failing: the app made a
+real network call to LinkedIn's API (401 Unauthorized) instead of using
+`@repo/testing`'s `linkedin-provider.mock.ts` fake.
+
+### Root cause
+
+`packages/testing` has no `"files"` restriction in its `package.json` (it
+ships its whole `src/` tree, unlike the built packages). Once
+`injectWorkspacePackages: true` is on, pnpm doesn't just decide
+package-by-package whether to inject — it rewrites *every* `workspace:*`
+dependency in the lockfile from a plain `link:../../packages/X` entry
+(always a live symlink, content is whatever's on disk right now) to a
+`file:packages/X(...peer-hash...)` entry (resolved like a normal
+content-addressable dependency, cloned into `node_modules/.pnpm/` at
+install time). Once something is a `file:` dependency, pnpm's ordinary
+virtual-store logic — the same mechanism that gives `@repo/ai`,
+`@repo/media`, and `@repo/storage` multiple slots when their peer
+resolution diverges across consumers — can and does materialize a real,
+frozen copy of it, independent of any injection intent. `@repo/testing`
+pulls in a wide, divergent dependency tree (`better-auth`, `ai`, multiple
+optional DB-driver peers via `@repo/database`), so it gets its own
+`node_modules/.pnpm/@repo+testing@file+packages+testing_<peer-hash>/`
+slot, materialized as a real copy — confirmed by diffing it against
+`packages/testing/src/`: it's an independent, frozen snapshot, not a
+symlink back to source.
+
+That copy's own `mock.module('@repo/linkedin', ...)` call (in its own
+`linkedin-provider.mock.ts`) resolves `@repo/linkedin` through *its own*
+node_modules chain
+(`.pnpm/@repo+testing@.../node_modules/@repo/linkedin` →
+`.pnpm/@repo+linkedin@file+packages+linkedin/node_modules/@repo/linkedin`),
+which is a different resolved path than what
+`apps/api/src/services/social-post.service.ts` uses directly
+(`apps/api/node_modules/@repo/linkedin` → a plain symlink straight to
+`packages/linkedin`). Confirmed with debug instrumentation: the mock
+file's own top-level code never even runs from the app's perspective, and
+`social-post.service.ts` calls the real `createLinkedinClient`. Bun's
+`mock.module` doesn't bridge the two different resolution paths, even
+though both ultimately point at the same file on disk.
+
+Bisected with git worktrees + fully independent installs to confirm this
+is not a false positive: the test passes cleanly at every commit through
+`869f71d2` ("fix: missing deps in ducker build", the commit that first set
+`injectWorkspacePackages: true`), and fails starting at the very next
+commit (`7122d52`), whose only relevant change was regenerating
+`pnpm-lock.yaml` with `pnpm install` (no `--frozen-lockfile`) — which is
+what actually completed the `link:` → `file:` conversion for every
+workspace dependency, `@repo/testing` included. `869f71d2`'s lockfile had
+the *setting* on but hadn't yet been regenerated to fully reflect it (most
+`@repo/*` entries were still `link:`), which is why it didn't reproduce
+there.
+
+### Fix attempts that didn't work
+
+- **`dependenciesMeta: { "@repo/ai": { "injected": true }, ... }`** listing
+  every direct production dependency explicitly on `apps/api`, with the
+  global `injectWorkspacePackages` setting removed: broke a *different*
+  package (`@repo/logger` ended up as a dangling symlink to a virtual-store
+  slot that was never created). Manually scoping injection per direct
+  dependency doesn't reliably cascade through the transitive graph.
+- **`dependenciesMeta: { "@repo/testing": { "injected": false } }`** on
+  `apps/api`, with the global setting left on: doesn't work either. The
+  lockfile still records `@repo/testing@file:packages/testing(...)` (not
+  reverted to `link:`), and the test still fails the same way. The
+  `injected` flag doesn't control the `link:`/`file:` lockfile
+  representation that's actually the root cause — it's narrower than that.
+
+### Fix that worked: re-register from apps/api's resolution context
+
+Resolved 2026-08-07, on the test/mock side as suggested above, leaving
+pnpm's injection mechanics alone:
+
+- `packages/testing/src/mocks/linkedin-provider.mock.ts` now exports the
+  replacement module object (`linkedinModuleMock`) instead of only
+  building it inline inside its own `mock.module()` call.
+- New `apps/api/test/preload.ts` (wired via `bunfig.toml`
+  `[test].preload`) imports that object and calls
+  `mock.module('@repo/linkedin', () => linkedinModuleMock)` again. Because
+  the caller lives inside `apps/api`, Bun resolves `@repo/linkedin` to the
+  same path the app's own code imports, so this registration is the one
+  that actually intercepts `social-post.service.ts`. The frozen copy's own
+  registration still covers its own path. Both registrations share one
+  module object, so `LinkedinApiError` identity stays consistent
+  everywhere.
+
+Verified: the previously failing publish test and the full `apps/api`
+suite (315 tests, 27 files) pass. The `ai` and `@repo/storage` mocks were
+never broken because both resolution contexts happen to land on the same
+virtual-store slot for them (confirmed by comparing the frozen
+`@repo/testing` copy's `node_modules/@repo/*` symlink targets against
+`apps/api/node_modules/@repo/*`). That is coincidence, not contract; if
+either silently stops mocking after a lockfile change, re-register it in
+the preload the same way.
+
+### DX landmine: frozen `.pnpm` copies go stale — fixed via sync setting
+
+The general staleness rule under injection: **an edit or rebuild reaches
+consumers that resolve the package through a live symlink, and does not
+reach consumers that resolve it through a materialized `.pnpm` slot.**
+For apps/api as of 2026-08-07, `config`/`database`/`linkedin`/`logger`/
+`queue`/`utils`/`workflow`/`export` were direct symlinks, while
+`ai`/`auth`/`media`/`storage`/`testing` went through slots — but the
+split is decided by peer-resolution divergence and shifts with lockfile
+changes, so don't memorize it. Transitive resolutions are the sneaky
+case: even a symlinked package reaches *its own* dependencies through
+slots (e.g. `@repo/database`'s view of `@repo/config`).
+
+Observed concretely, twice:
+
+- Adding an export to `packages/testing/src/` produced "Export named
+  'linkedinModuleMock' not found" pointing into the frozen copy. Plain
+  `pnpm install` (and even `--force`) reported "Already up to date"
+  without refreshing it; deleting the `.pnpm` slot alone wasn't repaired
+  either. Only a full re-link (delete `node_modules`, reinstall) fixed it.
+- Rebuilding `@repo/storage` gave `packages/storage/dist/index.mjs` a new
+  inode while the injected copy kept the old file. Nothing watches or
+  syncs on build by default.
+
+**Fix (2026-08-07)**: `pnpm-workspace.yaml` now sets
+
+```yaml
+syncInjectedDepsAfterScripts:
+  - build
+```
+
+so pnpm re-syncs a package's injected copies whenever its `build` script
+runs *through pnpm* (`pnpm --filter @repo/<pkg> build`). Verified: after a
+storage rebuild the slot's `dist/index.mjs` is hardlinked to the fresh
+build output, and for `@repo/testing` (which got a no-op `"build": "true"`
+script purely as a sync trigger, since it ships raw `src/`) a marker file
+added to `src/` appeared in the injected copy after
+`pnpm --filter @repo/testing build` and disappeared again after deleting
+it and re-running the build.
+
+So the pre-existing workflow — rebuild a package after editing it — is
+sufficient again, including for `@repo/testing`. `pnpm clean` +
+`pnpm install` remains the fallback if something still looks stale.
+
+How this interacts with the dev workflows (all verified empirically):
+
+- `pnpm --filter @repo/<pkg> build`: syncs.
+- Turbo-run builds (`pnpm build`, `turbo run build --filter=...`, and the
+  `^build` that `pnpm dev` runs on startup): sync. Turbo invokes the
+  scripts in a way that still fires pnpm's hook.
+- **Watch-mode rebuilds do NOT sync** (`pnpm dev:all`, where packages run
+  `tsdown --watch`): the script never completes, so the
+  after-scripts hook never fires. A `touch`-triggered rebuild left the
+  source `dist/` on a new inode while the injected copy kept the old
+  file. The usual `pnpm dev` is unaffected because it filters to the
+  three apps and doesn't watch packages at all; after a package edit you
+  run the filtered build anyway, and that syncs.

@@ -74,7 +74,16 @@ export function resetLinkedinProviderMock(): void {
   waitForImageAvailableMock.mockImplementation(defaultWaitForImageAvailableImpl);
 }
 
-mock.module('@repo/linkedin', () => ({
+// Exported so apps/api's test preload can re-register it from the app's
+// own resolution context. Under injectWorkspacePackages, this file runs
+// from a frozen copy in node_modules/.pnpm/, where '@repo/linkedin'
+// resolves to a different path than the one apps/api imports, so the
+// mock.module call below never reaches the app on its own. Sharing one
+// module object keeps LinkedinApiError identity consistent across both
+// registrations. See docs/docker-deploy/injected-workspace-packages.md.
+export const linkedinModuleMock = {
   ...linkedinPackage,
   createLinkedinClient: createLinkedinClientMock,
-}));
+};
+
+mock.module('@repo/linkedin', () => linkedinModuleMock);
