@@ -3,6 +3,7 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+  injectWorkspacePackages: true
 
 catalogs:
   default:
@@ -102,7 +103,7 @@ importers:
         version: 2.3.0
       unstorage:
         specifier: ^1.17.5
-        version: 1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))
+        version: 1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -11261,9 +11262,9 @@ snapshots:
       '@lucide/vue': 1.28.0(vue@3.5.41(typescript@6.0.3))
       '@maizzle/tailwindcss': 1.5.6
       '@tailwindcss/postcss': 4.3.3
-      '@tailwindcss/vite': 4.3.3(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))
+      '@tailwindcss/vite': 4.3.3(vite@8.2.0(@types/node@24.1.0)(jiti@2.7.0)(tsx@4.23.0))
       '@unhead/vue': 3.3.1(@oxc-project/types@0.142.0)(@vitejs/devtools-kit@0.4.8(cac@7.0.0)(typescript@6.0.3)(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0)))(esbuild@0.28.1)(lightningcss@1.33.0)(oxc-parser@0.141.0)(rolldown@1.2.2)(rollup@4.62.4)(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
-      '@vitejs/plugin-vue': 6.0.8(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
+      '@vitejs/plugin-vue': 6.0.8(vite@8.2.0(@types/node@24.1.0)(jiti@2.7.0)(tsx@4.23.0))(vue@3.5.41(typescript@6.0.3))
       '@vueuse/core': 14.4.0(vue@3.5.41(typescript@6.0.3))
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -12861,7 +12862,7 @@ snapshots:
       postcss: 8.5.25
       tailwindcss: 4.3.3
 
-  '@tailwindcss/vite@4.3.3(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.3(vite@8.2.0(@types/node@24.1.0)(jiti@2.7.0)(tsx@4.23.0))':
     dependencies:
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
@@ -13639,7 +13640,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue@6.0.8(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))':
+  '@vitejs/plugin-vue@6.0.8(vite@8.2.0(@types/node@24.1.0)(jiti@2.7.0)(tsx@4.23.0))(vue@3.5.41(typescript@6.0.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0)
@@ -14714,6 +14715,13 @@ snapshots:
       '@libsql/client': 0.17.4
       better-sqlite3: 12.11.1
       drizzle-orm: 0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)
+
+  db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)):
+    optionalDependencies:
+      '@libsql/client': 0.17.4
+      better-sqlite3: 12.11.1
+      drizzle-orm: 1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
+    optional: true
 
   debug@4.4.3(supports-color@10.2.2):
     dependencies:
@@ -19100,6 +19108,20 @@ snapshots:
       ufo: 1.6.4
     optionalDependencies:
       db0: 0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0))
+      ioredis: 5.11.1(supports-color@10.2.2)
+
+  unstorage@1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2)):
+    dependencies:
+      anymatch: 3.1.3
+      chokidar: 5.0.0
+      destr: 2.0.5
+      h3: 1.15.11
+      lru-cache: 11.5.2
+      node-fetch-native: 1.6.7
+      ofetch: 1.5.1
+      ufo: 1.6.4
+    optionalDependencies:
+      db0: 0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))
       ioredis: 5.11.1(supports-color@10.2.2)
 
   untun@0.2.2: {}

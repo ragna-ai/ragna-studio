@@ -44,7 +44,7 @@ RUN pnpm turbo build --filter=@repo/webbrowser
 
 # Self-contained folder: webbrowser dist + production node_modules.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/webbrowser deploy --prod --legacy /prod/webbrowser
+  pnpm --filter @repo/webbrowser deploy --prod /prod/webbrowser
 
 # ============================================================
 # Runner — Bun on Debian + system Chromium. Bun's default/debian

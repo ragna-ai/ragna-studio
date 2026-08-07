@@ -2,6 +2,12 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# Required for `pnpm deploy` (used by the app Dockerfiles) to materialize
+# @repo/* workspace packages as real files inside the deploy target instead
+# of symlinking back to the monorepo source tree, which doesn't survive
+# being copied alone into a Docker runner stage.
+injectWorkspacePackages: true
+
 # drizzle-kit resolves `drizzle-orm/_relations` from its own subtree but declares
 # no drizzle-orm dependency, so pnpm otherwise links the hoisted 0.45.2 (pulled in
 # by db0/nuxt/better-auth) which lacks that subpath. Pin the matching RC here.

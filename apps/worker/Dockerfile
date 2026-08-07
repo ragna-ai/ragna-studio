@@ -39,7 +39,7 @@ RUN pnpm turbo build --filter=@repo/worker
 # Self-contained folder: worker dist + production node_modules.
 # Deps stay unbundled (dynamic imports and native modules need real files).
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/worker deploy --prod --legacy /prod/worker
+  pnpm --filter @repo/worker deploy --prod /prod/worker
 
 # ============================================================
 # Runner — minimal image with the deployed worker

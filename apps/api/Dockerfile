@@ -44,7 +44,7 @@ RUN pnpm turbo build --filter=@repo/api
 
 # Remove dev dependencies, keeping the built dist folders
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/api deploy --prod --legacy /prod/api
+  pnpm --filter @repo/api deploy --prod /prod/api
 
 # ============================================================
 # Runner — Bun on Debian (src/index.ts uses Bun.serve). The alpine tag
