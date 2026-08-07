@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
 import { dataset, datasetRow } from '../schema';
+import { sortOrderAsc, sortOrderDesc } from './sort-order';
 
 export type {
   Dataset,
@@ -332,7 +333,7 @@ export async function getDatasetRows({
     },
     // `id` breaks ties: sort keys are unique for rows created under the
     // dataset lock, but backfilled rows may share one.
-    orderBy: (c, { asc }) => [asc(c.sortOrder), asc(c.id)],
+    orderBy: (c) => [sortOrderAsc(c.sortOrder), asc(c.id)],
     limit: cappedLimit,
   });
 }
@@ -394,7 +395,7 @@ export async function createDatasetRow({
       .select({ sortOrder: datasetRow.sortOrder })
       .from(datasetRow)
       .where(eq(datasetRow.datasetId, datasetId))
-      .orderBy(desc(datasetRow.sortOrder))
+      .orderBy(sortOrderDesc(datasetRow.sortOrder))
       .limit(1);
 
     const sortOrder = generateKeyBetween(lastRow?.sortOrder ?? null, null);
@@ -449,10 +450,30 @@ export async function moveDatasetRow({
       .select({ id: datasetRow.id, sortOrder: datasetRow.sortOrder })
       .from(datasetRow)
       .where(and(eq(datasetRow.datasetId, datasetId), isNull(datasetRow.deletedAt)))
-      .orderBy(asc(datasetRow.sortOrder));
+      .orderBy(sortOrderAsc(datasetRow.sortOrder), asc(datasetRow.id));
 
     if (!rows.some((row) => row.id === rowId)) {
       throw new Error('Dataset row not found');
+    }
+
+    // Pre-existing rows can share a `sortOrder` (e.g. backfilled data, see
+    // `getDatasetRows`'s tie-break comment). `generateKeyBetween` throws on
+    // equal bounds, so repair any duplicates in place before computing the
+    // move: cheap since it only touches rows once, and every dataset only
+    // needs it the first time it's moved.
+    if (hasDuplicateSortOrder(rows)) {
+      let previousSortOrder: string | null = null;
+      for (const row of rows) {
+        const renumberedSortOrder = generateKeyBetween(previousSortOrder, null);
+        if (renumberedSortOrder !== row.sortOrder) {
+          await tx
+            .update(datasetRow)
+            .set({ sortOrder: renumberedSortOrder })
+            .where(eq(datasetRow.id, row.id));
+          row.sortOrder = renumberedSortOrder;
+        }
+        previousSortOrder = row.sortOrder;
+      }
     }
 
     const siblingRows = rows.filter((row) => row.id !== rowId);
@@ -470,6 +491,12 @@ export async function moveDatasetRow({
 
     return movedRow;
   });
+}
+
+// `rows` is sorted by `sortOrder` (with `id` as tiebreaker), so a duplicate
+// only ever shows up as two adjacent equal values.
+function hasDuplicateSortOrder(rows: { sortOrder: string }[]): boolean {
+  return rows.some((row, index) => index > 0 && row.sortOrder === rows[index - 1]?.sortOrder);
 }
 
 // `siblingRows` is already scoped to this dataset's non-deleted rows (and

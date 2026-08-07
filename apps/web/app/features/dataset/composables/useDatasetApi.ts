@@ -258,11 +258,14 @@ export function useMoveDatasetRow(datasetId: MaybeRefOrGetter<string>) {
           body: { afterRowId },
         },
       ),
-    onSuccess: () => {
+    // Returned so the mutation (and `isMovingRow`, which gates the up/down
+    // buttons) stays pending until the refetch lands, not just until the
+    // invalidation is queued. Otherwise a fast second click reads the
+    // pre-move `rows` array and computes `afterRowId` from stale positions.
+    onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: datasetKeys.rows(workspaceId, datasetId),
-      });
-    },
+      }),
     onError: () => {
       toast.error('Failed to move row');
     },

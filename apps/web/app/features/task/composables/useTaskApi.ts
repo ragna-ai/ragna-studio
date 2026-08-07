@@ -56,9 +56,9 @@ function taskBasePath(workspaceId: WorkspaceId): string {
  * `undefined`s for the filter slots, which only partial-matches a list
  * query whose filters are ALSO all `undefined` — not the filtered ones.
  */
-function invalidateTaskLists(queryClient: QueryClient, workspaceId: WorkspaceId): void {
+function invalidateTaskLists(queryClient: QueryClient, workspaceId: WorkspaceId): Promise<void> {
   const resolvedWorkspaceId = toValue(workspaceId);
-  queryClient.invalidateQueries({
+  return queryClient.invalidateQueries({
     predicate: (query) =>
       query.queryKey[0] === 'tasks' &&
       query.queryKey[1] === resolvedWorkspaceId &&
@@ -119,9 +119,7 @@ export function useCreateTask() {
   return useMutation<TaskResponse, unknown, CreateTaskRequest>({
     mutationFn: (body) =>
       $api<TaskResponse>(taskBasePath(workspaceId), { method: 'POST', body }),
-    onSuccess: () => {
-      invalidateTaskLists(queryClient, workspaceId);
-    },
+    onSuccess: () => invalidateTaskLists(queryClient, workspaceId),
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to create task'));
     },
@@ -173,7 +171,7 @@ export function useUpdateTask() {
 
       // The board/list view renders labels, priority, due date, and
       // assignee inline too.
-      invalidateTaskLists(queryClient, workspaceId);
+      return invalidateTaskLists(queryClient, workspaceId);
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to save task'));
@@ -217,12 +215,15 @@ export function useMoveTask() {
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to move task'));
     },
-    onSettled: () => {
+    onSettled: () =>
       // Board/list reconciliation after both success and error/rollback:
       // the board owns its own local column state for the optimistic drag,
       // this is the server-truth resync (docs/tasks/prd.md, "Board view").
-      invalidateTaskLists(queryClient, workspaceId);
-    },
+      // Returned so the mutation stays pending until the refetch lands, not
+      // just until the invalidation is queued (same fix as useMoveDatasetRow
+      // in the dataset composable) — otherwise a fast second drag reads a
+      // stale pre-move `props.tasks` array.
+      invalidateTaskLists(queryClient, workspaceId),
   });
 }
 
@@ -233,8 +234,8 @@ export function useDeleteTask() {
   return useMutation<void, unknown, string>({
     mutationFn: (taskId) =>
       $api<void>(`${taskBasePath(workspaceId)}/${taskId}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      invalidateTaskLists(queryClient, workspaceId);
+    onSuccess: async () => {
+      await invalidateTaskLists(queryClient, workspaceId);
       toast.success('Task deleted');
     },
     onError: (error) => {

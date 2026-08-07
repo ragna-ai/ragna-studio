@@ -1,19 +1,9 @@
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  inArray,
-  isNotNull,
-  isNull,
-  ne,
-  notInArray,
-  sql,
-} from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, ne, notInArray, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type { NewTask, Task, TaskLabel, TaskPriority, TaskStatus } from '../schema';
 import { task, taskToTaskLabel, workspace } from '../schema';
+import { sortOrderAsc, sortOrderDesc } from './sort-order';
 
 export type { NewTask, Task, TaskPriority, TaskStatus } from '../schema';
 
@@ -64,7 +54,7 @@ export async function listTasks({
       labels: true,
       assignedAgent: assignedAgentColumns,
     },
-    orderBy: (t, { asc: ascOrder }) => ascOrder(t.sortOrder),
+    orderBy: (t) => sortOrderAsc(t.sortOrder),
   });
 
   const subtaskCounts = await getSubtaskCounts({ parentTaskIds: tasks.map((t) => t.id) });
@@ -135,7 +125,7 @@ export async function getTaskById({
     with: {
       labels: true,
       assignedAgent: assignedAgentColumns,
-      subtasks: { orderBy: (t, { asc: ascOrder }) => ascOrder(t.sortOrder) },
+      subtasks: { orderBy: (t) => sortOrderAsc(t.sortOrder) },
     },
   });
 
@@ -229,7 +219,7 @@ async function sortOrderAtBottomOfColumn(
     .select({ sortOrder: task.sortOrder })
     .from(task)
     .where(and(eq(task.workspaceId, workspaceId), eq(task.status, status)))
-    .orderBy(desc(task.sortOrder))
+    .orderBy(sortOrderDesc(task.sortOrder))
     .limit(1);
 
   return generateKeyBetween(lastTask?.sortOrder ?? null, null);
@@ -350,11 +340,45 @@ export async function moveTask({
   afterTaskId?: string | null;
 }): Promise<Task | null> {
   return db.transaction(async (tx) => {
+    // Locks the workspace row for the duration of the transaction, the same
+    // pattern `moveDatasetRow` uses on its parent dataset row, so concurrent
+    // moves (and `createTask`'s append, see `sortOrderAtBottomOfColumn`) in
+    // this workspace serialize instead of racing to compute colliding sort
+    // keys.
+    const [lockedWorkspace] = await tx
+      .select()
+      .from(workspace)
+      .where(eq(workspace.id, workspaceId))
+      .for('update');
+
+    if (!lockedWorkspace) {
+      throw new Error('Workspace not found');
+    }
+
     const columnTasks = await tx
       .select({ id: task.id, sortOrder: task.sortOrder })
       .from(task)
       .where(and(eq(task.workspaceId, workspaceId), eq(task.status, status), ne(task.id, id)))
-      .orderBy(asc(task.sortOrder));
+      .orderBy(sortOrderAsc(task.sortOrder), asc(task.id));
+
+    // Pre-existing tasks can share a `sortOrder` (same risk as
+    // `moveDatasetRow` in dataset.repo.ts). `generateKeyBetween` throws on
+    // equal bounds, so repair any duplicates in place before computing the
+    // move.
+    if (hasDuplicateSortOrder(columnTasks)) {
+      let previousSortOrder: string | null = null;
+      for (const columnTask of columnTasks) {
+        const renumberedSortOrder = generateKeyBetween(previousSortOrder, null);
+        if (renumberedSortOrder !== columnTask.sortOrder) {
+          await tx
+            .update(task)
+            .set({ sortOrder: renumberedSortOrder })
+            .where(eq(task.id, columnTask.id));
+          columnTask.sortOrder = renumberedSortOrder;
+        }
+        previousSortOrder = columnTask.sortOrder;
+      }
+    }
 
     const sortOrder = resolveMoveSortOrder(columnTasks, afterTaskId);
 
@@ -366,6 +390,14 @@ export async function moveTask({
 
     return movedTask ?? null;
   });
+}
+
+// `columnTasks` is sorted by `sortOrder` (with `id` as tiebreaker), so a
+// duplicate only ever shows up as two adjacent equal values.
+function hasDuplicateSortOrder(columnTasks: { sortOrder: string }[]): boolean {
+  return columnTasks.some(
+    (columnTask, index) => index > 0 && columnTask.sortOrder === columnTasks[index - 1]?.sortOrder,
+  );
 }
 
 // `columnTasks` is already scoped to the target workspace + status, so
