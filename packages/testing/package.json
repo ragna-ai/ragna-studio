@@ -19,7 +19,7 @@
     "@repo/linkedin": "workspace:*",
     "@repo/storage": "workspace:*",
     "ai": "catalog:",
-    "better-auth": "^1.6.25"
+    "better-auth": "^1.6.26"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

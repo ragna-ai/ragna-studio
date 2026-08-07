@@ -12,7 +12,7 @@
     "check-types": "nuxt typecheck"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.51",
+    "@ai-sdk/vue": "^4.0.56",
     "@internationalized/date": "^3.12.3",
     "@lucide/vue": "^1.28.0",
     "@nuxt/fonts": "0.14.0",
@@ -46,10 +46,10 @@
     "prettier": "^3.9.6",
     "reka-ui": "^2.10.1",
     "shadcn-nuxt": "2.8.1",
-    "shiki": "^4.4.1",
+    "shiki": "^4.4.2",
     "tailwind-merge": "^3.6.0",
     "uuidv7": "^1.2.1",
-    "vue": "^3.5.40",
+    "vue": "^3.5.41",
     "vue-draggable-plus": "^0.6.0",
     "vue-router": "^5.2.0",
     "vue-sonner": "^2.0.9",
