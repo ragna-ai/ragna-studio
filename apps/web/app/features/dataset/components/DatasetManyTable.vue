@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { DatabaseIcon, MoreVerticalIcon, PencilIcon, Trash2Icon } from '@lucide/vue';
+import {
+  MoreVerticalIcon,
+  PencilIcon,
+  TableIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import type { DatasetListItem } from '~/features/dataset/types';
 
 interface Props {
@@ -47,16 +52,21 @@ const columnCount = 6;
         @click="navigateTo(`/dataset/${dataset.id}`)"
       >
         <TableCell class="w-12">
-          <DatabaseIcon class="size-4 stroke-1.5" />
+          <TableIcon class="size-4 stroke-1.5" />
         </TableCell>
         <TableCell>
           <div class="text-sm font-semibold">{{ dataset.name }}</div>
-          <div v-if="dataset.description" class="max-w-80 truncate text-xs text-muted-foreground">
+          <div
+            v-if="dataset.description"
+            class="max-w-80 truncate text-xs text-muted-foreground"
+          >
             {{ dataset.description }}
           </div>
         </TableCell>
         <TableCell>
-          <Badge :variant="dataset.origin === 'agent' ? 'secondary' : 'outline'">
+          <Badge
+            :variant="dataset.origin === 'agent' ? 'secondary' : 'outline'"
+          >
             {{ t(`dataset.origin.${dataset.origin}`) }}
           </Badge>
         </TableCell>
@@ -67,7 +77,11 @@ const columnCount = 6;
         <TableCell class="text-right whitespace-nowrap" @click.stop>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+              <Button
+                variant="outline"
+                size="icon"
+                :aria-label="t('common.actions')"
+              >
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>

@@ -1,6 +1,5 @@
 import {
   BotIcon,
-  DatabaseIcon,
   FileTextIcon,
   FolderClockIcon,
   HomeIcon,
@@ -9,6 +8,7 @@ import {
   MessagesSquareIcon,
   PlusCircleIcon,
   Share2Icon,
+  TableIcon,
   VideoIcon,
   WorkflowIcon,
 } from '@lucide/vue';
@@ -71,7 +71,7 @@ const defaultItems: NavItemConfig[] = [
   {
     id: 'dataset',
     path: '/dataset',
-    icon: DatabaseIcon,
+    icon: TableIcon,
     labelKey: 'nav.datasets',
     children: [],
   },
