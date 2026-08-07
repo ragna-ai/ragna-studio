@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   GenImage,
@@ -196,27 +196,6 @@ export async function updateGenImageStatusByIds({
     .set({ status, error })
     .where(inArray(genImage.id, ids))
     .returning();
-}
-
-// One-time backfill (apps/api/scripts/backfill-gen-images-status.ts,
-// docs/imagegen/worker-execution-prd.md decision 1): every gen_images row
-// that existed before the `status` column was added landed on 'pending',
-// the column's own default, regardless of its real state. Under the old
-// (pre-worker) model a gen_images row only ever existed once its image was
-// uploaded, and mediaId was NOT NULL at the time, so a non-null mediaId on
-// a still-'pending' row is unambiguously a pre-existing completed row, never
-// a genuinely in-flight one (those have a null mediaId until the worker
-// fills them in). The status='pending' guard makes this idempotent: a
-// second run always matches zero rows. Returns the number of rows flipped,
-// for the script's summary output.
-export async function backfillCompletedGenImageStatus(): Promise<number> {
-  const updated = await db
-    .update(genImage)
-    .set({ status: 'completed' })
-    .where(and(isNotNull(genImage.mediaId), eq(genImage.status, 'pending')))
-    .returning({ id: genImage.id });
-
-  return updated.length;
 }
 
 // Reference media ids for a gen image, read BEFORE deleteGenImageByIdAndWorkspaceId

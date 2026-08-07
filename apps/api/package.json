@@ -15,11 +15,9 @@
     "build": "tsdown",
     "dev": "bun --watch src/index.ts",
     "preview": "bun dist/index.mjs",
-    "check-types": "tsc --noEmit && tsc --noEmit -p test && tsc --noEmit -p scripts",
+    "check-types": "tsc --noEmit && tsc --noEmit -p test",
     "test": "bun test",
-    "test:setup": "pnpm --filter @repo/testing test:setup",
-    "backfill:media": "bun scripts/backfill-media.ts",
-    "backfill:gen-images-status": "bun scripts/backfill-gen-images-status.ts"
+    "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.0",

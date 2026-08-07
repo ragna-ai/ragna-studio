@@ -25,7 +25,7 @@
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
     "db:seed": "tsx src/seed/index.ts",
-    "db:backfill-workspace": "tsx src/scripts/backfill-workspace.ts",
+    "db:backup": "tsx src/scripts/backup.ts",
     "credits:grant": "tsx src/scripts/grant-credits.ts"
   },
   "dependencies": {
