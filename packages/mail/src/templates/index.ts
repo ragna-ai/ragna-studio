@@ -1,8 +1,9 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// At runtime, import.meta.url is dist/index.mjs → ../src/templates resolves to packages/mail/src/templates/
-const emailsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../src/templates')
+// At runtime, import.meta.url is dist/index.mjs → templates resolves to the
+// dist/templates/ copy placed there by tsdown.config.ts's `copy` option.
+const emailsDir = resolve(dirname(fileURLToPath(import.meta.url)), 'templates')
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const templates: Record<string, (vars: any) => { path: string; vars: Record<string, unknown> }> = {

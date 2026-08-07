@@ -61,10 +61,10 @@ importers:
         version: 0.9.0(hono@4.13.0)(zod@4.4.3)
       '@repo/ai':
         specifier: workspace:*
-        version: link:../../packages/ai
+        version: file:packages/ai(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@24.1.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(supports-color@10.2.2)(valibot@1.4.2(typescript@6.0.3))
       '@repo/auth':
         specifier: workspace:*
-        version: link:../../packages/auth
+        version: file:packages/auth(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(vue@3.5.41(typescript@6.0.3))
       '@repo/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -82,13 +82,13 @@ importers:
         version: link:../../packages/logger
       '@repo/media':
         specifier: workspace:*
-        version: link:../../packages/media
+        version: file:packages/media(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@24.1.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))(valibot@1.4.2(typescript@6.0.3))
       '@repo/queue':
         specifier: workspace:*
         version: link:../../packages/queue
       '@repo/storage':
         specifier: workspace:*
-        version: link:../../packages/storage
+        version: file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
       '@repo/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -110,7 +110,7 @@ importers:
     devDependencies:
       '@repo/testing':
         specifier: workspace:*
-        version: link:../../packages/testing
+        version: file:packages/testing(60faacd40c12452bf7d82b410e6f9a4a)
       '@repo/ts-config':
         specifier: workspace:*
         version: link:../../packages/ts-config
@@ -155,7 +155,7 @@ importers:
         version: 1.0.1(magic-string@1.1.0)(magicast@0.5.4)(oxc-parser@0.141.0)(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.41(typescript@6.0.3)))(rolldown@1.2.2)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.2)(rollup@4.62.4)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0)))
       '@repo/ai':
         specifier: workspace:*
-        version: link:../../packages/ai
+        version: file:packages/ai(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@26.1.2)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(supports-color@10.2.2)(valibot@1.4.2(typescript@6.0.3))
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -352,7 +352,7 @@ importers:
         version: link:../../packages/logger
       '@repo/mail':
         specifier: workspace:*
-        version: link:../../packages/mail
+        version: file:packages/mail(@types/node@24.1.0)(shiki@4.4.2)(tailwind-merge@3.6.0)(tsx@4.23.0)(vue@3.5.41(typescript@6.0.3))
       '@repo/media':
         specifier: workspace:*
         version: link:../../packages/media
@@ -3626,6 +3626,47 @@ packages:
 
   '@remusao/trie@1.5.0':
     resolution: {integrity: sha512-UX+3utJKgwCsg6sUozjxd38gNMVRXrY4TNX9VvCdSrlZBS1nZjRPi98ON3QjRAdf6KCguJFyQARRsulTeqQiPg==}
+
+  '@repo/ai@file:packages/ai':
+    resolution: {directory: packages/ai, type: directory}
+
+  '@repo/auth@file:packages/auth':
+    resolution: {directory: packages/auth, type: directory}
+
+  '@repo/config@file:packages/config':
+    resolution: {directory: packages/config, type: directory}
+
+  '@repo/database@file:packages/database':
+    resolution: {directory: packages/database, type: directory}
+
+  '@repo/linkedin@file:packages/linkedin':
+    resolution: {directory: packages/linkedin, type: directory}
+
+  '@repo/logger@file:packages/logger':
+    resolution: {directory: packages/logger, type: directory}
+
+  '@repo/mail@file:packages/mail':
+    resolution: {directory: packages/mail, type: directory}
+    peerDependencies:
+      vue: ^3.5.0
+
+  '@repo/media@file:packages/media':
+    resolution: {directory: packages/media, type: directory}
+
+  '@repo/queue@file:packages/queue':
+    resolution: {directory: packages/queue, type: directory}
+
+  '@repo/storage@file:packages/storage':
+    resolution: {directory: packages/storage, type: directory}
+
+  '@repo/testing@file:packages/testing':
+    resolution: {directory: packages/testing, type: directory}
+
+  '@repo/utils@file:packages/utils':
+    resolution: {directory: packages/utils, type: directory}
+
+  '@repo/workflow@file:packages/workflow':
+    resolution: {directory: packages/workflow, type: directory}
 
   '@rolldown/binding-android-arm64@1.2.2':
     resolution: {integrity: sha512-l7x215OGvo1s52JWmR8U/DAVzEDWBCIbTm28aeJV/WDTSHgcKXaZTuBT0hJMs5NggilfJTW3clZVvd24yfKJxA==}
@@ -10212,6 +10253,13 @@ snapshots:
     optionalDependencies:
       drizzle-orm: 0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)
 
+  '@better-auth/drizzle-adapter@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))':
+    dependencies:
+      '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
+      '@better-auth/utils': 0.4.2
+    optionalDependencies:
+      drizzle-orm: 1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
+
   '@better-auth/kysely-adapter@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(kysely@0.29.4)':
     dependencies:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
@@ -12512,6 +12560,688 @@ snapshots:
 
   '@remusao/trie@1.5.0': {}
 
+  '@repo/ai@file:packages/ai(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@24.1.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(supports-color@10.2.2)(valibot@1.4.2(typescript@6.0.3))':
+    dependencies:
+      '@ai-sdk/anthropic': 4.0.34(zod@4.4.3)
+      '@ai-sdk/black-forest-labs': 2.0.24(zod@4.4.3)
+      '@ai-sdk/google': 4.0.37(zod@4.4.3)
+      '@ai-sdk/google-vertex': 5.0.45(supports-color@10.2.2)(zod@4.4.3)
+      '@ai-sdk/mcp': 2.0.27(zod@4.4.3)
+      '@ai-sdk/openai': 4.0.34(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.6
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/logger': file:packages/logger
+      '@repo/media': file:packages/media(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@24.1.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))(valibot@1.4.2(typescript@6.0.3))
+      '@repo/queue': file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)
+      '@repo/storage': file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
+      '@repo/utils': file:packages/utils
+      ai: 7.0.56(zod@4.4.3)
+      serpapi: 2.2.1
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cloudflare/workers-types'
+      - '@deno/kv'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/blobs'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/node'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - aws4fetch
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
+      - db0
+      - effect
+      - expo-sqlite
+      - idb-keyval
+      - ioredis
+      - mssql
+      - mysql2
+      - pg
+      - pg-native
+      - postgres
+      - redis
+      - sql.js
+      - sqlite3
+      - supports-color
+      - typebox
+      - uploadthing
+      - valibot
+
+  '@repo/ai@file:packages/ai(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@26.1.2)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(supports-color@10.2.2)(valibot@1.4.2(typescript@6.0.3))':
+    dependencies:
+      '@ai-sdk/anthropic': 4.0.34(zod@4.4.3)
+      '@ai-sdk/black-forest-labs': 2.0.24(zod@4.4.3)
+      '@ai-sdk/google': 4.0.37(zod@4.4.3)
+      '@ai-sdk/google-vertex': 5.0.45(supports-color@10.2.2)(zod@4.4.3)
+      '@ai-sdk/mcp': 2.0.27(zod@4.4.3)
+      '@ai-sdk/openai': 4.0.34(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.6
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/logger': file:packages/logger
+      '@repo/media': file:packages/media(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@26.1.2)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))(valibot@1.4.2(typescript@6.0.3))
+      '@repo/queue': file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)
+      '@repo/storage': file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))
+      '@repo/utils': file:packages/utils
+      ai: 7.0.56(zod@4.4.3)
+      serpapi: 2.2.1
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cloudflare/workers-types'
+      - '@deno/kv'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/blobs'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/node'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - aws4fetch
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
+      - db0
+      - effect
+      - expo-sqlite
+      - idb-keyval
+      - ioredis
+      - mssql
+      - mysql2
+      - pg
+      - pg-native
+      - postgres
+      - redis
+      - sql.js
+      - sqlite3
+      - supports-color
+      - typebox
+      - uploadthing
+      - valibot
+
+  '@repo/auth@file:packages/auth(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(vue@3.5.41(typescript@6.0.3))':
+    dependencies:
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/queue': file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)
+      better-auth: 1.6.26(better-sqlite3@12.11.1)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(pg@8.22.0)(vue@3.5.41(typescript@6.0.3))
+      jose: 6.2.8
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@lynx-js/react'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
+      - drizzle-kit
+      - drizzle-orm
+      - effect
+      - expo-sqlite
+      - ioredis
+      - mongodb
+      - mssql
+      - mysql2
+      - next
+      - pg
+      - pg-native
+      - postgres
+      - prisma
+      - react
+      - react-dom
+      - redis
+      - solid-js
+      - sql.js
+      - sqlite3
+      - svelte
+      - typebox
+      - valibot
+      - vitest
+      - vue
+
+  '@repo/config@file:packages/config':
+    dependencies:
+      dotenv: 17.4.2
+      zod: 4.4.3
+
+  '@repo/database@file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))':
+    dependencies:
+      '@repo/config': file:packages/config
+      '@repo/utils': file:packages/utils
+      '@repo/workflow': file:packages/workflow
+      drizzle-orm: 1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
+      drizzle-seed: 1.0.0-rc.4(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))
+      fractional-indexing: 4.0.0
+      pg: 8.22.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - better-sqlite3
+      - bun-types
+      - effect
+      - expo-sqlite
+      - mssql
+      - mysql2
+      - pg-native
+      - postgres
+      - sql.js
+      - sqlite3
+      - typebox
+      - valibot
+
+  '@repo/linkedin@file:packages/linkedin': {}
+
+  '@repo/logger@file:packages/logger':
+    dependencies:
+      '@repo/config': file:packages/config
+      consola: 3.4.2
+
+  '@repo/mail@file:packages/mail(@types/node@24.1.0)(shiki@4.4.2)(tailwind-merge@3.6.0)(tsx@4.23.0)(vue@3.5.41(typescript@6.0.3))':
+    dependencies:
+      '@maizzle/framework': 6.0.13(@nuxt/kit@4.5.2(magic-string@1.1.0)(magicast@0.5.4)(oxc-parser@0.141.0)(rolldown@1.2.2)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.2)(rollup@4.62.4)(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0))))(@oxc-project/types@0.142.0)(@types/node@24.1.0)(@vitejs/devtools-kit@0.4.8(cac@7.0.0)(typescript@6.0.3)(vite@8.2.0(@types/node@24.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.1)(tsx@4.23.0)(yaml@2.9.0)))(@vue/compiler-sfc@3.5.41)(esbuild@0.28.1)(lightningcss@1.33.0)(oxc-parser@0.141.0)(pinia@4.0.2(@vue/devtools-api@8.1.5)(typescript@6.0.3)(vue@3.5.41(typescript@6.0.3)))(rolldown@1.2.2)(rollup@4.62.4)(shiki@4.4.2)(tailwind-merge@3.6.0)(terser@5.49.1)(tsx@4.23.0)(vue@3.5.41(typescript@6.0.3))(yaml@2.9.0)
+      '@maizzle/tailwindcss': 1.5.6
+      '@repo/config': file:packages/config
+      nodemailer: 9.0.4
+      nodemailer-brevo-transport: 2.2.1
+      vue: 3.5.41(typescript@6.0.3)
+    transitivePeerDependencies:
+      - '@farmfe/core'
+      - '@nuxt/kit'
+      - '@oxc-project/types'
+      - '@pinia/colada'
+      - '@rspack/core'
+      - '@types/node'
+      - '@unhead/cli'
+      - '@vitejs/devtools'
+      - '@vitejs/devtools-kit'
+      - '@vue/compiler-sfc'
+      - '@vue/composition-api'
+      - bun-types-no-globals
+      - esbuild
+      - less
+      - lightningcss
+      - oxc-parser
+      - pinia
+      - rolldown
+      - rollup
+      - sass
+      - sass-embedded
+      - shiki
+      - stylus
+      - sugarss
+      - svelte
+      - tailwind-merge
+      - terser
+      - tsx
+      - unloader
+      - vite-plus
+      - webpack
+      - yaml
+
+  '@repo/media@file:packages/media(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@24.1.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))(valibot@1.4.2(typescript@6.0.3))':
+    dependencies:
+      '@firecrawl/anydoc': 0.1.7
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/logger': file:packages/logger
+      '@repo/storage': file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
+      '@repo/utils': file:packages/utils
+      sharp: 0.35.3(@types/node@24.1.0)
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cloudflare/workers-types'
+      - '@deno/kv'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/blobs'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/node'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - aws4fetch
+      - better-sqlite3
+      - bun-types
+      - db0
+      - effect
+      - expo-sqlite
+      - idb-keyval
+      - ioredis
+      - mssql
+      - mysql2
+      - pg-native
+      - postgres
+      - sql.js
+      - sqlite3
+      - typebox
+      - uploadthing
+      - valibot
+
+  '@repo/media@file:packages/media(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/node@26.1.2)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))(valibot@1.4.2(typescript@6.0.3))':
+    dependencies:
+      '@firecrawl/anydoc': 0.1.7
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/logger': file:packages/logger
+      '@repo/storage': file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))
+      '@repo/utils': file:packages/utils
+      sharp: 0.35.3(@types/node@26.1.2)
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cloudflare/workers-types'
+      - '@deno/kv'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/blobs'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/node'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - aws4fetch
+      - better-sqlite3
+      - bun-types
+      - db0
+      - effect
+      - expo-sqlite
+      - idb-keyval
+      - ioredis
+      - mssql
+      - mysql2
+      - pg-native
+      - postgres
+      - sql.js
+      - sqlite3
+      - typebox
+      - uploadthing
+      - valibot
+
+  '@repo/queue@file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)':
+    dependencies:
+      '@repo/config': file:packages/config
+      '@repo/logger': file:packages/logger
+      bullmq: 6.0.8(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)
+    transitivePeerDependencies:
+      - bullmq-otel
+      - ioredis
+      - pg
+      - redis
+
+  '@repo/storage@file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))':
+    dependencies:
+      '@repo/config': file:packages/config
+      s3mini: 0.9.5
+      unstorage: 1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)))(ioredis@5.11.1(supports-color@10.2.2))
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - db0
+      - idb-keyval
+      - ioredis
+      - uploadthing
+
+  '@repo/storage@file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))':
+    dependencies:
+      '@repo/config': file:packages/config
+      s3mini: 0.9.5
+      unstorage: 1.17.5(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - db0
+      - idb-keyval
+      - ioredis
+      - uploadthing
+
+  '@repo/testing@file:packages/testing(60faacd40c12452bf7d82b410e6f9a4a)':
+    dependencies:
+      '@repo/auth': file:packages/auth(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(vue@3.5.41(typescript@6.0.3))
+      '@repo/config': file:packages/config
+      '@repo/database': file:packages/database(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(valibot@1.4.2(typescript@6.0.3))
+      '@repo/linkedin': file:packages/linkedin
+      '@repo/storage': file:packages/storage(db0@0.3.4(@libsql/client@0.17.4)(better-sqlite3@12.11.1)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)))(ioredis@5.11.1(supports-color@10.2.2))
+      ai: 7.0.56(zod@4.4.3)
+      better-auth: 1.6.26(better-sqlite3@12.11.1)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(pg@8.22.0)(vue@3.5.41(typescript@6.0.3))
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@cloudflare/workers-types'
+      - '@deno/kv'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@lynx-js/react'
+      - '@neondatabase/serverless'
+      - '@netlify/blobs'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - aws4fetch
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
+      - db0
+      - drizzle-kit
+      - drizzle-orm
+      - effect
+      - expo-sqlite
+      - idb-keyval
+      - ioredis
+      - mongodb
+      - mssql
+      - mysql2
+      - next
+      - pg
+      - pg-native
+      - postgres
+      - prisma
+      - react
+      - react-dom
+      - redis
+      - solid-js
+      - sql.js
+      - sqlite3
+      - svelte
+      - typebox
+      - uploadthing
+      - valibot
+      - vitest
+      - vue
+      - zod
+
+  '@repo/utils@file:packages/utils':
+    dependencies:
+      '@repo/config': file:packages/config
+      uuid: 14.0.1
+
+  '@repo/workflow@file:packages/workflow':
+    dependencies:
+      cron-parser: 5.7.0
+      zod: 4.4.3
+
   '@rolldown/binding-android-arm64@1.2.2':
     optional: true
 
@@ -14121,6 +14851,35 @@ snapshots:
       better-sqlite3: 12.11.1
       drizzle-kit: 0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
       drizzle-orm: 0.45.2(@libsql/client@0.17.4)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(kysely@0.29.4)(pg@8.22.0)
+      pg: 8.22.0
+      vue: 3.5.41(typescript@6.0.3)
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - '@opentelemetry/api'
+
+  better-auth@1.6.26(better-sqlite3@12.11.1)(drizzle-kit@0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))(pg@8.22.0)(vue@3.5.41(typescript@6.0.3)):
+    dependencies:
+      '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
+      '@better-auth/drizzle-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3))
+      '@better-auth/kysely-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(kysely@0.29.4)
+      '@better-auth/memory-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
+      '@better-auth/mongo-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
+      '@better-auth/prisma-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
+      '@better-auth/telemetry': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)
+      '@better-auth/utils': 0.4.2
+      '@better-fetch/fetch': 1.3.1
+      '@noble/ciphers': 2.2.0
+      '@noble/hashes': 2.3.0
+      better-call: 1.3.7(zod@4.4.3)
+      defu: 6.1.7
+      jose: 6.2.8
+      kysely: 0.29.4
+      nanostores: 1.4.2
+      zod: 4.4.3
+    optionalDependencies:
+      better-sqlite3: 12.11.1
+      drizzle-kit: 0.31.10(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
+      drizzle-orm: 1.0.0-rc.4(@libsql/client@0.17.4)(@tursodatabase/database-common@0.6.1)(@tursodatabase/database@0.6.1)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(bun-types@1.3.14)(pg@8.22.0)(valibot@1.4.2(typescript@6.0.3))(zod@4.4.3)
       pg: 8.22.0
       vue: 3.5.41(typescript@6.0.3)
     transitivePeerDependencies:
@@ -18387,7 +19146,6 @@ snapshots:
       '@img/sharp-win32-ia32': 0.35.3
       '@img/sharp-win32-x64': 0.35.3
       '@types/node': 26.1.2
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:
