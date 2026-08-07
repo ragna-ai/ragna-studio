@@ -285,7 +285,11 @@ function commitCustomDays() {
 
     <Separator />
 
-    <Button variant="outline" class="text-destructive" @click="emit('delete')">
+    <Button
+      variant="outline"
+      class="hover:text-destructive"
+      @click="emit('delete')"
+    >
       <Trash2Icon class="mr-2 size-4 stroke-1.5" />
       {{ t('task.property.delete') }}
     </Button>

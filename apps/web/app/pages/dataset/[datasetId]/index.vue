@@ -91,9 +91,6 @@ function handleExport(format: DatasetExportFormat) {
           </template>
         </PageBreadcrumb>
         <PageBreadcrumb v-else :items="loadingItems" />
-        <p v-if="datasetData?.dataset" class="text-xs text-muted-foreground">
-          {{ t(`dataset.origin.${datasetData.dataset.origin}`) }}
-        </p>
       </div>
       <div class="flex shrink-0 items-center gap-2">
         <DropdownMenu>

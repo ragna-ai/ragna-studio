@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { CornerUpLeftIcon } from '@lucide/vue';
+import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
+import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
+import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
 import {
   useDeleteTask,
   useGetTask,
@@ -7,9 +10,6 @@ import {
 } from '~/features/task/composables/useTaskApi';
 import { useGetTaskLabels } from '~/features/task/composables/useTaskLabelApi';
 import { formatTaskDisplayId } from '~/features/task/lib/task-display';
-import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
-import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
-import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
 
 definePageMeta({
   validate: (route) => hasValidTaskId(route.params),
@@ -130,7 +130,7 @@ async function handleDelete() {
 
 <template>
   <div v-if="task" class="flex h-full flex-col">
-    <header class="flex items-center border-b px-4 py-2">
+    <header class="flex items-center border-b p-4">
       <PageBreadcrumb :items="ancestorItems" />
     </header>
 
@@ -155,7 +155,7 @@ async function handleDelete() {
               :value="title"
               :placeholder="t('task.detail.titlePlaceholder')"
               :aria-label="t('task.detail.rename')"
-              class="w-full truncate rounded-sm border-none bg-transparent p-0 text-3xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              class="w-full truncate rounded-sm border-none bg-transparent p-0 text-3xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
               @input="handleTitleInput"
               @blur="commitTitleNow"
               @keydown.enter.prevent="handleTitleEnter"
@@ -178,7 +178,11 @@ async function handleDelete() {
         </div>
       </div>
 
-      <TaskPropertiesSidebar :task="task" :labels="labels" @delete="handleDelete" />
+      <TaskPropertiesSidebar
+        :task="task"
+        :labels="labels"
+        @delete="handleDelete"
+      />
     </div>
   </div>
   <div v-else-if="taskError" class="flex h-full items-center justify-center">
