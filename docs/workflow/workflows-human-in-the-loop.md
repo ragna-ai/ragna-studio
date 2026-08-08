@@ -1,6 +1,6 @@
 # Workflows: human in the loop (approval node)
 
-**Status: draft PRD, under review. Not implemented.**
+**Status: proposed.** Under review, not yet built.
 
 Companion to [README.md](./README.md) (architecture overview) and [workflows-implementation.md](./workflows-implementation.md) (v1 contracts). This resolves the `human-approval` placeholder from workflows.md and puts the reserved `suspended` run status to use.
 

@@ -1,5 +1,7 @@
 # Agent memory
 
+**Status: implemented (Phase 1, 2026-07-18).** Phase 2 (embeddings, semantic recall, background extraction) not started.
+
 Per-agent long-term memory. Each agent keeps a single markdown **memory document** it edits during a chat, and that document is automatically injected into the system prompt on every later turn, so the agent "remembers" across conversations.
 
 This PRD describes **Phase 1**, which is the functional core: a write tool plus prompt injection. Phase 2 (embeddings, semantic recall, background extraction) is scoped at the end but not built here.

@@ -1,6 +1,6 @@
 # Agent Context — Phase 2: Documents
 
-Status: approved, in implementation
+Status: implemented (2026-07-17)
 
 Phase 1 (see [agent-context.md](./agent-context.md)) gave agents a freeform
 `context` text field, injected as a `<context>` block by

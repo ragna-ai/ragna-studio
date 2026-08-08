@@ -1,6 +1,6 @@
 # Agent Context — Phase 3: Retrieval
 
-Status: approved, in implementation (2026-08-02)
+Status: implemented (merged via PR #14, 2026-08-02)
 
 Phase 2 (see [agent-context-documents.md](./agent-context-documents.md)) lets
 users upload documents to an agent. Every `ready` document is fully injected

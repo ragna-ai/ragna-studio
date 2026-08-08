@@ -1,6 +1,10 @@
 # Credit System (PRD)
 
-> **Status: designed, not implemented.** Decisions settled 2026-07-27.
+> **Status: implemented** (merged via PR #13, 2026-07-29). Reviewed the same
+> day (`review-2026-07-29.md`); three flaws found and fixed in follow-up
+> commits (`credit gate fails closed on unpriced models`, `strict
+> CREDIT_MARKUP_BPS validation`). Inert in practice until pricing is seeded
+> and `CREDITS_ENABLED` is turned on.
 
 A token-exact credit system. Every LLM call is priced from the provider's
 real per-token rates, multiplied by a configurable markup, and debited from

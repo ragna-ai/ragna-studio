@@ -1,6 +1,6 @@
 # Workflows: email trigger
 
-**Status: draft PRD, under review. Not implemented.**
+**Status: proposed.** Under review, not yet built.
 
 Companion to [README.md](./README.md) (architecture overview) and [workflows-scheduling.md](./workflows-scheduling.md), whose scheduler machinery this reuses. Adds the first event-driven trigger: start a run when a new email arrives in a connected mailbox. Gmail is the v1 connector; the design is provider-neutral so Outlook (Microsoft Graph) can follow without touching the trigger core.
 

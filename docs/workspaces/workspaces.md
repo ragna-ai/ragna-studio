@@ -1,5 +1,7 @@
 # Workspaces
 
+**Status: superseded** by [docs/api-standards/prd.md](../api-standards/prd.md) (2026-07-19).
+
 > **Superseded (2026-07-19):** the optional-filter model below ("All items",
 > "Unassigned", nullable `workspaceId`) is replaced by the required-container
 > model in [docs/api-standards/prd.md](../api-standards/prd.md). The security

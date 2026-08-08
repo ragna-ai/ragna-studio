@@ -1,6 +1,6 @@
 # Live Team Chat over WebSocket (PRD)
 
-> **Status: phase 1 implemented** (merged to main via PR #5, 2026-07-19).
+> **Status: implemented** (phase 1 only, merged via PR #5, 2026-07-19).
 > The spec below was updated during the build, so it reflects what shipped,
 > including a follow-up that moved the socket composable onto VueUse
 > `useWebSocket` with an app-level ping/pong heartbeat (branch

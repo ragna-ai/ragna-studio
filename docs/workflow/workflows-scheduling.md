@@ -1,8 +1,8 @@
 # Workflows: scheduled triggers
 
-Companion to [workflows.md](./workflows.md) (design) and [workflows-implementation.md](./workflows-implementation.md) (v1 contracts). This document specifies scheduled (cron) workflow triggers and resolves the "trigger scope" open point from workflows.md.
-
 **Status: implemented.**
+
+Companion to [workflows.md](./workflows.md) (design) and [workflows-implementation.md](./workflows-implementation.md) (v1 contracts). This document specifies scheduled (cron) workflow triggers and resolves the "trigger scope" open point from workflows.md.
 
 The core idea: a schedule is just another way to start a run. The engine, executors, and run/step tracking do not change. The only new machinery is a per-workflow BullMQ job scheduler whose tick creates a run row and enqueues the existing run job.
 

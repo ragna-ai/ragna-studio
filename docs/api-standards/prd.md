@@ -1,5 +1,7 @@
 # API Standards: workspace-contained resources
 
+**Status: implemented** (`feat: migrate api to workspace container model`, merged 2026-07-19). Live on every workspace-scoped controller.
+
 The API grew two competing models. Most controllers treat the workspace as an
 optional filter (flat routes like `/agent`, with `workspaceId` as a query param
 or body field). The newer document and folder controllers treat the workspace

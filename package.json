@@ -11,7 +11,8 @@
     "preview": "turbo run preview",
     "test:api": "turbo run test --filter=@repo/api",
     "pkg:update": "pnpm update -i -r -L",
-    "db:push": "pnpm --filter @repo/database db:push"
+    "db:push": "pnpm --filter @repo/database db:push",
+    "docs:index": "node scripts/docs-index.mjs"
   },
   "devDependencies": {
     "@turbo/gen": "^2.10.8",

@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Status: agreed 2026-07-29. Phase 1 is being implemented. Phase 2 is future work.
+Status: in-progress. Agreed 2026-07-29. Phase 1 (API integration tests) is actively being built. Phase 2 (Playwright e2e) is future work.
 
 ## Phases
 

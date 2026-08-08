@@ -1,8 +1,9 @@
 # Media library + chat attachments (PRD)
 
-> **Status: proposed** (2026-08-04). Discussed and decided with Sven:
-> FK composition over polymorphism, refcount deletion, v1 scope is the
-> media core plus chat attachments only.
+> **Status: implemented** (merged via PR #15, `feat: media library core +
+> chat attachments`, 2026-08-04). FK composition over polymorphism,
+> refcount deletion, v1 scope was the media core plus chat attachments
+> only, as decided with Sven.
 
 A central, owner-scoped `media` table becomes the single record of every
 file in R2. The owner decides the access chain: user-owned media is

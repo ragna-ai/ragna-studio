@@ -1,6 +1,6 @@
 # LinkedIn Integration Strategy
 
-Status: agreed 2026-07-14. Replaces the custom arctic OAuth flow from ragna-v2 (`packages/oauth`).
+Status: implemented (2026-07-14). Replaces the custom arctic OAuth flow from ragna-v2 (`packages/oauth`) with better-auth account linking.
 
 ## Decision
 

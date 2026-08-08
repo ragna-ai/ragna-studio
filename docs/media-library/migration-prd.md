@@ -1,9 +1,10 @@
 # Media library migration: imagegen, videogen, social posts (PRD)
 
-> **Status: proposed** (2026-08-04). Phase 2 of docs/media-library/prd.md,
-> decided with Sven: all three producers migrate in one effort, gen-image
-> input references become a link table, existing rows are backfilled by a
-> one-off script. Agent context documents stay out permanently.
+> **Status: implemented** (`feat: migrate to media library`, 2026-08-04).
+> Phase 2 of docs/media-library/prd.md. All three producers migrated in one
+> effort, gen-image input references became a link table, existing rows
+> were backfilled by a one-off script (since removed). Agent context
+> documents stay out permanently.
 
 Every R2-backed object in imagegen, videogen, and social posts becomes a
 `media` row, and every feature reference to one becomes an SQL-visible link

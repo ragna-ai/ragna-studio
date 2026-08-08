@@ -1,11 +1,11 @@
 # Unified media service + anydoc extraction (PRD)
 
-> **Status: proposed** (2026-08-04). Phase 3 of the media library
-> (prd.md, migration-prd.md). Decided with Sven: unify-and-stay-sync.
-> One `@repo/media` package as the single source of truth for media
-> domain logic, extraction swapped to `@firecrawl/anydoc`, pptx added,
-> and one shared type registry so agent context documents accept every
-> extractable type chat accepts.
+> **Status: implemented** (merged via PR #16, `feat: unified media service
+> (@repo/media) + anydoc extraction`, 2026-08-04). Phase 3 of the media
+> library (prd.md, migration-prd.md). One `@repo/media` package is the
+> single source of truth for media domain logic, extraction swapped to
+> `@firecrawl/anydoc`, pptx added, and one shared type registry lets agent
+> context documents accept every extractable type chat accepts.
 
 Media domain logic currently lives in three places: `media.service.ts` in
 apps/api, a deliberate duplicate of the refcount-delete helper in

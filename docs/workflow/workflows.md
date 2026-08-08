@@ -1,5 +1,7 @@
 # Workflows
 
+**Status: implemented.**
+
 Client-configurable workflows, stored in the database, edited on a visual canvas, executed by the worker.
 
 ## Decision: no Mastra, own interpreter

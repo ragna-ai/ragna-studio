@@ -1,6 +1,6 @@
 # Agent tool discovery (`findTool`)
 
-**Status: draft PRD, deliberately deferred. Not implemented, not scheduled. Build when an activation trigger below fires, not before.**
+**Status: deferred.** Deliberately not built; no activation trigger below has fired yet. Build when one does, not before.
 
 Related: [datasets.md](./datasets.md) (the soft-pin design that keeps hot paths discovery-free), `packages/ai/src/tools/agent.tools.ts` (the toolset seam this slots into).
 
