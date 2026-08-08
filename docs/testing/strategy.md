@@ -103,8 +103,15 @@ reuses in Phase 2.
 
 ### External boundaries
 
-- **Redis / BullMQ:** real docker Redis on `localhost:6381`. The API mostly
-  enqueues; asserting "job landed in queue X with DTO Y" is cheap and real.
+- **Redis / BullMQ:** faked with Bun's `mock.module()`, same as the other
+  external boundaries below. The API mostly enqueues (fire-and-forget from
+  its own tests' perspective; nothing here reads a job back off a real
+  queue), so there's no need to touch the shared docker Redis apps/worker's
+  local dev process also polls — hitting it for real either piles up
+  unprocessed test jobs there or has the dev worker actually try (and fail)
+  to process rows that only exist in `studio_test`. Real queue/worker
+  mechanics (a job actually being picked up and processed) is apps/worker's
+  concern, out of scope for Phase 1.
 - **AI providers, R2 storage, LinkedIn:** faked with Bun's `mock.module()`,
   registered in `packages/testing/src/mocks/` and detailed in
   `apps/api/test/README.md`'s "External-provider mocks" section. Not

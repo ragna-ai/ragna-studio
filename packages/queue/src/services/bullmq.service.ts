@@ -27,6 +27,7 @@ const connectionOptions: ConnectionOptions = {
   host: config.redisHost,
   port: config.redisPort,
   password: config.getSecret('REDIS_PASSWORD'),
+  db: config.redisDb,
 };
 
 const redisOptions: RedisOptions = {

@@ -18,6 +18,7 @@
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/linkedin": "workspace:*",
+    "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "ai": "catalog:",
     "better-auth": "^1.6.26"

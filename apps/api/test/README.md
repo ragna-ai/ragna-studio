@@ -152,19 +152,21 @@ bun test
 ## External-provider mocks
 
 `docs/testing/strategy.md`'s "External boundaries" (AI providers, R2
-storage, LinkedIn) are faked with Bun's `mock.module()`, registered by
-`packages/testing/src/mocks/` (`ai-provider.mock.ts`,
-`storage-provider.mock.ts`, `linkedin-provider.mock.ts`, combined by
-`provider-mocks.ts`). Registration happens in two places:
+storage, LinkedIn, Redis/BullMQ) are faked with Bun's `mock.module()`,
+registered by `packages/testing/src/mocks/` (`ai-provider.mock.ts`,
+`storage-provider.mock.ts`, `linkedin-provider.mock.ts`,
+`queue-provider.mock.ts`, combined by `provider-mocks.ts`). Registration
+happens in two places:
 
 - `test/preload.ts`, wired via `bunfig.toml`'s `[test].preload`,
-  re-registers the `@repo/linkedin` mock from apps/api's own resolution
-  context. This is required: with `injectWorkspacePackages: true`,
-  `@repo/testing` is materialized as a frozen copy under
-  `node_modules/.pnpm/`, and a `mock.module('@repo/linkedin', ...)` call
+  re-registers the `@repo/linkedin` and `@repo/queue` mocks from apps/api's
+  own resolution context. This is required: with
+  `injectWorkspacePackages: true`, `@repo/testing` can be materialized as a
+  frozen copy under `node_modules/.pnpm/`, and a `mock.module(...)` call
   made inside that copy keys on a different resolved path than the one
-  apps/api's code imports, so the mock silently never applied. See
-  `docs/docker-deploy/injected-workspace-packages.md`.
+  apps/api's code (and, for `@repo/queue`, `@repo/ai`'s bundled dist, which
+  imports it as an external specifier) imports, so the mock would silently
+  never apply. See `docs/docker-deploy/injected-workspace-packages.md`.
 - `@repo/testing`'s module body still runs every `mock.module()` call as a
   side effect: every test file that needs a mock imports it for fixtures
   (`seedAuthenticatedUser`, `truncateAllTables`, ...), listed before its
@@ -173,7 +175,7 @@ storage, LinkedIn) are faked with Bun's `mock.module()`, registered by
   `ai` and `@repo/storage` mocks, which currently resolve to the same
   virtual-store slot from both contexts. If one of them ever silently
   stops mocking after a lockfile change, re-register it in
-  `test/preload.ts` the same way as `@repo/linkedin`.
+  `test/preload.ts` the same way as `@repo/linkedin`/`@repo/queue`.
 
 `test/auth/route-sweep.test.ts` and `test/smoke/health.test.ts` are the
 only files that skip the `@repo/testing` import, and neither needs it:
@@ -207,6 +209,20 @@ exports, so everything else the package exports keeps working unmocked:
 - **`@repo/linkedin`** — `createLinkedinClient` is faked; `LinkedinApiError`
   is spread through real so `instanceof` checks in
   `social-post-media.service.ts` still work against the fake's errors.
+- **`@repo/queue`** — the `queue` factory (`queue.workflow()`,
+  `queue.genImages()`, ...) and the job-scheduler functions
+  (`upsertQueueJobScheduler`/`removeQueueJobScheduler`/
+  `getQueueJobSchedulers`) are faked; constants and DTOs stay real via the
+  spread. Every apps/api call into `@repo/queue` is fire-and-forget from the
+  test's own perspective (enqueue a job, sync a scheduler; nothing here
+  reads a job back off a real queue), so there's no reason to touch the
+  shared docker Redis the local dev worker also polls from — doing so would
+  either pile up unprocessed test jobs there or have the dev worker
+  actually try (and fail) to process rows that only exist in `studio_test`.
+  As a second line of defense (in case a real-Redis path is ever added),
+  `REDIS_DB` in `.env.testing` also points `NODE_ENV=test` runs at a
+  separate logical Redis database (`packages/config`'s `redisDb` /
+  `packages/queue`'s connection options) from dev's db 0.
 
 Every mock exposes a `reset*ProviderMock()` (combined as
 `resetProviderMocks()`), which every test file using a mock calls in

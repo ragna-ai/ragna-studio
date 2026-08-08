@@ -115,6 +115,15 @@ const ConfigSchema = z.object({
   REDIS_HOST: z.string().default(''),
   REDIS_PORT: PortSchema.default(6379),
   REDIS_PASSWORD: z.string().optional().default(''),
+  // Logical Redis database index (SELECT n). Lets test runs isolate their
+  // BullMQ queues from the dev worker on the same Redis instance instead of
+  // sharing db 0's keyspace.
+  REDIS_DB: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().min(0).max(15))
+    .default(0),
 
   // SMTP configuration
   SMTP_HOST: z.string().default('127.0.0.1'),
@@ -336,6 +345,10 @@ export class ConfigService {
 
   get redisPort(): number {
     return this._config.REDIS_PORT;
+  }
+
+  get redisDb(): number {
+    return this._config.REDIS_DB;
   }
 
   get smtpHost(): string {

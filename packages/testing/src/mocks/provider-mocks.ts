@@ -18,14 +18,17 @@
 // triggers it. See apps/api/test/README.md, "External-provider mocks".
 import { resetAiProviderMock } from './ai-provider.mock';
 import { resetLinkedinProviderMock } from './linkedin-provider.mock';
+import { resetQueueMock } from './queue-provider.mock';
 import { resetStorageProviderMock } from './storage-provider.mock';
 
 export * from './ai-provider.mock';
 export * from './linkedin-provider.mock';
+export * from './queue-provider.mock';
 export * from './storage-provider.mock';
 
 export function resetProviderMocks(): void {
   resetAiProviderMock();
   resetStorageProviderMock();
   resetLinkedinProviderMock();
+  resetQueueMock();
 }

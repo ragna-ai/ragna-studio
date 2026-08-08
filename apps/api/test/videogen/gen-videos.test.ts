@@ -26,9 +26,10 @@ import { app } from '../../src/app';
 //
 // Unlike imagegen, the create route (`generateVideoForWorkspace` ->
 // `requestGenVideo`, @repo/ai) never calls the `ai` package: it only
-// inserts a pending row and enqueues a BullMQ job against the real docker
-// Redis (docs/testing/strategy.md's "External boundaries" treats Redis as
-// real, not mocked). The actual Veo call
+// inserts a pending row and enqueues a BullMQ job. Enqueueing is faked by
+// @repo/testing's queue mock (docs/testing/strategy.md's "External
+// boundaries") rather than hitting the real docker Redis apps/worker's dev
+// process also polls. The actual Veo call
 // (`runGenVideo`/`generateAndUploadVideo`) only runs from apps/worker's
 // gen-video processor, out of scope here, so no `ai` mock is needed for
 // this file. The frame-upload route does need the storage mock.

@@ -23,8 +23,9 @@ import { app } from '../../src/app';
 // Like videogen (test/videogen/gen-videos.test.ts), the create route
 // (`generateImagesForWorkspace` -> `requestGenImages`, @repo/ai) no longer
 // calls the `ai` package: it inserts a batch of pending rows and enqueues a
-// BullMQ job against the real docker Redis (docs/testing/strategy.md's
-// "External boundaries" treats Redis as real, not mocked). The actual
+// BullMQ job. Enqueueing is faked by @repo/testing's queue mock
+// (docs/testing/strategy.md's "External boundaries") rather than hitting
+// the real docker Redis apps/worker's dev process also polls. The actual
 // provider call (`runGenImages`/`generateAndUploadBatch`) only runs from
 // apps/worker's gen-images processor, out of scope here
 // (docs/imagegen/worker-execution-prd.md), so completed/failed rows are
