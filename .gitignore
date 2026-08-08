@@ -37,6 +37,9 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+# Playwright MCP output
+.playwright-mcp/
+
 # Local database
 *.db
 
