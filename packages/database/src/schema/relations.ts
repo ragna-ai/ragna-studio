@@ -183,6 +183,21 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     messages: r.many.chatMessage(),
     attachments: r.many.chatAttachment(),
+    // Branching provenance (docs/chat/branching.md). Aliased because both
+    // are second relations between the chat<->chat / chat<->chatMessage
+    // table pairs (alongside the self-FK-less pair above and `messages`).
+    forkedFromChat: r.one.chat({
+      from: r.chat.forkedFromChatId,
+      to: r.chat.id,
+      optional: true,
+      alias: 'chatForkedFromChat',
+    }),
+    forkedFromMessage: r.one.chatMessage({
+      from: r.chat.forkedFromMessageId,
+      to: r.chatMessage.id,
+      optional: true,
+      alias: 'chatForkedFromMessage',
+    }),
   },
   chatMessage: {
     chat: r.one.chat({

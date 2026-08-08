@@ -56,6 +56,7 @@ export interface ChatHistoryItem {
       displayName: string;
     };
   };
+  forkedFrom: { chatId: string; title: string } | null;
 }
 
 export interface ChatHistoryResponse {
@@ -143,6 +144,41 @@ export function useCreateChatAndNavigate() {
   };
 
   return { createChatAndNavigate, ...rest };
+}
+
+interface BranchChatVariables {
+  chatId: string;
+  messageId: string;
+}
+
+// "Branch from here" (docs/chat/branching.md): copies chatId's messages up
+// to and including messageId into a brand new chat and navigates to it,
+// mirroring useCreateChatAndNavigate.
+export function useBranchChatAndNavigate() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<ChatResponse, unknown, BranchChatVariables>({
+    mutationFn: ({ chatId, messageId }) =>
+      $api<ChatResponse>(
+        `/workspace/${toValue(workspaceId)}/chat/${chatId}/branch`,
+        { method: 'POST', body: { messageId } },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, 'Failed to branch chat'));
+    },
+  });
+
+  const branchChatAndNavigate = async (variables: BranchChatVariables) => {
+    const { chat } = await mutation.mutateAsync(variables);
+    await navigateTo(`/chat/${chat.id}`);
+  };
+
+  return { branchChatAndNavigate, ...mutation };
 }
 
 interface UpdateChatTitleVariables {

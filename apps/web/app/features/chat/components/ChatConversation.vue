@@ -222,7 +222,12 @@ async function handleSubmit(text: string) {
               :scroll-anchor="message.role === 'user'"
             >
               <!-- Message -->
-              <ChatMessage :key="message.id" :message="message" />
+              <ChatMessage
+                v-if="chatId"
+                :key="message.id"
+                :message="message"
+                :chat-id="chatId"
+              />
               <!-- end chat message -->
             </MessageScrollerItem>
             <!-- Generating image/video -->

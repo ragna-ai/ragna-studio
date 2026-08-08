@@ -104,6 +104,12 @@ onKeyStroke('Escape', (event) => {
       class="block flex-1 truncate text-sm"
     >
       {{ chat.title }}
+      <span
+        v-if="chat.forkedFrom"
+        class="block truncate text-xs text-muted-foreground"
+      >
+        {{ t('chat.history.forkedFrom', { title: chat.forkedFrom.title }) }}
+      </span>
     </NuxtLinkLocale>
     <Button
       type="button"

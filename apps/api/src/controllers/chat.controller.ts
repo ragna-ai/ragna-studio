@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
+  branchChatForWorkspace,
   createChatForWorkspace,
   deleteChatForWorkspace,
   getChatForWorkspace,
@@ -11,6 +12,7 @@ import {
 } from '../services/chat.service';
 import { removeChatAttachment, uploadChatAttachments } from '../services/media.service';
 import {
+  validBranchChatBody,
   validChatAttachmentParams,
   validChatIdParam,
   validCreateChatBody,
@@ -83,6 +85,24 @@ export const chatController = new Hono()
     });
 
     return c.json({ chat });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/chat/:chatId/branch
+   * Copies the chat's messages up to and including messageId into a new,
+   * independent chat (docs/chat/branching.md). The source chat is untouched.
+   */
+  .post('/:chatId/branch', validChatIdParam, validBranchChatBody, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const chat = await branchChatForWorkspace({
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+      messageId: body.messageId,
+    });
+
+    return c.json({ chat }, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/chat/:chatId

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import {
+  CopyIcon,
+  EllipsisVerticalIcon,
   FilePenIcon,
   FileTextIcon,
   FolderOpenIcon,
+  GitBranchIcon,
   ImageIcon,
   NotebookTextIcon,
   PencilLineIcon,
@@ -11,7 +14,8 @@ import {
 } from '@lucide/vue';
 import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai';
 import type { UIMessage } from 'ai';
-import { isFileUIPart, isStaticToolUIPart } from 'ai';
+import { isFileUIPart, isStaticToolUIPart, isTextUIPart } from 'ai';
+import { toast } from 'vue-sonner';
 import {
   Message,
   MessageContent,
@@ -29,19 +33,36 @@ import {
   ToolInput,
   ToolOutput,
 } from '~/components/ai-elements/tool';
+import { useBranchChatAndNavigate } from '~/features/chat/composables/useChatApi';
 import { isImageMediaType } from '~/features/chat/lib/attachment-mime';
 
 interface Props {
   message: UIMessage;
+  chatId: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 // Composables
 const { t } = useI18n();
 const apiBaseUrl = useRuntimeConfig().public.apiBaseUrl;
+const { branchChatAndNavigate } = useBranchChatAndNavigate();
+const { copy } = useClipboard();
 
 // Functions
+function branchFromHere() {
+  branchChatAndNavigate({ chatId: props.chatId, messageId: props.message.id });
+}
+
+function copyText() {
+  const text = props.message.parts
+    .filter(isTextUIPart)
+    .map((part) => part.text)
+    .join('\n\n');
+  copy(text);
+  toast.success(t('chat.message.copied'));
+}
+
 type ToolPart = { type: string; state: string; output?: unknown };
 
 // Document file parts carry a relative, env-independent API download path
@@ -115,12 +136,15 @@ const getToolIcon = (part: ToolPart) => {
 
 <template>
   <Message :from="message.role" class="max-w-full">
-    <MessageContent class="">
+    <MessageContent>
       <template v-for="(part, index) in message.parts" :key="index">
         <MessageResponse v-if="part.type === 'text'" :content="part.text" />
 
         <Reasoning
-          v-else-if="part.type === 'reasoning' && (part.state === 'streaming' || part.text.trim())"
+          v-else-if="
+            part.type === 'reasoning' &&
+            (part.state === 'streaming' || part.text.trim())
+          "
           :is-streaming="part.state === 'streaming'"
         >
           <ReasoningTrigger />
@@ -177,5 +201,29 @@ const getToolIcon = (part: ToolPart) => {
         </template>
       </template>
     </MessageContent>
+
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="size-6 shrink-0 self-end opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
+          :aria-label="t('chat.message.actions')"
+        >
+          <EllipsisVerticalIcon class="size-3.5 stroke-1.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem @click="copyText">
+          <CopyIcon class="size-3.5 stroke-1.5" />
+          {{ t('chat.message.copy') }}
+        </DropdownMenuItem>
+        <DropdownMenuItem @click="branchFromHere">
+          <GitBranchIcon class="size-3.5 stroke-1.5" />
+          {{ t('chat.message.branch') }}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   </Message>
 </template>

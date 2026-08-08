@@ -17,6 +17,7 @@ import {
 } from '@repo/ai';
 import type { Chat, Media } from '@repo/database';
 import {
+  branchChatByWorkspaceId,
   createChat,
   deleteChatByWorkspaceId,
   getChatAttachmentsByChatId,
@@ -64,6 +65,9 @@ export interface ChatSummaryResponse {
       displayName: string;
     };
   };
+  // Branching provenance (docs/chat/branching.md): set when this chat was
+  // created via "Branch from here", null for an ordinary chat.
+  forkedFrom: { chatId: string; title: string } | null;
 }
 
 export interface ChatListResponse {
@@ -121,6 +125,10 @@ export async function listChatsForWorkspace({
           displayName: chatRecord.agent.aiModel.displayName,
         },
       },
+      forkedFrom:
+        chatRecord.forkedFromChatId && chatRecord.forkedFromChat
+          ? { chatId: chatRecord.forkedFromChatId, title: chatRecord.forkedFromChat.title }
+          : null,
     })),
     totalCount,
   };
@@ -247,6 +255,36 @@ export async function createChatForWorkspace({
   }
 
   return chatRecord;
+}
+
+/**
+ * [POST] /workspace/:workspaceId/chat/:chatId/branch
+ * Copies chatId's messages up to and including messageId into a brand new
+ * chat (docs/chat/branching.md). The source chat is never modified.
+ */
+export async function branchChatForWorkspace({
+  workspaceId,
+  chatId,
+  messageId,
+}: {
+  workspaceId: string;
+  chatId: string;
+  messageId: string;
+}): Promise<Chat> {
+  const { error, data: branchedChat } = await tryCatch(() =>
+    branchChatByWorkspaceId({ chatId, workspaceId, messageId }),
+  );
+
+  if (error !== null) {
+    logger.error(`Error branching chat ${chatId}`, error);
+    throw new InternalServerErrorException('Failed to branch chat');
+  }
+
+  if (!branchedChat) {
+    throw new NotFoundException('Chat or message not found');
+  }
+
+  return branchedChat;
 }
 
 /**

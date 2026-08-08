@@ -261,6 +261,12 @@
       "retry": "Hochladen wiederholen",
       "remove": "Anhang entfernen"
     },
+    "message": {
+      "actions": "Nachrichtenaktionen",
+      "branch": "Ab hier verzweigen",
+      "copy": "Text kopieren",
+      "copied": "In die Zwischenablage kopiert"
+    },
     "history": {
       "title": "Chat-Verlauf",
       "subtitle": "Verlauf deiner Unterhaltungen.",
@@ -270,6 +276,7 @@
       "empty": "Noch keine Chats",
       "rename": "Chat umbenennen",
       "titleRequired": "Titel ist erforderlich.",
+      "forkedFrom": "Abgezweigt von {title}",
       "table": {
         "agent": "Agent"
       }

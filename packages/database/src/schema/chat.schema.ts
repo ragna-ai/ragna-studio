@@ -1,4 +1,4 @@
-import { index, jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, index, jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
 import { agent, type Agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
@@ -18,6 +18,19 @@ export const chat = pgTable(
       .notNull()
       .references(() => agent.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
+    // Branching provenance only (docs/chat/branching.md), never read to
+    // reconstruct content: a branch is a full copy of its source's messages.
+    // Nullable self-FK, set null on delete so a branch survives its source
+    // being deleted. AnyPgColumn breaks the circular type reference.
+    forkedFromChatId: text('forked_from_chat_id').references((): AnyPgColumn => chat.id, {
+      onDelete: 'set null',
+    }),
+    // References chatMessage, declared further down this file; AnyPgColumn
+    // breaks that forward-reference type cycle too.
+    forkedFromMessageId: text('forked_from_message_id').references(
+      (): AnyPgColumn => chatMessage.id,
+      { onDelete: 'set null' },
+    ),
     ...timestamps,
   },
   (table) => [

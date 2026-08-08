@@ -255,6 +255,12 @@
       "retry": "Retry upload",
       "remove": "Remove attachment"
     },
+    "message": {
+      "actions": "Message actions",
+      "branch": "Branch from here",
+      "copy": "Copy text",
+      "copied": "Copied to clipboard"
+    },
     "history": {
       "title": "Chat history",
       "subtitle": "Your past conversations.",
@@ -264,6 +270,7 @@
       "empty": "No chats yet",
       "rename": "Rename chat",
       "titleRequired": "Title is required.",
+      "forkedFrom": "Forked from {title}",
       "table": {
         "agent": "Agent"
       }

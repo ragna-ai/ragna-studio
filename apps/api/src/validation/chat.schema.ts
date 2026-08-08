@@ -33,3 +33,10 @@ export const validUpdateChatTitleBody = myzValidator(
     title: z.string().trim().min(1).max(255),
   }),
 );
+
+export const validBranchChatBody = myzValidator(
+  'json',
+  z.object({
+    messageId: primaryId,
+  }),
+);

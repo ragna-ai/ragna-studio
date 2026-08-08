@@ -14,7 +14,7 @@
   "dependencies": {
     "@ai-sdk/vue": "^4.0.56",
     "@internationalized/date": "^3.12.3",
-    "@lucide/vue": "^1.28.0",
+    "@lucide/vue": "^1.29.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/icon": "2.4.1",
     "@nuxt/image": "2.1.0",

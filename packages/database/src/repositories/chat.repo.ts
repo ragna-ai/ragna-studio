@@ -1,7 +1,7 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Chat, ChatMessage } from '../schema';
-import { chat, chatMessage } from '../schema';
+import { chat, chatAttachment, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
 
 export type { Chat, ChatMessage } from '../schema';
@@ -126,6 +126,7 @@ export async function getChatsByWorkspaceId({
       id: true,
       agentId: true,
       title: true,
+      forkedFromChatId: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -140,6 +141,10 @@ export async function getChatsByWorkspaceId({
             columns: { id: true, provider: true, displayName: true },
           },
         },
+      },
+      // Sidebar provenance badge ("forked from {title}"), docs/chat/branching.md.
+      forkedFromChat: {
+        columns: { title: true },
       },
     },
     where: { workspaceId },
@@ -263,4 +268,88 @@ export async function upsertChatMessages(payload: IUpsertChatMessage[]): Promise
   }
 
   return upsertedChatMessages;
+}
+
+// BRANCHING (docs/chat/branching.md)
+//
+// Copy-on-branch, not a shared message tree: the new chat gets its own rows
+// (new ids/timestamps) for every message up to and including the cutoff, so
+// it is fully independent of the source chat from the moment it's created.
+export async function branchChatByWorkspaceId({
+  chatId,
+  workspaceId,
+  messageId,
+}: {
+  chatId: string;
+  workspaceId: string;
+  messageId: string;
+}): Promise<Chat | null> {
+  return db.transaction(async (tx) => {
+    const sourceChat = await tx.query.chat.findFirst({ where: { id: chatId, workspaceId } });
+    if (!sourceChat) {
+      return null;
+    }
+
+    // Rows within a turn can share createdAt (second precision); the
+    // time-ordered uuidv7 id breaks the tie, same as the read paths above.
+    const allMessages = await tx.query.chatMessage.findMany({
+      where: { chatId },
+      orderBy: (m, { asc }) => [asc(m.createdAt), asc(m.id)],
+    });
+    const cutoffIndex = allMessages.findIndex((m) => m.id === messageId);
+    if (cutoffIndex === -1) {
+      return null;
+    }
+    const messagesToCopy = allMessages.slice(0, cutoffIndex + 1);
+    const cutoffMessage = allMessages[cutoffIndex];
+    if (!cutoffMessage) {
+      return null;
+    }
+
+    const [branchedChat] = await tx
+      .insert(chat)
+      .values({
+        userId: sourceChat.userId,
+        workspaceId: sourceChat.workspaceId,
+        agentId: sourceChat.agentId,
+        title: `${sourceChat.title} (branch)`,
+        forkedFromChatId: sourceChat.id,
+        forkedFromMessageId: messageId,
+      })
+      .returning();
+
+    if (!branchedChat) {
+      throw new Error('Failed to create branched chat');
+    }
+
+    await tx.insert(chatMessage).values(
+      messagesToCopy.map((m) => ({
+        chatId: branchedChat.id,
+        role: m.role,
+        parts: m.parts,
+        metadata: m.metadata,
+      })),
+    );
+
+    // Attachments aren't linked to a specific message (chat_attachments is
+    // keyed by chatId only), so there's no exact per-message filter. Files
+    // are uploaded before the message that references them is sent, so
+    // "uploaded at or before the cutoff message" reliably captures every
+    // attachment the copied messages can reference, without parsing the
+    // UIMessage parts JSON to look for file references.
+    const attachmentsToCopy = await tx
+      .select()
+      .from(chatAttachment)
+      .where(and(eq(chatAttachment.chatId, chatId), lte(chatAttachment.createdAt, cutoffMessage.createdAt)));
+    if (attachmentsToCopy.length > 0) {
+      await tx.insert(chatAttachment).values(
+        attachmentsToCopy.map((a) => ({
+          chatId: branchedChat.id,
+          mediaId: a.mediaId,
+        })),
+      );
+    }
+
+    return branchedChat;
+  });
 }
