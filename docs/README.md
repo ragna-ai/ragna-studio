@@ -26,3 +26,10 @@ notes that aren't PRDs, reviews, checklists) doesn't need a Status line;
 
 Run `pnpm docs:index` after adding or changing a Status line to regenerate
 [INDEX.md](./INDEX.md).
+
+## Product overview
+
+[overview.md](./overview.md) is a hand-curated map of the product surface,
+grouped by feature area, for fast context-loading rather than build
+tracking. When a PRD's Status flips to `implemented`, add or update its
+entry there too.
