@@ -92,9 +92,7 @@ async function signIn(provider: SocialProvider) {
           :label="option.label"
           :loading="signingIn === option.provider"
           :disabled="signingIn !== null"
-          :last-used="
-            Boolean(authClient.isLastUsedLoginMethod(option.provider))
-          "
+          :last-used="authClient.isLastUsedLoginMethod(option.provider)"
           @click="signIn(option.provider)"
         />
       </div>
