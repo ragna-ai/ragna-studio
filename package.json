@@ -12,13 +12,14 @@
     "test:api": "turbo run test --filter=@repo/api",
     "pkg:update": "pnpm update -i -r -L",
     "db:push": "pnpm --filter @repo/database db:push",
-    "docs:index": "node scripts/docs-index.mjs"
+    "docs:index": "node scripts/docs-index.mjs",
+    "ci": "pnpm clean --lockfile && pnpm install"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.10.8",
+    "@turbo/gen": "^2.10.9",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "^2.10.8",
+    "turbo": "^2.10.9",
     "typescript": "catalog:"
   },
   "engines": {

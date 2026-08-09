@@ -24,9 +24,8 @@
 // apps/worker's future test suite is exactly where real queue/worker
 // mechanics (a job actually being picked up and processed) belongs, so it
 // should test against real BullMQ instead of importing this mock.
-import { mock } from 'bun:test';
 import * as queuePackage from '@repo/queue';
-import type { JobSchedulerJson, JobsOptions } from 'bullmq';
+import { mock } from 'bun:test';
 
 type FakeJob = { id: string; name: string };
 
@@ -34,17 +33,16 @@ function defaultQueueAddImpl(jobName: string): Promise<FakeJob> {
   return Promise.resolve({ id: `test-job-${crypto.randomUUID()}`, name: jobName });
 }
 
-export const queueAddMock = mock<
-  (jobName: string, data: unknown, opts?: JobsOptions) => Promise<FakeJob>
->(defaultQueueAddImpl);
+export const queueAddMock =
+  mock<(jobName: string, data: unknown, opts?: any) => Promise<FakeJob>>(defaultQueueAddImpl);
 
 function fakeQueue(name: string) {
   return { name, add: queueAddMock };
 }
 
-export const upsertQueueJobSchedulerMock = mock(() => Promise.resolve({} as JobSchedulerJson));
+export const upsertQueueJobSchedulerMock = mock(() => Promise.resolve({} as any));
 export const removeQueueJobSchedulerMock = mock(() => Promise.resolve(true));
-export const getQueueJobSchedulersMock = mock(() => Promise.resolve([] as JobSchedulerJson[]));
+export const getQueueJobSchedulersMock = mock(() => Promise.resolve([] as any[]));
 
 export function resetQueueMock(): void {
   queueAddMock.mockClear();
