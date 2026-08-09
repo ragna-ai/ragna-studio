@@ -4,7 +4,7 @@ import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, testUtils } from 'better-auth/plugins';
+import { admin, lastLoginMethod, testUtils } from 'better-auth/plugins';
 
 // LinkedIn requires these scopes for sign-in (openid/profile/email) and
 // posting on the user's behalf (w_member_social). Used unless an operator
@@ -31,7 +31,7 @@ export const auth = betterAuth({
   // integration tests (better-auth has no email/password provider, so
   // tests can't sign up through the API). Gated on NODE_ENV so it's absent
   // in dev and production.
-  plugins: [admin(), ...(config.isTest ? [testUtils()] : [])],
+  plugins: [admin(), lastLoginMethod(), ...(config.isTest ? [testUtils()] : [])],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
   trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],

@@ -1,16 +1,37 @@
 <script setup lang="ts">
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { LoaderCircleIcon, TriangleAlertIcon } from '@lucide/vue';
+import { TriangleAlertIcon } from '@lucide/vue';
+
+type SocialProvider = 'google' | 'microsoft' | 'apple';
+
+interface SocialProviderOption {
+  provider: SocialProvider;
+  icon: string;
+  label: string;
+}
+
+const SOCIAL_PROVIDERS: SocialProviderOption[] = [
+  {
+    provider: 'google',
+    icon: 'logos:google-icon',
+    label: 'Continue with Google',
+  },
+  {
+    provider: 'microsoft',
+    icon: 'logos:microsoft-icon',
+    label: 'Continue with Microsoft',
+  },
+  { provider: 'apple', icon: 'logos:apple', label: 'Continue with Apple' },
+];
 
 definePageMeta({ layout: 'auth' });
 useHead({ title: 'Login' });
 
 const authClient = useAuth();
 const errorMessage = ref<string | null>(null);
-const signingIn = ref<'google' | 'microsoft' | 'apple' | null>(null);
+const signingIn = ref<SocialProvider | null>(null);
 
-async function signIn(provider: 'google' | 'microsoft' | 'apple') {
+async function signIn(provider: SocialProvider) {
   errorMessage.value = null;
   signingIn.value = provider;
   // Absolute URLs back to this web app. A relative path would resolve against
@@ -64,50 +85,18 @@ async function signIn(provider: 'google' | 'microsoft' | 'apple') {
       </Transition>
 
       <div class="mt-8 space-y-4">
-        <Button
-          variant="outline"
-          class="w-full"
+        <AuthSocialSignInButton
+          v-for="option in SOCIAL_PROVIDERS"
+          :key="option.provider"
+          :icon="option.icon"
+          :label="option.label"
+          :loading="signingIn === option.provider"
           :disabled="signingIn !== null"
-          @click="signIn('google')"
-        >
-          <Icon
-            v-if="signingIn !== 'google'"
-            name="logos:google-icon"
-            class="h-4 w-4"
-          />
-          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
-          Continue with Google
-        </Button>
-
-        <Button
-          variant="outline"
-          class="w-full"
-          :disabled="signingIn !== null"
-          @click="signIn('microsoft')"
-        >
-          <Icon
-            v-if="signingIn !== 'microsoft'"
-            name="logos:microsoft-icon"
-            class="h-4 w-4"
-          />
-          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
-          Continue with Microsoft
-        </Button>
-
-        <Button
-          variant="outline"
-          class="w-full"
-          :disabled="signingIn !== null"
-          @click="signIn('apple')"
-        >
-          <Icon
-            v-if="signingIn !== 'apple'"
-            name="logos:apple"
-            class="h-4 w-4"
-          />
-          <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
-          Continue with Apple
-        </Button>
+          :last-used="
+            Boolean(authClient.isLastUsedLoginMethod(option.provider))
+          "
+          @click="signIn(option.provider)"
+        />
       </div>
 
       <p class="mt-8 text-center text-xs text-muted-foreground">
