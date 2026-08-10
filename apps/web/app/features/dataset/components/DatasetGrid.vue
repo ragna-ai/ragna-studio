@@ -57,7 +57,7 @@ function commitSelect(row: DatasetRow, column: DatasetColumn, value: unknown) {
 }
 
 function inputValueOf(event: Event): string {
-  return (event.target as HTMLInputElement).value;
+  return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
 }
 </script>
 
@@ -145,16 +145,30 @@ function inputValueOf(event: Event): string {
               :model-value="(cellValue(row, column) as string) ?? ''"
               @blur="(e: Event) => commitText(row, column, inputValueOf(e))"
             />
-            <!-- Long text is edited in DatasetRowPanel (expand button
-                 above); the grid cell itself stays a single truncated
-                 line. -->
-            <Input
-              v-else
-              type="text"
-              class="h-8 truncate"
-              :model-value="(cellValue(row, column) as string) ?? ''"
-              @blur="(e: Event) => commitText(row, column, inputValueOf(e))"
-            />
+            <!-- Text cells stay truncated to one line, but the full
+                 value is hard to review/edit in that width. Click opens
+                 a popover with a full-size textarea instead; closing it
+                 (blur, outside click, Escape) commits the value, same
+                 as every other cell type here. -->
+            <Popover v-else>
+              <PopoverTrigger as-child>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="h-8 w-full max-w-40 justify-start px-3 font-normal"
+                  :aria-label="t('dataset.grid.editCell', { column: column.name })"
+                >
+                  <span class="min-w-0 truncate">{{ cellValue(row, column) }}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-80 p-2" align="start">
+                <Textarea
+                  class="min-h-24"
+                  :model-value="(cellValue(row, column) as string) ?? ''"
+                  @blur="(e: Event) => commitText(row, column, inputValueOf(e))"
+                />
+              </PopoverContent>
+            </Popover>
           </TableCell>
           <TableCell class="text-right">
             <Button

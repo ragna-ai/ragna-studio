@@ -754,7 +754,8 @@
       },
       "expandRow": "Zeile erweitern",
       "moveRowUp": "Zeile nach oben verschieben",
-      "moveRowDown": "Zeile nach unten verschieben"
+      "moveRowDown": "Zeile nach unten verschieben",
+      "editCell": "{column} bearbeiten"
     },
     "columnManager": {
       "title": "Spalten",

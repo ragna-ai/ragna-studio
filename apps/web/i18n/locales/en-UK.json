@@ -748,7 +748,8 @@
       },
       "expandRow": "Expand row",
       "moveRowUp": "Move row up",
-      "moveRowDown": "Move row down"
+      "moveRowDown": "Move row down",
+      "editCell": "Edit {column}"
     },
     "columnManager": {
       "title": "Columns",
