@@ -32,9 +32,11 @@ const selectedRow = computed(
   () => props.rows.find((row) => row.id === selectedRowId.value) ?? null,
 );
 
-// The settings panel, the column manager, and the row panel are all asides
-// on this page; only one shows at a time. Opening one (from the page's
-// header buttons) closes the others...
+// The settings panel and the column manager are asides on this page; only
+// one shows at a time. The row panel is a modal (it overlays instead of
+// taking layout space) but stays part of the same mutual-exclusion rule so
+// two detail surfaces don't fight for attention. Opening one (from the
+// page's header buttons) closes the others...
 watch(columnManagerOpen, (isOpen) => {
   if (isOpen) {
     settingsOpen.value = false;
@@ -189,14 +191,15 @@ async function handleDeleteRow(rowId: string) {
       @save="handleSaveColumns"
       @close="columnManagerOpen = false"
     />
-    <DatasetRowPanel
-      v-else-if="selectedRow"
-      :key="selectedRow.id"
-      :columns="dataset.columns"
-      :row="selectedRow"
-      @update-cell="handleUpdateCell"
-      @delete="handleDeleteRow"
-      @close="selectedRowId = null"
-    />
   </div>
+
+  <DatasetRowPanel
+    v-if="selectedRow"
+    :key="selectedRow.id"
+    :columns="dataset.columns"
+    :row="selectedRow"
+    @update-cell="handleUpdateCell"
+    @delete="handleDeleteRow"
+    @close="selectedRowId = null"
+  />
 </template>

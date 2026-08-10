@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ArrowDownIcon, ArrowUpIcon, Maximize2Icon, PlusIcon, Trash2Icon } from '@lucide/vue';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  Maximize2Icon,
+  PlusIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import type { DatasetColumn, DatasetRow } from '~/features/dataset/types';
 
 interface Props {
@@ -21,7 +27,12 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'update-cell', rowId: string, columnId: string, value: string | number | null): void;
+  (
+    e: 'update-cell',
+    rowId: string,
+    columnId: string,
+    value: string | number | null,
+  ): void;
   (e: 'add-row'): void;
   (e: 'delete-row', rowId: string): void;
   // Opens DatasetRowPanel for this row. A dedicated leading-cell button,
@@ -40,7 +51,10 @@ const { t } = useI18n();
 const columnCount = computed(() => props.columns.length + 2);
 
 // Functions
-function cellValue(row: DatasetRow, column: DatasetColumn): string | number | null {
+function cellValue(
+  row: DatasetRow,
+  column: DatasetColumn,
+): string | number | null {
   return row.data[column.id] ?? null;
 }
 
@@ -48,12 +62,26 @@ function commitText(row: DatasetRow, column: DatasetColumn, rawValue: string) {
   emit('update-cell', row.id, column.id, rawValue === '' ? null : rawValue);
 }
 
-function commitNumber(row: DatasetRow, column: DatasetColumn, rawValue: string) {
-  emit('update-cell', row.id, column.id, rawValue === '' ? null : Number(rawValue));
+function commitNumber(
+  row: DatasetRow,
+  column: DatasetColumn,
+  rawValue: string,
+) {
+  emit(
+    'update-cell',
+    row.id,
+    column.id,
+    rawValue === '' ? null : Number(rawValue),
+  );
 }
 
 function commitSelect(row: DatasetRow, column: DatasetColumn, value: unknown) {
-  emit('update-cell', row.id, column.id, value === undefined ? null : String(value));
+  emit(
+    'update-cell',
+    row.id,
+    column.id,
+    value === undefined ? null : String(value),
+  );
 }
 
 function inputValueOf(event: Event): string {
@@ -67,7 +95,11 @@ function inputValueOf(event: Event): string {
       <TableHeader>
         <TableRow>
           <TableHead>&nbsp;</TableHead>
-          <TableHead v-for="column in columns" :key="column.id" class="min-w-40">
+          <TableHead
+            v-for="column in columns"
+            :key="column.id"
+            class="min-w-40"
+          >
             {{ column.name }}
           </TableHead>
           <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
@@ -91,7 +123,11 @@ function inputValueOf(event: Event): string {
               >
                 <Maximize2Icon
                   class="size-3.5 stroke-1.5"
-                  :class="row.id === expandedRowId ? 'text-foreground' : 'text-muted-foreground'"
+                  :class="
+                    row.id === expandedRowId
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                  "
                 />
               </Button>
               <Button
@@ -102,7 +138,9 @@ function inputValueOf(event: Event): string {
                 :aria-label="t('dataset.grid.moveRowUp')"
                 @click="emit('move-row-up', row.id)"
               >
-                <ArrowUpIcon class="size-3.5 stroke-1.5 text-muted-foreground" />
+                <ArrowUpIcon
+                  class="size-3.5 stroke-1.5 text-muted-foreground"
+                />
               </Button>
               <Button
                 variant="ghost"
@@ -112,7 +150,9 @@ function inputValueOf(event: Event): string {
                 :aria-label="t('dataset.grid.moveRowDown')"
                 @click="emit('move-row-down', row.id)"
               >
-                <ArrowDownIcon class="size-3.5 stroke-1.5 text-muted-foreground" />
+                <ArrowDownIcon
+                  class="size-3.5 stroke-1.5 text-muted-foreground"
+                />
               </Button>
             </div>
           </TableCell>
@@ -123,10 +163,16 @@ function inputValueOf(event: Event): string {
               @update:model-value="(v) => commitSelect(row, column, v)"
             >
               <SelectTrigger class="h-8 w-full">
-                <SelectValue :placeholder="t('dataset.grid.selectPlaceholder')" />
+                <SelectValue
+                  :placeholder="t('dataset.grid.selectPlaceholder')"
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="option in column.options ?? []" :key="option" :value="option">
+                <SelectItem
+                  v-for="option in column.options ?? []"
+                  :key="option"
+                  :value="option"
+                >
                   {{ option }}
                 </SelectItem>
               </SelectContent>
@@ -155,10 +201,14 @@ function inputValueOf(event: Event): string {
                 <Button
                   type="button"
                   variant="outline"
-                  class="h-8 w-full max-w-40 justify-start px-3 font-normal"
-                  :aria-label="t('dataset.grid.editCell', { column: column.name })"
+                  class="h-9 w-full max-w-40 justify-start px-3 font-normal"
+                  :aria-label="
+                    t('dataset.grid.editCell', { column: column.name })
+                  "
                 >
-                  <span class="min-w-0 truncate">{{ cellValue(row, column) }}</span>
+                  <span class="min-w-0 truncate">{{
+                    cellValue(row, column)
+                  }}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent class="w-80 p-2" align="start">
@@ -184,7 +234,11 @@ function inputValueOf(event: Event): string {
       </TableBody>
     </Table>
     <div class="mt-4">
-      <Button variant="outline" :disabled="isAddingRow" @click="emit('add-row')">
+      <Button
+        variant="outline"
+        :disabled="isAddingRow"
+        @click="emit('add-row')"
+      >
         <Spinner v-if="isAddingRow" class="mr-2" />
         <PlusIcon v-else class="mr-2 size-4" />
         {{ t('dataset.grid.addRow') }}
