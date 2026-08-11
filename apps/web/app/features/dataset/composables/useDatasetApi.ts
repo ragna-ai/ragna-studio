@@ -59,6 +59,7 @@ export function useGetDataset(
         },
       ),
     enabled: () => !!toValue(workspaceId) && !!toValue(datasetId),
+    shallow: true,
     ...options,
   });
 }
@@ -163,6 +164,7 @@ export function useGetDatasetRows(
         },
       ),
     enabled: () => !!toValue(workspaceId) && !!toValue(datasetId),
+    shallow: true,
     ...options,
   });
 }
@@ -302,8 +304,9 @@ export function useExportDataset(
         throw new Error('Empty export response');
       }
       const filename =
-        filenameFromContentDisposition(response.headers.get('content-disposition')) ??
-        buildExportFilename(toValue(datasetName), format);
+        filenameFromContentDisposition(
+          response.headers.get('content-disposition'),
+        ) ?? buildExportFilename(toValue(datasetName), format);
       downloadBlob(response._data, filename);
     },
     onError: () => {
