@@ -121,6 +121,9 @@ export default defineNuxtConfig({
         ],
       },
     },
+    optimizeDeps: {
+      exclude: ['@tanstack/vue-query-devtools'],
+    },
   },
   // DEV SERVER
   devServer: { port: 3000 },
