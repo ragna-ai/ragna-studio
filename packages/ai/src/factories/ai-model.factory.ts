@@ -6,8 +6,13 @@ import type { GoogleGenerativeAIProviderSettings } from '@ai-sdk/google';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { GoogleVertexProviderSettings } from '@ai-sdk/google-vertex';
 import { createVertex } from '@ai-sdk/google-vertex';
+import { createMistral, type MistralProviderSettings } from '@ai-sdk/mistral';
 import type { OpenAIProviderSettings } from '@ai-sdk/openai';
 import { createOpenAI } from '@ai-sdk/openai';
+import {
+  createOpenAICompatible,
+  type OpenAICompatibleProviderSettings,
+} from '@ai-sdk/openai-compatible';
 import type { Experimental_VideoModelV4 } from '@ai-sdk/provider';
 import { config } from '@repo/config';
 import type { EmbeddingModel, ImageModel, LanguageModel } from 'ai';
@@ -72,6 +77,17 @@ const googleGenAiAuthOptions: GoogleGenerativeAIProviderSettings = {
   apiKey: config.getSecret('GOOGLE_GENAI_API_KEY'),
 };
 
+const mistralAuthOptions: MistralProviderSettings = {
+  baseURL: config.mistralApiBaseUrl,
+  apiKey: config.getSecret('MISTRAL_API_KEY'),
+};
+
+const lmStudioAuthOptions: OpenAICompatibleProviderSettings = {
+  name: 'lmstudio',
+  baseURL: config.lmStudioApiBaseUrl,
+  apiKey: config.getSecret('LMSTUDIO_API_KEY') || undefined,
+};
+
 export function getLanguageModel(payload: GetLanguageModelPayload): LanguageModel {
   const { provider = 'anthropic', model = 'claude-sonnet-5' } = payload;
 
@@ -91,6 +107,14 @@ export function getLanguageModel(payload: GetLanguageModelPayload): LanguageMode
     case 'openai': {
       const openai = createOpenAI(openAiAuthOptions);
       return openai(model);
+    }
+    case 'mistral': {
+      const mistral = createMistral(mistralAuthOptions);
+      return mistral(model);
+    }
+    case 'lm-studio': {
+      const lmStudio = createOpenAICompatible(lmStudioAuthOptions);
+      return lmStudio(model);
     }
     default:
       throw new Error(`Unsupported provider: ${provider}`);
@@ -125,6 +149,14 @@ export function getEmbeddingModel(payload: GetEmbeddingModelPayload): EmbeddingM
     case 'openai': {
       const openai = createOpenAI(openAiAuthOptions);
       return openai.embedding(model);
+    }
+    case 'mistral': {
+      const mistral = createMistral(mistralAuthOptions);
+      return mistral.embedding(model);
+    }
+    case 'lm-studio': {
+      const lmStudio = createOpenAICompatible(lmStudioAuthOptions);
+      return lmStudio.embeddingModel(model);
     }
     default:
       throw new Error(`Unsupported provider: ${provider}`);

@@ -172,14 +172,11 @@ const ConfigSchema = z.object({
   // (docs/credits/prd.md, "The charge formula"), so downstream code and the
   // usage rows' `markupBps` snapshot stay unchanged and truthful. Per-model
   // `pricing.markupBps` overrides still apply on top of a disabled global.
-  CREDIT_MARKUP_BPS: z.preprocess(
-    (val) => {
-      if (val === '') return undefined;
-      if (typeof val === 'string' && val.toLowerCase() === 'null') return 10_000;
-      return val;
-    },
-    z.coerce.number().int().positive().default(15_000),
-  ),
+  CREDIT_MARKUP_BPS: z.preprocess((val) => {
+    if (val === '') return undefined;
+    if (typeof val === 'string' && val.toLowerCase() === 'null') return 10_000;
+    return val;
+  }, z.coerce.number().int().positive().default(15_000)),
   CREDITS_ENABLED: z
     .string()
     .optional()
@@ -216,6 +213,8 @@ const ConfigSchema = z.object({
   OPENAI_API_KEY: z.string().optional().default(''),
   ANTHROPIC_API_BASE_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
+  LMSTUDIO_API_BASE_URL: z.string().optional().default(''),
+  LMSTUDIO_API_KEY: z.string().optional().default(''),
   GOOGLE_VERTEX_API_BASE_URL: z.string().optional(),
   GOOGLE_VERTEX_PROJECT_ID: z.string().optional().default(''),
   GOOGLE_VERTEX_LOCATION: z.string().optional().default(''),
@@ -225,6 +224,8 @@ const ConfigSchema = z.object({
   GOOGLE_GENAI_API_KEY: z.string().optional().default(''),
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
+  MISTRAL_API_BASE_URL: z.string().optional(),
+  MISTRAL_API_KEY: z.string().optional().default(''),
 
   LINKEDIN_SCOPES: z.array(z.string()).default([]),
   LINKEDIN_CLIENT_ID: z.string().optional().default(''),
@@ -271,6 +272,8 @@ export class ConfigService {
         'LINKEDIN_CLIENT_SECRET',
         'MICROSOFT_CLIENT_SECRET',
         'APPLE_PRIVATE_KEY',
+        'MISTRAL_API_KEY',
+        'LMSTUDIO_API_KEY',
       ]);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -428,6 +431,10 @@ export class ConfigService {
     return this._config.BFL_API_BASE_URL;
   }
 
+  get lmStudioApiBaseUrl(): string {
+    return this._config.LMSTUDIO_API_BASE_URL;
+  }
+
   get googleVertexApiBaseUrl(): string | undefined {
     return this._config.GOOGLE_VERTEX_API_BASE_URL;
   }
@@ -450,6 +457,10 @@ export class ConfigService {
 
   get googleGenAiApiBaseUrl(): string | undefined {
     return this._config.GOOGLE_GENAI_API_BASE_URL;
+  }
+
+  get mistralApiBaseUrl(): string | undefined {
+    return this._config.MISTRAL_API_BASE_URL;
   }
 
   get googleClientId(): string {
@@ -502,6 +513,8 @@ export class ConfigService {
   getSecret(key: 'GOOGLE_CLIENT_SECRET'): string;
   getSecret(key: 'GOOGLE_VERTEX_CLIENT_EMAIL'): string;
   getSecret(key: 'GOOGLE_VERTEX_PRIVATE_KEY'): string;
+  getSecret(key: 'LMSTUDIO_API_KEY'): string;
+  getSecret(key: 'MISTRAL_API_KEY'): string;
   getSecret(key: 'LINKEDIN_CLIENT_SECRET'): string;
   getSecret(key: 'MICROSOFT_CLIENT_SECRET'): string;
   getSecret(key: 'APPLE_PRIVATE_KEY'): string;

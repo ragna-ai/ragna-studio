@@ -59,13 +59,12 @@ export function registerGenVideoJobProcessor(): Worker<any, any, string> {
 async function processGenVideo(genVideoId: string): Promise<void> {
   const { error } = await tryCatch(() => runGenVideo({ genVideoId }));
 
-  if (error === null) {
-    await notifyBestEffort({ genVideoId, type: 'video_generation_succeeded' });
-    return;
+  if (error !== null) {
+    await notifyBestEffort({ genVideoId, type: 'video_generation_failed' });
+    throw error;
   }
 
-  await notifyBestEffort({ genVideoId, type: 'video_generation_failed' });
-  throw error;
+  await notifyBestEffort({ genVideoId, type: 'video_generation_succeeded' });
 }
 
 // Best-effort by design: a notification failure must never mask the job's
