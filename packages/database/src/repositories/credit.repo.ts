@@ -1,6 +1,7 @@
 import { config } from '@repo/config';
-import { DrizzleQueryError, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../db';
+import { isUniqueViolationError } from '../errors';
 import type {
   AiModelPricing,
   CreditAccount,
@@ -432,18 +433,5 @@ export function ceilDiv(a: bigint, b: bigint): bigint {
 
 // A unique violation on `credit_ledger.idempotency_key` is how
 // settleCreditUsage/grantCredits detect "already applied" without a
-// preceding read-then-check race. node-postgres surfaces it as a
-// `DatabaseError` with `code: '23505'`, wrapped by drizzle in
-// `DrizzleQueryError.cause`.
-function isIdempotencyKeyConflict(error: unknown): boolean {
-  if (!(error instanceof DrizzleQueryError)) {
-    return false;
-  }
-
-  const cause = error.cause;
-  if (typeof cause !== 'object' || cause === null || !('code' in cause)) {
-    return false;
-  }
-
-  return cause.code === '23505';
-}
+// preceding read-then-check race.
+const isIdempotencyKeyConflict = isUniqueViolationError;

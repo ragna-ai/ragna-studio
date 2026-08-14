@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@repo/ai": "workspace:*",
+    "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",

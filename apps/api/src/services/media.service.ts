@@ -394,6 +394,46 @@ export async function deleteWorkspaceMediaObjects({
   }
 }
 
+// LIST
+
+export interface MediaListItem {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  createdAt: Date;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/media
+ * Lists every media row owned by the workspace, newest first. Powers the
+ * media-library picker in the email compose UI (docs/email/prd.md,
+ * "Compose/send"). No pagination: a workspace's media library is modest in
+ * size, same reasoning as task.service.ts's listTasksForWorkspace.
+ */
+export async function listMediaForWorkspace({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<MediaListItem[]> {
+  const { error, data: mediaRows } = await tryCatch(() => getMediaByWorkspaceId({ workspaceId }));
+
+  if (error !== null || !mediaRows) {
+    logger.error(`Failed to list media for workspace ${workspaceId}`, error);
+    throw new InternalServerErrorException('Failed to list media');
+  }
+
+  return mediaRows
+    .map((mediaRow) => ({
+      id: mediaRow.id,
+      filename: mediaRow.filename,
+      mimeType: mediaRow.mimeType,
+      size: mediaRow.size,
+      createdAt: mediaRow.createdAt,
+    }))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
 // DOWNLOAD
 
 /**

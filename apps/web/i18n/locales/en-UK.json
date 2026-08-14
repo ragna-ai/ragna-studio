@@ -30,6 +30,7 @@
     "workflows": "Workflows",
     "agents": "Agents",
     "chat": "Chat",
+    "mail": "Mail",
     "datasets": "Datasets",
     "docs": "Docs",
     "tasks": "Tasks",
@@ -991,6 +992,139 @@
       "custom": "Custom",
       "needsDueDateHint": "Set a due date to enable reminders.",
       "daysBeforeSuffix": "days before"
+    }
+  },
+  "email": {
+    "pageTitle": "Mail",
+    "connect": {
+      "title": "Connect Gmail",
+      "description": "Connect your Gmail account to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
+      "cta": "Connect Gmail"
+    },
+    "sidebar": {
+      "compose": "Compose",
+      "searchPlaceholder": "Search mail",
+      "pendingDrafts": "AI drafts",
+      "categories": "Categories",
+      "labels": "Labels",
+      "settings": "Email settings",
+      "syncNow": "Sync now"
+    },
+    "folder": {
+      "inbox": "Inbox",
+      "starred": "Starred",
+      "sent": "Sent",
+      "archived": "Archive",
+      "trashed": "Trash"
+    },
+    "thread": {
+      "unknownSender": "Unknown sender",
+      "noSubject": "(no subject)",
+      "empty": "No emails here.",
+      "noSearchResults": "No results for your search.",
+      "loadMore": "Load more",
+      "loadError": "Failed to load this conversation.",
+      "selectPrompt": "Select a conversation to read it.",
+      "actions": {
+        "toggleStar": "Star",
+        "toggleRead": "Toggle read",
+        "archive": "Archive",
+        "trash": "Move to trash"
+      }
+    },
+    "message": {
+      "to": "To: {recipients}",
+      "reply": "Reply",
+      "replyAll": "Reply all",
+      "forward": "Forward"
+    },
+    "attachments": {
+      "loading": "Loading attachments...",
+      "download": "Download"
+    },
+    "compose": {
+      "to": "To",
+      "cc": "Cc",
+      "bcc": "Bcc",
+      "addCcBcc": "Add Cc/Bcc",
+      "subject": "Subject",
+      "subjectPlaceholder": "Subject",
+      "bodyPlaceholder": "Write your message...",
+      "send": "Send",
+      "newTitle": "New message",
+      "attachments": {
+        "add": "Attach files",
+        "fromLibrary": "Attach from library",
+        "remove": "Remove attachment",
+        "tooLarge": "Attachments are larger than the 25 MB limit."
+      },
+      "mediaPicker": {
+        "title": "Attach from media library",
+        "empty": "No media in this workspace yet.",
+        "attach": "Attach ({count})"
+      }
+    },
+    "draft": {
+      "generating": "Drafting a reply...",
+      "readyBadge": "AI draft ready for review",
+      "discard": "Discard",
+      "trigger": {
+        "button": "Draft with AI",
+        "title": "Draft a reply with AI",
+        "agentPlaceholder": "Choose an agent",
+        "generate": "Generate draft"
+      }
+    },
+    "pendingDrafts": {
+      "pageTitle": "AI drafts",
+      "title": "AI drafts",
+      "subtitle": "Reply drafts waiting for your review before they can be sent.",
+      "empty": "No drafts waiting for review.",
+      "generatingPreview": "Still drafting a reply..."
+    },
+    "settings": {
+      "pageTitle": "Email settings",
+      "subtitle": "Manage your connected Gmail account, categories, and auto-draft rules.",
+      "notConnected": "Connect Gmail first to manage email settings.",
+      "tabs": {
+        "general": "General",
+        "categories": "Categories",
+        "senders": "Auto-draft senders"
+      },
+      "general": {
+        "title": "Account",
+        "defaultAgent": "Default draft agent",
+        "defaultAgentHint": "Used for auto-drafts and preselected on manual \"Draft with AI\" requests.",
+        "defaultAgentPlaceholder": "Choose an agent",
+        "dangerZone": "Danger zone",
+        "disconnect": "Disconnect Gmail",
+        "disconnectConfirmTitle": "Disconnect Gmail",
+        "disconnectConfirmMessage": "This removes your synced mail, categories, and drafts. Your Gmail account itself is unaffected."
+      },
+      "categories": {
+        "title": "Categories",
+        "subtitle": "Categories steer the AI classifier. The description is fed to it as-is, so describe what belongs in the category.",
+        "colorLabel": "Category color",
+        "namePlaceholder": "Category name",
+        "autoDraft": "Auto-draft",
+        "descriptionPlaceholder": "Describe what belongs in this category...",
+        "empty": "No categories yet.",
+        "deleteConfirmTitle": "Delete category",
+        "deleteConfirmMessage": "Delete \"{name}\"? Messages already classified into it keep their history, just without a category."
+      },
+      "senders": {
+        "title": "Auto-draft senders",
+        "subtitle": "Emails from these senders always get an AI draft reply, regardless of category.",
+        "placeholder": "sender{'@'}example.com",
+        "empty": "No senders on the auto-draft list yet."
+      }
+    },
+    "sync": {
+      "syncing": "Syncing...",
+      "error": "Sync error",
+      "lastSynced": "Synced {date}",
+      "neverSynced": "Not synced yet",
+      "syncFailed": "Failed to sync your mailbox. Try again in a moment."
     }
   }
 }

@@ -44,6 +44,13 @@ export const auth = betterAuth({
     google: {
       clientId: config.googleClientId,
       clientSecret: config.getSecret('GOOGLE_CLIENT_SECRET'),
+      // Google only issues a refresh token on a consenting grant. Needed so
+      // the Gmail account-linking flow (linkSocial() with gmail.modify,
+      // apps/web) gets a refresh token to store, even though the base
+      // sign-in scopes stay plain openid/profile/email (docs/email/prd.md,
+      // "Auth and account connection").
+      accessType: 'offline',
+      prompt: 'consent',
     },
     microsoft: {
       clientId: config.microsoftClientId,

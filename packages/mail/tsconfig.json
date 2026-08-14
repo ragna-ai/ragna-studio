@@ -2,7 +2,12 @@
   "extends": "@repo/ts-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    // turndown's types (content/html-to-markdown.ts) reference DOM element
+    // types even though it runs standalone in Node (bundles its own HTML
+    // parser); es2023 alone doesn't define them. Same override as
+    // apps/webbrowser, which hits the same thing via puppeteer + turndown.
+    "lib": ["es2023", "dom"]
   },
   "include": ["src", ".maizzle/*.d.ts"]
 }

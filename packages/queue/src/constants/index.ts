@@ -7,6 +7,9 @@ export const WORKFLOW_SCHEDULES_QUEUE = 'workflow-schedules-queue';
 export const AGENT_CONTEXT_DOCUMENTS_QUEUE = 'agent-context-documents-queue';
 export const GEN_VIDEOS_QUEUE = 'gen-videos-queue';
 export const GEN_IMAGES_QUEUE = 'gen-images-queue';
+export const EMAIL_SYNC_QUEUE = 'email-sync-queue';
+export const EMAIL_CLASSIFY_QUEUE = 'email-classify-queue';
+export const EMAIL_DRAFT_QUEUE = 'email-draft-queue';
 
 // The set of notification kinds and the data payload each one carries. This is
 // the single source of truth: adding a new notification scenario is one entry

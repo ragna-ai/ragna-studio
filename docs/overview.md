@@ -113,6 +113,15 @@ Automatically tags AI-generated media with a provenance badge, best-effort
 (doesn't block generation if labeling fails).
 → [docs/ai-labeling/prd.md](./ai-labeling/prd.md)
 
+### Email client
+Gmail-backed email client (`/mail`): three-pane UI, AI auto-categorization
+into user-defined categories, AI reply drafts via a configurable agent
+(auto-triggered per category/sender or manual), markdown-canonical content
+pipeline rendered through `@repo/editor`. Polling sync with manual
+"Sync now".
+→ [docs/email/prd.md](./email/prd.md),
+[gmail-client-decision.md](./email/gmail-client-decision.md)
+
 ## Supporting services
 
 ### Web browser service

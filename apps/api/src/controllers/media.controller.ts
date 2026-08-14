@@ -1,13 +1,23 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
-import { downloadMedia } from '../services/media.service';
+import { downloadMedia, listMediaForWorkspace } from '../services/media.service';
 import { validMediaIdParam } from '../validation';
 
 export const mediaController = new Hono()
   .basePath('/workspace/:workspaceId/media')
   .use(authMiddleware)
   .use(workspaceGuard)
+  /**
+   * [GET] /workspace/:workspaceId/media
+   * Lists the workspace's media, newest first. Powers pickers like the
+   * email compose media-library attachment picker.
+   */
+  .get('/', async (c) => {
+    const workspace = c.get('workspace');
+    const media = await listMediaForWorkspace({ workspaceId: workspace.id });
+    return c.json({ media });
+  })
   /**
    * [GET] /workspace/:workspaceId/media/:mediaId/download
    * Streams a workspace-owned media object from R2 with its content-type

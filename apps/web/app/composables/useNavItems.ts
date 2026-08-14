@@ -5,6 +5,7 @@ import {
   HomeIcon,
   ImageIcon,
   ListTodoIcon,
+  MailIcon,
   MessagesSquareIcon,
   PlusCircleIcon,
   Share2Icon,
@@ -66,6 +67,13 @@ const defaultItems: NavItemConfig[] = [
     path: '/chat',
     icon: MessagesSquareIcon,
     labelKey: 'nav.chat',
+    children: [],
+  },
+  {
+    id: 'mail',
+    path: '/mail',
+    icon: MailIcon,
+    labelKey: 'nav.mail',
     children: [],
   },
   {
