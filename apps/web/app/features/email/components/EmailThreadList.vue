@@ -32,11 +32,35 @@ const emit = defineEmits<{
 
 // Composables
 const { t } = useI18n();
+const router = useRouter();
+const route = useRoute();
 const filtersRef = computed(() => props.filters);
 const { mutate: archiveThread } = useSetThreadArchived(filtersRef);
 const { mutate: trashThread } = useSetThreadTrashed(filtersRef);
 const { mutate: starThread } = useSetThreadStarred(filtersRef);
 const { mutate: setThreadRead } = useSetThreadRead();
+
+// Archiving/trashing a row removes it from this list optimistically, but if
+// that row is also the thread currently open in the reading pane
+// (EmailThreadView, driven by the route's threadId), nothing else tells the
+// route to move on - the pane would otherwise keep rendering a thread that
+// no longer appears anywhere in the list. Mirrors EmailThreadView's own
+// trash/archive buttons, which already navigate back to `/mail` on click.
+function closeIfActive(threadId: string) {
+  if (threadId === props.activeThreadId) {
+    router.push({ path: '/mail', query: { ...route.query } });
+  }
+}
+
+function handleArchive(threadId: string) {
+  archiveThread({ threadId, archived: true });
+  closeIfActive(threadId);
+}
+
+function handleTrash(threadId: string) {
+  trashThread({ threadId });
+  closeIfActive(threadId);
+}
 
 // Computed
 const categoryById = computed(() => new Map(props.categories.map((category) => [category.id, category])));
@@ -75,8 +99,8 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
         :draft="draftFor(thread)"
         :is-active="thread.id === props.activeThreadId"
         @open="emit('open', thread.id)"
-        @archive="archiveThread({ threadId: thread.id, archived: true })"
-        @trash="trashThread({ threadId: thread.id })"
+        @archive="handleArchive(thread.id)"
+        @trash="handleTrash(thread.id)"
         @star="(value) => starThread({ threadId: thread.id, starred: value })"
         @toggle-read="setThreadRead({ threadId: thread.id, read: thread.isUnread })"
       />
