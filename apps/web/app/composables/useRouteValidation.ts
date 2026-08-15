@@ -34,8 +34,11 @@ const taskIdSchema = z.object({
   taskId: primaryIdSchema,
 });
 
+// threadId is an optional route segment (apps/web/app/pages/mail/[[threadId]].vue,
+// shared by /mail and /mail/:threadId to avoid remounting the page on
+// thread-open - see that file's comment), so absence is valid too.
 const emailThreadIdSchema = z.object({
-  threadId: primaryIdSchema,
+  threadId: primaryIdSchema.optional(),
 });
 
 const emailDraftIdSchema = z.object({
@@ -66,7 +69,7 @@ export const hasValidDocumentId = (params: any) =>
 export const hasValidTaskId = (params: any) =>
   hasValidSchema(taskIdSchema, params);
 
-export const hasValidEmailThreadId = (params: any) =>
+export const hasValidOptionalEmailThreadId = (params: any) =>
   hasValidSchema(emailThreadIdSchema, params);
 
 export const hasValidEmailDraftId = (params: any) =>

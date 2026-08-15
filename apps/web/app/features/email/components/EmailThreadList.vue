@@ -8,12 +8,14 @@ import {
   useSetThreadStarred,
   useSetThreadTrashed,
 } from '~/features/email/composables/useEmailThreadApi';
-import type { EmailCategory, EmailThreadListFilters, EmailThreadSummary } from '~/features/email/types';
+import type { EmailCategory, EmailDraft, EmailThreadListFilters, EmailThreadSummary } from '~/features/email/types';
 
 // Props
 const props = defineProps<{
   threads: EmailThreadSummary[];
   categories: EmailCategory[];
+  /** Every active draft on the account, for the per-row "Draft" indicator - not filtered to this list's threads. */
+  drafts: EmailDraft[];
   activeThreadId: string | null;
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -38,9 +40,16 @@ const { mutate: setThreadRead } = useSetThreadRead();
 
 // Computed
 const categoryById = computed(() => new Map(props.categories.map((category) => [category.id, category])));
+const draftByThreadId = computed(
+  () => new Map(props.drafts.filter((draft) => draft.threadId !== null).map((draft) => [draft.threadId as string, draft])),
+);
 
 function categoryFor(thread: EmailThreadSummary): EmailCategory | null {
   return thread.categoryId ? (categoryById.value.get(thread.categoryId) ?? null) : null;
+}
+
+function draftFor(thread: EmailThreadSummary): EmailDraft | null {
+  return draftByThreadId.value.get(thread.id) ?? null;
 }
 </script>
 
@@ -63,6 +72,7 @@ function categoryFor(thread: EmailThreadSummary): EmailCategory | null {
         :key="thread.id"
         :thread="thread"
         :category="categoryFor(thread)"
+        :draft="draftFor(thread)"
         :is-active="thread.id === props.activeThreadId"
         @open="emit('open', thread.id)"
         @archive="archiveThread({ threadId: thread.id, archived: true })"

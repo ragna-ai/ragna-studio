@@ -36,7 +36,7 @@ export function deriveThreadSummaryPatch(
     labelIds: Array.from(new Set(messages.flatMap((message) => message.labelIds))),
     isUnread: messages.some((message) => message.isUnread),
     isStarred: messages.some((message) => message.isStarred),
-    categoryId: messages.at(-1)?.categoryId ?? null,
+    categoryId: messages.findLast((message) => message.categoryId !== null)?.categoryId ?? null,
     messageCount: messages.length,
   };
 }

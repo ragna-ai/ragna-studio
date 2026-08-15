@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ArchiveIcon, MailIcon, MailOpenIcon, StarIcon, Trash2Icon } from '@lucide/vue';
+import { ArchiveIcon, FileEditIcon, MailIcon, MailOpenIcon, SparklesIcon, StarIcon, Trash2Icon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { useDateTimeFormat } from '~/composables/useDateTimeFormat';
 import EmailCategoryBadge from '~/features/email/components/EmailCategoryBadge.vue';
 import { threadParticipantsLabel } from '~/features/email/lib/email-display';
-import type { EmailCategory, EmailThreadSummary } from '~/features/email/types';
+import type { EmailCategory, EmailDraft, EmailThreadSummary } from '~/features/email/types';
 
 // Props
 const props = defineProps<{
   thread: EmailThreadSummary;
   category: EmailCategory | null;
+  /** The thread's active draft, if any (EmailThreadList.vue's `draftByThreadId` lookup) - drives the "Draft" indicator badge below. */
+  draft: EmailDraft | null;
   isActive: boolean;
 }>();
 
@@ -107,6 +109,14 @@ const { formatDateTime } = useDateTimeFormat();
           class="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
         >
           {{ props.thread.messageCount }}
+        </span>
+        <span
+          v-if="props.draft"
+          class="flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+        >
+          <SparklesIcon v-if="props.draft.origin === 'ai'" class="size-3" />
+          <FileEditIcon v-else class="size-3" />
+          {{ t('email.thread.draftBadge') }}
         </span>
       </div>
     </div>

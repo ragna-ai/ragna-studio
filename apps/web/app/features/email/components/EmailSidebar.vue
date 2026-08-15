@@ -21,6 +21,7 @@ const props = defineProps<{
   categoryId: string | null;
   labelId: string | null;
   isSearching: boolean;
+  isDraftsView: boolean;
   pendingDraftsCount: number;
   isComposing: boolean;
 }>();
@@ -30,6 +31,7 @@ const emit = defineEmits<{
   compose: [];
   search: [string];
   selectFolder: [EmailFolder];
+  selectDrafts: [];
   selectCategory: [string | null];
   selectLabel: [string | null];
 }>();
@@ -102,23 +104,24 @@ function handleSyncNow() {
               {{ t(config.labelKey) }}
             </button>
           </li>
-          <!-- Drafts folder: a route link, not an `EMAIL_FOLDERS` entry -
-               those ids are thread-list filters validated against the API's
-               emailFolderEnum, and a draft list isn't a thread list
-               (docs/email/drafts-change-request.md, section 6). It still
-               sits visually inside this system-folder list, and its badge
-               keeps counting AI drafts pending review. -->
+          <!-- Drafts: a client-only pseudo-folder, not an `EMAIL_FOLDERS`
+               entry - those ids are thread-list filters validated against
+               the API's emailFolderEnum, and a draft list isn't a thread
+               list. Selecting it behaves exactly like any other folder
+               button (same list + reading-pane layout, no navigation). -->
           <li>
-            <NuxtLinkLocale
-              to="/mail/drafts"
+            <button
+              type="button"
               class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+              :class="{ 'bg-muted font-medium': props.isDraftsView }"
+              @click="emit('selectDrafts')"
             >
               <FileEditIcon class="size-4 shrink-0 text-muted-foreground" />
               {{ t('email.sidebar.drafts') }}
               <Badge v-if="props.pendingDraftsCount > 0" variant="secondary" class="ml-auto">
                 {{ props.pendingDraftsCount }}
               </Badge>
-            </NuxtLinkLocale>
+            </button>
           </li>
         </ul>
 

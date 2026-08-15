@@ -1025,6 +1025,7 @@
       "loadMore": "Load more",
       "loadError": "Failed to load this conversation.",
       "selectPrompt": "Select a conversation to read it.",
+      "draftBadge": "Draft",
       "replaceDraft": {
         "title": "Discard the current draft?",
         "message": "This thread already has an unsent draft of a different kind. Starting a new one discards it."
@@ -1085,9 +1086,6 @@
       }
     },
     "draftsFolder": {
-      "pageTitle": "Drafts",
-      "title": "Drafts",
-      "subtitle": "Every unsent message: yours, AI-drafted, and ones started in Gmail.",
       "empty": "No drafts."
     },
     "settings": {

@@ -108,3 +108,7 @@ Always use the clean-code skill.
 - no browser verification
 
 The user handles verification and commits.
+
+# Browser use
+
+Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate it without credentials. Ask the user to share images or details if required.

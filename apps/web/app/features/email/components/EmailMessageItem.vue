@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import { useDateTimeFormat } from '~/composables/useDateTimeFormat';
+import EmailCategoryBadge from '~/features/email/components/EmailCategoryBadge.vue';
 import EmailContentIframe from '~/features/email/components/EmailContentIframe.vue';
 import EmailMessageAttachments from '~/features/email/components/EmailMessageAttachments.vue';
 import {
@@ -8,11 +9,12 @@ import {
   formatParticipantList,
   participantInitials,
 } from '~/features/email/lib/email-display';
-import type { EmailMessageDetail } from '~/features/email/types';
+import type { EmailCategory, EmailMessageDetail } from '~/features/email/types';
 
 // Props
 const props = defineProps<{
   message: EmailMessageDetail;
+  category: EmailCategory | null;
   expanded: boolean;
 }>();
 
@@ -43,16 +45,20 @@ const toLabel = computed(() => formatParticipantList(props.message.to));
       </Avatar>
       <div class="min-w-0 flex-1">
         <div class="flex items-center justify-between gap-2">
-          <p
-            class="truncate text-sm font-medium"
-            :class="{ 'font-semibold': props.message.isUnread }"
-          >
-            {{ formatParticipant(props.message.from) }}
-          </p>
+          <div class="flex min-w-0 items-center gap-2">
+            <p
+              class="truncate text-sm font-medium"
+              :class="{ 'font-semibold': props.message.isUnread }"
+            >
+              {{ formatParticipant(props.message.from) }}
+            </p>
+            <EmailCategoryBadge v-if="props.category" :category="props.category" />
+          </div>
           <span class="shrink-0 text-xs text-muted-foreground">{{
             formatDateTime(props.message.sentAt)
           }}</span>
         </div>
+        <p class="truncate text-sm text-muted-foreground">{{ props.message.subject || t('email.thread.noSubject') }}</p>
         <p v-if="props.expanded" class="truncate text-xs text-muted-foreground">
           {{ t('email.message.to', { recipients: toLabel }) }}
         </p>

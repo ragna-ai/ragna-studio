@@ -38,9 +38,9 @@ export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
 
 /**
  * [GET] /email/draft - omitting `threadId` returns every non-terminal draft
- * on the account: the Drafts folder (docs/email/drafts-change-request.md,
- * section 6), not the AI review queue below. Distinct query key and caller
- * from `useGetPendingDrafts` even though both hit the same endpoint family.
+ * on the account. Drives both the Drafts pseudo-folder's row list and, via a
+ * `threadId` lookup, the small "Draft" indicator on thread rows in every
+ * other folder (EmailClient.vue).
  */
 export function useGetAllDrafts() {
   const { $api } = useNuxtApp();
@@ -68,25 +68,6 @@ export function useGetEmailDraft(draftId: MaybeRefOrGetter<string | null>) {
   });
 }
 
-/**
- * [GET] /email/draft/pending - account-wide drafts awaiting review, for the
- * sidebar's "AI drafts pending review" badge count (still counted even
- * though the Drafts folder link that carries it now shows every draft, not
- * just this queue). NOTE (apps/api, listPendingEmailDraftsForUser doc
- * comment): the endpoint currently only returns `generating` rows, not
- * `ready` ones, even though it's meant to double as a review inbox for both.
- * Reported to team-lead; this composable is written against the intended
- * (generating + ready) shape so the UI needs no changes once that's fixed.
- */
-export function useGetPendingDrafts() {
-  const { $api } = useNuxtApp();
-  return useQuery<EmailDraftListResponse>({
-    queryKey: emailKeys.pendingDrafts(),
-    queryFn: ({ signal }) => $api<EmailDraftListResponse>('/email/draft/pending', { method: 'GET', signal }),
-    refetchInterval: (query) => (hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false),
-  });
-}
-
 interface DraftInvalidationTarget {
   /** Omitted for `useTriggerEmailDraft`, whose 202 response carries no draft id to key a refetch on. */
   draftId?: string;
@@ -97,8 +78,8 @@ interface DraftInvalidationTarget {
 /**
  * Every draft mutation touches the same read models: the single-draft view
  * (only when the draft's own id is known), the thread's draft list (only
- * when the draft has a thread), the Drafts folder, and the AI-pending badge
- * count.
+ * when the draft has a thread), and the account-wide `allDrafts` list that
+ * backs both the Drafts pseudo-folder and the thread-row indicator.
  */
 function invalidateDraftQueries(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -106,7 +87,6 @@ function invalidateDraftQueries(
 ): void {
   if (draftId) queryClient.invalidateQueries({ queryKey: emailKeys.draft(draftId) });
   if (threadId) queryClient.invalidateQueries({ queryKey: emailKeys.drafts(threadId) });
-  queryClient.invalidateQueries({ queryKey: emailKeys.pendingDrafts() });
   queryClient.invalidateQueries({ queryKey: emailKeys.allDrafts() });
 }
 

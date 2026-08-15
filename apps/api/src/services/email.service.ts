@@ -708,9 +708,16 @@ async function hydrateThreadSummary({
   const labelIds = Array.from(new Set(threadMessages.flatMap((message) => message.labelIds)));
   const isUnread = threadMessages.some((message) => message.isUnread);
   const isStarred = threadMessages.some((message) => message.isStarred);
-  // Most recent message's category represents the thread in the list view;
-  // classification runs per-message but a thread reads as "one card".
-  const categoryId = threadMessages.at(-1)?.categoryId ?? null;
+  // Most recent *classified* message's category represents the thread in
+  // the list/detail views; classification runs per-message but a thread
+  // reads as "one card". Scanning back from the newest message (rather than
+  // just reading .at(-1)) matters because the newest message is often one
+  // the classifier never touches, e.g. the account's own SENT reply
+  // (isNonClassifiableMessage, apps/worker/src/mail/email-sync.service.ts) -
+  // that message's categoryId is permanently null, which would otherwise
+  // hide an earlier message's real classification.
+  const categoryId = threadMessages.findLast((message) => message.categoryId !== null)
+    ?.categoryId ?? null;
 
   return {
     id: thread.id,
@@ -797,10 +804,7 @@ export interface EmailMessageDetail {
   labelIds: string[];
   categoryId: string | null;
   needsReply: boolean;
-  // Canonical markdown only (docs/email/prd.md, "Content pipeline"): the
-  // web app renders received mail as markdown, never HTML. htmlBody is a
-  // server-only conversion source and is never shipped to the client.
-  body: { markdown: string | null };
+  body: { markdown: string | null; html: string | null };
 }
 
 export interface EmailThreadDetailResponse {
@@ -840,9 +844,11 @@ export async function getEmailThreadDetailForUser({
   // source, docs/email/prd.md "Content pipeline") but never surfaces in the
   // response.
   const markdownByMessageId = new Map<string, string | null>();
+  const htmlByMessageId = new Map<string, string | null>();
   for (const message of messages) {
     if (message.body) {
       markdownByMessageId.set(message.id, message.body.textBody);
+      htmlByMessageId.set(message.id, message.body.htmlBody);
     }
   }
 
@@ -876,6 +882,7 @@ export async function getEmailThreadDetailForUser({
       );
 
       markdownByMessageId.set(message.id, markdown);
+      htmlByMessageId.set(message.id, live.body.html);
     }
   }
 
@@ -902,7 +909,7 @@ export async function getEmailThreadDetailForUser({
       needsReply: message.needsReply,
       body: {
         markdown: markdownByMessageId.get(message.id) ?? null,
-        html: message.body?.htmlBody ?? null,
+        html: htmlByMessageId.get(message.id) ?? null,
       },
     })),
   };

@@ -1031,6 +1031,7 @@
       "loadMore": "Mehr laden",
       "loadError": "Diese Unterhaltung konnte nicht geladen werden.",
       "selectPrompt": "Wähle eine Unterhaltung zum Lesen aus.",
+      "draftBadge": "Entwurf",
       "replaceDraft": {
         "title": "Aktuellen Entwurf verwerfen?",
         "message": "Für diese Unterhaltung gibt es bereits einen unversendeten Entwurf einer anderen Art. Ein neuer Entwurf verwirft diesen."
@@ -1091,9 +1092,6 @@
       }
     },
     "draftsFolder": {
-      "pageTitle": "Entwürfe",
-      "title": "Entwürfe",
-      "subtitle": "Alle unversendeten Nachrichten: deine eigenen, KI-Entwürfe und in Gmail begonnene.",
       "empty": "Keine Entwürfe."
     },
     "settings": {

@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import EmailConnectPrompt from '~/features/email/components/EmailConnectPrompt.vue';
+import EmailDraftList from '~/features/email/components/EmailDraftList.vue';
 import EmailDraftPanel from '~/features/email/components/EmailDraftPanel.vue';
 import EmailSidebar from '~/features/email/components/EmailSidebar.vue';
 import EmailThreadList from '~/features/email/components/EmailThreadList.vue';
@@ -14,13 +15,14 @@ import {
 } from '~/features/email/composables/useEmailConnectFlow';
 import {
   useCreateEmailDraft,
+  useGetAllDrafts,
   useGetEmailDraft,
-  useGetPendingDrafts,
 } from '~/features/email/composables/useEmailDraftApi';
 import { useSearchEmail } from '~/features/email/composables/useEmailSearchApi';
 import { useGetEmailThreads } from '~/features/email/composables/useEmailThreadApi';
 import { firstQueryValue } from '~/features/email/lib/route-query';
 import type {
+  EmailDraft,
   EmailFolder,
   EmailThreadListFilters,
   EmailThreadSummary,
@@ -29,9 +31,12 @@ import type {
 // Feature container for /mail (Vue best-practices: route view stays thin,
 // composition lives here): owns the connect gate, filters/search state, and
 // the three panes, delegating rendering to EmailSidebar/EmailThreadList/
-// EmailThreadView. app/pages/mail/index.vue, app/pages/mail/[threadId].vue
-// and app/pages/mail/draft/[draftId].vue just forward their route param in
-// here - `threadId` and `draftId` are mutually exclusive.
+// EmailThreadView. app/pages/mail/[[threadId]].vue (one route record for
+// both /mail and /mail/:threadId, so opening a thread updates this
+// component's prop instead of unmounting/remounting it - that page-boundary
+// remount used to reset EmailThreadList's scroll position on every open) and
+// app/pages/mail/draft/[draftId].vue just forward their route param in here -
+// `threadId` and `draftId` are mutually exclusive.
 const props = defineProps<{ threadId?: string; draftId?: string }>();
 
 // Composables
@@ -100,11 +105,24 @@ watch(
   },
 );
 
-const folder = computed<EmailFolder>(
-  () => (firstQueryValue(route.query.folder) as EmailFolder | null) ?? 'inbox',
-);
+const folderQuery = computed(() => firstQueryValue(route.query.folder));
 const categoryId = computed(() => firstQueryValue(route.query.categoryId));
 const labelId = computed(() => firstQueryValue(route.query.labelId));
+
+// Drafts is a client-only pseudo-folder: `?folder=drafts` selects it exactly
+// like any other EMAIL_FOLDERS value (same query-param mechanism, same list +
+// reading-pane layout, no navigation to a different page), but it isn't part
+// of the server-validated `EmailFolder`/emailFolderEnum, so it never reaches
+// `filters.folder` - the thread-list query is skipped entirely while active
+// and the row data comes from `useGetAllDrafts` instead.
+const isDraftsView = computed(
+  () => folderQuery.value === 'drafts' && !categoryId.value && !labelId.value && !isSearching.value,
+);
+
+const folder = computed<EmailFolder | null>(() => {
+  if (isDraftsView.value) return null;
+  return (folderQuery.value as EmailFolder | null) ?? 'inbox';
+});
 
 const filters = computed<EmailThreadListFilters>(() => ({
   folder: categoryId.value || labelId.value ? null : folder.value,
@@ -112,10 +130,12 @@ const filters = computed<EmailThreadListFilters>(() => ({
   labelId: labelId.value,
 }));
 
-const threadsQuery = useGetEmailThreads(filters);
+const threadsQuery = useGetEmailThreads(filters, () => !isDraftsView.value);
 const searchResult = useSearchEmail(searchInput);
 const categoriesQuery = useGetEmailCategories();
-const pendingDraftsQuery = useGetPendingDrafts();
+// Always fetched (not just in drafts view): also drives the sidebar count and
+// the per-thread "Draft" indicator badge in every other folder.
+const allDraftsQuery = useGetAllDrafts();
 
 // `/mail/draft/:draftId` (new mail, no thread below it - see the entry
 // points table in docs/email/drafts-change-request.md, section 2). Only
@@ -163,9 +183,8 @@ const availableLabels = computed(() => {
   return Array.from(labels).sort();
 });
 
-const pendingDraftsCount = computed(
-  () => pendingDraftsQuery.data.value?.drafts.length ?? 0,
-);
+const allDrafts = computed<EmailDraft[]>(() => allDraftsQuery.data.value?.drafts ?? []);
+const pendingDraftsCount = computed(() => allDrafts.value.length);
 
 // Functions
 function pushFilterQuery(query: Record<string, string>) {
@@ -175,6 +194,11 @@ function pushFilterQuery(query: Record<string, string>) {
 function selectFolder(next: EmailFolder) {
   searchInput.value = '';
   pushFilterQuery({ folder: next });
+}
+
+function selectDrafts() {
+  searchInput.value = '';
+  pushFilterQuery({ folder: 'drafts' });
 }
 
 function selectCategory(id: string | null) {
@@ -193,6 +217,12 @@ function handleSearch(query: string) {
 
 function openThread(id: string) {
   router.push({ path: `/mail/${id}`, query: route.query });
+}
+
+/** A draft with a thread opens the thread view (EmailDraftPanel renders inline there, same as today); a threadless ('new') draft opens its own standalone route. */
+function openDraft(draft: EmailDraft) {
+  const path = draft.threadId ? `/mail/${draft.threadId}` : `/mail/draft/${draft.id}`;
+  router.push({ path, query: route.query });
 }
 
 function loadMoreThreads() {
@@ -232,18 +262,31 @@ async function handleCompose() {
       :category-id="filters.categoryId"
       :label-id="filters.labelId"
       :is-searching="isSearching"
+      :is-drafts-view="isDraftsView"
       :pending-drafts-count="pendingDraftsCount"
       :is-composing="isCreatingDraft"
       @compose="handleCompose"
       @search="handleSearch"
       @select-folder="selectFolder"
+      @select-drafts="selectDrafts"
       @select-category="selectCategory"
       @select-label="selectLabel"
     />
+    <!-- Drafts pseudo-folder list -->
+    <EmailDraftList
+      v-if="isDraftsView"
+      :drafts="allDrafts"
+      :active-draft-id="props.draftId ?? null"
+      :active-thread-id="props.threadId ?? null"
+      :is-loading="allDraftsQuery.isLoading.value"
+      @open="openDraft"
+    />
     <!-- Thread list -->
     <EmailThreadList
+      v-else
       :threads="listThreads"
       :categories="categoriesQuery.data.value?.categories ?? []"
+      :drafts="allDrafts"
       :active-thread-id="props.threadId ?? null"
       :is-loading="
         isSearching

@@ -3,7 +3,6 @@ import { ArchiveIcon, CornerUpLeftIcon, ForwardIcon, MailIcon, MailOpenIcon, Sta
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Spinner } from '~/components/ui/spinner';
-import EmailCategoryBadge from '~/features/email/components/EmailCategoryBadge.vue';
 import EmailDraftPanel from '~/features/email/components/EmailDraftPanel.vue';
 import EmailDraftTriggerButton from '~/features/email/components/EmailDraftTriggerButton.vue';
 import EmailMessageItem from '~/features/email/components/EmailMessageItem.vue';
@@ -23,7 +22,7 @@ import {
   useSetThreadStarred,
   useSetThreadTrashed,
 } from '~/features/email/composables/useEmailThreadApi';
-import type { EmailDraftKind, EmailThreadListFilters } from '~/features/email/types';
+import type { EmailCategory, EmailDraftKind, EmailMessageDetail, EmailThreadListFilters } from '~/features/email/types';
 
 // Props
 const props = defineProps<{
@@ -59,9 +58,17 @@ const draftPanel = useTemplateRef<InstanceType<typeof EmailDraftPanel>>('draftPa
 
 // Computed
 const thread = computed(() => data.value?.thread ?? null);
+// API returns messages oldest-first (sentAt asc) so lastMessage/reply-target
+// logic below keeps reading .at(-1) - only the render order is flipped
+// (newest-first, macOS Mail-style) via messagesNewestFirst.
 const messages = computed(() => data.value?.messages ?? []);
-const category = computed(() => categoriesData.value?.categories.find((c) => c.id === thread.value?.categoryId) ?? null);
+const messagesNewestFirst = computed(() => [...messages.value].reverse());
+const categoryById = computed(() => new Map(categoriesData.value?.categories.map((category) => [category.id, category]) ?? []));
 const lastMessage = computed(() => messages.value.at(-1) ?? null);
+
+function categoryFor(message: EmailMessageDetail): EmailCategory | null {
+  return message.categoryId ? (categoryById.value.get(message.categoryId) ?? null) : null;
+}
 // One active (non-terminal) draft per thread, whoever wrote it - AI or user
 // (docs/email/drafts-change-request.md, section 2: "stops filtering on
 // origin"). Never needed an origin filter here in the first place since
@@ -85,6 +92,17 @@ function toggleExpanded(messageId: string) {
   }
   expandedIds.value = next;
 }
+
+// The view now stays mounted across thread switches (pages/mail/[[threadId]].vue's
+// `key: false`), so expandedIds no longer resets for free between threads -
+// clear it explicitly whenever the open thread changes, before the lastMessage
+// watcher below re-expands the new thread's latest message.
+watch(
+  () => props.threadId,
+  () => {
+    expandedIds.value = new Set();
+  },
+);
 
 watch(
   lastMessage,
@@ -213,13 +231,7 @@ function handleToggleRead() {
       {{ t('email.thread.loadError') }}
     </p>
     <template v-else-if="thread">
-      <header class="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h2 class="truncate text-base font-semibold">{{ thread.subject || t('email.thread.noSubject') }}</h2>
-            <EmailCategoryBadge v-if="category" :category="category" />
-          </div>
-        </div>
+      <header class="flex shrink-0 items-center justify-end gap-3 border-b px-4 py-3">
         <div class="flex shrink-0 items-center gap-1">
           <Button
             v-if="lastMessage"
@@ -303,9 +315,10 @@ function handleToggleRead() {
       <div class="min-h-0 flex-1 overflow-y-auto">
         <EmailDraftPanel v-if="activeDraft" ref="draftPanel" :draft="activeDraft" />
         <EmailMessageItem
-          v-for="message in messages"
+          v-for="message in messagesNewestFirst"
           :key="message.id"
           :message="message"
+          :category="categoryFor(message)"
           :expanded="isExpanded(message.id)"
           @toggle-expand="toggleExpanded(message.id)"
         />

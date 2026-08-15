@@ -18,8 +18,13 @@ const THREADS_PAGE_SIZE = 25;
  * instead of replacing it, driving the thread list's "load more" affordance.
  * `filters` is `MaybeRefOrGetter` (task/agent composable convention, e.g.
  * useTaskApi.ts's `useGetTasks`) so callers can pass a plain `computed()`.
+ * `enabled` lets EmailClient.vue skip this fetch entirely while the Drafts
+ * pseudo-folder is active (its list comes from `useGetAllDrafts` instead).
  */
-export function useGetEmailThreads(filters: MaybeRefOrGetter<EmailThreadListFilters>) {
+export function useGetEmailThreads(
+  filters: MaybeRefOrGetter<EmailThreadListFilters>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
   const { $api } = useNuxtApp();
 
   return useInfiniteQuery({
@@ -40,6 +45,7 @@ export function useGetEmailThreads(filters: MaybeRefOrGetter<EmailThreadListFilt
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
+    enabled: () => toValue(enabled),
   });
 }
 
