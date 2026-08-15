@@ -15,8 +15,8 @@ import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 
 export interface DocumentEditorKitOptions {
-  /** Shown when the editor has no content. */
   placeholder?: string;
+  hasMarkdown?: boolean;
 }
 
 const lowlight = createLowlight(common);
@@ -79,6 +79,6 @@ export function createDocumentEditorExtensions(
     TableKit.configure({
       table: { resizable: true },
     }),
-    Markdown,
+    ...(options.hasMarkdown ? [Markdown] : []),
   ];
 }

@@ -30,6 +30,7 @@
     "workflows": "Workflows",
     "agents": "Agenten",
     "chat": "Chat",
+    "mail": "E-Mail",
     "datasets": "Datensätze",
     "docs": "Dokumente",
     "tasks": "Aufgaben",
@@ -997,6 +998,147 @@
       "custom": "Benutzerdefiniert",
       "needsDueDateHint": "Lege ein Fälligkeitsdatum fest, um Erinnerungen zu aktivieren.",
       "daysBeforeSuffix": "Tage vorher"
+    }
+  },
+  "email": {
+    "pageTitle": "E-Mail",
+    "connect": {
+      "title": "Gmail verbinden",
+      "description": "Verbinde dein Gmail-Konto, um E-Mails zu lesen, zu beantworten und Antwortentwürfe von einem Agenten erstellen zu lassen. Es wird nie etwas ohne deine Prüfung versendet.",
+      "cta": "Gmail verbinden"
+    },
+    "sidebar": {
+      "compose": "Verfassen",
+      "searchPlaceholder": "E-Mails durchsuchen",
+      "drafts": "Entwürfe",
+      "categories": "Kategorien",
+      "labels": "Labels",
+      "settings": "E-Mail-Einstellungen",
+      "syncNow": "Jetzt synchronisieren"
+    },
+    "folder": {
+      "inbox": "Posteingang",
+      "starred": "Markiert",
+      "sent": "Gesendet",
+      "archived": "Archiv",
+      "trashed": "Papierkorb"
+    },
+    "thread": {
+      "unknownSender": "Unbekannter Absender",
+      "noSubject": "(kein Betreff)",
+      "empty": "Hier sind keine E-Mails.",
+      "noSearchResults": "Keine Ergebnisse für deine Suche.",
+      "loadMore": "Mehr laden",
+      "loadError": "Diese Unterhaltung konnte nicht geladen werden.",
+      "selectPrompt": "Wähle eine Unterhaltung zum Lesen aus.",
+      "replaceDraft": {
+        "title": "Aktuellen Entwurf verwerfen?",
+        "message": "Für diese Unterhaltung gibt es bereits einen unversendeten Entwurf einer anderen Art. Ein neuer Entwurf verwirft diesen."
+      },
+      "actions": {
+        "toggleStar": "Markieren",
+        "toggleRead": "Gelesen umschalten",
+        "archive": "Archivieren",
+        "trash": "In den Papierkorb verschieben"
+      }
+    },
+    "message": {
+      "to": "An: {recipients}",
+      "reply": "Antworten",
+      "replyAll": "Allen antworten",
+      "forward": "Weiterleiten"
+    },
+    "attachments": {
+      "loading": "Anhänge werden geladen...",
+      "download": "Herunterladen"
+    },
+    "compose": {
+      "to": "An",
+      "cc": "Cc",
+      "bcc": "Bcc",
+      "addCcBcc": "Cc/Bcc hinzufügen",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Betreff",
+      "bodyPlaceholder": "Nachricht schreiben...",
+      "send": "Senden",
+      "newTitle": "Neue Nachricht",
+      "contentTooLarge": "Dieser Entwurf ist zu groß, um ihn hier zu bearbeiten oder zu senden. Verwirf ihn, oder öffne ihn in Gmail, um ihn dort zu bearbeiten und zu senden.",
+      "attachments": {
+        "add": "Dateien anhängen",
+        "fromLibrary": "Aus Mediathek anhängen",
+        "remove": "Anhang entfernen",
+        "tooLarge": "Die Anhänge überschreiten das Limit von 25 MB."
+      },
+      "mediaPicker": {
+        "title": "Aus Mediathek anhängen",
+        "empty": "Noch keine Medien in diesem Workspace.",
+        "attach": "Anhängen ({count})"
+      }
+    },
+    "draft": {
+      "generating": "Antwort wird entworfen...",
+      "discard": "Verwerfen",
+      "notFound": "Diesen Entwurf gibt es nicht mehr.",
+      "panel": {
+        "saving": "Wird gespeichert...",
+        "saved": "Gespeichert"
+      },
+      "trigger": {
+        "button": "Mit KI entwerfen",
+        "title": "Antwort mit KI entwerfen",
+        "agentPlaceholder": "Agent wählen",
+        "generate": "Entwurf erstellen"
+      }
+    },
+    "draftsFolder": {
+      "pageTitle": "Entwürfe",
+      "title": "Entwürfe",
+      "subtitle": "Alle unversendeten Nachrichten: deine eigenen, KI-Entwürfe und in Gmail begonnene.",
+      "empty": "Keine Entwürfe."
+    },
+    "settings": {
+      "pageTitle": "E-Mail-Einstellungen",
+      "subtitle": "Verwalte dein verbundenes Gmail-Konto, Kategorien und Auto-Entwurf-Regeln.",
+      "notConnected": "Verbinde zuerst Gmail, um die E-Mail-Einstellungen zu verwalten.",
+      "tabs": {
+        "general": "Allgemein",
+        "categories": "Kategorien",
+        "senders": "Auto-Entwurf-Absender"
+      },
+      "general": {
+        "title": "Konto",
+        "defaultAgent": "Standard-Entwurfsagent",
+        "defaultAgentHint": "Wird für Auto-Entwürfe genutzt und bei manuellen \"Mit KI entwerfen\"-Anfragen vorausgewählt.",
+        "defaultAgentPlaceholder": "Agent wählen",
+        "dangerZone": "Gefahrenzone",
+        "disconnect": "Gmail trennen",
+        "disconnectConfirmTitle": "Gmail trennen",
+        "disconnectConfirmMessage": "Dadurch werden deine synchronisierten E-Mails, Kategorien und Entwürfe entfernt. Dein Gmail-Konto selbst bleibt unberührt."
+      },
+      "categories": {
+        "title": "Kategorien",
+        "subtitle": "Kategorien steuern den KI-Klassifizierer. Die Beschreibung wird ihm unverändert übergeben, beschreibe also, was in die Kategorie gehört.",
+        "colorLabel": "Kategoriefarbe",
+        "namePlaceholder": "Kategoriename",
+        "autoDraft": "Auto-Entwurf",
+        "descriptionPlaceholder": "Beschreibe, was in diese Kategorie gehört...",
+        "empty": "Noch keine Kategorien.",
+        "deleteConfirmTitle": "Kategorie löschen",
+        "deleteConfirmMessage": "\"{name}\" löschen? Bereits zugeordnete Nachrichten behalten ihren Verlauf, nur ohne Kategorie."
+      },
+      "senders": {
+        "title": "Auto-Entwurf-Absender",
+        "subtitle": "E-Mails dieser Absender erhalten immer einen KI-Antwortentwurf, unabhängig von der Kategorie.",
+        "placeholder": "absender{'@'}beispiel.de",
+        "empty": "Noch keine Absender auf der Auto-Entwurf-Liste."
+      }
+    },
+    "sync": {
+      "syncing": "Wird synchronisiert...",
+      "error": "Synchronisierungsfehler",
+      "lastSynced": "Synchronisiert {date}",
+      "neverSynced": "Noch nicht synchronisiert",
+      "syncFailed": "Synchronisierung deines Postfachs fehlgeschlagen. Versuche es gleich noch einmal."
     }
   }
 }

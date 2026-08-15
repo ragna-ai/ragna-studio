@@ -41,6 +41,12 @@ const ConfigSchema = z.object({
     .string()
     .optional()
     .transform((val) => Number(val) || 4),
+  // Email sync poll interval in ms (docs/email/prd.md, "Config"). Default
+  // 5 minutes.
+  EMAIL_SYNC_INTERVAL: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 5 * 60_000),
   APP_URL: z
     .string()
     .trim()
@@ -316,6 +322,10 @@ export class ConfigService {
 
   get browserMaxConcurrency(): number {
     return this._config.BROWSER_MAX_CONCURRENCY;
+  }
+
+  get emailSyncInterval(): number {
+    return this._config.EMAIL_SYNC_INTERVAL;
   }
 
   get appUrl(): string {

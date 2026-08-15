@@ -1,6 +1,7 @@
 // packages/database/src/index.ts
 
 export * from './db';
+export * from './errors';
 export * from './repositories';
 export * from './zod';
 // Re-exported so consumers (e.g. @repo/testing) never need their own

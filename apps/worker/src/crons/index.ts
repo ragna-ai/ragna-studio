@@ -1,7 +1,9 @@
+import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import { addCronJob } from '@repo/queue';
 
 import { cleanupProcessor } from './cleanup.cron';
+import { emailSyncCronProcessor } from './email-sync.cron';
 import { mediaSweepProcessor } from './media-sweep.cron';
 import { staleRunsProcessor } from './stale-runs.cron';
 import { taskReminderProcessor } from './task-reminder.cron';
@@ -31,6 +33,12 @@ export function registerCronJobs() {
     name: 'media-sweep',
     processor: mediaSweepProcessor,
     schedule: { pattern: '0 * * * *' }, // Hourly
+  });
+
+  addCronJob({
+    name: 'email-sync',
+    processor: emailSyncCronProcessor,
+    schedule: { every: config.emailSyncInterval }, // Default 5 minutes (docs/email/prd.md, "Config")
   });
 
   logger.info('Cron jobs registered');

@@ -25,7 +25,9 @@ export {
   createUIMessageStream,
   createUIMessageStreamResponse,
   generateImage,
+  // generateObject, // generateObject is deprecated in favor of generateText with a structured output schema
   generateText,
+  Output,
   safeValidateUIMessages,
   smoothStream,
   stepCountIs,

@@ -283,8 +283,14 @@ export function getQueue({ name }: { name: string }): Queue | null {
   return queue;
 }
 
-export function getOrCreateQueue({ name }: { name: string }) {
-  return getQueue({ name }) ?? createQueue({ name });
+export function getOrCreateQueue({
+  name,
+  opts,
+}: {
+  name: string;
+  opts?: Omit<QueueOptions, 'connection'>;
+}) {
+  return getQueue({ name }) ?? createQueue({ name, opts });
 }
 
 export function getCronJob({ name }: { name: string }) {

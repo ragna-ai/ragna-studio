@@ -15,6 +15,24 @@
 // re-register it. See docs/docker-deploy/injected-workspace-packages.md.
 import { linkedinModuleMock, queueModuleMock } from '@repo/testing';
 import { mock } from 'bun:test';
+import { emailQueueModuleMock } from './email/support/email-queue.mock';
+import { mailProviderModuleMock } from './email/support/mail-provider.mock';
 
 mock.module('@repo/linkedin', () => linkedinModuleMock);
 mock.module('@repo/queue', () => queueModuleMock);
+
+// email.service.ts / email-provider.service.ts are imported unconditionally
+// by src/app.ts (emailController), so whichever test file happens to import
+// `app` first - not necessarily one under test/email/ - is what fixes their
+// `@repo/mail/provider` and `@repo/queue` bindings for the rest of the
+// process (ES modules evaluate once; a mock.module call after that point
+// doesn't reach an already-bound live import). Registering both here,
+// before any test file loads, guarantees the email domain's mocks
+// (test/email/support/) are in place no matter which file runs first. The
+// queue one must be the *last* '@repo/queue' registration in this file: it
+// extends queueModuleMock with the emailSync/emailClassify/emailDraft
+// factories that package are missing (see email-queue.mock.ts's doc
+// comment), so it has to win over the plain `queueModuleMock` registered
+// two lines up.
+mock.module('@repo/mail/provider', () => mailProviderModuleMock);
+mock.module('@repo/queue', () => emailQueueModuleMock);

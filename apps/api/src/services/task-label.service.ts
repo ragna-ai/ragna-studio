@@ -1,22 +1,17 @@
 import type { TaskLabel } from '@repo/database';
-import { createTaskLabel, deleteTaskLabel, listTaskLabels, updateTaskLabel } from '@repo/database';
+import {
+  createTaskLabel,
+  deleteTaskLabel,
+  isUniqueViolationError,
+  listTaskLabels,
+  updateTaskLabel,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
 
 // Every function below runs after the workspace guard has verified the
 // caller owns `:workspaceId` (docs/api-standards/prd.md).
-
-// Postgres' unique_violation code for the (workspaceId, name) index
-// (packages/database/src/schema/task.schema.ts). The pg driver attaches
-// `code` to the thrown error; there's no typed error class for it in
-// @repo/database, so this is the only way to tell it apart from other
-// failures.
-const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
-
-function isDuplicateNameError(error: Error): boolean {
-  return 'code' in error && error.code === POSTGRES_UNIQUE_VIOLATION_CODE;
-}
 
 /**
  * [GET] /workspace/:workspaceId/task-label
@@ -53,7 +48,7 @@ export async function createTaskLabelForWorkspace({
   );
 
   if (error !== null) {
-    if (isDuplicateNameError(error)) {
+    if (isUniqueViolationError(error)) {
       throw new BadRequestException(`A label named "${name}" already exists in this workspace`);
     }
 
@@ -88,7 +83,7 @@ export async function updateTaskLabelForWorkspace({
   );
 
   if (error !== null) {
-    if (name !== undefined && isDuplicateNameError(error)) {
+    if (name !== undefined && isUniqueViolationError(error)) {
       throw new BadRequestException(`A label named "${name}" already exists in this workspace`);
     }
 

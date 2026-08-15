@@ -7,6 +7,7 @@ export * from './chat.schema';
 export * from './credit.schema';
 export * from './dataset.schema';
 export * from './document.schema';
+export * from './email.schema';
 export * from './folder.schema';
 export * from './genimage.schema';
 export * from './genvideo.schema';

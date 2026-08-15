@@ -12,6 +12,7 @@ import { chatController } from './controllers/chat.controller';
 import { creditController } from './controllers/credit.controller';
 import { datasetController } from './controllers/dataset.controller';
 import { documentController } from './controllers/document.controller';
+import { emailController } from './controllers/email.controller';
 import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
 import { mediaController } from './controllers/media.controller';
@@ -65,6 +66,7 @@ export const app = new Hono()
   .route('/', overviewController)
   .route('/', datasetController)
   .route('/', documentController)
+  .route('/', emailController)
   .route('/', folderController)
   .route('/', taskController)
   .route('/', taskLabelController)

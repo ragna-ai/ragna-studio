@@ -1,0 +1,222 @@
+import {
+  addColumnAfter as addColumnAfterCommand,
+  addColumnBefore as addColumnBeforeCommand,
+  addRowAfter as addRowAfterCommand,
+  addRowBefore as addRowBeforeCommand,
+  createDocumentEditor,
+  cycleList as cycleListCommand,
+  cycleTextOrientation as cycleTextOrientationCommand,
+  deleteColumn as deleteColumnCommand,
+  deleteRow as deleteRowCommand,
+  deleteTable as deleteTableCommand,
+  formatText as formatTextCommand,
+  getCharacterCount,
+  getLinkUrl,
+  getWordCount,
+  insertImage as insertImageCommand,
+  insertTable as insertTableCommand,
+  isInsideTable,
+  redo as redoCommand,
+  setLink as setLinkCommand,
+  toggleCodeBlock as toggleCodeBlockCommand,
+  toggleHeaderColumn as toggleHeaderColumnCommand,
+  toggleHeaderRow as toggleHeaderRowCommand,
+  toggleTaskList as toggleTaskListCommand,
+  undo as undoCommand,
+  unsetLink as unsetLinkCommand,
+  type Editor,
+  type TextFormat,
+} from '@repo/editor';
+
+export interface UseEmailComposeEditorOptions {
+  content: string;
+  placeholder?: string;
+  autofocus?: 'start' | 'end';
+  onUpdate?: (html: string) => void;
+}
+
+/**
+ * One Tiptap Editor instance for the compose/reply/draft-edit box
+ * (docs/email/html-content-change-request.md: editor is HTML-native,
+ * `contentType: 'html'` below). Same command surface as
+ * ~/features/document/composables/useDocumentEditor.ts and
+ * ~/features/task/composables/useTaskDescriptionEditor.ts (mirrored, not
+ * shared, same reasoning as the task composable: each feature mounts its
+ * own instance), so it drives the document feature's EditorMenu.vue toolbar
+ * unchanged.
+ */
+export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
+  const editor = shallowRef<Editor>();
+
+  onMounted(() => {
+    editor.value = createDocumentEditor({
+      content: options.content,
+      contentType: 'html',
+      placeholder: options.placeholder,
+      autofocus: options.autofocus,
+      onUpdate: options.onUpdate,
+    });
+  });
+
+  onBeforeUnmount(() => {
+    editor.value?.destroy();
+    editor.value = undefined;
+  });
+
+  function requireEditor(): Editor {
+    if (!editor.value) {
+      throw new Error('Editor instance is not available');
+    }
+    return editor.value;
+  }
+
+  function formatText(format: TextFormat) {
+    return formatTextCommand(requireEditor(), format);
+  }
+
+  function cycleList() {
+    return cycleListCommand(requireEditor());
+  }
+
+  function cycleTextOrientation() {
+    return cycleTextOrientationCommand(requireEditor());
+  }
+
+  function toggleTaskList() {
+    return toggleTaskListCommand(requireEditor());
+  }
+
+  function toggleCodeBlock() {
+    return toggleCodeBlockCommand(requireEditor());
+  }
+
+  function undo() {
+    return undoCommand(requireEditor());
+  }
+
+  function redo() {
+    return redoCommand(requireEditor());
+  }
+
+  /** The wire format for `content`: `editor.getHTML()` is Tiptap-core, re-exported through `Editor`. */
+  function getHtml(): string {
+    return requireEditor().getHTML();
+  }
+
+  /** The wire format for `text`: Tiptap's built-in doc-aware plain-text extraction, not a string-stripping helper. */
+  function getText(): string {
+    return requireEditor().getText();
+  }
+
+  function isInTable(): boolean {
+    return isInsideTable(requireEditor());
+  }
+
+  function insertTable() {
+    return insertTableCommand(requireEditor());
+  }
+
+  function addRowBefore() {
+    return addRowBeforeCommand(requireEditor());
+  }
+
+  function addRowAfter() {
+    return addRowAfterCommand(requireEditor());
+  }
+
+  function deleteRow() {
+    return deleteRowCommand(requireEditor());
+  }
+
+  function addColumnBefore() {
+    return addColumnBeforeCommand(requireEditor());
+  }
+
+  function addColumnAfter() {
+    return addColumnAfterCommand(requireEditor());
+  }
+
+  function deleteColumn() {
+    return deleteColumnCommand(requireEditor());
+  }
+
+  function deleteTable() {
+    return deleteTableCommand(requireEditor());
+  }
+
+  function toggleHeaderRow() {
+    return toggleHeaderRowCommand(requireEditor());
+  }
+
+  function toggleHeaderColumn() {
+    return toggleHeaderColumnCommand(requireEditor());
+  }
+
+  function getLink(): string {
+    return getLinkUrl(requireEditor());
+  }
+
+  function setLink(url: string) {
+    return setLinkCommand(requireEditor(), url);
+  }
+
+  function unsetLink() {
+    return unsetLinkCommand(requireEditor());
+  }
+
+  function insertImage(url: string) {
+    return insertImageCommand(requireEditor(), url);
+  }
+
+  function characterCount(): number {
+    return getCharacterCount(requireEditor());
+  }
+
+  function wordCount(): number {
+    return getWordCount(requireEditor());
+  }
+
+  /**
+   * Replaces the editor's content, e.g. hydrating an AI draft's HTML once it
+   * arrives. `contentType: 'html'` must be passed explicitly on every call:
+   * it defaults to `'json'` per call, not per instance (see
+   * `CreateDocumentEditorOptions`'s doc comment in
+   * packages/editor/src/document-editor.ts).
+   */
+  function setContent(html: string) {
+    requireEditor().commands.setContent(html, { contentType: 'html' });
+  }
+
+  return {
+    editor,
+    formatText,
+    cycleList,
+    cycleTextOrientation,
+    toggleTaskList,
+    toggleCodeBlock,
+    undo,
+    redo,
+    getHtml,
+    getText,
+    isInTable,
+    insertTable,
+    addRowBefore,
+    addRowAfter,
+    deleteRow,
+    addColumnBefore,
+    addColumnAfter,
+    deleteColumn,
+    deleteTable,
+    toggleHeaderRow,
+    toggleHeaderColumn,
+    getLink,
+    setLink,
+    unsetLink,
+    insertImage,
+    characterCount,
+    wordCount,
+    setContent,
+  };
+}
+
+export type EmailComposeEditorController = ReturnType<typeof useEmailComposeEditor>;

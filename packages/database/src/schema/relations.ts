@@ -8,6 +8,15 @@ import { chat, chatMessage } from './chat.schema';
 import { creditAccount, creditLedger, creditUsageEvent } from './credit.schema';
 import { dataset, datasetRow } from './dataset.schema';
 import { document } from './document.schema';
+import {
+  emailAccount,
+  emailAutoDraftSender,
+  emailCategory,
+  emailDraft,
+  emailMessage,
+  emailMessageBody,
+  emailThread,
+} from './email.schema';
 import { folder } from './folder.schema';
 import { genImage, genImageReference } from './genimage.schema';
 import { genVideo } from './genvideo.schema';
@@ -41,6 +50,13 @@ const schema = {
   dataset,
   datasetRow,
   document,
+  emailAccount,
+  emailCategory,
+  emailAutoDraftSender,
+  emailThread,
+  emailMessage,
+  emailMessageBody,
+  emailDraft,
   folder,
   genImage,
   genImageReference,
@@ -82,6 +98,13 @@ export const relations = defineRelations(schema, (r) => ({
     creditAccount: r.one.creditAccount({
       from: r.user.id,
       to: r.creditAccount.userId,
+      optional: true,
+    }),
+    // One row per user (docs/email/prd.md, "Auth and account connection"),
+    // optional: most users never connect Gmail.
+    emailAccount: r.one.emailAccount({
+      from: r.user.id,
+      to: r.emailAccount.userId,
       optional: true,
     }),
   },
@@ -130,6 +153,9 @@ export const relations = defineRelations(schema, (r) => ({
     contextDocuments: r.many.agentContextDocument(),
     contextDocumentChunks: r.many.agentContextDocumentChunk(),
     documents: r.many.document(),
+    // Reverse of email_accounts.defaultAgentId.
+    defaultForEmailAccounts: r.many.emailAccount(),
+    emailDrafts: r.many.emailDraft(),
   },
   agentMemory: {
     agent: r.one.agent({
@@ -303,6 +329,96 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     createdByAgent: r.one.agent({
       from: r.document.createdByAgentId,
+      to: r.agent.id,
+      optional: true,
+    }),
+  },
+  emailAccount: {
+    user: r.one.user({
+      from: r.emailAccount.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    defaultAgent: r.one.agent({
+      from: r.emailAccount.defaultAgentId,
+      to: r.agent.id,
+      optional: true,
+    }),
+    threads: r.many.emailThread(),
+    categories: r.many.emailCategory(),
+    autoDraftSenders: r.many.emailAutoDraftSender(),
+    drafts: r.many.emailDraft(),
+  },
+  emailCategory: {
+    account: r.one.emailAccount({
+      from: r.emailCategory.accountId,
+      to: r.emailAccount.id,
+      optional: false,
+    }),
+    messages: r.many.emailMessage(),
+  },
+  emailAutoDraftSender: {
+    account: r.one.emailAccount({
+      from: r.emailAutoDraftSender.accountId,
+      to: r.emailAccount.id,
+      optional: false,
+    }),
+  },
+  emailThread: {
+    account: r.one.emailAccount({
+      from: r.emailThread.accountId,
+      to: r.emailAccount.id,
+      optional: false,
+    }),
+    messages: r.many.emailMessage(),
+    drafts: r.many.emailDraft(),
+  },
+  emailMessage: {
+    account: r.one.emailAccount({
+      from: r.emailMessage.accountId,
+      to: r.emailAccount.id,
+      optional: false,
+    }),
+    thread: r.one.emailThread({
+      from: r.emailMessage.threadId,
+      to: r.emailThread.id,
+      optional: false,
+    }),
+    category: r.one.emailCategory({
+      from: r.emailMessage.categoryId,
+      to: r.emailCategory.id,
+      optional: true,
+    }),
+    body: r.one.emailMessageBody(),
+    replyDrafts: r.many.emailDraft(),
+  },
+  emailMessageBody: {
+    message: r.one.emailMessage({
+      from: r.emailMessageBody.messageId,
+      to: r.emailMessage.id,
+      optional: false,
+    }),
+  },
+  emailDraft: {
+    account: r.one.emailAccount({
+      from: r.emailDraft.accountId,
+      to: r.emailAccount.id,
+      optional: false,
+    }),
+    // Optional: `kind: 'new'` drafts have no thread yet.
+    thread: r.one.emailThread({
+      from: r.emailDraft.threadId,
+      to: r.emailThread.id,
+      optional: true,
+    }),
+    replyToMessage: r.one.emailMessage({
+      from: r.emailDraft.replyToMessageId,
+      to: r.emailMessage.id,
+      optional: true,
+    }),
+    // Optional: `origin: 'user'` drafts have no agent.
+    agent: r.one.agent({
+      from: r.emailDraft.agentId,
       to: r.agent.id,
       optional: true,
     }),

@@ -3,6 +3,7 @@ export * from './agent.schema';
 export * from './chat.schema';
 export * from './dataset.schema';
 export * from './document.schema';
+export * from './email.schema';
 export * from './folder.schema';
 export * from './gen-image.schema';
 export * from './gen-video.schema';
