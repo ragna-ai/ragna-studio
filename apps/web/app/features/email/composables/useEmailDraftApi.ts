@@ -30,9 +30,14 @@ export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
   return useQuery<EmailDraftListResponse>({
     queryKey: emailKeys.drafts(threadId as MaybeRefOrGetter<string>),
     queryFn: ({ signal }) =>
-      $api<EmailDraftListResponse>('/email/draft', { method: 'GET', query: { threadId: toValue(threadId) }, signal }),
+      $api<EmailDraftListResponse>('/email/draft', {
+        method: 'GET',
+        query: { threadId: toValue(threadId) },
+        signal,
+      }),
     enabled: () => !!toValue(threadId),
-    refetchInterval: (query) => (hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false),
+    refetchInterval: (query) =>
+      hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false,
   });
 }
 
@@ -46,8 +51,10 @@ export function useGetAllDrafts() {
   const { $api } = useNuxtApp();
   return useQuery<EmailDraftListResponse>({
     queryKey: emailKeys.allDrafts(),
-    queryFn: ({ signal }) => $api<EmailDraftListResponse>('/email/draft', { method: 'GET', signal }),
-    refetchInterval: (query) => (hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false),
+    queryFn: ({ signal }) =>
+      $api<EmailDraftListResponse>('/email/draft', { method: 'GET', signal }),
+    refetchInterval: (query) =>
+      hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false,
   });
 }
 
@@ -62,7 +69,11 @@ export function useGetEmailDraft(draftId: MaybeRefOrGetter<string | null>) {
   const { $api } = useNuxtApp();
   return useQuery<EmailDraftResponse>({
     queryKey: emailKeys.draft(draftId as MaybeRefOrGetter<string>),
-    queryFn: ({ signal }) => $api<EmailDraftResponse>(`/email/draft/${toValue(draftId)}`, { method: 'GET', signal }),
+    queryFn: ({ signal }) =>
+      $api<EmailDraftResponse>(`/email/draft/${toValue(draftId)}`, {
+        method: 'GET',
+        signal,
+      }),
     enabled: () => !!toValue(draftId),
     retry: false,
   });
@@ -85,8 +96,10 @@ function invalidateDraftQueries(
   queryClient: ReturnType<typeof useQueryClient>,
   { draftId, threadId }: DraftInvalidationTarget,
 ): void {
-  if (draftId) queryClient.invalidateQueries({ queryKey: emailKeys.draft(draftId) });
-  if (threadId) queryClient.invalidateQueries({ queryKey: emailKeys.drafts(threadId) });
+  if (draftId)
+    queryClient.invalidateQueries({ queryKey: emailKeys.draft(draftId) });
+  if (threadId)
+    queryClient.invalidateQueries({ queryKey: emailKeys.drafts(threadId) });
   queryClient.invalidateQueries({ queryKey: emailKeys.allDrafts() });
 }
 
@@ -95,7 +108,9 @@ interface FetchErrorWithStatus {
   data?: unknown;
 }
 
-function hasConflictingDraft(data: unknown): data is EmailDraftConflictResponse {
+function hasConflictingDraft(
+  data: unknown,
+): data is EmailDraftConflictResponse {
   return typeof data === 'object' && data !== null && 'draft' in data;
 }
 
@@ -108,7 +123,8 @@ function hasConflictingDraft(data: unknown): data is EmailDraftConflictResponse 
  */
 export function extractConflictingDraft(error: unknown): EmailDraft | null {
   const fetchError = error as FetchErrorWithStatus | undefined;
-  if (fetchError?.status !== 409 || !hasConflictingDraft(fetchError.data)) return null;
+  if (fetchError?.status !== 409 || !hasConflictingDraft(fetchError.data))
+    return null;
   return fetchError.data.draft;
 }
 
@@ -123,9 +139,13 @@ export function useCreateEmailDraft() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, CreateEmailDraftRequest>({
-    mutationFn: (body) => $api<EmailDraftResponse>('/email/draft', { method: 'POST', body }),
+    mutationFn: (body) =>
+      $api<EmailDraftResponse>('/email/draft', { method: 'POST', body }),
     onSuccess: ({ draft }, { threadId }) =>
-      invalidateDraftQueries(queryClient, { draftId: draft.id, threadId: threadId ?? null }),
+      invalidateDraftQueries(queryClient, {
+        draftId: draft.id,
+        threadId: threadId ?? null,
+      }),
     onError: (error) => {
       if (extractConflictingDraft(error)) return;
       toast.error(extractErrorMessage(error, 'Failed to create draft'));
@@ -153,9 +173,14 @@ export function useUpdateEmailDraft() {
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, UpdateEmailDraftVariables>({
     mutationFn: ({ draftId, threadId: _threadId, ...patch }) =>
-      $api<EmailDraftResponse>(`/email/draft/${draftId}`, { method: 'PATCH', body: patch }),
-    onSuccess: (_, { draftId, threadId }) => invalidateDraftQueries(queryClient, { draftId, threadId }),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to save draft')),
+      $api<EmailDraftResponse>(`/email/draft/${draftId}`, {
+        method: 'PATCH',
+        body: patch,
+      }),
+    onSuccess: (_, { draftId, threadId }) =>
+      invalidateDraftQueries(queryClient, { draftId, threadId }),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to save draft')),
   });
 }
 
@@ -170,12 +195,28 @@ export function useDiscardEmailDraft() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, DiscardEmailDraftVariables>({
-    mutationFn: ({ draftId }) => $api<EmailDraftResponse>(`/email/draft/${draftId}/discard`, { method: 'POST' }),
-    onSuccess: (_, { draftId, threadId }) => {
-      invalidateDraftQueries(queryClient, { draftId, threadId });
-      toast.success('Draft discarded');
+    mutationFn: ({ draftId }) =>
+      $api<EmailDraftResponse>(`/email/draft/${draftId}/discard`, {
+        method: 'POST',
+      }),
+    onMutate: ({ draftId }) => {
+      // Optimistically remove the draft from the list so it disappears from
+      // the UI immediately, even before the server responds. If the discard
+      // fails, we'll roll back to the previous state by invalidating the queries in onSettled.
+      queryClient.setQueryData<EmailDraftListResponse | undefined>(
+        emailKeys.drafts(draftId),
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            drafts: oldData.drafts.filter((draft) => draft.id !== draftId),
+          };
+        },
+      );
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to discard draft')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to discard draft')),
+    onSettled: (_, __, { draftId, threadId }) =>
+      invalidateDraftQueries(queryClient, { draftId, threadId }),
   });
 }
 
@@ -193,19 +234,29 @@ interface SendEmailDraftMutationVariables extends SendEmailDraftVariables {
 export function useSendEmailDraft() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<SendEmailResponse, unknown, SendEmailDraftMutationVariables>({
+  return useMutation<
+    SendEmailResponse,
+    unknown,
+    SendEmailDraftMutationVariables
+  >({
     mutationFn: ({ draftId, threadId: _threadId, ...input }) =>
       $api<SendEmailResponse>(`/email/draft/${draftId}/send`, {
         method: 'POST',
         body: buildSendDraftFormData(input),
       }),
     onSuccess: (result, { draftId, threadId }) => {
-      invalidateDraftQueries(queryClient, { draftId, threadId: threadId ?? result.threadId });
-      queryClient.invalidateQueries({ queryKey: emailKeys.thread(result.threadId) });
+      invalidateDraftQueries(queryClient, {
+        draftId,
+        threadId: threadId ?? result.threadId,
+      });
+      queryClient.invalidateQueries({
+        queryKey: emailKeys.thread(result.threadId),
+      });
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
       toast.success('Email sent');
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to send draft')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to send draft')),
   });
 }
 
@@ -222,8 +273,13 @@ export function useTriggerEmailDraft() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, TriggerEmailDraftRequest>({
-    mutationFn: (body) => $api<void>('/email/draft/trigger', { method: 'POST', body }),
-    onSuccess: (_, { threadId }) => invalidateDraftQueries(queryClient, { threadId }),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to start drafting a reply')),
+    mutationFn: (body) =>
+      $api<void>('/email/draft/trigger', { method: 'POST', body }),
+    onSuccess: (_, { threadId }) =>
+      invalidateDraftQueries(queryClient, { threadId }),
+    onError: (error) =>
+      toast.error(
+        extractErrorMessage(error, 'Failed to start drafting a reply'),
+      ),
   });
 }
