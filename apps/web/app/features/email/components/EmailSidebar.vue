@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { PenSquareIcon, RefreshCwIcon, SearchIcon, SettingsIcon, SparklesIcon, TagIcon } from '@lucide/vue';
+import { FileEditIcon, PenSquareIcon, RefreshCwIcon, SearchIcon, SettingsIcon, TagIcon } from '@lucide/vue';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { ScrollArea } from '~/components/ui/scroll-area';
+import { Spinner } from '~/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 import EmailSyncStatusBadge from '~/features/email/components/EmailSyncStatusBadge.vue';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
@@ -21,6 +22,7 @@ const props = defineProps<{
   labelId: string | null;
   isSearching: boolean;
   pendingDraftsCount: number;
+  isComposing: boolean;
 }>();
 
 // Emits
@@ -71,8 +73,9 @@ function handleSyncNow() {
 <template>
   <div class="flex h-full w-64 shrink-0 flex-col border-r">
     <div class="shrink-0 space-y-3 p-3">
-      <Button class="w-full justify-start" @click="emit('compose')">
-        <PenSquareIcon class="mr-2 size-4" />
+      <Button class="w-full justify-start" :disabled="props.isComposing" @click="emit('compose')">
+        <Spinner v-if="props.isComposing" class="mr-2 size-4" />
+        <PenSquareIcon v-else class="mr-2 size-4" />
         {{ t('email.sidebar.compose') }}
       </Button>
       <div class="relative">
@@ -99,13 +102,19 @@ function handleSyncNow() {
               {{ t(config.labelKey) }}
             </button>
           </li>
+          <!-- Drafts folder: a route link, not an `EMAIL_FOLDERS` entry -
+               those ids are thread-list filters validated against the API's
+               emailFolderEnum, and a draft list isn't a thread list
+               (docs/email/drafts-change-request.md, section 6). It still
+               sits visually inside this system-folder list, and its badge
+               keeps counting AI drafts pending review. -->
           <li>
             <NuxtLinkLocale
               to="/mail/drafts"
               class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
             >
-              <SparklesIcon class="size-4 shrink-0 text-muted-foreground" />
-              {{ t('email.sidebar.pendingDrafts') }}
+              <FileEditIcon class="size-4 shrink-0 text-muted-foreground" />
+              {{ t('email.sidebar.drafts') }}
               <Badge v-if="props.pendingDraftsCount > 0" variant="secondary" class="ml-auto">
                 {{ props.pendingDraftsCount }}
               </Badge>

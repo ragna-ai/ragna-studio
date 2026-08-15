@@ -8,6 +8,8 @@ export type EmailAccountSyncState = 'idle' | 'syncing' | 'error';
 export type EmailFolder = 'inbox' | 'archived' | 'trashed' | 'starred' | 'sent';
 
 export type EmailDraftStatus = 'generating' | 'ready' | 'discarded' | 'sent';
+export type EmailDraftOrigin = 'ai' | 'user';
+export type EmailDraftKind = 'new' | 'reply' | 'forward';
 
 export interface EmailParticipant {
   name: string | null;
@@ -163,24 +165,15 @@ export interface EmailSearchResponse {
 }
 
 // --- Compose / send --------------------------------------------------------
+// Every compose flow (new/reply/reply-all/forward/AI) now edits a persisted
+// draft row first (docs/email/drafts-change-request.md, "One draft object
+// for all four cases"), so `POST /email/send` and its plain (non-draft)
+// request shape have no remaining caller - sending always goes through
+// `POST /email/draft/:draftId/send` below.
 
 export interface SendEmailResponse {
   messageId: string;
   threadId: string;
-}
-
-export interface SendEmailVariables {
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
-  subject: string;
-  html: string;
-  text: string;
-  threadId?: string;
-  replyToMessageId?: string;
-  mediaIds?: string[];
-  files?: File[];
-  draftId?: string;
 }
 
 export interface SendEmailDraftVariables {
@@ -213,15 +206,36 @@ export interface MediaListResponse {
 }
 
 // --- Drafts ---------------------------------------------------------------
+// Wire contract per docs/email/drafts-change-request.md ("Wire contract"):
+// the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
+
+export interface EmailDraftAttachment {
+  /** Null when the attachment lives on the Gmail draft itself rather than a forwarded message. */
+  providerMessageId: string | null;
+  providerAttachmentId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  contentId: string | null;
+  inline: boolean;
+}
 
 export interface EmailDraft {
   id: string;
   accountId: string;
-  threadId: string;
+  origin: EmailDraftOrigin;
+  kind: EmailDraftKind;
+  threadId: string | null;
   replyToMessageId: string | null;
-  agentId: string;
+  agentId: string | null;
+  to: EmailParticipant[];
+  cc: EmailParticipant[];
+  bcc: EmailParticipant[];
+  subject: string | null;
   content: string;
+  attachments: EmailDraftAttachment[];
   status: EmailDraftStatus;
+  providerDraftId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -231,6 +245,62 @@ export interface EmailDraftListResponse {
 }
 
 export interface EmailDraftResponse {
+  draft: EmailDraft;
+}
+
+/**
+ * The full set of fields EmailComposer.vue reports back on every change
+ * (recipients, subject, body markdown, forwarded-attachment set), so
+ * EmailDraftPanel.vue can debounce them into one `PATCH /email/draft/:id`
+ * call without reaching into the composer's internal editor/refs.
+ */
+export interface EmailDraftEditableFields {
+  to: EmailParticipant[];
+  cc: EmailParticipant[];
+  bcc: EmailParticipant[];
+  subject: string;
+  content: string;
+  attachments: EmailDraftAttachment[];
+}
+
+export interface CreateEmailDraftRequest {
+  kind: EmailDraftKind;
+  threadId?: string;
+  replyToMessageId?: string;
+}
+
+/**
+ * `origin`, `kind`, `threadId`, `replyToMessageId` and `agentId` are set at
+ * creation only and rejected by PATCH (docs/email/drafts-change-request.md,
+ * "API changes"), so this is a distinct, narrower type from `EmailDraft`
+ * rather than a `Partial<EmailDraft>` that would still type-check those
+ * fields as assignable.
+ */
+export type UpdateEmailDraftRequest = Partial<EmailDraftEditableFields> & {
+  /**
+   * Forces the Gmail write-back regardless of the attachment-based push rule
+   * (section 3: a draft carrying attachments otherwise only pushes to Gmail
+   * when the attachment set itself changes, so body/subject/recipient edits
+   * on it would sit local-only indefinitely without this). Not a draft
+   * field - never echoed back on `EmailDraft` - so it lives outside
+   * `EmailDraftEditableFields`. EmailComposer.vue sets this before send and
+   * on its unmount/navigate-away flush; ordinary keystroke autosaves omit
+   * it.
+   */
+  flush?: boolean;
+};
+
+/**
+ * Body of the 409 `POST /email/draft` returns when the thread already has a
+ * non-terminal draft ("refuses a second non-terminal draft on the same
+ * thread ... with a 409 carrying the existing draft's id"). The wire
+ * contract only specifies the id is included; modeled as the same `{ draft }`
+ * envelope as a normal create response so the client can also read the
+ * existing draft's `kind` (needed to decide whether to prompt a
+ * discard-first flow) - JUDGEMENT CALL, flagged for the API agent to confirm
+ * or correct the actual shape.
+ */
+export interface EmailDraftConflictResponse {
   draft: EmailDraft;
 }
 

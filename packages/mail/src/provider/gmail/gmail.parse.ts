@@ -6,9 +6,9 @@
 // provider does not sanitize HTML or fetch attachment bytes here; callers
 // sanitize, and `getAttachment` fetches bytes on demand.
 
-import type { MailAttachmentMeta, MailBody, MailMessage, MailMessageMetadata } from '../mail-provider';
+import type { MailAttachmentMeta, MailBody, MailDraft, MailDraftSummary, MailMessage, MailMessageMetadata } from '../mail-provider';
 import { parseAddressList } from './gmail.address';
-import type { GmailHeader, GmailMessagePart, GmailMessageResource } from './gmail.types';
+import type { GmailDraftResource, GmailHeader, GmailMessagePart, GmailMessageResource } from './gmail.types';
 
 const LABEL_UNREAD = 'UNREAD';
 const LABEL_STARRED = 'STARRED';
@@ -54,6 +54,32 @@ export function toMailMessage(raw: GmailMessageResource): MailMessage {
 
 function parseReferencesHeader(value: string | null): string[] {
   return value ? value.split(/\s+/).filter(Boolean) : [];
+}
+
+/** Maps a `drafts.get`(`format=metadata`) response onto the Drafts-folder listing shape. */
+export function toMailDraftSummary(raw: GmailDraftResource): MailDraftSummary {
+  const metadata = toMailMessageMetadata(raw.message);
+
+  return {
+    id: raw.id,
+    threadId: metadata.threadId,
+    to: metadata.to,
+    cc: metadata.cc,
+    bcc: metadata.bcc,
+    subject: metadata.subject,
+    snippet: metadata.snippet,
+    date: metadata.date,
+  };
+}
+
+/** Maps a `drafts.get`(`format=full`) response onto the full draft shape, body included. */
+export function toMailDraft(raw: GmailDraftResource): MailDraft {
+  const summary = toMailDraftSummary(raw);
+
+  return {
+    ...summary,
+    body: raw.message.payload ? parseGmailPayload(raw.message.payload) : { text: null, html: null, attachments: [] },
+  };
 }
 
 /** Recursively walks a MIME part tree, collecting the text/HTML bodies and attachment metadata. */

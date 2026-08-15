@@ -16,6 +16,13 @@ export const emailKeys = {
   thread: (threadId: MaybeRefOrGetter<string>) => ['email', 'thread', threadId] as const,
   search: (query: MaybeRefOrGetter<string>) => ['email', 'search', query] as const,
   drafts: (threadId: MaybeRefOrGetter<string>) => ['email', 'drafts', threadId] as const,
+  // Singular: one draft by id, for the standalone `/mail/draft/:draftId`
+  // view. Distinct key from the plural `drafts(threadId)` above.
+  draft: (draftId: MaybeRefOrGetter<string>) => ['email', 'draft', draftId] as const,
   pendingDrafts: () => ['email', 'drafts', 'pending'] as const,
+  // The Drafts folder (docs/email/drafts-change-request.md, section 6): every
+  // non-terminal draft on the account, a different query from `pendingDrafts`
+  // (the AI review queue) even though both hit `GET /email/draft`.
+  allDrafts: () => ['email', 'drafts', 'all'] as const,
   attachments: (messageId: MaybeRefOrGetter<string>) => ['email', 'attachments', messageId] as const,
 };

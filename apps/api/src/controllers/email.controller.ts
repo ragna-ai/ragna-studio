@@ -2,18 +2,21 @@ import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
+  ActiveDraftConflictError,
   addAutoDraftSenderForUser,
   connectEmailAccount,
   createEmailCategoryForUser,
+  createEmailDraftForUser,
   deleteEmailCategoryForUser,
   discardEmailDraftForUser,
   disconnectEmailAccount,
   downloadEmailAttachmentForUser,
   getEmailAccountStatus,
+  getEmailDraftForUser,
   getEmailThreadDetailForUser,
   listAutoDraftSendersForUser,
   listEmailCategoriesForUser,
-  listEmailDraftsForThreadForUser,
+  listEmailDraftsForUser,
   listEmailMessageAttachmentsForUser,
   listEmailThreadsForUser,
   listPendingEmailDraftsForUser,
@@ -33,19 +36,20 @@ import {
   triggerEmailDraftForUser,
   updateEmailAccountSettingsForUser,
   updateEmailCategoryForUser,
-  updateEmailDraftContentForUser,
+  updateEmailDraftForUser,
 } from '../services/email.service';
 import {
   validArchiveActionBody,
   validAutoDraftSenderIdParam,
   validCreateAutoDraftSenderBody,
   validCreateEmailCategoryBody,
+  validCreateEmailDraftBody,
   validEmailAttachmentParams,
   validEmailCategoryIdParam,
   validEmailDraftIdParam,
+  validEmailDraftListQuery,
   validEmailMessageIdParam,
   validEmailSearchQuery,
-  validEmailThreadDraftsQuery,
   validEmailThreadIdParam,
   validEmailThreadListQuery,
   validReadActionBody,
@@ -199,12 +203,14 @@ export const emailController = new Hono()
   // --- Drafts (static prefixes before /thread/:threadId's dynamic sibling) --
   /**
    * [GET] /email/draft?threadId=...
+   * `threadId` absent -> every non-terminal draft on the account (the
+   * Drafts folder).
    */
-  .get('/draft', validEmailThreadDraftsQuery, async (c) => {
+  .get('/draft', validEmailDraftListQuery, async (c) => {
     const user = c.get('user');
     const { threadId } = c.req.valid('query');
 
-    const drafts = await listEmailDraftsForThreadForUser({ userId: user.id, threadId });
+    const drafts = await listEmailDraftsForUser({ userId: user.id, threadId });
     return c.json({ drafts });
   })
   /**
@@ -214,6 +220,39 @@ export const emailController = new Hono()
     const user = c.get('user');
     const drafts = await listPendingEmailDraftsForUser({ userId: user.id });
     return c.json({ drafts });
+  })
+  /**
+   * [POST] /email/draft
+   * Creates the local row for one of the four compose entry points:
+   * `{ kind, threadId?, replyToMessageId? }`. 409s with the same `{ draft }`
+   * envelope a successful create returns - the existing non-terminal draft
+   * on the thread - instead of opening a second one
+   * (one-active-draft-per-thread), so the client can focus it and read its
+   * `kind` to decide whether to offer a replace.
+   */
+  .post('/draft', validCreateEmailDraftBody, async (c) => {
+    const user = c.get('user');
+    const body = c.req.valid('json');
+
+    try {
+      const draft = await createEmailDraftForUser({ userId: user.id, ...body });
+      return c.json({ draft }, StatusCodes.CREATED);
+    } catch (error) {
+      if (error instanceof ActiveDraftConflictError) {
+        return c.json({ draft: error.draft }, StatusCodes.CONFLICT);
+      }
+      throw error;
+    }
+  })
+  /**
+   * [GET] /email/draft/:draftId
+   */
+  .get('/draft/:draftId', validEmailDraftIdParam, async (c) => {
+    const user = c.get('user');
+    const { draftId } = c.req.valid('param');
+
+    const draft = await getEmailDraftForUser({ userId: user.id, draftId });
+    return c.json({ draft });
   })
   /**
    * [POST] /email/draft/trigger
@@ -229,13 +268,19 @@ export const emailController = new Hono()
   })
   /**
    * [PATCH] /email/draft/:draftId
+   * Autosave endpoint, widened to the full editable set: any of
+   * `{ to, cc, bcc, subject, content, attachments }`, plus a control-only
+   * `flush?: boolean` that forces this call to push to Gmail regardless of
+   * the attachment write-back debounce rule (set on panel close and before
+   * send). Creation-only fields (`origin`, `kind`, `threadId`,
+   * `replyToMessageId`, `agentId`) are rejected at the validation layer.
    */
   .patch('/draft/:draftId', validEmailDraftIdParam, validUpdateEmailDraftBody, async (c) => {
     const user = c.get('user');
     const { draftId } = c.req.valid('param');
-    const { content } = c.req.valid('json');
+    const body = c.req.valid('json');
 
-    const draft = await updateEmailDraftContentForUser({ userId: user.id, draftId, content });
+    const draft = await updateEmailDraftForUser({ userId: user.id, draftId, ...body });
     return c.json({ draft });
   })
   /**

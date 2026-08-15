@@ -3,7 +3,7 @@ import { FolderOpenIcon, PaperclipIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import EmailMediaPickerDialog from '~/features/email/components/EmailMediaPickerDialog.vue';
 import { EMAIL_MAX_TOTAL_ATTACHMENT_BYTES } from '~/features/email/lib/email-attachment-limits';
-import type { MediaListItem } from '~/features/email/types';
+import type { EmailDraftAttachment, MediaListItem } from '~/features/email/types';
 
 // Props
 // Two models: `files` (fresh uploads) and `media` (existing media-library
@@ -11,8 +11,18 @@ import type { MediaListItem } from '~/features/email/types';
 // submit (apps/api/src/controllers/email.controller.ts) - no eager upload
 // step, unlike the chat feature's attachments, which upload ahead of send
 // because chat messages persist independently of the compose box.
+//
+// `draftAttachments` is a third, read-mostly set: a forward draft's carried
+// Gmail attachments (docs/email/drafts-change-request.md, section 5). It's a
+// plain prop, not a model - content is never downloaded client-side, so
+// there's nothing here to re-upload on send, only a set the user can shrink.
+// Removing one is reported up via `removeDraftAttachment` so
+// EmailComposer.vue can fold it into the same autosave PATCH as everything
+// else, instead of this component owning its own copy of the draft.
 const files = defineModel<File[]>('files', { default: () => [] });
 const media = defineModel<MediaListItem[]>('media', { default: () => [] });
+const props = defineProps<{ draftAttachments: EmailDraftAttachment[] }>();
+const emit = defineEmits<{ removeDraftAttachment: [EmailDraftAttachment] }>();
 
 // Refs
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -25,7 +35,8 @@ const { t } = useI18n();
 const totalBytes = computed(
   () =>
     files.value.reduce((sum, file) => sum + file.size, 0) +
-    media.value.reduce((sum, item) => sum + item.size, 0),
+    media.value.reduce((sum, item) => sum + item.size, 0) +
+    props.draftAttachments.reduce((sum, attachment) => sum + attachment.size, 0),
 );
 const isOverLimit = computed(() => totalBytes.value > EMAIL_MAX_TOTAL_ATTACHMENT_BYTES);
 const mediaIds = computed(() => media.value.map((item) => item.id));
@@ -54,6 +65,10 @@ function handleMediaAttach(picked: MediaListItem[]) {
   media.value = [...media.value, ...picked];
 }
 
+function draftAttachmentKey(attachment: EmailDraftAttachment): string {
+  return `${attachment.providerMessageId}-${attachment.providerAttachmentId}`;
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -63,7 +78,26 @@ function formatBytes(bytes: number): string {
 
 <template>
   <div class="space-y-2">
-    <ul v-if="files.length > 0 || media.length > 0" class="flex flex-wrap gap-2">
+    <ul v-if="files.length > 0 || media.length > 0 || draftAttachments.length > 0" class="flex flex-wrap gap-2">
+      <li
+        v-for="attachment in draftAttachments"
+        :key="`draft-${draftAttachmentKey(attachment)}`"
+        class="flex items-center gap-1.5 rounded-md border bg-muted/50 py-1 pr-1 pl-2 text-xs"
+      >
+        <PaperclipIcon class="size-3 shrink-0 text-muted-foreground" />
+        <span class="max-w-48 truncate">{{ attachment.filename }}</span>
+        <span class="text-muted-foreground">{{ formatBytes(attachment.size) }}</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="size-5"
+          :aria-label="t('email.compose.attachments.remove')"
+          @click="emit('removeDraftAttachment', attachment)"
+        >
+          <XIcon class="size-3" />
+        </Button>
+      </li>
       <li
         v-for="(file, index) in files"
         :key="`file-${file.name}-${index}`"

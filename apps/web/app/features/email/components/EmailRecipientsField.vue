@@ -12,6 +12,8 @@ import {
 const props = defineProps<{
   label: string;
   placeholder?: string;
+  /** Native `autofocus`, passed through to the underlying input - used by EmailDraftPanel.vue to focus recipients on a fresh forward/new-message draft. */
+  autofocus?: boolean;
 }>();
 
 // Model: recipient email addresses, one TagsInput tag per address.
@@ -28,7 +30,7 @@ const model = defineModel<string[]>({ default: () => [] });
           <XIcon class="size-3" />
         </TagsInputItemDelete>
       </TagsInputItem>
-      <TagsInputInput :placeholder="props.placeholder" />
+      <TagsInputInput :placeholder="props.placeholder" :autofocus="props.autofocus" />
     </TagsInput>
   </div>
 </template>

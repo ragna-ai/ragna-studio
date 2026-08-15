@@ -32,6 +32,8 @@ import type {
   MailAccountProfile,
   MailActionResult,
   MailAttachmentContent,
+  MailDraft,
+  MailDraftSummary,
   MailLabel,
   MailMessage,
   MailProvider,
@@ -82,6 +84,22 @@ export function buildFakeMailThread(overrides: Partial<MailThread> = {}): MailTh
   const messages = overrides.messages ?? [buildFakeMailMessage({ threadId: id })];
 
   return { id, messages };
+}
+
+export function buildFakeMailDraft(overrides: Partial<MailDraft> = {}): MailDraft {
+  const id = overrides.id ?? nextFixtureId('provider-draft');
+
+  return {
+    id,
+    threadId: overrides.threadId ?? nextFixtureId('provider-thread'),
+    to: overrides.to ?? [{ name: 'Recipient', address: 'recipient@example.test' }],
+    cc: overrides.cc ?? [],
+    bcc: overrides.bcc ?? [],
+    subject: overrides.subject ?? 'Test subject',
+    snippet: overrides.snippet ?? 'Test snippet',
+    date: overrides.date ?? new Date(),
+    body: overrides.body ?? { text: 'Draft body.', html: null, attachments: [] },
+  };
 }
 
 // --- Per-method mocks -----------------------------------------------------
@@ -166,6 +184,37 @@ function defaultGetAttachmentImpl(
   return Promise.resolve({ size: 3, data: Buffer.from('abc') });
 }
 
+function defaultGetDraftAttachmentImpl(
+  _draftId: MailProviderId,
+  _attachmentId: string,
+): Promise<MailAttachmentContent> {
+  return Promise.resolve({ size: 3, data: Buffer.from('abc') });
+}
+
+function defaultCreateDraftImpl(_input: SendMailInput): Promise<MailDraft> {
+  return Promise.resolve(buildFakeMailDraft());
+}
+
+function defaultUpdateDraftImpl(draftId: MailProviderId, _input: SendMailInput): Promise<MailDraft> {
+  return Promise.resolve(buildFakeMailDraft({ id: draftId }));
+}
+
+function defaultGetDraftImpl(draftId: MailProviderId): Promise<MailDraft> {
+  return Promise.resolve(buildFakeMailDraft({ id: draftId }));
+}
+
+function defaultListDraftsImpl(): Promise<MailDraftSummary[]> {
+  return Promise.resolve([]);
+}
+
+function defaultSendDraftImpl(_draftId: MailProviderId): Promise<SendMailResult> {
+  return Promise.resolve({ messageId: nextFixtureId('sent-message'), threadId: nextFixtureId('sent-thread') });
+}
+
+function defaultDeleteDraftImpl(_draftId: MailProviderId): Promise<void> {
+  return Promise.resolve();
+}
+
 export const getProfileMock = mock(defaultGetProfileImpl);
 export const syncFromCursorMock = mock(defaultSyncFromCursorImpl);
 export const fetchThreadMock = mock(defaultFetchThreadImpl);
@@ -178,6 +227,13 @@ export const setReadMock = mock(defaultSetReadImpl);
 export const listLabelsMock = mock(defaultListLabelsImpl);
 export const searchMock = mock(defaultSearchImpl);
 export const getAttachmentMock = mock(defaultGetAttachmentImpl);
+export const getDraftAttachmentMock = mock(defaultGetDraftAttachmentImpl);
+export const createDraftMock = mock(defaultCreateDraftImpl);
+export const updateDraftMock = mock(defaultUpdateDraftImpl);
+export const getDraftMock = mock(defaultGetDraftImpl);
+export const listDraftsMock = mock(defaultListDraftsImpl);
+export const sendDraftMock = mock(defaultSendDraftImpl);
+export const deleteDraftMock = mock(defaultDeleteDraftImpl);
 
 const fakeMailProvider: MailProvider = {
   getProfile: getProfileMock,
@@ -185,6 +241,12 @@ const fakeMailProvider: MailProvider = {
   fetchThread: fetchThreadMock,
   fetchMessage: fetchMessageMock,
   send: sendMock,
+  createDraft: createDraftMock,
+  updateDraft: updateDraftMock,
+  getDraft: getDraftMock,
+  listDrafts: listDraftsMock,
+  sendDraft: sendDraftMock,
+  deleteDraft: deleteDraftMock,
   setArchived: setArchivedMock,
   trashMessage: trashMessageMock,
   setStarred: setStarredMock,
@@ -192,6 +254,7 @@ const fakeMailProvider: MailProvider = {
   listLabels: listLabelsMock,
   search: searchMock,
   getAttachment: getAttachmentMock,
+  getDraftAttachment: getDraftAttachmentMock,
 };
 
 export const createGmailProviderMock = mock(() => fakeMailProvider);
@@ -221,6 +284,20 @@ export function resetMailProviderMock(): void {
   searchMock.mockImplementation(defaultSearchImpl);
   getAttachmentMock.mockClear();
   getAttachmentMock.mockImplementation(defaultGetAttachmentImpl);
+  getDraftAttachmentMock.mockClear();
+  getDraftAttachmentMock.mockImplementation(defaultGetDraftAttachmentImpl);
+  createDraftMock.mockClear();
+  createDraftMock.mockImplementation(defaultCreateDraftImpl);
+  updateDraftMock.mockClear();
+  updateDraftMock.mockImplementation(defaultUpdateDraftImpl);
+  getDraftMock.mockClear();
+  getDraftMock.mockImplementation(defaultGetDraftImpl);
+  listDraftsMock.mockClear();
+  listDraftsMock.mockImplementation(defaultListDraftsImpl);
+  sendDraftMock.mockClear();
+  sendDraftMock.mockImplementation(defaultSendDraftImpl);
+  deleteDraftMock.mockClear();
+  deleteDraftMock.mockImplementation(defaultDeleteDraftImpl);
   createGmailProviderMock.mockClear();
 }
 

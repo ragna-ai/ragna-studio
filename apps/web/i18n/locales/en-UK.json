@@ -1004,7 +1004,7 @@
     "sidebar": {
       "compose": "Compose",
       "searchPlaceholder": "Search mail",
-      "pendingDrafts": "AI drafts",
+      "drafts": "Drafts",
       "categories": "Categories",
       "labels": "Labels",
       "settings": "Email settings",
@@ -1025,6 +1025,10 @@
       "loadMore": "Load more",
       "loadError": "Failed to load this conversation.",
       "selectPrompt": "Select a conversation to read it.",
+      "replaceDraft": {
+        "title": "Discard the current draft?",
+        "message": "This thread already has an unsent draft of a different kind. Starting a new one discards it."
+      },
       "actions": {
         "toggleStar": "Star",
         "toggleRead": "Toggle read",
@@ -1052,6 +1056,7 @@
       "bodyPlaceholder": "Write your message...",
       "send": "Send",
       "newTitle": "New message",
+      "contentTooLarge": "This draft is too large to edit or send here. Discard it, or open it in Gmail to edit and send it.",
       "attachments": {
         "add": "Attach files",
         "fromLibrary": "Attach from library",
@@ -1066,8 +1071,12 @@
     },
     "draft": {
       "generating": "Drafting a reply...",
-      "readyBadge": "AI draft ready for review",
       "discard": "Discard",
+      "notFound": "This draft no longer exists.",
+      "panel": {
+        "saving": "Saving...",
+        "saved": "Saved"
+      },
       "trigger": {
         "button": "Draft with AI",
         "title": "Draft a reply with AI",
@@ -1075,12 +1084,11 @@
         "generate": "Generate draft"
       }
     },
-    "pendingDrafts": {
-      "pageTitle": "AI drafts",
-      "title": "AI drafts",
-      "subtitle": "Reply drafts waiting for your review before they can be sent.",
-      "empty": "No drafts waiting for review.",
-      "generatingPreview": "Still drafting a reply..."
+    "draftsFolder": {
+      "pageTitle": "Drafts",
+      "title": "Drafts",
+      "subtitle": "Every unsent message: yours, AI-drafted, and ones started in Gmail.",
+      "empty": "No drafts."
     },
     "settings": {
       "pageTitle": "Email settings",

@@ -1010,7 +1010,7 @@
     "sidebar": {
       "compose": "Verfassen",
       "searchPlaceholder": "E-Mails durchsuchen",
-      "pendingDrafts": "KI-Entwürfe",
+      "drafts": "Entwürfe",
       "categories": "Kategorien",
       "labels": "Labels",
       "settings": "E-Mail-Einstellungen",
@@ -1031,6 +1031,10 @@
       "loadMore": "Mehr laden",
       "loadError": "Diese Unterhaltung konnte nicht geladen werden.",
       "selectPrompt": "Wähle eine Unterhaltung zum Lesen aus.",
+      "replaceDraft": {
+        "title": "Aktuellen Entwurf verwerfen?",
+        "message": "Für diese Unterhaltung gibt es bereits einen unversendeten Entwurf einer anderen Art. Ein neuer Entwurf verwirft diesen."
+      },
       "actions": {
         "toggleStar": "Markieren",
         "toggleRead": "Gelesen umschalten",
@@ -1058,6 +1062,7 @@
       "bodyPlaceholder": "Nachricht schreiben...",
       "send": "Senden",
       "newTitle": "Neue Nachricht",
+      "contentTooLarge": "Dieser Entwurf ist zu groß, um ihn hier zu bearbeiten oder zu senden. Verwirf ihn, oder öffne ihn in Gmail, um ihn dort zu bearbeiten und zu senden.",
       "attachments": {
         "add": "Dateien anhängen",
         "fromLibrary": "Aus Mediathek anhängen",
@@ -1072,8 +1077,12 @@
     },
     "draft": {
       "generating": "Antwort wird entworfen...",
-      "readyBadge": "KI-Entwurf bereit zur Prüfung",
       "discard": "Verwerfen",
+      "notFound": "Diesen Entwurf gibt es nicht mehr.",
+      "panel": {
+        "saving": "Wird gespeichert...",
+        "saved": "Gespeichert"
+      },
       "trigger": {
         "button": "Mit KI entwerfen",
         "title": "Antwort mit KI entwerfen",
@@ -1081,12 +1090,11 @@
         "generate": "Entwurf erstellen"
       }
     },
-    "pendingDrafts": {
-      "pageTitle": "KI-Entwürfe",
-      "title": "KI-Entwürfe",
-      "subtitle": "Antwortentwürfe, die auf deine Prüfung warten, bevor sie versendet werden können.",
-      "empty": "Keine Entwürfe zur Prüfung.",
-      "generatingPreview": "Antwort wird noch entworfen..."
+    "draftsFolder": {
+      "pageTitle": "Entwürfe",
+      "title": "Entwürfe",
+      "subtitle": "Alle unversendeten Nachrichten: deine eigenen, KI-Entwürfe und in Gmail begonnene.",
+      "empty": "Keine Entwürfe."
     },
     "settings": {
       "pageTitle": "E-Mail-Einstellungen",

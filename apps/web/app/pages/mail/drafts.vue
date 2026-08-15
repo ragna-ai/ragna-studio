@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import EmailPendingDraftsList from '~/features/email/components/EmailPendingDraftsList.vue';
+import EmailDraftsList from '~/features/email/components/EmailDraftsList.vue';
 
 const { t } = useI18n();
 
 useHead({
-  title: t('email.pendingDrafts.pageTitle'),
+  title: t('email.draftsFolder.pageTitle'),
 });
 </script>
 
@@ -12,12 +12,12 @@ useHead({
   <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
-        <HeadingTitle :title="t('email.pendingDrafts.title')" :subtitle="t('email.pendingDrafts.subtitle')" />
+        <HeadingTitle :title="t('email.draftsFolder.title')" :subtitle="t('email.draftsFolder.subtitle')" />
       </template>
       <template #bottom> </template>
     </Heading>
     <div class="px-5">
-      <EmailPendingDraftsList />
+      <EmailDraftsList />
     </div>
   </SectionWrapper>
 </template>

@@ -38,6 +38,10 @@ const emailThreadIdSchema = z.object({
   threadId: primaryIdSchema,
 });
 
+const emailDraftIdSchema = z.object({
+  draftId: primaryIdSchema,
+});
+
 export const hasValidChatId = (params: any) =>
   hasValidSchema(chatIdSchema, params);
 
@@ -64,6 +68,9 @@ export const hasValidTaskId = (params: any) =>
 
 export const hasValidEmailThreadId = (params: any) =>
   hasValidSchema(emailThreadIdSchema, params);
+
+export const hasValidEmailDraftId = (params: any) =>
+  hasValidSchema(emailDraftIdSchema, params);
 
 export function hasValidPage(params: any) {
   const regexScheme = /^[1-9]\d{0,4}$/;

@@ -1,8 +1,10 @@
-import type { SendEmailDraftVariables, SendEmailVariables } from '~/features/email/types';
+import type { SendEmailDraftVariables } from '~/features/email/types';
 
-// Shared multipart body builder for /email/send and /email/draft/:draftId/send
-// (apps/api/src/controllers/email.controller.ts: identical field shape,
-// recipients and media picks as repeated form fields).
+// Multipart body builder for POST /email/draft/:draftId/send
+// (apps/api/src/controllers/email.controller.ts). Every compose flow now
+// edits a draft first (docs/email/drafts-change-request.md), so this is the
+// only send path left on the client - there is no more plain, non-draft
+// /email/send caller.
 
 function appendRepeated(formData: FormData, key: string, values: string[] | undefined): void {
   for (const value of values ?? []) {
@@ -10,10 +12,8 @@ function appendRepeated(formData: FormData, key: string, values: string[] | unde
   }
 }
 
-function appendCommonFields(
-  formData: FormData,
-  input: Pick<SendEmailVariables, 'to' | 'cc' | 'bcc' | 'subject' | 'html' | 'text' | 'mediaIds' | 'files'>,
-): void {
+export function buildSendDraftFormData(input: Omit<SendEmailDraftVariables, 'draftId'>): FormData {
+  const formData = new FormData();
   appendRepeated(formData, 'to', input.to);
   appendRepeated(formData, 'cc', input.cc);
   appendRepeated(formData, 'bcc', input.bcc);
@@ -24,20 +24,6 @@ function appendCommonFields(
   for (const file of input.files ?? []) {
     formData.append('files', file);
   }
-}
-
-export function buildSendFormData(input: SendEmailVariables): FormData {
-  const formData = new FormData();
-  appendCommonFields(formData, input);
-  if (input.threadId) formData.append('threadId', input.threadId);
-  if (input.replyToMessageId) formData.append('replyToMessageId', input.replyToMessageId);
-  if (input.draftId) formData.append('draftId', input.draftId);
-  return formData;
-}
-
-export function buildSendDraftFormData(input: Omit<SendEmailDraftVariables, 'draftId'>): FormData {
-  const formData = new FormData();
-  appendCommonFields(formData, input);
   if (input.content !== undefined) formData.append('content', input.content);
   return formData;
 }

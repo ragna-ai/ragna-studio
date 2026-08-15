@@ -405,20 +405,22 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.emailAccount.id,
       optional: false,
     }),
+    // Optional: `kind: 'new'` drafts have no thread yet.
     thread: r.one.emailThread({
       from: r.emailDraft.threadId,
       to: r.emailThread.id,
-      optional: false,
+      optional: true,
     }),
     replyToMessage: r.one.emailMessage({
       from: r.emailDraft.replyToMessageId,
       to: r.emailMessage.id,
       optional: true,
     }),
+    // Optional: `origin: 'user'` drafts have no agent.
     agent: r.one.agent({
       from: r.emailDraft.agentId,
       to: r.agent.id,
-      optional: false,
+      optional: true,
     }),
   },
   folder: {

@@ -9,7 +9,7 @@
 // table, strikethrough, and task-list support turndown's core doesn't have
 // (dependency pre-approved for exactly this).
 //
-// Uses `@joplin/turndown-plugin-gfm`, not the original `turndown-plugin-gfm`:
+// Uses `@truto/turndown-plugin-gfm`, not the original `turndown-plugin-gfm`:
 // the original is unmaintained and its table rules crash on a `<table>`
 // with zero `<tr>` rows (`node.rows[0]` is `undefined`, and `isHeadingRow`
 // dereferences it unconditionally) — real newsletter/marketing HTML hits
@@ -31,12 +31,13 @@
 // no CSS parsing, just a regex check for the couple of inline-style
 // patterns real senders actually use for it.
 
-import { gfm } from '@joplin/turndown-plugin-gfm';
+import { gfm } from '@truto/turndown-plugin-gfm';
 import TurndownService from 'turndown';
 import type { MailBody } from '../provider/mail-provider';
 
 const NON_CONTENT_TAG_NAMES = new Set(['HEAD', 'STYLE', 'SCRIPT', 'TITLE', 'NOSCRIPT', 'TEMPLATE']);
-const HIDDEN_INLINE_STYLE_RE = /(?:^|;)\s*(?:display\s*:\s*none|mso-hide\s*:\s*all|max-height\s*:\s*0(?:px)?)\b/i;
+const HIDDEN_INLINE_STYLE_RE =
+  /(?:^|;)\s*(?:display\s*:\s*none|mso-hide\s*:\s*all|max-height\s*:\s*0(?:px)?)\b/i;
 
 const turndownService = new TurndownService();
 turndownService.use(gfm);
@@ -65,7 +66,9 @@ export function htmlToMarkdown(html: string): string {
  * raw conversion (and its errors) should call `htmlToMarkdown` directly.
  */
 export function toCanonicalMarkdown(body: Pick<MailBody, 'html' | 'text'>): string | null {
-  const markdown = body.html ? convertHtmlResiliently(body.html, body.text) : (body.text ?? '').trim();
+  const markdown = body.html
+    ? convertHtmlResiliently(body.html, body.text)
+    : (body.text ?? '').trim();
   return markdown ? markdown : null;
 }
 

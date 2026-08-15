@@ -12,6 +12,8 @@ import type {
   MailActionResult,
   MailAddress,
   MailAttachmentContent,
+  MailDraft,
+  MailDraftSummary,
   MailLabel,
   MailMessage,
   MailMessageMetadata,
@@ -24,11 +26,13 @@ import type {
   SendMailInput,
   SendMailResult,
 } from '../mail-provider';
-import { GmailApiError, gmailRequest } from './gmail.client';
-import { toMailMessage, toMailMessageMetadata } from './gmail.parse';
+import { GmailApiError, gmailRequest, gmailRequestVoid, type GmailRequestOptions } from './gmail.client';
+import { toMailDraft, toMailDraftSummary, toMailMessage, toMailMessageMetadata } from './gmail.parse';
 import { aggregateHistoryPage, type GmailAggregatedChange } from './gmail.sync';
 import type {
   GmailAttachmentResource,
+  GmailDraftResource,
+  GmailDraftsListResponse,
   GmailHistoryListResponse,
   GmailLabelsListResponse,
   GmailMessageResource,
@@ -47,6 +51,13 @@ const LABEL_INBOX = 'INBOX';
 const HISTORY_TYPES = ['messageAdded', 'labelAdded', 'labelRemoved', 'messageDeleted'];
 
 const SEARCH_PAGE_SIZE = '50';
+const DRAFTS_PAGE_SIZE = '50';
+
+/** Body shape Gmail expects for both `messages.send` and `drafts.{create,update}`. */
+interface GmailRawMessageBody {
+  raw: string;
+  threadId?: string;
+}
 
 export { GmailApiError } from './gmail.client';
 
@@ -108,17 +119,82 @@ export class GmailProvider implements MailProvider {
 
   async send(input: SendMailInput): Promise<SendMailResult> {
     const raw = await this.buildOutgoingRaw(input);
-    const body: { raw: string; threadId?: string } = { raw };
-    if (input.thread) {
-      body.threadId = input.thread.threadId;
-    }
 
     const sent = await this.request<GmailMessageSendResponse>('users/me/messages/send', {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(this.buildRawMessageBody(raw, input)),
     });
 
     return { messageId: sent.id, threadId: sent.threadId };
+  }
+
+  async createDraft(input: SendMailInput): Promise<MailDraft> {
+    const raw = await this.buildOutgoingRaw(input);
+
+    const created = await this.request<GmailDraftResource>('users/me/drafts', {
+      method: 'POST',
+      body: JSON.stringify({ message: this.buildRawMessageBody(raw, input) }),
+    });
+
+    // The create response's nested message carries only id/threadId, not the
+    // parsed body Gmail derived from `raw`; re-fetch to return the same
+    // authoritative shape `getDraft` does.
+    return this.getDraft(created.id);
+  }
+
+  async updateDraft(draftId: MailProviderId, input: SendMailInput): Promise<MailDraft> {
+    const raw = await this.buildOutgoingRaw(input);
+
+    await this.request<GmailDraftResource>(`users/me/drafts/${draftId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ message: this.buildRawMessageBody(raw, input) }),
+    });
+
+    return this.getDraft(draftId);
+  }
+
+  // Throws `GmailApiError` with `status: 404` if the draft no longer exists
+  // (already sent or discarded elsewhere); callers distinguish that from a
+  // transport failure by checking `error instanceof GmailApiError`.
+  async getDraft(draftId: MailProviderId): Promise<MailDraft> {
+    const raw = await this.request<GmailDraftResource>(`users/me/drafts/${draftId}?format=full`);
+    return toMailDraft(raw);
+  }
+
+  async listDrafts(): Promise<MailDraftSummary[]> {
+    const summaries: MailDraftSummary[] = [];
+    let pageToken: string | undefined;
+
+    do {
+      const params = new URLSearchParams({ maxResults: DRAFTS_PAGE_SIZE });
+      if (pageToken) {
+        params.set('pageToken', pageToken);
+      }
+
+      const page = await this.request<GmailDraftsListResponse>(`users/me/drafts?${params.toString()}`);
+      for (const stub of page.drafts ?? []) {
+        summaries.push(await this.getDraftSummary(stub.id));
+      }
+      pageToken = page.nextPageToken;
+    } while (pageToken);
+
+    return summaries;
+  }
+
+  async sendDraft(draftId: MailProviderId): Promise<SendMailResult> {
+    const sent = await this.request<GmailMessageSendResponse>('users/me/drafts/send', {
+      method: 'POST',
+      body: JSON.stringify({ id: draftId }),
+    });
+
+    return { messageId: sent.id, threadId: sent.threadId };
+  }
+
+  // Same 404-on-already-gone semantics as `getDraft`; deleting a draft that
+  // was already discarded (or just sent, which deletes it server-side) is
+  // surfaced as `GmailApiError` with `status: 404`, not a generic failure.
+  async deleteDraft(draftId: MailProviderId): Promise<void> {
+    await this.requestVoid(`users/me/drafts/${draftId}`, { method: 'DELETE' });
   }
 
   async setArchived(messageId: MailProviderId, archived: boolean): Promise<MailActionResult> {
@@ -175,10 +251,35 @@ export class GmailProvider implements MailProvider {
     return { size: response.size, data: Buffer.from(response.data, 'base64url') };
   }
 
+  // Throws `GmailApiError` with `status: 404` if the draft no longer exists,
+  // same semantics as `getDraft`.
+  async getDraftAttachment(draftId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
+    const messageId = await this.getDraftMessageId(draftId);
+    return this.getAttachment(messageId, attachmentId);
+  }
+
   // --- internals ---------------------------------------------------------
 
-  private request<T>(path: string, options?: { method?: 'GET' | 'POST'; body?: string }): Promise<T> {
+  private request<T>(path: string, options?: GmailRequestOptions): Promise<T> {
     return gmailRequest<T>(this.getAccessToken, path, options);
+  }
+
+  private requestVoid(path: string, options?: GmailRequestOptions): Promise<void> {
+    return gmailRequestVoid(this.getAccessToken, path, options);
+  }
+
+  /** `drafts.list` only returns draft/message ids; fetch metadata for the folder listing. */
+  private async getDraftSummary(draftId: MailProviderId): Promise<MailDraftSummary> {
+    const raw = await this.request<GmailDraftResource>(`users/me/drafts/${draftId}?format=metadata`);
+    return toMailDraftSummary(raw);
+  }
+
+  // Resolves the draft's *current* contained message id, purely to hand off
+  // to `getAttachment`; never returned to a caller of this class. `minimal`
+  // is the cheapest format that still reports `message.id`.
+  private async getDraftMessageId(draftId: MailProviderId): Promise<MailProviderId> {
+    const raw = await this.request<GmailDraftResource>(`users/me/drafts/${draftId}?format=minimal`);
+    return raw.message.id;
   }
 
   private async fetchHistoryPage(
@@ -278,6 +379,15 @@ export class GmailProvider implements MailProvider {
 
     const buffer = await new MailComposer(mailOptions).compile().build();
     return buffer.toString('base64url');
+  }
+
+  /** Wraps a MIME `raw` blob with `threadId` when `input` threads it, for send and draft writes alike. */
+  private buildRawMessageBody(raw: string, input: SendMailInput): GmailRawMessageBody {
+    const body: GmailRawMessageBody = { raw };
+    if (input.thread) {
+      body.threadId = input.thread.threadId;
+    }
+    return body;
   }
 }
 

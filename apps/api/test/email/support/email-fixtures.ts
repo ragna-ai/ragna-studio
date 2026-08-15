@@ -14,7 +14,16 @@
 // functions instead: they model data the *sync poller* would have written,
 // which is out of scope for apps/api's own test suite (docs/email/prd.md,
 // "Worker jobs"), so going through the real API isn't an option here.
-import type { EmailAccount, EmailDraft, EmailDraftStatus, EmailParticipant, EmailThread } from '@repo/database';
+import type {
+  EmailAccount,
+  EmailDraft,
+  EmailDraftAttachment,
+  EmailDraftKind,
+  EmailDraftOrigin,
+  EmailDraftStatus,
+  EmailParticipant,
+  EmailThread,
+} from '@repo/database';
 import {
   createEmailDraft,
   upsertEmailMessageBody,
@@ -160,22 +169,40 @@ export async function seedEmailThreadWithMessage(
   return { thread, messageId: message.id, providerMessageId, providerThreadId };
 }
 
-/** Directly inserts an email_drafts row, e.g. for edit/discard/send lifecycle tests. */
+/**
+ * Directly inserts an email_drafts row, e.g. for edit/discard/send lifecycle
+ * tests. Defaults to an AI reply draft (origin/kind), the shape every
+ * pre-drafts-change-request test in this suite already seeds; pass
+ * `origin`/`kind`/`to`/`providerDraftId`/etc. to model a user draft or one
+ * already pushed to Gmail (docs/email/drafts-change-request.md).
+ */
 export function seedEmailDraft(params: {
   accountId: string;
-  threadId: string;
-  agentId: string;
+  threadId?: string | null;
+  agentId?: string | null;
+  origin?: EmailDraftOrigin;
+  kind?: EmailDraftKind;
   replyToMessageId?: string;
+  to?: EmailParticipant[];
+  subject?: string | null;
   content?: string;
+  attachments?: EmailDraftAttachment[];
   status?: EmailDraftStatus;
+  providerDraftId?: string;
 }): Promise<EmailDraft> {
   return createEmailDraft({
     accountId: params.accountId,
-    threadId: params.threadId,
-    agentId: params.agentId,
+    origin: params.origin ?? 'ai',
+    kind: params.kind ?? 'reply',
+    threadId: params.threadId ?? null,
+    agentId: params.agentId ?? null,
     replyToMessageId: params.replyToMessageId ?? null,
+    to: params.to ?? [],
+    subject: params.subject ?? null,
     content: params.content ?? 'Draft reply content.',
+    attachments: params.attachments ?? [],
     status: params.status ?? 'ready',
+    providerDraftId: params.providerDraftId ?? null,
   });
 }
 

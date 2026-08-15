@@ -1,9 +1,20 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { EmailDraft, EmailDraftStatus, NewEmailDraft } from '../schema';
 import { emailDraft } from '../schema';
 
-export type { EmailDraft, EmailDraftStatus, NewEmailDraft } from '../schema';
+export type {
+  EmailDraft,
+  EmailDraftAttachment,
+  EmailDraftKind,
+  EmailDraftOrigin,
+  EmailDraftStatus,
+  NewEmailDraft,
+} from '../schema';
+
+// A draft has reached its terminal state once discarded or sent; every list
+// view that means "still being worked on" excludes these two.
+const NON_TERMINAL_STATUSES: EmailDraftStatus[] = ['generating', 'ready'];
 
 export async function createEmailDraft(values: NewEmailDraft): Promise<EmailDraft> {
   const [created] = await db.insert(emailDraft).values(values).returning();
@@ -27,10 +38,31 @@ export async function getEmailDraftById({
   return found ?? null;
 }
 
-type UpdateEmailDraftFields = Partial<Pick<NewEmailDraft, 'content' | 'status'>>;
+// Keyed lookup for the worker's Gmail reconciliation pass: it learns a
+// draft's providerDraftId from drafts.list and needs the local row back to
+// decide whether to upsert content or just confirm it's still there.
+export async function getEmailDraftByProviderDraftId({
+  providerDraftId,
+  accountId,
+}: {
+  providerDraftId: string;
+  accountId: string;
+}): Promise<EmailDraft | null> {
+  const found = await db.query.emailDraft.findFirst({ where: { providerDraftId, accountId } });
+
+  return found ?? null;
+}
+
+type UpdateEmailDraftFields = Partial<
+  Pick<
+    NewEmailDraft,
+    'content' | 'status' | 'to' | 'cc' | 'bcc' | 'subject' | 'providerDraftId' | 'attachments'
+  >
+>;
 
 // Shared by the worker (writes generated content, flips 'generating' ->
-// 'ready') and the review UI (user edits, discard, send).
+// 'ready', stores providerDraftId once pushed to Gmail) and the review UI
+// (recipients/subject/body edits, discard, send).
 export async function updateEmailDraft({
   id,
   accountId,
@@ -46,7 +78,8 @@ export async function updateEmailDraft({
 }
 
 // Every draft on a thread (newest first), for the inline draft panel next to
-// the thread view.
+// the thread view. `kind: 'new'` drafts never match this (their threadId is
+// null), so they never show up here, only in listEmailDraftsByAccountId.
 export async function listEmailDraftsByThreadId({
   threadId,
   accountId,
@@ -56,6 +89,22 @@ export async function listEmailDraftsByThreadId({
 }): Promise<EmailDraft[]> {
   return db.query.emailDraft.findMany({
     where: { threadId, accountId },
+    orderBy: (t, { desc }) => desc(t.createdAt),
+  });
+}
+
+// The Drafts folder (docs/email/drafts-change-request.md, "Scope > 6"):
+// every non-terminal draft for the account, newest first, whoever wrote it
+// and whether or not it has a thread yet.
+export async function listEmailDraftsByAccountId({
+  accountId,
+  statuses = NON_TERMINAL_STATUSES,
+}: {
+  accountId: string;
+  statuses?: EmailDraftStatus[];
+}): Promise<EmailDraft[]> {
+  return db.query.emailDraft.findMany({
+    where: { accountId, status: { in: statuses } },
     orderBy: (t, { desc }) => desc(t.createdAt),
   });
 }
@@ -74,6 +123,33 @@ export async function listPendingEmailDraftsByAccountId({
   return db.query.emailDraft.findMany({
     where: { accountId, status: { in: statuses } },
     orderBy: (t, { asc }) => asc(t.createdAt),
+  });
+}
+
+// The sync cron's abandoned-draft sweep (docs/email/drafts-change-request.md,
+// "Scope > 4"): rows that never reached Gmail (no providerDraftId to delete
+// there) with no body and no recipients, left untouched past `olderThan`.
+// Callers pass the result straight to deleteEmailDraft, row by row, since a
+// never-pushed draft is a plain local delete.
+export async function listEmptyStaleEmailDrafts({
+  accountId,
+  olderThan,
+}: {
+  accountId: string;
+  olderThan: Date;
+}): Promise<EmailDraft[]> {
+  return db.query.emailDraft.findMany({
+    where: {
+      accountId,
+      providerDraftId: { isNull: true },
+      content: '',
+      updatedAt: { lt: olderThan },
+      // jsonb equality against the empty-array default; `to`/`cc`/`bcc`
+      // are bound as query parameters via drizzle's sql tag, not
+      // concatenated.
+      RAW: (table) =>
+        sql`${table.to} = '[]'::jsonb AND ${table.cc} = '[]'::jsonb AND ${table.bcc} = '[]'::jsonb`,
+    },
   });
 }
 

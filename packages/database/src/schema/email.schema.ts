@@ -19,6 +19,36 @@ export interface EmailParticipant {
 
 export type EmailDraftStatus = 'generating' | 'ready' | 'discarded' | 'sent';
 
+// Who authored the draft: drives the sparkle badge and the review-queue
+// count only, nothing else (docs/email/drafts-change-request.md, "Decisions").
+export type EmailDraftOrigin = 'ai' | 'user';
+
+// What the draft is composing. `new` rows have no thread yet, hence
+// `email_drafts.threadId` being nullable (docs/email/drafts-change-request.md,
+// "Scope > 1").
+export type EmailDraftKind = 'new' | 'reply' | 'forward';
+
+// A forward draft's carried-over attachment set: metadata only, pointing back
+// at the Gmail message/attachment it came from. Content is re-fetched from
+// Gmail at write-back/send time, never stored here
+// (docs/email/drafts-change-request.md, "Scope > 5").
+export interface EmailDraftAttachment {
+  // Set when this attachment was copied from the forwarded message: the
+  // source message id, used to re-fetch its content at write-back/send time.
+  // Null when it instead came from a Gmail-authored draft's own contained
+  // message, whose id @repo/mail deliberately never persists (it is replaced
+  // on every drafts.update). That case is re-fetched via
+  // getDraftAttachment(draftId, attachmentId) instead, so a null here is what
+  // tells the caller which of the two fetch paths to take.
+  providerMessageId: string | null;
+  providerAttachmentId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  contentId: string | null;
+  inline: boolean;
+}
+
 // EMAIL ACCOUNT
 // One row per user (docs/email/prd.md, "Auth and account connection"). The
 // actual OAuth tokens live in better-auth's `account` table via
@@ -200,8 +230,11 @@ export type EmailMessageBody = typeof emailMessageBody.$inferSelect;
 export type NewEmailMessageBody = typeof emailMessageBody.$inferInsert;
 
 // EMAIL DRAFT
-// Local-only AI reply draft (docs/email/prd.md, "Non-goals": never written to
-// Gmail's own drafts folder, never auto-sent).
+// The single home for every unsent message, whoever wrote it: AI replies,
+// user replies/forwards/new mail, and drafts created in Gmail web/mobile
+// (docs/email/drafts-change-request.md, "Scope > 1"). Hybrid-persisted: this
+// row is the editing/autosave target, debounced-written to Gmail via
+// `providerDraftId`.
 export const emailDraft = pgTable(
   'email_drafts',
   {
@@ -209,22 +242,34 @@ export const emailDraft = pgTable(
     accountId: text('account_id')
       .notNull()
       .references(() => emailAccount.id, { onDelete: 'cascade' }),
-    threadId: text('thread_id')
-      .notNull()
-      .references(() => emailThread.id, { onDelete: 'cascade' }),
+    origin: text('origin').notNull().$type<EmailDraftOrigin>(),
+    kind: text('kind').notNull().$type<EmailDraftKind>(),
+    // Null for `kind: 'new'`, which has no thread yet.
+    threadId: text('thread_id').references(() => emailThread.id, { onDelete: 'cascade' }),
     // Null once the source message is purged; the draft survives pointing
-    // only at its thread.
+    // only at its thread. For `kind: 'reply'` this is the message being
+    // replied to; for `kind: 'forward'` the message being forwarded.
     replyToMessageId: text('reply_to_message_id').references(() => emailMessage.id, {
       onDelete: 'set null',
     }),
-    // No onDelete action: the agent that produced a draft must stay
-    // resolvable for review, same reasoning as media.schema.ts's mediaId FKs.
-    agentId: text('agent_id')
-      .notNull()
-      .references(() => agent.id),
+    // Null for `origin: 'user'`, which has no agent. No onDelete action: the
+    // agent that produced a draft must stay resolvable for review, same
+    // reasoning as media.schema.ts's mediaId FKs.
+    agentId: text('agent_id').references(() => agent.id),
+    to: jsonb('to').notNull().$type<EmailParticipant[]>().default([]),
+    cc: jsonb('cc').notNull().$type<EmailParticipant[]>().default([]),
+    bcc: jsonb('bcc').notNull().$type<EmailParticipant[]>().default([]),
+    subject: text('subject'),
     // Markdown, @repo/editor-managed, same convention as document.content.
     content: text('content').notNull().default(''),
+    // The forwarded message's carried-over attachment set; see
+    // EmailDraftAttachment above.
+    attachments: jsonb('attachments').notNull().$type<EmailDraftAttachment[]>().default([]),
     status: text('status').notNull().$type<EmailDraftStatus>().default('generating'),
+    // Null until the draft is pushed to Gmail (docs/email/drafts-change-request.md,
+    // "Decisions"). The draft id is stable across Gmail-side updates, unlike
+    // the message id it wraps, so this is the only provider id we key on.
+    providerDraftId: text('provider_draft_id'),
     ...timestamps,
   },
   (table) => [
@@ -232,6 +277,11 @@ export const emailDraft = pgTable(
     index('emailDraft_threadId_idx').on(table.threadId),
     index('emailDraft_replyToMessageId_idx').on(table.replyToMessageId),
     index('emailDraft_agentId_idx').on(table.agentId),
+    index('emailDraft_providerDraftId_idx').on(table.providerDraftId),
+    uniqueIndex('emailDraft_accountId_providerDraftId_idx').on(
+      table.accountId,
+      table.providerDraftId,
+    ),
   ],
 );
 

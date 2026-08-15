@@ -145,17 +145,66 @@ export const validEmailDraftIdParam = myzValidator(
   }),
 );
 
-export const validEmailThreadDraftsQuery = myzValidator(
+// threadId absent means "every non-terminal draft on the account", the
+// Drafts folder (docs/email/drafts-change-request.md, "Wire contract").
+export const validEmailDraftListQuery = myzValidator(
   'query',
   z.object({
-    threadId: primaryId,
+    threadId: primaryId.optional(),
   }),
 );
 
-export const validUpdateEmailDraftBody = myzValidator(
+const emailParticipantSchema = z.object({
+  name: z.string().nullable(),
+  email: z.email(),
+});
+
+// A forward draft's carried-over attachment set, mirrors
+// EmailDraftAttachment (packages/database/src/schema/email.schema.ts).
+// `providerMessageId` is null when the attachment lives on the Gmail draft
+// itself rather than on a forwarded message (docs/email/
+// drafts-change-request.md, "Wire contract").
+const emailDraftAttachmentSchema = z.object({
+  providerMessageId: z.string().min(1).nullable(),
+  providerAttachmentId: z.string().min(1),
+  filename: z.string().min(1),
+  mimeType: z.string().min(1),
+  size: z.number().int().nonnegative(),
+  contentId: z.string().nullable(),
+  inline: z.boolean(),
+});
+
+// [POST] /email/draft. `reply`/`forward` need a thread the caller owns;
+// `new` seeds nothing (email.service.ts's createEmailDraftForUser validates
+// the kind-specific combination beyond what the shape alone can express).
+export const validCreateEmailDraftBody = myzValidator(
   'json',
   z.object({
-    content: z.string(),
+    kind: z.enum(['new', 'reply', 'forward']),
+    threadId: primaryId.optional(),
+    replyToMessageId: primaryId.optional(),
+  }),
+);
+
+// [PATCH] /email/draft/:draftId - the full editable set. `origin`, `kind`,
+// `threadId`, `replyToMessageId` and `agentId` are creation-only
+// (docs/email/drafts-change-request.md, "Wire contract"): `strictObject`
+// rejects them (and any other unknown key) with a 422 instead of silently
+// ignoring them.
+export const validUpdateEmailDraftBody = myzValidator(
+  'json',
+  z.strictObject({
+    to: z.array(emailParticipantSchema).optional(),
+    cc: z.array(emailParticipantSchema).optional(),
+    bcc: z.array(emailParticipantSchema).optional(),
+    subject: z.string().nullable().optional(),
+    content: z.string().optional(),
+    attachments: z.array(emailDraftAttachmentSchema).optional(),
+    // Explicit "push to Gmail now regardless of the attachment debounce
+    // rule" signal (docs/email/drafts-change-request.md, "Wire contract").
+    // The client sets this on panel close and before send; control-only,
+    // never persisted on the row.
+    flush: z.boolean().optional(),
   }),
 );
 

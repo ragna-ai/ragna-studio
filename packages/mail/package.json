@@ -31,9 +31,10 @@
     "@maizzle/tailwindcss": "1.5.6",
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
+    "@truto/turndown-plugin-gfm": "^1.0.3",
+    "marked": "18.0.9",
     "nodemailer": "^9.0.5",
     "nodemailer-brevo-transport": "^2.2.1",
-    "@joplin/turndown-plugin-gfm": "^1.0.67",
     "turndown": "^7.2.4"
   },
   "devDependencies": {

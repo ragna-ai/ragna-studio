@@ -112,3 +112,25 @@ export interface GmailMessageSendResponse {
   threadId: string;
   labelIds?: string[];
 }
+
+export interface GmailDraftResource {
+  id: string;
+  message: GmailMessageResource;
+}
+
+// `drafts.list` only ever populates `id` and `threadId` on the nested
+// message, regardless of query params; full headers/body require a
+// follow-up `drafts.get`.
+export interface GmailDraftStub {
+  id: string;
+  message?: {
+    id: string;
+    threadId: string;
+  };
+}
+
+export interface GmailDraftsListResponse {
+  drafts?: GmailDraftStub[];
+  nextPageToken?: string;
+  resultSizeEstimate?: number;
+}

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import EmailComposeDialog from '~/features/email/components/EmailComposeDialog.vue';
 import EmailConnectPrompt from '~/features/email/components/EmailConnectPrompt.vue';
+import EmailDraftPanel from '~/features/email/components/EmailDraftPanel.vue';
 import EmailSidebar from '~/features/email/components/EmailSidebar.vue';
 import EmailThreadList from '~/features/email/components/EmailThreadList.vue';
 import EmailThreadView from '~/features/email/components/EmailThreadView.vue';
@@ -12,7 +12,11 @@ import {
   GMAIL_CONNECT_CALLBACK_PARAM,
   useEmailConnectFlow,
 } from '~/features/email/composables/useEmailConnectFlow';
-import { useGetPendingDrafts } from '~/features/email/composables/useEmailDraftApi';
+import {
+  useCreateEmailDraft,
+  useGetEmailDraft,
+  useGetPendingDrafts,
+} from '~/features/email/composables/useEmailDraftApi';
 import { useSearchEmail } from '~/features/email/composables/useEmailSearchApi';
 import { useGetEmailThreads } from '~/features/email/composables/useEmailThreadApi';
 import { firstQueryValue } from '~/features/email/lib/route-query';
@@ -20,15 +24,15 @@ import type {
   EmailFolder,
   EmailThreadListFilters,
   EmailThreadSummary,
-  SendEmailResponse,
 } from '~/features/email/types';
 
 // Feature container for /mail (Vue best-practices: route view stays thin,
 // composition lives here): owns the connect gate, filters/search state, and
 // the three panes, delegating rendering to EmailSidebar/EmailThreadList/
-// EmailThreadView. Both app/pages/mail/index.vue and
-// app/pages/mail/[threadId].vue just forward their `threadId` in here.
-const props = defineProps<{ threadId?: string }>();
+// EmailThreadView. app/pages/mail/index.vue, app/pages/mail/[threadId].vue
+// and app/pages/mail/draft/[draftId].vue just forward their route param in
+// here - `threadId` and `draftId` are mutually exclusive.
+const props = defineProps<{ threadId?: string; draftId?: string }>();
 
 // Composables
 const route = useRoute();
@@ -37,6 +41,8 @@ const queryClient = useQueryClient();
 const { t } = useI18n();
 const { data: accountData, isLoading: isAccountLoading } = useGetEmailAccount();
 const { finishConnect } = useEmailConnectFlow();
+const { mutateAsync: createDraft, isPending: isCreatingDraft } =
+  useCreateEmailDraft();
 
 // Finish the connect flow on return from Google (useEmailConnectFlow.ts).
 // finishConnect() already toasts its own error (useEmailConnectFlow.ts's
@@ -52,7 +58,6 @@ onMounted(async () => {
 
 // Refs
 const searchInput = ref('');
-const isComposeOpen = ref(false);
 
 // Computed
 const isConnected = computed(() => accountData.value?.connected === true);
@@ -86,7 +91,11 @@ watch(
   (lastSyncedAt, previousLastSyncedAt) => {
     // `previousLastSyncedAt === undefined` is the initial account-data
     // arrival (nothing to invalidate yet, not a completed sync).
-    if (previousLastSyncedAt === undefined || lastSyncedAt === previousLastSyncedAt) return;
+    if (
+      previousLastSyncedAt === undefined ||
+      lastSyncedAt === previousLastSyncedAt
+    )
+      return;
     queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
   },
 );
@@ -107,6 +116,18 @@ const threadsQuery = useGetEmailThreads(filters);
 const searchResult = useSearchEmail(searchInput);
 const categoriesQuery = useGetEmailCategories();
 const pendingDraftsQuery = useGetPendingDrafts();
+
+// `/mail/draft/:draftId` (new mail, no thread below it - see the entry
+// points table in docs/email/drafts-change-request.md, section 2). Only
+// fetches once a draftId is actually being viewed; a 404 (draft already
+// sent/discarded elsewhere) surfaces as `standaloneDraftQuery.isError`,
+// rendered as a "not found" message rather than an error toast.
+const isDraftRoute = computed(() => !!props.draftId);
+const standaloneDraftId = computed(() => props.draftId ?? null);
+const standaloneDraftQuery = useGetEmailDraft(standaloneDraftId);
+const standaloneDraft = computed(
+  () => standaloneDraftQuery.data.value?.draft ?? null,
+);
 
 const listThreads = computed<EmailThreadSummary[]>(() => {
   if (isSearching.value) return searchResult.data.value?.threads ?? [];
@@ -178,8 +199,20 @@ function loadMoreThreads() {
   if (threadsQuery.hasNextPage.value) threadsQuery.fetchNextPage();
 }
 
-function handleComposed(_result: SendEmailResponse) {
-  isComposeOpen.value = false;
+// Compose creates the local draft row up front (docs/email/drafts-change-request.md,
+// "Creation timing"), then routes to its own page - EmailDraftPanel is the
+// only surface that ever renders it, there's no more modal to open here. A
+// `kind: 'new'` draft carries no `threadId`, so it can never hit the
+// one-active-draft-per-thread 409; the catch here only stops a failed
+// create (already toasted by the mutation's onError) from also surfacing as
+// an unhandled promise rejection.
+async function handleCompose() {
+  try {
+    const { draft } = await createDraft({ kind: 'new' });
+    router.push({ path: `/mail/draft/${draft.id}` });
+  } catch {
+    // Already toasted by the mutation's onError.
+  }
 }
 </script>
 
@@ -189,6 +222,7 @@ function handleComposed(_result: SendEmailResponse) {
   </div>
   <EmailConnectPrompt v-else-if="!isConnected" />
   <div v-else class="flex h-full min-h-0">
+    <!-- Sidebar -->
     <EmailSidebar
       v-if="account"
       :account="account"
@@ -199,12 +233,14 @@ function handleComposed(_result: SendEmailResponse) {
       :label-id="filters.labelId"
       :is-searching="isSearching"
       :pending-drafts-count="pendingDraftsCount"
-      @compose="isComposeOpen = true"
+      :is-composing="isCreatingDraft"
+      @compose="handleCompose"
       @search="handleSearch"
       @select-folder="selectFolder"
       @select-category="selectCategory"
       @select-label="selectLabel"
     />
+    <!-- Thread list -->
     <EmailThreadList
       :threads="listThreads"
       :categories="categoriesQuery.data.value?.categories ?? []"
@@ -221,24 +257,33 @@ function handleComposed(_result: SendEmailResponse) {
       @open="openThread"
       @load-more="loadMoreThreads"
     />
+    <!-- Thread view -->
     <EmailThreadView
       v-if="props.threadId"
       :thread-id="props.threadId"
       :filters="filters"
     />
+    <!-- Draft view if draft-only route -->
+    <div v-else-if="isDraftRoute" class="flex min-h-0 flex-1 flex-col">
+      <div
+        v-if="standaloneDraftQuery.isLoading.value"
+        class="flex flex-1 items-center justify-center"
+      >
+        <Spinner />
+      </div>
+      <p
+        v-else-if="standaloneDraftQuery.isError.value || !standaloneDraft"
+        class="flex flex-1 items-center justify-center text-sm text-muted-foreground"
+      >
+        {{ t('email.draft.notFound') }}
+      </p>
+      <EmailDraftPanel v-else :draft="standaloneDraft" />
+    </div>
     <div
       v-else
       class="flex flex-1 items-center justify-center text-sm text-muted-foreground"
     >
       {{ t('email.thread.selectPrompt') }}
     </div>
-
-    <EmailComposeDialog
-      v-model:open="isComposeOpen"
-      :title="t('email.compose.newTitle')"
-      subject=""
-      content=""
-      @sent="handleComposed"
-    />
   </div>
 </template>

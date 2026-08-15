@@ -15,7 +15,11 @@ export interface MailAddress {
 }
 
 export interface MailAttachmentMeta {
-  /** Opaque id, scoped to the message it was found on. Pass to `getAttachment`. */
+  /**
+   * Opaque id, scoped to the message it was found on. Pass to `getAttachment`
+   * for a `MailMessage`'s attachment, or to `getDraftAttachment` (with the
+   * draft id, not a message id) for a `MailDraft`'s attachment.
+   */
   id: string;
   filename: string;
   mimeType: string;
@@ -142,6 +146,31 @@ export interface SendMailResult {
   threadId: MailProviderId;
 }
 
+// --- Drafts -----------------------------------------------------------
+
+/**
+ * Listing-friendly draft shape, for the Drafts folder. `id` is the draft's
+ * own, stable identity: a Gmail draft is a container whose contained message
+ * (and that message's id) is replaced wholesale on every `updateDraft`.
+ * Persist only `id`; nothing outside this package may key on the contained
+ * message's id.
+ */
+export interface MailDraftSummary {
+  id: MailProviderId;
+  threadId: MailProviderId;
+  to: MailAddress[];
+  cc: MailAddress[];
+  bcc: MailAddress[];
+  subject: string | null;
+  snippet: string;
+  date: Date;
+}
+
+/** Full draft: `MailDraftSummary` plus the parsed body and attachment metadata. */
+export interface MailDraft extends MailDraftSummary {
+  body: MailBody;
+}
+
 // --- Mailbox actions ------------------------------------------------------
 
 export interface MailActionResult {
@@ -198,6 +227,30 @@ export interface MailProvider {
   /** Sends a new message, or a reply when `input.thread` is set. */
   send(input: SendMailInput): Promise<SendMailResult>;
 
+  /**
+   * Creates a Gmail draft from `input`. For a reply/forward draft, set
+   * `input.thread` so the draft carries `threadId` plus `In-Reply-To` and
+   * `References` headers from the start.
+   */
+  createDraft(input: SendMailInput): Promise<MailDraft>;
+
+  /**
+   * Replaces the draft's message wholesale; Gmail has no partial update.
+   * `input.thread` must be re-supplied on every call for a reply/forward
+   * draft, dropping it on one save detaches the draft from its thread.
+   */
+  updateDraft(draftId: MailProviderId, input: SendMailInput): Promise<MailDraft>;
+
+  getDraft(draftId: MailProviderId): Promise<MailDraft>;
+
+  /** Every draft in the mailbox, for the Drafts folder listing. Paginates internally. */
+  listDrafts(): Promise<MailDraftSummary[]>;
+
+  /** Sends the draft; Gmail deletes it server-side. Returns the same shape as `send`. */
+  sendDraft(draftId: MailProviderId): Promise<SendMailResult>;
+
+  deleteDraft(draftId: MailProviderId): Promise<void>;
+
   /** `archived: true` removes the message from the inbox; `false` restores it. */
   setArchived(messageId: MailProviderId, archived: boolean): Promise<MailActionResult>;
   trashMessage(messageId: MailProviderId): Promise<MailActionResult>;
@@ -210,4 +263,12 @@ export interface MailProvider {
   search(query: string, pageToken?: string | null): Promise<MailSearchResult>;
 
   getAttachment(messageId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent>;
+
+  /**
+   * Same as `getAttachment`, addressed by draft id instead of message id.
+   * A draft's contained message id changes on every `updateDraft`, so a
+   * caller can never hold one to pass to `getAttachment`; an attachment on a
+   * draft is therefore only ever reachable through the draft it belongs to.
+   */
+  getDraftAttachment(draftId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent>;
 }

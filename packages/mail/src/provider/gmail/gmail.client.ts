@@ -33,11 +33,11 @@ export class GmailApiError extends Error {
 }
 
 export interface GmailRequestOptions {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: string;
 }
 
-/** GETs or POSTs a Gmail REST path (relative to `/gmail/v1/`), retrying transient failures. */
+/** GETs, POSTs or PUTs a Gmail REST path (relative to `/gmail/v1/`), retrying transient failures. */
 export async function gmailRequest<T>(
   getAccessToken: () => Promise<string>,
   path: string,
@@ -45,6 +45,21 @@ export async function gmailRequest<T>(
 ): Promise<T> {
   return retryExpoBackoff(
     () => performGmailRequest<T>(getAccessToken, path, options),
+    MAX_RETRIES,
+    INITIAL_RETRY_DELAY_MS,
+    MAX_RETRY_DELAY_MS,
+    isRetryableGmailError,
+  );
+}
+
+/** Same as `gmailRequest`, for endpoints that reply with an empty body (e.g. `DELETE`). */
+export async function gmailRequestVoid(
+  getAccessToken: () => Promise<string>,
+  path: string,
+  options: GmailRequestOptions = {},
+): Promise<void> {
+  return retryExpoBackoff(
+    () => performGmailRequestVoid(getAccessToken, path, options),
     MAX_RETRIES,
     INITIAL_RETRY_DELAY_MS,
     MAX_RETRY_DELAY_MS,
@@ -61,6 +76,23 @@ async function performGmailRequest<T>(
   path: string,
   options: GmailRequestOptions,
 ): Promise<T> {
+  const response = await fetchGmail(getAccessToken, path, options);
+  return (await response.json()) as T;
+}
+
+async function performGmailRequestVoid(
+  getAccessToken: () => Promise<string>,
+  path: string,
+  options: GmailRequestOptions,
+): Promise<void> {
+  await fetchGmail(getAccessToken, path, options);
+}
+
+async function fetchGmail(
+  getAccessToken: () => Promise<string>,
+  path: string,
+  options: GmailRequestOptions,
+): Promise<Response> {
   const accessToken = await getAccessToken();
 
   const response = await fetch(`${GMAIL_API_BASE_URL}/${path}`, {
@@ -77,5 +109,5 @@ async function performGmailRequest<T>(
     throw await GmailApiError.fromResponse(response);
   }
 
-  return (await response.json()) as T;
+  return response;
 }
