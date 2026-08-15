@@ -186,6 +186,8 @@ export function seedEmailDraft(params: {
   to?: EmailParticipant[];
   subject?: string | null;
   content?: string;
+  /** Plain-text MIME sibling of `content` (docs/email/html-content-change-request.md). */
+  text?: string;
   attachments?: EmailDraftAttachment[];
   status?: EmailDraftStatus;
   providerDraftId?: string;
@@ -199,7 +201,8 @@ export function seedEmailDraft(params: {
     replyToMessageId: params.replyToMessageId ?? null,
     to: params.to ?? [],
     subject: params.subject ?? null,
-    content: params.content ?? 'Draft reply content.',
+    content: params.content ?? '<p>Draft reply content.</p>',
+    text: params.text ?? 'Draft reply content.',
     attachments: params.attachments ?? [],
     status: params.status ?? 'ready',
     providerDraftId: params.providerDraftId ?? null,

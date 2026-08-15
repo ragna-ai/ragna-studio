@@ -67,7 +67,12 @@ import { logger } from '@repo/logger';
 // plain-text, same convention apps/worker/src/mail/message-body.ts uses for
 // the classify/sync lazy-persist path. Both persistence paths below must
 // stay byte-for-byte consistent with that worker helper.
-import { buildReplyQuoteMarkdown, markdownToHtml, toCanonicalMarkdown } from '@repo/mail/content';
+import {
+  buildReplyQuoteHtml,
+  htmlToText,
+  markdownToHtml,
+  toCanonicalMarkdown,
+} from '@repo/mail/content';
 import type {
   MailAddress,
   MailAttachmentContent,
@@ -895,7 +900,10 @@ export async function getEmailThreadDetailForUser({
       labelIds: message.labelIds,
       categoryId: message.categoryId,
       needsReply: message.needsReply,
-      body: { markdown: markdownByMessageId.get(message.id) ?? null },
+      body: {
+        markdown: markdownByMessageId.get(message.id) ?? null,
+        html: message.body?.htmlBody ?? null,
+      },
     })),
   };
 }
@@ -1654,13 +1662,20 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
     // overwritten when the caller actually sent an edited version, and
     // providerDraftId is only cleared when this send actually consumed one
     // (Gmail deletes the draft server-side, so the id no longer resolves).
+    // `text` is written alongside `content` here too - the two must never
+    // drift (docs/email/html-content-change-request.md): prefer the
+    // client's own `text` (its Tiptap `getText()`, sent alongside the same
+    // edited `content`), falling back to the shared stripper only if a
+    // caller sent `draftContent` without a paired `text`.
     await tryCatch(() =>
       updateEmailDraft({
         id: draftId,
         accountId: account.id,
         status: 'sent',
         ...(providerDraftId ? { providerDraftId: null } : {}),
-        ...(draftContent !== undefined ? { content: draftContent } : {}),
+        ...(draftContent !== undefined
+          ? { content: draftContent, text: text ?? htmlToText(draftContent) }
+          : {}),
       }),
     );
   }
@@ -1749,11 +1764,18 @@ async function resolveForwardAttachments({
   }));
 }
 
-// The message being replied to/forwarded may not have its markdown body
+// The message being replied to/forwarded may not have its HTML body
 // persisted yet (docs/email/prd.md's "Sync model" lazy-persist gap, the same
 // one getEmailThreadDetailForUser fills for the thread view): fetch it live
-// and persist it when that happens, instead of quoting an empty body.
-async function resolveMessageMarkdownForQuote({
+// and persist it when that happens, instead of quoting an empty body. A
+// message that turns out to have no HTML part at all (a plain-text-only
+// email, `htmlBody`/`body.html` genuinely null rather than just unpersisted)
+// falls back to rendering its markdown body through the existing
+// `markdownToHtml` renderer, so the quote still has something to show
+// instead of coming out empty - this fallback isn't specified in
+// docs/email/html-content-change-request.md, which only covers the
+// has-HTML case; flagged here rather than guessed silently elsewhere.
+async function resolveMessageHtmlForQuote({
   provider,
   message,
 }: {
@@ -1762,8 +1784,8 @@ async function resolveMessageMarkdownForQuote({
 }): Promise<string> {
   const { data: withBody } = await tryCatch(() => getEmailMessageWithBodyById({ id: message.id }));
 
-  if (withBody?.body?.textBody) {
-    return withBody.body.textBody;
+  if (withBody?.body?.htmlBody) {
+    return withBody.body.htmlBody;
   }
 
   const { error, data: liveMessage } = await tryCatch(() =>
@@ -1788,29 +1810,39 @@ async function resolveMessageMarkdownForQuote({
     }),
   );
 
-  return markdown;
+  return liveMessage.body.html ?? markdownToHtml(markdown);
+}
+
+export interface ReplyDraftContent {
+  content: string;
+  text: string;
 }
 
 // Server-side quoting (docs/email/drafts-change-request.md, "Wire contract":
 // amends prd.md's "the API never appends quotes server-side" - that was
 // right when a send was assembled in the browser, but a draft is now a
 // persisted server object, so the quote has to be in the row at creation.
-// Reuses the client's own helper so there is still exactly one
-// implementation of the quote format.
+// Reuses the client's own helper (docs/email/html-content-change-request.md,
+// "Quoting: HTML blockquote replaces buildReplyQuoteMarkdown") so there is
+// still exactly one implementation of the quote format, shared with
+// apps/worker's AI draft push. `text` is derived from the same HTML via
+// `htmlToText` so the two can never drift relative to each other.
 async function buildReplyDraftContent({
   provider,
   message,
 }: {
   provider: MailProvider;
   message: EmailMessage;
-}): Promise<string> {
-  const markdownBody = await resolveMessageMarkdownForQuote({ provider, message });
+}): Promise<ReplyDraftContent> {
+  const html = await resolveMessageHtmlForQuote({ provider, message });
 
-  return buildReplyQuoteMarkdown({
+  const content = buildReplyQuoteHtml({
     from: toMailAddressFromParticipant(message.from),
     date: message.sentAt,
-    markdownBody,
+    html,
   });
+
+  return { content, text: htmlToText(content) };
 }
 
 /**
@@ -1821,7 +1853,8 @@ async function buildReplyDraftContent({
  * (reply-all is not a kind - the client PATCHes `cc` in separately, so the
  * two must not fight); `forward` leaves `to` empty and seeds the forwarded
  * message's attachment metadata. Both `reply` and `forward` seed `content`
- * with the quoted source message via `buildReplyDraftContent`.
+ * (HTML) and `text` (its plain-text sibling) with the quoted source message
+ * via `buildReplyDraftContent`.
  * `reply`/`forward` 409 (`ActiveDraftConflictError`) when the thread already
  * has a non-terminal draft instead of opening a second one.
  */
@@ -1854,6 +1887,7 @@ export async function createEmailDraftForUser({
       bcc: [],
       subject: null,
       content: '',
+      text: '',
       attachments: [],
       status: 'ready',
     });
@@ -1873,7 +1907,7 @@ export async function createEmailDraftForUser({
   await assertNoActiveDraftOnThread({ accountId: account.id, threadId: thread.id });
 
   const provider = await getGmailProviderForUser({ userId });
-  const content = await buildReplyDraftContent({ provider, message });
+  const { content, text } = await buildReplyDraftContent({ provider, message });
   const attachments =
     kind === 'forward' ? await resolveForwardAttachments({ provider, message }) : [];
 
@@ -1888,6 +1922,7 @@ export async function createEmailDraftForUser({
     bcc: [],
     subject: thread.subject,
     content,
+    text,
     attachments,
     status: 'ready',
   });
@@ -2119,17 +2154,15 @@ async function buildDraftSendMailInput({
     cc: draft.cc.length > 0 ? draft.cc.map(toMailAddressFromParticipant) : undefined,
     bcc: draft.bcc.length > 0 ? draft.bcc.map(toMailAddressFromParticipant) : undefined,
     subject: draft.subject ?? '',
-    // `content` is markdown, the canonical representation everywhere except
-    // the wire edges (docs/email/prd.md, "Content pipeline"). Gmail's own
-    // web/mobile UI renders whatever `text/html` part it finds, not
-    // markdown source, and pushing drafts into the real Gmail drafts folder
-    // exists specifically so they can be reviewed and sent from there
-    // (docs/email/drafts-change-request.md); `markdownToHtml` renders the
-    // intermediate draft body for that html part. The final `/send` path
-    // stays on the client's real Tiptap HTML - never routed through this
-    // renderer - so only the in-progress draft body is affected.
-    html: markdownToHtml(draft.content),
-    text: draft.content,
+    // `content` is HTML, the canonical representation everywhere a human
+    // touches a draft (docs/email/html-content-change-request.md); `text`
+    // is its plain-text MIME sibling, written alongside `content` by
+    // whichever producer wrote it (browser Tiptap `getText()`, or the
+    // worker/API's `htmlToText` helper for the two server-authored
+    // producers) so the two never drift relative to each other. Both are
+    // read straight off the row - nothing is derived at write-back time.
+    html: draft.content,
+    text: draft.text,
     attachments: attachments.length > 0 ? attachments : undefined,
     thread,
   };
@@ -2226,8 +2259,12 @@ async function pushDraftToGmailIfDue({
  * (docs/email/drafts-change-request.md, "Scope > 3"). `origin`, `kind`,
  * `threadId`, `replyToMessageId`, `agentId` are creation-only and rejected
  * at the validation layer (validation/email.schema.ts's `strictObject`).
- * `flush` is control-only: it decides whether this call pushes to Gmail and
- * is never persisted on the row.
+ * `content` (HTML) and `text` (its plain-text MIME sibling) are independent
+ * optional fields - the client sends both together on every autosave
+ * (docs/email/html-content-change-request.md, "Scope > 3"), but each is only
+ * overwritten when actually present in the request body. `flush` is
+ * control-only: it decides whether this call pushes to Gmail and is never
+ * persisted on the row.
  */
 export async function updateEmailDraftForUser({
   userId,
@@ -2237,6 +2274,7 @@ export async function updateEmailDraftForUser({
   bcc,
   subject,
   content,
+  text,
   attachments,
   flush,
 }: {
@@ -2247,6 +2285,7 @@ export async function updateEmailDraftForUser({
   bcc?: EmailParticipant[];
   subject?: string | null;
   content?: string;
+  text?: string;
   attachments?: EmailDraftAttachment[];
   flush?: boolean;
 }): Promise<EmailDraft> {
@@ -2266,6 +2305,7 @@ export async function updateEmailDraftForUser({
       ...(bcc !== undefined ? { bcc } : {}),
       ...(subject !== undefined ? { subject } : {}),
       ...(content !== undefined ? { content } : {}),
+      ...(text !== undefined ? { text } : {}),
       ...(attachments !== undefined ? { attachments } : {}),
     }),
   );

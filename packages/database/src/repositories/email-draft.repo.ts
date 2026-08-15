@@ -56,7 +56,15 @@ export async function getEmailDraftByProviderDraftId({
 type UpdateEmailDraftFields = Partial<
   Pick<
     NewEmailDraft,
-    'content' | 'status' | 'to' | 'cc' | 'bcc' | 'subject' | 'providerDraftId' | 'attachments'
+    | 'content'
+    | 'text'
+    | 'status'
+    | 'to'
+    | 'cc'
+    | 'bcc'
+    | 'subject'
+    | 'providerDraftId'
+    | 'attachments'
   >
 >;
 

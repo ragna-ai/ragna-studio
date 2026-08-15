@@ -269,11 +269,12 @@ export const emailController = new Hono()
   /**
    * [PATCH] /email/draft/:draftId
    * Autosave endpoint, widened to the full editable set: any of
-   * `{ to, cc, bcc, subject, content, attachments }`, plus a control-only
-   * `flush?: boolean` that forces this call to push to Gmail regardless of
-   * the attachment write-back debounce rule (set on panel close and before
-   * send). Creation-only fields (`origin`, `kind`, `threadId`,
-   * `replyToMessageId`, `agentId`) are rejected at the validation layer.
+   * `{ to, cc, bcc, subject, content, text, attachments }`, plus a
+   * control-only `flush?: boolean` that forces this call to push to Gmail
+   * regardless of the attachment write-back debounce rule (set on panel
+   * close and before send). Creation-only fields (`origin`, `kind`,
+   * `threadId`, `replyToMessageId`, `agentId`) are rejected at the
+   * validation layer.
    */
   .patch('/draft/:draftId', validEmailDraftIdParam, validUpdateEmailDraftBody, async (c) => {
     const user = c.get('user');

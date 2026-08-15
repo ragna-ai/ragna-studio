@@ -11,7 +11,6 @@ import {
   deleteTable as deleteTableCommand,
   formatText as formatTextCommand,
   getCharacterCount,
-  getDocumentMarkdown,
   getLinkUrl,
   getWordCount,
   insertImage as insertImageCommand,
@@ -33,14 +32,14 @@ export interface UseEmailComposeEditorOptions {
   content: string;
   placeholder?: string;
   autofocus?: 'start' | 'end';
-  onUpdate?: (markdown: string) => void;
+  onUpdate?: (html: string) => void;
 }
 
 /**
  * One Tiptap Editor instance for the compose/reply/draft-edit box
- * (docs/email/prd.md, "Content pipeline": editor is markdown-native, HTML
- * only appears at send time via `editor.getHTML()`). Same command surface
- * as ~/features/document/composables/useDocumentEditor.ts and
+ * (docs/email/html-content-change-request.md: editor is HTML-native,
+ * `contentType: 'html'` below). Same command surface as
+ * ~/features/document/composables/useDocumentEditor.ts and
  * ~/features/task/composables/useTaskDescriptionEditor.ts (mirrored, not
  * shared, same reasoning as the task composable: each feature mounts its
  * own instance), so it drives the document feature's EditorMenu.vue toolbar
@@ -52,6 +51,7 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
   onMounted(() => {
     editor.value = createDocumentEditor({
       content: options.content,
+      contentType: 'html',
       placeholder: options.placeholder,
       autofocus: options.autofocus,
       onUpdate: options.onUpdate,
@@ -98,14 +98,14 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
     return redoCommand(requireEditor());
   }
 
-  /** Serializes the current content back to markdown, sent to the API alongside the editor's HTML. */
-  function getMarkdown(): string {
-    return getDocumentMarkdown(requireEditor());
-  }
-
-  /** The wire format for `html`: `editor.getHTML()` is Tiptap-core, re-exported through `Editor`. */
+  /** The wire format for `content`: `editor.getHTML()` is Tiptap-core, re-exported through `Editor`. */
   function getHtml(): string {
     return requireEditor().getHTML();
+  }
+
+  /** The wire format for `text`: Tiptap's built-in doc-aware plain-text extraction, not a string-stripping helper. */
+  function getText(): string {
+    return requireEditor().getText();
   }
 
   function isInTable(): boolean {
@@ -176,9 +176,15 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
     return getWordCount(requireEditor());
   }
 
-  /** Replaces the editor's content, e.g. hydrating an AI draft's markdown once it arrives. */
-  function setContent(markdown: string) {
-    requireEditor().commands.setContent(markdown);
+  /**
+   * Replaces the editor's content, e.g. hydrating an AI draft's HTML once it
+   * arrives. `contentType: 'html'` must be passed explicitly on every call:
+   * it defaults to `'json'` per call, not per instance (see
+   * `CreateDocumentEditorOptions`'s doc comment in
+   * packages/editor/src/document-editor.ts).
+   */
+  function setContent(html: string) {
+    requireEditor().commands.setContent(html, { contentType: 'html' });
   }
 
   return {
@@ -190,8 +196,8 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
     toggleCodeBlock,
     undo,
     redo,
-    getMarkdown,
     getHtml,
+    getText,
     isInTable,
     insertTable,
     addRowBefore,

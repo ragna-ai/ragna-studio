@@ -199,6 +199,11 @@ export const validUpdateEmailDraftBody = myzValidator(
     bcc: z.array(emailParticipantSchema).optional(),
     subject: z.string().nullable().optional(),
     content: z.string().optional(),
+    // Plain-text MIME sibling of `content`, same optional/partial shape
+    // (docs/email/html-content-change-request.md, "Scope > 3"): the client
+    // sends both together on every autosave, but either can be omitted to
+    // leave the stored value untouched.
+    text: z.string().optional(),
     attachments: z.array(emailDraftAttachmentSchema).optional(),
     // Explicit "push to Gmail now regardless of the attachment debounce
     // rule" signal (docs/email/drafts-change-request.md, "Wire contract").

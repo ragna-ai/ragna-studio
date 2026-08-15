@@ -260,8 +260,14 @@ export const emailDraft = pgTable(
     cc: jsonb('cc').notNull().$type<EmailParticipant[]>().default([]),
     bcc: jsonb('bcc').notNull().$type<EmailParticipant[]>().default([]),
     subject: text('subject'),
-    // Markdown, @repo/editor-managed, same convention as document.content.
+    // HTML (canonical), edited by the user via the now-HTML-native Tiptap
+    // instance (docs/email/html-content-change-request.md).
     content: text('content').notNull().default(''),
+    // Plain-text MIME sibling of `content`, always written alongside it by
+    // whichever producer wrote `content` (browser Tiptap getText(), or the
+    // worker/API's html-to-text helper); never derived at send time
+    // (docs/email/html-content-change-request.md, "Scope > 3").
+    text: text('text').notNull().default(''),
     // The forwarded message's carried-over attachment set; see
     // EmailDraftAttachment above.
     attachments: jsonb('attachments').notNull().$type<EmailDraftAttachment[]>().default([]),

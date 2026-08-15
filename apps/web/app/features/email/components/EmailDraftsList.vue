@@ -54,7 +54,7 @@ function draftLink(draft: EmailDraft): string {
           <span v-if="draft.status === 'generating'" class="rounded-full bg-muted px-2 py-0.5 font-medium">
             {{ t('email.draft.generating') }}
           </span>
-          <span v-else>{{ snippet(draft.content) }}</span>
+          <span v-else>{{ snippet(draft.text) }}</span>
         </p>
       </NuxtLinkLocale>
       <Button

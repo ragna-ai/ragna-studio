@@ -34,6 +34,7 @@
 import { gfm } from '@truto/turndown-plugin-gfm';
 import TurndownService from 'turndown';
 import type { MailBody } from '../provider/mail-provider';
+import { decodeHtmlEntities } from './html-entities';
 
 const NON_CONTENT_TAG_NAMES = new Set(['HEAD', 'STYLE', 'SCRIPT', 'TITLE', 'NOSCRIPT', 'TEMPLATE']);
 const HIDDEN_INLINE_STYLE_RE =
@@ -94,15 +95,4 @@ function stripHtmlTags(html: string): string {
   return decodeHtmlEntities(withoutNoise.replace(/<[^>]*>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_match, code: string) => String.fromCharCode(Number(code)));
 }

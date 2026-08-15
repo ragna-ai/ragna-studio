@@ -36,8 +36,9 @@ import {
 } from '@repo/ai';
 import { logger } from '@repo/logger';
 import {
-  buildReplyQuoteMarkdown,
+  buildReplyQuoteHtml,
   formatThreadForPrompt,
+  htmlToText,
   markdownToHtml,
   type ThreadPromptMessageInput,
 } from '@repo/mail/content';
@@ -98,9 +99,9 @@ export async function generateEmailDraft({
 
   const provider = getGmailProviderForAccount(account);
 
-  let content: string;
+  let markdownContent: string;
   try {
-    content = await runDraftAgent({ account, provider, agentId, threadId });
+    markdownContent = await runDraftAgent({ account, provider, agentId, threadId });
   } catch (error) {
     // Best-effort by design (docs/email/prd.md, "Worker jobs"): a failed
     // draft is discarded, not retried, and never fails the BullMQ job.
@@ -109,13 +110,18 @@ export async function generateEmailDraft({
     return;
   }
 
-  await updateEmailDraft({ id: draft.id, accountId, status: 'ready', content });
+  // The agent only ever writes markdown (DRAFT_TASK_INSTRUCTIONS); converted
+  // to HTML once, here, so `content` is never briefly markdown in a
+  // now-HTML column, e.g. if pushDraftToGmail below bails out early
+  // (docs/email/html-content-change-request.md, "AI-generated drafts").
+  const htmlBody = markdownToHtml(markdownContent);
+  await updateEmailDraft({ id: draft.id, accountId, status: 'ready', content: htmlBody, text: htmlToText(htmlBody) });
 
   // Pushed to Gmail as soon as the draft turns 'ready', without waiting for
   // a user edit (docs/email/drafts-change-request.md, "Decisions": "AI
   // drafts to Gmail" / "Scope > 3"), so the draft is reviewable from Gmail
   // mobile too. Best-effort: never fails this job, see pushDraftToGmail.
-  await pushDraftToGmail({ account, provider, threadId, replyToMessageId, draftId: draft.id, content });
+  await pushDraftToGmail({ account, provider, threadId, replyToMessageId, draftId: draft.id, htmlBody });
 }
 
 async function runDraftAgent({
@@ -223,7 +229,7 @@ interface ReplyDraftContext {
   // real case; null only for a message whose body somehow never got stored,
   // in which case pushDraftToGmail falls back to the live fetch it already
   // makes for the threading headers rather than adding a second fetch path.
-  replyToMarkdownBody: string | null;
+  replyToHtmlBody: string | null;
 }
 
 async function loadReplyDraftContext({
@@ -250,7 +256,7 @@ async function loadReplyDraftContext({
     replyToProviderMessageId: replyToMessage.providerMessageId,
     replyToFrom: toMailAddress(replyToMessage.from),
     replyToDate: replyToMessage.sentAt,
-    replyToMarkdownBody: replyToMessage.body?.textBody ?? null,
+    replyToHtmlBody: replyToMessage.body?.htmlBody ?? null,
   };
 }
 
@@ -266,23 +272,25 @@ function ensureReplySubject(subject: string | null): string {
 
 // Quoted history is appended by the system, never written by the agent
 // (DRAFT_TASK_INSTRUCTIONS above explicitly forbids it), using the same
-// buildReplyQuoteMarkdown a user reply/forward is seeded with (POST
+// buildReplyQuoteHtml a user reply/forward is seeded with (POST
 // /email/draft), so an AI draft and a human reply on the same thread carry
 // identical quoted history byte for byte, whether the draft is sent from
-// Gmail or from our own review UI.
+// Gmail or from our own review UI. buildReplyQuoteHtml already returns a
+// self-contained `<p>` header plus `<blockquote>`, so this is a plain HTML
+// concatenation, not a markdown-style `\n\n` join.
 function buildDraftContentWithQuote({
-  content,
+  htmlBody,
   context,
-  quoteMarkdownBody,
+  quoteHtmlBody,
 }: {
-  content: string;
+  htmlBody: string;
   context: ReplyDraftContext;
-  quoteMarkdownBody: string;
+  quoteHtmlBody: string;
 }): string {
-  return `${content}\n\n${buildReplyQuoteMarkdown({
+  return `${htmlBody}${buildReplyQuoteHtml({
     from: context.replyToFrom,
     date: context.replyToDate,
-    markdownBody: quoteMarkdownBody,
+    html: quoteHtmlBody,
   })}`;
 }
 
@@ -297,14 +305,17 @@ async function pushDraftToGmail({
   threadId,
   replyToMessageId,
   draftId,
-  content,
+  htmlBody,
 }: {
   account: EmailAccount;
   provider: MailProvider;
   threadId: string;
   replyToMessageId: string;
   draftId: string;
-  content: string;
+  // Already converted from the agent's markdown output by the caller
+  // (generateEmailDraft), so this function works in HTML throughout: stored
+  // content, the quote, and the outgoing MIME parts.
+  htmlBody: string;
 }): Promise<void> {
   try {
     const context = await loadReplyDraftContext({ account, threadId, replyToMessageId });
@@ -330,14 +341,16 @@ async function pushDraftToGmail({
     // deliberately two updateEmailDraft calls on that cold path instead of
     // collapsing into one after the fetch: a second local write is cheap,
     // and it's what buys the guarantee that a Gmail outage never leaves the
-    // draft without a usable body. Do not re-merge these.
-    let bodyWithQuote: string | null =
-      context.replyToMarkdownBody !== null
-        ? buildDraftContentWithQuote({ content, context, quoteMarkdownBody: context.replyToMarkdownBody })
-        : null;
+    // draft without a usable body. Do not re-merge these. `text` is derived
+    // from `bodyWithQuote` and saved alongside it every time so the two
+    // columns can never drift relative to each other.
+    let bodyWithQuote: string | null = null;
+    let text: string | null = null;
 
-    if (bodyWithQuote !== null) {
-      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote });
+    if (context.replyToHtmlBody !== null) {
+      bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody: context.replyToHtmlBody });
+      text = htmlToText(bodyWithQuote);
+      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
     }
 
     // The RFC822 Message-ID header and References chain aren't stored on the
@@ -347,15 +360,23 @@ async function pushDraftToGmail({
     // quote source below on the rare miss where nothing was stored yet.
     const fullReplyToMessage = await provider.fetchMessage(context.replyToProviderMessageId, 'full');
 
-    if (bodyWithQuote === null) {
+    if (bodyWithQuote === null || text === null) {
       // Only reached on that rare storage miss: persistMessageBody both
-      // derives the markdown and fills the gap for the next reader, same as
-      // apps/api's resolveMessageMarkdownForQuote does for a user-authored
-      // reply/forward draft.
-      const quoteMarkdownBody =
-        (await persistMessageBody({ messageId: replyToMessageId, body: fullReplyToMessage.body })).textBody ?? '';
-      bodyWithQuote = buildDraftContentWithQuote({ content, context, quoteMarkdownBody });
-      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote });
+      // derives the HTML/markdown pair and fills the gap for the next
+      // reader, same as apps/api's quote-seeding does for a user-authored
+      // reply/forward draft. A genuinely plain-text-only message has no
+      // htmlBody at all (not just unsynced), so fall back through
+      // markdownToHtml the same way apps/api's resolveMessageHtmlForQuote
+      // does - otherwise the quote silently comes out empty instead of
+      // showing the sender's plain-text message.
+      const persistedReplyToBody = await persistMessageBody({
+        messageId: replyToMessageId,
+        body: fullReplyToMessage.body,
+      });
+      const quoteHtmlBody = persistedReplyToBody.htmlBody ?? markdownToHtml(persistedReplyToBody.textBody ?? '');
+      bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody });
+      text = htmlToText(bodyWithQuote);
+      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
     }
 
     if (!fullReplyToMessage.messageIdHeader) {
@@ -366,11 +387,12 @@ async function pushDraftToGmail({
     const created = await provider.createDraft({
       to: context.to.map(toMailAddress),
       subject: context.subject,
-      text: bodyWithQuote,
-      // Gmail's own web/mobile UI renders the text/html part, not the
-      // markdown source; without it a draft opened or sent from Gmail shows
-      // the recipient raw markdown (packages/mail/src/content/markdown-to-html.ts).
-      html: markdownToHtml(bodyWithQuote),
+      // Gmail's own web/mobile UI renders the text/html part; text is the
+      // plain-text MIME sibling derived from the same HTML we just stored,
+      // not the markdown source (docs/email/html-content-change-request.md,
+      // "Outgoing MIME assembly").
+      text,
+      html: bodyWithQuote,
       thread: {
         threadId: context.providerThreadId,
         inReplyToMessageId: fullReplyToMessage.messageIdHeader,

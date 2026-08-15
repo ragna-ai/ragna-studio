@@ -32,6 +32,7 @@
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
     "@truto/turndown-plugin-gfm": "^1.0.3",
+    "isomorphic-dompurify": "^3.22.0",
     "marked": "18.0.9",
     "nodemailer": "^9.0.5",
     "nodemailer-brevo-transport": "^2.2.1",

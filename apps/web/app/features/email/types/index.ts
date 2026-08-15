@@ -126,7 +126,7 @@ export interface EmailMessageDetail {
   labelIds: string[];
   categoryId: string | null;
   needsReply: boolean;
-  body: { markdown: string | null };
+  body: { markdown: string | null; html: string | null };
 }
 
 export interface EmailThreadDetailResponse {
@@ -184,7 +184,7 @@ export interface SendEmailDraftVariables {
   subject: string;
   html: string;
   text: string;
-  /** Final edited markdown, only sent when the draft was changed in the editor. */
+  /** Final edited HTML, only sent when the draft was changed in the editor. */
   content?: string;
   mediaIds?: string[];
   files?: File[];
@@ -232,7 +232,10 @@ export interface EmailDraft {
   cc: EmailParticipant[];
   bcc: EmailParticipant[];
   subject: string | null;
+  /** HTML (docs/email/html-content-change-request.md flips this from markdown). */
   content: string;
+  /** Plain-text MIME sibling of `content`, always written alongside it. */
+  text: string;
   attachments: EmailDraftAttachment[];
   status: EmailDraftStatus;
   providerDraftId: string | null;
@@ -250,9 +253,11 @@ export interface EmailDraftResponse {
 
 /**
  * The full set of fields EmailComposer.vue reports back on every change
- * (recipients, subject, body markdown, forwarded-attachment set), so
+ * (recipients, subject, body HTML/text, forwarded-attachment set), so
  * EmailDraftPanel.vue can debounce them into one `PATCH /email/draft/:id`
- * call without reaching into the composer's internal editor/refs.
+ * call without reaching into the composer's internal editor/refs. `content`
+ * and `text` are always sent together (docs/email/html-content-change-request.md,
+ * "Scope > 3"): one editor snapshot, never one without the other.
  */
 export interface EmailDraftEditableFields {
   to: EmailParticipant[];
@@ -260,6 +265,7 @@ export interface EmailDraftEditableFields {
   bcc: EmailParticipant[];
   subject: string;
   content: string;
+  text: string;
   attachments: EmailDraftAttachment[];
 }
 

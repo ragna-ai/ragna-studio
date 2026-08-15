@@ -89,7 +89,7 @@ const isDraftGone = ref(false);
 // (with autosave wired to its `onUpdate`) when safe, the read-only one
 // (same composable EmailMessageItem.vue uses for messages) when not - never
 // both, and never the editable one at all when unsafe. `controller` (the
-// editable-only command surface: getMarkdown/getHtml/the toolbar) stays
+// editable-only command surface: getHtml/getText/the toolbar) stays
 // `undefined` in the unsafe branch; `requireController()` below is the one
 // place that turns "used it anyway" into a thrown error instead of a silent
 // bad read, for the same reason useEmailComposeEditor.ts's own
@@ -136,13 +136,24 @@ function toParticipants(addresses: string[]): EmailParticipant[] {
   return addresses.map((email) => ({ email, name: null }));
 }
 
+/** The HTML/text pair every draft-writing payload below sends together, straight off the live editor (see EmailDraftEditableFields's doc comment). */
+function buildContentFields(): Pick<EmailDraftEditableFields, 'content' | 'text'> {
+  const editorController = requireController();
+  return {
+    content: editorController.getHtml(),
+    text: editorController.getText(),
+  };
+}
+
 function buildSnapshot(): EmailDraftEditableFields {
+  const { content, text } = buildContentFields();
   return {
     to: toParticipants(to.value),
     cc: toParticipants(cc.value),
     bcc: toParticipants(bcc.value),
     subject: subject.value,
-    content: requireController().getMarkdown(),
+    content,
+    text,
     attachments: draftAttachments.value,
   };
 }
@@ -167,8 +178,8 @@ async function saveDraftNow(flush: boolean) {
 // Debounced ~1s after the last edit (docs/email/drafts-change-request.md,
 // section 3), and debounced *here* rather than in EmailDraftPanel.vue: the
 // real cost per call isn't building the snapshot object, it's
-// `getMarkdown()` re-serializing the whole editor document, and that should
-// run once per pause in typing, not once per keystroke.
+// `getHtml()`/`getText()` re-serializing the whole editor document, and
+// that should run once per pause in typing, not once per keystroke.
 const emitChange = useDebounceFn(() => {
   void saveDraftNow(false);
 }, 1000);
@@ -206,7 +217,7 @@ async function handleSend() {
   await saveDraftNow(true);
 
   try {
-    const editorController = requireController();
+    const { content, text } = buildContentFields();
     const result = await sendEmailDraft({
       draftId: props.draft.id,
       threadId: props.draft.threadId,
@@ -214,9 +225,9 @@ async function handleSend() {
       cc: cc.value.length > 0 ? cc.value : undefined,
       bcc: bcc.value.length > 0 ? bcc.value : undefined,
       subject: subject.value.trim(),
-      html: editorController.getHtml(),
-      text: editorController.getMarkdown(),
-      content: editorController.getMarkdown(),
+      html: content,
+      text,
+      content,
       files: files.value,
       mediaIds: media.value.map((item) => item.id),
     });
