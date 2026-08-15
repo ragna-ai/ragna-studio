@@ -1,7 +1,16 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
-import { deriveThreadSummaryPatch, patchThreadDetail, patchThreadInLists } from '~/features/email/lib/email-thread-cache';
+import {
+  deriveThreadSummaryPatch,
+  patchThreadDetail,
+  patchThreadInLists,
+} from '~/features/email/lib/email-thread-cache';
 import type {
   EmailThreadActionResponse,
   EmailThreadDetailResponse,
@@ -44,7 +53,8 @@ export function useGetEmailThreads(
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length + 1 : undefined,
     enabled: () => toValue(enabled),
   });
 }
@@ -58,9 +68,12 @@ export function useGetEmailThreads(
 export function useGetEmailThread(threadId: MaybeRefOrGetter<string | null>) {
   const { $api } = useNuxtApp();
   return useQuery<EmailThreadDetailResponse>({
-    queryKey: emailKeys.thread(threadId as MaybeRefOrGetter<string>),
+    queryKey: emailKeys.thread(threadId),
     queryFn: ({ signal }) =>
-      $api<EmailThreadDetailResponse>(`/email/thread/${toValue(threadId)}`, { method: 'GET', signal }),
+      $api<EmailThreadDetailResponse>(`/email/thread/${toValue(threadId)}`, {
+        method: 'GET',
+        signal,
+      }),
     enabled: () => !!toValue(threadId),
   });
 }
@@ -83,36 +96,82 @@ function applyThreadActionSuccess(
   if (leavesCurrentFolder) {
     patchThreadInLists(queryClient, threadId, { remove: true });
   } else if (messages.length > 0) {
-    patchThreadInLists(queryClient, threadId, deriveThreadSummaryPatch(messages));
+    patchThreadInLists(
+      queryClient,
+      threadId,
+      deriveThreadSummaryPatch(messages),
+    );
   }
 }
 
-/** [POST] /email/thread/:threadId/archive */
-export function useSetThreadArchived(filters: MaybeRefOrGetter<EmailThreadListFilters>) {
+/**
+ * [POST] /email/thread/:threadId/archive - optimistic removal + unconditional
+ * onSettled invalidation, same shape as useDiscardEmailDraft
+ * (useEmailDraftApi.ts): onMutate removes the row so it disappears
+ * immediately, onSettled always re-syncs with the server regardless of
+ * outcome (a failure un-does the optimistic removal via refetch, a success
+ * just confirms it), so there's no snapshot to keep consistent by hand. This
+ * also means a background sync's invalidation of the same query
+ * (EmailClient.vue's lastSyncedAt watcher) can never get clobbered by a
+ * stale rollback landing after it.
+ */
+export function useSetThreadArchived(
+  filters: MaybeRefOrGetter<EmailThreadListFilters>,
+) {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
 
-  return useMutation<EmailThreadActionResponse, unknown, { threadId: string; archived: boolean }>({
+  return useMutation<
+    EmailThreadActionResponse,
+    unknown,
+    { threadId: string; archived: boolean }
+  >({
     mutationFn: ({ threadId, archived }) =>
-      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/archive`, { method: 'POST', body: { archived } }),
-    onSuccess: ({ messages }, { threadId, archived }) => {
-      applyThreadActionSuccess(queryClient, threadId, messages, archived && toValue(filters).folder === 'inbox');
+      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/archive`, {
+        method: 'POST',
+        body: { archived },
+      }),
+    // Archiving only leaves the current view when archiving *into* it from
+    // the inbox. Unarchiving (`archived: false`) never removes a row, so
+    // there's nothing to predict optimistically for it.
+    onMutate: ({ threadId, archived }) => {
+      if (archived && toValue(filters).folder === 'inbox') {
+        patchThreadInLists(queryClient, threadId, { remove: true });
+      }
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to archive thread')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to archive thread')),
+    onSettled: (_data, _error, { threadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
+      queryClient.invalidateQueries({ queryKey: emailKeys.thread(threadId) });
+    },
   });
 }
 
-/** [POST] /email/thread/:threadId/trash */
-export function useSetThreadTrashed(filters: MaybeRefOrGetter<EmailThreadListFilters>) {
+/** [POST] /email/thread/:threadId/trash - see useSetThreadArchived's doc comment for the optimistic/onSettled shape. */
+export function useSetThreadTrashed(
+  filters: MaybeRefOrGetter<EmailThreadListFilters>,
+) {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
 
   return useMutation<EmailThreadActionResponse, unknown, { threadId: string }>({
-    mutationFn: ({ threadId }) => $api<EmailThreadActionResponse>(`/email/thread/${threadId}/trash`, { method: 'POST' }),
-    onSuccess: ({ messages }, { threadId }) => {
-      applyThreadActionSuccess(queryClient, threadId, messages, toValue(filters).folder !== 'trashed');
+    mutationFn: ({ threadId }) =>
+      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/trash`, {
+        method: 'POST',
+      }),
+    // Trashing leaves every view except Trash itself.
+    onMutate: ({ threadId }) => {
+      if (toValue(filters).folder !== 'trashed') {
+        patchThreadInLists(queryClient, threadId, { remove: true });
+      }
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to move thread to trash')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to move thread to trash')),
+    onSettled: (_data, _error, { threadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
+      queryClient.invalidateQueries({ queryKey: emailKeys.thread(threadId) });
+    },
   });
 }
 
@@ -122,18 +181,33 @@ export function useSetThreadTrashed(filters: MaybeRefOrGetter<EmailThreadListFil
  * still-starred messages must stay), not from the single message's
  * requested `starred` value.
  */
-export function useSetThreadStarred(filters: MaybeRefOrGetter<EmailThreadListFilters>) {
+export function useSetThreadStarred(
+  filters: MaybeRefOrGetter<EmailThreadListFilters>,
+) {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
 
-  return useMutation<EmailThreadActionResponse, unknown, { threadId: string; starred: boolean }>({
+  return useMutation<
+    EmailThreadActionResponse,
+    unknown,
+    { threadId: string; starred: boolean }
+  >({
     mutationFn: ({ threadId, starred }) =>
-      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/star`, { method: 'POST', body: { starred } }),
+      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/star`, {
+        method: 'POST',
+        body: { starred },
+      }),
     onSuccess: ({ messages }, { threadId }) => {
       const stillStarred = messages.some((message) => message.isStarred);
-      applyThreadActionSuccess(queryClient, threadId, messages, toValue(filters).folder === 'starred' && !stillStarred);
+      applyThreadActionSuccess(
+        queryClient,
+        threadId,
+        messages,
+        toValue(filters).folder === 'starred' && !stillStarred,
+      );
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to update star')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to update star')),
   });
 }
 
@@ -142,12 +216,20 @@ export function useSetThreadRead() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
 
-  return useMutation<EmailThreadActionResponse, unknown, { threadId: string; read: boolean }>({
+  return useMutation<
+    EmailThreadActionResponse,
+    unknown,
+    { threadId: string; read: boolean }
+  >({
     mutationFn: ({ threadId, read }) =>
-      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/read`, { method: 'POST', body: { read } }),
+      $api<EmailThreadActionResponse>(`/email/thread/${threadId}/read`, {
+        method: 'POST',
+        body: { read },
+      }),
     onSuccess: ({ messages }, { threadId }) => {
       applyThreadActionSuccess(queryClient, threadId, messages, false);
     },
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to update read status')),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to update read status')),
   });
 }
