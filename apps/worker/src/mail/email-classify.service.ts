@@ -66,7 +66,7 @@ export async function classifyEmailMessage({
   const body = await ensureMessageBody({ provider, message });
   const categories = await listEmailCategoriesByAccountId({ accountId });
 
-  const category = await classifyBestEffort({ message, markdownBody: body.textBody, categories });
+  const category = await classifyBestEffort({ message, text: body.textBody, categories });
   const shouldAutoDraft = await resolvesToAutoDraft({ accountId, message, category });
 
   await updateEmailMessageClassification({
@@ -107,11 +107,11 @@ async function resolvesToAutoDraft({
 
 async function classifyBestEffort({
   message,
-  markdownBody,
+  text,
   categories,
 }: {
   message: EmailMessageWithBody;
-  markdownBody: string | null;
+  text: string | null;
   categories: EmailCategory[];
 }): Promise<EmailCategory | undefined> {
   if (categories.length === 0) {
@@ -119,7 +119,7 @@ async function classifyBestEffort({
   }
 
   try {
-    const categoryId = await classifyWithModel({ message, markdownBody, categories });
+    const categoryId = await classifyWithModel({ message, text, categories });
     return categoryId ? categories.find((category) => category.id === categoryId) : undefined;
   } catch (error) {
     logger.error(
@@ -132,11 +132,11 @@ async function classifyBestEffort({
 
 async function classifyWithModel({
   message,
-  markdownBody,
+  text,
   categories,
 }: {
   message: EmailMessageWithBody;
-  markdownBody: string | null;
+  text: string | null;
   categories: EmailCategory[];
 }): Promise<string | null> {
   const excerpt = formatThreadForPrompt(
@@ -145,7 +145,7 @@ async function classifyWithModel({
         from: toMailAddress(message.from),
         date: message.sentAt,
         subject: message.subject,
-        markdownBody: markdownBody ?? message.snippet ?? '',
+        text: text ?? message.snippet ?? '',
       },
     ],
     { maxCharacters: MAX_CLASSIFY_CHARS },

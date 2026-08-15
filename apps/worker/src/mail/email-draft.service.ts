@@ -206,7 +206,7 @@ async function buildThreadContext({
       from: toMailAddress(message.from),
       date: message.sentAt,
       subject: message.subject,
-      markdownBody: body.textBody ?? message.snippet ?? '',
+      text: body.textBody ?? message.snippet ?? '',
     });
   }
 

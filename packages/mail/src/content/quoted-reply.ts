@@ -1,11 +1,11 @@
 // packages/mail/src/content/quoted-reply.ts
 //
-// Strips quoted reply chains from canonical markdown. Operates on markdown,
-// not the source HTML: `formatThreadForPrompt` (the only caller) receives
-// already-converted `markdownBody` strings, and stripping is a
-// prompt-assembly step, not part of the stored canonical markdown (see
-// html-to-markdown.ts). Two heuristics, chosen to match how turndown
-// renders the common quote shapes:
+// Strips quoted reply chains from canonical text (plain-text or, as a
+// fallback, markdown converted from HTML — see `toCanonicalText`).
+// `formatThreadForPrompt` (the only caller) receives already-converted
+// `text` strings; stripping is a prompt-assembly step, not part of the
+// stored canonical text. Two heuristics, chosen to match both plain-text
+// `>` quoting and how turndown renders the common HTML quote shapes:
 //
 // 1. Gmail/Outlook/etc. wrap history in `<blockquote>`, usually preceded by
 //    an "On DATE, NAME wrote:" attribution line. Turndown renders the

@@ -2,10 +2,17 @@ import type { MailAttachmentMeta } from '@repo/mail/provider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
-import { deriveThreadSummaryPatch, patchThreadDetail, patchThreadInLists } from '~/features/email/lib/email-thread-cache';
+import {
+  deriveThreadSummaryPatch,
+  patchThreadDetail,
+  patchThreadInLists,
+} from '~/features/email/lib/email-thread-cache';
 import type { EmailMessageActionResponse } from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
-import { downloadBlob, filenameFromContentDisposition } from '~/lib/file-export';
+import {
+  downloadBlob,
+  filenameFromContentDisposition,
+} from '~/lib/file-export';
 
 /** [GET] /email/message/:messageId/attachments response. */
 interface EmailMessageAttachmentsResponse {
@@ -29,9 +36,16 @@ function applyMessageActionSuccess(
 ): void {
   const mergedMessages = patchThreadDetail(queryClient, threadId, [message]);
   if (mergedMessages) {
-    patchThreadInLists(queryClient, threadId, deriveThreadSummaryPatch(mergedMessages));
+    patchThreadInLists(
+      queryClient,
+      threadId,
+      deriveThreadSummaryPatch(mergedMessages),
+    );
   } else {
-    patchThreadInLists(queryClient, threadId, { isUnread: message.isUnread, isStarred: message.isStarred });
+    patchThreadInLists(queryClient, threadId, {
+      isUnread: message.isUnread,
+      isStarred: message.isStarred,
+    });
   }
 }
 
@@ -44,11 +58,25 @@ interface MessageActionVariables {
 export function useSetMessageArchived() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailMessageActionResponse, unknown, MessageActionVariables & { archived: boolean }>({
+  return useMutation<
+    EmailMessageActionResponse,
+    unknown,
+    MessageActionVariables & { archived: boolean }
+  >({
     mutationFn: ({ messageId, archived }) =>
-      $api<EmailMessageActionResponse>(`/email/message/${messageId}/archive`, { method: 'POST', body: { archived } }),
-    onSuccess: ({ message }, { threadId }) => applyMessageActionSuccess(queryClient, threadId, message),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to archive message')),
+      $api<EmailMessageActionResponse>(`/email/message/${messageId}/archive`, {
+        method: 'POST',
+        body: { archived },
+      }),
+    onMutate: ({ threadId, messageId }) => {
+      // TODO: Optimistically remove the message from the list so it disappears from
+      // the UI immediately, even before the server responds. If the archive
+      // fails, we'll roll back to the previous state by invalidating the queries in onSettled.
+    },
+    onSuccess: ({ message }, { threadId }) =>
+      applyMessageActionSuccess(queryClient, threadId, message),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to archive message')),
   });
 }
 
@@ -56,11 +84,26 @@ export function useSetMessageArchived() {
 export function useSetMessageTrashed() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailMessageActionResponse, unknown, MessageActionVariables>({
+  return useMutation<
+    EmailMessageActionResponse,
+    unknown,
+    MessageActionVariables
+  >({
     mutationFn: ({ messageId }) =>
-      $api<EmailMessageActionResponse>(`/email/message/${messageId}/trash`, { method: 'POST' }),
-    onSuccess: ({ message }, { threadId }) => applyMessageActionSuccess(queryClient, threadId, message),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to move message to trash')),
+      $api<EmailMessageActionResponse>(`/email/message/${messageId}/trash`, {
+        method: 'POST',
+      }),
+    onMutate: ({ threadId, messageId }) => {
+      // TODO: Optimistically remove the message from the list so it disappears from
+      // the UI immediately, even before the server responds. If the trash
+      // fails, we'll roll back to the previous state by invalidating the queries in onSettled.
+    },
+    onSuccess: ({ message }, { threadId }) =>
+      applyMessageActionSuccess(queryClient, threadId, message),
+    onError: (error) =>
+      toast.error(
+        extractErrorMessage(error, 'Failed to move message to trash'),
+      ),
   });
 }
 
@@ -68,11 +111,20 @@ export function useSetMessageTrashed() {
 export function useSetMessageStarred() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailMessageActionResponse, unknown, MessageActionVariables & { starred: boolean }>({
+  return useMutation<
+    EmailMessageActionResponse,
+    unknown,
+    MessageActionVariables & { starred: boolean }
+  >({
     mutationFn: ({ messageId, starred }) =>
-      $api<EmailMessageActionResponse>(`/email/message/${messageId}/star`, { method: 'POST', body: { starred } }),
-    onSuccess: ({ message }, { threadId }) => applyMessageActionSuccess(queryClient, threadId, message),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to update star')),
+      $api<EmailMessageActionResponse>(`/email/message/${messageId}/star`, {
+        method: 'POST',
+        body: { starred },
+      }),
+    onSuccess: ({ message }, { threadId }) =>
+      applyMessageActionSuccess(queryClient, threadId, message),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to update star')),
   });
 }
 
@@ -80,11 +132,20 @@ export function useSetMessageStarred() {
 export function useSetMessageRead() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailMessageActionResponse, unknown, MessageActionVariables & { read: boolean }>({
+  return useMutation<
+    EmailMessageActionResponse,
+    unknown,
+    MessageActionVariables & { read: boolean }
+  >({
     mutationFn: ({ messageId, read }) =>
-      $api<EmailMessageActionResponse>(`/email/message/${messageId}/read`, { method: 'POST', body: { read } }),
-    onSuccess: ({ message }, { threadId }) => applyMessageActionSuccess(queryClient, threadId, message),
-    onError: (error) => toast.error(extractErrorMessage(error, 'Failed to update read status')),
+      $api<EmailMessageActionResponse>(`/email/message/${messageId}/read`, {
+        method: 'POST',
+        body: { read },
+      }),
+    onSuccess: ({ message }, { threadId }) =>
+      applyMessageActionSuccess(queryClient, threadId, message),
+    onError: (error) =>
+      toast.error(extractErrorMessage(error, 'Failed to update read status')),
   });
 }
 
@@ -102,10 +163,13 @@ export function useGetEmailMessageAttachments(
   return useQuery<EmailMessageAttachmentsResponse>({
     queryKey: emailKeys.attachments(messageId),
     queryFn: ({ signal }) =>
-      $api<EmailMessageAttachmentsResponse>(`/email/message/${toValue(messageId)}/attachments`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<EmailMessageAttachmentsResponse>(
+        `/email/message/${toValue(messageId)}/attachments`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: options.enabled,
   });
 }
@@ -119,7 +183,11 @@ export function useGetEmailMessageAttachments(
  */
 export function useDownloadEmailAttachment() {
   const { $api } = useNuxtApp();
-  return useMutation<void, unknown, { messageId: string; attachment: MailAttachmentMeta }>({
+  return useMutation<
+    void,
+    unknown,
+    { messageId: string; attachment: MailAttachmentMeta }
+  >({
     mutationFn: async ({ messageId, attachment }) => {
       const response = await $api.raw<Blob>(
         `/email/message/${messageId}/attachment/${attachment.id}`,
@@ -129,7 +197,9 @@ export function useDownloadEmailAttachment() {
         throw new Error('Empty attachment response');
       }
       const filename =
-        filenameFromContentDisposition(response.headers.get('content-disposition')) ?? attachment.filename;
+        filenameFromContentDisposition(
+          response.headers.get('content-disposition'),
+        ) ?? attachment.filename;
       downloadBlob(response._data, filename);
     },
     onError: (error) => {

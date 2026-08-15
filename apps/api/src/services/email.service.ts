@@ -62,16 +62,16 @@ import {
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-// Canonical html->markdown conversion (docs/email/prd.md, "Content
-// pipeline"): `email_message_bodies.textBody` stores markdown, never raw
-// plain-text, same convention apps/worker/src/mail/message-body.ts uses for
-// the classify/sync lazy-persist path. Both persistence paths below must
-// stay byte-for-byte consistent with that worker helper.
+// `email_message_bodies.textBody` is the LLM-facing canonical text (plain-
+// text part preferred, else markdown from HTML), same convention
+// apps/worker/src/mail/message-body.ts uses for the classify/sync
+// lazy-persist path. Both persistence paths below must stay byte-for-byte
+// consistent with that worker helper.
 import {
   buildReplyQuoteHtml,
   htmlToText,
   markdownToHtml,
-  toCanonicalMarkdown,
+  toCanonicalText,
 } from '@repo/mail/content';
 import type {
   MailAddress,
@@ -871,17 +871,17 @@ export async function getEmailThreadDetailForUser({
       const live = liveByProviderId.get(message.providerMessageId);
       if (!live) continue;
 
-      const markdown = toCanonicalMarkdown(live.body);
+      const text = toCanonicalText(live.body);
 
       await tryCatch(() =>
         upsertEmailMessageBody({
           messageId: message.id,
-          textBody: markdown,
+          textBody: text,
           htmlBody: live.body.html,
         }),
       );
 
-      markdownByMessageId.set(message.id, markdown);
+      markdownByMessageId.set(message.id, text);
       htmlByMessageId.set(message.id, live.body.html);
     }
   }
@@ -1019,7 +1019,7 @@ async function persistFetchedThread({
     await tryCatch(() =>
       upsertEmailMessageBody({
         messageId: message.id,
-        textBody: toCanonicalMarkdown(providerMessage.body),
+        textBody: toCanonicalText(providerMessage.body),
         htmlBody: providerMessage.body.html,
       }),
     );
@@ -1804,20 +1804,20 @@ async function resolveMessageHtmlForQuote({
     throw new InternalServerErrorException('Failed to load the message being replied to');
   }
 
-  // toCanonicalMarkdown returns null only for a genuinely empty body (no
-  // html, no text); the quote then degrades to an empty quoted block rather
-  // than failing the draft creation.
-  const markdown = toCanonicalMarkdown(liveMessage.body) ?? '';
+  // toCanonicalText returns null only for a genuinely empty body (no html,
+  // no text); the quote then degrades to an empty quoted block rather than
+  // failing the draft creation.
+  const text = toCanonicalText(liveMessage.body) ?? '';
 
   await tryCatch(() =>
     upsertEmailMessageBody({
       messageId: message.id,
-      textBody: markdown,
+      textBody: text,
       htmlBody: liveMessage.body.html,
     }),
   );
 
-  return liveMessage.body.html ?? markdownToHtml(markdown);
+  return liveMessage.body.html ?? markdownToHtml(text);
 }
 
 export interface ReplyDraftContent {

@@ -26,7 +26,7 @@ import {
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { toCanonicalMarkdown } from '@repo/mail/content';
+import { toCanonicalText } from '@repo/mail/content';
 import type {
   MailDraftSummary,
   MailMessageMetadata,
@@ -464,7 +464,7 @@ async function refreshReconciledDraft({
   }
 
   const full = await provider.getDraft(summary.id);
-  const content = toCanonicalMarkdown(full.body) ?? '';
+  const content = toCanonicalText(full.body) ?? '';
 
   // origin/kind/threadId/replyToMessageId/agentId are set once at creation
   // and rejected by the API's own PATCH (docs/email/drafts-change-request.md,
@@ -491,7 +491,7 @@ async function createReconciledDraft({
   summary: MailDraftSummary;
 }): Promise<void> {
   const full = await provider.getDraft(summary.id);
-  const content = toCanonicalMarkdown(full.body) ?? '';
+  const content = toCanonicalText(full.body) ?? '';
 
   // Gmail assigns every draft a threadId, including a brand-new standalone
   // draft, and that id doesn't necessarily correspond to a real conversation

@@ -1,35 +1,18 @@
 // packages/mail/src/content/html-to-markdown.ts
 //
-// Markdown is the canonical representation for message bodies wherever an
-// LLM or the user touches content (docs/email/prd.md, "Content pipeline").
-// This is the single conversion point, and it's display-grade, not just
-// LLM-grade: the web app renders received mail as this markdown through the
-// Tiptap editor, which supports links, images, GFM tables, and task lists.
-// Plain turndown already round-trips links/images; the gfm plugin adds
-// table, strikethrough, and task-list support turndown's core doesn't have
-// (dependency pre-approved for exactly this).
+// The canonical LLM-facing representation for message bodies prefers the
+// sender's plain-text part, falling back to a markdown conversion of the
+// HTML part (see `toCanonicalText`). Received-mail display uses a
+// sanitized HTML iframe instead (see docs/email/html-content-change-request.md).
 //
-// Uses `@truto/turndown-plugin-gfm`, not the original `turndown-plugin-gfm`:
-// the original is unmaintained and its table rules crash on a `<table>`
-// with zero `<tr>` rows (`node.rows[0]` is `undefined`, and `isHeadingRow`
-// dereferences it unconditionally) — real newsletter/marketing HTML hits
-// this constantly. Joplin's fork guards the same path (`tableShouldBeSkipped`
-// treats a missing/rowless table as "skip"), same plugin API otherwise.
+// Uses `@truto/turndown-plugin-gfm`, not the original: the original crashes
+// on a `<table>` with zero `<tr>` rows, which real newsletter HTML hits
+// constantly.
 //
-// Deliberately does no quote-stripping here — `textBody` is persisted as
-// the full canonical markdown; stripping is a prompt-assembly concern, see
-// `stripQuotedReply` / `formatThreadForPrompt`.
-//
-// Turndown's defaults don't drop <style>/<script>/<title> content — it has
-// no notion of "non-visible" elements, so their raw text (entire email
-// stylesheets, in practice) flattens straight into the markdown output.
-// apps/webbrowser never hits this because it strips those elements from
-// the live DOM before handing HTML to turndown; email HTML comes to us
-// raw, so this package has to do the same removal itself. Also drops the
-// common "preheader" trick (an inline-hidden element carrying preview text
-// meant only for the inbox list, never the reader) on a best-effort basis:
-// no CSS parsing, just a regex check for the couple of inline-style
-// patterns real senders actually use for it.
+// Turndown has no notion of "non-visible" elements, so raw <style>/<script>
+// text (entire email stylesheets, in practice) would otherwise flatten
+// straight into the output. Also drops the "preheader" trick (a
+// display:none element carrying inbox-preview text) via regex, best-effort.
 
 import { gfm } from '@truto/turndown-plugin-gfm';
 import TurndownService from 'turndown';
@@ -49,42 +32,44 @@ turndownService.remove((node) => {
   const style = node.getAttribute('style');
   return Boolean(style && HIDDEN_INLINE_STYLE_RE.test(style));
 });
+// Default image rule inlines `src` verbatim; a `data:` URI image (embedded
+// newsletter art/logos) would dump its whole base64 payload into the
+// markdown, sometimes hundreds of KB, so those get placeholdered instead.
+turndownService.addRule('stripDataUriImages', {
+  filter: (node) => node.nodeName === 'IMG' && (node.getAttribute('src') ?? '').startsWith('data:'),
+  replacement: () => '[image]',
+});
 
 export function htmlToMarkdown(html: string): string {
   return turndownService.turndown(html).trim();
 }
 
 /**
- * The ingest rule from the PRD: convert the HTML part when present, else
- * fall back to the text/plain part. One path, computed once at persist
- * time. Returns `null` when neither part yields any content.
- *
- * Resilient by design, unlike `htmlToMarkdown`: real-world email HTML is
- * frequently malformed in ways no turndown config fully guards against, and
- * this is the ingest boundary — a conversion failure here must degrade, not
- * fail the whole sync/classify job. Falls back to the text/plain part, then
- * to a naive tag-strip of the HTML as a last resort. Callers who want the
- * raw conversion (and its errors) should call `htmlToMarkdown` directly.
+ * Prefers the text/plain part when present (nothing to convert or leak),
+ * else converts HTML. Falls back to a naive tag-strip if conversion throws,
+ * since real-world email HTML is often malformed and this is the ingest
+ * boundary: a failure here must degrade, not fail the sync/classify job.
  */
-export function toCanonicalMarkdown(body: Pick<MailBody, 'html' | 'text'>): string | null {
-  const markdown = body.html
-    ? convertHtmlResiliently(body.html, body.text)
-    : (body.text ?? '').trim();
+export function toCanonicalText(body: Pick<MailBody, 'html' | 'text'>): string | null {
+  const text = body.text?.trim();
+  if (text) {
+    return text;
+  }
+
+  const markdown = body.html ? convertHtmlResiliently(body.html) : '';
   return markdown ? markdown : null;
 }
 
-function convertHtmlResiliently(html: string, textFallback: string | null): string {
+function convertHtmlResiliently(html: string): string {
   try {
     return htmlToMarkdown(html);
   } catch {
-    const text = textFallback?.trim();
-    return text ? text : stripHtmlTags(html);
+    return stripHtmlTags(html);
   }
 }
 
-// Last-resort fallback for toCanonicalMarkdown: also drop <head>/<style>/
-// <script> *content* (not just tags), so this path can't reintroduce the
-// same leaked-CSS problem the primary turndown config guards against above.
+// Also drops <head>/<style>/<script> *content*, not just the tags, so this
+// fallback can't reintroduce the leaked-CSS problem turndown guards against.
 function stripHtmlTags(html: string): string {
   const withoutNoise = html
     .replace(/<head[\s\S]*?<\/head>/gi, ' ')

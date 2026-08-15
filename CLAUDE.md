@@ -111,4 +111,8 @@ The user handles verification and commits.
 
 # Browser use
 
-Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate it without credentials. Ask the user to share images or details if required.
+Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate because you don't have credentials. Ask the user to share images or details if required.
+
+# BugFix
+
+Typecast is not a bugfix.
