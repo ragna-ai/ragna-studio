@@ -69,6 +69,20 @@ function isDraftMessage(message: Pick<MailMessageMetadata, 'labelIds'>): boolean
   return message.labelIds.includes(DRAFT_LABEL_ID);
 }
 
+// Gmail system labels for mail that shouldn't reach the classifier: SENT is
+// the account owner's own outgoing mail (classification/auto-draft is for
+// mail arriving in the account, not mail it sent); SPAM is Gmail's own spam
+// filter having already judged the sender, and classifying it risks
+// auto-drafting a reply to a spammer via the auto-draft-sender allowlist or
+// a matching category; TRASH is mail the user already discarded; CHAT is
+// Gmail Chat/Hangouts traffic riding the same history feed, not email. All
+// four are still carried through to email_messages.labelIds for display.
+const NON_CLASSIFIABLE_LABEL_IDS = ['SENT', 'SPAM', 'TRASH', 'CHAT'];
+
+function isNonClassifiableMessage(message: Pick<MailMessageMetadata, 'labelIds'>): boolean {
+  return message.labelIds.some((labelId) => NON_CLASSIFIABLE_LABEL_IDS.includes(labelId));
+}
+
 export async function syncEmailAccount(accountId: string): Promise<void> {
   const account = await getEmailAccountById({ id: accountId });
   if (!account) {
@@ -315,7 +329,9 @@ async function applyFlagsChanges({
 // A single new message: upsert its thread (denormalized fields refreshed
 // from this message, see participants.ts) and its own row, then enqueue
 // classification — unlike the seed path, this is new mail arriving after
-// connect (docs/email/prd.md, "Worker jobs").
+// connect (docs/email/prd.md, "Worker jobs"). Sent/spam/trash/chat mail is
+// stored (so it still shows up in its thread) but skips classification (see
+// isNonClassifiableMessage).
 async function importAddedMessage({
   account,
   message,
@@ -347,6 +363,10 @@ async function importAddedMessage({
     isStarred: message.starred,
     labelIds: message.labelIds,
   });
+
+  if (isNonClassifiableMessage(message)) {
+    return;
+  }
 
   await queue
     .emailClassify()
