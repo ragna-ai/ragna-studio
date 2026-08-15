@@ -11,12 +11,12 @@ definePageMeta({
 });
 
 const route = useRoute();
-const chatId = computed(() => route.params.chatId as string);
+const chatId = computed(() => route.params.chatId?.toString() ?? '');
 
 // Composables
-const { data, isLoading, error: chatError } = useGetChat(chatId);
 const { t } = useI18n();
 const chatStore = useChatStore();
+const { data, isLoading, error: chatError } = useGetChat(chatId);
 
 useHead({
   title: () => data.value?.chat?.title ?? t('chat.conversation.title'),
