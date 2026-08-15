@@ -24,11 +24,48 @@ function hasGeneratingDraft(data: EmailDraftListResponse | undefined): boolean {
   return data?.drafts.some((draft) => draft.status === 'generating') ?? false;
 }
 
+// Bridges the gap between POST /email/draft/trigger returning as soon as the
+// job is enqueued (apps/api/src/services/email.service.ts,
+// triggerEmailDraftForUser) and the worker actually creating the
+// 'generating' row (apps/worker/src/mail/email-draft.service.ts,
+// generateEmailDraft). Without this, useGetThreadDrafts's refetchInterval
+// below is gated purely on drafts it already has: the refetch that fires
+// right after the trigger call almost always lands before the worker's row
+// exists, finds nothing, and - since nothing is generating - never polls
+// again. The trigger button then just goes quiet with no loading state.
+// Module-level so useTriggerEmailDraft (fired from EmailDraftTriggerButton)
+// and useGetThreadDrafts (read from EmailThreadView, a different component)
+// can share it.
+const pendingDraftTriggerThreadIds = reactive(new Set<string>());
+const pendingDraftTriggerTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+// Safety net for a job that finishes without ever creating a row (e.g. no
+// agent configured on the account - generateEmailDraft returns early): stop
+// polling for it even though no draft ever showed up.
+const PENDING_DRAFT_TRIGGER_TIMEOUT_MS = 30_000;
+
+function markDraftTriggerPending(threadId: string): void {
+  pendingDraftTriggerThreadIds.add(threadId);
+  clearTimeout(pendingDraftTriggerTimeouts.get(threadId));
+  pendingDraftTriggerTimeouts.set(
+    threadId,
+    setTimeout(() => clearDraftTriggerPending(threadId), PENDING_DRAFT_TRIGGER_TIMEOUT_MS),
+  );
+}
+
+function clearDraftTriggerPending(threadId: string): void {
+  pendingDraftTriggerThreadIds.delete(threadId);
+  const timeout = pendingDraftTriggerTimeouts.get(threadId);
+  if (timeout) {
+    clearTimeout(timeout);
+    pendingDraftTriggerTimeouts.delete(threadId);
+  }
+}
+
 /** [GET] /email/draft?threadId=... */
 export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
   const { $api } = useNuxtApp();
-  return useQuery<EmailDraftListResponse>({
-    queryKey: emailKeys.drafts(threadId as MaybeRefOrGetter<string>),
+  const query = useQuery<EmailDraftListResponse>({
+    queryKey: emailKeys.drafts(threadId),
     queryFn: ({ signal }) =>
       $api<EmailDraftListResponse>('/email/draft', {
         method: 'GET',
@@ -36,9 +73,22 @@ export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
         signal,
       }),
     enabled: () => !!toValue(threadId),
-    refetchInterval: (query) =>
-      hasGeneratingDraft(query.state.data) ? DRAFT_POLL_INTERVAL_MS : false,
+    refetchInterval: (query) => {
+      if (hasGeneratingDraft(query.state.data)) return DRAFT_POLL_INTERVAL_MS;
+      const id = toValue(threadId);
+      return id && pendingDraftTriggerThreadIds.has(id) ? DRAFT_POLL_INTERVAL_MS : false;
+    },
   });
+
+  // Once the worker's row shows up (in any status), the check above already
+  // covers further polling - clear the pending flag so it doesn't also
+  // outlive the row via the timeout.
+  watch(query.data, (data) => {
+    const id = toValue(threadId);
+    if (id && data && data.drafts.length > 0) clearDraftTriggerPending(id);
+  });
+
+  return query;
 }
 
 /**
@@ -68,7 +118,7 @@ export function useGetAllDrafts() {
 export function useGetEmailDraft(draftId: MaybeRefOrGetter<string | null>) {
   const { $api } = useNuxtApp();
   return useQuery<EmailDraftResponse>({
-    queryKey: emailKeys.draft(draftId as MaybeRefOrGetter<string>),
+    queryKey: emailKeys.draft(draftId),
     queryFn: ({ signal }) =>
       $api<EmailDraftResponse>(`/email/draft/${toValue(draftId)}`, {
         method: 'GET',
@@ -275,11 +325,18 @@ export function useTriggerEmailDraft() {
   return useMutation<void, unknown, TriggerEmailDraftRequest>({
     mutationFn: (body) =>
       $api<void>('/email/draft/trigger', { method: 'POST', body }),
+    // Marked pending before the request even settles, not just on success:
+    // the enqueue+row-creation race (see markDraftTriggerPending's doc
+    // comment) means useGetThreadDrafts needs to already be polling by the
+    // time onSuccess's invalidate fires its refetch.
+    onMutate: ({ threadId }) => markDraftTriggerPending(threadId),
     onSuccess: (_, { threadId }) =>
       invalidateDraftQueries(queryClient, { threadId }),
-    onError: (error) =>
+    onError: (error, { threadId }) => {
+      clearDraftTriggerPending(threadId);
       toast.error(
         extractErrorMessage(error, 'Failed to start drafting a reply'),
-      ),
+      );
+    },
   });
 }
