@@ -268,6 +268,16 @@ export const emailDraft = pgTable(
     // worker/API's html-to-text helper); never derived at send time
     // (docs/email/html-content-change-request.md, "Scope > 3").
     text: text('text').notNull().default(''),
+    // Quoted history rendered read-only in a sandboxed iframe, kept out of
+    // the editable `content`/`text` above so the compose editor never parses
+    // sender-authored HTML into the app's own DOM. Null means no quote
+    // (`kind: 'new'`, or a draft created before this column existed - not
+    // migrated, see below); server-authored only, written once at creation
+    // or by the worker, never client-writable via PATCH
+    // (docs/email/quote-iframe-change-request.md, "Scope > 1").
+    quotedHtml: text('quoted_html'),
+    // Plain-text sibling of `quotedHtml`, same null semantics.
+    quotedText: text('quoted_text'),
     // The forwarded message's carried-over attachment set; see
     // EmailDraftAttachment above.
     attachments: jsonb('attachments').notNull().$type<EmailDraftAttachment[]>().default([]),

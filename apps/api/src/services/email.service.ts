@@ -70,6 +70,7 @@ import { logger } from '@repo/logger';
 import {
   buildReplyQuoteHtml,
   htmlToText,
+  joinDraftContentWithQuote,
   textToHtml,
   toCanonicalText,
 } from '@repo/mail/content';
@@ -1842,9 +1843,9 @@ async function resolveMessageHtmlForQuote({
   return liveMessage.body.html ?? textToHtml(text);
 }
 
-export interface ReplyDraftContent {
-  content: string;
-  text: string;
+export interface ReplyDraftQuote {
+  quotedHtml: string;
+  quotedText: string;
 }
 
 // Server-side quoting (docs/email/drafts-change-request.md, "Wire contract":
@@ -1854,15 +1855,17 @@ export interface ReplyDraftContent {
 // Reuses the client's own helper (docs/email/html-content-change-request.md,
 // "Quoting: HTML blockquote replaces buildReplyQuoteMarkdown") so there is
 // still exactly one implementation of the quote format, shared with
-// apps/worker's AI draft push. `text` is derived from the same HTML via
-// `htmlToText` so the two can never drift relative to each other.
-async function buildReplyDraftContent({
+// apps/worker's AI draft push. `quotedText` is derived from the same HTML via
+// `htmlToText` so the two can never drift relative to each other. The quote
+// lives in its own `quotedHtml`/`quotedText` columns, separate from the
+// user's own `content`/`text` (docs/email/quote-iframe-change-request.md).
+async function buildReplyDraftQuote({
   provider,
   message,
 }: {
   provider: MailProvider;
   message: EmailMessage;
-}): Promise<ReplyDraftContent> {
+}): Promise<ReplyDraftQuote> {
   const html = await resolveMessageHtmlForQuote({ provider, message });
 
   const content = buildReplyQuoteHtml({
@@ -1871,7 +1874,7 @@ async function buildReplyDraftContent({
     html,
   });
 
-  return { content, text: htmlToText(content) };
+  return { quotedHtml: content, quotedText: htmlToText(content) };
 }
 
 /**
@@ -1881,9 +1884,10 @@ async function buildReplyDraftContent({
  * `reply` seeds `to` from the replied-to message's sender only, never `cc`
  * (reply-all is not a kind - the client PATCHes `cc` in separately, so the
  * two must not fight); `forward` leaves `to` empty and seeds the forwarded
- * message's attachment metadata. Both `reply` and `forward` seed `content`
- * (HTML) and `text` (its plain-text sibling) with the quoted source message
- * via `buildReplyDraftContent`.
+ * message's attachment metadata. Both `reply` and `forward` start `content`/
+ * `text` empty (the user's own reply text, typed later) and seed
+ * `quotedHtml`/`quotedText` with the quoted source message via
+ * `buildReplyDraftQuote` (docs/email/quote-iframe-change-request.md).
  * `reply`/`forward` 409 (`ActiveDraftConflictError`) when the thread already
  * has a non-terminal draft instead of opening a second one.
  */
@@ -1936,7 +1940,7 @@ export async function createEmailDraftForUser({
   await assertNoActiveDraftOnThread({ accountId: account.id, threadId: thread.id });
 
   const provider = await getGmailProviderForUser({ userId });
-  const { content, text } = await buildReplyDraftContent({ provider, message });
+  const { quotedHtml, quotedText } = await buildReplyDraftQuote({ provider, message });
   const attachments =
     kind === 'forward' ? await resolveForwardAttachments({ provider, message }) : [];
 
@@ -1950,8 +1954,10 @@ export async function createEmailDraftForUser({
     cc: [],
     bcc: [],
     subject: thread.subject,
-    content,
-    text,
+    content: '',
+    text: '',
+    quotedHtml,
+    quotedText,
     attachments,
     status: 'ready',
   });
@@ -2178,20 +2184,26 @@ async function buildDraftSendMailInput({
   const attachments = await resolveDraftAttachmentContents({ provider, draft });
   assertAttachmentsWithinBudget(attachments);
 
+  // `content`/`text` are the user's own typed reply; `quotedHtml`/
+  // `quotedText` are the read-only quoted history rendered separately in the
+  // compose UI (docs/email/quote-iframe-change-request.md). The two are
+  // rejoined here, at the edge, into the single `html`/`text` MIME parts the
+  // provider actually sends - `joinDraftContentWithQuote` is the one shared
+  // implementation of that join, also used by apps/worker's write-back.
+  const { html, text } = joinDraftContentWithQuote({
+    content: draft.content,
+    text: draft.text,
+    quotedHtml: draft.quotedHtml,
+    quotedText: draft.quotedText,
+  });
+
   return {
     to: draft.to.map(toMailAddressFromParticipant),
     cc: draft.cc.length > 0 ? draft.cc.map(toMailAddressFromParticipant) : undefined,
     bcc: draft.bcc.length > 0 ? draft.bcc.map(toMailAddressFromParticipant) : undefined,
     subject: draft.subject ?? '',
-    // `content` is HTML, the canonical representation everywhere a human
-    // touches a draft (docs/email/html-content-change-request.md); `text`
-    // is its plain-text MIME sibling, written alongside `content` by
-    // whichever producer wrote it (browser Tiptap `getText()`, or the
-    // worker/API's `htmlToText` helper for the two server-authored
-    // producers) so the two never drift relative to each other. Both are
-    // read straight off the row - nothing is derived at write-back time.
-    html: draft.content,
-    text: draft.text,
+    html,
+    text,
     attachments: attachments.length > 0 ? attachments : undefined,
     thread,
   };

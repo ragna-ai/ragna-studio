@@ -351,7 +351,7 @@ describe('POST /email/draft - creation per kind', () => {
     expect(body.draft.cc).toEqual([]);
   });
 
-  test('kind: reply seeds `content` with the quoted source message as HTML, and `text` as its plain-text sibling (buildReplyQuoteHtml)', async () => {
+  test('kind: reply starts `content`/`text` empty and seeds `quotedHtml`/`quotedText` with the quoted source message (buildReplyQuoteHtml)', async () => {
     const { cookieHeader, accountId } = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({
       accountId,
@@ -371,13 +371,24 @@ describe('POST /email/draft - creation per kind', () => {
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = z
-      .object({ draft: z.object({ content: z.string(), text: z.string() }) })
+      .object({
+        draft: z.object({
+          content: z.string(),
+          text: z.string(),
+          quotedHtml: z.string().nullable(),
+          quotedText: z.string().nullable(),
+        }),
+      })
       .parse(await response.json());
-    expect(body.draft.content).toContain('Ada Lovelace &lt;ada@example.test&gt; wrote:');
-    expect(body.draft.content).toContain('<blockquote>');
-    expect(body.draft.content).toContain('<p>Original message body.</p>');
-    expect(body.draft.text).toContain('Ada Lovelace <ada@example.test> wrote:');
-    expect(body.draft.text).toContain('Original message body.');
+    // `content`/`text` are the user's own reply text, which starts empty -
+    // the quote no longer lives here (docs/email/quote-iframe-change-request.md).
+    expect(body.draft.content).toBe('');
+    expect(body.draft.text).toBe('');
+    expect(body.draft.quotedHtml).toContain('Ada Lovelace &lt;ada@example.test&gt; wrote:');
+    expect(body.draft.quotedHtml).toContain('<blockquote>');
+    expect(body.draft.quotedHtml).toContain('<p>Original message body.</p>');
+    expect(body.draft.quotedText).toContain('Ada Lovelace <ada@example.test> wrote:');
+    expect(body.draft.quotedText).toContain('Original message body.');
   });
 
   test('kind: reply live-fetches the source body when it is not persisted yet (lazy-body gap), and falls back to a rendered HTML quote when the live message has no HTML part', async () => {
@@ -409,11 +420,11 @@ describe('POST /email/draft - creation per kind', () => {
     expect(response.status).toBe(StatusCodes.CREATED);
     expect(fetchMessageMock).toHaveBeenCalledTimes(1);
     const body = z
-      .object({ draft: z.object({ content: z.string(), text: z.string() }) })
+      .object({ draft: z.object({ quotedHtml: z.string().nullable(), quotedText: z.string().nullable() }) })
       .parse(await response.json());
-    expect(body.draft.content).toContain('<blockquote>');
-    expect(body.draft.content).toContain('Live-fetched body.');
-    expect(body.draft.text).toContain('Live-fetched body.');
+    expect(body.draft.quotedHtml).toContain('<blockquote>');
+    expect(body.draft.quotedHtml).toContain('Live-fetched body.');
+    expect(body.draft.quotedText).toContain('Live-fetched body.');
   });
 
   test('kind: reply 400s without a threadId', async () => {
@@ -470,6 +481,7 @@ describe('POST /email/draft - creation per kind', () => {
           kind: z.string(),
           to: z.array(z.unknown()),
           content: z.string(),
+          quotedHtml: z.string().nullable(),
           attachments: z.array(
             z.object({
               providerMessageId: z.string().nullable(),
@@ -484,10 +496,12 @@ describe('POST /email/draft - creation per kind', () => {
       .parse(await response.json());
     expect(body.draft.kind).toBe('forward');
     expect(body.draft.to).toEqual([]);
-    // Forward also gets the quoted-source seed (same helper as reply).
-    expect(body.draft.content).toContain('wrote:');
-    expect(body.draft.content).toContain('<blockquote>');
-    expect(body.draft.content).toContain('<p>Hello, this is a seeded message body.</p>');
+    // `content` is the user's own text, empty until they type; the
+    // quoted-source seed (same helper as reply) lives in `quotedHtml`.
+    expect(body.draft.content).toBe('');
+    expect(body.draft.quotedHtml).toContain('wrote:');
+    expect(body.draft.quotedHtml).toContain('<blockquote>');
+    expect(body.draft.quotedHtml).toContain('<p>Hello, this is a seeded message body.</p>');
     expect(body.draft.attachments).toHaveLength(1);
     expect(body.draft.attachments[0]).toMatchObject({
       providerAttachmentId: 'att-1',
@@ -885,5 +899,34 @@ describe('PATCH /email/draft/:draftId - Gmail write-back reads html/text straigh
     // HTML and is passed straight through as the `html` MIME part.
     expect(input.html).toBe('<p><strong>Bold</strong> reply text.</p>');
     expect(input.text).toBe('Bold reply text.');
+  });
+
+  test('a push to Gmail joins `content` with `quotedHtml` (and `text` with `quotedText`) via joinDraftContentWithQuote', async () => {
+    const { cookieHeader, accountId, agentId } = await connectAccountWithAgent();
+    const seeded = await seedEmailThreadWithMessage({ accountId });
+    const draft = await seedEmailDraft({
+      accountId,
+      threadId: seeded.thread.id,
+      agentId,
+      content: '',
+      text: '',
+      quotedHtml: '<blockquote><p>Quoted body.</p></blockquote>',
+      quotedText: 'Quoted body.',
+    });
+
+    const response = await app.request(`/email/draft/${draft.id}`, {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        content: '<p>My new reply.</p>',
+        text: 'My new reply.',
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(createDraftMock).toHaveBeenCalledTimes(1);
+    const input = createDraftMock.mock.calls[0]?.[0] as { html?: string; text?: string };
+    expect(input.html).toBe('<p>My new reply.</p><blockquote><p>Quoted body.</p></blockquote>');
+    expect(input.text).toBe('My new reply.Quoted body.');
   });
 });

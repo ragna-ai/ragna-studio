@@ -188,6 +188,9 @@ export function seedEmailDraft(params: {
   content?: string;
   /** Plain-text MIME sibling of `content` (docs/email/html-content-change-request.md). */
   text?: string;
+  /** Read-only quoted history, split out of content/text (docs/email/quote-iframe-change-request.md). */
+  quotedHtml?: string | null;
+  quotedText?: string | null;
   attachments?: EmailDraftAttachment[];
   status?: EmailDraftStatus;
   providerDraftId?: string;
@@ -203,6 +206,8 @@ export function seedEmailDraft(params: {
     subject: params.subject ?? null,
     content: params.content ?? '<p>Draft reply content.</p>',
     text: params.text ?? 'Draft reply content.',
+    quotedHtml: params.quotedHtml ?? null,
+    quotedText: params.quotedText ?? null,
     attachments: params.attachments ?? [],
     status: params.status ?? 'ready',
     providerDraftId: params.providerDraftId ?? null,

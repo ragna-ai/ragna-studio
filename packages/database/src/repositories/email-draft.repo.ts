@@ -58,6 +58,8 @@ type UpdateEmailDraftFields = Partial<
     NewEmailDraft,
     | 'content'
     | 'text'
+    | 'quotedHtml'
+    | 'quotedText'
     | 'status'
     | 'to'
     | 'cc'

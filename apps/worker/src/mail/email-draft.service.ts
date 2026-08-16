@@ -40,6 +40,7 @@ import {
   emailBodyToText,
   formatThreadForPrompt,
   htmlToText,
+  joinDraftContentWithQuote,
   markdownToHtml,
   textToHtml,
   type ThreadPromptMessageInput,
@@ -291,23 +292,23 @@ function ensureReplySubject(subject: string | null): string {
 // buildReplyQuoteHtml a user reply/forward is seeded with (POST
 // /email/draft), so an AI draft and a human reply on the same thread carry
 // identical quoted history byte for byte, whether the draft is sent from
-// Gmail or from our own review UI. buildReplyQuoteHtml already returns a
-// self-contained `<p>` header plus `<blockquote>`, so this is a plain HTML
-// concatenation, not a markdown-style `\n\n` join.
-function buildDraftContentWithQuote({
-  htmlBody,
+// Gmail or from our own review UI. The quote is stored in its own
+// `quotedHtml`/`quotedText` columns, separate from the agent's `content`/
+// `text` (docs/email/quote-iframe-change-request.md), so the compose UI can
+// render it read-only instead of parsing it into the live editor.
+function buildQuoteFields({
   context,
   quoteHtmlBody,
 }: {
-  htmlBody: string;
   context: ReplyDraftContext;
   quoteHtmlBody: string;
-}): string {
-  return `${htmlBody}${buildReplyQuoteHtml({
+}): { quotedHtml: string; quotedText: string } {
+  const quotedHtml = buildReplyQuoteHtml({
     from: context.replyToFrom,
     date: context.replyToDate,
     html: quoteHtmlBody,
-  })}`;
+  });
+  return { quotedHtml, quotedText: htmlToText(quotedHtml) };
 }
 
 // Creates the Gmail-side draft for an AI reply that just turned 'ready'.
@@ -356,7 +357,7 @@ async function pushDraftToGmail({
       subject: context.subject,
     });
 
-    // Same reasoning for content: when the replied-to message's body is
+    // Same reasoning for the quote: when the replied-to message's body is
     // already stored (the common case — the classifier persists bodies at
     // ingest), the quote is buildable from local data alone, so it's saved
     // here too, before the fetch below can fail. Only the rare storage miss
@@ -364,20 +365,18 @@ async function pushDraftToGmail({
     // deliberately two updateEmailDraft calls on that cold path instead of
     // collapsing into one after the fetch: a second local write is cheap,
     // and it's what buys the guarantee that a Gmail outage never leaves the
-    // draft without a usable body. Do not re-merge these. `text` is derived
-    // from `bodyWithQuote` and saved alongside it every time so the two
-    // columns can never drift relative to each other.
-    let bodyWithQuote: string | null = null;
-    let text: string | null = null;
+    // draft without a usable quote. Do not re-merge these. `content`/`text`
+    // (the agent's own reply) are already saved by generateEmailDraft before
+    // this function runs, so only `quotedHtml`/`quotedText` are written here.
+    let quotedHtml: string | null = null;
+    let quotedText: string | null = null;
 
     if (context.replyToHtmlBody !== null) {
-      bodyWithQuote = buildDraftContentWithQuote({
-        htmlBody,
+      ({ quotedHtml, quotedText } = buildQuoteFields({
         context,
         quoteHtmlBody: context.replyToHtmlBody,
-      });
-      text = htmlToText(bodyWithQuote);
-      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
+      }));
+      await updateEmailDraft({ id: draftId, accountId: account.id, quotedHtml, quotedText });
     }
 
     // The RFC822 Message-ID header and References chain aren't stored on the
@@ -390,7 +389,7 @@ async function pushDraftToGmail({
       'full',
     );
 
-    if (bodyWithQuote === null || text === null) {
+    if (quotedHtml === null || quotedText === null) {
       // Only reached on that rare storage miss: persistMessageBody both
       // derives the canonical text/HTML pair and fills the gap for the next
       // reader, same as apps/api's quote-seeding does for a user-authored
@@ -406,9 +405,8 @@ async function pushDraftToGmail({
       });
       const quoteHtmlBody =
         persistedReplyToBody.htmlBody ?? textToHtml(persistedReplyToBody.textBody ?? '');
-      bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody });
-      text = htmlToText(bodyWithQuote);
-      await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
+      ({ quotedHtml, quotedText } = buildQuoteFields({ context, quoteHtmlBody }));
+      await updateEmailDraft({ id: draftId, accountId: account.id, quotedHtml, quotedText });
     }
 
     if (!fullReplyToMessage.messageIdHeader) {
@@ -418,6 +416,17 @@ async function pushDraftToGmail({
       return;
     }
 
+    // The agent's own reply (`htmlBody`/its text form) plus the quote just
+    // saved above, joined the same way apps/api's send path joins
+    // `content`/`quotedHtml` (joinDraftContentWithQuote, @repo/mail/content)
+    // - one shared assembly, not two independent concatenations.
+    const { html, text } = joinDraftContentWithQuote({
+      content: htmlBody,
+      text: htmlToText(htmlBody),
+      quotedHtml,
+      quotedText,
+    });
+
     const created = await provider.createDraft({
       to: context.to.map(toMailAddress),
       subject: context.subject,
@@ -426,7 +435,7 @@ async function pushDraftToGmail({
       // not the markdown source (docs/email/html-content-change-request.md,
       // "Outgoing MIME assembly").
       text,
-      html: bodyWithQuote,
+      html,
       thread: {
         threadId: context.providerThreadId,
         inReplyToMessageId: fullReplyToMessage.messageIdHeader,

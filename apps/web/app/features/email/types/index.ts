@@ -240,6 +240,10 @@ export interface EmailDraft {
   content: string;
   /** Plain-text MIME sibling of `content`, always written alongside it. */
   text: string;
+  /** Read-only quoted history, rendered via EmailContentIframe - never client-writable (docs/email/quote-iframe-change-request.md). Null for kind: 'new', or a draft created before this field existed. */
+  quotedHtml: string | null;
+  /** Plain-text sibling of quotedHtml, same null semantics. */
+  quotedText: string | null;
   attachments: EmailDraftAttachment[];
   status: EmailDraftStatus;
   providerDraftId: string | null;
