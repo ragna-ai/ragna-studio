@@ -7,6 +7,7 @@ import {
   SparklesIcon,
   StarIcon,
   Trash2Icon,
+  TrashIcon,
 } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { useDateTimeFormat } from '~/composables/useDateTimeFormat';
@@ -25,13 +26,14 @@ const props = defineProps<{
   /** The thread's active draft, if any (EmailThreadList.vue's `draftByThreadId` lookup) - drives the "Draft" indicator badge below. */
   draft: EmailDraft | null;
   isActive: boolean;
+  isTrashedFolder: boolean;
 }>();
 
 // Emits
 const emit = defineEmits<{
   open: [];
   archive: [];
-  trash: [];
+  trash: [boolean];
   star: [boolean];
   toggleRead: [];
 }>();
@@ -122,11 +124,22 @@ const { formatDateTime } = useDateTimeFormat();
             <Button
               variant="ghost"
               size="icon"
-              class="size-7"
-              :aria-label="t('email.thread.actions.trash')"
-              @click="emit('trash')"
+              class="group/trash size-7"
+              :aria-label="
+                props.isTrashedFolder
+                  ? t('email.thread.actions.restore')
+                  : t('email.thread.actions.trash')
+              "
+              @click="emit('trash', !props.isTrashedFolder)"
             >
-              <Trash2Icon class="size-3.5 text-muted-foreground" />
+              <TrashIcon
+                v-if="props.isTrashedFolder"
+                class="size-3.5 text-muted-foreground group-hover/trash:text-green-600"
+              />
+              <Trash2Icon
+                v-else
+                class="size-3.5 text-muted-foreground group-hover/trash:text-destructive"
+              />
             </Button>
           </div>
         </div>

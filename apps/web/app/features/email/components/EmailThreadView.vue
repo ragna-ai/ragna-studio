@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArchiveIcon, CornerUpLeftIcon, ForwardIcon, MailIcon, MailOpenIcon, StarIcon, Trash2Icon } from '@lucide/vue';
+import { ArchiveIcon, CornerUpLeftIcon, ForwardIcon, MailIcon, MailOpenIcon, StarIcon, Trash2Icon, TrashIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Spinner } from '~/components/ui/spinner';
@@ -206,7 +206,8 @@ function handleArchive() {
 
 function handleTrash() {
   if (!thread.value) return;
-  trashThread({ threadId: thread.value.id });
+  const trashed = props.filters.folder !== 'trashed';
+  trashThread({ threadId: thread.value.id, trashed });
   backToList();
 }
 
@@ -304,10 +305,19 @@ function handleToggleRead() {
           <Button
             variant="ghost"
             size="icon"
-            :aria-label="t('email.thread.actions.trash')"
+            class="group/trash"
+            :aria-label="
+              props.filters.folder === 'trashed'
+                ? t('email.thread.actions.restore')
+                : t('email.thread.actions.trash')
+            "
             @click="handleTrash"
           >
-            <Trash2Icon class="size-4" />
+            <TrashIcon
+              v-if="props.filters.folder === 'trashed'"
+              class="size-4 group-hover/trash:text-green-600"
+            />
+            <Trash2Icon v-else class="size-4" />
           </Button>
         </div>
       </header>

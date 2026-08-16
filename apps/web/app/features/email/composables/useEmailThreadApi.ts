@@ -148,26 +148,48 @@ export function useSetThreadArchived(
   });
 }
 
-/** [POST] /email/thread/:threadId/trash - see useSetThreadArchived's doc comment for the optimistic/onSettled shape. */
+/**
+ * [POST] /email/thread/:threadId/trash - see useSetThreadArchived's doc
+ * comment for the optimistic/onSettled shape. `trashed` is a two-way toggle
+ * like `archived`: `true` trashes, `false` restores to the inbox.
+ */
 export function useSetThreadTrashed(
   filters: MaybeRefOrGetter<EmailThreadListFilters>,
 ) {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
 
-  return useMutation<EmailThreadActionResponse, unknown, { threadId: string }>({
-    mutationFn: ({ threadId }) =>
+  return useMutation<
+    EmailThreadActionResponse,
+    unknown,
+    { threadId: string; trashed: boolean }
+  >({
+    mutationFn: ({ threadId, trashed }) =>
       $api<EmailThreadActionResponse>(`/email/thread/${threadId}/trash`, {
         method: 'POST',
+        body: { trashed },
       }),
-    // Trashing leaves every view except Trash itself.
-    onMutate: ({ threadId }) => {
-      if (toValue(filters).folder !== 'trashed') {
+    // Trashing leaves every view except Trash itself. Untrashing leaves the
+    // Trash view (it's no longer trashed) but can't be optimistically added to
+    // wherever it lands instead (inbox, a category, etc.) - onSettled's
+    // invalidation picks that up on refetch.
+    onMutate: ({ threadId, trashed }) => {
+      const leavesCurrentView = trashed
+        ? toValue(filters).folder !== 'trashed'
+        : toValue(filters).folder === 'trashed';
+      if (leavesCurrentView) {
         patchThreadInLists(queryClient, threadId, { remove: true });
       }
     },
-    onError: (error) =>
-      toast.error(extractErrorMessage(error, 'Failed to move thread to trash')),
+    onError: (error, variables) =>
+      toast.error(
+        extractErrorMessage(
+          error,
+          variables.trashed
+            ? 'Failed to move thread to trash'
+            : 'Failed to restore thread from trash',
+        ),
+      ),
     onSettled: (_data, _error, { threadId }) => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
       queryClient.invalidateQueries({ queryKey: emailKeys.thread(threadId) });

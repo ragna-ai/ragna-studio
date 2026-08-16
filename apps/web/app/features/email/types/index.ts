@@ -126,7 +126,7 @@ export interface EmailMessageDetail {
   labelIds: string[];
   categoryId: string | null;
   needsReply: boolean;
-  body: { markdown: string | null; html: string | null };
+  body: { text: string | null; html: string | null };
 }
 
 export interface EmailThreadDetailResponse {

@@ -122,6 +122,13 @@ export const validArchiveActionBody = myzValidator(
   }),
 );
 
+export const validTrashActionBody = myzValidator(
+  'json',
+  z.object({
+    trashed: z.boolean(),
+  }),
+);
+
 export const validStarActionBody = myzValidator(
   'json',
   z.object({

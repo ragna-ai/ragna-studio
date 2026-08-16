@@ -87,11 +87,12 @@ export function useSetMessageTrashed() {
   return useMutation<
     EmailMessageActionResponse,
     unknown,
-    MessageActionVariables
+    MessageActionVariables & { trashed: boolean }
   >({
-    mutationFn: ({ messageId }) =>
+    mutationFn: ({ messageId, trashed }) =>
       $api<EmailMessageActionResponse>(`/email/message/${messageId}/trash`, {
         method: 'POST',
+        body: { trashed },
       }),
     onMutate: ({ threadId, messageId }) => {
       // TODO: Optimistically remove the message from the list so it disappears from

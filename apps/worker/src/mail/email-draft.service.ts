@@ -15,6 +15,15 @@
 // @repo/database — out of this worker-only slice's file ownership, reported
 // back instead of invented here (see PRD goal "Classify and draft calls
 // account credits").
+import {
+  buildAgentInstructions,
+  buildAgentToolset,
+  generateText,
+  getLanguageModel,
+  stepCountIs,
+  toModelSettings,
+  withCachedInstructions,
+} from '@repo/ai';
 import type { EmailAccount, EmailMessageWithBody, EmailParticipant } from '@repo/database';
 import {
   createEmailDraft,
@@ -25,18 +34,10 @@ import {
   listEmailMessagesByThreadId,
   updateEmailDraft,
 } from '@repo/database';
-import {
-  buildAgentInstructions,
-  buildAgentToolset,
-  generateText,
-  getLanguageModel,
-  stepCountIs,
-  toModelSettings,
-  withCachedInstructions,
-} from '@repo/ai';
 import { logger } from '@repo/logger';
 import {
   buildReplyQuoteHtml,
+  emailBodyToText,
   formatThreadForPrompt,
   htmlToText,
   markdownToHtml,
@@ -45,8 +46,8 @@ import {
 } from '@repo/mail/content';
 import type { MailAddress, MailProvider } from '@repo/mail/provider';
 import type { EmailDraftJobData } from '@repo/queue';
-import { logTraceStepDebug, withAgentConfig } from '../workflow/executors/run-referenced-agent';
 import { noopWriter } from '../workflow/executors/noop-writer';
+import { logTraceStepDebug, withAgentConfig } from '../workflow/executors/run-referenced-agent';
 import { getGmailProviderForAccount } from './gmail-provider';
 import { ensureMessageBody, persistMessageBody } from './message-body';
 import { toMailAddress } from './participants';
@@ -116,13 +117,26 @@ export async function generateEmailDraft({
   // now-HTML column, e.g. if pushDraftToGmail below bails out early
   // (docs/email/html-content-change-request.md, "AI-generated drafts").
   const htmlBody = markdownToHtml(markdownContent);
-  await updateEmailDraft({ id: draft.id, accountId, status: 'ready', content: htmlBody, text: htmlToText(htmlBody) });
+  await updateEmailDraft({
+    id: draft.id,
+    accountId,
+    status: 'ready',
+    content: htmlBody,
+    text: htmlToText(htmlBody),
+  });
 
   // Pushed to Gmail as soon as the draft turns 'ready', without waiting for
   // a user edit (docs/email/drafts-change-request.md, "Decisions": "AI
   // drafts to Gmail" / "Scope > 3"), so the draft is reviewable from Gmail
   // mobile too. Best-effort: never fails this job, see pushDraftToGmail.
-  await pushDraftToGmail({ account, provider, threadId, replyToMessageId, draftId: draft.id, htmlBody });
+  await pushDraftToGmail({
+    account,
+    provider,
+    threadId,
+    replyToMessageId,
+    draftId: draft.id,
+    htmlBody,
+  });
 }
 
 async function runDraftAgent({
@@ -203,11 +217,12 @@ async function buildThreadContext({
 
   for (const message of messages) {
     const body = await ensureMessageBody({ provider, message });
+    const emailText = emailBodyToText(body, { maxLength: 10_000 });
     inputs.push({
       from: toMailAddress(message.from),
       date: message.sentAt,
       subject: message.subject,
-      text: body.textBody ?? message.snippet ?? '',
+      text: emailText ?? message.snippet ?? '',
     });
   }
 
@@ -321,7 +336,9 @@ async function pushDraftToGmail({
   try {
     const context = await loadReplyDraftContext({ account, threadId, replyToMessageId });
     if (!context) {
-      logger.warn(`Cannot push email draft ${draftId} to Gmail: thread or reply-to message is missing`);
+      logger.warn(
+        `Cannot push email draft ${draftId} to Gmail: thread or reply-to message is missing`,
+      );
       return;
     }
 
@@ -332,7 +349,12 @@ async function pushDraftToGmail({
     // itself. A user opening an otherwise-fine AI draft to find it addressed
     // to nobody, with no subject, is worse than the push simply not
     // happening yet.
-    await updateEmailDraft({ id: draftId, accountId: account.id, to: context.to, subject: context.subject });
+    await updateEmailDraft({
+      id: draftId,
+      accountId: account.id,
+      to: context.to,
+      subject: context.subject,
+    });
 
     // Same reasoning for content: when the replied-to message's body is
     // already stored (the common case — the classifier persists bodies at
@@ -349,7 +371,11 @@ async function pushDraftToGmail({
     let text: string | null = null;
 
     if (context.replyToHtmlBody !== null) {
-      bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody: context.replyToHtmlBody });
+      bodyWithQuote = buildDraftContentWithQuote({
+        htmlBody,
+        context,
+        quoteHtmlBody: context.replyToHtmlBody,
+      });
       text = htmlToText(bodyWithQuote);
       await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
     }
@@ -359,7 +385,10 @@ async function pushDraftToGmail({
     // one live metadata fetch, same as apps/api's email.service.ts
     // resolveThreading does for a user-sent reply. Its body doubles as the
     // quote source below on the rare miss where nothing was stored yet.
-    const fullReplyToMessage = await provider.fetchMessage(context.replyToProviderMessageId, 'full');
+    const fullReplyToMessage = await provider.fetchMessage(
+      context.replyToProviderMessageId,
+      'full',
+    );
 
     if (bodyWithQuote === null || text === null) {
       // Only reached on that rare storage miss: persistMessageBody both
@@ -375,14 +404,17 @@ async function pushDraftToGmail({
         messageId: replyToMessageId,
         body: fullReplyToMessage.body,
       });
-      const quoteHtmlBody = persistedReplyToBody.htmlBody ?? textToHtml(persistedReplyToBody.textBody ?? '');
+      const quoteHtmlBody =
+        persistedReplyToBody.htmlBody ?? textToHtml(persistedReplyToBody.textBody ?? '');
       bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody });
       text = htmlToText(bodyWithQuote);
       await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });
     }
 
     if (!fullReplyToMessage.messageIdHeader) {
-      logger.warn(`Cannot thread email draft ${draftId} to Gmail: reply-to message has no Message-ID header`);
+      logger.warn(
+        `Cannot thread email draft ${draftId} to Gmail: reply-to message has no Message-ID header`,
+      );
       return;
     }
 

@@ -1040,7 +1040,8 @@
         "toggleStar": "Markieren",
         "toggleRead": "Gelesen umschalten",
         "archive": "Archivieren",
-        "trash": "In den Papierkorb verschieben"
+        "trash": "In den Papierkorb verschieben",
+        "restore": "Aus dem Papierkorb wiederherstellen"
       }
     },
     "message": {

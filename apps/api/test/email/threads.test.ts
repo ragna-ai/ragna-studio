@@ -256,7 +256,7 @@ describe('GET /email/thread/:threadId', () => {
     const { cookieHeader, accountId } = await connectAccount();
     const seeded = await seedEmailThreadWithMessage({
       accountId,
-      textBody: 'Already stored markdown.',
+      textBody: 'Already stored text.',
       withBody: true,
     });
 
@@ -267,10 +267,10 @@ describe('GET /email/thread/:threadId', () => {
     expect(response.status).toBe(StatusCodes.OK);
     const body = z
       .object({
-        messages: z.array(z.object({ body: z.object({ markdown: z.string().nullable() }) })),
+        messages: z.array(z.object({ body: z.object({ text: z.string().nullable() }) })),
       })
       .parse(await response.json());
-    expect(body.messages[0]?.body.markdown).toBe('Already stored markdown.');
+    expect(body.messages[0]?.body.text).toBe('Already stored text.');
     expect(fetchThreadMock).not.toHaveBeenCalled();
   });
 
@@ -299,10 +299,10 @@ describe('GET /email/thread/:threadId', () => {
     expect(first.status).toBe(StatusCodes.OK);
     const firstBody = z
       .object({
-        messages: z.array(z.object({ body: z.object({ markdown: z.string().nullable() }) })),
+        messages: z.array(z.object({ body: z.object({ text: z.string().nullable() }) })),
       })
       .parse(await first.json());
-    expect(firstBody.messages[0]?.body.markdown).toBe('Fresh content');
+    expect(firstBody.messages[0]?.body.text).toBe('Fresh content');
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
 
     const second = await app.request(`/email/thread/${seeded.thread.id}`, {
@@ -311,10 +311,10 @@ describe('GET /email/thread/:threadId', () => {
     expect(second.status).toBe(StatusCodes.OK);
     const secondBody = z
       .object({
-        messages: z.array(z.object({ body: z.object({ markdown: z.string().nullable() }) })),
+        messages: z.array(z.object({ body: z.object({ text: z.string().nullable() }) })),
       })
       .parse(await second.json());
-    expect(secondBody.messages[0]?.body.markdown).toBe('Fresh content');
+    expect(secondBody.messages[0]?.body.text).toBe('Fresh content');
     // Second request found the body already persisted - no second live fetch.
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
   });

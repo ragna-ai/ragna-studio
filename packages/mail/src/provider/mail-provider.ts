@@ -253,7 +253,8 @@ export interface MailProvider {
 
   /** `archived: true` removes the message from the inbox; `false` restores it. */
   setArchived(messageId: MailProviderId, archived: boolean): Promise<MailActionResult>;
-  trashMessage(messageId: MailProviderId): Promise<MailActionResult>;
+  /** `trashed: true` moves the message to trash; `false` restores it to the inbox. */
+  setTrashed(messageId: MailProviderId, trashed: boolean): Promise<MailActionResult>;
   setStarred(messageId: MailProviderId, starred: boolean): Promise<MailActionResult>;
   setRead(messageId: MailProviderId, read: boolean): Promise<MailActionResult>;
 

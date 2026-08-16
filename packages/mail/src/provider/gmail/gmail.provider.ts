@@ -203,11 +203,21 @@ export class GmailProvider implements MailProvider {
       : this.modifyMessage(messageId, [LABEL_INBOX], []);
   }
 
-  async trashMessage(messageId: MailProviderId): Promise<MailActionResult> {
-    const trashed = await this.request<GmailMessageResource>(`users/me/messages/${messageId}/trash`, {
+  async setTrashed(messageId: MailProviderId, trashed: boolean): Promise<MailActionResult> {
+    if (trashed) {
+      const result = await this.request<GmailMessageResource>(`users/me/messages/${messageId}/trash`, {
+        method: 'POST',
+      });
+      return toMailActionResult(result);
+    }
+
+    // Gmail's `untrash` endpoint only removes the TRASH label, it doesn't
+    // restore INBOX membership - a follow-up `modify` call adds it back, and
+    // its response is the authoritative final label state.
+    await this.request<GmailMessageResource>(`users/me/messages/${messageId}/untrash`, {
       method: 'POST',
     });
-    return toMailActionResult(trashed);
+    return this.modifyMessage(messageId, [LABEL_INBOX], []);
   }
 
   async setStarred(messageId: MailProviderId, starred: boolean): Promise<MailActionResult> {

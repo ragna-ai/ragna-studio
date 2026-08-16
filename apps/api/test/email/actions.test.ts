@@ -10,7 +10,7 @@ import {
   setArchivedMock,
   setReadMock,
   setStarredMock,
-  trashMessageMock,
+  setTrashedMock,
 } from './support/mail-provider.mock';
 
 // Mailbox actions (docs/email/prd.md, "API": "Actions: archive, trash, star,
@@ -94,19 +94,36 @@ describe('POST /email/message/:messageId/archive', () => {
 });
 
 describe('POST /email/message/:messageId/trash', () => {
-  test('provider call + local flags updated', async () => {
+  test('trashes: provider call + local flags updated', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const seeded = await seedEmailThreadWithMessage({ accountId });
+    const seeded = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
 
     const response = await app.request(`/email/message/${seeded.messageId}/trash`, {
       method: 'POST',
-      headers: { cookie: cookieHeader },
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ trashed: true }),
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(trashMessageMock).toHaveBeenCalledWith(seeded.providerMessageId);
+    expect(setTrashedMock).toHaveBeenCalledWith(seeded.providerMessageId, true);
     const row = await getEmailMessageById({ id: seeded.messageId });
     expect(row?.labelIds).toContain('TRASH');
+  });
+
+  test('restores: provider call + local flags updated', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const seeded = await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH'] });
+
+    const response = await app.request(`/email/message/${seeded.messageId}/trash`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ trashed: false }),
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(setTrashedMock).toHaveBeenCalledWith(seeded.providerMessageId, false);
+    const row = await getEmailMessageById({ id: seeded.messageId });
+    expect(row?.labelIds).toContain('INBOX');
   });
 });
 
@@ -312,11 +329,12 @@ describe('thread-level actions loop every message', () => {
 
     const response = await app.request(`/email/thread/${threadId}/trash`, {
       method: 'POST',
-      headers: { cookie: cookieHeader },
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ trashed: true }),
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(trashMessageMock).toHaveBeenCalledTimes(2);
+    expect(setTrashedMock).toHaveBeenCalledTimes(2);
     for (const messageId of messageIds) {
       const row = await getEmailMessageById({ id: messageId });
       expect(row?.labelIds).toContain('TRASH');

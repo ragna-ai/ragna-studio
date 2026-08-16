@@ -27,12 +27,12 @@ import {
   setMessageArchivedForUser,
   setMessageReadForUser,
   setMessageStarredForUser,
+  setMessageTrashedForUser,
   setThreadArchivedForUser,
   setThreadReadForUser,
   setThreadStarredForUser,
   setThreadTrashedForUser,
   syncEmailAccountNowForUser,
-  trashMessageForUser,
   triggerEmailDraftForUser,
   updateEmailAccountSettingsForUser,
   updateEmailCategoryForUser,
@@ -56,6 +56,7 @@ import {
   validSendEmailBody,
   validSendEmailDraftBody,
   validStarActionBody,
+  validTrashActionBody,
   validTriggerEmailDraftBody,
   validUpdateEmailAccountSettingsBody,
   validUpdateEmailCategoryBody,
@@ -372,13 +373,19 @@ export const emailController = new Hono()
   /**
    * [POST] /email/message/:messageId/trash
    */
-  .post('/message/:messageId/trash', validEmailMessageIdParam, async (c) => {
-    const user = c.get('user');
-    const { messageId } = c.req.valid('param');
+  .post(
+    '/message/:messageId/trash',
+    validEmailMessageIdParam,
+    validTrashActionBody,
+    async (c) => {
+      const user = c.get('user');
+      const { messageId } = c.req.valid('param');
+      const { trashed } = c.req.valid('json');
 
-    const message = await trashMessageForUser({ userId: user.id, messageId });
-    return c.json({ message });
-  })
+      const message = await setMessageTrashedForUser({ userId: user.id, messageId, trashed });
+      return c.json({ message });
+    },
+  )
   /**
    * [POST] /email/message/:messageId/star
    */
@@ -463,11 +470,12 @@ export const emailController = new Hono()
   /**
    * [POST] /email/thread/:threadId/trash - loops the thread's message ids.
    */
-  .post('/thread/:threadId/trash', validEmailThreadIdParam, async (c) => {
+  .post('/thread/:threadId/trash', validEmailThreadIdParam, validTrashActionBody, async (c) => {
     const user = c.get('user');
     const { threadId } = c.req.valid('param');
+    const { trashed } = c.req.valid('json');
 
-    const messages = await setThreadTrashedForUser({ userId: user.id, threadId });
+    const messages = await setThreadTrashedForUser({ userId: user.id, threadId, trashed });
     return c.json({ messages });
   })
   /**

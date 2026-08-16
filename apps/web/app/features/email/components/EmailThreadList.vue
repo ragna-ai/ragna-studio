@@ -57,8 +57,8 @@ function handleArchive(threadId: string) {
   closeIfActive(threadId);
 }
 
-function handleTrash(threadId: string) {
-  trashThread({ threadId });
+function handleTrash(threadId: string, trashed: boolean) {
+  trashThread({ threadId, trashed });
   closeIfActive(threadId);
 }
 
@@ -98,9 +98,10 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
         :category="categoryFor(thread)"
         :draft="draftFor(thread)"
         :is-active="thread.id === props.activeThreadId"
+        :is-trashed-folder="props.filters.folder === 'trashed'"
         @open="emit('open', thread.id)"
         @archive="handleArchive(thread.id)"
-        @trash="handleTrash(thread.id)"
+        @trash="(trashed) => handleTrash(thread.id, trashed)"
         @star="(value) => starThread({ threadId: thread.id, starred: value })"
         @toggle-read="setThreadRead({ threadId: thread.id, read: thread.isUnread })"
       />

@@ -1034,7 +1034,8 @@
         "toggleStar": "Star",
         "toggleRead": "Toggle read",
         "archive": "Archive",
-        "trash": "Move to trash"
+        "trash": "Move to trash",
+        "restore": "Restore from trash"
       }
     },
     "message": {

@@ -804,7 +804,7 @@ export interface EmailMessageDetail {
   labelIds: string[];
   categoryId: string | null;
   needsReply: boolean;
-  body: { markdown: string | null; html: string | null };
+  body: { text: string | null; html: string | null };
 }
 
 export interface EmailThreadDetailResponse {
@@ -840,14 +840,11 @@ export async function getEmailThreadDetailForUser({
     throw new InternalServerErrorException('Failed to load thread');
   }
 
-  // Markdown only, in memory: htmlBody is persisted below (the conversion
-  // source, docs/email/prd.md "Content pipeline") but never surfaces in the
-  // response.
-  const markdownByMessageId = new Map<string, string | null>();
+  const textByMessageId = new Map<string, string | null>();
   const htmlByMessageId = new Map<string, string | null>();
   for (const message of messages) {
     if (message.body) {
-      markdownByMessageId.set(message.id, message.body.textBody);
+      textByMessageId.set(message.id, message.body.textBody);
       htmlByMessageId.set(message.id, message.body.htmlBody);
     }
   }
@@ -881,7 +878,7 @@ export async function getEmailThreadDetailForUser({
         }),
       );
 
-      markdownByMessageId.set(message.id, text);
+      textByMessageId.set(message.id, text);
       htmlByMessageId.set(message.id, live.body.html);
     }
   }
@@ -895,23 +892,29 @@ export async function getEmailThreadDetailForUser({
 
   return {
     thread: threadSummary,
-    messages: messages.map((message) => ({
-      id: message.id,
-      from: message.from,
-      to: message.to,
-      cc: message.cc ?? [],
-      subject: message.subject,
-      sentAt: message.sentAt,
-      isUnread: message.isUnread,
-      isStarred: message.isStarred,
-      labelIds: message.labelIds,
-      categoryId: message.categoryId,
-      needsReply: message.needsReply,
-      body: {
-        markdown: markdownByMessageId.get(message.id) ?? null,
-        html: htmlByMessageId.get(message.id) ?? null,
-      },
-    })),
+    // A text-only message (no HTML part at all) has a null htmlBody here,
+    // not just an unsynced one - fall back to textToHtml the same way
+    // resolveMessageHtmlForQuote does, so the reading pane (which only
+    // renders `html`) still shows something instead of a blank iframe.
+    messages: messages.map((message) => {
+      const text = textByMessageId.get(message.id) ?? null;
+      const html = htmlByMessageId.get(message.id) ?? (text ? textToHtml(text) : null);
+
+      return {
+        id: message.id,
+        from: message.from,
+        to: message.to,
+        cc: message.cc ?? [],
+        subject: message.subject,
+        sentAt: message.sentAt,
+        isUnread: message.isUnread,
+        isStarred: message.isStarred,
+        labelIds: message.labelIds,
+        categoryId: message.categoryId,
+        needsReply: message.needsReply,
+        body: { text, html },
+      };
+    }),
   };
 }
 
@@ -1248,11 +1251,15 @@ export function setMessageArchivedForUser(params: {
 }
 
 /** [POST] /email/message/:messageId/trash */
-export function trashMessageForUser(params: { userId: string; messageId: string }) {
+export function setMessageTrashedForUser(params: {
+  userId: string;
+  messageId: string;
+  trashed: boolean;
+}) {
   return applyMessageAction({
     userId: params.userId,
     messageId: params.messageId,
-    action: (provider, id) => provider.trashMessage(id),
+    action: (provider, id) => provider.setTrashed(id, params.trashed),
   });
 }
 
@@ -1296,11 +1303,15 @@ export function setThreadArchivedForUser(params: {
 }
 
 /** [POST] /email/thread/:threadId/trash - loops the thread's message ids. */
-export function setThreadTrashedForUser(params: { userId: string; threadId: string }) {
+export function setThreadTrashedForUser(params: {
+  userId: string;
+  threadId: string;
+  trashed: boolean;
+}) {
   return applyThreadAction({
     userId: params.userId,
     threadId: params.threadId,
-    action: (provider, id) => provider.trashMessage(id),
+    action: (provider, id) => provider.setTrashed(id, params.trashed),
   });
 }
 

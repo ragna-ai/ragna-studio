@@ -139,11 +139,11 @@ function defaultSetArchivedImpl(messageId: MailProviderId, archived: boolean): P
   });
 }
 
-function defaultTrashMessageImpl(messageId: MailProviderId): Promise<MailActionResult> {
+function defaultSetTrashedImpl(messageId: MailProviderId, trashed: boolean): Promise<MailActionResult> {
   return Promise.resolve({
     messageId,
     threadId: 'thread-default',
-    labelIds: ['TRASH'],
+    labelIds: trashed ? ['TRASH'] : ['INBOX'],
     unread: false,
     starred: false,
   });
@@ -221,7 +221,7 @@ export const fetchThreadMock = mock(defaultFetchThreadImpl);
 export const fetchMessageMock = mock(defaultFetchMessageImpl);
 export const sendMock = mock(defaultSendImpl);
 export const setArchivedMock = mock(defaultSetArchivedImpl);
-export const trashMessageMock = mock(defaultTrashMessageImpl);
+export const setTrashedMock = mock(defaultSetTrashedImpl);
 export const setStarredMock = mock(defaultSetStarredImpl);
 export const setReadMock = mock(defaultSetReadImpl);
 export const listLabelsMock = mock(defaultListLabelsImpl);
@@ -248,7 +248,7 @@ const fakeMailProvider: MailProvider = {
   sendDraft: sendDraftMock,
   deleteDraft: deleteDraftMock,
   setArchived: setArchivedMock,
-  trashMessage: trashMessageMock,
+  setTrashed: setTrashedMock,
   setStarred: setStarredMock,
   setRead: setReadMock,
   listLabels: listLabelsMock,
@@ -272,8 +272,8 @@ export function resetMailProviderMock(): void {
   sendMock.mockImplementation(defaultSendImpl);
   setArchivedMock.mockClear();
   setArchivedMock.mockImplementation(defaultSetArchivedImpl);
-  trashMessageMock.mockClear();
-  trashMessageMock.mockImplementation(defaultTrashMessageImpl);
+  setTrashedMock.mockClear();
+  setTrashedMock.mockImplementation(defaultSetTrashedImpl);
   setStarredMock.mockClear();
   setStarredMock.mockImplementation(defaultSetStarredImpl);
   setReadMock.mockClear();
