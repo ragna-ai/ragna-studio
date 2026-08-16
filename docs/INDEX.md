@@ -14,7 +14,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
-| [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | in-progress (raised, decided, and built by parallel Sonnet agents 2026-08-16, confirmed by Sven, committed to `main` same day; still awaiting a manual browser pass through reply/forward compose before this flips to `implemented` - this environment can't exercise the OAuth-gated UI directly) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
 
 ## Proposed
@@ -44,6 +43,7 @@ work first, shipped reference and dead/historical docs last.
 | [Export (datasets and documents) and manual dataset row reorder](./datasets/export-and-row-reorder.md) | implemented (2026-07-22); user verification and commit pending |
 | [Documents Feature (PRD)](./documents/prd.md) | implemented (branch `feat/documents`, 2026-07-18) |
 | [Email Client (PRD)](./email/prd.md) | implemented (2026-08-14, branch feat/email-client) |
+| [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |

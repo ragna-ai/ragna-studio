@@ -1,10 +1,8 @@
 # Email Compose: Sandbox the Quoted History in an Iframe (change request)
 
-> **Status: in-progress** (raised, decided, and built by parallel Sonnet
-> agents 2026-08-16, confirmed by Sven, committed to `main` same day; still
-> awaiting a manual browser pass through reply/forward compose before this
-> flips to `implemented` - this environment can't exercise the OAuth-gated
-> UI directly). Amends
+> **Status: implemented** (raised, decided, and built by parallel Sonnet
+> agents 2026-08-16, committed to `main` same day; manual browser pass
+> through reply/forward compose confirmed by Sven 2026-08-16). Amends
 > [html-content-change-request.md](./html-content-change-request.md)'s
 > quoting section and closes its own open point ("the oversized-content
 > composer guard ... needs re-evaluating once quoting no longer produces a
