@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { EditorContent, type Editor } from '@repo/editor';
+import { EditorContent } from '@repo/editor';
 import { useDebounceFn } from '@vueuse/core';
-import type { ShallowRef } from 'vue';
 import EditorMenu from '~/features/document/components/EditorMenu.vue';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Spinner } from '~/components/ui/spinner';
 import EmailComposerAttachments from '~/features/email/components/EmailComposerAttachments.vue';
 import EmailRecipientsField from '~/features/email/components/EmailRecipientsField.vue';
-import { useEmailComposeEditor, type EmailComposeEditorController } from '~/features/email/composables/useEmailComposeEditor';
+import { useEmailComposeEditor } from '~/features/email/composables/useEmailComposeEditor';
 import { useSendEmailDraft, useUpdateEmailDraft } from '~/features/email/composables/useEmailDraftApi';
-import { useEmailReadOnlyBody } from '~/features/email/composables/useEmailReadOnlyBody';
-import { formatParticipantList } from '~/features/email/lib/email-display';
-import { isEmailDraftContentUnsafeToEdit } from '~/features/email/lib/email-draft-safety';
 import type {
   EmailDraft,
   EmailDraftAttachment,
@@ -55,18 +51,6 @@ const { mutateAsync: sendEmailDraft, isPending: isSending } = useSendEmailDraft(
 const { mutateAsync: saveDraft, isPending: isSavingDraft } = useUpdateEmailDraft();
 watch(isSavingDraft, (value) => emit('saving', value));
 
-// A draft whose content can hang the editable Tiptap instance's hydration
-// (email-draft-safety.ts's doc comment has the confirmed real-world
-// trigger) never gets one constructed at all - not truncated, not
-// re-serialized, just rendered read-only through the same path the thread
-// view uses for messages. Re-serializing content the user can't see would
-// autosave the damage straight back into a real Gmail draft, so autosave is
-// disabled for this instance's entire lifetime, not just skipped once (see
-// `saveDraftNow`'s guard, the single point every save path funnels through).
-// A plain constant, not a computed: `draft` seeds the form once (above), so
-// this can't change out from under a mounted instance.
-const isUnsafeToEdit = isEmailDraftContentUnsafeToEdit(props.draft.content);
-
 // Refs
 const to = ref<string[]>(props.draft.to.map((participant) => participant.email));
 const cc = ref<string[]>(props.draft.cc.map((participant) => participant.email));
@@ -85,50 +69,24 @@ const media = ref<MediaListItem[]>([]);
 // to be a plain, never-reset ref rather than a snapshot of mutation state.
 const isDraftGone = ref(false);
 
-// `isUnsafeToEdit` picks the editor instance up front: the editable one
-// (with autosave wired to its `onUpdate`) when safe, the read-only one
-// (same composable EmailMessageItem.vue uses for messages) when not - never
-// both, and never the editable one at all when unsafe. `controller` (the
-// editable-only command surface: getHtml/getText/the toolbar) stays
-// `undefined` in the unsafe branch; `requireController()` below is the one
-// place that turns "used it anyway" into a thrown error instead of a silent
-// bad read, for the same reason useEmailComposeEditor.ts's own
-// `requireEditor()` exists.
-let editor: ShallowRef<Editor | undefined>;
-let controller: EmailComposeEditorController | undefined;
-if (isUnsafeToEdit) {
-  ({ editor } = useEmailReadOnlyBody(props.draft.content));
-} else {
-  controller = useEmailComposeEditor({
-    content: props.draft.content,
-    placeholder: t('email.compose.bodyPlaceholder'),
-    autofocus: props.autofocus,
-    onUpdate: () => emitChange(),
-  });
-  editor = controller.editor;
+const controller = useEmailComposeEditor({
+  content: props.draft.content,
+  placeholder: t('email.compose.bodyPlaceholder'),
+  autofocus: props.autofocus,
+  onUpdate: () => emitChange(),
+});
+const editor = controller.editor;
 
-  // These only make sense wired to an editable editor: readonly mode has no
-  // `onUpdate`, and its recipients/subject render as plain text, not the
-  // inputs these watch. Keeping the wiring itself out of that branch, not
-  // just guarding what it calls, is the difference between "structurally
-  // can't autosave" and "happens not to right now".
-  watch([to, cc, bcc, subject], () => emitChange());
-  onBeforeUnmount(() => {
-    if (props.suppressFlush || isDraftGone.value || !emitChange.isPending.value) return;
-    emitChange.cancel();
-    void saveDraftNow(true);
-  });
-}
-
-/** Only ever called from a path already gated on `!isUnsafeToEdit` (buildSnapshot via saveDraftNow's own guard; handleSend via canSend). Throws instead of reading through `undefined` if that invariant is ever broken by a future change. */
-function requireController(): EmailComposeEditorController {
-  if (!controller) throw new Error('EmailComposer: editable editor is not available for this draft');
-  return controller;
-}
+watch([to, cc, bcc, subject], () => emitChange());
+onBeforeUnmount(() => {
+  if (props.suppressFlush || isDraftGone.value || !emitChange.isPending.value) return;
+  emitChange.cancel();
+  void saveDraftNow(true);
+});
 
 // Computed
 const canSend = computed(
-  () => !isUnsafeToEdit && to.value.length > 0 && subject.value.trim().length > 0 && !isSending.value,
+  () => to.value.length > 0 && subject.value.trim().length > 0 && !isSending.value,
 );
 
 // Functions
@@ -138,10 +96,9 @@ function toParticipants(addresses: string[]): EmailParticipant[] {
 
 /** The HTML/text pair every draft-writing payload below sends together, straight off the live editor (see EmailDraftEditableFields's doc comment). */
 function buildContentFields(): Pick<EmailDraftEditableFields, 'content' | 'text'> {
-  const editorController = requireController();
   return {
-    content: editorController.getHtml(),
-    text: editorController.getText(),
+    content: controller.getHtml(),
+    text: controller.getText(),
   };
 }
 
@@ -161,12 +118,7 @@ function buildSnapshot(): EmailDraftEditableFields {
 // `flush` forces the Gmail write-back regardless of the attachment-based
 // push rule (UpdateEmailDraftRequest's doc comment) - set for the unmount
 // flush and the pre-send save below, left off ordinary keystroke autosaves.
-// The `isUnsafeToEdit` check here is the authoritative guard: every save
-// path (debounce, unmount flush, pre-send flush) funnels through this one
-// function, so blocking it here is enough on its own, independent of
-// whether every call site above also remembers to check.
 async function saveDraftNow(flush: boolean) {
-  if (isUnsafeToEdit) return;
   try {
     await saveDraft({ draftId: props.draft.id, threadId: props.draft.threadId, ...buildSnapshot(), flush });
     emit('saved');
@@ -198,10 +150,6 @@ function removeDraftAttachment(attachment: EmailDraftAttachment) {
 // surfacing as an unhandled promise rejection, and keeps the composer open
 // (no 'sent' emit) so the user can retry.
 async function handleSend() {
-  // `isUnsafeToEdit` is folded into `canSend` (above) rather than checked
-  // separately here: the read-only branch's Send button is rendered
-  // `disabled` off the same computed, so there's one source of truth for
-  // "sending is unavailable because the editor never mounted to serialize".
   if (!canSend.value) return;
 
   // The send request below reads `to`/`cc`/`bcc`/`subject`/the editor
@@ -241,40 +189,7 @@ async function handleSend() {
 </script>
 
 <template>
-  <div v-if="isUnsafeToEdit" class="flex min-h-0 flex-1 flex-col">
-    <p class="border-b bg-amber-50 px-4 py-2 text-xs text-amber-800">
-      {{ t('email.compose.contentTooLarge') }}
-    </p>
-    <div class="shrink-0 space-y-1 px-4 pt-3 text-sm">
-      <p class="truncate">
-        <span class="text-muted-foreground">{{ t('email.compose.to') }}:</span>
-        {{ formatParticipantList(props.draft.to) }}
-      </p>
-      <p v-if="props.draft.cc.length > 0" class="truncate">
-        <span class="text-muted-foreground">{{ t('email.compose.cc') }}:</span>
-        {{ formatParticipantList(props.draft.cc) }}
-      </p>
-      <p v-if="props.draft.bcc.length > 0" class="truncate">
-        <span class="text-muted-foreground">{{ t('email.compose.bcc') }}:</span>
-        {{ formatParticipantList(props.draft.bcc) }}
-      </p>
-      <p class="truncate">
-        <span class="text-muted-foreground">{{ t('email.compose.subject') }}:</span>
-        {{ props.draft.subject || t('email.thread.noSubject') }}
-      </p>
-    </div>
-    <div class="document-sheet min-h-40 flex-1 overflow-y-auto px-4 py-3">
-      <EditorContent :editor="editor" class="flex flex-1 flex-col" />
-    </div>
-    <div class="flex shrink-0 items-center justify-end gap-2 border-t px-4 py-3">
-      <slot name="extra-actions" />
-      <Button type="button" disabled>
-        {{ t('email.compose.send') }}
-      </Button>
-    </div>
-  </div>
-
-  <form v-else class="flex min-h-0 flex-1 flex-col overflow-y-auto" @submit.prevent="handleSend">
+  <form class="flex min-h-0 flex-1 flex-col overflow-y-auto" @submit.prevent="handleSend">
     <div class="shrink-0 space-y-1 px-4 pt-3">
       <EmailRecipientsField v-model="to" :label="t('email.compose.to')" :autofocus="props.recipientsAutofocus" />
       <template v-if="showCcBcc">
@@ -300,7 +215,7 @@ async function handleSend() {
     </div>
 
     <div class="shrink-0 border-b">
-      <EditorMenu :controller="requireController()" class="px-4 py-2" />
+      <EditorMenu :controller="controller" class="px-4 py-2" />
     </div>
     <!-- Auto-height, same document-sheet typography as the document/task editors
          (DocumentEditor.css) instead of a flex-1/overflow-y-auto box: the editor

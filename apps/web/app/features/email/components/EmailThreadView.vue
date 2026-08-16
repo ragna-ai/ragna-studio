@@ -13,6 +13,7 @@ import {
   useCreateEmailDraft,
   useDiscardEmailDraft,
   useGetThreadDrafts,
+  useIsDraftTriggerPending,
   useUpdateEmailDraft,
 } from '~/features/email/composables/useEmailDraftApi';
 import {
@@ -38,6 +39,7 @@ const threadIdRef = computed(() => props.threadId);
 const filtersRef = computed(() => props.filters);
 const { data, isLoading, isError } = useGetEmailThread(threadIdRef);
 const { data: draftsData } = useGetThreadDrafts(threadIdRef);
+const isDraftTriggerPending = useIsDraftTriggerPending(threadIdRef);
 const { data: accountData } = useGetEmailAccount();
 const { data: categoriesData } = useGetEmailCategories();
 const { mutate: archiveThread } = useSetThreadArchived(filtersRef);
@@ -264,7 +266,7 @@ function handleToggleRead() {
             {{ t('email.message.forward') }}
           </Button>
           <EmailDraftTriggerButton
-            v-if="lastMessage && !activeDraft"
+            v-if="lastMessage && !activeDraft && !isDraftTriggerPending"
             :thread-id="thread.id"
             :reply-to-message-id="lastMessage.id"
             :default-agent-id="accountData?.account?.defaultAgentId ?? null"
@@ -324,6 +326,18 @@ function handleToggleRead() {
 
       <div class="min-h-0 flex-1 overflow-y-auto">
         <EmailDraftPanel v-if="activeDraft" ref="draftPanel" :draft="activeDraft" />
+        <!-- The trigger's server-side row (which EmailDraftPanel's own
+             'generating' state renders off) only exists once the worker
+             picks the job up - this covers the gap between the click and
+             that row showing up, so "Draft with AI" gives feedback right
+             away instead of appearing to do nothing. -->
+        <div
+          v-else-if="isDraftTriggerPending"
+          class="flex items-center gap-2 border-b bg-amber-50/50 px-4 py-4 text-sm text-muted-foreground"
+        >
+          <Spinner class="size-4" />
+          {{ t('email.draft.generating') }}
+        </div>
         <EmailMessageItem
           v-for="message in messagesNewestFirst"
           :key="message.id"

@@ -61,6 +61,20 @@ function clearDraftTriggerPending(threadId: string): void {
   }
 }
 
+/**
+ * Reactive read of whether a "Draft with AI" trigger is still waiting on the
+ * worker's row to show up. `useGetThreadDrafts`'s polling only surfaces a
+ * draft once that row exists server-side; a view can watch this instead to
+ * render an immediate placeholder for the gap between the click and the
+ * first poll that actually finds something, rather than showing nothing.
+ */
+export function useIsDraftTriggerPending(threadId: MaybeRefOrGetter<string | null>) {
+  return computed(() => {
+    const id = toValue(threadId);
+    return !!id && pendingDraftTriggerThreadIds.has(id);
+  });
+}
+
 /** [GET] /email/draft?threadId=... */
 export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
   const { $api } = useNuxtApp();
@@ -79,6 +93,25 @@ export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
       return id && pendingDraftTriggerThreadIds.has(id) ? DRAFT_POLL_INTERVAL_MS : false;
     },
   });
+
+  // TanStack only re-evaluates/re-arms `refetchInterval` around an actual
+  // fetch on this query (onSubscribe, setOptions, or a state transition from
+  // its own fetch) - flipping the reactive `pendingDraftTriggerThreadIds` set
+  // in markDraftTriggerPending doesn't by itself make an already-idle
+  // observer notice. Relying solely on the invalidateQueries call in
+  // useTriggerEmailDraft's onSuccess is a race: on a fresh thread view it can
+  // land before this query is done mounting, so polling silently never
+  // starts until the next full remount. Watching the flag here and calling
+  // `refetch()` directly closes that gap deterministically.
+  watch(
+    () => {
+      const id = toValue(threadId);
+      return !!id && pendingDraftTriggerThreadIds.has(id);
+    },
+    (isPending) => {
+      if (isPending) query.refetch();
+    },
+  );
 
   // Once the worker's row shows up (in any status), the check above already
   // covers further polling - clear the pending flag so it doesn't also
