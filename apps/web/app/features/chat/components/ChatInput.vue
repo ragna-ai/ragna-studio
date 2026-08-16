@@ -95,7 +95,7 @@ onMounted(() => {
         v-model="text"
         :placeholder="t('chat.input.placeholder')"
         name="message"
-        class="min-h-12 resize-none rounded-xl bg-stone-50 py-3 pr-20 shadow-inner!"
+        class="max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-20 shadow-inner!"
         @keydown.enter.exact.prevent="onSubmit"
         @paste="onPaste"
       />

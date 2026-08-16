@@ -102,6 +102,10 @@ export const validEmailThreadListQuery = myzValidator(
     // Gmail label id, read-only display filter (docs/email/prd.md).
     labelId: z.string().min(1).optional(),
     folder: emailFolderEnum.optional(),
+    unreadOnly: z.coerce.boolean().optional(),
+    starredOnly: z.coerce.boolean().optional(),
+    dateFrom: z.coerce.date().optional(),
+    dateTo: z.coerce.date().optional(),
   }),
 );
 

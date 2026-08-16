@@ -1036,6 +1036,13 @@
         "title": "Aktuellen Entwurf verwerfen?",
         "message": "Für diese Unterhaltung gibt es bereits einen unversendeten Entwurf einer anderen Art. Ein neuer Entwurf verwirft diesen."
       },
+      "filters": {
+        "unread": "Ungelesen",
+        "starred": "Markiert",
+        "dateRange": "Zeitraum",
+        "dateFrom": "Von",
+        "dateTo": "Bis"
+      },
       "actions": {
         "toggleStar": "Markieren",
         "toggleRead": "Gelesen umschalten",
@@ -1064,7 +1071,6 @@
       "bodyPlaceholder": "Nachricht schreiben...",
       "send": "Senden",
       "newTitle": "Neue Nachricht",
-      "contentTooLarge": "Dieser Entwurf ist zu groß, um ihn hier zu bearbeiten oder zu senden. Verwirf ihn, oder öffne ihn in Gmail, um ihn dort zu bearbeiten und zu senden.",
       "attachments": {
         "add": "Dateien anhängen",
         "fromLibrary": "Aus Mediathek anhängen",

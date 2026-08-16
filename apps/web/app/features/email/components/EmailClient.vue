@@ -108,6 +108,10 @@ watch(
 const folderQuery = computed(() => firstQueryValue(route.query.folder));
 const categoryId = computed(() => firstQueryValue(route.query.categoryId));
 const labelId = computed(() => firstQueryValue(route.query.labelId));
+const unreadOnly = computed(() => firstQueryValue(route.query.unread) === '1');
+const starredOnly = computed(() => firstQueryValue(route.query.starred) === '1');
+const dateFrom = computed(() => firstQueryValue(route.query.dateFrom));
+const dateTo = computed(() => firstQueryValue(route.query.dateTo));
 
 // Drafts is a client-only pseudo-folder: `?folder=drafts` selects it exactly
 // like any other EMAIL_FOLDERS value (same query-param mechanism, same list +
@@ -128,6 +132,10 @@ const filters = computed<EmailThreadListFilters>(() => ({
   folder: categoryId.value || labelId.value ? null : folder.value,
   categoryId: categoryId.value,
   labelId: labelId.value,
+  unreadOnly: unreadOnly.value,
+  starredOnly: starredOnly.value,
+  dateFrom: dateFrom.value,
+  dateTo: dateTo.value,
 }));
 
 const threadsQuery = useGetEmailThreads(filters, () => !isDraftsView.value);
@@ -191,24 +199,75 @@ function pushFilterQuery(query: Record<string, string>) {
   router.push({ path: '/mail', query });
 }
 
+interface QuickFilterOverrides {
+  unreadOnly?: boolean;
+  starredOnly?: boolean;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+}
+
+// unread/starred/dateFrom/dateTo AND on top of whichever folder/category/
+// label is selected, so every navigation (which replaces the whole query)
+// has to re-include them explicitly, applying any single-field override.
+function buildFilterQuery(
+  selection: Record<string, string>,
+  overrides: QuickFilterOverrides = {},
+): Record<string, string> {
+  const nextUnread = overrides.unreadOnly ?? unreadOnly.value;
+  const nextStarred = overrides.starredOnly ?? starredOnly.value;
+  const nextDateFrom = overrides.dateFrom !== undefined ? overrides.dateFrom : dateFrom.value;
+  const nextDateTo = overrides.dateTo !== undefined ? overrides.dateTo : dateTo.value;
+
+  return {
+    ...selection,
+    ...(nextUnread ? { unread: '1' } : {}),
+    ...(nextStarred ? { starred: '1' } : {}),
+    ...(nextDateFrom ? { dateFrom: nextDateFrom } : {}),
+    ...(nextDateTo ? { dateTo: nextDateTo } : {}),
+  };
+}
+
+function currentSelectionQuery(): Record<string, string> {
+  if (categoryId.value) return { categoryId: categoryId.value };
+  if (labelId.value) return { labelId: labelId.value };
+  if (folderQuery.value) return { folder: folderQuery.value };
+  return {};
+}
+
 function selectFolder(next: EmailFolder) {
   searchInput.value = '';
-  pushFilterQuery({ folder: next });
+  pushFilterQuery(buildFilterQuery({ folder: next }));
 }
 
 function selectDrafts() {
   searchInput.value = '';
-  pushFilterQuery({ folder: 'drafts' });
+  pushFilterQuery(buildFilterQuery({ folder: 'drafts' }));
 }
 
 function selectCategory(id: string | null) {
   searchInput.value = '';
-  pushFilterQuery(id ? { categoryId: id } : {});
+  pushFilterQuery(buildFilterQuery(id ? { categoryId: id } : {}));
 }
 
 function selectLabel(id: string | null) {
   searchInput.value = '';
-  pushFilterQuery(id ? { labelId: id } : {});
+  pushFilterQuery(buildFilterQuery(id ? { labelId: id } : {}));
+}
+
+function toggleUnreadOnly() {
+  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { unreadOnly: !unreadOnly.value }));
+}
+
+function toggleStarredOnly() {
+  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { starredOnly: !starredOnly.value }));
+}
+
+function setDateFrom(value: string | null) {
+  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { dateFrom: value }));
+}
+
+function setDateTo(value: string | null) {
+  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { dateTo: value }));
 }
 
 function handleSearch(query: string) {
@@ -299,6 +358,10 @@ async function handleCompose() {
       :is-searching="isSearching"
       @open="openThread"
       @load-more="loadMoreThreads"
+      @toggle-unread-only="toggleUnreadOnly"
+      @toggle-starred-only="toggleStarredOnly"
+      @update-date-from="setDateFrom"
+      @update-date-to="setDateTo"
     />
     <!-- Thread view -->
     <EmailThreadView

@@ -112,6 +112,10 @@ export interface EmailThreadListFilters {
   categoryId: string | null;
   labelId: string | null;
   folder: EmailFolder | null;
+  unreadOnly: boolean;
+  starredOnly: boolean;
+  dateFrom: string | null;
+  dateTo: string | null;
 }
 
 export interface EmailMessageDetail {

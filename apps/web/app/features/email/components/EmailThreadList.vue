@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
+import EmailThreadListFilterBar from '~/features/email/components/EmailThreadListFilterBar.vue';
 import EmailThreadListItem from '~/features/email/components/EmailThreadListItem.vue';
 import {
   useSetThreadArchived,
@@ -28,6 +29,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   open: [string];
   loadMore: [];
+  toggleUnreadOnly: [];
+  toggleStarredOnly: [];
+  updateDateFrom: [string | null];
+  updateDateTo: [string | null];
 }>();
 
 // Composables
@@ -79,6 +84,17 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
 
 <template>
   <div class="flex h-full w-96 shrink-0 flex-col border-r">
+    <EmailThreadListFilterBar
+      v-if="!props.isSearching"
+      :unread-only="props.filters.unreadOnly"
+      :starred-only="props.filters.starredOnly"
+      :date-from="props.filters.dateFrom"
+      :date-to="props.filters.dateTo"
+      @toggle-unread-only="emit('toggleUnreadOnly')"
+      @toggle-starred-only="emit('toggleStarredOnly')"
+      @update-date-from="emit('updateDateFrom', $event)"
+      @update-date-to="emit('updateDateTo', $event)"
+    />
     <div v-if="props.isLoading" class="flex flex-1 items-center justify-center">
       <Spinner />
     </div>

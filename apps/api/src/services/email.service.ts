@@ -750,6 +750,10 @@ export async function listEmailThreadsForUser({
   categoryId,
   labelId,
   folder,
+  unreadOnly,
+  starredOnly,
+  dateFrom,
+  dateTo,
   page,
   limit,
 }: {
@@ -757,6 +761,10 @@ export async function listEmailThreadsForUser({
   categoryId?: string;
   labelId?: string;
   folder?: EmailFolder;
+  unreadOnly?: boolean;
+  starredOnly?: boolean;
+  dateFrom?: Date;
+  dateTo?: Date;
   page: number;
   limit: number;
 }): Promise<EmailThreadListResponse> {
@@ -765,6 +773,7 @@ export async function listEmailThreadsForUser({
 
   const folderFilter = resolveFolderFilter(folder);
   const effectiveLabelId = folderFilter.labelId ?? labelId;
+  const effectiveIsStarred = folderFilter.isStarred || starredOnly ? true : undefined;
 
   const { error, data: rows } = await tryCatch(() =>
     listEmailThreads({
@@ -772,7 +781,10 @@ export async function listEmailThreadsForUser({
       categoryId,
       labelId: effectiveLabelId,
       excludeLabelIds: folderFilter.excludeLabelIds,
-      isStarred: folderFilter.isStarred,
+      isStarred: effectiveIsStarred,
+      isUnread: unreadOnly ? true : undefined,
+      dateFrom,
+      dateTo,
       limit: limit + 1,
       offset,
     }),

@@ -1030,6 +1030,13 @@
         "title": "Discard the current draft?",
         "message": "This thread already has an unsent draft of a different kind. Starting a new one discards it."
       },
+      "filters": {
+        "unread": "Unread",
+        "starred": "Starred",
+        "dateRange": "Date range",
+        "dateFrom": "From",
+        "dateTo": "To"
+      },
       "actions": {
         "toggleStar": "Star",
         "toggleRead": "Toggle read",
@@ -1058,7 +1065,6 @@
       "bodyPlaceholder": "Write your message...",
       "send": "Send",
       "newTitle": "New message",
-      "contentTooLarge": "This draft is too large to edit or send here. Discard it, or open it in Gmail to edit and send it.",
       "attachments": {
         "add": "Attach files",
         "fromLibrary": "Attach from library",

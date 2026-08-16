@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, notExists, or, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, gte, lte, notExists, or, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { EmailMessage, EmailThread, NewEmailThread } from '../schema';
 import { emailMessage, emailThread } from '../schema';
@@ -47,6 +47,8 @@ export interface ListEmailThreadsFilters {
   excludeLabelIds?: string[];
   isStarred?: boolean;
   isUnread?: boolean;
+  dateFrom?: Date;
+  dateTo?: Date;
   limit: number;
   offset: number;
 }
@@ -71,6 +73,8 @@ export async function listEmailThreads({
   excludeLabelIds,
   isStarred,
   isUnread,
+  dateFrom,
+  dateTo,
   limit,
   offset,
 }: ListEmailThreadsFilters): Promise<EmailThread[]> {
@@ -106,6 +110,13 @@ export async function listEmailThreads({
           .where(and(...messageConditions)),
       ),
     );
+  }
+
+  if (dateFrom) {
+    conditions.push(gte(emailThread.lastMessageAt, dateFrom));
+  }
+  if (dateTo) {
+    conditions.push(lte(emailThread.lastMessageAt, dateTo));
   }
 
   if (excludeLabelIds && excludeLabelIds.length > 0) {

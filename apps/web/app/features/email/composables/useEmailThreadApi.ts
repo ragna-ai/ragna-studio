@@ -48,6 +48,10 @@ export function useGetEmailThreads(
           folder: resolved.folder ?? undefined,
           categoryId: resolved.categoryId ?? undefined,
           labelId: resolved.labelId ?? undefined,
+          unreadOnly: resolved.unreadOnly || undefined,
+          starredOnly: resolved.starredOnly || undefined,
+          dateFrom: resolved.dateFrom ?? undefined,
+          dateTo: resolved.dateTo ?? undefined,
         },
         signal,
       });
