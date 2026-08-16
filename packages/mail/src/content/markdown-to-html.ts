@@ -1,15 +1,12 @@
 // packages/mail/src/content/markdown-to-html.ts
 //
-// The outgoing edge of the pipeline described in html-to-markdown.ts:
-// markdown stays canonical everywhere a human or an LLM touches a message
-// body, but a Gmail draft is a MIME message and Gmail's own mobile/web UI
-// renders whatever `text/html` part it finds, not markdown source. Without
-// an HTML part, a draft opened or sent from Gmail directly (the whole point
-// of pushing drafts into the real Gmail drafts folder, see
-// docs/email/drafts-change-request.md) shows the recipient raw markdown,
-// asterisks and all. This is the one place that renders markdown to HTML so
-// every draft push can attach that HTML part alongside the markdown-derived
-// `text` part.
+// The AI draft agent still writes its reply as markdown (DRAFT_TASK_INSTRUCTIONS
+// in apps/worker's email-draft.service.ts), the one place markdown remains an
+// authored format rather than just an LLM-reading one. A Gmail draft is a MIME
+// message, and Gmail's own mobile/web UI renders whatever `text/html` part it
+// finds, not markdown source, so the agent's output is rendered here before
+// being pushed. For a genuinely plain-text quote fallback (no markdown
+// involved), use `textToHtml` instead - see its doc comment for why.
 //
 // This only ever produces the *intermediate* draft body Gmail shows
 // mid-edit. The final send still uses the client's Tiptap HTML, produced

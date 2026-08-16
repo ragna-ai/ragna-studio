@@ -9,7 +9,6 @@
 
 import type { EmailMessageWithBody } from '@repo/database';
 import { upsertEmailMessageBody } from '@repo/database';
-import { toCanonicalText } from '@repo/mail/content';
 import type { MailBody, MailProvider } from '@repo/mail/provider';
 
 export interface PersistedMessageBody {
@@ -18,7 +17,7 @@ export interface PersistedMessageBody {
 }
 
 function toPersistedBody(body: MailBody): PersistedMessageBody {
-  return { textBody: toCanonicalText(body), htmlBody: body.html };
+  return { textBody: body.text, htmlBody: body.html };
 }
 
 // Callers (classify, draft) load messages via getEmailMessageWithBodyById /

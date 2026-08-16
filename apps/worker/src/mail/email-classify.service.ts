@@ -16,32 +16,16 @@ import {
   updateEmailMessageClassification,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-// Shared quote-stripping thread-to-prompt formatter (docs/email/prd.md,
-// "Content pipeline"), also used by the draft context builder. A single
-// message here still benefits from quote-stripping: a reply's quoted tail
-// shouldn't sway the category.
-import { formatThreadForPrompt } from '@repo/mail/content';
+import { emailBodyToText } from '@repo/mail/content';
 import type { EmailClassifyJobData } from '@repo/queue';
 import { EMAIL_DRAFT_JOB, EmailDraftJobDto, queue } from '@repo/queue';
 import { getGmailProviderForAccount } from './gmail-provider';
 import { ensureMessageBody } from './message-body';
-import { toMailAddress } from './participants';
 
-// Same model/precedent as apps/api's chat.service.ts generateChatTitle:
-// Haiku-tier, uncredited "invisible spend" (docs/credits/prd.md, "Non-goals"
-// explicitly names generateChatTitle as this pattern; v1's credit system
-// only prices chat and workflow/team agent runs). Classification is the
-// same shape of cheap, high-volume utility call, so it stays uncharged
-// rather than inventing new credit infrastructure for it.
 const CLASSIFY_MODEL = 'claude-haiku-4-5';
 const NO_MATCH = 'NONE';
-const MAX_CLASSIFY_CHARS = 4000;
+const MAX_CLASSIFY_CHARS = 2000;
 
-// Structured output with the category NAMES as an enum: the schema makes a
-// truncated, typo'd, or chatty answer unrepresentable (the earlier
-// free-text variant asked for the category id and got UUIDs cut off by the
-// output cap). Names, not ids, because they are meaningful labels to the
-// model and unique per account by DB constraint.
 const CLASSIFY_SYSTEM_PROMPT = `You classify an email into exactly one category from a fixed list, for an inbox auto-categorization feature. Pick the single best-matching category by name. If none of the categories clearly fit, pick "${NO_MATCH}".`;
 
 export async function classifyEmailMessage({
@@ -66,7 +50,8 @@ export async function classifyEmailMessage({
   const body = await ensureMessageBody({ provider, message });
   const categories = await listEmailCategoriesByAccountId({ accountId });
 
-  const category = await classifyBestEffort({ message, text: body.textBody, categories });
+  const text = emailBodyToText(body, { maxLength: MAX_CLASSIFY_CHARS });
+  const category = await classifyBestEffort({ message, text, categories });
   const shouldAutoDraft = await resolvesToAutoDraft({ accountId, message, category });
 
   await updateEmailMessageClassification({
@@ -139,17 +124,17 @@ async function classifyWithModel({
   text: string | null;
   categories: EmailCategory[];
 }): Promise<string | null> {
-  const excerpt = formatThreadForPrompt(
-    [
-      {
-        from: toMailAddress(message.from),
-        date: message.sentAt,
-        subject: message.subject,
-        text: text ?? message.snippet ?? '',
-      },
-    ],
-    { maxCharacters: MAX_CLASSIFY_CHARS },
-  );
+  // A single already-truncated message (emailBodyToText applied
+  // MAX_CLASSIFY_CHARS above) doesn't need formatThreadForPrompt's
+  // multi-message budget/drop logic, which was throwing
+  // MessageExceedsPromptBudgetError once its own header pushed the block
+  // past MAX_CLASSIFY_CHARS again.
+  const from = message.from.name
+    ? `${message.from.name} <${message.from.email}>`
+    : message.from.email;
+  const subjectLine = message.subject ? `Subject: ${message.subject}\n` : '';
+  const body = text ?? message.snippet ?? '';
+  const excerpt = `From: ${from}\nDate: ${message.sentAt.toISOString()}\n${subjectLine}\n${body}`;
 
   const categoryList = categories
     .map((category) => `${category.name}: ${category.description}`)
@@ -157,13 +142,17 @@ async function classifyWithModel({
 
   const categoryNames = [NO_MATCH, ...categories.map((category) => category.name)];
 
+  const prompt = `<categories>\n${categoryList}\n</categories>\n\n<email>\n${excerpt}\n</email>`;
+
+  logger.debug(`Classifying email message ${message.id} with prompt ${JSON.stringify(prompt)}`);
+
   const { output } = await generateText({
     model: getLanguageModel({ provider: 'anthropic', model: CLASSIFY_MODEL }),
     instructions: CLASSIFY_SYSTEM_PROMPT,
     output: Output.object({
       schema: z.object({ category: z.enum(categoryNames) }),
     }),
-    prompt: `<categories>\n${categoryList}\n</categories>\n\n<email>\n${excerpt}\n</email>`,
+    prompt,
   });
 
   logger.debug(

@@ -40,6 +40,7 @@ import {
   formatThreadForPrompt,
   htmlToText,
   markdownToHtml,
+  textToHtml,
   type ThreadPromptMessageInput,
 } from '@repo/mail/content';
 import type { MailAddress, MailProvider } from '@repo/mail/provider';
@@ -362,18 +363,19 @@ async function pushDraftToGmail({
 
     if (bodyWithQuote === null || text === null) {
       // Only reached on that rare storage miss: persistMessageBody both
-      // derives the HTML/markdown pair and fills the gap for the next
+      // derives the canonical text/HTML pair and fills the gap for the next
       // reader, same as apps/api's quote-seeding does for a user-authored
       // reply/forward draft. A genuinely plain-text-only message has no
       // htmlBody at all (not just unsynced), so fall back through
-      // markdownToHtml the same way apps/api's resolveMessageHtmlForQuote
-      // does - otherwise the quote silently comes out empty instead of
-      // showing the sender's plain-text message.
+      // `textToHtml` the same way apps/api's resolveMessageHtmlForQuote does
+      // - not `markdownToHtml`, since `toCanonicalText` prefers the
+      // plain-text MIME part, so this textBody is genuine plain text, not
+      // markdown.
       const persistedReplyToBody = await persistMessageBody({
         messageId: replyToMessageId,
         body: fullReplyToMessage.body,
       });
-      const quoteHtmlBody = persistedReplyToBody.htmlBody ?? markdownToHtml(persistedReplyToBody.textBody ?? '');
+      const quoteHtmlBody = persistedReplyToBody.htmlBody ?? textToHtml(persistedReplyToBody.textBody ?? '');
       bodyWithQuote = buildDraftContentWithQuote({ htmlBody, context, quoteHtmlBody });
       text = htmlToText(bodyWithQuote);
       await updateEmailDraft({ id: draftId, accountId: account.id, content: bodyWithQuote, text });

@@ -1,12 +1,4 @@
 // apps/worker/src/mail/email-sync.service.ts
-//
-// Core email-sync algorithm (docs/email/prd.md, "Sync model" + "Worker
-// jobs"), called once per connected account by the email-sync processor.
-// Kept out of the processor file so the processor stays a thin BullMQ
-// wrapper, matching the rest of apps/worker (gen-video/gen-images delegate
-// to @repo/ai's run* functions the same way; email has no package of its
-// own to hold this, so it lives here instead).
-
 import type { EmailAccount, EmailDraft } from '@repo/database';
 import {
   createEmailDraft,
@@ -110,7 +102,11 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
     await reconcileDrafts({ account, provider });
     await sweepEmptyDrafts({ accountId: account.id });
 
-    await updateEmailAccountSyncState({ id: accountId, syncState: 'idle', lastSyncedAt: new Date() });
+    await updateEmailAccountSyncState({
+      id: accountId,
+      syncState: 'idle',
+      lastSyncedAt: new Date(),
+    });
   } catch (error) {
     await updateEmailAccountSyncState({ id: accountId, syncState: 'error' });
     throw error; // rethrow so BullMQ retries the job.
@@ -308,7 +304,9 @@ async function applyFlagsChanges({
     accountId,
     providerMessageIds: changes.map((change) => change.messageId),
   });
-  const existingByProviderId = new Map(existing.map((message) => [message.providerMessageId, message]));
+  const existingByProviderId = new Map(
+    existing.map((message) => [message.providerMessageId, message]),
+  );
 
   for (const change of changes) {
     const message = existingByProviderId.get(change.messageId);
@@ -458,7 +456,8 @@ async function refreshReconciledDraft({
   existing: EmailDraft;
   summary: MailDraftSummary;
 }): Promise<void> {
-  const isGmailNewer = summary.date.getTime() > existing.updatedAt.getTime() + DRAFT_RECONCILE_GRACE_MS;
+  const isGmailNewer =
+    summary.date.getTime() > existing.updatedAt.getTime() + DRAFT_RECONCILE_GRACE_MS;
   if (!isGmailNewer) {
     return;
   }
@@ -547,7 +546,8 @@ async function discardVanishedDrafts({
     // locally without making it into that snapshot. A row touched this
     // recently is not evidence the Gmail draft is actually gone, so it's
     // left for the next tick to judge instead of discarded here.
-    const touchedRecently = draft.updatedAt.getTime() > tickStartedAt.getTime() - DRAFT_RECONCILE_GRACE_MS;
+    const touchedRecently =
+      draft.updatedAt.getTime() > tickStartedAt.getTime() - DRAFT_RECONCILE_GRACE_MS;
     if (touchedRecently) {
       continue;
     }

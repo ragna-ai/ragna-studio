@@ -70,7 +70,7 @@ import { logger } from '@repo/logger';
 import {
   buildReplyQuoteHtml,
   htmlToText,
-  markdownToHtml,
+  textToHtml,
   toCanonicalText,
 } from '@repo/mail/content';
 import type {
@@ -1777,11 +1777,10 @@ async function resolveForwardAttachments({
 // and persist it when that happens, instead of quoting an empty body. A
 // message that turns out to have no HTML part at all (a plain-text-only
 // email, `htmlBody`/`body.html` genuinely null rather than just unpersisted)
-// falls back to rendering its markdown body through the existing
-// `markdownToHtml` renderer, so the quote still has something to show
-// instead of coming out empty - this fallback isn't specified in
-// docs/email/html-content-change-request.md, which only covers the
-// has-HTML case; flagged here rather than guessed silently elsewhere.
+// falls back to `textToHtml`, not a markdown renderer: `toCanonicalText`
+// prefers the plain-text MIME part, so this fallback almost always holds
+// genuine plain text, and running a sender's own `#`/`-`/`>` characters
+// through a markdown parser would misread them as syntax.
 async function resolveMessageHtmlForQuote({
   provider,
   message,
@@ -1817,7 +1816,7 @@ async function resolveMessageHtmlForQuote({
     }),
   );
 
-  return liveMessage.body.html ?? markdownToHtml(text);
+  return liveMessage.body.html ?? textToHtml(text);
 }
 
 export interface ReplyDraftContent {
