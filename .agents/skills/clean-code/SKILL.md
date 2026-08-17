@@ -18,7 +18,7 @@ Write code the next person can read and change without asking you. Assume that p
 9. **Comment _why_, not _what_.** The code shows what. A comment explains a non-obvious reason or trade-off. Delete comments that just restate the line.
 10. **Leave it cleaner.** Remove dead code, unused imports, and stray console logs you touch.
 11. **Prefer early returns.** Guard invalid cases up front and return. Avoid deep `if/else` nesting or `state ? :` chains; keep the happy path at the left margin.
-12. **Comment only if otherwise unclear.** If the code is clear, no comment is needed. Barely use `//` comments; prefer a docstring for functions and types. If you must comment, explain _why_, not _what_. Prefer to not comment at all.
+12. **Comment only if otherwise unclear.** If the code is clear, no comment is needed. Barely use `//` comments; prefer a docstring for functions and types. If you must comment, explain _why_, not _what_. Prefer to not comment at all and feel free to cleanup (delete) no longer needed comments.
 
 ## TypeScript
 

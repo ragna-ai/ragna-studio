@@ -97,7 +97,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 ### Coding
 
-Always use the clean-code skill.
+Before making changes to the code always load the clean-code skill.
 
 **Skip self-verification of changes** unless explicitly asked, means:
 
