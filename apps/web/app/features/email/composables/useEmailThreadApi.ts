@@ -12,6 +12,8 @@ import {
   patchThreadInLists,
 } from '~/features/email/lib/email-thread-cache';
 import type {
+  EmailBulkTrashRequest,
+  EmailBulkTrashResponse,
   EmailThreadActionResponse,
   EmailThreadDetailResponse,
   EmailThreadListFilters,
@@ -197,6 +199,44 @@ export function useSetThreadTrashed(
     onSettled: (_data, _error, { threadId }) => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
       queryClient.invalidateQueries({ queryKey: emailKeys.thread(threadId) });
+    },
+  });
+}
+
+/**
+ * [POST] /email/thread/bulk/trash - mass-trash
+ * (docs/email/mass-deletion-change-request.md). Same optimistic/onSettled
+ * shape as useSetThreadTrashed above: every requested thread is removed from
+ * the current list immediately (bulk-trash always leaves every view except
+ * Trash itself, same rule as the single-thread `trashed: true` case), and
+ * onSettled invalidates the threads query regardless of outcome. Doesn't
+ * touch the selection composable itself - EmailThreadList.vue clears it on
+ * success, since this mutation has no knowledge of that UI-only state.
+ */
+export function useBulkTrashThreads(
+  filters: MaybeRefOrGetter<EmailThreadListFilters>,
+) {
+  const { $api } = useNuxtApp();
+  const queryClient = useQueryClient();
+
+  return useMutation<EmailBulkTrashResponse, unknown, EmailBulkTrashRequest>({
+    mutationFn: ({ threadIds }) =>
+      $api<EmailBulkTrashResponse>('/email/thread/bulk/trash', {
+        method: 'POST',
+        body: { threadIds },
+      }),
+    onMutate: ({ threadIds }) => {
+      if (toValue(filters).folder === 'trashed') return;
+      for (const threadId of threadIds) {
+        patchThreadInLists(queryClient, threadId, { remove: true });
+      }
+    },
+    onError: (error) =>
+      toast.error(
+        extractErrorMessage(error, 'Failed to trash the selected threads'),
+      ),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
     },
   });
 }

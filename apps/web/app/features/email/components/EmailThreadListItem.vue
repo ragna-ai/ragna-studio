@@ -10,6 +10,7 @@ import {
   TrashIcon,
 } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
+import { Checkbox } from '~/components/ui/checkbox';
 import { useDateTimeFormat } from '~/composables/useDateTimeFormat';
 import EmailCategoryBadge from '~/features/email/components/EmailCategoryBadge.vue';
 import { threadParticipantsLabel } from '~/features/email/lib/email-display';
@@ -27,6 +28,9 @@ const props = defineProps<{
   draft: EmailDraft | null;
   isActive: boolean;
   isTrashedFolder: boolean;
+  isSelected: boolean;
+  /** Any thread is selected right now - keeps every row's checkbox visible, not just the hovered one (docs/email/mass-deletion-change-request.md, "Toolbar placement"). */
+  selectionActive: boolean;
 }>();
 
 // Emits
@@ -36,6 +40,7 @@ const emit = defineEmits<{
   trash: [boolean];
   star: [boolean];
   toggleRead: [];
+  toggleSelect: [];
 }>();
 
 // Composables
@@ -66,10 +71,16 @@ const { formatDateTime } = useDateTimeFormat();
         <!-- Timestamp and hover actions share one grid cell (both placed at
              col/row 1) so the cell sizes to the wider of the two and neither
              ever overlaps the other; group-focus-within keeps the actions (and
-             their focus rings) visible for keyboard users, not just on hover. -->
+             their focus rings) visible for keyboard users, not just on hover.
+             The selection checkbox lives in the same bar as the other row
+             actions, first in line right before the star button, instead of
+             its own column - it needs the bar visible whenever any row is
+             selected, not just on hover, hence selectionActive on top of the
+             existing group-hover/group-focus-within opacity toggle. -->
         <div class="grid shrink-0 items-center justify-items-end">
           <span
             class="col-start-1 row-start-1 flex items-center gap-1 text-xs text-muted-foreground group-focus-within:opacity-0 group-hover:opacity-0"
+            :class="{ 'opacity-0': props.selectionActive }"
           >
             <StarIcon
               v-if="props.thread.isStarred"
@@ -82,9 +93,15 @@ const { formatDateTime } = useDateTimeFormat();
             }}
           </span>
           <div
-            class="z-10 col-start-1 row-start-1 flex items-center gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+            class="z-10 col-start-1 row-start-1 flex items-center gap-0.5 group-focus-within:opacity-100 group-hover:opacity-100"
+            :class="props.selectionActive ? 'opacity-100' : 'opacity-0'"
             @click.stop
           >
+            <Checkbox
+              :model-value="props.isSelected"
+              :aria-label="t('email.thread.actions.select')"
+              @update:model-value="emit('toggleSelect')"
+            />
             <Button
               variant="ghost"
               size="icon"

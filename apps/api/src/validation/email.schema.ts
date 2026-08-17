@@ -133,6 +133,16 @@ export const validTrashActionBody = myzValidator(
   }),
 );
 
+// Batch size cap of 50 (docs/email/mass-deletion-change-request.md, "Batch
+// size cap"): keeps worst-case Gmail call volume within a single synchronous
+// request, since there's no background job for this.
+export const validBulkTrashThreadsBody = myzValidator(
+  'json',
+  z.object({
+    threadIds: z.array(primaryId).min(1).max(50),
+  }),
+);
+
 export const validStarActionBody = myzValidator(
   'json',
   z.object({

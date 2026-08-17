@@ -1328,6 +1328,43 @@ export function setThreadTrashedForUser(params: {
   });
 }
 
+export interface BulkTrashThreadResult {
+  threadId: string;
+  ok: boolean;
+}
+
+/**
+ * [POST] /email/thread/bulk/trash
+ * Loops the requested thread ids, trashing each one through the same
+ * per-thread path as `setThreadTrashedForUser`. Every id is wrapped in its
+ * own `tryCatch` so one bad id (not found, provider error) doesn't reject
+ * the whole batch - same tolerant, log-and-continue precedent as
+ * `applyActionToMessages` (docs/email/mass-deletion-change-request.md,
+ * "Execution model").
+ */
+export async function bulkSetThreadsTrashedForUser({
+  userId,
+  threadIds,
+}: {
+  userId: string;
+  threadIds: string[];
+}): Promise<BulkTrashThreadResult[]> {
+  return Promise.all(
+    threadIds.map(async (threadId) => {
+      const { error } = await tryCatch(() =>
+        setThreadTrashedForUser({ userId, threadId, trashed: true }),
+      );
+
+      if (error !== null) {
+        logger.error(`Failed to bulk-trash thread ${threadId}`, error);
+        return { threadId, ok: false };
+      }
+
+      return { threadId, ok: true };
+    }),
+  );
+}
+
 /** [POST] /email/thread/:threadId/star - loops the thread's message ids. */
 export function setThreadStarredForUser(params: {
   userId: string;

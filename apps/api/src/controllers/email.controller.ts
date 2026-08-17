@@ -4,6 +4,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   ActiveDraftConflictError,
   addAutoDraftSenderForUser,
+  bulkSetThreadsTrashedForUser,
   connectEmailAccount,
   createEmailCategoryForUser,
   createEmailDraftForUser,
@@ -41,6 +42,7 @@ import {
 import {
   validArchiveActionBody,
   validAutoDraftSenderIdParam,
+  validBulkTrashThreadsBody,
   validCreateAutoDraftSenderBody,
   validCreateEmailCategoryBody,
   validCreateEmailDraftBody,
@@ -455,6 +457,21 @@ export const emailController = new Hono()
 
     const detail = await getEmailThreadDetailForUser({ userId: user.id, threadId });
     return c.json(detail);
+  })
+  /**
+   * [POST] /email/thread/bulk/trash
+   * Mass-trash (docs/email/mass-deletion-change-request.md): trashes up to
+   * 50 threads in one request, tolerant of individual failures. Registered
+   * before /thread/:threadId's dynamic siblings so "bulk" is never matched
+   * as a thread id (the literal "trash" suffix would otherwise collide with
+   * /thread/:threadId/trash below).
+   */
+  .post('/thread/bulk/trash', validBulkTrashThreadsBody, async (c) => {
+    const user = c.get('user');
+    const { threadIds } = c.req.valid('json');
+
+    const results = await bulkSetThreadsTrashedForUser({ userId: user.id, threadIds });
+    return c.json({ results });
   })
   /**
    * [POST] /email/thread/:threadId/archive - loops the thread's message ids.

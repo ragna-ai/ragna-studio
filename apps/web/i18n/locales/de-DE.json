@@ -1048,7 +1048,16 @@
         "toggleRead": "Gelesen umschalten",
         "archive": "Archivieren",
         "trash": "In den Papierkorb verschieben",
-        "restore": "Aus dem Papierkorb wiederherstellen"
+        "restore": "Aus dem Papierkorb wiederherstellen",
+        "select": "Unterhaltung auswählen"
+      },
+      "selection": {
+        "selectAllLoaded": "Alle auswählen",
+        "deselectAll": "Auswahl aufheben",
+        "trash": "In den Papierkorb verschieben",
+        "overCapHint": "Wähle höchstens {max}, um sie gemeinsam in den Papierkorb zu verschieben",
+        "confirmTitle": "{count} Unterhaltungen in den Papierkorb verschieben?",
+        "confirmMessage": "Du kannst sie später aus dem Papierkorb wiederherstellen."
       }
     },
     "message": {

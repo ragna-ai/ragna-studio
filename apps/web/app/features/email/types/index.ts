@@ -161,6 +161,26 @@ export interface EmailThreadActionResponse {
   messages: EmailMessageActionRow[];
 }
 
+/**
+ * `POST /email/thread/bulk/trash` request body
+ * (apps/api/src/validation/email.schema.ts's `validBulkTrashThreadsBody`).
+ * Capped at 50 ids server-side; the UI enforces the same cap before sending
+ * (useEmailThreadSelection.ts's `BULK_TRASH_MAX_SELECTION`).
+ */
+export interface EmailBulkTrashRequest {
+  threadIds: string[];
+}
+
+/** One requested thread's outcome - `ok: false` for a thread that failed (not found, provider error) without failing the rest of the batch (email.service.ts's `bulkSetThreadsTrashedForUser`). */
+export interface EmailBulkTrashResult {
+  threadId: string;
+  ok: boolean;
+}
+
+export interface EmailBulkTrashResponse {
+  results: EmailBulkTrashResult[];
+}
+
 // --- Search -------------------------------------------------------------
 
 export interface EmailSearchResponse {

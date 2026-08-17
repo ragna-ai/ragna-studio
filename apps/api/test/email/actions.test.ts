@@ -341,3 +341,99 @@ describe('thread-level actions loop every message', () => {
     }
   });
 });
+
+// A fake but well-formed uuidv7 string (8-4-4-4-12 hex, version nibble '7',
+// variant nibble in [8-b]) - primaryId (email.schema.ts) checks shape via
+// z.uuidv7(), not real v7 semantics, so this is enough to pass validation
+// for ids that don't need to resolve to a real row (over-cap/empty-array
+// cases below).
+function fakeThreadId(index: number): string {
+  return `00000000-0000-7000-8000-${index.toString(16).padStart(12, '0')}`;
+}
+
+describe('POST /email/thread/bulk/trash', () => {
+  test('full-batch success: every requested thread is trashed', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const first = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
+    const second = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
+
+    const response = await app.request('/email/thread/bulk/trash', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ threadIds: [first.thread.id, second.thread.id] }),
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = (await response.json()) as { results: { threadId: string; ok: boolean }[] };
+    expect(body.results).toEqual([
+      { threadId: first.thread.id, ok: true },
+      { threadId: second.thread.id, ok: true },
+    ]);
+
+    for (const seeded of [first, second]) {
+      const row = await getEmailMessageById({ id: seeded.messageId });
+      expect(row?.labelIds).toContain('TRASH');
+    }
+  });
+
+  test('a bad/foreign thread id among valid ones fails only that entry, not the whole batch', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const owned = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
+
+    const other = await seedAuthenticatedUser();
+    const { accountId: otherAccountId } = await seedConnectedGmailAccount({
+      userId: other.userId,
+      cookieHeader: other.cookieHeader,
+    });
+    const foreign = await seedEmailThreadWithMessage({
+      accountId: otherAccountId,
+      labelIds: ['INBOX'],
+    });
+
+    const response = await app.request('/email/thread/bulk/trash', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ threadIds: [owned.thread.id, foreign.thread.id] }),
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = (await response.json()) as { results: { threadId: string; ok: boolean }[] };
+    expect(body.results).toEqual([
+      { threadId: owned.thread.id, ok: true },
+      { threadId: foreign.thread.id, ok: false },
+    ]);
+
+    const ownedRow = await getEmailMessageById({ id: owned.messageId });
+    expect(ownedRow?.labelIds).toContain('TRASH');
+
+    const foreignRow = await getEmailMessageById({ id: foreign.messageId });
+    expect(foreignRow?.labelIds).not.toContain('TRASH');
+  });
+
+  test('rejects more than 50 thread ids', async () => {
+    const { cookieHeader } = await connectAccount();
+    const threadIds = Array.from({ length: 51 }, (_, index) => fakeThreadId(index));
+
+    const response = await app.request('/email/thread/bulk/trash', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ threadIds }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(setTrashedMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects an empty thread id array', async () => {
+    const { cookieHeader } = await connectAccount();
+
+    const response = await app.request('/email/thread/bulk/trash', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ threadIds: [] }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(setTrashedMock).not.toHaveBeenCalled();
+  });
+});
