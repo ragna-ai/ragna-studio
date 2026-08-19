@@ -8,6 +8,15 @@ const iframeHeight = ref(0);
 
 let resizeObserver: ResizeObserver | undefined;
 
+// Senders style dark mode via `@media (prefers-color-scheme: dark)`, which the browser
+// matches against the OS/browser theme. We always want light, so disarm it here.
+function forceLightMode(html: string): string {
+  return html.replace(
+    /prefers-color-scheme\s*:\s*dark/gi,
+    'prefers-color-scheme: light',
+  );
+}
+
 const iframeHtml = computed(() => {
   const { headHtml, bodyHtml } = sanitizeHtmlForIframe(props.html);
 
@@ -34,6 +43,7 @@ const iframeHtml = computed(() => {
           "
         >
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light">
         <!-- Defensive layout CSS; email-provided CSS can still override this. -->
         <style>
           html,
@@ -44,6 +54,7 @@ const iframeHtml = computed(() => {
             max-width: 100%;
             overflow: hidden;
             overflow-wrap: break-word;
+            color-scheme: light;
           }
           body {
             font-family:
@@ -67,9 +78,9 @@ const iframeHtml = computed(() => {
           }
         </style>
         <!-- Sender-provided head content (e.g. newsletter <style> rules); can override the defensive CSS above. -->
-        ${headHtml}
+        ${forceLightMode(headHtml)}
       </head>
-      <body>${bodyHtml}</body>
+      <body>${forceLightMode(bodyHtml)}</body>
     </html>
   `;
 });
