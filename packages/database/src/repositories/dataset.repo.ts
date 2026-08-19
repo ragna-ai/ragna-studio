@@ -22,6 +22,8 @@ export const MAX_LIST_ROWS_LIMIT = 100;
 
 export type DatasetWithRowCount = Dataset & { rowCount: number };
 
+type DatasetTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 // VALIDATION (shared by the REST endpoints and the agent tools, per
 // docs/datasets.md decision 2)
 
@@ -264,17 +266,62 @@ export async function updateDataset({
     }
   }
 
-  const [updatedDataset] = await db
-    .update(dataset)
-    .set({ name, description, columns })
-    .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
-    .returning();
+  return db.transaction(async (tx) => {
+    const [existingDataset] = await tx
+      .select({ columns: dataset.columns })
+      .from(dataset)
+      .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
+      .for('update');
 
-  if (!updatedDataset) {
-    throw new Error('Dataset not found');
+    if (!existingDataset) {
+      throw new Error('Dataset not found');
+    }
+
+    const [updatedDataset] = await tx
+      .update(dataset)
+      .set({ name, description, columns })
+      .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
+      .returning();
+
+    if (!updatedDataset) {
+      throw new Error('Dataset not found');
+    }
+
+    if (columns) {
+      await pruneRemovedColumnsFromRows(tx, datasetId, existingDataset.columns, columns);
+    }
+
+    return updatedDataset;
+  });
+}
+
+/**
+ * Deleting a column must also drop its key from every row's jsonb blob:
+ * `updateDatasetRow` merges a row's full stored data before validating, so a
+ * leftover key for a removed column would fail validation the next time that
+ * row is edited, even when the edit itself doesn't touch that column.
+ */
+async function pruneRemovedColumnsFromRows(
+  tx: DatasetTransaction,
+  datasetId: string,
+  previousColumns: DatasetColumn[],
+  currentColumns: DatasetColumn[],
+): Promise<void> {
+  const currentColumnIds = new Set(currentColumns.map((column) => column.id));
+  const removedColumnIds = previousColumns
+    .map((column) => column.id)
+    .filter((columnId) => !currentColumnIds.has(columnId));
+
+  if (removedColumnIds.length === 0) {
+    return;
   }
 
-  return updatedDataset;
+  const prunedData = removedColumnIds.reduce(
+    (rowData, columnId) => sql<DatasetRowData>`${rowData} - ${columnId}`,
+    sql<DatasetRowData>`${datasetRow.data}`,
+  );
+
+  await tx.update(datasetRow).set({ data: prunedData }).where(eq(datasetRow.datasetId, datasetId));
 }
 
 export async function deleteDatasetById({
