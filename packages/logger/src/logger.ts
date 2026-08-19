@@ -35,9 +35,28 @@ const getConsolaLogLevel = (level: string) => {
 export const logger = createConsola({
   level: getConsolaLogLevel(config.logLevel),
   formatOptions: {
-    date: false,
+    columns: 1,
+    colors: true,
+    compact: false,
+    date: true,
   },
 });
+
+interface DateFormattingReporter {
+  formatDate: (date: Date) => string;
+}
+
+const isDateFormattingReporter = (reporter: object): reporter is DateFormattingReporter =>
+  'formatDate' in reporter && typeof reporter.formatDate === 'function';
+
+// consola's built-in reporters hardcode formatDate() to date.toLocaleTimeString(),
+// so `formatOptions.date: true` only ever prints the time, never the date.
+// Patch the reporter instances in place to include both.
+for (const reporter of logger.options.reporters) {
+  if (isDateFormattingReporter(reporter)) {
+    reporter.formatDate = (date) => date.toLocaleString();
+  }
+}
 
 export const logError = (name: string, error: unknown) => {
   if (error instanceof Error) {
