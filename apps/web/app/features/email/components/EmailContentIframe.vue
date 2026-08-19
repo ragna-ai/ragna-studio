@@ -9,7 +9,7 @@ const iframeHeight = ref(0);
 let resizeObserver: ResizeObserver | undefined;
 
 const iframeHtml = computed(() => {
-  const cleanHtml = sanitizeHtmlForIframe(props.html);
+  const { headHtml, bodyHtml } = sanitizeHtmlForIframe(props.html);
 
   return `
     <!doctype html>
@@ -42,6 +42,7 @@ const iframeHtml = computed(() => {
             margin: 0;
             padding: 0;
             max-width: 100%;
+            overflow: hidden;
             overflow-wrap: break-word;
           }
           body {
@@ -65,8 +66,10 @@ const iframeHtml = computed(() => {
             box-sizing: border-box;
           }
         </style>
+        <!-- Sender-provided head content (e.g. newsletter <style> rules); can override the defensive CSS above. -->
+        ${headHtml}
       </head>
-      <body>${cleanHtml}</body>
+      <body>${bodyHtml}</body>
     </html>
   `;
 });
@@ -106,7 +109,11 @@ onBeforeUnmount(() => {
   <iframe
     ref="iframe"
     :srcdoc="iframeHtml"
-    :style="{ width: '100%', height: `${iframeHeight}px`, border: '0' }"
+    :style="{
+      width: '100%',
+      height: `${iframeHeight}px`,
+      border: '0',
+    }"
     allow="
       geolocation 'none';
       camera 'none';

@@ -52,13 +52,18 @@ const toLabel = computed(() => formatParticipantList(props.message.to));
             >
               {{ formatParticipant(props.message.from) }}
             </p>
-            <EmailCategoryBadge v-if="props.category" :category="props.category" />
+            <EmailCategoryBadge
+              v-if="props.category"
+              :category="props.category"
+            />
           </div>
           <span class="shrink-0 text-xs text-muted-foreground">{{
             formatDateTime(props.message.sentAt)
           }}</span>
         </div>
-        <p class="truncate text-sm text-muted-foreground">{{ props.message.subject || t('email.thread.noSubject') }}</p>
+        <p class="truncate text-sm text-muted-foreground">
+          {{ props.message.subject || t('email.thread.noSubject') }}
+        </p>
         <p v-if="props.expanded" class="truncate text-xs text-muted-foreground">
           {{ t('email.message.to', { recipients: toLabel }) }}
         </p>
@@ -66,7 +71,7 @@ const toLabel = computed(() => formatParticipantList(props.message.to));
     </button>
 
     <div v-if="props.expanded" class="px-4 pb-4">
-      <div class="document-sheet rounded-md border-0 px-0 py-0">
+      <div class="bg-white">
         <EmailContentIframe :html="props.message.body?.html ?? ''" />
       </div>
 

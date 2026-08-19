@@ -14,9 +14,17 @@ export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html);
 }
 
-export function sanitizeHtmlForIframe(html: string): string {
-  return DOMPurify.sanitize(html, {
+export interface SanitizedIframeHtml {
+  headHtml: string;
+  bodyHtml: string;
+}
+
+export function sanitizeHtmlForIframe(html: string): SanitizedIframeHtml {
+  const clean = DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
+    // Keep <head> (e.g. newsletter <style> blocks) instead of dropping it:
+    // DOMPurify only returns <body>'s innerHTML unless this is set.
+    WHOLE_DOCUMENT: true,
     // Protect against hostile id/name values in untrusted markup.
     SANITIZE_DOM: true,
     SANITIZE_NAMED_PROPS: true,
@@ -45,4 +53,10 @@ export function sanitizeHtmlForIframe(html: string): string {
     ],
     FORBID_ATTR: ['onclick', 'onerror', 'onload', 'onmouseover'],
   });
+
+  const doc = new DOMParser().parseFromString(clean, 'text/html');
+  return {
+    headHtml: doc.head.innerHTML,
+    bodyHtml: doc.body.innerHTML,
+  };
 }
