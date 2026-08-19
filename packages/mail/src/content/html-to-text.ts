@@ -21,34 +21,6 @@ const FORWARDED_CONTENT_PATTERNS = [
   /(?:\r?\n|\r)?Original Message/i,
 ];
 
-const NON_CONTENT_TAG_RE = /<(head|style|script|template)[\s\S]*?<\/\1>/gi;
-
-// Block-level boundaries that should read as a line break once tags are
-// gone, so the output isn't one unbroken run-on line. Applied before tag
-// stripping, since after stripping there's nothing left to match on.
-const BLOCK_BREAK_RE = /<\/(p|div|li|tr|h[1-6]|blockquote)>|<br\s*\/?>/gi;
-
-// export function htmlToText(html: string): string {
-//   const withoutNoise = html.replace(NON_CONTENT_TAG_RE, ' ');
-//   const withLineBreaks = withoutNoise.replace(BLOCK_BREAK_RE, '\n');
-//   const withoutTags = withLineBreaks.replace(/<[^>]*>/g, ' ');
-
-//   return collapseWhitespace(decodeHtmlEntities(withoutTags));
-// }
-
-// Collapses runs of horizontal whitespace but keeps the paragraph/line
-// breaks `htmlToText` inserted, and caps blank-line runs at one so
-// deeply-nested block markup doesn't blow the output up into mostly empty
-// lines.
-function collapseWhitespace(value: string): string {
-  return value
-    .split('\n')
-    .map((line) => line.replace(/[^\S\n]+/g, ' ').trim())
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
 export function stripForwardedContent(text: string): string {
   for (const pattern of FORWARDED_CONTENT_PATTERNS) {
     const parts = text.split(pattern);
