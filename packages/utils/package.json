@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@repo/config": "workspace:*",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
