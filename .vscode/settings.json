@@ -29,5 +29,9 @@
   "[handlebars]": {
     "editor.defaultFormatter": "vscode.html-language-features",
     "editor.formatOnSave": false
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": false
   }
 }
