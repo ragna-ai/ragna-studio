@@ -3,6 +3,8 @@ import { db } from '@repo/database';
 import { account } from '@repo/database/schema';
 import { assertConnectedToTestDatabase } from '../db/db-guard';
 
+const LINKEDIN_ISSUER = 'local:oauth:linkedin';
+
 export interface SeedLinkedinAccountParams {
   userId: string;
   accessToken?: string;
@@ -44,6 +46,7 @@ export async function seedLinkedinAccount(
     userId: params.userId,
     accountId: linkedinPersonId,
     providerId: 'linkedin',
+    issuer: LINKEDIN_ISSUER,
     accessToken,
     accessTokenExpiresAt: new Date(now.getTime() + 60 * 60 * 1000),
     createdAt: now,

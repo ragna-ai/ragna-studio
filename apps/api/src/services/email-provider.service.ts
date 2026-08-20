@@ -88,9 +88,14 @@ export async function getGmailProviderForUser({
 
   return createGmailProvider({
     getAccessToken: async () => {
-      const { error, data: token } = await tryCatch(() =>
-        auth.api.getAccessToken({ body: { providerId: GOOGLE_PROVIDER_ID, userId } }),
-      );
+      const { error, data: token } = await tryCatch(async () => {
+        const account = await getAccountByUserIdAndProvider({ userId, providerId: GOOGLE_PROVIDER_ID });
+        if (!account) {
+          throw new Error('Google account is no longer linked');
+        }
+
+        return auth.api.getAccessToken({ body: { accountId: account.id, userId } });
+      });
 
       if (error !== null || !token?.accessToken) {
         logger.error('Failed to get a valid Google access token', error);

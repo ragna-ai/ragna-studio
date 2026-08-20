@@ -9,7 +9,16 @@ import { createAuthClient } from 'better-auth/vue';
 // portable, so we start from that and hand-add the lastLoginMethodClient
 // methods we actually call, instead of trying to re-derive the full plugin
 // type (which silently drops those methods, see git history of this file).
-export type AuthClient = ReturnType<typeof createAuthClient> & {
+//
+// `hydrateSession` is omitted from the base type: as of better-auth 1.7, the
+// admin plugin's `banned`/`role` additional fields make its inferred
+// `hydrateSession(session)` parameter a strict superset of the base client's
+// (which knows nothing about those fields), and function parameters are
+// contravariant, so the admin-augmented client no longer structurally
+// satisfies the base signature. We never call `hydrateSession` ourselves
+// (it's an internal SSR-hydration hook), so dropping it from this type is
+// safe and keeps the type portable.
+export type AuthClient = Omit<ReturnType<typeof createAuthClient>, 'hydrateSession'> & {
   getLastUsedLoginMethod: () => string | null;
   isLastUsedLoginMethod: (method: string) => boolean;
   clearLastUsedLoginMethod: () => void;

@@ -4,12 +4,13 @@ import { toast } from 'vue-sonner';
 export type SocialProviderId = 'google' | 'microsoft' | 'linkedin';
 
 export interface LinkedAccount {
+  /** Local `account` row id. This is what `unlinkAccount()` expects, not `accountId`. */
+  id: string;
   accountId: string;
   providerId: string;
 }
 
 interface DisconnectAccountInput {
-  providerId: string;
   accountId: string;
 }
 

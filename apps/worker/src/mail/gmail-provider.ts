@@ -5,8 +5,10 @@
 // so it lives here instead of duplicated per processor.
 
 import { auth } from '@repo/auth/server';
-import type { EmailAccount } from '@repo/database';
+import { getAccountByUserIdAndProvider, type EmailAccount } from '@repo/database';
 import { createGmailProvider, type MailProvider } from '@repo/mail/provider';
+
+const GOOGLE_PROVIDER_ID = 'google';
 
 export function getGmailProviderForAccount(account: EmailAccount): MailProvider {
   return createGmailProvider({
@@ -20,8 +22,14 @@ export function getGmailProviderForAccount(account: EmailAccount): MailProvider 
 // and refreshes it if the access token is within 5s of expiry, no HTTP
 // context required.
 async function getGoogleAccessToken(userId: string): Promise<string> {
+  const googleAccount = await getAccountByUserIdAndProvider({ userId, providerId: GOOGLE_PROVIDER_ID });
+
+  if (!googleAccount) {
+    throw new Error(`No Google account linked for user ${userId}`);
+  }
+
   const { accessToken } = await auth.api.getAccessToken({
-    body: { providerId: 'google', userId },
+    body: { accountId: googleAccount.id, userId },
   });
 
   if (!accessToken) {

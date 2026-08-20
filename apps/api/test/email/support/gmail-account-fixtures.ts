@@ -15,6 +15,7 @@ import { account } from '@repo/database/schema';
 import { assertConnectedToTestDatabase } from '@repo/testing';
 
 const GOOGLE_PROVIDER_ID = 'google';
+const GOOGLE_ISSUER = 'https://accounts.google.com';
 
 // Matches email-provider.service.ts's GMAIL_MODIFY_SCOPE constant.
 const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
@@ -47,6 +48,7 @@ async function insertGoogleAccount({
     userId,
     accountId: resolvedGoogleAccountId,
     providerId: GOOGLE_PROVIDER_ID,
+    issuer: GOOGLE_ISSUER,
     accessToken: resolvedAccessToken,
     accessTokenExpiresAt: new Date(now.getTime() + 60 * 60 * 1000),
     scope: scopes.join(','),

@@ -46,8 +46,8 @@ function handleConnect(providerId: SocialProviderId) {
   connect(providerId);
 }
 
-function handleDisconnect(providerId: SocialProviderId, accountId: string) {
-  disconnect({ providerId, accountId });
+function handleDisconnect(accountId: string) {
+  disconnect({ accountId });
 }
 
 // Hooks
@@ -90,8 +90,8 @@ function handleDisconnect(providerId: SocialProviderId, accountId: string) {
           <Button
             v-if="row.account"
             variant="outline"
-            :disabled="disconnectingAccountId === row.account.accountId"
-            @click="handleDisconnect(row.provider.id, row.account.accountId)"
+            :disabled="disconnectingAccountId === row.account.id"
+            @click="handleDisconnect(row.account.id)"
           >
             {{ $t('user.social.disconnect') }}
           </Button>

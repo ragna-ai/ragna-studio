@@ -36,7 +36,7 @@ export const auth = betterAuth({
   basePath: '/auth',
   trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
   database: drizzleAdapter(db, {
-    provider: 'sqlite',
+    provider: 'pg',
     schema,
   }),
   // session: { cookieCache: { enabled: true } },

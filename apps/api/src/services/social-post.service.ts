@@ -513,7 +513,7 @@ export async function publishSocialPost({
   }
 
   const { error: tokenError, data: token } = await tryCatch(() =>
-    auth.api.getAccessToken({ body: { providerId: 'linkedin', userId } }),
+    auth.api.getAccessToken({ body: { accountId: account.id, userId } }),
   );
 
   if (tokenError !== null || !token?.accessToken) {
