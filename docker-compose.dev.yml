@@ -15,6 +15,7 @@ services:
     profiles:
       - prod
     environment:
+      - LOG_LEVEL=normal
       - DB_HOST=postgres
       - DB_PORT=5432
       - REDIS_HOST=redis
@@ -29,6 +30,7 @@ services:
     profiles:
       - prod
     environment:
+      - LOG_LEVEL=debug
       - DB_HOST=postgres
       - DB_PORT=5432
       - REDIS_HOST=redis
