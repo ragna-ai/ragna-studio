@@ -18,7 +18,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@firecrawl/anydoc": "^0.1.8",
+    "@firecrawl/anydoc": "^0.2.3",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
