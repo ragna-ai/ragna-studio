@@ -326,7 +326,20 @@ export class GmailProvider implements MailProvider {
       }
 
       if (change.type === 'added') {
-        const message = await this.fetchMessage(change.messageId, 'metadata');
+        // The message can be gone by the time we fetch it (e.g. spam
+        // auto-purge, immediate user delete): messagesAdded already fired,
+        // but messages.get 404s. Drop it rather than let it bubble up and
+        // fail the whole sync - there's nothing to import, and there's no
+        // local row for a later `deleted` history record to clean up either.
+        let message: MailMessageMetadata;
+        try {
+          message = await this.fetchMessage(change.messageId, 'metadata');
+        } catch (error) {
+          if (error instanceof GmailApiError && error.status === 404) {
+            continue;
+          }
+          throw error;
+        }
         changes.push({ type: 'added', message });
         continue;
       }
