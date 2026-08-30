@@ -69,11 +69,11 @@ async function seedAiModels() {
     },
     {
       provider: 'google-vertex',
-      model: 'imagen-4.0-generate-001',
+      model: 'gemini-3-pro-image-preview',
       modality: 'image',
-      family: 'diffusion',
+      family: 'multimodal',
       size: 'medium',
-      displayName: 'Imagen 4',
+      displayName: 'Gemini 3 Pro Image',
       description: 'Photorealistic image generation by Google.',
     },
     {

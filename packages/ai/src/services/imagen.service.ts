@@ -4,8 +4,8 @@ import type { OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
 import { config } from '@repo/config';
 import type { GenImage, GenImageWithMedia, Media } from '@repo/database';
 import {
-  createGenImageReferences,
   createGenImageRecords,
+  createGenImageReferences,
   createMedia,
   getDefaultAiModelByModality,
   getGenImageRowsByIds,
@@ -236,7 +236,7 @@ export async function createGenImageBatch(params: CreateImageParams): Promise<Ge
     Array.from({ length: n }, () => ({
       userId,
       workspaceId,
-      status: 'pending' as const,
+      status: 'pending',
       mediaId: null,
       prompt,
       provider,
@@ -346,11 +346,14 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
 
   const configProviderParams = (): Pick<
     GenerateImageParams,
-    'aspectRatio' | 'size' | 'seed' | 'providerOptions'
+    'aspectRatio' | 'size' | 'seed' | 'providerOptions' | 'maxImagesPerCall'
   > => {
     switch (provider) {
       case 'bfl': {
-        const { width, height } = getDimensionsFromResolutionAndAspectRatio(resolution, aspectRatio);
+        const { width, height } = getDimensionsFromResolutionAndAspectRatio(
+          resolution,
+          aspectRatio,
+        );
         return {
           aspectRatio,
           seed: seed ?? undefined,
@@ -365,41 +368,57 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         };
       }
       case 'google-vertex': {
-        // Reference images never reach this branch in practice: apps/api
-        // rejects them for any model without ai_models.capabilities
-        // .supportsReferenceImages, and vertex ships with that flag unset
-        // (docs/imagegen/prd.md decision 3). That gate lives outside
-        // @repo/ai, so it's worth spelling out why a vertex request built
-        // with referenceImages anyway would be dangerous rather than just
-        // unsupported: @ai-sdk/google-vertex maps the SDK's unified
-        // `prompt: { images }` to Imagen's edit endpoint with a hardcoded
-        // `editMode: 'EDIT_MODE_INPAINT_INSERTION'`, i.e. maskless
-        // inpainting, not the subject/style conditioning bfl and openai
-        // give us. Nothing below reads references, so there is
-        // nothing to disable here; this comment is the guardrail.
-        //
-        // EU AI Act Art. 50(2) guardrail (docs/ai-labeling/prd.md part 1):
-        // addWatermark controls Imagen's SynthID marking. Never set it to
-        // false here, now or in any future edit of this branch, even to
-        // unblock a seed request. Imagen rejects `seed` while addWatermark
-        // is on, so the watermark wins: seed is dropped for this provider
-        // below instead, the same way OpenAI silently ignores it.
+        // @ai-sdk/google-vertex 5.0.63+ dropped Imagen entirely: image
+        // requests now go through Gemini's generateContent, which has no
+        // addWatermark or negativePrompt option. That's fine for the EU AI
+        // Act Art. 50(2) guardrail (docs/ai-labeling/prd.md part 1):
+        // Gemini image models apply SynthID unconditionally, with no
+        // API-level toggle to disable it.
+        if (negativePrompt) {
+          logger.warn(
+            'negativePrompt dropped for Vertex: Gemini image models have no equivalent option',
+            {
+              provider,
+              model,
+            },
+          );
+        }
+
+        // Gemini image models don't honor seed for reproducible output.
         if (seed !== null) {
           logger.warn(
-            'Seed dropped for Vertex Imagen: SynthID marking stays on and Imagen rejects seed while it is enabled',
-            { provider, model },
+            'Seed dropped for Vertex Gemini image models: not supported for reproducible output',
+            {
+              provider,
+              model,
+            },
           );
         }
 
         return {
           aspectRatio,
           seed: undefined,
+          // doGenerate throws for n > 1, so fan the batch out into one call
+          // per image instead of one call for the whole batch.
+          maxImagesPerCall: 1,
           providerOptions: toProviderOptions({
             vertex: {
-              negativePrompt: negativePrompt ?? undefined,
-              personGeneration: 'allow_all',
-              safetySetting: 'block_medium_and_above',
-              sampleImageSize: resolution === '1K' ? '1K' : '2K',
+              imageConfig: {
+                imageSize: resolution === '1K' ? '1K' : '2K',
+                personGeneration: 'ALLOW_ALL',
+              },
+              safetySettings: [
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+                {
+                  category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+                },
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+                {
+                  category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+                },
+              ],
             } satisfies GoogleVertexImageProviderOptions,
           }),
         };
@@ -458,6 +477,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
       seed: providerParams.seed,
       aspectRatio: providerParams.aspectRatio,
       size: providerParams.size,
+      maxImagesPerCall: providerParams.maxImagesPerCall,
       providerOptions: providerParams.providerOptions,
     }),
   );
@@ -494,7 +514,9 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         return { buffer, applied: false };
       }
 
-      const { error, data } = await tryCatch(() => applyImageWatermark({ buffer, mimeType: 'image/png' }));
+      const { error, data } = await tryCatch(() =>
+        applyImageWatermark({ buffer, mimeType: 'image/png' }),
+      );
 
       if (error !== null || !data) {
         logger.warn('Visible watermark failed, storing raw image instead', { error });
@@ -629,7 +651,11 @@ async function resolveDefaultImageModel(): Promise<ResolvedDefaultImageModel> {
     throw new Error('No image generation model available');
   }
 
-  return { provider: imageModel.provider, model: imageModel.model, capabilities: imageModel.capabilities };
+  return {
+    provider: imageModel.provider,
+    model: imageModel.model,
+    capabilities: imageModel.capabilities,
+  };
 }
 
 /**
