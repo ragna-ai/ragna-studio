@@ -11,6 +11,7 @@ import { useGetEmailAccount } from '~/features/email/composables/useEmailAccount
 import { useGetEmailCategories } from '~/features/email/composables/useEmailCategoryApi';
 import {
   GMAIL_CONNECT_CALLBACK_PARAM,
+  GMAIL_RECONNECT_CALLBACK_PARAM,
   useEmailConnectFlow,
 } from '~/features/email/composables/useEmailConnectFlow';
 import {
@@ -45,19 +46,27 @@ const router = useRouter();
 const queryClient = useQueryClient();
 const { t } = useI18n();
 const { data: accountData, isLoading: isAccountLoading } = useGetEmailAccount();
-const { finishConnect } = useEmailConnectFlow();
+const { finishConnect, finishReconnect } = useEmailConnectFlow();
 const { mutateAsync: createDraft, isPending: isCreatingDraft } =
   useCreateEmailDraft();
 
-// Finish the connect flow on return from Google (useEmailConnectFlow.ts).
-// finishConnect() already toasts its own error (useEmailConnectFlow.ts's
-// connectAccountMutation onError); mutateAsync still rejects afterwards, so
-// this catches and swallows it instead of leaving an unhandled rejection.
+// Finish the connect/reconnect flow on return from Google
+// (useEmailConnectFlow.ts). Both finish*() calls already toast their own
+// error; mutateAsync still rejects afterwards, so this catches and swallows
+// it instead of leaving an unhandled rejection.
 onMounted(async () => {
-  if (route.query[GMAIL_CONNECT_CALLBACK_PARAM] === '1') {
-    const { [GMAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
-    await router.replace({ query: rest });
-    await finishConnect();
+  try {
+    if (route.query[GMAIL_CONNECT_CALLBACK_PARAM] === '1') {
+      const { [GMAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+      await router.replace({ query: rest });
+      await finishConnect();
+    } else if (route.query[GMAIL_RECONNECT_CALLBACK_PARAM] === '1') {
+      const { [GMAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+      await router.replace({ query: rest });
+      await finishReconnect();
+    }
+  } catch {
+    // Already toasted by useEmailConnectFlow.ts's own mutation onError.
   }
 });
 
@@ -79,11 +88,18 @@ const isSearching = computed(() => searchInput.value.trim().length > 0);
 // catches every completed sync regardless of whether 'syncing' was ever
 // observed. A failed sync doesn't move lastSyncedAt, which is exactly why
 // the error toast still needs this syncState-based watcher.
+//
+// 'reauth_required' gets its own toast on every transition into it (not
+// gated on `previousSyncState === 'syncing'` like the plain error case):
+// email-sync.service.ts can set it straight from an 'idle' cron tick, not
+// just off a user-observed 'syncing' state.
 watch(
   () => account.value?.syncState,
   (syncState, previousSyncState) => {
     if (previousSyncState === 'syncing' && syncState === 'error') {
       toast.error(t('email.sync.syncFailed'));
+    } else if (syncState === 'reauth_required' && previousSyncState !== 'reauth_required') {
+      toast.error(t('email.sync.reauthRequiredToast'));
     }
   },
 );

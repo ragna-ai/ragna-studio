@@ -19,6 +19,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { toCanonicalText } from '@repo/mail/content';
+import { isAuthGmailError } from '@repo/mail/provider';
 import type {
   MailDraftSummary,
   MailMessageMetadata,
@@ -108,7 +109,10 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
       lastSyncedAt: new Date(),
     });
   } catch (error) {
-    await updateEmailAccountSyncState({ id: accountId, syncState: 'error' });
+    await updateEmailAccountSyncState({
+      id: accountId,
+      syncState: isAuthGmailError(error) ? 'reauth_required' : 'error',
+    });
     throw error; // rethrow so BullMQ retries the job.
   }
 }

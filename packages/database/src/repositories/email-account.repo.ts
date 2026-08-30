@@ -33,10 +33,19 @@ export async function getEmailAccountById({ id }: { id: string }): Promise<Email
   return found ?? null;
 }
 
-// Every connected account, for the sync cron's fan-out (docs/email/prd.md,
-// "Worker jobs": one email-sync job per connected account).
-export async function listEmailAccounts(): Promise<EmailAccount[]> {
-  return db.query.emailAccount.findMany();
+// Every connected account still worth polling, for the sync cron's fan-out
+// (docs/email/prd.md, "Worker jobs": one email-sync job per connected
+// account). Excludes 'reauth_required' accounts: their stored credentials
+// are known dead until the user reconnects (docs/email/gmail-reauth-change-request.md),
+// so re-enqueuing them every tick would just repeat the same failing Gmail
+// call. Reconnecting flips the row back to a syncState this query includes
+// (email.service.ts's syncEmailAccountNowForUser also enqueues that first
+// sync directly, so the account doesn't have to wait for the next tick to
+// resume).
+export async function listEmailAccountsDueForSync(): Promise<EmailAccount[]> {
+  return db.query.emailAccount.findMany({
+    where: { syncState: { ne: 'reauth_required' } },
+  });
 }
 
 // Email settings page: default draft agent only. Other fields (email

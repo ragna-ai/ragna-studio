@@ -1127,7 +1127,9 @@
         "dangerZone": "Gefahrenzone",
         "disconnect": "Gmail trennen",
         "disconnectConfirmTitle": "Gmail trennen",
-        "disconnectConfirmMessage": "Dadurch werden deine synchronisierten E-Mails, Kategorien und Entwürfe entfernt. Dein Gmail-Konto selbst bleibt unberührt."
+        "disconnectConfirmMessage": "Dadurch werden deine synchronisierten E-Mails, Kategorien und Entwürfe entfernt. Dein Gmail-Konto selbst bleibt unberührt.",
+        "reconnect": "Gmail erneut verbinden",
+        "reconnectHint": "Der Gmail-Zugriff ist abgelaufen und konnte nicht automatisch erneuert werden. Verbinde erneut, um die Synchronisierung fortzusetzen."
       },
       "categories": {
         "title": "Kategorien",
@@ -1150,9 +1152,11 @@
     "sync": {
       "syncing": "Wird synchronisiert...",
       "error": "Synchronisierungsfehler",
+      "reauthRequired": "Erneute Verbindung nötig",
       "lastSynced": "Synchronisiert {date}",
       "neverSynced": "Noch nicht synchronisiert",
-      "syncFailed": "Synchronisierung deines Postfachs fehlgeschlagen. Versuche es gleich noch einmal."
+      "syncFailed": "Synchronisierung deines Postfachs fehlgeschlagen. Versuche es gleich noch einmal.",
+      "reauthRequiredToast": "Gmail-Zugriff abgelaufen. Verbinde Gmail in den Einstellungen erneut, um die Synchronisierung fortzusetzen."
     }
   }
 }

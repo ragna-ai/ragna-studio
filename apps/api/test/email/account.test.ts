@@ -25,7 +25,7 @@ const accountStatusSchema = z.object({
   id: z.string(),
   email: z.string(),
   defaultAgentId: z.string().nullable(),
-  syncState: z.enum(['idle', 'syncing', 'error']),
+  syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
   lastSyncedAt: z.string().nullable(),
 });
 
@@ -40,7 +40,7 @@ const fullAccountResponseSchema = z.object({
     userId: z.string(),
     email: z.string(),
     defaultAgentId: z.string().nullable(),
-    syncState: z.enum(['idle', 'syncing', 'error']),
+    syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
   }),
 });
 

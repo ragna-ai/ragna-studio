@@ -1121,7 +1121,9 @@
         "dangerZone": "Danger zone",
         "disconnect": "Disconnect Gmail",
         "disconnectConfirmTitle": "Disconnect Gmail",
-        "disconnectConfirmMessage": "This removes your synced mail, categories, and drafts. Your Gmail account itself is unaffected."
+        "disconnectConfirmMessage": "This removes your synced mail, categories, and drafts. Your Gmail account itself is unaffected.",
+        "reconnect": "Reconnect Gmail",
+        "reconnectHint": "Gmail access expired and could not refresh automatically. Reconnect to resume syncing."
       },
       "categories": {
         "title": "Categories",
@@ -1144,9 +1146,11 @@
     "sync": {
       "syncing": "Syncing...",
       "error": "Sync error",
+      "reauthRequired": "Reconnect needed",
       "lastSynced": "Synced {date}",
       "neverSynced": "Not synced yet",
-      "syncFailed": "Failed to sync your mailbox. Try again in a moment."
+      "syncFailed": "Failed to sync your mailbox. Try again in a moment.",
+      "reauthRequiredToast": "Gmail access expired. Reconnect Gmail in settings to resume syncing."
     }
   }
 }

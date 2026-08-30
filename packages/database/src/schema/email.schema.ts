@@ -8,7 +8,12 @@ import { user } from './user.schema';
 // later without a schema change (docs/email/prd.md, "Future directions").
 export type EmailProvider = 'gmail';
 
-export type EmailAccountSyncState = 'idle' | 'syncing' | 'error';
+// 'reauth_required': Gmail rejected the stored credentials with 401/403 even
+// after gmail.client.ts's one-shot token refetch (gmail-provider.ts's stored
+// refresh token is missing/revoked). Distinct from 'error' (transient
+// failure, self-heals on the next sync) so the UI can prompt reconnecting
+// Gmail instead of just "try again".
+export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_required';
 
 // Shared shape for from/to/cc columns: Gmail (and any future provider)
 // always carries a display name alongside the address.

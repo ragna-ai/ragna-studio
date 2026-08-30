@@ -59,7 +59,7 @@ interface GmailRawMessageBody {
   threadId?: string;
 }
 
-export { GmailApiError } from './gmail.client';
+export { GmailApiError, isAuthGmailError } from './gmail.client';
 
 export interface GmailProviderOptions {
   /** Resolves a fresh, valid Gmail OAuth access token; the provider does not refresh or cache tokens. */

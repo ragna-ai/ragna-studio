@@ -1,8 +1,13 @@
 // packages/mail/src/provider/gmail/gmail.client.ts
 //
 // Thin authorized fetch wrapper for the Gmail REST API v1, with retry on
-// transient failures (429 / 5xx). Callers are responsible for interpreting a
-// 404 where it's meaningful (e.g. `users.history.list` on an expired cursor).
+// transient failures (429 / 5xx) and on a 401/403 (getAccessToken's caller
+// re-checks token expiry on every call, so a retry can self-heal a token
+// that had genuinely just expired; an account whose refresh token is
+// missing or revoked gets the same stale token back and fails the same way
+// again, and that final error is what reaches the caller). Callers are
+// responsible for interpreting a 404 where it's meaningful (e.g.
+// `users.history.list` on an expired cursor).
 
 import { retryExpoBackoff } from '@repo/utils';
 
@@ -37,7 +42,7 @@ export interface GmailRequestOptions {
   body?: string;
 }
 
-/** GETs, POSTs or PUTs a Gmail REST path (relative to `/gmail/v1/`), retrying transient failures. */
+/** GETs, POSTs or PUTs a Gmail REST path (relative to `/gmail/v1/`), retrying transient and auth failures. */
 export async function gmailRequest<T>(
   getAccessToken: () => Promise<string>,
   path: string,
@@ -68,7 +73,14 @@ export async function gmailRequestVoid(
 }
 
 function isRetryableGmailError(error: unknown): boolean {
-  return error instanceof GmailApiError && (error.status === 429 || error.status >= 500);
+  return (
+    error instanceof GmailApiError && (error.status === 429 || error.status >= 500 || isAuthGmailError(error))
+  );
+}
+
+/** A 401/403 from Gmail: the caller's access token was rejected outright, distinct from a transient 429/5xx. */
+export function isAuthGmailError(error: unknown): boolean {
+  return error instanceof GmailApiError && (error.status === 401 || error.status === 403);
 }
 
 async function performGmailRequest<T>(
