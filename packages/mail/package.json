@@ -27,16 +27,16 @@
     "maizzle:build": "maizzle build --config maizzle.config.ts"
   },
   "dependencies": {
-    "@maizzle/framework": "6.1.1",
+    "@maizzle/framework": "6.1.2",
     "@maizzle/tailwindcss": "1.5.6",
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
     "@truto/turndown-plugin-gfm": "^1.0.3",
     "email-reply-parser": "^2.3.9",
     "html-to-text": "^10.0.1",
-    "isomorphic-dompurify": "^3.22.0",
-    "marked": "18.0.10",
-    "nodemailer": "^9.0.5",
+    "isomorphic-dompurify": "^3.23.0",
+    "marked": "18.0.11",
+    "nodemailer": "^9.0.6",
     "nodemailer-brevo-transport": "^2.2.1",
     "turndown": "^7.2.4"
   },
@@ -48,7 +48,7 @@
     "@types/turndown": "^5.0.6",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vue": "^3.5.41"
+    "vue": "^3.5.42"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

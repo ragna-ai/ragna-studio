@@ -46,10 +46,10 @@ catalog:
   tailwindcss: ^4.3.3
   tsdown: ^0.22.14
   typescript: 6.0.3
-  zod: 4.4.3
-  oxfmt: ^0.64.0
-  oxlint: ^1.79.0
-  ai: ^7.0.79
+  zod: 4.5.2
+  oxfmt: ^0.65.0
+  oxlint: ^1.80.0
+  ai: ^7.0.85
 
 updateConfig:
   ignoreDependencies:

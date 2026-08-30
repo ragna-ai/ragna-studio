@@ -21,7 +21,7 @@
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
     "ai": "catalog:",
-    "better-auth": "^1.7.1"
+    "better-auth": "^1.7.2"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
