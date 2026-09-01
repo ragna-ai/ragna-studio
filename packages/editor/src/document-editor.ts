@@ -42,3 +42,16 @@ export function createDocumentEditor(options: CreateDocumentEditorOptions = {}):
 export function getDocumentMarkdown(editor: Editor): string {
   return editor.getMarkdown();
 }
+
+/**
+ * Replaces the editor's content. `contentType` must match the instance's own
+ * `contentType` (see `CreateDocumentEditorOptions` above): it isn't carried
+ * over from the instance and defaults to 'json' per call.
+ */
+export function setDocumentContent(
+  editor: Editor,
+  content: string,
+  contentType: 'markdown' | 'html',
+): void {
+  editor.commands.setContent(content, { contentType });
+}

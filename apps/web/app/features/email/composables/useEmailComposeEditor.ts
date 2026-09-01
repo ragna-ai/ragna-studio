@@ -17,6 +17,7 @@ import {
   insertTable as insertTableCommand,
   isInsideTable,
   redo as redoCommand,
+  setDocumentContent,
   setLink as setLinkCommand,
   toggleCodeBlock as toggleCodeBlockCommand,
   toggleHeaderColumn as toggleHeaderColumnCommand,
@@ -184,7 +185,7 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
    * packages/editor/src/document-editor.ts).
    */
   function setContent(html: string) {
-    requireEditor().commands.setContent(html, { contentType: 'html' });
+    setDocumentContent(requireEditor(), html, 'html');
   }
 
   return {

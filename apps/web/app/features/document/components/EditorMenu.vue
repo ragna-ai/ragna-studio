@@ -24,9 +24,44 @@ import {
 import type { DocumentEditorController } from '~/features/document/composables/useDocumentEditor';
 import { cn } from '~/lib/utils';
 
+/**
+ * The toolbar only drives formatting/table/link commands, never markdown
+ * serialization, so it accepts any controller offering this subset - both
+ * `DocumentEditorController` and the email feature's
+ * `EmailComposeEditorController` satisfy it, without coupling this component
+ * to a controller type it doesn't fully use.
+ */
+export type EditorToolbarController = Pick<
+  DocumentEditorController,
+  | 'editor'
+  | 'formatText'
+  | 'cycleList'
+  | 'cycleTextOrientation'
+  | 'toggleTaskList'
+  | 'toggleCodeBlock'
+  | 'undo'
+  | 'redo'
+  | 'isInTable'
+  | 'insertTable'
+  | 'addRowBefore'
+  | 'addRowAfter'
+  | 'deleteRow'
+  | 'addColumnBefore'
+  | 'addColumnAfter'
+  | 'deleteColumn'
+  | 'deleteTable'
+  | 'toggleHeaderRow'
+  | 'toggleHeaderColumn'
+  | 'getLink'
+  | 'setLink'
+  | 'unsetLink'
+  | 'insertImage'
+  | 'wordCount'
+>;
+
 // Props
 const props = defineProps<{
-  controller: DocumentEditorController;
+  controller: EditorToolbarController;
   showWordCount?: boolean;
   class?: string;
 }>();
