@@ -56,7 +56,10 @@ function taskBasePath(workspaceId: WorkspaceId): string {
  * `undefined`s for the filter slots, which only partial-matches a list
  * query whose filters are ALSO all `undefined` — not the filtered ones.
  */
-function invalidateTaskLists(queryClient: QueryClient, workspaceId: WorkspaceId): Promise<void> {
+function invalidateTaskLists(
+  queryClient: QueryClient,
+  workspaceId: WorkspaceId,
+): Promise<void> {
   const resolvedWorkspaceId = toValue(workspaceId);
   return queryClient.invalidateQueries({
     predicate: (query) =>
@@ -103,10 +106,13 @@ export function useGetTask(
   return useQuery<TaskDetailResponse>({
     queryKey: taskKeys.detail(workspaceId, taskId),
     queryFn: ({ signal }) =>
-      $api<TaskDetailResponse>(`${taskBasePath(workspaceId)}/${toValue(taskId)}`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<TaskDetailResponse>(
+        `${taskBasePath(workspaceId)}/${toValue(taskId)}`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(taskId),
     ...options,
   });
@@ -119,7 +125,14 @@ export function useCreateTask() {
   return useMutation<TaskResponse, unknown, CreateTaskRequest>({
     mutationFn: (body) =>
       $api<TaskResponse>(taskBasePath(workspaceId), { method: 'POST', body }),
-    onSuccess: () => invalidateTaskLists(queryClient, workspaceId),
+    onSuccess: (_response, { parentTaskId }) => {
+      if (parentTaskId) {
+        queryClient.invalidateQueries({
+          queryKey: taskKeys.detail(workspaceId, parentTaskId),
+        });
+      }
+      return invalidateTaskLists(queryClient, workspaceId);
+    },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to create task'));
     },
@@ -159,10 +172,13 @@ export function useUpdateTask() {
       queryClient.setQueryData<TaskDetailResponse>(
         taskKeys.detail(workspaceId, taskId),
         (previous) =>
-          previous ? { task: { ...previous.task, ...response.task } } : previous,
+          previous
+            ? { task: { ...previous.task, ...response.task } }
+            : previous,
       );
 
-      const touchesJoinedFields = labelIds !== undefined || assignedAgentId !== undefined;
+      const touchesJoinedFields =
+        labelIds !== undefined || assignedAgentId !== undefined;
       if (touchesJoinedFields) {
         queryClient.invalidateQueries({
           queryKey: taskKeys.detail(workspaceId, taskId),
@@ -209,7 +225,9 @@ export function useMoveTask() {
       queryClient.setQueryData<TaskDetailResponse>(
         taskKeys.detail(workspaceId, taskId),
         (previous) =>
-          previous ? { task: { ...previous.task, ...response.task } } : previous,
+          previous
+            ? { task: { ...previous.task, ...response.task } }
+            : previous,
       );
     },
     onError: (error) => {
@@ -233,7 +251,9 @@ export function useDeleteTask() {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (taskId) =>
-      $api<void>(`${taskBasePath(workspaceId)}/${taskId}`, { method: 'DELETE' }),
+      $api<void>(`${taskBasePath(workspaceId)}/${taskId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: async () => {
       await invalidateTaskLists(queryClient, workspaceId);
       toast.success('Task deleted');
