@@ -13,6 +13,14 @@ export const validTaskIdParam = myzValidator(
   }),
 );
 
+export const validTaskAttachmentParams = myzValidator(
+  'param',
+  z.object({
+    taskId: primaryId,
+    attachmentId: primaryId,
+  }),
+);
+
 // List is unpaginated (docs/tasks/prd.md, "List"): a board needs every card.
 // Only optional filters, no page/limit/sort.
 export const validTaskListQuery = myzValidator(

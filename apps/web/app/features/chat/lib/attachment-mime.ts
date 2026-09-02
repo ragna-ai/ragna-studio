@@ -53,3 +53,23 @@ export function isImageFilename(filename: string): boolean {
 export function isImageMediaType(mediaType: string): boolean {
   return mediaType.startsWith('image/');
 }
+
+// vscode-icons file-type icons, keyed by extension. Covers exactly the
+// document kinds this repo's attachments accept (docs/media-library/prd.md);
+// images never reach this map since they render as an actual thumbnail
+// instead of a file-type icon.
+const FILE_TYPE_ICON_BY_EXTENSION: Record<string, string> = {
+  '.pdf': 'vscode-icons:file-type-pdf2',
+  '.docx': 'vscode-icons:file-type-word',
+  '.pptx': 'vscode-icons:file-type-powerpoint',
+  '.xlsx': 'vscode-icons:file-type-excel',
+  '.csv': 'vscode-icons:file-type-excel',
+  '.txt': 'vscode-icons:file-type-text',
+  '.md': 'vscode-icons:file-type-markdown',
+};
+
+const DEFAULT_FILE_TYPE_ICON = 'vscode-icons:default-file';
+
+export function getFileTypeIconName(filename: string): string {
+  return FILE_TYPE_ICON_BY_EXTENSION[getFileExtension(filename)] ?? DEFAULT_FILE_TYPE_ICON;
+}

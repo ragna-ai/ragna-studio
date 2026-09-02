@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { media, type Media } from './media.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -118,3 +119,34 @@ export const taskToTaskLabel = pgTable(
 
 export type TaskToTaskLabel = typeof taskToTaskLabel.$inferSelect;
 export type NewTaskToTaskLabel = typeof taskToTaskLabel.$inferInsert;
+
+// TASK ATTACHMENT
+// Links a task to a media row, same shape as media.schema.ts's
+// chatAttachment (docs/tasks/attachments-prd.md). Deleting a task cascades
+// its attachment rows; the media row itself is only removed once its
+// reference count across every link table drops to zero, driven explicitly
+// by media.service.ts (apps/api). mediaId has no onDelete action on
+// purpose: a media row must never be deleted while an attachment still
+// points at it.
+export const taskAttachment = pgTable(
+  'task_attachments',
+  {
+    id: primaryIdColumn,
+    taskId: text('task_id')
+      .notNull()
+      .references(() => task.id, { onDelete: 'cascade' }),
+    mediaId: text('media_id')
+      .notNull()
+      .references(() => media.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('taskAttachment_taskId_idx').on(table.taskId),
+    index('taskAttachment_mediaId_idx').on(table.mediaId),
+  ],
+);
+
+export type TaskAttachment = typeof taskAttachment.$inferSelect;
+export type NewTaskAttachment = typeof taskAttachment.$inferInsert;
+
+export type TaskAttachmentWithMedia = TaskAttachment & { media: Media };

@@ -25,7 +25,7 @@ import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
-import { task, taskLabel, taskToTaskLabel } from './task.schema';
+import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -70,6 +70,7 @@ const schema = {
   workflowRunStep,
   notification,
   task,
+  taskAttachment,
   taskLabel,
   taskToTaskLabel,
   workspace,
@@ -511,6 +512,7 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
     }),
     chatAttachments: r.many.chatAttachment(),
+    taskAttachments: r.many.taskAttachment(),
     genImages: r.many.genImage(),
     genImageReferences: r.many.genImageReference(),
     genVideos: r.many.genVideo({ alias: 'genVideoMedia' }),
@@ -612,6 +614,19 @@ export const relations = defineRelations(schema, (r) => ({
     labels: r.many.taskLabel({
       from: r.task.id.through(r.taskToTaskLabel.taskId),
       to: r.taskLabel.id.through(r.taskToTaskLabel.taskLabelId),
+    }),
+    attachments: r.many.taskAttachment(),
+  },
+  taskAttachment: {
+    task: r.one.task({
+      from: r.taskAttachment.taskId,
+      to: r.task.id,
+      optional: false,
+    }),
+    media: r.one.media({
+      from: r.taskAttachment.mediaId,
+      to: r.media.id,
+      optional: false,
     }),
   },
   taskLabel: {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CornerUpLeftIcon } from '@lucide/vue';
+import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
 import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
@@ -168,6 +169,8 @@ async function handleDelete() {
               :task-id="task.id"
               :description="task.description"
             />
+
+            <TaskAttachments :task-id="task.id" />
 
             <TaskSubtaskList
               v-if="!task.parentTaskId"

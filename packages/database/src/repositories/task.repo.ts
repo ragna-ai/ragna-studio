@@ -1,11 +1,28 @@
 import { and, asc, eq, inArray, isNotNull, isNull, ne, notInArray, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
-import type { NewTask, Task, TaskLabel, TaskPriority, TaskStatus } from '../schema';
-import { task, taskToTaskLabel, workspace } from '../schema';
+import type {
+  NewTask,
+  NewTaskAttachment,
+  Task,
+  TaskAttachment,
+  TaskAttachmentWithMedia,
+  TaskLabel,
+  TaskPriority,
+  TaskStatus,
+} from '../schema';
+import { task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
-export type { NewTask, Task, TaskPriority, TaskStatus } from '../schema';
+export type {
+  NewTask,
+  NewTaskAttachment,
+  Task,
+  TaskAttachment,
+  TaskAttachmentWithMedia,
+  TaskPriority,
+  TaskStatus,
+} from '../schema';
 
 type TaskTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -469,4 +486,41 @@ export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
 
 export async function markTaskReminderSent({ id }: { id: string }): Promise<void> {
   await db.update(task).set({ reminderSentAt: new Date() }).where(eq(task.id, id));
+}
+
+// TASK ATTACHMENT
+
+export async function createTaskAttachment(values: NewTaskAttachment): Promise<TaskAttachment> {
+  const [created] = await db.insert(taskAttachment).values(values).returning();
+
+  if (!created) {
+    throw new Error('Failed to create task attachment');
+  }
+
+  return created;
+}
+
+export async function deleteTaskAttachmentById({ id }: { id: string }): Promise<void> {
+  await db.delete(taskAttachment).where(eq(taskAttachment.id, id));
+}
+
+export async function getTaskAttachmentsByTaskId({
+  taskId,
+}: {
+  taskId: string;
+}): Promise<TaskAttachmentWithMedia[]> {
+  return db.query.taskAttachment.findMany({
+    where: { taskId },
+    with: { media: true },
+    orderBy: (t, { asc: ascOrder }) => ascOrder(t.createdAt),
+  });
+}
+
+export async function getTaskAttachmentById({ id }: { id: string }): Promise<TaskAttachmentWithMedia | null> {
+  const found = await db.query.taskAttachment.findFirst({
+    where: { id },
+    with: { media: true },
+  });
+
+  return found ?? null;
 }

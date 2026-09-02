@@ -3,6 +3,11 @@ import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
+  listTaskAttachments,
+  removeTaskAttachment,
+  uploadTaskAttachments,
+} from '../services/task-attachment.service';
+import {
   createTaskForUser,
   deleteTaskForUser,
   getTask,
@@ -13,6 +18,7 @@ import {
 import {
   validCreateTaskBody,
   validMoveTaskBody,
+  validTaskAttachmentParams,
   validTaskIdParam,
   validTaskListQuery,
   validUpdateTaskBody,
@@ -128,4 +134,56 @@ export const taskController = new Hono()
     });
 
     return c.json({ task: taskRecord });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/task/:taskId/attachments
+   */
+  .get('/:taskId/attachments', validTaskIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const result = await listTaskAttachments({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/task/:taskId/attachments
+   * Upload one or more files in a single multipart request (`files` field)
+   * and attach them to the task.
+   */
+  .post('/:taskId/attachments', validTaskIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const body = await c.req.parseBody({ all: true });
+    const filesField = body.files;
+    const files = Array.isArray(filesField) ? filesField : filesField ? [filesField] : [];
+    const uploadedFiles = files.filter((file): file is File => file instanceof File);
+
+    const result = await uploadTaskAttachments({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      files: uploadedFiles,
+    });
+
+    return c.json(result, StatusCodes.CREATED);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/task/:taskId/attachments/:attachmentId
+   * Detaches a file from the task and deletes its media once unreferenced.
+   */
+  .delete('/:taskId/attachments/:attachmentId', validTaskAttachmentParams, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    await removeTaskAttachment({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      attachmentId: param.attachmentId,
+    });
+
+    return c.json({ message: 'Attachment deleted successfully' });
   });

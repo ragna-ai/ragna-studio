@@ -971,6 +971,20 @@
       "deleteConfirmTitle": "Delete task",
       "deleteConfirmMessage": "Are you sure you want to delete this task? Its subtasks become top-level tasks."
     },
+    "attachment": {
+      "title": "Attachments",
+      "add": "Add files",
+      "dropHint": "Drop files to attach them",
+      "empty": "No attachments yet.",
+      "uploadFailed": "Upload failed",
+      "removeFailed": "Failed to remove attachment",
+      "retry": "Retry upload",
+      "remove": "Remove attachment",
+      "errors": {
+        "unsupportedType": "\"{name}\" isn't a supported file type.",
+        "tooLarge": "\"{name}\" is larger than 10 MB."
+      }
+    },
     "property": {
       "priority": "Priority",
       "dueDate": "Due date",

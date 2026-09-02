@@ -40,6 +40,8 @@ export const taskKeys = {
     ] as const,
   detail: (workspaceId: WorkspaceId, taskId: MaybeRefOrGetter<string>) =>
     ['tasks', workspaceId, 'detail', taskId] as const,
+  attachments: (workspaceId: WorkspaceId, taskId: MaybeRefOrGetter<string>) =>
+    ['tasks', workspaceId, 'detail', taskId, 'attachments'] as const,
 };
 
 function taskBasePath(workspaceId: WorkspaceId): string {
@@ -260,6 +262,111 @@ export function useDeleteTask() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to delete task'));
+    },
+  });
+}
+
+function taskAttachmentsBasePath(
+  workspaceId: WorkspaceId,
+  taskId: MaybeRefOrGetter<string>,
+): string {
+  return `${taskBasePath(workspaceId)}/${toValue(taskId)}/attachments`;
+}
+
+// One uploaded file, as returned by the task attachments endpoint. Same
+// shape as ~/features/chat/composables/useChatApi.ts's ChatAttachment: `url`
+// is a public CDN url for images and an authenticated API download path for
+// documents.
+export interface TaskAttachment {
+  id: string;
+  mediaId: string;
+  filename: string;
+  mediaType: string;
+  size: number;
+  url: string;
+}
+
+export interface GetTaskAttachmentsResponse {
+  attachments: TaskAttachment[];
+}
+
+export function useGetTaskAttachments(
+  taskId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useQuery<GetTaskAttachmentsResponse>({
+    queryKey: taskKeys.attachments(workspaceId, taskId),
+    queryFn: ({ signal }) =>
+      $api<GetTaskAttachmentsResponse>(
+        taskAttachmentsBasePath(workspaceId, taskId),
+        { method: 'GET', signal },
+      ),
+    enabled: () => !!toValue(workspaceId) && !!toValue(taskId),
+    ...options,
+  });
+}
+
+export interface UploadTaskAttachmentsResponse {
+  attachments: TaskAttachment[];
+}
+
+export interface UploadTaskAttachmentsVariables {
+  taskId: string;
+  files: File[];
+}
+
+// Error handling is left to the caller
+// (~/features/task/composables/useTaskAttachments.ts): it renders a
+// per-item retry/dismiss state instead of a toast, so a generic `onError`
+// here would double-report the same failure.
+export function useUploadTaskAttachments() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation<
+    UploadTaskAttachmentsResponse,
+    unknown,
+    UploadTaskAttachmentsVariables
+  >({
+    mutationFn: ({ taskId, files }) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('files', file));
+      return $api<UploadTaskAttachmentsResponse>(
+        taskAttachmentsBasePath(workspaceId, taskId),
+        { method: 'POST', body: formData },
+      );
+    },
+    onSuccess: (_response, { taskId }) => {
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.attachments(workspaceId, taskId),
+      });
+    },
+  });
+}
+
+export interface DeleteTaskAttachmentVariables {
+  taskId: string;
+  attachmentId: string;
+}
+
+// Also left to the caller to report, for the same reason as the upload
+// mutation above.
+export function useDeleteTaskAttachment() {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, DeleteTaskAttachmentVariables>({
+    mutationFn: ({ taskId, attachmentId }) =>
+      $api<void>(
+        `${taskAttachmentsBasePath(workspaceId, taskId)}/${attachmentId}`,
+        { method: 'DELETE' },
+      ),
+    onSuccess: (_response, { taskId }) => {
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.attachments(workspaceId, taskId),
+      });
     },
   });
 }

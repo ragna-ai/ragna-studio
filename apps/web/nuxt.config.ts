@@ -46,6 +46,18 @@ export default defineNuxtConfig({
     provider: 'none',
     clientBundle: {
       scan: true,
+      // Attachment file-type icons are resolved from a filename at runtime
+      // (`getFileTypeIconName`), so the static `scan` can't discover them —
+      // list them explicitly to get bundled.
+      icons: [
+        'vscode-icons:file-type-pdf2',
+        'vscode-icons:file-type-word',
+        'vscode-icons:file-type-powerpoint',
+        'vscode-icons:file-type-excel',
+        'vscode-icons:file-type-text',
+        'vscode-icons:file-type-markdown',
+        'vscode-icons:default-file',
+      ],
     },
     customCollections: [
       {

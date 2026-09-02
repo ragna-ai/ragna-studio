@@ -1,7 +1,15 @@
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { db } from '../db';
 import type { ChatAttachment, ChatAttachmentWithMedia, Media, NewChatAttachment, NewMedia } from '../schema';
-import { chatAttachment, genImage, genImageReference, genVideo, media, socialPostMedia } from '../schema';
+import {
+  chatAttachment,
+  genImage,
+  genImageReference,
+  genVideo,
+  media,
+  socialPostMedia,
+  taskAttachment,
+} from '../schema';
 
 export type { ChatAttachment, ChatAttachmentWithMedia, Media, MediaOrigin, NewChatAttachment, NewMedia } from '../schema';
 
@@ -41,6 +49,7 @@ export async function getMediaByWorkspaceId({ workspaceId }: { workspaceId: stri
 export async function countMediaReferences({ mediaId }: { mediaId: string }): Promise<number> {
   const [
     chatAttachmentCount,
+    taskAttachmentCount,
     genImageCount,
     genImageReferenceCount,
     genVideoCount,
@@ -48,6 +57,7 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
     socialPostMediaCount,
   ] = await Promise.all([
     db.$count(chatAttachment, eq(chatAttachment.mediaId, mediaId)),
+    db.$count(taskAttachment, eq(taskAttachment.mediaId, mediaId)),
     db.$count(genImage, eq(genImage.mediaId, mediaId)),
     db.$count(genImageReference, eq(genImageReference.mediaId, mediaId)),
     db.$count(genVideo, eq(genVideo.mediaId, mediaId)),
@@ -57,6 +67,7 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
 
   return (
     chatAttachmentCount +
+    taskAttachmentCount +
     genImageCount +
     genImageReferenceCount +
     genVideoCount +
@@ -77,6 +88,7 @@ export async function findUnreferencedMediaOlderThan({ hours }: { hours: number 
     .select({ media })
     .from(media)
     .leftJoin(chatAttachment, eq(chatAttachment.mediaId, media.id))
+    .leftJoin(taskAttachment, eq(taskAttachment.mediaId, media.id))
     .leftJoin(genImage, eq(genImage.mediaId, media.id))
     .leftJoin(genImageReference, eq(genImageReference.mediaId, media.id))
     .leftJoin(genVideo, or(eq(genVideo.mediaId, media.id), eq(genVideo.frameMediaId, media.id)))
@@ -84,6 +96,7 @@ export async function findUnreferencedMediaOlderThan({ hours }: { hours: number 
     .where(
       and(
         isNull(chatAttachment.id),
+        isNull(taskAttachment.id),
         isNull(genImage.id),
         isNull(genImageReference.id),
         isNull(genVideo.id),

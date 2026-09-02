@@ -977,6 +977,20 @@
       "deleteConfirmTitle": "Aufgabe löschen",
       "deleteConfirmMessage": "Möchtest du diese Aufgabe wirklich löschen? Ihre Unteraufgaben werden zu eigenständigen Aufgaben."
     },
+    "attachment": {
+      "title": "Anhänge",
+      "add": "Dateien hinzufügen",
+      "dropHint": "Dateien hier ablegen, um sie anzuhängen",
+      "empty": "Noch keine Anhänge.",
+      "uploadFailed": "Hochladen fehlgeschlagen",
+      "removeFailed": "Anhang konnte nicht entfernt werden",
+      "retry": "Hochladen wiederholen",
+      "remove": "Anhang entfernen",
+      "errors": {
+        "unsupportedType": "\"{name}\" ist kein unterstützter Dateityp.",
+        "tooLarge": "\"{name}\" ist größer als 10 MB."
+      }
+    },
     "property": {
       "priority": "Priorität",
       "dueDate": "Fällig am",
