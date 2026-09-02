@@ -34,7 +34,7 @@ import {
   ToolOutput,
 } from '~/components/ai-elements/tool';
 import { useBranchChatAndNavigate } from '~/features/chat/composables/useChatApi';
-import { isImageMediaType } from '~/features/chat/lib/attachment-mime';
+import { getFileTypeIconName, isImageMediaType } from '~/features/chat/lib/attachment-mime';
 
 interface Props {
   message: UIMessage;
@@ -167,7 +167,10 @@ const getToolIcon = (part: ToolPart) => {
             rel="noopener noreferrer"
             class="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm hover:bg-accent"
           >
-            <FileTextIcon class="size-4 shrink-0 text-muted-foreground" />
+            <Icon
+              :name="getFileTypeIconName(part.filename || part.url)"
+              class="size-4 shrink-0"
+            />
             <span class="truncate">{{ part.filename || part.url }}</span>
           </a>
         </template>

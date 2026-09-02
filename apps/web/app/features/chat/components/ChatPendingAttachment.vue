@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // Imports
-import { FileIcon, RotateCcwIcon, XIcon } from '@lucide/vue';
+import { RotateCcwIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
-import { isImageFilename } from '~/features/chat/lib/attachment-mime';
+import { getFileTypeIconName, isImageFilename } from '~/features/chat/lib/attachment-mime';
 
 // Props
 interface Props {
@@ -24,6 +24,7 @@ const { t } = useI18n();
 
 // Computed
 const isImage = computed(() => isImageFilename(props.item.file.name));
+const fileTypeIcon = computed(() => getFileTypeIconName(props.item.file.name));
 const thumbnailUrl = computed(
   () => props.item.attachment?.url ?? props.item.previewUrl,
 );
@@ -50,7 +51,7 @@ function onRemove() {
       class="size-full object-cover"
     />
     <template v-else-if="!isImage">
-      <FileIcon class="size-6 shrink-0 text-muted-foreground" />
+      <Icon :name="fileTypeIcon" class="size-6 shrink-0" />
       <span
         class="truncate text-xs text-muted-foreground"
         :title="item.file.name"
