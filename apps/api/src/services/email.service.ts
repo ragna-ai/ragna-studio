@@ -717,8 +717,8 @@ async function hydrateThreadSummary({
   // (isNonClassifiableMessage, apps/worker/src/mail/email-sync.service.ts) -
   // that message's categoryId is permanently null, which would otherwise
   // hide an earlier message's real classification.
-  const categoryId = threadMessages.findLast((message) => message.categoryId !== null)
-    ?.categoryId ?? null;
+  const categoryId =
+    threadMessages.findLast((message) => message.categoryId !== null)?.categoryId ?? null;
 
   return {
     id: thread.id,
@@ -1823,7 +1823,7 @@ async function resolveForwardAttachments({
 
   return fullMessage.body.attachments.map((attachment) => ({
     providerMessageId: message.providerMessageId,
-    providerAttachmentId: attachment.id,
+    providerAttachmentId: attachment.attachmentId,
     filename: attachment.filename,
     mimeType: attachment.mimeType,
     size: attachment.size,
@@ -2611,16 +2611,24 @@ export interface EmailAttachmentDownload {
 }
 
 /**
- * [GET] /email/message/:messageId/attachment/:attachmentId
+ * [GET] /email/message/:messageId/attachment/:partId
+ *
+ * Keyed on `partId` (the attachment's stable MIME part id), not Gmail's
+ * `attachmentId`: that token isn't guaranteed to stay the same once the
+ * message is modified (e.g. the read-state flip that happens when a thread
+ * is opened), so a client holding one from an earlier `/attachments` list
+ * call can't reliably reuse it later. `attachmentId` is instead re-resolved
+ * fresh from the same live fetch used to look up `meta` below, right before
+ * it's used.
  */
 export async function downloadEmailAttachmentForUser({
   userId,
   messageId,
-  attachmentId,
+  partId,
 }: {
   userId: string;
   messageId: string;
-  attachmentId: string;
+  partId: string;
 }): Promise<EmailAttachmentDownload> {
   const account = await loadEmailAccount({ userId });
   const message = await requireOwnedMessage({ accountId: account.id, messageId });
@@ -2635,18 +2643,18 @@ export async function downloadEmailAttachmentForUser({
     throw new InternalServerErrorException('Failed to load message');
   }
 
-  const meta = fullMessage.body.attachments.find((attachment) => attachment.id === attachmentId);
+  const meta = fullMessage.body.attachments.find((attachment) => attachment.partId === partId);
 
   if (!meta) {
     throw new NotFoundException('Attachment not found');
   }
 
   const { error, data: content } = await tryCatch(() =>
-    provider.getAttachment(message.providerMessageId, attachmentId),
+    provider.getAttachment(message.providerMessageId, meta.attachmentId),
   );
 
   if (error !== null || !content) {
-    logger.error(`Failed to download attachment ${attachmentId}`, error);
+    logger.error(`Failed to download attachment ${partId}`, error);
     throw new InternalServerErrorException('Failed to download attachment');
   }
 

@@ -122,7 +122,8 @@ function toAttachmentMeta(part: GmailMessagePart): MailAttachmentMeta {
   const inline = disposition ? disposition.toLowerCase().startsWith('inline') : Boolean(contentId);
 
   return {
-    id: part.body?.attachmentId ?? '',
+    partId: part.partId ?? '',
+    attachmentId: part.body?.attachmentId ?? '',
     filename: part.filename ?? '',
     mimeType: part.mimeType,
     size: part.body?.size ?? 0,

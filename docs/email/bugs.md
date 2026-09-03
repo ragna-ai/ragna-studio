@@ -108,3 +108,69 @@ imported; that call finds no row, returns `null`, and the thread-cleanup
 call it would otherwise trigger is skipped. So the eventual delete event
 is a harmless no-op against data that was never written, not a dangling
 reference.
+
+## Attachment download 404s with a valid message/attachment (2026-09-03)
+
+~~Downloading an email attachment (`GET /email/message/:messageId/attachment/
+:attachmentId`) intermittently 404s with `{"code":404,"error":"Attachment
+not found"}`, even for an attachment the user just saw listed on that exact
+message.~~ Fixed: `downloadEmailAttachmentForUser`
+(`apps/api/src/services/email.service.ts`) did its own live
+`fetchMessage(id, 'full')` and matched the client-supplied `attachmentId`
+against that fresh fetch's attachment list with strict equality. The
+`attachmentId` on the client had been read from an *earlier*, separate
+`GET /email/message/:messageId/attachments` call — a second Gmail
+`messages.get`. Gmail's `attachmentId` is not documented as stable across
+separate fetches of the same message; it's scoped to a single API response,
+not to the message as a durable entity. Confirmed via research (see
+below), not just inferred from the stack trace: added a server-side
+`logger.warn` at the failed-match site first, reproduced, and the response
+body's `Content-Length` (43 bytes) matched `{"code":404,"error":"Attachment
+not found"}` exactly, ruling out a routing 404 or a "message not found"
+404 from `requireOwnedMessage`.
+
+Fix: `MailAttachmentMeta` (`packages/mail/src/provider/mail-provider.ts`)
+now exposes two separate ids instead of one:
+
+- `partId` — the MIME part's id, documented by Google as *"The immutable ID
+  of the message part"*. Safe to hand to a client and have it come back in
+  a later request.
+- `attachmentId` — Gmail's opaque content-fetch token. Not safe to persist
+  or round-trip; must be re-resolved from a live fetch immediately before
+  use.
+
+The download route is now keyed on `partId`
+(`/email/message/:messageId/attachment/:partId`).
+`downloadEmailAttachmentForUser` still does one live `fetchMessage` (same
+as before — no extra round trip), matches by `partId` instead of
+`attachmentId`, and then uses *that same fetch's* `meta.attachmentId` to
+call `provider.getAttachment`, never the id the client sent. The frontend
+(`useDownloadEmailAttachment`, `EmailMessageAttachments.vue`) now keys and
+downloads by `attachment.partId`.
+
+Research backing the fix (see `docs/email/bugs.md` git history for the
+full source list if needed):
+
+- Gmail API `Message` resource reference documents `MessagePart.partId` as
+  *"The immutable ID of the message part."*
+  ([developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages))
+- A guide dedicated to this exact question states a Gmail `attachmentId` is
+  "scoped to a single message and is not globally unique" and warns:
+  "Never cache it as a permanent reference — fetch it fresh from the
+  message, then download." It recommends persisting `messageId` + filename
+  + content hash instead, never the attachment id itself.
+  ([cli.nylas.com/guides/gmail-attachment-id-stability](https://cli.nylas.com/guides/gmail-attachment-id-stability))
+- `users.messages.attachments.get`'s reference gives the attachment `id`
+  path parameter no stability or caching guidance at all, consistent with
+  "read it out of a fresh fetch and use it immediately."
+  ([developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages.attachments/get](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages.attachments/get))
+
+Known and deliberately not fixed: `resolveForwardAttachments` /
+`EmailDraftAttachment.providerAttachmentId`
+(`apps/api/src/services/email.service.ts`) has the same class of bug, only
+worse — it persists a forwarded message's `attachmentId` into the draft row
+in Postgres and re-fetches it at send time, which can be arbitrarily far in
+the future. Per the research above, that's exactly the anti-pattern to
+avoid. Out of scope here (touches the drafts DB schema and the
+write-back/send flow, not just the download endpoint); worth its own fix if
+"attachment not found" shows up on sending a forward with attachments.

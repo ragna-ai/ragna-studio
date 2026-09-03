@@ -176,11 +176,11 @@ export function useGetEmailMessageAttachments(
 }
 
 /**
- * [GET] /email/message/:messageId/attachment/:attachmentId - fetched as a
- * blob through the authenticated `$api` instance (document export
- * pattern, useDocumentApi.ts's useExportDocument) rather than a plain
- * anchor href, so the download carries the session cookie reliably
- * cross-origin between the web and API dev ports.
+ * [GET] /email/message/:messageId/attachment/:partId - fetched as a blob
+ * through the authenticated `$api` instance (document export pattern,
+ * useDocumentApi.ts's useExportDocument) rather than a plain anchor href,
+ * so the download carries the session cookie reliably cross-origin between
+ * the web and API dev ports.
  */
 export function useDownloadEmailAttachment() {
   const { $api } = useNuxtApp();
@@ -191,7 +191,7 @@ export function useDownloadEmailAttachment() {
   >({
     mutationFn: async ({ messageId, attachment }) => {
       const response = await $api.raw<Blob>(
-        `/email/message/${messageId}/attachment/${attachment.id}`,
+        `/email/message/${messageId}/attachment/${attachment.partId}`,
         { method: 'GET', responseType: 'blob' },
       );
       if (!response._data) {

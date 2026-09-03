@@ -16,11 +16,21 @@ export interface MailAddress {
 
 export interface MailAttachmentMeta {
   /**
-   * Opaque id, scoped to the message it was found on. Pass to `getAttachment`
-   * for a `MailMessage`'s attachment, or to `getDraftAttachment` (with the
-   * draft id, not a message id) for a `MailDraft`'s attachment.
+   * Stable structural id for this attachment within the message (Gmail's
+   * MIME `partId`). Unlike `attachmentId` below, this doesn't change when
+   * the message itself is modified (read/label/star state), so it's safe
+   * to hand to a caller and have them hold onto it across requests.
    */
-  id: string;
+  partId: string;
+  /**
+   * Opaque, provider-issued token to fetch this attachment's bytes: pass to
+   * `getAttachment` for a `MailMessage`'s attachment, or to
+   * `getDraftAttachment` (with the draft id, not a message id) for a
+   * `MailDraft`'s attachment. Not guaranteed stable once the message is
+   * modified - re-resolve it from a fresh fetch rather than persisting it
+   * or round-tripping it through a client across requests.
+   */
+  attachmentId: string;
   filename: string;
   mimeType: string;
   size: number;

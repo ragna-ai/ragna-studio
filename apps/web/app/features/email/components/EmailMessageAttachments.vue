@@ -15,8 +15,8 @@ const { data, isLoading } = useGetEmailMessageAttachments(messageIdRef, { enable
 const { mutate: downloadAttachment, variables: downloadingVariables, isPending: isDownloading } =
   useDownloadEmailAttachment();
 
-function isRowDownloading(attachmentId: string): boolean {
-  return isDownloading.value && downloadingVariables.value?.attachment.id === attachmentId;
+function isRowDownloading(partId: string): boolean {
+  return isDownloading.value && downloadingVariables.value?.attachment.partId === partId;
 }
 
 function formatBytes(bytes: number): string {
@@ -35,7 +35,7 @@ function formatBytes(bytes: number): string {
     <ul v-else class="flex flex-wrap gap-2">
       <li
         v-for="attachment in data?.attachments ?? []"
-        :key="attachment.id"
+        :key="attachment.partId"
         class="flex items-center gap-2 rounded-md border bg-muted/40 py-1 pr-1 pl-2 text-xs"
       >
         <PaperclipIcon class="size-3 shrink-0 text-muted-foreground" />
@@ -45,11 +45,11 @@ function formatBytes(bytes: number): string {
           variant="ghost"
           size="icon"
           class="size-5"
-          :disabled="isRowDownloading(attachment.id)"
+          :disabled="isRowDownloading(attachment.partId)"
           :aria-label="t('email.attachments.download')"
           @click="downloadAttachment({ messageId: props.messageId, attachment })"
         >
-          <Spinner v-if="isRowDownloading(attachment.id)" class="size-3" />
+          <Spinner v-if="isRowDownloading(attachment.partId)" class="size-3" />
           <DownloadIcon v-else class="size-3" />
         </Button>
       </li>

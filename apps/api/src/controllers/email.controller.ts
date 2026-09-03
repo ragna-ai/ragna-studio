@@ -423,14 +423,16 @@ export const emailController = new Hono()
     return c.json({ attachments });
   })
   /**
-   * [GET] /email/message/:messageId/attachment/:attachmentId
-   * Streams the attachment bytes straight from Gmail.
+   * [GET] /email/message/:messageId/attachment/:partId
+   * Streams the attachment bytes straight from Gmail. `partId` is the
+   * attachment's stable MIME part id, not Gmail's ephemeral attachmentId -
+   * see `downloadEmailAttachmentForUser` for why.
    */
-  .get('/message/:messageId/attachment/:attachmentId', validEmailAttachmentParams, async (c) => {
+  .get('/message/:messageId/attachment/:partId', validEmailAttachmentParams, async (c) => {
     const user = c.get('user');
-    const { messageId, attachmentId } = c.req.valid('param');
+    const { messageId, partId } = c.req.valid('param');
 
-    const file = await downloadEmailAttachmentForUser({ userId: user.id, messageId, attachmentId });
+    const file = await downloadEmailAttachmentForUser({ userId: user.id, messageId, partId });
 
     return c.body(new Uint8Array(file.data), 200, {
       'Content-Type': file.mimeType,

@@ -87,7 +87,7 @@ export const validEmailAttachmentParams = myzValidator(
   'param',
   z.object({
     messageId: primaryId,
-    attachmentId: z.string().min(1),
+    partId: z.string().min(1),
   }),
 );
 

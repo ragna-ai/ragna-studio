@@ -452,7 +452,8 @@ describe('POST /email/draft - creation per kind', () => {
             html: null,
             attachments: [
               {
-                id: 'att-1',
+                partId: '1',
+                attachmentId: 'att-1',
                 filename: 'invoice.pdf',
                 mimeType: 'application/pdf',
                 size: 1234,
