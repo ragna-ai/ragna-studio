@@ -344,6 +344,34 @@ const ANTHROPIC_CACHE_BREAKPOINT = {
   anthropic: { cacheControl: { type: 'ephemeral' as const } },
 };
 
+type ProviderOptions = NonNullable<ModelMessage['providerOptions']>;
+
+// Per-provider `providerOptions` defaults applied to every generateText/
+// streamText call, regardless of which provider the agent is configured
+// with — each provider ignores providerOptions keys it doesn't recognize,
+// the same trick ANTHROPIC_CACHE_BREAKPOINT above relies on. To add a new
+// provider's defaults, add another key here; withDefaultProviderOptions
+// picks it up automatically, no call site needs to change.
+const DEFAULT_PROVIDER_OPTIONS: ProviderOptions = {
+  // OpenAI's default `openai(model)` factory
+  // (packages/ai/src/factories/ai-model.factory.ts) routes through the
+  // Responses API, which OpenAI logs server-side unless the request sets
+  // `store: false` (platform.openai.com/docs/api-reference/responses).
+  openai: { store: false },
+};
+
+/**
+ * Merges the shared default provider options with any call-specific
+ * overrides, for the top-level `providerOptions` of a generateText/
+ * streamText call.
+ * @param overrides Call-specific provider options; win over the defaults
+ * (per provider key, not deep-merged).
+ * @returns The merged provider options to pass as `providerOptions`.
+ */
+export function withDefaultProviderOptions(overrides?: ProviderOptions): ProviderOptions {
+  return { ...DEFAULT_PROVIDER_OPTIONS, ...overrides };
+}
+
 /**
  * Wraps rendered instructions (system prompt + context + documents + memory
  * + pinned dataset, from buildAgentInstructions) in a cache breakpoint. The

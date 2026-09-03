@@ -23,6 +23,7 @@ import {
   stepCountIs,
   toModelSettings,
   withCachedInstructions,
+  withDefaultProviderOptions,
 } from '@repo/ai';
 import type { EmailAccount, EmailMessageWithBody, EmailParticipant } from '@repo/database';
 import {
@@ -193,6 +194,7 @@ async function runDraftAgent({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions: withCachedInstructions(instructions),
     prompt: `${DRAFT_TASK_INSTRUCTIONS}\n\n<thread>\n${threadContext}\n</thread>`,
+    providerOptions: withDefaultProviderOptions(),
     tools,
     temperature: modelSettings.temperature,
     maxOutputTokens: modelSettings.maxOutputTokens,

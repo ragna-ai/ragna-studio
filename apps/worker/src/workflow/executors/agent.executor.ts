@@ -1,4 +1,9 @@
-import { generateText, getLanguageModel, withCachedInstructions } from '@repo/ai';
+import {
+  generateText,
+  getLanguageModel,
+  withCachedInstructions,
+  withDefaultProviderOptions,
+} from '@repo/ai';
 import { getDefaultAgent } from '@repo/database';
 import type { AgentConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
@@ -39,6 +44,7 @@ export const executeAgent: Executor = async (node, ctx) => {
       }),
       instructions: withCachedInstructions(config.systemPrompt),
       prompt,
+      providerOptions: withDefaultProviderOptions(),
     });
 
     await settleWorkflowUsage({

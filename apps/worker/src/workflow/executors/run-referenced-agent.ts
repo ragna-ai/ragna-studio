@@ -7,6 +7,7 @@ import {
   stepCountIs,
   toModelSettings,
   withCachedInstructions,
+  withDefaultProviderOptions,
 } from '@repo/ai';
 import { config } from '@repo/config';
 import type {
@@ -373,6 +374,7 @@ export async function runReferencedAgent({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions: withCachedInstructions(instructions),
     prompt,
+    providerOptions: withDefaultProviderOptions(),
     tools,
     temperature: modelSettings.temperature,
     maxOutputTokens: modelSettings.maxOutputTokens,

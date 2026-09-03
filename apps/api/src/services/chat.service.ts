@@ -14,6 +14,7 @@ import {
   toUIMessageStream,
   withCachedInstructions,
   withCachedLastMessage,
+  withDefaultProviderOptions,
 } from '@repo/ai';
 import type { Chat, Media } from '@repo/database';
 import {
@@ -708,6 +709,7 @@ export async function runChatStream(
             provider: agent.aiModel.provider,
             model: agent.aiModel.model,
           }),
+          providerOptions: withDefaultProviderOptions(),
           temperature: modelSettings.temperature,
           maxOutputTokens: modelSettings.maxOutputTokens,
           reasoning: modelSettings.reasoning,
