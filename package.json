@@ -9,6 +9,7 @@
     "check-types": "turbo run check-types",
     "gen": "turbo gen",
     "preview": "turbo run preview",
+    "test:setup": "pnpm --filter @repo/testing test:setup",
     "test:api": "turbo run test --filter=@repo/api",
     "pkg:update": "pnpm update -i -r -L",
     "db:push": "pnpm --filter @repo/database db:push",
