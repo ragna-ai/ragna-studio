@@ -356,35 +356,67 @@ const chatTitleGeneratorPrompt = `As a chat title generator your task is to crea
   Avoid using any special characters, markdown, or punctuation marks at the beginning or end of the title.\n
   Keep the title under 10 words if possible.`;
 
-export async function generateChatTitle({ uiMessage }: { uiMessage: UIMessage }) {
-  //
+// Same default a chat is created with (see createChatForWorkspace), so a
+// chat that never manages to get a generated title still reads sensibly.
+const FALLBACK_CHAT_TITLE = 'Chat';
+
+// Models sometimes ignore the "no markdown" instruction (e.g. "# Title") or
+// wrap the title in quotes/bold markers. Strip that formatting rather than
+// relying on the prompt alone.
+function sanitizeChatTitle(rawTitle: string): string {
+  return rawTitle
+    .trim()
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/^[*_`~"']+|[*_`~"']+$/g, '')
+    .trim();
+}
+
+class EmptyChatTitleError extends Error {
+  constructor() {
+    super('Generated chat title was empty after sanitization');
+    this.name = 'EmptyChatTitleError';
+  }
+}
+
+async function generateChatTitleOnce(messageText: string): Promise<string> {
+  const { text } = await generateText({
+    model: getLanguageModel({
+      provider: 'openai',
+      model: 'gpt-5.6-luna',
+    }),
+    instructions: chatTitleGeneratorPrompt,
+    messages: [{ role: 'user', content: messageText }],
+    providerOptions: withDefaultProviderOptions(),
+    maxOutputTokens: 20,
+  });
+
+  const title = sanitizeChatTitle(text);
+
+  if (title.length === 0) {
+    throw new EmptyChatTitleError();
+  }
+
+  return title;
+}
+
+export async function generateChatTitle({ uiMessage }: { uiMessage: UIMessage }): Promise<string> {
   const messageText = uiMessage.parts
     .map((part) => (part.type === 'text' ? part.text : ''))
     .join(' ')
     .trim();
 
-  try {
-    const { text } = await generateText({
-      model: getLanguageModel({
-        provider: 'openai',
-        model: 'gpt-5.6-luna',
-      }),
-      instructions: chatTitleGeneratorPrompt,
-      messages: [{ role: 'user', content: messageText }],
-      maxOutputTokens: 20,
-      providerOptions: withDefaultProviderOptions(),
-    });
+  const { data: title, error } = await tryCatch(() => generateChatTitleOnce(messageText), {
+    retryOnFailure: true,
+  });
 
-    const title = text.trim().replace(/(^"|"$)/g, '');
-
-    logger.debug(`Generated chat title: ${title}`);
-
-    return title;
-    //
-  } catch (error) {
-    logger.error('Error generating chat title', error);
-    throw new InternalServerErrorException('Failed to generate chat title');
+  if (error !== null || !title) {
+    logger.error('Error generating chat title, using fallback title', error);
+    return FALLBACK_CHAT_TITLE;
   }
+
+  logger.debug(`Generated chat title: ${title}`);
+
+  return title;
 }
 
 // Derived from `createUIMessageStream`'s own return type instead of naming
