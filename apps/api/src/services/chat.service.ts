@@ -366,12 +366,13 @@ export async function generateChatTitle({ uiMessage }: { uiMessage: UIMessage })
   try {
     const { text } = await generateText({
       model: getLanguageModel({
-        provider: 'anthropic',
-        model: 'claude-haiku-4-5',
+        provider: 'openai',
+        model: 'gpt-5.6-luna',
       }),
       instructions: chatTitleGeneratorPrompt,
       messages: [{ role: 'user', content: messageText }],
       maxOutputTokens: 20,
+      providerOptions: withDefaultProviderOptions(),
     });
 
     const title = text.trim().replace(/(^"|"$)/g, '');
@@ -459,7 +460,10 @@ function toExtractedTextPart(part: FilePartLike, media: Media): UIMessagePartLik
   };
 }
 
-async function inlinePdfFilePart(part: FilePartLike, media: Media): Promise<UIMessagePartLike | null> {
+async function inlinePdfFilePart(
+  part: FilePartLike,
+  media: Media,
+): Promise<UIMessagePartLike | null> {
   const { error, data: object } = await tryCatch(() =>
     downloadObjectBuffer(media.bucket, media.storageKey),
   );
@@ -527,7 +531,9 @@ async function resolveModelFacingMessages(
 
   return Promise.all(
     messages.map((message) =>
-      message.role === 'user' ? resolveModelFacingUserMessage(message, attachmentsByMediaId) : message,
+      message.role === 'user'
+        ? resolveModelFacingUserMessage(message, attachmentsByMediaId)
+        : message,
     ),
   );
 }
