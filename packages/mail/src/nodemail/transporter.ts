@@ -1,9 +1,9 @@
 import { config } from '@repo/config';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
-let transporter: nodemailer.Transporter;
+let transporter: Transporter;
 
-export async function getTransporter(): Promise<nodemailer.Transporter> {
+export async function getTransporter(): Promise<Transporter> {
   if (transporter) {
     return transporter;
   }
