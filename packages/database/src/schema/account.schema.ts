@@ -11,11 +11,12 @@ export const account = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
-    // better-auth 1.7 account-selector API: identifies the OAuth issuer that
-    // vouches for `accountId` (e.g. "https://accounts.google.com"). Existing
-    // rows were backfilled via apps/worker/src/scripts/backfill-account-issuer.ts
-    // before this column was tightened to NOT NULL.
-    issuer: text('issuer').notNull(),
+    // better-auth 1.7.0-1.7.2 account-selector API: identified the OAuth
+    // issuer that vouches for `accountId`. Better-auth 1.7.3 reverted this;
+    // accounts are recognized by providerId + accountId again, as in 1.6, and
+    // the core no longer writes this column. Kept nullable rather than
+    // dropped per the 1.7 upgrade guide (https://www.better-auth.com/docs/guides/1-7-upgrade-guide).
+    issuer: text('issuer'),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
     accessTokenExpiresAt: timestamp('access_token_expires_at'),
@@ -28,7 +29,7 @@ export const account = pgTable(
   },
   (table) => [
     index('account_userId_idx').on(table.userId),
-    uniqueIndex('account_issuer_accountId_idx').on(table.issuer, table.accountId),
+    uniqueIndex('account_providerId_accountId_idx').on(table.providerId, table.accountId),
   ],
 );
 

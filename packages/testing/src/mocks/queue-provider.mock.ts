@@ -52,12 +52,39 @@ export function resetQueueMock(): void {
   getQueueJobSchedulersMock.mockClear();
 }
 
+// Overrides for the real @repo/queue exports we replace below. Named
+// explicitly (rather than left to inference) so TS never has to expand and
+// print @repo/queue's own bullmq-typed exports (Queue, Job, FlowProducer,
+// ...): packages/testing doesn't depend on bullmq directly, and those types
+// live in a nested copy under packages/queue/node_modules that TS can't name
+// via a portable import from here (TS2883). Referencing `typeof queuePackage`
+// below reuses the existing `@repo/queue` import instead of triggering that
+// expansion.
+type QueueMockOverrides = {
+  queue: {
+    email: () => ReturnType<typeof fakeQueue>;
+    onboarding: () => ReturnType<typeof fakeQueue>;
+    notification: () => ReturnType<typeof fakeQueue>;
+    workflow: () => ReturnType<typeof fakeQueue>;
+    agentContextDocument: () => ReturnType<typeof fakeQueue>;
+    genVideo: () => ReturnType<typeof fakeQueue>;
+    genImages: () => ReturnType<typeof fakeQueue>;
+    emailSync: () => ReturnType<typeof fakeQueue>;
+    emailClassify: () => ReturnType<typeof fakeQueue>;
+    emailDraft: () => ReturnType<typeof fakeQueue>;
+  };
+  upsertQueueJobScheduler: typeof upsertQueueJobSchedulerMock;
+  removeQueueJobScheduler: typeof removeQueueJobSchedulerMock;
+  getQueueJobSchedulers: typeof getQueueJobSchedulersMock;
+};
+
 // Exported so apps/api's test preload can re-register it from the app's own
 // resolution context, the same way linkedin-provider.mock.ts's
 // `linkedinModuleMock` does: under injectWorkspacePackages, this file runs
 // from a frozen copy in node_modules/.pnpm/, where '@repo/queue' resolves
 // to a different path than the one apps/api (and @repo/ai) import.
-export const queueModuleMock = {
+export const queueModuleMock: Omit<typeof queuePackage, keyof QueueMockOverrides> &
+  QueueMockOverrides = {
   ...queuePackage,
   queue: {
     email: () => fakeQueue(queuePackage.EMAILS_QUEUE),

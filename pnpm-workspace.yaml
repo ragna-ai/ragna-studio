@@ -44,12 +44,12 @@ catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.1.0
   tailwindcss: ^4.3.3
-  tsdown: ^0.22.14
+  tsdown: ^0.23.0
   typescript: 6.0.3
-  zod: 4.5.2
-  oxfmt: ^0.65.0
-  oxlint: ^1.80.0
-  ai: ^7.0.85
+  zod: 4.5.4
+  oxfmt: ^0.66.0
+  oxlint: ^1.81.0
+  ai: ^7.0.93
 
 updateConfig:
   ignoreDependencies:

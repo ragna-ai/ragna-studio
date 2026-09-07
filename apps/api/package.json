@@ -20,7 +20,7 @@
     "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.9.0",
+    "@hono/zod-validator": "^0.9.1",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
@@ -34,7 +34,7 @@
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "hono": "^4.13.5",
+    "hono": "^4.13.7",
     "http-status-codes": "^2.3.0",
     "unstorage": "^1.17.5",
     "zod": "catalog:"
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/ts-config": "workspace:*",
-    "@types/bun": "1.4.0",
+    "@types/bun": "1.4.1",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

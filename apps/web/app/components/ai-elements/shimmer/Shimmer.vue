@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CSSProperties, HTMLAttributes } from 'vue'
+import type { Component, CSSProperties, HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
 import { motion } from 'motion-v'
 import { computed, useSlots } from 'vue'
@@ -46,8 +46,14 @@ const componentStyle = computed((): CSSProperties => ({
     'var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))',
 }))
 
-const MotionComponent = computed(() => {
-  return motion[props.as as keyof typeof motion] || motion.p
+// motion[tag] indexes into ~170 per-tag DefineComponent generics; letting TS
+// infer that union blows past its complexity limit (TS2590). Asserting the
+// object shape once here keeps every lookup a plain `Component`.
+type MotionTag = Extract<keyof HTMLElementTagNameMap, keyof typeof motion>
+const motionComponents = motion as unknown as Record<MotionTag, Component>
+
+const MotionComponent = computed<Component>(() => {
+  return motionComponents[props.as as MotionTag] || motionComponents.p
 })
 </script>
 
