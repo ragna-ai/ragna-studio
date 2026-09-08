@@ -351,10 +351,10 @@ export async function deleteChatForWorkspace({
 }
 
 const chatTitleGeneratorPrompt = `As a chat title generator your task is to create a short chat title based on the provided text.\n
-  You always only respond with the chat title in plain text in the users language.\n
-  The title should be concise, descriptive, and relevant to the content of the message.\n
-  Avoid using any special characters, markdown, or punctuation marks at the beginning or end of the title.\n
-  Keep the title under 10 words if possible.`;
+  Rules:\n
+  - Always respond with the title in plain text in the users language\n
+  - The title must be short, concise, descriptive, and relevant to the content of the message\n
+  - Do not use any special characters, markdown, or punctuation marks`;
 
 // Same default a chat is created with (see createChatForWorkspace), so a
 // chat that never manages to get a generated title still reads sensibly.
@@ -390,6 +390,8 @@ async function generateChatTitleOnce(messageText: string): Promise<string> {
     maxOutputTokens: 20,
   });
 
+  logger.debug(`Raw generated chat title: ${text}`);
+
   const title = sanitizeChatTitle(text);
 
   if (title.length === 0) {
@@ -406,7 +408,10 @@ export async function generateChatTitle({ uiMessage }: { uiMessage: UIMessage })
     .trim();
 
   const { data: title, error } = await tryCatch(() => generateChatTitleOnce(messageText), {
-    retryOnFailure: true,
+    options: {
+      retries: 3,
+      shouldRetry: (error) => error instanceof EmptyChatTitleError,
+    },
   });
 
   if (error !== null || !title) {
