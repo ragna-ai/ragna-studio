@@ -275,6 +275,16 @@
       "table": {
         "agent": "Agent"
       }
+    },
+    "search": {
+      "title": "Search chats",
+      "subtitle": "Search across chat titles and messages.",
+      "placeholder": "Search chats and messages...",
+      "caseSensitive": "Case sensitive",
+      "minLengthHint": "Type at least {min} characters to search.",
+      "loading": "Searching...",
+      "empty": "No chats match your search.",
+      "error": "An error occurred while searching."
     }
   },
   "workflow": {

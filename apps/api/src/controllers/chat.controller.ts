@@ -9,12 +9,14 @@ import {
   getChatForWorkspace,
   listChatsForWorkspace,
   renameChatForWorkspace,
+  searchChatsForWorkspace,
 } from '../services/chat.service';
 import { removeChatAttachment, uploadChatAttachments } from '../services/media.service';
 import {
   validBranchChatBody,
   validChatAttachmentParams,
   validChatIdParam,
+  validChatSearchQuery,
   validCreateChatBody,
   validPaginationQuery,
   validUpdateChatTitleBody,
@@ -57,6 +59,27 @@ export const chatController = new Hono()
     });
 
     return c.json({ chat }, StatusCodes.CREATED);
+  })
+  /**
+   * [GET] /workspace/:workspaceId/chat/search
+   * Registered before `/:chatId`: Hono matches routes in registration
+   * order, so `/:chatId` would otherwise greedily capture "search" as a
+   * chatId param.
+   */
+  .get('/search', validChatSearchQuery, async (c) => {
+    const workspace = c.get('workspace');
+    const query = c.req.valid('query');
+
+    const result = await searchChatsForWorkspace({
+      workspaceId: workspace.id,
+      q: query.q,
+      page: query.page,
+      limit: query.limit,
+      snippetsPerChat: query.snippetsPerChat,
+      caseSensitive: query.caseSensitive,
+    });
+
+    return c.json(result);
   })
   /**
    * [GET] /workspace/:workspaceId/chat/:chatId

@@ -37,6 +37,9 @@ export const chat = pgTable(
     index('chat_userId_idx').on(table.userId),
     index('chat_agentId_idx').on(table.agentId),
     index('chat_workspaceId_idx').on(table.workspaceId),
+    // Trigram GIN index backing substring ILIKE search on chat titles
+    // (docs/chat/search-prd.md). Requires the pg_trgm extension.
+    index('chat_title_trgm_idx').using('gin', table.title.op('gin_trgm_ops')),
   ],
 );
 

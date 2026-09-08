@@ -23,6 +23,24 @@ export const chatKeys = {
     ['chats', workspaceId, 'detail', chatId] as const,
   history: (workspaceId: WorkspaceId) =>
     ['chats', workspaceId, 'history'] as const,
+  search: (
+    workspaceId: WorkspaceId,
+    query: MaybeRefOrGetter<string>,
+    page: MaybeRefOrGetter<number>,
+    limit: MaybeRefOrGetter<number>,
+    snippetsPerChat: MaybeRefOrGetter<number>,
+    caseSensitive: MaybeRefOrGetter<boolean>,
+  ) =>
+    [
+      'chats',
+      workspaceId,
+      'search',
+      query,
+      page,
+      limit,
+      snippetsPerChat,
+      caseSensitive,
+    ] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;

@@ -102,8 +102,12 @@ export const validEmailThreadListQuery = myzValidator(
     // Gmail label id, read-only display filter (docs/email/prd.md).
     labelId: z.string().min(1).optional(),
     folder: emailFolderEnum.optional(),
-    unreadOnly: z.coerce.boolean().optional(),
-    starredOnly: z.coerce.boolean().optional(),
+    // stringbool(), not coerce.boolean(): query params arrive as strings,
+    // and `Boolean("false")` is `true` in JS, so `?unreadOnly=false` would
+    // otherwise coerce to `true` (docs/chat/search-prd.md's caseSensitive
+    // hit this same trap; fixed here opportunistically).
+    unreadOnly: z.stringbool().optional(),
+    starredOnly: z.stringbool().optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
   }),

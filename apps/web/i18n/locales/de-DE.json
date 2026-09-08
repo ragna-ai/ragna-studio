@@ -281,6 +281,16 @@
       "table": {
         "agent": "Agent"
       }
+    },
+    "search": {
+      "title": "Chats durchsuchen",
+      "subtitle": "Durchsuche Chat-Titel und Nachrichten.",
+      "placeholder": "Chats und Nachrichten durchsuchen...",
+      "caseSensitive": "Groß-/Kleinschreibung beachten",
+      "minLengthHint": "Gib mindestens {min} Zeichen ein, um zu suchen.",
+      "loading": "Suche läuft...",
+      "empty": "Keine Chats gefunden.",
+      "error": "Beim Durchsuchen ist ein Fehler aufgetreten."
     }
   },
   "workflow": {

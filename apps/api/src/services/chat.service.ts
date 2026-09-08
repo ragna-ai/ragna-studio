@@ -16,7 +16,7 @@ import {
   withCachedLastMessage,
   withDefaultProviderOptions,
 } from '@repo/ai';
-import type { Chat, Media } from '@repo/database';
+import type { Chat, ChatSearchMessageSnippet, Media } from '@repo/database';
 import {
   branchChatByWorkspaceId,
   createChat,
@@ -25,6 +25,9 @@ import {
   getChatByIdForUser,
   getChatByIdForWorkspace,
   getChatCountByWorkspaceId,
+  getChatSearchMatchCount,
+  getChatSearchMatchedChats,
+  getChatSearchMessageSnippets,
   getChatsByWorkspaceId,
   getOrCreateDefaultAgentForUser,
   settleCreditUsage,
@@ -133,6 +136,108 @@ export async function listChatsForWorkspace({
     })),
     totalCount,
   };
+}
+
+export interface ChatSearchResult {
+  id: string;
+  title: string;
+  titleMatched: boolean;
+  updatedAt: Date;
+  agent: {
+    id: string;
+    name: string;
+    aiModel: {
+      id: string;
+      provider: string;
+      displayName: string;
+    };
+  };
+  messageSnippets: ChatSearchMessageSnippet[];
+}
+
+export interface ChatSearchResponse {
+  results: ChatSearchResult[];
+  totalCount: number;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/chat/search
+ * Substring search (pg_trgm) across a workspace's chats: matches by title or
+ * by message content (docs/chat/search-prd.md). Results are one row per
+ * matching chat, most-recently-matching first; each row carries up to
+ * `snippetsPerChat` highlighted message excerpts, most recent first.
+ */
+export async function searchChatsForWorkspace({
+  workspaceId,
+  q,
+  page,
+  limit,
+  snippetsPerChat,
+  caseSensitive,
+}: {
+  workspaceId: string;
+  q: string;
+  page: number;
+  limit: number;
+  snippetsPerChat: number;
+  caseSensitive: boolean;
+}): Promise<ChatSearchResponse> {
+  const offset = (page - 1) * limit;
+
+  const { error: countError, data: totalCount } = await tryCatch(() =>
+    getChatSearchMatchCount({ workspaceId, query: q, caseSensitive }),
+  );
+
+  if (countError !== null || totalCount === null) {
+    logger.error(`Error counting chat search matches for workspace ${workspaceId}`, countError);
+    throw new InternalServerErrorException('Failed to search chats');
+  }
+
+  const { error, data: matchedChats } = await tryCatch(() =>
+    getChatSearchMatchedChats({ workspaceId, query: q, limit, offset, caseSensitive }),
+  );
+
+  if (error !== null || !matchedChats) {
+    logger.error(`Error searching chats for workspace ${workspaceId}`, error);
+    throw new InternalServerErrorException('Failed to search chats');
+  }
+
+  const results = await Promise.all(
+    matchedChats.map(async (matchedChat): Promise<ChatSearchResult> => {
+      const { error: snippetsError, data: messageSnippets } = await tryCatch(() =>
+        getChatSearchMessageSnippets({
+          chatId: matchedChat.id,
+          query: q,
+          limit: snippetsPerChat,
+          caseSensitive,
+        }),
+      );
+
+      if (snippetsError !== null || !messageSnippets) {
+        logger.error(`Error fetching search snippets for chat ${matchedChat.id}`, snippetsError);
+        throw new InternalServerErrorException('Failed to search chats');
+      }
+
+      return {
+        id: matchedChat.id,
+        title: matchedChat.title,
+        titleMatched: matchedChat.titleMatched,
+        updatedAt: matchedChat.updatedAt,
+        agent: {
+          id: matchedChat.agent.id,
+          name: matchedChat.agent.name,
+          aiModel: {
+            id: matchedChat.agent.aiModel.id,
+            provider: matchedChat.agent.aiModel.provider,
+            displayName: matchedChat.agent.aiModel.displayName,
+          },
+        },
+        messageSnippets,
+      };
+    }),
+  );
+
+  return { results, totalCount };
 }
 
 export interface ChatMessageResponse {
