@@ -21,6 +21,7 @@ const props = defineProps<Props>();
 // Emits
 const emit = defineEmits<{
   submit: [text: string];
+  stop: [];
   files: [files: File[]];
   retry: [id: string];
   remove: [id: string];
@@ -62,6 +63,10 @@ function onPaste(event: ClipboardEvent) {
 
 function onSubmit(event: Event) {
   event.preventDefault();
+  if (props.isBusy) {
+    emit('stop');
+    return;
+  }
   if (!canSubmit.value) return;
   const trimmedText = text.value.trim();
   text.value = '';
@@ -109,7 +114,7 @@ onMounted(() => {
         >
           <PaperclipIcon class="size-4 stroke-1.5 opacity-75" />
         </Button>
-        <PromptInputSubmit :status="status" :disabled="isBusy || !canSubmit" />
+        <PromptInputSubmit :status="status" :disabled="!isBusy && !canSubmit" />
       </div>
     </div>
   </form>

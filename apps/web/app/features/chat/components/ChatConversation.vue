@@ -83,7 +83,7 @@ const chatTransport = new WebSocketChatTransport(
   },
 );
 
-const { messages, sendMessage, status, error } = useChat({
+const { messages, sendMessage, status, error, stop } = useChat({
   messages: initialMessages,
   generateId: createPrimaryId,
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
@@ -268,6 +268,7 @@ async function handleSubmit(text: string) {
         :status="status"
         :is-busy="isBusy"
         @submit="handleSubmit"
+        @stop="stop"
         @files="chatAttachments.handleFiles"
         @retry="chatAttachments.retry"
         @remove="chatAttachments.remove"
