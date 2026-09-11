@@ -15,8 +15,8 @@ import { toast } from 'vue-sonner';
 import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import {
-  type ChatAttachment,
   useCreateChat,
+  type ChatAttachment,
 } from '~/features/chat/composables/useChatApi';
 import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
@@ -99,6 +99,8 @@ const { messages, sendMessage, status, error, stop } = useChat({
         kind: 'videoGen',
         prompt: extractGenerationPrompt(dataPart.data),
       };
+    } else {
+      // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
     }
   },
   // A turn that wasn't aborted just settled a charge server-side
@@ -185,6 +187,9 @@ function toFilePart(attachment: ChatAttachment): FileUIPart {
 }
 
 async function handleSubmit(text: string) {
+  // if text is empty or whitespace, don't send it
+  if (!text || text.trim().length === 0) return;
+
   try {
     await ensureChat();
   } catch {
