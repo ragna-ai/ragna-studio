@@ -281,6 +281,7 @@
       "subtitle": "Search across chat titles and messages.",
       "placeholder": "Search chats and messages...",
       "caseSensitive": "Case sensitive",
+      "clear": "Clear search",
       "minLengthHint": "Type at least {min} characters to search.",
       "loading": "Searching...",
       "empty": "No chats match your search.",

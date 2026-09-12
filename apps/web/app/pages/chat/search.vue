@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CaseSensitiveIcon, SearchIcon } from '@lucide/vue';
+import { CaseSensitiveIcon, SearchIcon, XIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import ChatSearchResultsTable from '~/features/chat/components/ChatSearchResultsTable.vue';
 import { useChatSearchApi } from '~/features/chat/composables/useChatSearchApi';
@@ -59,6 +59,12 @@ function toggleCaseSensitive() {
   caseSensitive.value = !caseSensitive.value;
 }
 
+function clearSearch() {
+  searchInput.value = '';
+  query.value = '';
+  page.value = 1;
+}
+
 // Hooks
 watch(searchInput, applySearch);
 watch(caseSensitive, () => {
@@ -95,17 +101,28 @@ watch([query, page, limit], ([q, p, l]) => {
         />
         <Input
           v-model="searchInput"
-          class="h-11 py-2.5 pr-10 pl-9"
+          class="h-11 py-2.5 pr-[4.5rem] pl-9"
           :placeholder="t('chat.search.placeholder')"
         />
         <!-- Inline icon toggles docked in the input's right edge, VSCode
-             search-widget style. Only case-sensitive today, but this wrapper
-             is where a later whole-word/regex toggle would go next to it.
-             `top-1/2 -translate-y-1/2` centers relative to this wrapper's
-             own height, so it tracks the input's taller `h-11` automatically. -->
+             search-widget style. Clear + case-sensitive today, but this
+             wrapper is where a later whole-word/regex toggle would go next
+             to them. `top-1/2 -translate-y-1/2` centers relative to this
+             wrapper's own height, so it tracks the input's taller `h-11`
+             automatically. -->
         <div
           class="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-0.5"
         >
+          <Button
+            v-if="searchInput"
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            :aria-label="t('chat.search.clear')"
+            @click="clearSearch"
+          >
+            <XIcon class="size-3.5 shrink-0 text-muted-foreground" />
+          </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
