@@ -3,6 +3,7 @@ import { CaseSensitiveIcon, SearchIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import ChatSearchResultsTable from '~/features/chat/components/ChatSearchResultsTable.vue';
 import { useChatSearchApi } from '~/features/chat/composables/useChatSearchApi';
+import { parseChatSearchQuery } from '~/features/chat/lib/chat-search-query';
 import { useChatSearchSettingsStore } from '~/features/chat/stores/chatsearchsettings.store';
 import { cn } from '~/lib/utils';
 
@@ -10,16 +11,22 @@ import { cn } from '~/lib/utils';
 // Emits
 
 // Refs
-const searchInput = ref('');
-const query = ref('');
-const page = ref(1);
+const route = useRoute();
+const router = useRouter();
+// Restores search text/page/page-size from the URL (e.g. after navigating back from a chat),
+// falling back to defaults for a fresh visit or a malformed/tampered query string.
+const initialQuery = parseChatSearchQuery(route.query);
+
+const searchInput = ref(initialQuery.q);
+const query = ref(initialQuery.q);
+const page = ref(initialQuery.page);
 // 10, not the API's documented default of 20 (docs/chat/search-prd.md,
 // "API") - `limit` is always sent explicitly below, so that default only
 // matters when the param is omitted, and `PaginateControls`' page-size
 // `Select` only offers 10/25/50/100. A value outside that list (e.g. 20)
 // leaves the select bound to a value with no matching `SelectItem`, which
 // Radix/shadcn renders blank instead of falling back to the first option.
-const limit = ref(10);
+const limit = ref(initialQuery.limit);
 // Snippets-per-chat-row is a fixed v1 default (docs/chat/search-prd.md, "API"),
 // independent of the page/limit pagination above.
 const snippetsPerChat = ref(3);
@@ -56,6 +63,16 @@ function toggleCaseSensitive() {
 watch(searchInput, applySearch);
 watch(caseSensitive, () => {
   page.value = 1; // reset to first page, same as a new search
+});
+
+// Mirrors search text/page/page-size into the URL so they survive a
+// back-navigation (e.g. from a chat opened out of the results). `replace`,
+// not `push`, so neither keystrokes nor paging pile up browser history
+// entries - the address bar just tracks the current state.
+watch([query, page, limit], ([q, p, l]) => {
+  router.replace({
+    query: { ...route.query, q: q || undefined, page: p, limit: l },
+  });
 });
 </script>
 

@@ -16,11 +16,6 @@ defineProps<Props>();
 // Composables
 const { formatDateTime } = useDateTimeFormat();
 const { t } = useI18n();
-
-// Functions
-function openChat(chatId: string) {
-  navigateTo(chatUrl(chatId));
-}
 </script>
 
 <template>
@@ -43,10 +38,19 @@ function openChat(chatId: string) {
       <TableRow
         v-for="result in results"
         :key="result.id"
-        class="cursor-pointer align-top"
-        @click="openChat(result.id)"
+        class="relative cursor-pointer align-top"
       >
         <TableCell class="w-12">
+          <!-- Stretched link: an invisible anchor sized to the whole row
+               (via the row's own `relative`, since `td` stays `static` and
+               isn't a positioning context) gives the row real `<a>`
+               semantics - right-click "open in new tab" and NuxtLink
+               preloading - while still looking like a plain clickable row. -->
+          <NuxtLinkLocale
+            :to="chatUrl(result.id)"
+            :aria-label="result.title"
+            class="absolute inset-0 z-10"
+          />
           <MessagesSquareIcon class="size-4 stroke-1.5" />
         </TableCell>
         <TableCell>
