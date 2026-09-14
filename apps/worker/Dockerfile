@@ -6,13 +6,21 @@
 FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+ENV PATH="$PNPM_HOME/bin:$PATH"
 ENV TURBO_TELEMETRY_DISABLED=1
 
-RUN corepack enable \
-  && npm install -g turbo
-
 WORKDIR /app
+
+# Single source of truth for the pnpm version is package.json's
+# "packageManager" field — read it instead of hardcoding it here.
+COPY package.json ./
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && PNPM_VERSION="$(sed -n 's/.*"packageManager": *"pnpm@\([0-9][0-9.]*\)+.*/\1/p' package.json)" \
+  && curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION="$PNPM_VERSION" SHELL=/bin/sh ENV="$HOME/.shrc" sh - \
+  && npm install -g turbo
 
 # ============================================================
 # Pruner — extract only what @repo/worker and its deps need
