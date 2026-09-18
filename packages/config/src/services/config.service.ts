@@ -233,6 +233,10 @@ const ConfigSchema = z.object({
   MISTRAL_API_BASE_URL: z.string().optional(),
   MISTRAL_API_KEY: z.string().optional().default(''),
 
+  // Chat title generation model (chat-title.service.ts in @repo/ai)
+  CHAT_TITLE_MODEL_PROVIDER: z.string().default('anthropic'),
+  CHAT_TITLE_MODEL: z.string().default('claude-haiku-4-5'),
+
   LINKEDIN_SCOPES: z.array(z.string()).default([]),
   LINKEDIN_CLIENT_ID: z.string().optional().default(''),
   LINKEDIN_CLIENT_SECRET: z.string().optional().default(''),
@@ -471,6 +475,14 @@ export class ConfigService {
 
   get mistralApiBaseUrl(): string | undefined {
     return this._config.MISTRAL_API_BASE_URL;
+  }
+
+  get chatTitleModelProvider(): string {
+    return this._config.CHAT_TITLE_MODEL_PROVIDER;
+  }
+
+  get chatTitleModel(): string {
+    return this._config.CHAT_TITLE_MODEL;
   }
 
   get googleClientId(): string {
