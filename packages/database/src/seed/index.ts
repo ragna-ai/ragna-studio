@@ -1,7 +1,10 @@
-import { reset } from 'drizzle-seed';
 import { db } from '../db';
 import * as schema from '../schema';
 
+// Upserts by (provider, model) so this is safe to run on every deploy
+// (docker-compose.yml's `seed` service) instead of only once by hand: it
+// never touches rows it didn't insert, unlike drizzle-seed's reset(), which
+// used to truncate every table first.
 async function seedAiModels() {
   await db.insert(schema.aiModel).values([
     {
@@ -118,10 +121,19 @@ async function seedAiModels() {
       displayName: 'FLUX 3 Video',
       description: 'Video generation with draft/enhance by Black Forest Labs.',
     },
-  ]);
+  ]).onConflictDoNothing({ target: [schema.aiModel.provider, schema.aiModel.model] });
 }
 
+// Bootstraps the one default agent template by name, since it has no
+// natural business key of its own to upsert on like seedAiModels does.
 async function seedDefaultAgent() {
+  const existing = await db.query.agentTemplate.findFirst({
+    where: { name: 'RAGNA Agent' },
+  });
+  if (existing) {
+    return;
+  }
+
   const defaultModel = await db.query.aiModel.findFirst({
     where: { provider: 'anthropic', size: 'small' },
   });
@@ -140,7 +152,6 @@ async function seedDefaultAgent() {
 }
 
 async function main() {
-  await reset(db, schema);
   await seedAiModels();
   await seedDefaultAgent();
 }

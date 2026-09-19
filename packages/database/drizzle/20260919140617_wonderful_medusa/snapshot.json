@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "85b1af39-ef73-414d-8008-6b2ece78e511",
+  "id": "b2cfbe43-d75f-4e0a-95b2-9adf22cabdcc",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -6423,6 +6423,34 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "agent_templates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "provider",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "model",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "ai_model_provider_model_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ai_models"
     },
     {
       "nameExplicit": true,

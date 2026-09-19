@@ -1,4 +1,4 @@
-import { jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
+import { jsonb, pgEnum, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 
 export interface AiModelCapabilities {
@@ -58,22 +58,28 @@ export const pgModalityEnum = pgEnum('modality', aiModelModalities);
 export const pgFamilyEnum = pgEnum('family', aiModelFamilies);
 export const pgSizeEnum = pgEnum('size', aiModelSizes);
 
-export const aiModel = pgTable('ai_models', {
-  id: primaryIdColumn,
-  provider: text('provider').notNull(),
-  model: text('model').notNull(),
-  modality: pgModalityEnum().notNull(),
-  family: pgFamilyEnum().notNull(),
-  size: pgSizeEnum().notNull(),
-  displayName: text('display_name').notNull(),
-  description: text('description').notNull(),
-  capabilities: jsonb('capabilities').default({}).notNull().$type<AiModelCapabilities>(),
-  meta: jsonb('meta').default({}).notNull().$type<AiModelMeta>(),
-  // Set by hand, same as capabilities: no seeding here (docs/credits/prd.md,
-  // "Pricing"). Null means "not chargeable".
-  pricing: jsonb('pricing').$type<AiModelPricing>(),
-  ...timestamps,
-});
+export const aiModel = pgTable(
+  'ai_models',
+  {
+    id: primaryIdColumn,
+    provider: text('provider').notNull(),
+    model: text('model').notNull(),
+    modality: pgModalityEnum().notNull(),
+    family: pgFamilyEnum().notNull(),
+    size: pgSizeEnum().notNull(),
+    displayName: text('display_name').notNull(),
+    description: text('description').notNull(),
+    capabilities: jsonb('capabilities').default({}).notNull().$type<AiModelCapabilities>(),
+    meta: jsonb('meta').default({}).notNull().$type<AiModelMeta>(),
+    // Set by hand, same as capabilities: no seeding here (docs/credits/prd.md,
+    // "Pricing"). Null means "not chargeable".
+    pricing: jsonb('pricing').$type<AiModelPricing>(),
+    ...timestamps,
+  },
+  // Lets the seed script upsert by (provider, model) instead of reset()-ing
+  // the whole table on every run (packages/database/src/seed/index.ts).
+  (table) => [uniqueIndex('ai_model_provider_model_idx').on(table.provider, table.model)],
+);
 
 export type AiModel = typeof aiModel.$inferSelect;
 export type NewAiModel = typeof aiModel.$inferInsert;

@@ -18,6 +18,21 @@ services:
     depends_on:
       - postgres
 
+  seed:
+    image: ghcr.io/ragna-ai/ragna-studio-migrate:latest
+    container_name: ragna_studio_seed
+    restart: "no"
+    command: ["node", "dist/seed/index.mjs"]
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   webapp:
     image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
     container_name: ragna_studio_webapp
@@ -46,7 +61,7 @@ services:
         condition: service_started
       redis:
         condition: service_started
-      migrate:
+      seed:
         condition: service_completed_successfully
 
   api:
@@ -66,7 +81,7 @@ services:
         condition: service_started
       webbrowser:
         condition: service_started
-      migrate:
+      seed:
         condition: service_completed_successfully
 
   webbrowser:

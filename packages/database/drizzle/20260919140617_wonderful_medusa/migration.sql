@@ -593,6 +593,7 @@ CREATE INDEX "agent_defaultDatasetId_idx" ON "agents" ("default_dataset_id");-->
 CREATE UNIQUE INDEX "agent_default_per_workspace_idx" ON "agents" ("user_id","workspace_id") WHERE "is_default" AND "workspace_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "agent_default_unassigned_idx" ON "agents" ("user_id") WHERE "is_default" AND "workspace_id" IS NULL;--> statement-breakpoint
 CREATE INDEX "agent_template_aiModelId_idx" ON "agent_templates" ("ai_model_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "ai_model_provider_model_idx" ON "ai_models" ("provider","model");--> statement-breakpoint
 CREATE INDEX "chat_userId_idx" ON "chats" ("user_id");--> statement-breakpoint
 CREATE INDEX "chat_agentId_idx" ON "chats" ("agent_id");--> statement-breakpoint
 CREATE INDEX "chat_workspaceId_idx" ON "chats" ("workspace_id");--> statement-breakpoint

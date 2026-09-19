@@ -3,10 +3,12 @@
 # Build from the repo root:
 #   docker build -f packages/database/Dockerfile .
 #
-# One-shot image: applies pending SQL migrations (packages/database/drizzle)
-# against DATABASE_URL, then exits. Run as its own `migrate` service ahead of
-# api/worker (docker-compose.yml, `depends_on: condition: service_completed_successfully`)
-# so N app replicas never race the same migration on boot.
+# One-shot image, two commands: the default CMD applies pending SQL
+# migrations (packages/database/drizzle) against DATABASE_URL; the `seed`
+# compose service overrides it to run dist/seed/index.mjs (idempotent
+# upserts) instead. Both exit when done and run ahead of api/worker
+# (docker-compose.yml, `depends_on: condition: service_completed_successfully`)
+# so N app replicas never race a migration or seed run on boot.
 
 # ============================================================
 # Base — node + pnpm + turbo. Alpine is fine here (unlike apps/api and
@@ -58,7 +60,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   pnpm --filter @repo/database deploy --prod /prod/database
 
 # ============================================================
-# Runner — minimal image that only runs the migration script
+# Runner — minimal image for the migrate/seed one-shot commands
 # ============================================================
 FROM node:24-alpine AS runner
 
