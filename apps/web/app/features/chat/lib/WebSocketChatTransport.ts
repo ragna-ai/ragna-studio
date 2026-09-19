@@ -85,6 +85,16 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
 
     this.onSubscribedChange?.(true);
     unsubscribe = subscribe(channel, (frame) => {
+      // Once the stream has been closed/errored (by a prior frame or an
+      // abort), ignore anything else in flight for it: acting twice on the
+      // same controller throws (e.g. closing an already-errored stream).
+      if (finished && frame.type !== 'subscribed') {
+        console.warn(
+          `WebSocketChatTransport: dropped late "${frame.type}" frame for "${channel}" after stream was already finished`,
+        );
+        return;
+      }
+
       switch (frame.type) {
         case 'subscribed':
           settleAck?.();
