@@ -26,6 +26,7 @@
     "db:pull": "drizzle-kit pull",
     "db:seed": "bun src/seed/index.ts",
     "db:migrate": "bun src/scripts/migrate.ts",
+    "db:baseline": "bun src/scripts/baseline.ts",
     "db:backup": "bun src/scripts/backup.ts",
     "credits:grant": "bun src/scripts/grant-credits.ts"
   },

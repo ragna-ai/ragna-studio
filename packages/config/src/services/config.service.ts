@@ -243,7 +243,11 @@ const ConfigSchema = z.object({
 
   MICROSOFT_CLIENT_ID: z.string().optional().default(''),
   MICROSOFT_CLIENT_SECRET: z.string().optional().default(''),
-  MICROSOFT_TENANT_ID: z.string().optional().default('common'),
+  // "organizations": work/school accounts only, personal Microsoft accounts
+  // rejected (see @better-auth/core's microsoft-entra-id provider, which
+  // also double-checks this via the ID token's tid claim). Use "common" to
+  // allow personal accounts too, or a specific tenant GUID to lock to one org.
+  MICROSOFT_TENANT_ID: z.string().optional().default('organizations'),
 
   APPLE_CLIENT_ID: z.string().optional().default(''),
   APPLE_TEAM_ID: z.string().optional().default(''),

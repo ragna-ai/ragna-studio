@@ -1,6 +1,22 @@
 # This is a development override file for docker-compose.
 
 services:
+  migrate:
+    cpus: 1
+    profiles:
+      - full
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+
+  seed:
+    cpus: 1
+    profiles:
+      - full
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+
   webapp:
     cpus: 1
     restart: no
