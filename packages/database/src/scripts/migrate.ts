@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     await client.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_KEY]);
 
     console.log('Running migrations...');
-    await migrate(drizzle(client), { migrationsFolder: './drizzle' });
+    await migrate(drizzle({ client }), { migrationsFolder: './drizzle' });
     console.log('Migrations complete.');
   } finally {
     await client.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_KEY]);
