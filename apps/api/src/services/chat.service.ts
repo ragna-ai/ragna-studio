@@ -750,7 +750,9 @@ export async function runChatStream(
       generateId: createPrimaryId,
       onError(error) {
         logger.error(`Error in chat stream for chat ${chatId}`, error);
-        return 'An error occurred.';
+        // An i18n key, not display text: the frontend translates it
+        // (ChatConversation.vue renders `error.message` through `$t`).
+        return 'chat.conversation.errors.generic';
       },
       execute: ({ writer: dataStream }) => {
         // Handle title generation in parallel

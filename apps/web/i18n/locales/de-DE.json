@@ -263,7 +263,10 @@
     "conversation": {
       "title": "Chat",
       "subtitle": "Unterhalte dich mit deinem KI-Agenten.",
-      "disclaimer": "KI Generiert. Antworten können fehlerhaft sein. Überprüfe wichtige Informationen."
+      "disclaimer": "KI Generiert. Antworten können fehlerhaft sein. Überprüfe wichtige Informationen.",
+      "errors": {
+        "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+      }
     },
     "input": {
       "placeholder": "Wie kann ich dir helfen?",

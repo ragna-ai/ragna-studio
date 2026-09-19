@@ -248,7 +248,7 @@ async function handleSubmit(text: string) {
               <Loader />
             </div>
             <p v-if="error" class="text-sm text-destructive">
-              {{ error.message }}
+              {{ $t(error.message) }}
             </p>
           </MessageScrollerContent>
         </MessageScrollerViewport>

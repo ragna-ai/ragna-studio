@@ -257,7 +257,10 @@
     "conversation": {
       "title": "Chat",
       "subtitle": "Chat with your AI agent.",
-      "disclaimer": "AI generated. Responses may be incorrect. Verify important information."
+      "disclaimer": "AI generated. Responses may be incorrect. Verify important information.",
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      }
     },
     "input": {
       "placeholder": "How can I help you?",

@@ -13,6 +13,17 @@ const PortSchema = z
   .transform(Number)
   .pipe(z.number().int().min(1).max(65535));
 
+// An unset base URL env var is absent (`undefined`), but a present-but-empty
+// one (e.g. `OPENAI_API_BASE_URL=` in a deployed env file) parses as `''`,
+// which is still a valid string to `.optional()` — not normalized away like
+// `undefined` is. The AI SDK provider factories pass this straight through
+// as `baseURL`, and every one of them throws "baseURL must be a non-empty
+// string" rather than falling back to their default endpoint.
+const OptionalBaseUrlSchema = z
+  .string()
+  .optional()
+  .transform((val) => val || undefined);
+
 // Define which variables are required vs optional based on environment
 const ConfigSchema = z.object({
   // App configuration
@@ -213,24 +224,24 @@ const ConfigSchema = z.object({
   CF_DOCUMENTS_BUCKET_NAME: z.string().optional().default(''),
 
   // AI Service Base URLs
-  BFL_API_BASE_URL: z.string().optional(),
+  BFL_API_BASE_URL: OptionalBaseUrlSchema,
   BFL_API_KEY: z.string().optional().default(''),
-  OPENAI_API_BASE_URL: z.string().optional(),
+  OPENAI_API_BASE_URL: OptionalBaseUrlSchema,
   OPENAI_API_KEY: z.string().optional().default(''),
-  ANTHROPIC_API_BASE_URL: z.string().optional(),
+  ANTHROPIC_API_BASE_URL: OptionalBaseUrlSchema,
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   LMSTUDIO_API_BASE_URL: z.string().optional().default(''),
   LMSTUDIO_API_KEY: z.string().optional().default(''),
-  GOOGLE_VERTEX_API_BASE_URL: z.string().optional(),
+  GOOGLE_VERTEX_API_BASE_URL: OptionalBaseUrlSchema,
   GOOGLE_VERTEX_PROJECT_ID: z.string().optional().default(''),
   GOOGLE_VERTEX_LOCATION: z.string().optional().default(''),
   GOOGLE_VERTEX_CLIENT_EMAIL: z.string().optional().default(''),
   GOOGLE_VERTEX_PRIVATE_KEY: z.string().optional().default(''),
-  GOOGLE_GENAI_API_BASE_URL: z.string().optional(),
+  GOOGLE_GENAI_API_BASE_URL: OptionalBaseUrlSchema,
   GOOGLE_GENAI_API_KEY: z.string().optional().default(''),
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
-  MISTRAL_API_BASE_URL: z.string().optional(),
+  MISTRAL_API_BASE_URL: OptionalBaseUrlSchema,
   MISTRAL_API_KEY: z.string().optional().default(''),
 
   // Chat title generation model (chat-title.service.ts in @repo/ai)
