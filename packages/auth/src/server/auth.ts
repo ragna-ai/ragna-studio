@@ -111,8 +111,10 @@ export const auth = betterAuth({
       generateId: false,
     },
     ipAddress: {
-      // TODO: check ip-conf for cf & reverse proxy
-      // ipAddressHeaders: ['cf-connecting-ip'], // or any other custom header
+      // Cloudflare sits in front of Traefik and always sets this to the
+      // single real client IP, so we don't need to parse/trust the
+      // x-forwarded-for chain through Traefik.
+      ipAddressHeaders: ['cf-connecting-ip'],
     },
     cookiePrefix: 'app',
   },
