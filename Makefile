@@ -12,10 +12,10 @@ build:
 	./scripts/build.sh
 
 build-core:
-	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh
+	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh && ./scripts/build-migrate.sh
 
 build-all:
-	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh && ./scripts/build-webbrowser.sh
+	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh && ./scripts/build-webbrowser.sh && ./scripts/build-migrate.sh
 
 # ── Docker (production compose) ──────────────────────────────────────────────
 up-prod:

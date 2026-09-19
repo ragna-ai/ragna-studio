@@ -5,6 +5,19 @@ volumes:
   redis_data:
 
 services:
+  migrate:
+    image: ghcr.io/ragna-ai/ragna-studio-migrate:latest
+    container_name: ragna_studio_migrate
+    restart: "no"
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app_net
+    depends_on:
+      - postgres
+
   webapp:
     image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
     container_name: ragna_studio_webapp
@@ -29,8 +42,12 @@ services:
     networks:
       - app_net
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
 
   api:
     image: ghcr.io/ragna-ai/ragna-studio-api:latest
@@ -43,9 +60,14 @@ services:
     networks:
       - app_net
     depends_on:
-      - postgres
-      - redis
-      - webbrowser
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      webbrowser:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
 
   webbrowser:
     image: ghcr.io/ragna-ai/ragna-studio-webbrowser:latest
