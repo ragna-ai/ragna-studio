@@ -5,7 +5,7 @@ services:
     cpus: 1
     restart: no
     profiles:
-      - prod
+      - full
     ports:
       - ${APP_PORT:-3000}:3000
 
@@ -13,7 +13,7 @@ services:
     cpus: 1
     restart: no
     profiles:
-      - prod
+      - full
     environment:
       - LOG_LEVEL=warn
       - DB_HOST=postgres
@@ -28,7 +28,7 @@ services:
     cpus: 1
     restart: no
     profiles:
-      - prod
+      - full
     environment:
       - LOG_LEVEL=warn
       - DB_HOST=postgres
@@ -41,7 +41,7 @@ services:
     cpus: 1
     restart: no
     profiles:
-      - prod
+      - full
     ports:
       - ${WEBBROWSER_PORT:-3011}:3011
 
