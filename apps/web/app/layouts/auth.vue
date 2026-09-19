@@ -1,5 +1,9 @@
+<script setup lang="ts">
+const head = useLocaleHead();
+</script>
+
 <template>
-  <Html lang="en">
+  <Html :lang="head.htmlAttrs.lang" :dir="head.htmlAttrs.dir">
     <Head>
       <Title>RAGNA Studio</Title>
     </Head>

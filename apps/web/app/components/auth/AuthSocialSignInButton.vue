@@ -37,7 +37,7 @@ const emit = defineEmits<{ click: [] }>();
       variant="secondary"
       class="absolute -top-2 -right-2"
     >
-      Last used
+      {{ $t('auth.login.lastUsed') }}
     </Badge>
   </div>
 </template>

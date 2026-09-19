@@ -51,6 +51,25 @@
       "credits": "{count} credits"
     }
   },
+  "auth": {
+    "login": {
+      "pageTitle": "Login",
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account to continue",
+      "genericError": "Sign in failed. Please try again.",
+      "providers": {
+        "google": "Continue with Google",
+        "microsoft": "Continue with Microsoft",
+        "apple": "Continue with Apple"
+      },
+      "lastUsed": "Last used",
+      "termsAgreement": "By continuing, you agree to our {terms} and {privacy}.",
+      "termsLink": "Terms of Service",
+      "privacyLink": "Privacy Policy",
+      "testimonial": "The platform that helped us ship faster and scale with confidence.",
+      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc."
+    }
+  },
   "home": {
     "title": "Dashboard",
     "titleWithName": "Welcome, {name}",

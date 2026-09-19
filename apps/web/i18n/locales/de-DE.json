@@ -89,6 +89,25 @@
     "delete": "Benachrichtigung löschen",
     "clearAll": "Alle löschen"
   },
+  "auth": {
+    "login": {
+      "pageTitle": "Anmelden",
+      "title": "Willkommen zurück",
+      "subtitle": "Melde dich an, um fortzufahren",
+      "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "providers": {
+        "google": "Mit Google fortfahren",
+        "microsoft": "Mit Microsoft fortfahren",
+        "apple": "Mit Apple fortfahren"
+      },
+      "lastUsed": "Zuletzt verwendet",
+      "termsAgreement": "Mit der Fortsetzung stimmst du unseren {terms} und unserer {privacy} zu.",
+      "termsLink": "Nutzungsbedingungen",
+      "privacyLink": "Datenschutzrichtlinie",
+      "testimonial": "Die Plattform, mit der wir schneller ausliefern und selbstbewusst skalieren konnten.",
+      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc."
+    }
+  },
   "home": {
     "title": "Dashboard",
     "titleWithName": "Willkommen, {name}",

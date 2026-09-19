@@ -7,25 +7,18 @@ type SocialProvider = 'google' | 'microsoft' | 'apple';
 interface SocialProviderOption {
   provider: SocialProvider;
   icon: string;
-  label: string;
 }
 
 const SOCIAL_PROVIDERS: SocialProviderOption[] = [
-  {
-    provider: 'google',
-    icon: 'logos:google-icon',
-    label: 'Continue with Google',
-  },
-  {
-    provider: 'microsoft',
-    icon: 'logos:microsoft-icon',
-    label: 'Continue with Microsoft',
-  },
-  { provider: 'apple', icon: 'logos:apple', label: 'Continue with Apple' },
+  { provider: 'google', icon: 'logos:google-icon' },
+  { provider: 'microsoft', icon: 'logos:microsoft-icon' },
+  { provider: 'apple', icon: 'logos:apple' },
 ];
 
 definePageMeta({ layout: 'auth' });
-useHead({ title: 'Login' });
+
+const { t } = useI18n();
+useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
 const errorMessage = ref<string | null>(null);
@@ -44,11 +37,11 @@ async function signIn(provider: SocialProvider) {
       errorCallbackURL: `${appOrigin}/auth/login`,
     });
     if (error) {
-      errorMessage.value = error.message ?? 'Sign in failed. Please try again.';
+      errorMessage.value = error.message ?? t('auth.login.genericError');
       signingIn.value = null;
     }
   } catch {
-    errorMessage.value = 'Sign in failed. Please try again.';
+    errorMessage.value = t('auth.login.genericError');
     signingIn.value = null;
   }
 }
@@ -61,9 +54,11 @@ async function signIn(provider: SocialProvider) {
         <span class="text-2xl font-semibold tracking-tight">RAGNA Studio</span>
       </div>
 
-      <h1 class="text-2xl font-semibold tracking-tight">Welcome back</h1>
+      <h1 class="text-2xl font-semibold tracking-tight">
+        {{ $t('auth.login.title') }}
+      </h1>
       <p class="mt-2 text-sm text-muted-foreground">
-        Sign in to your account to continue
+        {{ $t('auth.login.subtitle') }}
       </p>
 
       <Transition
@@ -89,7 +84,7 @@ async function signIn(provider: SocialProvider) {
           v-for="option in SOCIAL_PROVIDERS"
           :key="option.provider"
           :icon="option.icon"
-          :label="option.label"
+          :label="$t(`auth.login.providers.${option.provider}`)"
           :loading="signingIn === option.provider"
           :disabled="signingIn !== null"
           :last-used="authClient.isLastUsedLoginMethod(option.provider)"
@@ -97,21 +92,28 @@ async function signIn(provider: SocialProvider) {
         />
       </div>
 
-      <p class="mt-8 text-center text-xs text-muted-foreground">
-        By continuing, you agree to our
-        <NuxtLink
-          to="/terms"
-          class="underline underline-offset-4 hover:text-foreground"
-        >
-          Terms of Service
-        </NuxtLink>
-        and
-        <NuxtLink
-          to="/privacy"
-          class="underline underline-offset-4 hover:text-foreground"
-          >Privacy Policy</NuxtLink
-        >.
-      </p>
+      <i18n-t
+        keypath="auth.login.termsAgreement"
+        tag="p"
+        class="mt-8 text-center text-xs text-muted-foreground"
+      >
+        <template #terms>
+          <NuxtLink
+            to="/terms"
+            class="underline underline-offset-4 hover:text-foreground"
+          >
+            {{ $t('auth.login.termsLink') }}
+          </NuxtLink>
+        </template>
+        <template #privacy>
+          <NuxtLink
+            to="/privacy"
+            class="underline underline-offset-4 hover:text-foreground"
+          >
+            {{ $t('auth.login.privacyLink') }}
+          </NuxtLink>
+        </template>
+      </i18n-t>
     </div>
   </div>
 
@@ -123,10 +125,10 @@ async function signIn(provider: SocialProvider) {
     </div>
     <blockquote class="space-y-2">
       <p class="text-lg leading-relaxed text-stone-100">
-        "The platform that helped us ship faster and scale with confidence."
+        "{{ $t('auth.login.testimonial') }}"
       </p>
       <footer class="text-sm text-stone-400">
-        Sofia Davis &mdash; CTO, Acme Inc.
+        {{ $t('auth.login.testimonialAuthor') }}
       </footer>
     </blockquote>
   </div>
