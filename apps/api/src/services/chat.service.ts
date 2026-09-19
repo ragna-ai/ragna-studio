@@ -747,6 +747,11 @@ export async function runChatStream(
 
     const uiMessageStream = createUIMessageStream({
       originalMessages: validUiMessages,
+      generateId: createPrimaryId,
+      onError(error) {
+        logger.error(`Error in chat stream for chat ${chatId}`, error);
+        return 'An error occurred.';
+      },
       execute: ({ writer: dataStream }) => {
         // Handle title generation in parallel
         if (titlePromise) {
@@ -870,8 +875,8 @@ export async function runChatStream(
           }),
         );
       },
-      async onEnd({ responseMessage, isAborted, finishReason }) {
-        if (isAborted || finishReason === 'error') {
+      async onEnd({ responseMessage, isAborted, finishReason, outcome }) {
+        if (isAborted || finishReason === 'error' || outcome.status === 'failed') {
           return;
         }
 
