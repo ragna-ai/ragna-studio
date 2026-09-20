@@ -616,6 +616,21 @@ function toChatMessageRow(message: UIMessage, chatId: string) {
   };
 }
 
+// Auto-continue (sendAutomaticallyWhen in ChatConversation.vue) resends the
+// already-persisted last message instead of a new one; skip re-appending it.
+function isEchoOfLastPersistedMessage(
+  message: unknown,
+  lastPersisted: { id: string } | undefined,
+) {
+  return (
+    lastPersisted !== undefined &&
+    typeof message === 'object' &&
+    message !== null &&
+    'id' in message &&
+    message.id === lastPersisted.id
+  );
+}
+
 // One in-flight run per chat: `abortChatRun` looks a chat up here to cancel it.
 const inFlightRunsByChatId = new Map<string, AbortController>();
 
@@ -684,7 +699,9 @@ export async function runChatStream(
     // Rebuild the full conversation from persisted history plus the one new
     // message the client sent, rather than trusting a client-sent history.
     const validated = await safeValidateUIMessages({
-      messages: [...userChat.messages, message],
+      messages: isEchoOfLastPersistedMessage(message, userChat.messages.at(-1))
+        ? userChat.messages
+        : [...userChat.messages, message],
     });
 
     if (!validated.success) {
