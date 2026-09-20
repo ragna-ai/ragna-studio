@@ -17,6 +17,7 @@ import type {
 } from 'ai';
 import { tool } from 'ai';
 import * as z from 'zod';
+import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a task always belongs to a workspace (the workspace is
 // the board, docs/tasks/prd.md), and every chat (and therefore every tool
@@ -249,10 +250,9 @@ const createTaskInputSchema = z.object({
     .describe(
       'Days before the due date to send a reminder, 0 = on the due date. Requires `dueDate` to also be set.',
     ),
-  parentTaskId: z
-    .string()
-    .optional()
-    .describe('Id of an existing top-level task to nest this one under (subtasks are one level deep).'),
+  parentTaskId: optionalNonEmptyString().describe(
+    'Id of an existing top-level task to nest this one under (subtasks are one level deep). Null or omit for a top-level task.',
+  ),
   labelNames: z
     .array(z.string())
     .optional()
@@ -274,9 +274,8 @@ export const getCreateTaskTool = (
     execute: async (input) => {
       writer.write({ type: 'data-task', data: { action: 'create' }, transient: true });
 
-      if (input.remindDaysBeforeDue !== undefined && !input.dueDate) {
-        return { error: '`remindDaysBeforeDue` requires `dueDate` to also be set.' };
-      }
+      // Ignore a reminder offset without a real due date instead of erroring.
+      const remindDaysBeforeDue = input.dueDate ? input.remindDaysBeforeDue : undefined;
 
       if (input.parentTaskId) {
         const parentValidation = await validateParentTask({
@@ -306,7 +305,7 @@ export const getCreateTaskTool = (
             status: input.status,
             priority: input.priority,
             dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
-            remindDaysBeforeDue: input.remindDaysBeforeDue,
+            remindDaysBeforeDue,
             parentTaskId: input.parentTaskId,
             createdByAgentId: agentId,
             labelIds,
@@ -367,7 +366,9 @@ const updateTaskInputSchema = z.object({
     .array(z.string())
     .optional()
     .describe('Replaces the task\'s labels with these existing workspace labels (see listTaskLabels).'),
-  assignedAgentId: z.string().optional().describe('Agent id to assign this task to.'),
+  assignedAgentId: optionalNonEmptyString().describe(
+    'Agent id to assign this task to. Null or omit to leave unassigned.',
+  ),
   unassign: z.boolean().optional().describe('Set true to remove the current agent assignment.'),
 });
 
@@ -408,7 +409,7 @@ export const getUpdateTaskTool = (
       if (input.parentTaskId !== undefined) fields.parentTaskId = input.parentTaskId;
       if (input.unassign) {
         fields.assignedAgentId = null;
-      } else if (input.assignedAgentId !== undefined) {
+      } else if (input.assignedAgentId) {
         fields.assignedAgentId = input.assignedAgentId;
       }
 

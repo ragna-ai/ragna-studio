@@ -11,6 +11,7 @@ import type {
 } from 'ai';
 import { tool } from 'ai';
 import * as z from 'zod';
+import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a document always belongs to a workspace, and every
 // chat (and therefore every tool call) always has one.
@@ -108,10 +109,9 @@ export const getReadDocumentTool = (
 const createDocumentInputSchema = z.object({
   title: z.string().min(1).max(255).describe('The document title.'),
   content: z.string().describe('The document body as markdown.'),
-  folderId: z
-    .string()
-    .optional()
-    .describe('Id of the folder to file this document under. Omit to leave it at root level.'),
+  folderId: optionalNonEmptyString().describe(
+    'Id of the folder to file this document under. Null or omit to leave it at root level.',
+  ),
 });
 
 type CreateDocumentInput = z.infer<typeof createDocumentInputSchema>;
