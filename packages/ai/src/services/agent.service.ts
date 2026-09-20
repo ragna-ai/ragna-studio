@@ -263,10 +263,6 @@ function buildInstructions(
 
 export interface AgentInstructionsResult {
   instructions: string;
-  // True once the agent's ready documents are above
-  // AGENT_CONTEXT_INJECTION_THRESHOLD: callers must wire the
-  // searchContextDocuments tool into the toolset alongside these
-  // instructions (docs/agent/agent-context-retrieval.md, "Search tool").
   retrievalMode: boolean;
 }
 
@@ -323,15 +319,8 @@ export function toModelSettings(settings: AgentSettings | null | undefined): {
   reasoning: AgentReasoningEffort | undefined;
 } {
   return {
-    // Temperature 0 means "disabled", not "sample at 0" (the settings form
-    // treats 0 as off, and older agents still store a literal 0). Reasoning
-    // models reject the parameter outright, so 0 must not be sent either.
     temperature: settings?.temperature || undefined,
     maxOutputTokens: settings?.maxOutputTokens ?? undefined,
-    // Unset/null: nothing sent, provider default applies. 'none' is sent
-    // through to explicitly disable reasoning; 'low'/'medium'/'high' map
-    // onto each provider's own mechanism (Anthropic thinking budget, OpenAI
-    // reasoningEffort, Google thinkingConfig).
     reasoning: settings?.reasoning ?? undefined,
   };
 }
@@ -346,21 +335,9 @@ const ANTHROPIC_CACHE_BREAKPOINT = {
 
 type ProviderOptions = NonNullable<ModelMessage['providerOptions']>;
 
-// Per-provider `providerOptions` defaults applied to every generateText/
-// streamText call, regardless of which provider the agent is configured
-// with — each provider ignores providerOptions keys it doesn't recognize,
-// the same trick ANTHROPIC_CACHE_BREAKPOINT above relies on. To add a new
-// provider's defaults, add another key here; withDefaultProviderOptions
-// picks it up automatically, no call site needs to change.
 const DEFAULT_PROVIDER_OPTIONS: ProviderOptions = {
-  // OpenAI's default `openai(model)` factory
-  // (packages/ai/src/factories/ai-model.factory.ts) routes through the
-  // Responses API, which OpenAI logs server-side unless the request sets
-  // `store: false` (platform.openai.com/docs/api-reference/responses).
-  // reasoningSummary/includeThoughts: opt-in flags providers require to
-  // return visible reasoning text (developers.openai.com/api/docs/guides/reasoning).
-  openai: { store: false, reasoningSummary: 'auto' },
-  google: { thinkingConfig: { includeThoughts: true } },
+  openai: { store: false }, //  , reasoningSummary: 'auto'
+  // google: { thinkingConfig: { includeThoughts: true } },
 };
 
 /**
