@@ -357,7 +357,10 @@ const DEFAULT_PROVIDER_OPTIONS: ProviderOptions = {
   // (packages/ai/src/factories/ai-model.factory.ts) routes through the
   // Responses API, which OpenAI logs server-side unless the request sets
   // `store: false` (platform.openai.com/docs/api-reference/responses).
-  openai: { store: false },
+  // reasoningSummary/includeThoughts: opt-in flags providers require to
+  // return visible reasoning text (developers.openai.com/api/docs/guides/reasoning).
+  openai: { store: false, reasoningSummary: 'auto' },
+  google: { thinkingConfig: { includeThoughts: true } },
 };
 
 /**
