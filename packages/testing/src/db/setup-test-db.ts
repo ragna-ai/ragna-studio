@@ -25,6 +25,7 @@ export async function setupTestDatabase(): Promise<void> {
   }
 
   await createDatabaseIfMissing(testDatabaseUrl, testDatabaseName);
+  await ensureExtensions(testDatabaseUrl);
   await pushSchema(testDatabaseName);
 
   console.log('Test database ready.');
@@ -51,6 +52,20 @@ async function createDatabaseIfMissing(
     await adminDb.unsafe(`create database ${testDatabaseName}`);
   } finally {
     await adminDb.close();
+  }
+}
+
+async function ensureExtensions(testDatabaseUrl: URL): Promise<void> {
+  // docker/postgres-init.sql only creates these for the default database at
+  // container init, not for studio_test, which is created later above. Runs
+  // every time (not just on fresh create) so a pre-existing studio_test from
+  // before this function existed still gets them.
+  const testDb = new SQL(testDatabaseUrl.toString());
+  try {
+    await testDb.unsafe('create extension if not exists vector');
+    await testDb.unsafe('create extension if not exists pg_trgm');
+  } finally {
+    await testDb.close();
   }
 }
 
