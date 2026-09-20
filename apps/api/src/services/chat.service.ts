@@ -812,7 +812,8 @@ export async function runChatStream(
           maxOutputTokens: modelSettings.maxOutputTokens,
           reasoning: modelSettings.reasoning,
           tools,
-          stopWhen: stepCountIs(5),
+          // Matches the workflow/team-node agent step caps (docs/workflow/workflows-team-node.md).
+          stopWhen: stepCountIs(15),
           onStart(st) {
             logger.debug('Request started', {
               callId: st.callId,
