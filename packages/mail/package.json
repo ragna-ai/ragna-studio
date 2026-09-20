@@ -27,7 +27,7 @@
     "maizzle:build": "maizzle build --config maizzle.config.ts"
   },
   "dependencies": {
-    "@maizzle/framework": "6.1.2",
+    "@maizzle/framework": "6.1.7",
     "@maizzle/tailwindcss": "1.5.6",
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
@@ -35,8 +35,8 @@
     "email-reply-parser": "^2.3.9",
     "html-to-text": "^10.0.1",
     "isomorphic-dompurify": "^4.1.0",
-    "marked": "18.0.11",
-    "nodemailer": "^10.0.0",
+    "marked": "18.0.13",
+    "nodemailer": "^10.0.10",
     "nodemailer-brevo-transport": "^2.2.1",
     "turndown": "^7.2.4"
   },
