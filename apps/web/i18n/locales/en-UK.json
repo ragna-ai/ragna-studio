@@ -236,6 +236,45 @@
       "createDocument": {
         "label": "Create Document"
       },
+      "datasetCreate": {
+        "label": "Create Dataset"
+      },
+      "datasetFind": {
+        "label": "Find Dataset"
+      },
+      "datasetListRows": {
+        "label": "List Rows"
+      },
+      "datasetGetRow": {
+        "label": "Get Row"
+      },
+      "datasetAppendRow": {
+        "label": "Append Row"
+      },
+      "datasetUpdateRow": {
+        "label": "Update Row"
+      },
+      "datasetMoveRow": {
+        "label": "Move Row"
+      },
+      "listTasks": {
+        "label": "List Tasks"
+      },
+      "readTask": {
+        "label": "Read Task"
+      },
+      "createTask": {
+        "label": "Create Task"
+      },
+      "updateTask": {
+        "label": "Update Task"
+      },
+      "moveTask": {
+        "label": "Move Task"
+      },
+      "searchContextDocuments": {
+        "label": "Search Context"
+      },
       "datasets": {
         "label": "Datasets",
         "description": "Read and write structured data tables: task queues, plans, and other durable state.",
@@ -282,7 +321,10 @@
       "actions": "Message actions",
       "branch": "Branch from here",
       "copy": "Copy text",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "toolGroup": {
+        "summary": "Used {count} tools"
+      }
     },
     "history": {
       "title": "Chat history",

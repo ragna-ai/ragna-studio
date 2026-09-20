@@ -250,6 +250,45 @@
       },
       "createDocument": {
         "label": "Dokument erstellen"
+      },
+      "datasetCreate": {
+        "label": "Datensatz erstellen"
+      },
+      "datasetFind": {
+        "label": "Datensatz suchen"
+      },
+      "datasetListRows": {
+        "label": "Zeilen auflisten"
+      },
+      "datasetGetRow": {
+        "label": "Zeile abrufen"
+      },
+      "datasetAppendRow": {
+        "label": "Zeile hinzufügen"
+      },
+      "datasetUpdateRow": {
+        "label": "Zeile aktualisieren"
+      },
+      "datasetMoveRow": {
+        "label": "Zeile verschieben"
+      },
+      "listTasks": {
+        "label": "Aufgaben auflisten"
+      },
+      "readTask": {
+        "label": "Aufgabe lesen"
+      },
+      "createTask": {
+        "label": "Aufgabe erstellen"
+      },
+      "updateTask": {
+        "label": "Aufgabe aktualisieren"
+      },
+      "moveTask": {
+        "label": "Aufgabe verschieben"
+      },
+      "searchContextDocuments": {
+        "label": "Kontext durchsuchen"
       }
     }
   },
@@ -288,7 +327,10 @@
       "actions": "Nachrichtenaktionen",
       "branch": "Ab hier verzweigen",
       "copy": "Text kopieren",
-      "copied": "In die Zwischenablage kopiert"
+      "copied": "In die Zwischenablage kopiert",
+      "toolGroup": {
+        "summary": "{count} Werkzeuge verwendet"
+      }
     },
     "history": {
       "title": "Chat-Verlauf",

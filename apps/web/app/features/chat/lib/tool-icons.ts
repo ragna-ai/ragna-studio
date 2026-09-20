@@ -1,0 +1,50 @@
+import {
+  ArrowRightLeftIcon,
+  FilePenIcon,
+  FileSearchIcon,
+  FileTextIcon,
+  FolderOpenIcon,
+  ImageIcon,
+  ListPlusIcon,
+  ListTodoIcon,
+  MoveIcon,
+  NotebookTextIcon,
+  PencilIcon,
+  PencilLineIcon,
+  PlusIcon,
+  Rows3Icon,
+  SearchIcon,
+  TableIcon,
+  VideoIcon,
+} from '@lucide/vue';
+import type { Component } from 'vue';
+
+// Keyed by the bare tool id (a tool-* UIMessage part's `type` minus the
+// `tool-` prefix), one entry per id in agent.tool.* (i18n locales) /
+// agentToolValues (packages/database/src/schema/agent.schema.ts).
+export const TOOL_ICONS: Record<string, Component> = {
+  think: PencilLineIcon,
+  linkedinDraft: FileTextIcon,
+  imageGen: ImageIcon,
+  videoGen: VideoIcon,
+  webSearch: SearchIcon,
+  webBrowser: SearchIcon,
+  listDocuments: FolderOpenIcon,
+  readDocument: FileTextIcon,
+  editDocument: FilePenIcon,
+  createDocument: FilePenIcon,
+  memory: NotebookTextIcon,
+  datasetCreate: TableIcon,
+  datasetFind: SearchIcon,
+  datasetListRows: Rows3Icon,
+  datasetGetRow: FileSearchIcon,
+  datasetAppendRow: ListPlusIcon,
+  datasetUpdateRow: PencilIcon,
+  datasetMoveRow: ArrowRightLeftIcon,
+  listTasks: ListTodoIcon,
+  readTask: FileTextIcon,
+  createTask: PlusIcon,
+  updateTask: PencilIcon,
+  moveTask: MoveIcon,
+  searchContextDocuments: FileSearchIcon,
+};
