@@ -6,7 +6,7 @@ services:
       - "traefik.http.routers.ragna-webapp.entrypoints=https"
       - "traefik.http.services.ragna-webapp.loadbalancer.server.port=3000"
       - "traefik.http.routers.ragna-webapp.service=ragna-webapp"
-      - "traefik.http.routers.ragna-webapp.middlewares=default@file"
+      - "traefik.http.routers.ragna-webapp.middlewares=ragna-webapp-default@file"
       - "traefik.http.routers.ragna-webapp.tls=true"
       - "traefik.http.routers.ragna-webapp.tls.certresolver=http"
       - "traefik.docker.network=traefik_net"
