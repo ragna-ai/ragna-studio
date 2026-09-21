@@ -156,7 +156,11 @@ async function main() {
   await seedDefaultAgent();
 }
 
-main().catch((error) => {
-  console.error('Error seeding database:', error);
-  process.exit(1);
-});
+main()
+  .catch((error) => {
+    console.error('Error seeding database:', error);
+    process.exitCode = 1;
+  })
+  // The pool's default idle timeout is 10s, so without this the process
+  // just hangs open waiting it out instead of exiting once seeding is done.
+  .finally(() => db.$client.end());
