@@ -73,10 +73,9 @@ export const auth = betterAuth({
   hooks: {},
   user: {},
   account: {
+    encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
-      // The LinkedIn email may differ from the user's sign-in email, so we
-      // can't require a match to link the account.
       allowDifferentEmails: true,
     },
   },
