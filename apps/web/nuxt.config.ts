@@ -3,6 +3,8 @@ import { createResolver } from 'nuxt/kit';
 
 const { resolve } = createResolver(import.meta.url);
 
+const isDev = process.env.NODE_ENV === 'development';
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -18,12 +20,46 @@ export default defineNuxtConfig({
     '@nuxt/image',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }],
     '@nuxtjs/i18n',
+    'nuxt-security',
   ],
   // CONFIG
   runtimeConfig: {
     public: {
       apiBaseUrl: 'http://localhost:3010', // default value for dev
     },
+  },
+  // SECURITY
+  // apps/web has no server/ routes of its own (all data goes to apps/api
+  // cross-origin), so the request-time middlewares below are no-ops here.
+  // HSTS/X-Content-Type-Options/X-Frame-Options/X-XSS-Protection stay owned by
+  // Traefik's shared default-security-headers (same as ragna-api), only CSP
+  // needs to live here since its nonce has to be generated per-request.
+  security: {
+    enabled: !isDev,
+    headers: {
+      strictTransportSecurity: false,
+      xContentTypeOptions: false,
+      xFrameOptions: false,
+      xXSSProtection: false,
+      // static.ragna.io doesn't send Cross-Origin-Resource-Policy, COEP would
+      // block image loads from it
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        'default-src': ["'self'"],
+        'connect-src': ["'self'", 'https://api.ragna.io', 'wss://api.ragna.io'],
+        'img-src': ["'self'", 'data:', 'https://static.ragna.io'],
+        // fonts are self-hosted via @nuxt/fonts, no external font host needed
+        'font-src': ["'self'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+      },
+    },
+    rateLimiter: false,
+    requestSizeLimiter: false,
+    xssValidator: false,
+    corsHandler: false,
+    allowedMethodsRestricter: false,
+    csrf: false,
+    sri: false,
   },
   // CSS
   css: ['~/assets/css/main.css'],
