@@ -41,13 +41,16 @@ export default defineNuxtConfig({
       xContentTypeOptions: false,
       xFrameOptions: false,
       xXSSProtection: false,
-      // static.ragna.io doesn't send Cross-Origin-Resource-Policy, COEP would
-      // block image loads from it
       crossOriginEmbedderPolicy: false,
       contentSecurityPolicy: {
         'default-src': ["'self'"],
         'connect-src': ["'self'", 'https://api.ragna.io', 'wss://api.ragna.io'],
-        'img-src': ["'self'", 'data:', 'https://static.ragna.io'],
+        'img-src': [
+          "'self'",
+          'data:',
+          'https://static.ragna.io',
+          'https://images.ragna.io',
+        ],
         // fonts are self-hosted via @nuxt/fonts, no external font host needed
         'font-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],
