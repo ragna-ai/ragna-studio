@@ -37,6 +37,8 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
     container_name: ragna_studio_webapp
     restart: always
+    mem_limit: 512m
+    cpus: 1.0
     env_file:
       - .env
     security_opt:
@@ -50,6 +52,8 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-worker:latest
     container_name: ragna_studio_worker
     restart: always
+    mem_limit: 2048m
+    cpus: 2.0
     env_file:
       - .env
     security_opt:
@@ -68,6 +72,8 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-api:latest
     container_name: ragna_studio_api
     restart: always
+    mem_limit: 1024m
+    cpus: 1.5
     env_file:
       - .env
     security_opt:
@@ -88,6 +94,8 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-webbrowser:latest
     container_name: ragna_studio_webbrowser
     restart: always
+    mem_limit: 1536m
+    cpus: 1.5
     env_file:
       - .env
     security_opt:
@@ -99,6 +107,8 @@ services:
     image: pgvector/pgvector:0.8.6-pg18-trixie
     container_name: ragna_studio_postgresql
     restart: always
+    mem_limit: 1024m
+    cpus: 1.5
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
@@ -116,6 +126,8 @@ services:
     image: redis:8.8.0-alpine3.23
     container_name: ragna_studio_redis
     restart: always
+    mem_limit: 256m
+    cpus: 0.5
     command: "redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
