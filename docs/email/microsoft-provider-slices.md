@@ -1,6 +1,6 @@
 # Microsoft provider: implementation slices
 
-> **Status: in-progress** (approved 2026-09-24; all slices and the integration pass done same day, awaiting Sven's verification). Build plan for
+> **Status: implemented** (approved and built 2026-09-24, merged via PR #22). Build plan for
 > [microsoft-provider-prd.md](./microsoft-provider-prd.md).
 
 Two phases. Phase 1 lands the shared contract so the four phase-2 slices can
