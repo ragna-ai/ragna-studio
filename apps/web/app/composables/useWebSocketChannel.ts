@@ -97,7 +97,7 @@ const {
   heartbeat: {
     message: 'ping',
     responseMessage: 'pong',
-    interval: HEARTBEAT_INTERVAL_MS,
+    // interval: HEARTBEAT_INTERVAL_MS,
     pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
   },
   autoReconnect: {
