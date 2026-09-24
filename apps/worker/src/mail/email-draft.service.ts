@@ -50,7 +50,7 @@ import type { MailAddress, MailProvider } from '@repo/mail/provider';
 import type { EmailDraftJobData } from '@repo/queue';
 import { noopWriter } from '../workflow/executors/noop-writer';
 import { logTraceStepDebug, withAgentConfig } from '../workflow/executors/run-referenced-agent';
-import { getGmailProviderForAccount } from './gmail-provider';
+import { getMailProviderForAccount } from './mail-provider';
 import { ensureMessageBody, persistMessageBody } from './message-body';
 import { toMailAddress } from './participants';
 
@@ -101,7 +101,7 @@ export async function generateEmailDraft({
     status: 'generating',
   });
 
-  const provider = getGmailProviderForAccount(account);
+  const provider = getMailProviderForAccount(account);
 
   let markdownContent: string;
   try {
@@ -116,7 +116,7 @@ export async function generateEmailDraft({
 
   // The agent only ever writes markdown (DRAFT_TASK_INSTRUCTIONS); converted
   // to HTML once, here, so `content` is never briefly markdown in a
-  // now-HTML column, e.g. if pushDraftToGmail below bails out early
+  // now-HTML column, e.g. if pushDraftToProvider below bails out early
   // (docs/email/html-content-change-request.md, "AI-generated drafts").
   const htmlBody = markdownToHtml(markdownContent);
   await updateEmailDraft({
@@ -127,11 +127,12 @@ export async function generateEmailDraft({
     text: htmlToText(htmlBody),
   });
 
-  // Pushed to Gmail as soon as the draft turns 'ready', without waiting for
-  // a user edit (docs/email/drafts-change-request.md, "Decisions": "AI
-  // drafts to Gmail" / "Scope > 3"), so the draft is reviewable from Gmail
-  // mobile too. Best-effort: never fails this job, see pushDraftToGmail.
-  await pushDraftToGmail({
+  // Pushed to the provider as soon as the draft turns 'ready', without
+  // waiting for a user edit (docs/email/drafts-change-request.md,
+  // "Decisions": "AI drafts to Gmail" / "Scope > 3"), so the draft is
+  // reviewable from the provider's own mobile app too. Best-effort: never
+  // fails this job, see pushDraftToProvider.
+  await pushDraftToProvider({
     account,
     provider,
     threadId,
@@ -232,10 +233,10 @@ async function buildThreadContext({
   return formatThreadForPrompt(inputs, { maxCharacters: MAX_DRAFT_CONTEXT_CHARS });
 }
 
-// Everything the Gmail push needs that comes from our own index, no
-// provider call required — split out of pushDraftToGmail so that function
-// reads as one linear flow instead of mixing local lookups with the live
-// provider fetch that follows.
+// Everything the provider push needs that comes from our own index, no
+// provider call required — split out of pushDraftToProvider so that
+// function reads as one linear flow instead of mixing local lookups with
+// the live provider fetch that follows.
 interface ReplyDraftContext {
   providerThreadId: string;
   to: EmailParticipant[];
@@ -246,8 +247,9 @@ interface ReplyDraftContext {
   // Present whenever ensureMessageBody already persisted it while building
   // the agent's thread context (buildThreadContext, above) — i.e. in every
   // real case; null only for a message whose body somehow never got stored,
-  // in which case pushDraftToGmail falls back to the live fetch it already
-  // makes for the threading headers rather than adding a second fetch path.
+  // in which case pushDraftToProvider falls back to the live fetch it
+  // already makes for the threading headers rather than adding a second
+  // fetch path.
   replyToHtmlBody: string | null;
 }
 
@@ -294,7 +296,7 @@ function ensureReplySubject(subject: string | null): string {
 // buildReplyQuoteHtml a user reply/forward is seeded with (POST
 // /email/draft), so an AI draft and a human reply on the same thread carry
 // identical quoted history byte for byte, whether the draft is sent from
-// Gmail or from our own review UI. The quote is stored in its own
+// the provider or from our own review UI. The quote is stored in its own
 // `quotedHtml`/`quotedText` columns, separate from the agent's `content`/
 // `text` (docs/email/quote-iframe-change-request.md), so the compose UI can
 // render it read-only instead of parsing it into the live editor.
@@ -313,12 +315,12 @@ function buildQuoteFields({
   return { quotedHtml, quotedText: htmlToText(quotedHtml) };
 }
 
-// Creates the Gmail-side draft for an AI reply that just turned 'ready'.
+// Creates the provider-side draft for an AI reply that just turned 'ready'.
 // Best-effort: the draft is already usable from our own review UI once
 // 'ready', so a push failure here is logged and swallowed rather than
 // failing the draft job; providerDraftId simply stays null
 // (docs/email/drafts-change-request.md, "Scope > 3").
-async function pushDraftToGmail({
+async function pushDraftToProvider({
   account,
   provider,
   threadId,
@@ -340,15 +342,15 @@ async function pushDraftToGmail({
     const context = await loadReplyDraftContext({ account, threadId, replyToMessageId });
     if (!context) {
       logger.warn(
-        `Cannot push email draft ${draftId} to Gmail: thread or reply-to message is missing`,
+        `Cannot push email draft ${draftId} to the provider: thread or reply-to message is missing`,
       );
       return;
     }
 
     // to/subject come entirely from local data (the thread row and the
     // replied-to message's sender), so they're saved before any provider
-    // call below: a Gmail outage (expired token, network blip, replied-to
-    // message gone from Gmail) must degrade the push, never the draft
+    // call below: a provider outage (expired token, network blip, replied-to
+    // message gone from the mailbox) must degrade the push, never the draft
     // itself. A user opening an otherwise-fine AI draft to find it addressed
     // to nobody, with no subject, is worse than the push simply not
     // happening yet.
@@ -366,8 +368,8 @@ async function pushDraftToGmail({
     // needs that fetch's body, handled after it succeeds. This is
     // deliberately two updateEmailDraft calls on that cold path instead of
     // collapsing into one after the fetch: a second local write is cheap,
-    // and it's what buys the guarantee that a Gmail outage never leaves the
-    // draft without a usable quote. Do not re-merge these. `content`/`text`
+    // and it's what buys the guarantee that a provider outage never leaves
+    // the draft without a usable quote. Do not re-merge these. `content`/`text`
     // (the agent's own reply) are already saved by generateEmailDraft before
     // this function runs, so only `quotedHtml`/`quotedText` are written here.
     let quotedHtml: string | null = null;
@@ -413,7 +415,7 @@ async function pushDraftToGmail({
 
     if (!fullReplyToMessage.messageIdHeader) {
       logger.warn(
-        `Cannot thread email draft ${draftId} to Gmail: reply-to message has no Message-ID header`,
+        `Cannot thread email draft ${draftId} to the provider: reply-to message has no Message-ID header`,
       );
       return;
     }
@@ -432,21 +434,22 @@ async function pushDraftToGmail({
     const created = await provider.createDraft({
       to: context.to.map(toMailAddress),
       subject: context.subject,
-      // Gmail's own web/mobile UI renders the text/html part; text is the
-      // plain-text MIME sibling derived from the same HTML we just stored,
-      // not the markdown source (docs/email/html-content-change-request.md,
-      // "Outgoing MIME assembly").
+      // The provider's own web/mobile UI renders the text/html part; text
+      // is the plain-text MIME sibling derived from the same HTML we just
+      // stored, not the markdown source (docs/email/html-content-change-
+      // request.md, "Outgoing MIME assembly").
       text,
       html,
       thread: {
         threadId: context.providerThreadId,
         inReplyToMessageId: fullReplyToMessage.messageIdHeader,
         references: fullReplyToMessage.references,
+        replyToProviderMessageId: context.replyToProviderMessageId,
       },
     });
 
     await updateEmailDraft({ id: draftId, accountId: account.id, providerDraftId: created.id });
   } catch (error) {
-    logger.error(`Failed to push email draft ${draftId} to Gmail`, error);
+    logger.error(`Failed to push email draft ${draftId} to the provider`, error);
   }
 }

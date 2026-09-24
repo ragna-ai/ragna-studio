@@ -115,9 +115,7 @@ function buildSnapshot(): EmailDraftEditableFields {
   };
 }
 
-// `flush` forces the Gmail write-back regardless of the attachment-based
-// push rule (UpdateEmailDraftRequest's doc comment) - set for the unmount
-// flush and the pre-send save below, left off ordinary keystroke autosaves.
+// `flush` forces the provider write-back; set for the unmount flush and the pre-send save below.
 async function saveDraftNow(flush: boolean) {
   try {
     await saveDraft({ draftId: props.draft.id, threadId: props.draft.threadId, ...buildSnapshot(), flush });
@@ -152,15 +150,8 @@ function removeDraftAttachment(attachment: EmailDraftAttachment) {
 async function handleSend() {
   if (!canSend.value) return;
 
-  // The send request below reads `to`/`cc`/`bcc`/`subject`/the editor
-  // directly, so it can't send stale content - but `sendEmailDraft` acts on
-  // the draft's Gmail-side state via `providerDraftId`, which only reflects
-  // what the last PATCH pushed. Cancel any pending debounced autosave (it
-  // would otherwise race this, or fire after the draft is already 'sent')
-  // and push one final flush first so Gmail has this exact content before
-  // send touches it. `saveDraftNow` swallows its own errors, and a failed
-  // pre-send flush deliberately doesn't block the send attempt below - the
-  // send request carries this same content directly either way.
+  // `sendEmailDraft` acts on the draft's provider-side state via `providerDraftId`, which only
+  // reflects the last PATCH - flush any pending autosave first so it has this exact content.
   emitChange.cancel();
   await saveDraftNow(true);
 

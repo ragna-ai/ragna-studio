@@ -43,6 +43,7 @@ import {
   validArchiveActionBody,
   validAutoDraftSenderIdParam,
   validBulkTrashThreadsBody,
+  validConnectEmailAccountBody,
   validCreateAutoDraftSenderBody,
   validCreateEmailCategoryBody,
   validCreateEmailDraftBody,
@@ -80,9 +81,10 @@ export const emailController = new Hono()
   /**
    * [POST] /email/account/connect
    */
-  .post('/account/connect', async (c) => {
+  .post('/account/connect', validConnectEmailAccountBody, async (c) => {
     const user = c.get('user');
-    const account = await connectEmailAccount({ userId: user.id });
+    const { provider } = c.req.valid('json');
+    const account = await connectEmailAccount({ userId: user.id, provider });
     return c.json({ account }, StatusCodes.CREATED);
   })
   /**
@@ -91,7 +93,7 @@ export const emailController = new Hono()
   .post('/account/disconnect', async (c) => {
     const user = c.get('user');
     await disconnectEmailAccount({ userId: user.id });
-    return c.json({ message: 'Gmail disconnected successfully' });
+    return c.json({ message: 'Email account disconnected successfully' });
   })
   /**
    * [POST] /email/account/sync
@@ -269,16 +271,7 @@ export const emailController = new Hono()
     await triggerEmailDraftForUser({ userId: user.id, ...body });
     return c.body(null, StatusCodes.ACCEPTED);
   })
-  /**
-   * [PATCH] /email/draft/:draftId
-   * Autosave endpoint, widened to the full editable set: any of
-   * `{ to, cc, bcc, subject, content, text, attachments }`, plus a
-   * control-only `flush?: boolean` that forces this call to push to Gmail
-   * regardless of the attachment write-back debounce rule (set on panel
-   * close and before send). Creation-only fields (`origin`, `kind`,
-   * `threadId`, `replyToMessageId`, `agentId`) are rejected at the
-   * validation layer.
-   */
+  // [PATCH] /email/draft/:draftId, the autosave endpoint. `flush` forces a push to the provider regardless of debounce.
   .patch('/draft/:draftId', validEmailDraftIdParam, validUpdateEmailDraftBody, async (c) => {
     const user = c.get('user');
     const { draftId } = c.req.valid('param');
@@ -422,12 +415,7 @@ export const emailController = new Hono()
     const attachments = await listEmailMessageAttachmentsForUser({ userId: user.id, messageId });
     return c.json({ attachments });
   })
-  /**
-   * [GET] /email/message/:messageId/attachment/:partId
-   * Streams the attachment bytes straight from Gmail. `partId` is the
-   * attachment's stable MIME part id, not Gmail's ephemeral attachmentId -
-   * see `downloadEmailAttachmentForUser` for why.
-   */
+  // [GET] /email/message/:messageId/attachment/:partId
   .get('/message/:messageId/attachment/:partId', validEmailAttachmentParams, async (c) => {
     const user = c.get('user');
     const { messageId, partId } = c.req.valid('param');

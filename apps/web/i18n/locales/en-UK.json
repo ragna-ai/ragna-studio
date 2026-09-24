@@ -1086,13 +1086,19 @@
   "email": {
     "pageTitle": "Mail",
     "connect": {
-      "title": "Connect Gmail",
-      "description": "Connect your Gmail account to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
-      "cta": "Connect Gmail"
+      "title": "Connect your mailbox",
+      "description": "Connect your Gmail or Outlook mailbox to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
+      "gmailCta": "Connect Gmail",
+      "microsoftCta": "Connect Outlook"
     },
     "sidebar": {
       "compose": "Compose",
       "searchPlaceholder": "Search mail",
+      "searchHintLabel": "Search syntax help",
+      "searchHint": {
+        "gmail": "Try Gmail operators like from:name, is:unread, has:attachment.",
+        "microsoft": "Try Outlook search like from:name, hasattachments:true."
+      },
       "drafts": "Drafts",
       "categories": "Categories",
       "labels": "Labels",
@@ -1195,8 +1201,8 @@
     },
     "settings": {
       "pageTitle": "Email settings",
-      "subtitle": "Manage your connected Gmail account, categories, and auto-draft rules.",
-      "notConnected": "Connect Gmail first to manage email settings.",
+      "subtitle": "Manage your connected mailbox, categories, and auto-draft rules.",
+      "notConnected": "Connect a mailbox first to manage email settings.",
       "tabs": {
         "general": "General",
         "categories": "Categories",
@@ -1204,15 +1210,19 @@
       },
       "general": {
         "title": "Account",
+        "provider": {
+          "gmail": "Gmail",
+          "microsoft": "Outlook"
+        },
         "defaultAgent": "Default draft agent",
         "defaultAgentHint": "Used for auto-drafts and preselected on manual \"Draft with AI\" requests.",
         "defaultAgentPlaceholder": "Choose an agent",
         "dangerZone": "Danger zone",
-        "disconnect": "Disconnect Gmail",
-        "disconnectConfirmTitle": "Disconnect Gmail",
-        "disconnectConfirmMessage": "This removes your synced mail, categories, and drafts. Your Gmail account itself is unaffected.",
-        "reconnect": "Reconnect Gmail",
-        "reconnectHint": "Gmail access expired and could not refresh automatically. Reconnect to resume syncing."
+        "disconnect": "Disconnect mailbox",
+        "disconnectConfirmTitle": "Disconnect mailbox",
+        "disconnectConfirmMessage": "This removes your synced mail, categories, and drafts. Your {provider} account itself is unaffected.",
+        "reconnect": "Reconnect {provider}",
+        "reconnectHint": "{provider} access expired and could not refresh automatically. Reconnect to resume syncing."
       },
       "categories": {
         "title": "Categories",
@@ -1239,7 +1249,7 @@
       "lastSynced": "Synced {date}",
       "neverSynced": "Not synced yet",
       "syncFailed": "Failed to sync your mailbox. Try again in a moment.",
-      "reauthRequiredToast": "Gmail access expired. Reconnect Gmail in settings to resume syncing."
+      "reauthRequiredToast": "Mailbox access expired. Reconnect in settings to resume syncing."
     }
   }
 }

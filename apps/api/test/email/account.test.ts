@@ -7,22 +7,23 @@ import { app } from '../../src/app';
 import {
   createAgentForWorkspace,
   seedConnectedGmailAccount,
+  seedConnectedMicrosoftAccount,
   seedEmailThreadWithMessage,
 } from './support/email-fixtures';
 import { seedGmailLinkedAccount, seedGoogleAccountWithoutGmailScope } from './support/gmail-account-fixtures';
 import { getProfileMock, resetMailProviderMock } from './support/mail-provider.mock';
+import {
+  seedMicrosoftAccountWithoutMailScope,
+  seedMicrosoftLinkedAccount,
+  seedMicrosoftLinkedAccountWithShortScopes,
+} from './support/microsoft-account-fixtures';
 import { emailSyncAddMock, resetEmailQueueMock } from './support/email-queue.mock';
 
-// Email account connection (docs/email/prd.md, "Auth and account
-// connection"). Auth/authorization for /email/* in general are covered by
-// test/auth/route-sweep.test.ts (every registered route rejects an
-// unauthenticated request); this file only checks the feature's own
-// behavior. Every test needs the fake MailProvider (test/email/support/
-// mail-provider.mock.ts) and, since email.service.ts enqueues a sync job on
-// connect, the extended queue mock (email-queue.mock.ts).
+// Auth/authorization for /email/* in general is covered by test/auth/route-sweep.test.ts, not here.
 
 const accountStatusSchema = z.object({
   id: z.string(),
+  provider: z.enum(['gmail', 'microsoft']),
   email: z.string(),
   defaultAgentId: z.string().nullable(),
   syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
@@ -38,11 +39,20 @@ const fullAccountResponseSchema = z.object({
   account: z.object({
     id: z.string(),
     userId: z.string(),
+    provider: z.enum(['gmail', 'microsoft']),
     email: z.string(),
     defaultAgentId: z.string().nullable(),
     syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
   }),
 });
+
+function connectRequest(cookieHeader: string, provider: 'gmail' | 'microsoft') {
+  return app.request('/email/account/connect', {
+    method: 'POST',
+    headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+    body: JSON.stringify({ provider }),
+  });
+}
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -73,13 +83,25 @@ describe('GET /email/account', () => {
     const body = statusResponseSchema.parse(await response.json());
     expect(body.connected).toBe(true);
     expect(body.account?.id).toBe(connected.accountId);
+    expect(body.account?.provider).toBe('gmail');
     expect(body.account?.email).toBe('me@gmail.test');
     expect(body.account?.syncState).toBe('idle');
     expect(body.account?.lastSyncedAt).toBeNull();
   });
+
+  test('reports provider: microsoft for a connected Outlook mailbox', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedConnectedMicrosoftAccount({ userId, cookieHeader, email: 'me@outlook.test' });
+
+    const response = await app.request('/email/account', { headers: { cookie: cookieHeader } });
+
+    const body = statusResponseSchema.parse(await response.json());
+    expect(body.account?.provider).toBe('microsoft');
+    expect(body.account?.email).toBe('me@outlook.test');
+  });
 });
 
-describe('POST /email/account/connect', () => {
+describe('POST /email/account/connect - gmail', () => {
   test('creates the account row, seeds default categories, and enqueues the initial sync', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     await seedGmailLinkedAccount({ userId });
@@ -87,13 +109,11 @@ describe('POST /email/account/connect', () => {
       Promise.resolve({ emailAddress: 'newly-connected@gmail.test', cursor: 'history-0' }),
     );
 
-    const response = await app.request('/email/account/connect', {
-      method: 'POST',
-      headers: { cookie: cookieHeader },
-    });
+    const response = await connectRequest(cookieHeader, 'gmail');
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = fullAccountResponseSchema.parse(await response.json());
+    expect(body.account.provider).toBe('gmail');
     expect(body.account.email).toBe('newly-connected@gmail.test');
     expect(body.account.userId).toBe(userId);
     expect(body.account.syncState).toBe('idle');
@@ -114,10 +134,7 @@ describe('POST /email/account/connect', () => {
   test('rejects with a clean 4xx when no Google account is linked at all', async () => {
     const { cookieHeader } = await seedAuthenticatedUser();
 
-    const response = await app.request('/email/account/connect', {
-      method: 'POST',
-      headers: { cookie: cookieHeader },
-    });
+    const response = await connectRequest(cookieHeader, 'gmail');
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
@@ -127,10 +144,7 @@ describe('POST /email/account/connect', () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     await seedGoogleAccountWithoutGmailScope({ userId });
 
-    const response = await app.request('/email/account/connect', {
-      method: 'POST',
-      headers: { cookie: cookieHeader },
-    });
+    const response = await connectRequest(cookieHeader, 'gmail');
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
@@ -140,12 +154,68 @@ describe('POST /email/account/connect', () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     await seedConnectedGmailAccount({ userId, cookieHeader });
 
-    const response = await app.request('/email/account/connect', {
-      method: 'POST',
-      headers: { cookie: cookieHeader },
-    });
+    const response = await connectRequest(cookieHeader, 'gmail');
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  });
+
+  test('rejects an unknown provider value with a 422', async () => {
+    const { cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await app.request('/email/account/connect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ provider: 'yahoo' }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /email/account/connect - microsoft', () => {
+  test('creates the account row with provider: microsoft', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedMicrosoftLinkedAccount({ userId });
+    getProfileMock.mockImplementationOnce(() =>
+      Promise.resolve({ emailAddress: 'newly-connected@outlook.test', cursor: 'delta-0' }),
+    );
+
+    const response = await connectRequest(cookieHeader, 'microsoft');
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+    const body = fullAccountResponseSchema.parse(await response.json());
+    expect(body.account.provider).toBe('microsoft');
+    expect(body.account.email).toBe('newly-connected@outlook.test');
+    expect(emailSyncAddMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('accepts mail scopes stored as short names, not just full resource URIs', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedMicrosoftLinkedAccountWithShortScopes({ userId });
+
+    const response = await connectRequest(cookieHeader, 'microsoft');
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+  });
+
+  test('rejects with a clean 4xx when no Microsoft account is linked at all', async () => {
+    const { cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await connectRequest(cookieHeader, 'microsoft');
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects with a clean 4xx when Microsoft is linked but Mail.ReadWrite/Mail.Send were never granted', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedMicrosoftAccountWithoutMailScope({ userId });
+
+    const response = await connectRequest(cookieHeader, 'microsoft');
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
   });
 });
 

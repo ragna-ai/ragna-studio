@@ -1,34 +1,8 @@
 // apps/api/test/email/support/mail-provider.mock.ts
-//
-// Fakes `@repo/mail/provider`'s `createGmailProvider` (docs/testing/
-// strategy.md's "External boundaries": apps/api never talks to Gmail
-// directly, only through the `MailProvider` interface built by
-// email-provider.service.ts). Mirrors packages/testing/src/mocks/
-// linkedin-provider.mock.ts's mechanism (fake the factory function, spread
-// the real module for everything else) but lives inside apps/api/test
-// instead of packages/testing, per this suite's file ownership (apps/api/
-// test/** only, no packages/* edits).
-//
-// That placement also sidesteps the injected-workspace-packages resolution
-// hazard the linkedin/queue mocks need apps/api/test/preload.ts to work
-// around (README, "External-provider mocks"): this file's own
-// `mock.module('@repo/mail/provider', ...)` call already runs from within
-// apps/api's own module-resolution context (it's a file inside apps/api),
-// so there is no second "frozen .pnpm copy" context to reconcile - one
-// registration, right here, is enough.
-//
-// email-provider.service.ts's `getGmailProviderForUser` still calls the
-// real `getGoogleGmailScopeStatus` (a plain DB read of better-auth's
-// `account` table) before ever reaching `createGmailProvider`, so a test
-// still needs a linked Google account with the `gmail.modify` scope seeded
-// first - see gmail-account-fixtures.ts, mirroring how the LinkedIn tests
-// seed a linked account via seedLinkedinAccount. Once that check passes,
-// `createGmailProvider` here returns `fakeMailProvider` directly, without
-// ever invoking the real `getAccessToken` callback the service wires up -
-// no real Google token exchange happens on this path at all.
 import { mock } from 'bun:test';
 import * as mailProviderPackage from '@repo/mail/provider';
 import type {
+  CreateMailProviderOptions,
   MailAccountProfile,
   MailActionResult,
   MailAttachmentContent,
@@ -70,6 +44,7 @@ export function buildFakeMailMessage(overrides: Partial<MailMessage> = {}): Mail
     snippet: overrides.snippet ?? 'Test snippet',
     date: overrides.date ?? new Date(),
     labelIds: overrides.labelIds ?? ['INBOX'],
+    folder: overrides.folder ?? 'inbox',
     unread: overrides.unread ?? false,
     starred: overrides.starred ?? false,
     body: overrides.body ?? { text: 'Hello from a fake message.', html: '<p>Hello from a fake message.</p>', attachments: [] },
@@ -134,6 +109,7 @@ function defaultSetArchivedImpl(messageId: MailProviderId, archived: boolean): P
     messageId,
     threadId: 'thread-default',
     labelIds: archived ? [] : ['INBOX'],
+    folder: archived ? 'archive' : 'inbox',
     unread: false,
     starred: false,
   });
@@ -144,6 +120,7 @@ function defaultSetTrashedImpl(messageId: MailProviderId, trashed: boolean): Pro
     messageId,
     threadId: 'thread-default',
     labelIds: trashed ? ['TRASH'] : ['INBOX'],
+    folder: trashed ? 'trash' : 'inbox',
     unread: false,
     starred: false,
   });
@@ -154,6 +131,7 @@ function defaultSetStarredImpl(messageId: MailProviderId, starred: boolean): Pro
     messageId,
     threadId: 'thread-default',
     labelIds: starred ? ['STARRED'] : [],
+    folder: 'inbox',
     unread: false,
     starred,
   });
@@ -164,9 +142,14 @@ function defaultSetReadImpl(messageId: MailProviderId, read: boolean): Promise<M
     messageId,
     threadId: 'thread-default',
     labelIds: [],
+    folder: 'inbox',
     unread: !read,
     starred: false,
   });
+}
+
+function defaultListRecentInboxThreadIdsImpl(): Promise<MailProviderId[]> {
+  return Promise.resolve([]);
 }
 
 function defaultListLabelsImpl(): Promise<MailLabel[]> {
@@ -234,6 +217,7 @@ export const getDraftMock = mock(defaultGetDraftImpl);
 export const listDraftsMock = mock(defaultListDraftsImpl);
 export const sendDraftMock = mock(defaultSendDraftImpl);
 export const deleteDraftMock = mock(defaultDeleteDraftImpl);
+export const listRecentInboxThreadIdsMock = mock(defaultListRecentInboxThreadIdsImpl);
 
 const fakeMailProvider: MailProvider = {
   getProfile: getProfileMock,
@@ -253,11 +237,13 @@ const fakeMailProvider: MailProvider = {
   setRead: setReadMock,
   listLabels: listLabelsMock,
   search: searchMock,
+  listRecentInboxThreadIds: listRecentInboxThreadIdsMock,
   getAttachment: getAttachmentMock,
   getDraftAttachment: getDraftAttachmentMock,
 };
 
-export const createGmailProviderMock = mock(() => fakeMailProvider);
+// Ignores which provider was requested - one fake MailProvider serves both.
+export const createMailProviderMock = mock((_options: CreateMailProviderOptions) => fakeMailProvider);
 
 export function resetMailProviderMock(): void {
   getProfileMock.mockClear();
@@ -298,12 +284,14 @@ export function resetMailProviderMock(): void {
   sendDraftMock.mockImplementation(defaultSendDraftImpl);
   deleteDraftMock.mockClear();
   deleteDraftMock.mockImplementation(defaultDeleteDraftImpl);
-  createGmailProviderMock.mockClear();
+  listRecentInboxThreadIdsMock.mockClear();
+  listRecentInboxThreadIdsMock.mockImplementation(defaultListRecentInboxThreadIdsImpl);
+  createMailProviderMock.mockClear();
 }
 
 export const mailProviderModuleMock = {
   ...mailProviderPackage,
-  createGmailProvider: createGmailProviderMock,
+  createMailProvider: createMailProviderMock,
 };
 
 mock.module('@repo/mail/provider', () => mailProviderModuleMock);

@@ -99,10 +99,10 @@ export function useDisconnectEmailAccount() {
     mutationFn: () => $api<void>('/email/account/disconnect', { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email'] });
-      toast.success('Gmail disconnected');
+      toast.success('Mailbox disconnected');
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to disconnect Gmail'));
+      toast.error(extractErrorMessage(error, 'Failed to disconnect mailbox'));
     },
   });
 }

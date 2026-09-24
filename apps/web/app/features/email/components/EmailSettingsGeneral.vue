@@ -40,12 +40,18 @@ const defaultAgentId = computed({
 const needsReconnect = computed(
   () => props.account.syncState === 'reauth_required',
 );
+const providerIcon = computed(() =>
+  props.account.provider === 'microsoft' ? 'logos:microsoft-icon' : 'logos:google-icon',
+);
+const providerLabel = computed(() =>
+  t(`email.settings.general.provider.${props.account.provider}`),
+);
 
 // Functions
 async function handleDisconnect() {
   const confirmed = await confirm({
     title: t('email.settings.general.disconnectConfirmTitle'),
-    message: t('email.settings.general.disconnectConfirmMessage'),
+    message: t('email.settings.general.disconnectConfirmMessage', { provider: providerLabel.value }),
     confirmLabel: t('email.settings.general.disconnect'),
     cancelLabel: t('common.cancel'),
     variant: 'destructive',
@@ -54,12 +60,9 @@ async function handleDisconnect() {
   disconnect();
 }
 
-// Round-trips through Google back to /mail (same returnPath the initial
-// connect flow uses, EmailConnectPrompt.vue) - EmailClient.vue is the one
-// place that finishes the reconnect on return
-// (GMAIL_RECONNECT_CALLBACK_PARAM), not this settings page.
+// EmailClient.vue is the one place that finishes the reconnect on return (MAIL_RECONNECT_CALLBACK_PARAM).
 function handleReconnect() {
-  startReconnect('/mail');
+  startReconnect(props.account.provider, '/mail');
 }
 </script>
 
@@ -70,7 +73,11 @@ function handleReconnect() {
     </CardHeader>
     <CardContent class="space-y-6">
       <div class="space-y-2">
-        <p class="text-sm font-medium">{{ props.account.email }}</p>
+        <div class="flex items-center gap-2">
+          <Icon :name="providerIcon" class="size-4 shrink-0" />
+          <p class="text-sm font-medium">{{ props.account.email }}</p>
+          <span class="text-xs text-muted-foreground">{{ providerLabel }}</span>
+        </div>
         <EmailSyncStatusBadge
           :sync-state="props.account.syncState"
           :last-synced-at="props.account.lastSyncedAt"
@@ -80,7 +87,7 @@ function handleReconnect() {
             class="flex max-w-lg items-center gap-1.5 text-xs text-destructive"
           >
             <AlertTriangleIcon class="size-3.5 shrink-0" />
-            {{ t('email.settings.general.reconnectHint') }}
+            {{ t('email.settings.general.reconnectHint', { provider: providerLabel }) }}
           </p>
           <Button
             variant="default"
@@ -88,7 +95,7 @@ function handleReconnect() {
             @click="handleReconnect"
           >
             <Spinner v-if="isRelinking" class="mr-2" />
-            {{ t('email.settings.general.reconnect') }}
+            {{ t('email.settings.general.reconnect', { provider: providerLabel }) }}
           </Button>
         </div>
       </div>

@@ -10,6 +10,7 @@
 // `users.history.list` on an expired cursor).
 
 import { retryExpoBackoff } from '@repo/utils';
+import { isMailAuthError, MailProviderError } from '../errors';
 
 const GMAIL_API_BASE_URL = 'https://gmail.googleapis.com/gmail/v1';
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -17,13 +18,9 @@ const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 500;
 const MAX_RETRY_DELAY_MS = 8_000;
 
-export class GmailApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-    public readonly body?: string,
-  ) {
-    super(message);
+export class GmailApiError extends MailProviderError {
+  constructor(message: string, status: number, body?: string) {
+    super(message, status, body);
     this.name = 'GmailApiError';
   }
 
@@ -74,13 +71,8 @@ export async function gmailRequestVoid(
 
 function isRetryableGmailError(error: unknown): boolean {
   return (
-    error instanceof GmailApiError && (error.status === 429 || error.status >= 500 || isAuthGmailError(error))
+    error instanceof GmailApiError && (error.status === 429 || error.status >= 500 || isMailAuthError(error))
   );
-}
-
-/** A 401/403 from Gmail: the caller's access token was rejected outright, distinct from a transient 429/5xx. */
-export function isAuthGmailError(error: unknown): boolean {
-  return error instanceof GmailApiError && (error.status === 401 || error.status === 403);
 }
 
 async function performGmailRequest<T>(

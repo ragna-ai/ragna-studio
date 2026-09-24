@@ -1,108 +1,147 @@
 // apps/api/src/services/email-provider.service.ts
-//
-// Small helper that turns a logged-in user into a ready-to-use
-// `MailProvider` (docs/email/prd.md, "Auth and account connection"). Gmail
-// access is granted through the existing account-linking flow
-// (`linkSocial()` in apps/web with the `gmail.modify` scope), never through
-// a dedicated email-connect OAuth flow of our own. This file is the only
-// place in apps/api that touches better-auth's account/token API for email;
-// email.service.ts and the worker only ever talk to the `MailProvider`
-// interface built here.
 
 import { auth } from '@repo/auth/server';
-import { getAccountByUserIdAndProvider } from '@repo/database';
+import { getAccountByUserIdAndProvider, getEmailAccountByUserId } from '@repo/database';
 import { logger } from '@repo/logger';
-import { createGmailProvider, type MailProvider } from '@repo/mail/provider';
+import { createMailProvider, type MailProvider, type MailProviderKind } from '@repo/mail/provider';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException } from '../exceptions';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
 
-const GOOGLE_PROVIDER_ID = 'google';
+// gmail maps to better-auth's 'google' social provider id.
+const BETTER_AUTH_PROVIDER_ID: Record<MailProviderKind, string> = {
+  gmail: 'google',
+  microsoft: 'microsoft',
+};
 
-// Sensitive-scope identifier Google issues for `gmail.modify`. Stored
-// space-separated on better-auth's `account.scope` at link time.
+const PROVIDER_DISPLAY_NAME: Record<MailProviderKind, string> = {
+  gmail: 'Google',
+  microsoft: 'Microsoft',
+};
+
 const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
 
-export interface GoogleGmailScopeStatus {
-  /** Whether the user has linked a Google account at all (any scope). */
-  linked: boolean;
-  /** Whether that linked account was granted `gmail.modify`. */
-  hasGmailScope: boolean;
+// account.scope may store these as full URIs or short names; hasOAuthScope below accepts both.
+const MICROSOFT_MAIL_SCOPES = ['Mail.ReadWrite', 'Mail.Send'];
+
+function hasOAuthScope(scopes: string[], shortName: string): boolean {
+  const needle = shortName.toLowerCase();
+  return scopes.some((scope) => {
+    const lower = scope.toLowerCase();
+    return lower === needle || lower.endsWith(`/${needle}`);
+  });
 }
 
-/**
- * Inspects the user's linked Google account (better-auth's `account` table)
- * without calling Google, so callers can 400 with a clear message before
- * ever attempting a Gmail request.
- */
-export async function getGoogleGmailScopeStatus({
+export interface MailProviderScopeStatus {
+  linked: boolean;
+  hasRequiredScope: boolean;
+}
+
+// Reads account.scope directly instead of calling the provider, so callers can 400 before the first mail request.
+export async function getMailProviderScopeStatus({
   userId,
+  provider,
 }: {
   userId: string;
-}): Promise<GoogleGmailScopeStatus> {
+  provider: MailProviderKind;
+}): Promise<MailProviderScopeStatus> {
   const { error, data: account } = await tryCatch(() =>
-    getAccountByUserIdAndProvider({ userId, providerId: GOOGLE_PROVIDER_ID }),
+    getAccountByUserIdAndProvider({ userId, providerId: BETTER_AUTH_PROVIDER_ID[provider] }),
   );
 
   if (error !== null) {
-    logger.error('Failed to load Google account', error);
-    throw new InternalServerErrorException('Failed to load Google account');
+    logger.error(`Failed to load ${provider} account`, error);
+    throw new InternalServerErrorException('Failed to load linked account');
   }
 
   if (!account) {
-    return { linked: false, hasGmailScope: false };
+    return { linked: false, hasRequiredScope: false };
   }
 
   const scopes = (account.scope ?? '').split(',').filter(Boolean);
-  return { linked: true, hasGmailScope: scopes.includes(GMAIL_MODIFY_SCOPE) };
+  const hasRequiredScope =
+    provider === 'gmail'
+      ? scopes.includes(GMAIL_MODIFY_SCOPE)
+      : MICROSOFT_MAIL_SCOPES.every((scope) => hasOAuthScope(scopes, scope));
+
+  return { linked: true, hasRequiredScope };
 }
 
-function assertGmailScope(status: GoogleGmailScopeStatus): void {
+function assertProviderScope(provider: MailProviderKind, status: MailProviderScopeStatus): void {
+  const name = PROVIDER_DISPLAY_NAME[provider];
+
   if (!status.linked) {
     throw new BadRequestException(
-      'Connect your Google account first, then connect Gmail from the email settings page',
+      `Connect your ${name} account first, then connect your mailbox from the email settings page`,
     );
   }
 
-  if (!status.hasGmailScope) {
+  if (!status.hasRequiredScope) {
     throw new BadRequestException(
-      'Your Google account is missing Gmail access. Reconnect it and grant the Gmail permission',
+      `Your ${name} account is missing mailbox access. Reconnect it and grant the required permissions`,
     );
   }
 }
 
-/**
- * Builds a `GmailProvider` for a user, wired to better-auth's
- * auto-refreshing access-token API (`auth.api.getAccessToken`), the same
- * call social-post.service.ts uses for LinkedIn. Throws a clear
- * `BadRequestException` up front when the account isn't linked or lacks the
- * `gmail.modify` scope, instead of letting the first Gmail call fail with an
- * opaque 401.
- */
-export async function getGmailProviderForUser({
-  userId,
-}: {
-  userId: string;
-}): Promise<MailProvider> {
-  const scopeStatus = await getGoogleGmailScopeStatus({ userId });
-  assertGmailScope(scopeStatus);
+function buildMailProvider({ userId, provider }: { userId: string; provider: MailProviderKind }): MailProvider {
+  const betterAuthProviderId = BETTER_AUTH_PROVIDER_ID[provider];
+  const name = PROVIDER_DISPLAY_NAME[provider];
 
-  return createGmailProvider({
+  return createMailProvider({
+    provider,
     getAccessToken: async () => {
       const { error, data: token } = await tryCatch(async () => {
-        const account = await getAccountByUserIdAndProvider({ userId, providerId: GOOGLE_PROVIDER_ID });
+        const account = await getAccountByUserIdAndProvider({ userId, providerId: betterAuthProviderId });
         if (!account) {
-          throw new Error('Google account is no longer linked');
+          throw new Error(`${name} account is no longer linked`);
         }
 
         return auth.api.getAccessToken({ body: { accountId: account.id, userId } });
       });
 
       if (error !== null || !token?.accessToken) {
-        logger.error('Failed to get a valid Google access token', error);
-        throw new InternalServerErrorException('Failed to get a valid Google access token');
+        logger.error(`Failed to get a valid ${name} access token`, error);
+        throw new InternalServerErrorException(`Failed to get a valid ${name} access token`);
       }
 
       return token.accessToken;
     },
   });
+}
+
+async function assertScopeAndBuildProvider({
+  userId,
+  provider,
+}: {
+  userId: string;
+  provider: MailProviderKind;
+}): Promise<MailProvider> {
+  const status = await getMailProviderScopeStatus({ userId, provider });
+  assertProviderScope(provider, status);
+  return buildMailProvider({ userId, provider });
+}
+
+export async function getMailProviderForUser({ userId }: { userId: string }): Promise<MailProvider> {
+  const { error, data: account } = await tryCatch(() => getEmailAccountByUserId({ userId }));
+
+  if (error !== null) {
+    logger.error('Failed to load email account', error);
+    throw new InternalServerErrorException('Failed to load email account');
+  }
+
+  if (!account) {
+    throw new NotFoundException('Mailbox is not connected');
+  }
+
+  return assertScopeAndBuildProvider({ userId, provider: account.provider });
+}
+
+// Connect path: no email_accounts row exists yet, so the provider comes from the request body instead.
+export async function getMailProviderForConnectRequest({
+  userId,
+  provider,
+}: {
+  userId: string;
+  provider: MailProviderKind;
+}): Promise<MailProvider> {
+  return assertScopeAndBuildProvider({ userId, provider });
 }

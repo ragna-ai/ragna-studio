@@ -13,6 +13,30 @@ const PortSchema = z
   .transform(Number)
   .pipe(z.number().int().min(1).max(65535));
 
+const DURATION_UNIT_MS: Record<string, number> = {
+  m: 60_000,
+  h: 60 * 60_000,
+  d: 24 * 60 * 60_000,
+  w: 7 * 24 * 60 * 60_000,
+};
+
+function durationToMs(value: string): number {
+  const unitMs = DURATION_UNIT_MS[value.slice(-1)];
+  if (unitMs === undefined) {
+    throw new Error(`Invalid duration: ${value}`);
+  }
+  return Number.parseInt(value, 10) * unitMs;
+}
+
+/** A duration like "30m", "12h", "1d" or "2w", parsed to milliseconds. */
+function durationSchema(defaultValue: string) {
+  return z
+    .string()
+    .regex(/^\d+[mhdw]$/, 'Expected a duration like "12h", "1d" or "2w"')
+    .default(defaultValue)
+    .transform(durationToMs);
+}
+
 // An unset base URL env var is absent (`undefined`), but a present-but-empty
 // one (e.g. `OPENAI_API_BASE_URL=` in a deployed env file) parses as `''`,
 // which is still a valid string to `.optional()` — not normalized away like
@@ -58,6 +82,7 @@ const ConfigSchema = z.object({
     .string()
     .optional()
     .transform((val) => Number(val) || 5 * 60_000),
+  EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE: durationSchema('1d'),
   APP_URL: z
     .string()
     .trim()
@@ -345,6 +370,10 @@ export class ConfigService {
 
   get emailSyncInterval(): number {
     return this._config.EMAIL_SYNC_INTERVAL;
+  }
+
+  get emailAutoClassifyMaxMessageAgeMs(): number {
+    return this._config.EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE;
   }
 
   get appUrl(): string {

@@ -1,6 +1,6 @@
-import { and, desc, eq, exists, gte, lte, notExists, or, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, gte, inArray, lte, notExists, sql } from 'drizzle-orm';
 import { db } from '../db';
-import type { EmailMessage, EmailThread, NewEmailThread } from '../schema';
+import type { EmailMessage, EmailMessageFolder, EmailThread, NewEmailThread } from '../schema';
 import { emailMessage, emailThread } from '../schema';
 
 export type { EmailParticipant, EmailThread, NewEmailThread } from '../schema';
@@ -39,12 +39,8 @@ export interface ListEmailThreadsFilters {
   accountId: string;
   categoryId?: string;
   labelId?: string;
-  // Folder-style exclusion (docs/email/prd.md, "Web": system folders derived
-  // from Gmail labels). Gmail's Archive isn't a label itself, it's "no
-  // INBOX label", so folders like Archive need "has none of these labels"
-  // rather than "has this one label" — hence a separate param instead of
-  // overloading labelId with negation.
-  excludeLabelIds?: string[];
+  folder?: EmailMessageFolder;
+  excludeFolders?: EmailMessageFolder[];
   isStarred?: boolean;
   isUnread?: boolean;
   dateFrom?: Date;
@@ -70,7 +66,8 @@ export async function listEmailThreads({
   accountId,
   categoryId,
   labelId,
-  excludeLabelIds,
+  folder,
+  excludeFolders,
   isStarred,
   isUnread,
   dateFrom,
@@ -81,6 +78,7 @@ export async function listEmailThreads({
   const hasIncludeFilter =
     categoryId !== undefined ||
     labelId !== undefined ||
+    folder !== undefined ||
     isStarred !== undefined ||
     isUnread !== undefined;
 
@@ -101,6 +99,9 @@ export async function listEmailThreads({
     if (labelId !== undefined) {
       messageConditions.push(labelContainsCondition(labelId));
     }
+    if (folder !== undefined) {
+      messageConditions.push(eq(emailMessage.folder, folder));
+    }
 
     conditions.push(
       exists(
@@ -119,15 +120,18 @@ export async function listEmailThreads({
     conditions.push(lte(emailThread.lastMessageAt, dateTo));
   }
 
-  if (excludeLabelIds && excludeLabelIds.length > 0) {
-    const excludeConditions = or(...excludeLabelIds.map(labelContainsCondition));
-
+  if (excludeFolders && excludeFolders.length > 0) {
     conditions.push(
       notExists(
         db
           .select({ one: sql`1` })
           .from(emailMessage)
-          .where(and(eq(emailMessage.threadId, emailThread.id), excludeConditions)),
+          .where(
+            and(
+              eq(emailMessage.threadId, emailThread.id),
+              inArray(emailMessage.folder, excludeFolders),
+            ),
+          ),
       ),
     );
   }

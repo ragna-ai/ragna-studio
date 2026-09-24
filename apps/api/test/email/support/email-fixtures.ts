@@ -1,19 +1,4 @@
 // apps/api/test/email/support/email-fixtures.ts
-//
-// Shared setup helpers for the email domain test suite. Most tests need a
-// connected Gmail account before hitting any other /email route, so
-// `seedConnectedGmailAccount` drives that through the real
-// `POST /email/account/connect` endpoint (seeding the linked Google account
-// first via gmail-account-fixtures.ts) rather than inserting an
-// `email_accounts` row by hand - this exercises the connect flow itself
-// (default categories, enqueue) the same way every other domain's fixtures
-// go through the real API where practical (e.g. media/chat-attachments.
-// test.ts's createAgent/createChat).
-//
-// Threads/messages/bodies are seeded directly through @repo/database's repo
-// functions instead: they model data the *sync poller* would have written,
-// which is out of scope for apps/api's own test suite (docs/email/prd.md,
-// "Worker jobs"), so going through the real API isn't an option here.
 import type {
   EmailAccount,
   EmailDraft,
@@ -21,6 +6,7 @@ import type {
   EmailDraftKind,
   EmailDraftOrigin,
   EmailDraftStatus,
+  EmailMessageFolder,
   EmailParticipant,
   EmailThread,
 } from '@repo/database';
@@ -35,6 +21,7 @@ import * as z from 'zod';
 import { app } from '../../../src/app';
 import { seedGmailLinkedAccount } from './gmail-account-fixtures';
 import { getProfileMock } from './mail-provider.mock';
+import { seedMicrosoftLinkedAccount } from './microsoft-account-fixtures';
 
 export interface ConnectedGmailAccount {
   userId: string;
@@ -42,11 +29,41 @@ export interface ConnectedGmailAccount {
   email: string;
 }
 
-/**
- * Links a Google account with the gmail.modify scope, then drives the real
- * connect endpoint (seeds default categories + enqueues the initial sync,
- * email.service.ts's connectEmailAccount).
- */
+interface ConnectEmailAccountResult {
+  accountId: string;
+  email: string;
+}
+
+async function connectEmailAccountRequest({
+  cookieHeader,
+  provider,
+  email,
+}: {
+  cookieHeader: string;
+  provider: 'gmail' | 'microsoft';
+  email?: string;
+}): Promise<ConnectEmailAccountResult> {
+  if (email) {
+    getProfileMock.mockImplementationOnce(() => Promise.resolve({ emailAddress: email, cursor: 'history-cursor-0' }));
+  }
+
+  const response = await app.request('/email/account/connect', {
+    method: 'POST',
+    headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+    body: JSON.stringify({ provider }),
+  });
+
+  if (response.status !== 201) {
+    throw new Error(`connectEmailAccountRequest: connect failed with status ${response.status}`);
+  }
+
+  const body = z
+    .object({ account: z.object({ id: z.string(), email: z.string() }) })
+    .parse(await response.json());
+
+  return { accountId: body.account.id, email: body.account.email };
+}
+
 export async function seedConnectedGmailAccount({
   userId,
   cookieHeader,
@@ -57,25 +74,24 @@ export async function seedConnectedGmailAccount({
   email?: string;
 }): Promise<ConnectedGmailAccount> {
   await seedGmailLinkedAccount({ userId });
+  const connected = await connectEmailAccountRequest({ cookieHeader, provider: 'gmail', email });
 
-  if (email) {
-    getProfileMock.mockImplementationOnce(() => Promise.resolve({ emailAddress: email, cursor: 'history-cursor-0' }));
-  }
+  return { userId, ...connected };
+}
 
-  const response = await app.request('/email/account/connect', {
-    method: 'POST',
-    headers: { cookie: cookieHeader },
-  });
+export async function seedConnectedMicrosoftAccount({
+  userId,
+  cookieHeader,
+  email,
+}: {
+  userId: string;
+  cookieHeader: string;
+  email?: string;
+}): Promise<ConnectedGmailAccount> {
+  await seedMicrosoftLinkedAccount({ userId });
+  const connected = await connectEmailAccountRequest({ cookieHeader, provider: 'microsoft', email });
 
-  if (response.status !== 201) {
-    throw new Error(`seedConnectedGmailAccount: connect failed with status ${response.status}`);
-  }
-
-  const body = z
-    .object({ account: z.object({ id: z.string(), email: z.string() }) })
-    .parse(await response.json());
-
-  return { userId, accountId: body.account.id, email: body.account.email };
+  return { userId, ...connected };
 }
 
 export async function createAgentForWorkspace(cookieHeader: string, workspaceId: string): Promise<string> {
@@ -100,6 +116,7 @@ export interface SeedThreadWithMessageParams {
   from?: EmailParticipant;
   to?: EmailParticipant[];
   labelIds?: string[];
+  folder?: EmailMessageFolder;
   isUnread?: boolean;
   isStarred?: boolean;
   categoryId?: string;
@@ -154,6 +171,7 @@ export async function seedEmailThreadWithMessage(
     sentAt,
     isUnread: params.isUnread ?? true,
     isStarred: params.isStarred ?? false,
+    folder: params.folder ?? 'inbox',
     labelIds: params.labelIds ?? ['INBOX'],
     categoryId: params.categoryId ?? null,
   });

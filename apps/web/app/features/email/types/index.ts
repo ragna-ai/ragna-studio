@@ -7,6 +7,12 @@ export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_requi
 // Matches apps/api/src/validation/email.schema.ts's `emailFolderEnum`.
 export type EmailFolder = 'inbox' | 'archived' | 'trashed' | 'starred' | 'sent';
 
+export type EmailProviderKind = 'gmail' | 'microsoft';
+
+export function isEmailProviderKind(value: string): value is EmailProviderKind {
+  return value === 'gmail' || value === 'microsoft';
+}
+
 export type EmailDraftStatus = 'generating' | 'ready' | 'discarded' | 'sent';
 export type EmailDraftOrigin = 'ai' | 'user';
 export type EmailDraftKind = 'new' | 'reply' | 'forward';
@@ -21,6 +27,7 @@ export interface EmailParticipant {
 export interface EmailAccount {
   id: string;
   email: string;
+  provider: EmailProviderKind;
   defaultAgentId: string | null;
   syncState: EmailAccountSyncState;
   lastSyncedAt: string | null;
@@ -234,7 +241,7 @@ export interface MediaListResponse {
 // the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
 
 export interface EmailDraftAttachment {
-  /** Null when the attachment lives on the Gmail draft itself rather than a forwarded message. */
+  /** Null when the attachment lives on the draft itself rather than a forwarded message. */
   providerMessageId: string | null;
   providerAttachmentId: string;
   filename: string;
@@ -311,16 +318,7 @@ export interface CreateEmailDraftRequest {
  * fields as assignable.
  */
 export type UpdateEmailDraftRequest = Partial<EmailDraftEditableFields> & {
-  /**
-   * Forces the Gmail write-back regardless of the attachment-based push rule
-   * (section 3: a draft carrying attachments otherwise only pushes to Gmail
-   * when the attachment set itself changes, so body/subject/recipient edits
-   * on it would sit local-only indefinitely without this). Not a draft
-   * field - never echoed back on `EmailDraft` - so it lives outside
-   * `EmailDraftEditableFields`. EmailComposer.vue sets this before send and
-   * on its unmount/navigate-away flush; ordinary keystroke autosaves omit
-   * it.
-   */
+  /** Forces the provider write-back even when only body/subject/recipients changed; not a persisted draft field. */
   flush?: boolean;
 };
 

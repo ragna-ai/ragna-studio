@@ -1,15 +1,4 @@
 // apps/api/test/email/support/gmail-account-fixtures.ts
-//
-// Seeds a better-auth `account` row for the 'google' provider, mirroring
-// packages/testing/src/social/social-account-fixtures.ts's
-// seedLinkedinAccount (see that file's doc comment for why a plaintext,
-// far-future-expiring token round-trips through `auth.api.getAccessToken`
-// without a real refresh: packages/auth/src/server/auth.ts never sets
-// `account.encryptOAuthTokens`). email-provider.service.ts's
-// `getGoogleGmailScopeStatus` reads this row's `scope` column directly (a
-// comma-separated list), so tests seed it here instead of driving a real
-// OAuth consent flow. Lives in apps/api/test/** (not packages/testing) per
-// this suite's file ownership.
 import { db } from '@repo/database';
 import { account } from '@repo/database/schema';
 import { assertConnectedToTestDatabase } from '@repo/testing';

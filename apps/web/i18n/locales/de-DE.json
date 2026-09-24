@@ -1092,13 +1092,19 @@
   "email": {
     "pageTitle": "E-Mail",
     "connect": {
-      "title": "Gmail verbinden",
-      "description": "Verbinde dein Gmail-Konto, um E-Mails zu lesen, zu beantworten und Antwortentwürfe von einem Agenten erstellen zu lassen. Es wird nie etwas ohne deine Prüfung versendet.",
-      "cta": "Gmail verbinden"
+      "title": "Postfach verbinden",
+      "description": "Verbinde dein Gmail- oder Outlook-Postfach, um E-Mails zu lesen, zu beantworten und Antwortentwürfe von einem Agenten erstellen zu lassen. Es wird nie etwas ohne deine Prüfung versendet.",
+      "gmailCta": "Gmail verbinden",
+      "microsoftCta": "Outlook verbinden"
     },
     "sidebar": {
       "compose": "Verfassen",
       "searchPlaceholder": "E-Mails durchsuchen",
+      "searchHintLabel": "Hilfe zur Suchsyntax",
+      "searchHint": {
+        "gmail": "Nutze Gmail-Operatoren wie from:name, is:unread, has:attachment.",
+        "microsoft": "Nutze die Outlook-Suche wie from:name, hasattachments:true."
+      },
       "drafts": "Entwürfe",
       "categories": "Kategorien",
       "labels": "Labels",
@@ -1201,8 +1207,8 @@
     },
     "settings": {
       "pageTitle": "E-Mail-Einstellungen",
-      "subtitle": "Verwalte dein verbundenes Gmail-Konto, Kategorien und Auto-Entwurf-Regeln.",
-      "notConnected": "Verbinde zuerst Gmail, um die E-Mail-Einstellungen zu verwalten.",
+      "subtitle": "Verwalte dein verbundenes Postfach, Kategorien und Auto-Entwurf-Regeln.",
+      "notConnected": "Verbinde zuerst ein Postfach, um die E-Mail-Einstellungen zu verwalten.",
       "tabs": {
         "general": "Allgemein",
         "categories": "Kategorien",
@@ -1210,15 +1216,19 @@
       },
       "general": {
         "title": "Konto",
+        "provider": {
+          "gmail": "Gmail",
+          "microsoft": "Outlook"
+        },
         "defaultAgent": "Standard-Entwurfsagent",
         "defaultAgentHint": "Wird für Auto-Entwürfe genutzt und bei manuellen \"Mit KI entwerfen\"-Anfragen vorausgewählt.",
         "defaultAgentPlaceholder": "Agent wählen",
         "dangerZone": "Gefahrenzone",
-        "disconnect": "Gmail trennen",
-        "disconnectConfirmTitle": "Gmail trennen",
-        "disconnectConfirmMessage": "Dadurch werden deine synchronisierten E-Mails, Kategorien und Entwürfe entfernt. Dein Gmail-Konto selbst bleibt unberührt.",
-        "reconnect": "Gmail erneut verbinden",
-        "reconnectHint": "Der Gmail-Zugriff ist abgelaufen und konnte nicht automatisch erneuert werden. Verbinde erneut, um die Synchronisierung fortzusetzen."
+        "disconnect": "Postfach trennen",
+        "disconnectConfirmTitle": "Postfach trennen",
+        "disconnectConfirmMessage": "Dadurch werden deine synchronisierten E-Mails, Kategorien und Entwürfe entfernt. Dein {provider}-Konto selbst bleibt unberührt.",
+        "reconnect": "{provider} erneut verbinden",
+        "reconnectHint": "Der {provider}-Zugriff ist abgelaufen und konnte nicht automatisch erneuert werden. Verbinde erneut, um die Synchronisierung fortzusetzen."
       },
       "categories": {
         "title": "Kategorien",
@@ -1245,7 +1255,7 @@
       "lastSynced": "Synchronisiert {date}",
       "neverSynced": "Noch nicht synchronisiert",
       "syncFailed": "Synchronisierung deines Postfachs fehlgeschlagen. Versuche es gleich noch einmal.",
-      "reauthRequiredToast": "Gmail-Zugriff abgelaufen. Verbinde Gmail in den Einstellungen erneut, um die Synchronisierung fortzusetzen."
+      "reauthRequiredToast": "Postfachzugriff abgelaufen. Verbinde dich in den Einstellungen erneut, um die Synchronisierung fortzusetzen."
     }
   }
 }

@@ -9,18 +9,15 @@
 /** Opaque id assigned by the provider (message, thread, or label). */
 export type MailProviderId = string;
 
+export type MailFolder = 'inbox' | 'sent' | 'archive' | 'trash' | 'spam' | 'draft';
+
 export interface MailAddress {
   name?: string;
   address: string;
 }
 
 export interface MailAttachmentMeta {
-  /**
-   * Stable structural id for this attachment within the message (Gmail's
-   * MIME `partId`). Unlike `attachmentId` below, this doesn't change when
-   * the message itself is modified (read/label/star state), so it's safe
-   * to hand to a caller and have them hold onto it across requests.
-   */
+  /** Stable across read/label/star changes (unlike attachmentId). */
   partId: string;
   /**
    * Opaque, provider-issued token to fetch this attachment's bytes: pass to
@@ -64,6 +61,7 @@ export interface MailMessageMetadata {
   snippet: string;
   date: Date;
   labelIds: MailProviderId[];
+  folder: MailFolder;
   unread: boolean;
   starred: boolean;
 }
@@ -92,6 +90,7 @@ export interface MailAccountProfile {
 
 export interface MailSyncMessageAdded {
   type: 'added';
+  /** May name an already-indexed message (e.g. Graph delta); upsert, don't assume new. */
   message: MailMessageMetadata;
 }
 
@@ -100,6 +99,7 @@ export interface MailSyncFlagsChanged {
   messageId: MailProviderId;
   threadId: MailProviderId;
   labelIds: MailProviderId[];
+  folder: MailFolder;
   unread: boolean;
   starred: boolean;
 }
@@ -137,6 +137,8 @@ export interface SendMailThreadingInput {
   inReplyToMessageId: string;
   /** Prior `References` chain, oldest first; `inReplyToMessageId` is appended automatically. */
   references?: string[];
+  /** Gmail ignores this; Microsoft Graph needs it for createReply/createForward. */
+  replyToProviderMessageId: MailProviderId;
 }
 
 export interface SendMailInput {
@@ -158,13 +160,7 @@ export interface SendMailResult {
 
 // --- Drafts -----------------------------------------------------------
 
-/**
- * Listing-friendly draft shape, for the Drafts folder. `id` is the draft's
- * own, stable identity: a Gmail draft is a container whose contained message
- * (and that message's id) is replaced wholesale on every `updateDraft`.
- * Persist only `id`; nothing outside this package may key on the contained
- * message's id.
- */
+/** Persist only `id`; the contained message's id changes on every `updateDraft`. */
 export interface MailDraftSummary {
   id: MailProviderId;
   threadId: MailProviderId;
@@ -187,6 +183,7 @@ export interface MailActionResult {
   messageId: MailProviderId;
   threadId: MailProviderId;
   labelIds: MailProviderId[];
+  folder: MailFolder;
   unread: boolean;
   starred: boolean;
 }
@@ -219,11 +216,7 @@ export interface MailProvider {
   /** Connected account's address and the cursor to start syncing from. */
   getProfile(): Promise<MailAccountProfile>;
 
-  /**
-   * Applies mailbox changes since `cursor`: new messages, flag/label
-   * changes, and deletions. Returns `{ status: 'cursorExpired' }` instead of
-   * throwing when the cursor can no longer be resolved.
-   */
+  /** Returns `cursorExpired` instead of throwing when the cursor can't be resolved. */
   syncFromCursor(cursor: string): Promise<MailSyncOutcome>;
 
   /** Full thread with every message's body parsed. */
@@ -237,18 +230,10 @@ export interface MailProvider {
   /** Sends a new message, or a reply when `input.thread` is set. */
   send(input: SendMailInput): Promise<SendMailResult>;
 
-  /**
-   * Creates a Gmail draft from `input`. For a reply/forward draft, set
-   * `input.thread` so the draft carries `threadId` plus `In-Reply-To` and
-   * `References` headers from the start.
-   */
+  /** Set `input.thread` for a reply/forward draft. */
   createDraft(input: SendMailInput): Promise<MailDraft>;
 
-  /**
-   * Replaces the draft's message wholesale; Gmail has no partial update.
-   * `input.thread` must be re-supplied on every call for a reply/forward
-   * draft, dropping it on one save detaches the draft from its thread.
-   */
+  /** No partial update: re-supply `input.thread` on every call. */
   updateDraft(draftId: MailProviderId, input: SendMailInput): Promise<MailDraft>;
 
   getDraft(draftId: MailProviderId): Promise<MailDraft>;
@@ -256,7 +241,7 @@ export interface MailProvider {
   /** Every draft in the mailbox, for the Drafts folder listing. Paginates internally. */
   listDrafts(): Promise<MailDraftSummary[]>;
 
-  /** Sends the draft; Gmail deletes it server-side. Returns the same shape as `send`. */
+  /** The provider deletes the draft server-side; same result shape as `send`. */
   sendDraft(draftId: MailProviderId): Promise<SendMailResult>;
 
   deleteDraft(draftId: MailProviderId): Promise<void>;
@@ -272,6 +257,8 @@ export interface MailProvider {
 
   /** Proxies the provider's native search query syntax; returns matching thread ids. */
   search(query: string, pageToken?: string | null): Promise<MailSearchResult>;
+
+  listRecentInboxThreadIds(limit: number): Promise<MailProviderId[]>;
 
   getAttachment(messageId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent>;
 

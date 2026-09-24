@@ -3,16 +3,12 @@ import { agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 
-// Gmail is the only implementation that ships in v1; the provider enum and
-// opaque syncCursor exist so a second provider (Microsoft Graph) slots in
-// later without a schema change (docs/email/prd.md, "Future directions").
-export type EmailProvider = 'gmail';
+export type EmailProvider = 'gmail' | 'microsoft';
 
-// 'reauth_required': Gmail rejected the stored credentials with 401/403 even
-// after gmail.client.ts's one-shot token refetch (gmail-provider.ts's stored
-// refresh token is missing/revoked). Distinct from 'error' (transient
-// failure, self-heals on the next sync) so the UI can prompt reconnecting
-// Gmail instead of just "try again".
+// Duplicated from @repo/mail's MailFolder to avoid a dependency on it.
+export type EmailMessageFolder = 'inbox' | 'sent' | 'archive' | 'trash' | 'spam' | 'draft';
+
+// Distinct from 'error': credentials were rejected outright, not a transient failure.
 export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_required';
 
 // Shared shape for from/to/cc columns: Gmail (and any future provider)
@@ -33,18 +29,9 @@ export type EmailDraftOrigin = 'ai' | 'user';
 // "Scope > 1").
 export type EmailDraftKind = 'new' | 'reply' | 'forward';
 
-// A forward draft's carried-over attachment set: metadata only, pointing back
-// at the Gmail message/attachment it came from. Content is re-fetched from
-// Gmail at write-back/send time, never stored here
-// (docs/email/drafts-change-request.md, "Scope > 5").
+// Metadata only; attachment bytes are re-fetched from the provider on demand.
 export interface EmailDraftAttachment {
-  // Set when this attachment was copied from the forwarded message: the
-  // source message id, used to re-fetch its content at write-back/send time.
-  // Null when it instead came from a Gmail-authored draft's own contained
-  // message, whose id @repo/mail deliberately never persists (it is replaced
-  // on every drafts.update). That case is re-fetched via
-  // getDraftAttachment(draftId, attachmentId) instead, so a null here is what
-  // tells the caller which of the two fetch paths to take.
+  // Null when copied from the draft's own contained message instead of a forwarded one; see getDraftAttachment.
   providerMessageId: string | null;
   providerAttachmentId: string;
   filename: string;
@@ -66,7 +53,7 @@ export const emailAccount = pgTable(
       .notNull()
       .unique()
       .references(() => user.id, { onDelete: 'cascade' }),
-    provider: text('provider').notNull().$type<EmailProvider>().default('gmail'),
+    provider: text('provider').notNull().$type<EmailProvider>(),
     email: text('email').notNull(),
     // Opaque cursor: Gmail's historyId today, a Graph delta token later.
     // Null until the first successful sync.
@@ -168,9 +155,7 @@ export type EmailThread = typeof emailThread.$inferSelect;
 export type NewEmailThread = typeof emailThread.$inferInsert;
 
 // EMAIL MESSAGE
-// Metadata index row (docs/email/prd.md, "Sync model"): mirrors Gmail's
-// message metadata plus our own category/needsReply columns. The body is
-// fetched and persisted lazily, see email_message_bodies below.
+// Body is fetched and persisted lazily; see email_message_bodies.
 export const emailMessage = pgTable(
   'email_messages',
   {
@@ -190,8 +175,9 @@ export const emailMessage = pgTable(
     sentAt: timestamp('sent_at').notNull(),
     isUnread: boolean('is_unread').notNull().default(true),
     isStarred: boolean('is_starred').notNull().default(false),
-    // Gmail label ids (system + user labels), read-only display only
-    // (docs/email/prd.md, "Non-goals").
+    // No backfill: every writer sets this explicitly, the default only satisfies NOT NULL on old rows.
+    folder: text('folder').notNull().$type<EmailMessageFolder>().default('inbox'),
+    // Gmail label ids, or Outlook category names; read-only.
     labelIds: jsonb('label_ids').notNull().$type<string[]>().default([]),
     // Set by the classifier job; null until classified.
     categoryId: text('category_id').references(() => emailCategory.id, {
@@ -206,6 +192,7 @@ export const emailMessage = pgTable(
     index('emailMessage_accountId_idx').on(table.accountId),
     index('emailMessage_threadId_idx').on(table.threadId),
     index('emailMessage_categoryId_idx').on(table.categoryId),
+    index('emailMessage_accountId_folder_idx').on(table.accountId, table.folder),
     uniqueIndex('emailMessage_accountId_providerMessageId_idx').on(
       table.accountId,
       table.providerMessageId,
@@ -235,11 +222,7 @@ export type EmailMessageBody = typeof emailMessageBody.$inferSelect;
 export type NewEmailMessageBody = typeof emailMessageBody.$inferInsert;
 
 // EMAIL DRAFT
-// The single home for every unsent message, whoever wrote it: AI replies,
-// user replies/forwards/new mail, and drafts created in Gmail web/mobile
-// (docs/email/drafts-change-request.md, "Scope > 1"). Hybrid-persisted: this
-// row is the editing/autosave target, debounced-written to Gmail via
-// `providerDraftId`.
+// Single home for every unsent message, regardless of origin.
 export const emailDraft = pgTable(
   'email_drafts',
   {
@@ -287,9 +270,7 @@ export const emailDraft = pgTable(
     // EmailDraftAttachment above.
     attachments: jsonb('attachments').notNull().$type<EmailDraftAttachment[]>().default([]),
     status: text('status').notNull().$type<EmailDraftStatus>().default('generating'),
-    // Null until the draft is pushed to Gmail (docs/email/drafts-change-request.md,
-    // "Decisions"). The draft id is stable across Gmail-side updates, unlike
-    // the message id it wraps, so this is the only provider id we key on.
+    // Null until pushed to the provider; stable across provider-side updates, unlike the message id it wraps.
     providerDraftId: text('provider_draft_id'),
     ...timestamps,
   },

@@ -3,7 +3,7 @@ import { db } from '../db';
 import type { EmailMessage, EmailMessageBody, NewEmailMessage } from '../schema';
 import { emailMessage } from '../schema';
 
-export type { EmailMessage, NewEmailMessage } from '../schema';
+export type { EmailMessage, EmailMessageFolder, NewEmailMessage } from '../schema';
 
 export type EmailMessageWithBody = EmailMessage & { body: EmailMessageBody | null };
 
@@ -29,6 +29,7 @@ export async function upsertEmailMessageByProviderMessageId(
         sentAt: values.sentAt,
         isUnread: values.isUnread,
         isStarred: values.isStarred,
+        folder: values.folder,
         labelIds: values.labelIds,
         updatedAt: sql`(CURRENT_TIMESTAMP)`,
       },
@@ -99,7 +100,7 @@ export async function findEmailMessagesByProviderIds({
 }
 
 type UpdateEmailMessageFlagsFields = Partial<
-  Pick<NewEmailMessage, 'isUnread' | 'isStarred' | 'labelIds'>
+  Pick<NewEmailMessage, 'isUnread' | 'isStarred' | 'folder' | 'labelIds'>
 >;
 
 // Mailbox actions (archive/trash/star/read-unread) and the sync job's
