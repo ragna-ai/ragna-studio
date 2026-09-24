@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { FileEditIcon, PenSquareIcon, RefreshCwIcon, SearchIcon, SettingsIcon, TagIcon } from '@lucide/vue';
+import {
+  FileEditIcon,
+  HelpCircleIcon,
+  PenSquareIcon,
+  RefreshCwIcon,
+  SearchIcon,
+  SettingsIcon,
+  TagIcon,
+} from '@lucide/vue';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -60,6 +68,7 @@ watch(searchInput, emitSearch);
 const isSyncing = computed(
   () => props.account.syncState === 'syncing' || isSyncPending.value || isManualAccountSyncActive.value,
 );
+const searchHintKey = computed(() => `email.sidebar.searchHint.${props.account.provider}`);
 
 // Functions
 function isActiveFolder(folder: EmailFolder): boolean {
@@ -80,13 +89,33 @@ function handleSyncNow() {
         <PenSquareIcon v-else class="mr-2 size-4" />
         {{ t('email.sidebar.compose') }}
       </Button>
-      <div class="relative">
-        <SearchIcon class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          v-model="searchInput"
-          class="h-8 pl-8 text-sm"
-          :placeholder="t('email.sidebar.searchPlaceholder')"
-        />
+      <div class="flex items-center gap-1">
+        <div class="relative flex-1">
+          <SearchIcon class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            v-model="searchInput"
+            class="h-8 pl-8 text-sm"
+            :placeholder="t('email.sidebar.searchPlaceholder')"
+          />
+        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="size-8 shrink-0"
+                :aria-label="t('email.sidebar.searchHintLabel')"
+              >
+                <HelpCircleIcon class="size-3.5 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" class="max-w-56">
+              <p>{{ t(searchHintKey) }}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
 

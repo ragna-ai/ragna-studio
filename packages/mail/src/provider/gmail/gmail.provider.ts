@@ -27,7 +27,14 @@ import type {
   SendMailResult,
 } from '../mail-provider';
 import { GmailApiError, gmailRequest, gmailRequestVoid, type GmailRequestOptions } from './gmail.client';
-import { toMailDraft, toMailDraftSummary, toMailMessage, toMailMessageMetadata } from './gmail.parse';
+import {
+  hasChatLabel,
+  toMailDraft,
+  toMailDraftSummary,
+  toMailFolder,
+  toMailMessage,
+  toMailMessageMetadata,
+} from './gmail.parse';
 import { aggregateHistoryPage, type GmailAggregatedChange } from './gmail.sync';
 import type {
   GmailAttachmentResource,
@@ -59,7 +66,7 @@ interface GmailRawMessageBody {
   threadId?: string;
 }
 
-export { GmailApiError, isAuthGmailError } from './gmail.client';
+export { GmailApiError } from './gmail.client';
 
 export interface GmailProviderOptions {
   /** Resolves a fresh, valid Gmail OAuth access token; the provider does not refresh or cache tokens. */
@@ -104,7 +111,8 @@ export class GmailProvider implements MailProvider {
 
   async fetchThread(threadId: MailProviderId): Promise<MailThread> {
     const raw = await this.request<GmailThreadResource>(`users/me/threads/${threadId}?format=full`);
-    return { id: raw.id, messages: raw.messages.map(toMailMessage) };
+    const messages = raw.messages.filter((message) => !hasChatLabel(message.labelIds ?? []));
+    return { id: raw.id, messages: messages.map(toMailMessage) };
   }
 
   fetchMessage(messageId: MailProviderId, format: 'metadata'): Promise<MailMessageMetadata>;
@@ -254,6 +262,19 @@ export class GmailProvider implements MailProvider {
     };
   }
 
+  async listRecentInboxThreadIds(limit: number): Promise<MailProviderId[]> {
+    const threadIds: MailProviderId[] = [];
+    let pageToken: string | null | undefined;
+
+    do {
+      const page = await this.search('in:inbox', pageToken);
+      threadIds.push(...page.threadIds);
+      pageToken = page.nextPageToken;
+    } while (pageToken && threadIds.length < limit);
+
+    return threadIds.slice(0, limit);
+  }
+
   async getAttachment(messageId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
     const response = await this.request<GmailAttachmentResource>(
       `users/me/messages/${messageId}/attachments/${attachmentId}`,
@@ -340,6 +361,9 @@ export class GmailProvider implements MailProvider {
           }
           throw error;
         }
+        if (hasChatLabel(message.labelIds)) {
+          continue;
+        }
         changes.push({ type: 'added', message });
         continue;
       }
@@ -349,6 +373,7 @@ export class GmailProvider implements MailProvider {
         messageId: change.messageId,
         threadId: change.threadId,
         labelIds: change.labelIds,
+        folder: toMailFolder(change.labelIds),
         unread: change.labelIds.includes(LABEL_UNREAD),
         starred: change.labelIds.includes(LABEL_STARRED),
       });
@@ -420,6 +445,7 @@ function toMailActionResult(raw: GmailMessageResource): MailActionResult {
     messageId: raw.id,
     threadId: raw.threadId,
     labelIds,
+    folder: toMailFolder(labelIds),
     unread: labelIds.includes(LABEL_UNREAD),
     starred: labelIds.includes(LABEL_STARRED),
   };

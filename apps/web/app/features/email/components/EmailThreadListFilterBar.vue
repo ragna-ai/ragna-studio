@@ -30,7 +30,7 @@ const props = defineProps<{
   starredOnly: boolean;
   dateFrom: string | null;
   dateTo: string | null;
-  /** Hides the unread/starred/date-range filters (search proxies Gmail's own `q=`, these don't apply) - the mass-trash controls below stay usable during a search regardless. */
+  /** Hides the unread/starred/date-range filters (search proxies the provider's own query syntax, these don't apply) - the mass-trash controls below stay usable during a search regardless. */
   isSearching: boolean;
   selectionCount: number;
   isSelectionOverCap: boolean;

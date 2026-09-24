@@ -847,11 +847,11 @@ describe('POST /email/draft/:draftId/send - providerDraftId set', () => {
   });
 });
 
-describe('GET /email/thread - DRAFT exclusion', () => {
-  test('a message carrying the DRAFT label is excluded from inbox and the default (no-folder) view', async () => {
+describe('GET /email/thread - draft folder exclusion', () => {
+  test('a message with folder draft is excluded from inbox and the default (no-folder) view', async () => {
     const { cookieHeader, accountId } = await connectAccountWithAgent();
-    const ordinary = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX', 'DRAFT'] });
+    const ordinary = await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'draft' });
 
     const inboxResponse = await app.request('/email/thread?folder=inbox', {
       headers: { cookie: cookieHeader },

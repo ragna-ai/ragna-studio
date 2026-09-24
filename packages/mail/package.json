@@ -41,6 +41,7 @@
     "turndown": "^7.2.4"
   },
   "devDependencies": {
+    "@microsoft/microsoft-graph-types": "^2.43.1",
     "@repo/ts-config": "workspace:*",
     "@types/html-to-text": "^9.0.4",
     "@types/node": "catalog:",

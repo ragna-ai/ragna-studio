@@ -3,17 +3,16 @@ import { MailIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import { useEmailConnectFlow } from '~/features/email/composables/useEmailConnectFlow';
+import type { EmailProviderKind } from '~/features/email/types';
 
-// The landing state for /mail before Gmail is connected
-// (docs/email/prd.md, "Auth and account connection"): explains the feature
-// and starts the linkSocial() -> POST /email/account/connect flow.
+// The landing state for /mail before a mailbox is connected.
 const { t } = useI18n();
 const { startConnect, isLinking, isFinishingConnect } = useEmailConnectFlow();
 
 const isBusy = computed(() => isLinking.value || isFinishingConnect.value);
 
-function handleConnect() {
-  startConnect('/mail');
+function handleConnect(provider: EmailProviderKind) {
+  startConnect(provider, '/mail');
 }
 </script>
 
@@ -26,9 +25,17 @@ function handleConnect() {
       <h1 class="text-lg font-semibold">{{ t('email.connect.title') }}</h1>
       <p class="text-sm text-muted-foreground">{{ t('email.connect.description') }}</p>
     </div>
-    <Button :disabled="isBusy" @click="handleConnect">
-      <Spinner v-if="isBusy" class="mr-2" />
-      {{ t('email.connect.cta') }}
-    </Button>
+    <div class="flex gap-2">
+      <Button :disabled="isBusy" @click="handleConnect('gmail')">
+        <Spinner v-if="isBusy" class="mr-2" />
+        <Icon v-else name="logos:google-icon" class="mr-2 size-4" />
+        {{ t('email.connect.gmailCta') }}
+      </Button>
+      <Button variant="outline" :disabled="isBusy" @click="handleConnect('microsoft')">
+        <Spinner v-if="isBusy" class="mr-2" />
+        <Icon v-else name="logos:microsoft-icon" class="mr-2 size-4" />
+        {{ t('email.connect.microsoftCta') }}
+      </Button>
+    </div>
   </div>
 </template>

@@ -1,4 +1,5 @@
 // apps/worker/src/mail/email-sync.service.ts
+import { config } from '@repo/config';
 import type { EmailAccount, EmailDraft } from '@repo/database';
 import {
   createEmailDraft,
@@ -19,9 +20,10 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { toCanonicalText } from '@repo/mail/content';
-import { isAuthGmailError } from '@repo/mail/provider';
+import { isMailAuthError } from '@repo/mail/provider';
 import type {
   MailDraftSummary,
+  MailFolder,
   MailMessageMetadata,
   MailProvider,
   MailSyncChange,
@@ -30,50 +32,43 @@ import type {
   MailSyncMessageDeleted,
 } from '@repo/mail/provider';
 import { EMAIL_CLASSIFY_JOB, EmailClassifyJobDto, queue } from '@repo/queue';
-import { getGmailProviderForAccount } from './gmail-provider';
+import { getMailProviderForAccount } from './mail-provider';
 import { persistMessageBody } from './message-body';
 import { fromParticipant, summarizeThread, toParticipants } from './participants';
 
 // "the most recent ~50 inbox threads" (docs/email/prd.md, "Sync model").
 const SEED_THREAD_COUNT = 50;
 
-// Gmail's system label for a draft's contained message
-// (docs/email/drafts-change-request.md, "Scope > 7"). A message carrying it
-// is reconciled into email_drafts by reconcileDrafts below, never imported
-// as ordinary mail or handed to the classifier.
-const DRAFT_LABEL_ID = 'DRAFT';
-
 // Abandoned drafts (docs/email/drafts-change-request.md, "Scope > 4"): still
 // empty and untouched this long are swept on the account's own sync tick.
 const EMPTY_DRAFT_SWEEP_AGE_MS = 24 * 60 * 60 * 1000;
 
-// The client autosaves locally on a ~1s debounce and write-backs to Gmail on
-// a ~3s one (docs/email/drafts-change-request.md, "Scope > 3"), so a sync
-// tick landing mid-edit can observe a local row that's already ahead of
-// what Gmail has. This grace window absorbs that in-flight write-back plus
-// ordinary clock skew between our server and Gmail's: it's what lets
-// reconcileDrafts tell "Gmail has a genuinely newer edit" apart from "our
-// own recent write hasn't reached Gmail yet", without the worker needing
-// any notion of UI focus/dirty state (that half of conflict handling stays
-// out of scope here; freshness is the worker's whole contribution to it).
+// The client autosaves locally on a ~1s debounce and write-backs to the
+// provider on a ~3s one (docs/email/drafts-change-request.md, "Scope > 3"),
+// so a sync tick landing mid-edit can observe a local row that's already
+// ahead of what the provider has. This grace window absorbs that in-flight
+// write-back plus ordinary clock skew: it's what lets reconcileDrafts tell
+// "the provider has a genuinely newer edit" apart from "our own recent
+// write hasn't reached it yet", without the worker needing any notion of UI
+// focus/dirty state (that half of conflict handling stays out of scope
+// here; freshness is the worker's whole contribution to it).
 const DRAFT_RECONCILE_GRACE_MS = 60 * 1000;
 
-function isDraftMessage(message: Pick<MailMessageMetadata, 'labelIds'>): boolean {
-  return message.labelIds.includes(DRAFT_LABEL_ID);
+function isDraftMessage(message: Pick<MailMessageMetadata, 'folder'>): boolean {
+  return message.folder === 'draft';
 }
 
-// Gmail system labels for mail that shouldn't reach the classifier: SENT is
-// the account owner's own outgoing mail (classification/auto-draft is for
-// mail arriving in the account, not mail it sent); SPAM is Gmail's own spam
-// filter having already judged the sender, and classifying it risks
-// auto-drafting a reply to a spammer via the auto-draft-sender allowlist or
-// a matching category; TRASH is mail the user already discarded; CHAT is
-// Gmail Chat/Hangouts traffic riding the same history feed, not email. All
-// four are still carried through to email_messages.labelIds for display.
-const NON_CLASSIFIABLE_LABEL_IDS = ['SENT', 'SPAM', 'TRASH', 'CHAT'];
+// Mail that shouldn't reach the classifier: sent is the account owner's own
+// outgoing mail (classification/auto-draft is for mail arriving in the
+// account, not mail it sent); spam has already been judged by the
+// provider's own filter, and classifying it risks auto-drafting a reply to
+// a spammer via the auto-draft-sender allowlist or a matching category;
+// trash is mail the user already discarded. All three still reach
+// email_messages for display.
+const NON_CLASSIFIABLE_FOLDERS: MailFolder[] = ['sent', 'spam', 'trash'];
 
-function isNonClassifiableMessage(message: Pick<MailMessageMetadata, 'labelIds'>): boolean {
-  return message.labelIds.some((labelId) => NON_CLASSIFIABLE_LABEL_IDS.includes(labelId));
+function isNonClassifiableMessage(message: Pick<MailMessageMetadata, 'folder'>): boolean {
+  return NON_CLASSIFIABLE_FOLDERS.includes(message.folder);
 }
 
 export async function syncEmailAccount(accountId: string): Promise<void> {
@@ -86,7 +81,7 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
   await updateEmailAccountSyncState({ id: accountId, syncState: 'syncing' });
 
   try {
-    const provider = getGmailProviderForAccount(account);
+    const provider = getMailProviderForAccount(account);
 
     if (account.syncCursor) {
       await applyIncrementalSync({ account, provider, cursor: account.syncCursor });
@@ -111,7 +106,7 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
   } catch (error) {
     await updateEmailAccountSyncState({
       id: accountId,
-      syncState: isAuthGmailError(error) ? 'reauth_required' : 'error',
+      syncState: isMailAuthError(error) ? 'reauth_required' : 'error',
     });
     throw error; // rethrow so BullMQ retries the job.
   }
@@ -131,25 +126,12 @@ async function seedInitialSync({
 }): Promise<void> {
   const profile = await provider.getProfile();
 
-  const threadIds = await collectInboxThreadIds(provider, SEED_THREAD_COUNT);
+  const threadIds = await provider.listRecentInboxThreadIds(SEED_THREAD_COUNT);
   for (const threadId of threadIds) {
     await importThread({ account, provider, providerThreadId: threadId });
   }
 
   await updateEmailAccountSyncState({ id: account.id, syncCursor: profile.cursor });
-}
-
-async function collectInboxThreadIds(provider: MailProvider, limit: number): Promise<string[]> {
-  const threadIds: string[] = [];
-  let pageToken: string | null | undefined;
-
-  do {
-    const page = await provider.search('in:inbox', pageToken);
-    threadIds.push(...page.threadIds);
-    pageToken = page.nextPageToken;
-  } while (pageToken && threadIds.length < limit);
-
-  return threadIds.slice(0, limit);
 }
 
 // Seed import only: pulls the full thread (metadata + bodies, since
@@ -201,6 +183,7 @@ async function importThread({
       sentAt: message.date,
       isUnread: message.unread,
       isStarred: message.starred,
+      folder: message.folder,
       labelIds: message.labelIds,
     });
 
@@ -250,21 +233,15 @@ async function applySyncChanges({
   account: EmailAccount;
   changes: MailSyncChange[];
 }): Promise<void> {
-  const addedChanges = changes.filter(isAdded);
+  // A draft's contained message is reconciled into email_drafts separately
+  // (reconcileDrafts, called once per sync after applySyncChanges), never
+  // imported as mail or classified (docs/email/drafts-change-request.md,
+  // "Scope > 7").
+  const addedChanges = changes.filter(isAdded).filter((change) => !isDraftMessage(change.message));
   const flagsChanges = changes.filter(isFlagsChanged);
   const deletedChanges = changes.filter(isDeleted);
 
-  for (const change of addedChanges) {
-    // A draft's contained message carries the DRAFT label and is reconciled
-    // into email_drafts separately (reconcileDrafts, called once per sync
-    // after applySyncChanges), never imported as mail or classified
-    // (docs/email/drafts-change-request.md, "Scope > 7").
-    if (isDraftMessage(change.message)) {
-      continue;
-    }
-    await importAddedMessage({ account, message: change.message });
-  }
-
+  await applyAddedChanges({ account, changes: addedChanges });
   await applyFlagsChanges({ accountId: account.id, changes: flagsChanges });
 
   // A messagesDeleted here for a draft's message is the ordinary churn of
@@ -323,23 +300,62 @@ async function applyFlagsChanges({
       id: message.id,
       isUnread: change.unread,
       isStarred: change.starred,
+      folder: change.folder,
       labelIds: change.labelIds,
     });
   }
 }
 
-// A single new message: upsert its thread (denormalized fields refreshed
-// from this message, see participants.ts) and its own row, then enqueue
-// classification — unlike the seed path, this is new mail arriving after
-// connect (docs/email/prd.md, "Worker jobs"). Sent/spam/trash/chat mail is
-// stored (so it still shows up in its thread) but skips classification (see
-// isNonClassifiableMessage).
+// Graph delta can't tell "created" from "updated", so an `added` change may
+// name a message we already indexed (docs/email/microsoft-provider-prd.md,
+// "Contract changes"). Every message is upserted either way; only ones not
+// already indexed before the upsert get (re-)classified.
+async function applyAddedChanges({
+  account,
+  changes,
+}: {
+  account: EmailAccount;
+  changes: MailSyncMessageAdded[];
+}): Promise<void> {
+  if (changes.length === 0) {
+    return;
+  }
+
+  const existing = await findEmailMessagesByProviderIds({
+    accountId: account.id,
+    providerMessageIds: changes.map((change) => change.message.id),
+  });
+  const alreadyIndexedIds = new Set(existing.map((message) => message.providerMessageId));
+
+  for (const change of changes) {
+    await importAddedMessage({
+      account,
+      message: change.message,
+      shouldClassify: !alreadyIndexedIds.has(change.message.id),
+    });
+  }
+}
+
+// Caps LLM cost when a sync surfaces old mail (initial import, reseed, provider bug, worker outage backlog).
+function isRecentEnoughToClassify(account: EmailAccount, message: Pick<MailMessageMetadata, 'date'>): boolean {
+  const cutoff = Math.max(account.createdAt.getTime(), Date.now() - config.emailAutoClassifyMaxMessageAgeMs);
+  return message.date.getTime() >= cutoff;
+}
+
+// A single new (or re-emitted) message: upsert its thread (denormalized
+// fields refreshed from this message, see participants.ts) and its own row,
+// then enqueue classification only when it's genuinely new — unlike the
+// seed path, this is new mail arriving after connect (docs/email/prd.md,
+// "Worker jobs"). Sent/spam/trash mail is stored (so it still shows up in
+// its thread) but skips classification (see isNonClassifiableMessage).
 async function importAddedMessage({
   account,
   message,
+  shouldClassify,
 }: {
   account: EmailAccount;
   message: MailMessageMetadata;
+  shouldClassify: boolean;
 }): Promise<void> {
   const summary = summarizeThread([message]);
   const threadRow = await upsertEmailThreadByProviderThreadId({
@@ -363,10 +379,11 @@ async function importAddedMessage({
     sentAt: message.date,
     isUnread: message.unread,
     isStarred: message.starred,
+    folder: message.folder,
     labelIds: message.labelIds,
   });
 
-  if (isNonClassifiableMessage(message)) {
+  if (!shouldClassify || isNonClassifiableMessage(message) || !isRecentEnoughToClassify(account, message)) {
     return;
   }
 

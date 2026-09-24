@@ -1,15 +1,4 @@
 // apps/api/src/services/email.service.ts
-//
-// Email client business logic (docs/email/prd.md). Per-user, not
-// workspace-scoped: every function below takes `userId` and resolves the
-// caller's single `email_accounts` row itself, mirroring how
-// notification.service.ts / user.controller.ts scope by userId instead of a
-// workspace guard. Provider access always goes through `MailProvider`
-// (built by email-provider.service.ts); nothing here talks to Gmail's wire
-// format directly.
-//
-// Every repo call below is against email-foundation's real, merged
-// packages/database repo layer (email-*.repo.ts).
 
 import type {
   Agent,
@@ -22,6 +11,7 @@ import type {
   EmailDraftKind,
   EmailDraftStatus,
   EmailMessage,
+  EmailMessageFolder,
   EmailParticipant,
   EmailThreadWithMessages,
   Media,
@@ -81,13 +71,14 @@ import type {
   MailAttachmentMeta,
   MailProvider,
   MailProviderId,
+  MailProviderKind,
   MailMessage as ProviderMailMessage,
   MailThread as ProviderMailThread,
   SendMailInput,
   SendMailResult,
   SendMailThreadingInput,
 } from '@repo/mail/provider';
-import { GmailApiError } from '@repo/mail/provider';
+import { isMailNotFoundError } from '@repo/mail/provider';
 import {
   EMAIL_DRAFT_JOB,
   EMAIL_SYNC_JOB,
@@ -102,12 +93,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import { getGmailProviderForUser } from './email-provider.service';
+import { getMailProviderForConnectRequest, getMailProviderForUser } from './email-provider.service';
 
 // Attachment bytes (and metadata) are never persisted (docs/email/prd.md,
 // "Attachments stay fetch-on-demand"), so a compose request's fresh uploads
 // go straight into the outgoing mail without ever touching R2/@repo/media.
-const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024; // Gmail's own cap
+const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024; // the provider's own cap, same for Gmail and Outlook
 
 const TERMINAL_DRAFT_STATUSES: ReadonlySet<EmailDraftStatus> = new Set(['sent', 'discarded']);
 
@@ -122,7 +113,7 @@ async function loadEmailAccount({ userId }: { userId: string }): Promise<EmailAc
   }
 
   if (!account) {
-    throw new NotFoundException('Gmail is not connected');
+    throw new NotFoundException('Mailbox is not connected');
   }
 
   return account;
@@ -132,6 +123,7 @@ export interface EmailAccountStatusResponse {
   connected: boolean;
   account: {
     id: string;
+    provider: MailProviderKind;
     email: string;
     defaultAgentId: string | null;
     syncState: EmailAccountSyncState;
@@ -148,6 +140,7 @@ function toAccountStatus(account: EmailAccount | null): EmailAccountStatusRespon
     connected: true,
     account: {
       id: account.id,
+      provider: account.provider,
       email: account.email,
       defaultAgentId: account.defaultAgentId,
       syncState: account.syncState,
@@ -209,39 +202,36 @@ const DEFAULT_EMAIL_CATEGORIES: ReadonlyArray<{
   },
 ];
 
-/**
- * [POST] /email/account/connect
- * Gmail access itself was already granted through `linkSocial()` with the
- * `gmail.modify` scope (apps/web, "Connect Gmail" action). This endpoint
- * turns that link into an `email_accounts` row: reads the mailbox address,
- * seeds the default categories, and enqueues the initial sync (worker
- * treats a null syncCursor as the seed import, docs/email/prd.md).
- */
-export async function connectEmailAccount({ userId }: { userId: string }): Promise<EmailAccount> {
+/** [POST] /email/account/connect */
+export async function connectEmailAccount({
+  userId,
+  provider: providerKind,
+}: {
+  userId: string;
+  provider: MailProviderKind;
+}): Promise<EmailAccount> {
   const { data: existing } = await tryCatch(() => getEmailAccountByUserId({ userId }));
 
   if (existing) {
-    throw new BadRequestException('Gmail is already connected');
+    throw new BadRequestException('A mailbox is already connected');
   }
 
-  // Throws BadRequestException itself if Google isn't linked or lacks the
-  // gmail.modify scope.
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForConnectRequest({ userId, provider: providerKind });
 
   const { error: profileError, data: profile } = await tryCatch(() => provider.getProfile());
 
   if (profileError !== null || !profile) {
-    logger.error('Failed to read Gmail profile while connecting', profileError);
-    throw new BadRequestException('Failed to read your Gmail profile. Try reconnecting Google');
+    logger.error('Failed to read mailbox profile while connecting', profileError);
+    throw new BadRequestException('Failed to read your mailbox profile. Try reconnecting your account');
   }
 
   const { error, data: account } = await tryCatch(() =>
-    createEmailAccount({ userId, email: profile.emailAddress }),
+    createEmailAccount({ userId, provider: providerKind, email: profile.emailAddress }),
   );
 
   if (error !== null || !account) {
     logger.error('Failed to create email account', error);
-    throw new InternalServerErrorException('Failed to connect Gmail');
+    throw new InternalServerErrorException('Failed to connect your mailbox');
   }
 
   const { error: categoriesError } = await tryCatch(() =>
@@ -275,13 +265,7 @@ export async function connectEmailAccount({ userId }: { userId: string }): Promi
   return account;
 }
 
-/**
- * [POST] /email/account/disconnect
- * Deletes the `email_accounts` row; every dependent table (threads,
- * messages, bodies, categories, senders, drafts) cascades with it
- * (email.schema.ts). The linked Google account itself is untouched: it's
- * shared with sign-in and any other linked-account feature.
- */
+// [POST] /email/account/disconnect. Cascades to threads/messages/etc; the linked social account itself stays untouched.
 export async function disconnectEmailAccount({ userId }: { userId: string }): Promise<void> {
   const account = await loadEmailAccount({ userId });
 
@@ -289,7 +273,7 @@ export async function disconnectEmailAccount({ userId }: { userId: string }): Pr
 
   if (error !== null) {
     logger.error('Failed to disconnect email account', error);
-    throw new InternalServerErrorException('Failed to disconnect Gmail');
+    throw new InternalServerErrorException('Failed to disconnect your mailbox');
   }
 }
 
@@ -615,46 +599,26 @@ export async function removeAutoDraftSenderForUser({
 export type EmailFolder = 'inbox' | 'archived' | 'trashed' | 'starred' | 'sent';
 
 interface FolderThreadFilter {
-  labelId?: string;
-  excludeLabelIds?: string[];
+  folder?: EmailMessageFolder;
+  excludeFolders?: EmailMessageFolder[];
   isStarred?: boolean;
 }
 
-// Maps each system folder onto listEmailThreads' label filters
-// (docs/email/prd.md: "system folder inbox/archived/trashed/starred/sent
-// derived from labelIds"). Archive is "lacks INBOX" (and isn't itself
-// trashed/spam), not a label of its own, hence excludeLabelIds with no
-// labelId - the two are separate NOT-EXISTS/EXISTS subqueries on the repo
-// side, so a thread doesn't need both conditions to hold on the same
-// message row (email-thread.repo.ts).
-//
-// `default` covers every non-folder view (category filter, label filter, or
-// no filter at all): none of those are "trashed", so trashed/spam mail must
-// stay excluded there too, same as inbox/archived/starred/sent - otherwise
-// a trashed thread that still matches a category leaks back into that
-// category's list (docs/email/bugs.md #1). "trashed" is the one folder that
-// intentionally does NOT exclude TRASH, since it's the view that shows it.
-//
-// DRAFT is excluded everywhere TRASH/SPAM already are
-// (docs/email/drafts-change-request.md, "Scope > 7"): once drafts are
-// written to Gmail (see pushDraftToGmail below) they carry the DRAFT label
-// and would otherwise leak into the inbox/archive/default thread lists as
-// if they were ordinary mail. `email_drafts` is the Drafts folder's own
-// list, not this one.
+// `default` excludes trash/spam/draft too, same as inbox/archived; "trashed" is the one view that doesn't.
 function resolveFolderFilter(folder: EmailFolder | undefined): FolderThreadFilter {
   switch (folder) {
     case 'inbox':
-      return { labelId: 'INBOX', excludeLabelIds: ['TRASH', 'SPAM', 'DRAFT'] };
+      return { folder: 'inbox', excludeFolders: ['trash', 'spam', 'draft'] };
     case 'archived':
-      return { excludeLabelIds: ['INBOX', 'TRASH', 'SPAM', 'DRAFT'] };
+      return { folder: 'archive', excludeFolders: ['inbox', 'trash', 'spam', 'draft'] };
     case 'trashed':
-      return { labelId: 'TRASH' };
+      return { folder: 'trash' };
     case 'sent':
-      return { labelId: 'SENT' };
+      return { folder: 'sent' };
     case 'starred':
       return { isStarred: true };
     default:
-      return { excludeLabelIds: ['TRASH', 'SPAM', 'DRAFT'] };
+      return { excludeFolders: ['trash', 'spam', 'draft'] };
   }
 }
 
@@ -739,13 +703,7 @@ export interface EmailThreadListResponse {
   hasMore: boolean;
 }
 
-/**
- * [GET] /email/thread
- * Lists from the local index only, filtered by category, Gmail label id, or
- * a system folder derived from labelIds (docs/email/prd.md). No total-count
- * query exists on the repo side, so pagination is cursor-style: one extra
- * row is fetched to derive `hasMore`.
- */
+// [GET] /email/thread. No total-count query on the repo side, so pagination fetches one extra row to derive `hasMore`.
 export async function listEmailThreadsForUser({
   userId,
   categoryId,
@@ -773,15 +731,15 @@ export async function listEmailThreadsForUser({
   const offset = (page - 1) * limit;
 
   const folderFilter = resolveFolderFilter(folder);
-  const effectiveLabelId = folderFilter.labelId ?? labelId;
   const effectiveIsStarred = folderFilter.isStarred || starredOnly ? true : undefined;
 
   const { error, data: rows } = await tryCatch(() =>
     listEmailThreads({
       accountId: account.id,
       categoryId,
-      labelId: effectiveLabelId,
-      excludeLabelIds: folderFilter.excludeLabelIds,
+      labelId,
+      folder: folderFilter.folder,
+      excludeFolders: folderFilter.excludeFolders,
       isStarred: effectiveIsStarred,
       isUnread: unreadOnly ? true : undefined,
       dateFrom,
@@ -825,15 +783,7 @@ export interface EmailThreadDetailResponse {
   messages: EmailMessageDetail[];
 }
 
-/**
- * [GET] /email/thread/:threadId
- * Messages come from the local index, bodies are joined in by
- * listEmailMessagesByThreadId where already persisted; a live Gmail fetch
- * fills (and persists) any gap in one call for the whole thread
- * (docs/email/prd.md, "Sync model"). A thread with no gaps never calls
- * Gmail at all. Attachment metadata is intentionally not part of this
- * response - see listEmailMessageAttachmentsForUser below.
- */
+// [GET] /email/thread/:threadId. A missing body is live-fetched and persisted; a thread with no gaps never calls the provider.
 export async function getEmailThreadDetailForUser({
   userId,
   threadId,
@@ -865,14 +815,14 @@ export async function getEmailThreadDetailForUser({
   const gapMessages = messages.filter((message) => !message.body);
 
   if (gapMessages.length > 0) {
-    const provider = await getGmailProviderForUser({ userId });
+    const provider = await getMailProviderForUser({ userId });
     const { error: fetchError, data: liveThread } = await tryCatch(() =>
       provider.fetchThread(thread.providerThreadId),
     );
 
     if (fetchError !== null || !liveThread) {
       logger.error(`Failed to live-fetch thread ${thread.providerThreadId}`, fetchError);
-      throw new InternalServerErrorException('Failed to load thread from Gmail');
+      throw new InternalServerErrorException('Failed to load thread from the mail provider');
     }
 
     const liveByProviderId = new Map(liveThread.messages.map((message) => [message.id, message]));
@@ -975,8 +925,7 @@ async function requireOwnedMessage({
   return message;
 }
 
-// Turns a freshly Gmail-fetched thread into local index rows: used by the
-// search fallback (unknown thread id).
+// Used by the search fallback for a thread id we haven't indexed yet.
 async function persistFetchedThread({
   accountId,
   mailThread,
@@ -1021,6 +970,7 @@ async function persistFetchedThread({
         sentAt: providerMessage.date,
         isUnread: providerMessage.unread,
         isStarred: providerMessage.starred,
+        folder: providerMessage.folder,
         labelIds: providerMessage.labelIds,
       }),
     );
@@ -1066,12 +1016,7 @@ export interface EmailSearchResponse {
   nextPageToken: string | null;
 }
 
-/**
- * [GET] /email/search
- * Proxies Gmail's `q=` search operators (docs/email/prd.md), hydrating
- * returned thread ids against the local index and falling back to a live
- * fetch + persist for threads we haven't seen yet.
- */
+// [GET] /email/search. Proxies the provider's native search syntax, hydrating results against the local index.
 export async function searchEmailForUser({
   userId,
   query,
@@ -1082,12 +1027,12 @@ export async function searchEmailForUser({
   pageToken?: string;
 }): Promise<EmailSearchResponse> {
   const account = await loadEmailAccount({ userId });
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   const { error, data: result } = await tryCatch(() => provider.search(query, pageToken ?? null));
 
   if (error !== null || !result) {
-    logger.error('Failed to search Gmail', error);
+    logger.error('Failed to search email', error);
     throw new InternalServerErrorException('Failed to search email');
   }
 
@@ -1150,7 +1095,7 @@ async function applyMessageAction({
 }): Promise<EmailMessage> {
   const account = await loadEmailAccount({ userId });
   const message = await requireOwnedMessage({ accountId: account.id, messageId });
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   const { error, data: result } = await tryCatch(() => action(provider, message.providerMessageId));
 
@@ -1163,6 +1108,7 @@ async function applyMessageAction({
     updateEmailMessageFlags({
       id: message.id,
       labelIds: result.labelIds,
+      folder: result.folder,
       isUnread: result.unread,
       isStarred: result.starred,
     }),
@@ -1206,6 +1152,7 @@ async function applyActionToMessages({
         updateEmailMessageFlags({
           id: message.id,
           labelIds: result.labelIds,
+          folder: result.folder,
           isUnread: result.unread,
           isStarred: result.starred,
         }),
@@ -1245,7 +1192,7 @@ async function applyThreadAction({
     return [];
   }
 
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   return applyActionToMessages({ provider, messages, action });
 }
@@ -1379,7 +1326,11 @@ export function setThreadStarredForUser(params: {
 }
 
 /** [POST] /email/thread/:threadId/read - loops the thread's message ids. */
-export function setThreadReadForUser(params: { userId: string; threadId: string; read: boolean }) {
+export function setThreadReadForUser(params: {
+  userId: string;
+  threadId: string;
+  read: boolean;
+}) {
   return applyThreadAction({
     userId: params.userId,
     threadId: params.threadId,
@@ -1439,6 +1390,7 @@ async function resolveThreading({
     threadId: thread.providerThreadId,
     inReplyToMessageId: fullMessage.messageIdHeader,
     references: fullMessage.references,
+    replyToProviderMessageId: message.providerMessageId,
   };
 }
 
@@ -1476,11 +1428,7 @@ async function resolveAttachments({
   return attachments;
 }
 
-// Shared by every send/write-back path that assembles a final attachment
-// set (regular send, draft send-flush, draft write-back to Gmail): the
-// budget applies to whatever actually goes out over the wire, not just one
-// contributing source, so this runs once on the merged array rather than
-// per-source inside resolveAttachments.
+// Runs once on the merged attachment array, not per-source, so the budget covers whatever actually goes out.
 function assertAttachmentsWithinBudget(attachments: MailAttachmentInput[]): void {
   const totalBytes = attachments.reduce(
     (sum, attachment) => sum + attachment.content.byteLength,
@@ -1578,14 +1526,7 @@ export interface SendEmailInput {
    * otherwise keeps whatever the draft agent last wrote.
    */
   draftContent?: string;
-  /**
-   * `draftId`'s `providerDraftId`, when the draft already reached Gmail.
-   * Set this and the send flushes the request's final content into that
-   * Gmail draft (`updateDraft`) and sends it with `sendDraft` - which
-   * deletes the draft server-side - instead of `send`, so a stale debounced
-   * write-back is never what actually goes out
-   * (docs/email/drafts-change-request.md, "Send flushes first").
-   */
+  // Set when the draft already reached the provider: flushes+sends via updateDraft/sendDraft instead of plain send.
   providerDraftId?: string;
   /**
    * Pre-resolved attachment bytes to send alongside whatever `mediaIds`/
@@ -1636,11 +1577,7 @@ async function sendAsNewMessage({
   return result;
 }
 
-// "Send flushes first" (docs/email/drafts-change-request.md, "Scope > 3"):
-// the panel's debounced write-back may not have reached Gmail yet, and
-// `sendDraft` sends whatever Gmail currently holds, so the request's final
-// content is pushed with `updateDraft` first. `sendDraft` then deletes the
-// draft server-side and returns the same shape `send` does.
+// Flushes the request's final content with updateDraft first, since the panel's debounced write-back may be stale.
 async function sendViaExistingDraft({
   provider,
   providerDraftId,
@@ -1700,7 +1637,7 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
   assertSendableEmailRequest({ to, html, text });
 
   const account = await loadEmailAccount({ userId });
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   const thread = await resolveThreading({ provider, account, threadId, replyToMessageId });
   const attachments = [
@@ -1729,7 +1666,7 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
     // key as "leave untouched" (email-draft.repo.ts), so content is only
     // overwritten when the caller actually sent an edited version, and
     // providerDraftId is only cleared when this send actually consumed one
-    // (Gmail deletes the draft server-side, so the id no longer resolves).
+    // (the provider deletes the draft server-side, so the id no longer resolves).
     // `text` is written alongside `content` here too - the two must never
     // drift (docs/email/html-content-change-request.md): prefer the
     // client's own `text` (its Tiptap `getText()`, sent alongside the same
@@ -1801,10 +1738,7 @@ async function insertEmailDraft(values: NewEmailDraft): Promise<EmailDraft> {
   return draft;
 }
 
-// A forward draft's attachment metadata is copied from the forwarded
-// message's live Gmail attachments (docs/email/drafts-change-request.md,
-// "Scope > 5"); content is never fetched here, only re-fetched from Gmail at
-// write-back/send time (resolveDraftAttachmentContents below).
+// Metadata only; content is re-fetched from the provider at write-back/send time (resolveDraftAttachmentContents).
 async function resolveForwardAttachments({
   provider,
   message,
@@ -1976,7 +1910,7 @@ export async function createEmailDraftForUser({
 
   await assertNoActiveDraftOnThread({ accountId: account.id, threadId: thread.id });
 
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
   const { quotedHtml, quotedText } = await buildReplyDraftQuote({ provider, message });
   const attachments =
     kind === 'forward' ? await resolveForwardAttachments({ provider, message }) : [];
@@ -2116,11 +2050,7 @@ function toMailAddressFromParticipant(participant: EmailParticipant): MailAddres
   return { name: participant.name ?? undefined, address: participant.email };
 }
 
-// `providerMessageId` is null when the attachment lives on the Gmail draft
-// itself rather than on a forwarded message (a draft written in Gmail
-// web/mobile, materialized by the worker's sync reconciliation): those go
-// through `getDraftAttachment` (keyed on the draft id) instead of
-// `getAttachment` (keyed on a message id).
+// Null providerMessageId means the attachment lives on the draft itself, not a forwarded message.
 function fetchDraftAttachmentContent({
   provider,
   providerDraftId,
@@ -2136,7 +2066,7 @@ function fetchDraftAttachmentContent({
 
   if (!providerDraftId) {
     return Promise.reject(
-      new Error('Draft attachment has no source message and the draft has not reached Gmail'),
+      new Error('Draft attachment has no source message and the draft has not reached the provider'),
     );
   }
 
@@ -2169,13 +2099,7 @@ async function resolveDraftAttachmentContent({
   };
 }
 
-// Re-fetches a draft's carried-over attachment bytes from Gmail at
-// write-back/send time; nothing is stored on our side
-// (docs/email/drafts-change-request.md, "Scope > 5" / "Scope > 7").
-// `contentId` is preserved so a forwarded body's `cid:` references keep
-// resolving; `inline` itself needs no separate carry-over, MailComposer
-// (gmail.provider.ts's buildOutgoingRaw) already renders an attachment
-// inline purely off `contentId` being set.
+// Nothing is stored on our side; bytes are re-fetched from the provider at write-back/send time.
 function resolveDraftAttachmentContents({
   provider,
   draft,
@@ -2246,9 +2170,7 @@ async function buildDraftSendMailInput({
   };
 }
 
-// A draft with no recipients and no body text never reaches Gmail, so an
-// abandoned compose click leaves nothing in the user's real mailbox
-// (docs/email/drafts-change-request.md, "Scope > 3").
+// An abandoned compose click must not leave anything in the user's real mailbox.
 function isDraftEmpty(draft: EmailDraft): boolean {
   return (
     draft.to.length === 0 &&
@@ -2258,11 +2180,8 @@ function isDraftEmpty(draft: EmailDraft): boolean {
   );
 }
 
-// Creates the Gmail draft on the first push, updates it on every later one.
-// Best-effort: a transient Gmail failure here must not fail the autosave
-// request that already succeeded locally, so it's logged and the local row
-// is returned unchanged - the next debounced write-back tick retries.
-async function pushDraftToGmail({
+// Best-effort: a transient provider failure is logged, not thrown, so the already-succeeded autosave doesn't fail.
+async function pushDraftToProvider({
   userId,
   account,
   draft,
@@ -2271,7 +2190,7 @@ async function pushDraftToGmail({
   account: EmailAccount;
   draft: EmailDraft;
 }): Promise<EmailDraft> {
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
   const sendInput = await buildDraftSendMailInput({ provider, account, draft });
 
   const { error, data: pushed } = await tryCatch(() =>
@@ -2281,7 +2200,7 @@ async function pushDraftToGmail({
   );
 
   if (error !== null || !pushed) {
-    logger.error(`Failed to push draft ${draft.id} to Gmail`, error);
+    logger.error(`Failed to push draft ${draft.id} to the mail provider`, error);
     return draft;
   }
 
@@ -2296,21 +2215,8 @@ async function pushDraftToGmail({
   return withProviderId ?? draft;
 }
 
-// Gmail write-back for the autosave PATCH (docs/email/drafts-change-request.md,
-// "Scope > 3", "Attachment bytes and write-back cost"). An attachment-free
-// draft writes back on every call - cheap, no bytes to re-upload. Once a
-// draft carries attachments, write-back only fires when this call actually
-// changed the attachment set: the client is expected to resend `attachments`
-// (even unchanged) when it wants to force a push, e.g. on panel close, never
-// on a body-only keystroke save.
-// `flush` is the client's explicit "push now regardless" signal (set on
-// panel close and before send), not inferred from which fields the PATCH
-// touched - docs/email/drafts-change-request.md, "Wire contract": an
-// attachment-free draft still writes back on every call (cheap, no bytes to
-// re-upload), a draft carrying attachments only writes back when `flush` is
-// set, since `updateDraft` replaces the whole MIME message and would
-// otherwise re-upload attachment bytes on every keystroke.
-async function pushDraftToGmailIfDue({
+// An attachment-free draft writes back on every call; once it carries attachments, only `flush` (explicit) triggers one.
+async function pushDraftToProviderIfDue({
   userId,
   account,
   draft,
@@ -2327,23 +2233,10 @@ async function pushDraftToGmailIfDue({
     return draft;
   }
 
-  return pushDraftToGmail({ userId, account, draft });
+  return pushDraftToProvider({ userId, account, draft });
 }
 
-/**
- * [PATCH] /email/draft/:draftId
- * The autosave endpoint: local write always happens, Gmail write-back
- * follows the rule in `pushDraftToGmailIfDue`
- * (docs/email/drafts-change-request.md, "Scope > 3"). `origin`, `kind`,
- * `threadId`, `replyToMessageId`, `agentId` are creation-only and rejected
- * at the validation layer (validation/email.schema.ts's `strictObject`).
- * `content` (HTML) and `text` (its plain-text MIME sibling) are independent
- * optional fields - the client sends both together on every autosave
- * (docs/email/html-content-change-request.md, "Scope > 3"), but each is only
- * overwritten when actually present in the request body. `flush` is
- * control-only: it decides whether this call pushes to Gmail and is never
- * persisted on the row.
- */
+// [PATCH] /email/draft/:draftId, the autosave endpoint. `flush` is control-only, never persisted on the row.
 export async function updateEmailDraftForUser({
   userId,
   draftId,
@@ -2393,13 +2286,11 @@ export async function updateEmailDraftForUser({
     throw new InternalServerErrorException('Failed to update draft');
   }
 
-  return pushDraftToGmailIfDue({ userId, account, draft: updated, flush: flush === true });
+  return pushDraftToProviderIfDue({ userId, account, draft: updated, flush: flush === true });
 }
 
-// Deletes the Gmail draft when the local row was already pushed there,
-// tolerating a 404 (already gone - sent or discarded elsewhere) as success
-// (docs/email/drafts-change-request.md, "Scope > 4").
-async function deleteGmailDraftTolerating404({
+// A 404 (already gone - sent or discarded elsewhere) counts as success.
+async function deleteProviderDraftTolerating404({
   userId,
   providerDraftId,
   draftId,
@@ -2408,11 +2299,11 @@ async function deleteGmailDraftTolerating404({
   providerDraftId: string;
   draftId: string;
 }): Promise<void> {
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
   const { error } = await tryCatch(() => provider.deleteDraft(providerDraftId));
 
-  if (error !== null && !(error instanceof GmailApiError && error.status === 404)) {
-    logger.error(`Failed to delete Gmail draft for local draft ${draftId}`, error);
+  if (error !== null && !isMailNotFoundError(error)) {
+    logger.error(`Failed to delete provider draft for local draft ${draftId}`, error);
     throw new InternalServerErrorException('Failed to discard draft');
   }
 }
@@ -2431,7 +2322,7 @@ export async function discardEmailDraftForUser({
   const draft = await requireOwnedDraft({ accountId: account.id, draftId });
 
   if (draft.providerDraftId) {
-    await deleteGmailDraftTolerating404({
+    await deleteProviderDraftTolerating404({
       userId,
       providerDraftId: draft.providerDraftId,
       draftId: draft.id,
@@ -2455,18 +2346,7 @@ export async function discardEmailDraftForUser({
   return updated;
 }
 
-/**
- * [POST] /email/draft/:draftId/send
- * Delegates to `sendEmailForUser`, threading from the draft's own
- * `threadId`/`replyToMessageId` rather than trusting the request for them,
- * and carrying the draft's `providerDraftId` (if pushed) so the send flushes
- * the request's final content into Gmail before sending it
- * (docs/email/drafts-change-request.md, "Scope > 4"). The caller still
- * supplies the actual recipients/subject/body: the web app renders the
- * draft's markdown into the composer for the user to review and edit before
- * sending. The draft's own forwarded-attachment carry-over (if any) is
- * merged in alongside whatever the request's `mediaIds`/`files` resolve to.
- */
+// [POST] /email/draft/:draftId/send. Threads from the draft's own threadId/replyToMessageId, not the request's.
 export async function sendEmailDraftForUser({
   userId,
   draftId,
@@ -2500,7 +2380,7 @@ export async function sendEmailDraftForUser({
     throw new BadRequestException(`Draft is already ${draft.status}`);
   }
 
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
   const extraAttachments = await resolveDraftAttachmentContents({ provider, draft });
 
   return sendEmailForUser({
@@ -2590,7 +2470,7 @@ export async function listEmailMessageAttachmentsForUser({
 }): Promise<MailAttachmentMeta[]> {
   const account = await loadEmailAccount({ userId });
   const message = await requireOwnedMessage({ accountId: account.id, messageId });
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   const { error, data: fullMessage } = await tryCatch(() =>
     provider.fetchMessage(message.providerMessageId, 'full'),
@@ -2610,17 +2490,7 @@ export interface EmailAttachmentDownload {
   data: Buffer;
 }
 
-/**
- * [GET] /email/message/:messageId/attachment/:partId
- *
- * Keyed on `partId` (the attachment's stable MIME part id), not Gmail's
- * `attachmentId`: that token isn't guaranteed to stay the same once the
- * message is modified (e.g. the read-state flip that happens when a thread
- * is opened), so a client holding one from an earlier `/attachments` list
- * call can't reliably reuse it later. `attachmentId` is instead re-resolved
- * fresh from the same live fetch used to look up `meta` below, right before
- * it's used.
- */
+// Keyed on `partId` (stable), not the provider's `attachmentId` (not guaranteed stable across message changes).
 export async function downloadEmailAttachmentForUser({
   userId,
   messageId,
@@ -2632,7 +2502,7 @@ export async function downloadEmailAttachmentForUser({
 }): Promise<EmailAttachmentDownload> {
   const account = await loadEmailAccount({ userId });
   const message = await requireOwnedMessage({ accountId: account.id, messageId });
-  const provider = await getGmailProviderForUser({ userId });
+  const provider = await getMailProviderForUser({ userId });
 
   const { error: fetchError, data: fullMessage } = await tryCatch(() =>
     provider.fetchMessage(message.providerMessageId, 'full'),

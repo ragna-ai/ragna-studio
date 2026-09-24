@@ -10,8 +10,8 @@ import EmailThreadView from '~/features/email/components/EmailThreadView.vue';
 import { useGetEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { useGetEmailCategories } from '~/features/email/composables/useEmailCategoryApi';
 import {
-  GMAIL_CONNECT_CALLBACK_PARAM,
-  GMAIL_RECONNECT_CALLBACK_PARAM,
+  MAIL_CONNECT_CALLBACK_PARAM,
+  MAIL_RECONNECT_CALLBACK_PARAM,
   useEmailConnectFlow,
 } from '~/features/email/composables/useEmailConnectFlow';
 import {
@@ -22,11 +22,12 @@ import {
 import { useSearchEmail } from '~/features/email/composables/useEmailSearchApi';
 import { useGetEmailThreads } from '~/features/email/composables/useEmailThreadApi';
 import { firstQueryValue } from '~/features/email/lib/route-query';
-import type {
-  EmailDraft,
-  EmailFolder,
-  EmailThreadListFilters,
-  EmailThreadSummary,
+import {
+  isEmailProviderKind,
+  type EmailDraft,
+  type EmailFolder,
+  type EmailThreadListFilters,
+  type EmailThreadSummary,
 } from '~/features/email/types';
 
 // Feature container for /mail (Vue best-practices: route view stays thin,
@@ -50,20 +51,22 @@ const { finishConnect, finishReconnect } = useEmailConnectFlow();
 const { mutateAsync: createDraft, isPending: isCreatingDraft } =
   useCreateEmailDraft();
 
-// Finish the connect/reconnect flow on return from Google
+// Finish the connect/reconnect flow on return from the OAuth provider
 // (useEmailConnectFlow.ts). Both finish*() calls already toast their own
 // error; mutateAsync still rejects afterwards, so this catches and swallows
 // it instead of leaving an unhandled rejection.
 onMounted(async () => {
   try {
-    if (route.query[GMAIL_CONNECT_CALLBACK_PARAM] === '1') {
-      const { [GMAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+    const connectProvider = firstQueryValue(route.query[MAIL_CONNECT_CALLBACK_PARAM]);
+    const reconnectProvider = firstQueryValue(route.query[MAIL_RECONNECT_CALLBACK_PARAM]);
+    if (connectProvider && isEmailProviderKind(connectProvider)) {
+      const { [MAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
       await router.replace({ query: rest });
-      await finishConnect();
-    } else if (route.query[GMAIL_RECONNECT_CALLBACK_PARAM] === '1') {
-      const { [GMAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+      await finishConnect(connectProvider);
+    } else if (reconnectProvider && isEmailProviderKind(reconnectProvider)) {
+      const { [MAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
       await router.replace({ query: rest });
-      await finishReconnect();
+      await finishReconnect(reconnectProvider);
     }
   } catch {
     // Already toasted by useEmailConnectFlow.ts's own mutation onError.
@@ -178,12 +181,11 @@ const listThreads = computed<EmailThreadSummary[]>(() => {
   return threadsQuery.data.value?.pages.flatMap((page) => page.threads) ?? [];
 });
 
-// Read-only Gmail label filters, derived from whatever labels appear on the
-// currently loaded threads (docs/email/prd.md: "read-only Gmail label
-// filters (from thread data)" - there is no label-listing endpoint). Common
+// Read-only label filters, derived from whatever labels appear on the
+// currently loaded threads (there is no label-listing endpoint). Gmail's
 // system labels are excluded since folders/starred/unread already cover
-// them and a raw "INBOX"/"UNREAD" chip would just duplicate the folder list.
-const SYSTEM_LABEL_DENYLIST = new Set([
+// them; Outlook's labelIds are category display names, so all of them show.
+const GMAIL_SYSTEM_LABEL_DENYLIST = new Set([
   'INBOX',
   'SENT',
   'TRASH',
@@ -196,11 +198,13 @@ const SYSTEM_LABEL_DENYLIST = new Set([
 ]);
 const availableLabels = computed(() => {
   const pages = threadsQuery.data.value?.pages ?? [];
+  const isGmail = account.value?.provider === 'gmail';
   const labels = new Set<string>();
   for (const page of pages) {
     for (const thread of page.threads) {
       for (const labelId of thread.labelIds) {
-        if (!SYSTEM_LABEL_DENYLIST.has(labelId)) labels.add(labelId);
+        if (isGmail && GMAIL_SYSTEM_LABEL_DENYLIST.has(labelId)) continue;
+        labels.add(labelId);
       }
     }
   }

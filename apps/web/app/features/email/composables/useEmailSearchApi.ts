@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import type { EmailSearchResponse } from '~/features/email/types';
 
-/** [GET] /email/search?q=... - proxies Gmail's `q=` search operators. */
+/** [GET] /email/search?q=... - proxies the connected provider's native search syntax (Gmail `q=` / Outlook `$search`). */
 export function useSearchEmail(query: MaybeRefOrGetter<string>) {
   const { $api } = useNuxtApp();
   return useQuery<EmailSearchResponse>({

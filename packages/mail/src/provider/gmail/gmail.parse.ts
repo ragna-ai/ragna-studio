@@ -6,12 +6,41 @@
 // provider does not sanitize HTML or fetch attachment bytes here; callers
 // sanitize, and `getAttachment` fetches bytes on demand.
 
-import type { MailAttachmentMeta, MailBody, MailDraft, MailDraftSummary, MailMessage, MailMessageMetadata } from '../mail-provider';
+import type {
+  MailAttachmentMeta,
+  MailBody,
+  MailDraft,
+  MailDraftSummary,
+  MailFolder,
+  MailMessage,
+  MailMessageMetadata,
+} from '../mail-provider';
 import { parseAddressList } from './gmail.address';
 import type { GmailDraftResource, GmailHeader, GmailMessagePart, GmailMessageResource } from './gmail.types';
 
 const LABEL_UNREAD = 'UNREAD';
 const LABEL_STARRED = 'STARRED';
+const LABEL_DRAFT = 'DRAFT';
+const LABEL_TRASH = 'TRASH';
+const LABEL_SPAM = 'SPAM';
+const LABEL_INBOX = 'INBOX';
+const LABEL_SENT = 'SENT';
+const LABEL_CHAT = 'CHAT';
+
+/** First-match-wins mapping from Gmail's label set to the provider-neutral folder. */
+export function toMailFolder(labelIds: string[]): MailFolder {
+  if (labelIds.includes(LABEL_DRAFT)) return 'draft';
+  if (labelIds.includes(LABEL_TRASH)) return 'trash';
+  if (labelIds.includes(LABEL_SPAM)) return 'spam';
+  if (labelIds.includes(LABEL_INBOX)) return 'inbox';
+  if (labelIds.includes(LABEL_SENT)) return 'sent';
+  return 'archive';
+}
+
+/** Google Chat messages surface in the Gmail API but aren't real mail. */
+export function hasChatLabel(labelIds: string[]): boolean {
+  return labelIds.includes(LABEL_CHAT);
+}
 
 export function getHeaderValue(headers: GmailHeader[] | undefined, name: string): string | null {
   const header = headers?.find((candidate) => candidate.name.toLowerCase() === name.toLowerCase());
@@ -34,6 +63,7 @@ export function toMailMessageMetadata(raw: GmailMessageResource): MailMessageMet
     snippet: raw.snippet ?? '',
     date: new Date(Number(raw.internalDate)),
     labelIds,
+    folder: toMailFolder(labelIds),
     unread: labelIds.includes(LABEL_UNREAD),
     starred: labelIds.includes(LABEL_STARRED),
   };

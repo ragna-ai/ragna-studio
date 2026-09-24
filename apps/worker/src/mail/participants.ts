@@ -18,7 +18,7 @@ function toEmailParticipant(address: MailAddress): EmailParticipant {
   return { name: address.name ?? null, email: address.address };
 }
 
-// Gmail always sets a From header in practice; this only satisfies the
+// Providers always set a From header in practice; this only satisfies the
 // provider type's null case at the type level.
 const UNKNOWN_SENDER: EmailParticipant = { name: null, email: 'unknown' };
 

@@ -10,6 +10,13 @@ const hexColor = z
 
 // --- Account ----------------------------------------------------------
 
+export const validConnectEmailAccountBody = myzValidator(
+  'json',
+  z.object({
+    provider: z.enum(['gmail', 'microsoft']),
+  }),
+);
+
 export const validUpdateEmailAccountSettingsBody = myzValidator(
   'json',
   z.object({
@@ -99,7 +106,7 @@ export const validEmailThreadListQuery = myzValidator(
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(25),
     categoryId: primaryId.optional(),
-    // Gmail label id, read-only display filter (docs/email/prd.md).
+    // Read-only label chip filter: Gmail label id or Outlook category name.
     labelId: z.string().min(1).optional(),
     folder: emailFolderEnum.optional(),
     // stringbool(), not coerce.boolean(): query params arrive as strings,

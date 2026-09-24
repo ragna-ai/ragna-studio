@@ -56,11 +56,12 @@ async function listThreads(cookieHeader: string, query: string) {
 }
 
 describe('GET /email/thread (folders)', () => {
-  test('inbox: has INBOX, excludes trash/spam', async () => {
+  test('inbox: folder inbox, excludes trash/spam/draft', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const inbox = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['SPAM', 'INBOX'] });
+    const inbox = await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'trash' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'spam' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'draft' });
 
     const { body } = await listThreads(cookieHeader, 'folder=inbox');
 
@@ -72,41 +73,53 @@ describe('GET /email/thread (folders)', () => {
     const starred = await seedEmailThreadWithMessage({
       accountId,
       isStarred: true,
-      labelIds: ['INBOX'],
+      folder: 'inbox',
     });
-    await seedEmailThreadWithMessage({ accountId, isStarred: false, labelIds: ['INBOX'] });
+    await seedEmailThreadWithMessage({ accountId, isStarred: false, folder: 'inbox' });
 
     const { body } = await listThreads(cookieHeader, 'folder=starred');
 
     expect(body.threads.map((t) => t.id)).toEqual([starred.thread.id]);
   });
 
-  test('sent: has SENT label', async () => {
+  test('sent: folder sent', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const sent = await seedEmailThreadWithMessage({ accountId, labelIds: ['SENT'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
+    const sent = await seedEmailThreadWithMessage({ accountId, folder: 'sent' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
 
     const { body } = await listThreads(cookieHeader, 'folder=sent');
 
     expect(body.threads.map((t) => t.id)).toEqual([sent.thread.id]);
   });
 
-  test('trash: has TRASH label', async () => {
+  test('trash: folder trash', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const trashed = await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
+    const trashed = await seedEmailThreadWithMessage({ accountId, folder: 'trash' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
 
     const { body } = await listThreads(cookieHeader, 'folder=trashed');
 
     expect(body.threads.map((t) => t.id)).toEqual([trashed.thread.id]);
   });
 
-  test('archive: exclusion-based, not a label of its own', async () => {
+  test('archived: folder archive, excludes inbox/trash/spam/draft', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const archived = await seedEmailThreadWithMessage({ accountId, labelIds: ['IMPORTANT'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['SPAM'] });
+    const archived = await seedEmailThreadWithMessage({ accountId, folder: 'archive' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'trash' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'spam' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'draft' });
+
+    const { body } = await listThreads(cookieHeader, 'folder=archived');
+
+    expect(body.threads.map((t) => t.id)).toEqual([archived.thread.id]);
+  });
+
+  // Behavior change: the old label-based "archived = lacks INBOX" derivation also matched sent mail.
+  test('archived no longer includes sent mail', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const archived = await seedEmailThreadWithMessage({ accountId, folder: 'archive' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'sent' });
 
     const { body } = await listThreads(cookieHeader, 'folder=archived');
 
@@ -150,7 +163,7 @@ describe('GET /email/thread (filters)', () => {
     await seedEmailThreadWithMessage({
       accountId,
       categoryId: category.id,
-      labelIds: ['TRASH'],
+      folder: 'trash',
     });
 
     const { body } = await listThreads(cookieHeader, `categoryId=${category.id}`);
@@ -171,15 +184,14 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([matching.thread.id]);
   });
 
-  // docs/email/bugs.md #1: same leak, but through the read-only Gmail label
-  // filter instead of a category.
+  // Same leak as the categoryId case above, through the label chip filter instead.
   test('labelId excludes a trashed thread even though it still carries the label', async () => {
     const { cookieHeader, accountId } = await connectAccount();
     const matching = await seedEmailThreadWithMessage({
       accountId,
       labelIds: ['INBOX', 'IMPORTANT'],
     });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH', 'IMPORTANT'] });
+    await seedEmailThreadWithMessage({ accountId, labelIds: ['IMPORTANT'], folder: 'trash' });
 
     const { body } = await listThreads(cookieHeader, 'labelId=IMPORTANT');
 
@@ -190,9 +202,9 @@ describe('GET /email/thread (filters)', () => {
   // "list everything" view must not surface trash either.
   test('no filter at all still excludes trash/spam', async () => {
     const { cookieHeader, accountId } = await connectAccount();
-    const inbox = await seedEmailThreadWithMessage({ accountId, labelIds: ['INBOX'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['TRASH'] });
-    await seedEmailThreadWithMessage({ accountId, labelIds: ['SPAM'] });
+    const inbox = await seedEmailThreadWithMessage({ accountId, folder: 'inbox' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'trash' });
+    await seedEmailThreadWithMessage({ accountId, folder: 'spam' });
 
     const { body } = await listThreads(cookieHeader, '');
 
@@ -214,7 +226,7 @@ describe('GET /email/thread (filters)', () => {
     const trashed = await seedEmailThreadWithMessage({
       accountId,
       categoryId: category.id,
-      labelIds: ['TRASH'],
+      folder: 'trash',
     });
 
     const { body } = await listThreads(cookieHeader, `folder=trashed&categoryId=${category.id}`);

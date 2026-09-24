@@ -6,19 +6,11 @@ import { EMAIL_MAX_TOTAL_ATTACHMENT_BYTES } from '~/features/email/lib/email-att
 import type { EmailDraftAttachment, MediaListItem } from '~/features/email/types';
 
 // Props
-// Two models: `files` (fresh uploads) and `media` (existing media-library
-// picks). Both are sent inline as multipart `files`/`mediaId` fields on
-// submit (apps/api/src/controllers/email.controller.ts) - no eager upload
-// step, unlike the chat feature's attachments, which upload ahead of send
-// because chat messages persist independently of the compose box.
-//
-// `draftAttachments` is a third, read-mostly set: a forward draft's carried
-// Gmail attachments (docs/email/drafts-change-request.md, section 5). It's a
-// plain prop, not a model - content is never downloaded client-side, so
-// there's nothing here to re-upload on send, only a set the user can shrink.
-// Removing one is reported up via `removeDraftAttachment` so
-// EmailComposer.vue can fold it into the same autosave PATCH as everything
-// else, instead of this component owning its own copy of the draft.
+// `files`/`media` are sent inline as multipart fields on submit; no eager
+// upload step. `draftAttachments` is a third, read-mostly set: a forward
+// draft's carried provider attachments - not a model, content is never
+// downloaded client-side, only a set the user can shrink via
+// `removeDraftAttachment`.
 const files = defineModel<File[]>('files', { default: () => [] });
 const media = defineModel<MediaListItem[]>('media', { default: () => [] });
 const props = defineProps<{ draftAttachments: EmailDraftAttachment[] }>();

@@ -18,10 +18,10 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { emailBodyToText } from '@repo/mail/content';
-import { isAuthGmailError, type MailProvider } from '@repo/mail/provider';
+import { isMailAuthError, type MailProvider } from '@repo/mail/provider';
 import type { EmailClassifyJobData } from '@repo/queue';
 import { EMAIL_DRAFT_JOB, EmailDraftJobDto, queue } from '@repo/queue';
-import { getGmailProviderForAccount } from './gmail-provider';
+import { getMailProviderForAccount } from './mail-provider';
 import { ensureMessageBody, type PersistedMessageBody } from './message-body';
 
 const CLASSIFY_MODEL = 'claude-haiku-4-5';
@@ -48,15 +48,12 @@ export async function classifyEmailMessage({
     return;
   }
 
-  const provider = getGmailProviderForAccount(account);
+  const provider = getMailProviderForAccount(account);
   const body = await ensureMessageBodyBestEffort({ provider, message, accountId });
   if (body === null) {
-    // Gmail auth failed (isAuthGmailError below): the account is now
-    // flagged reauth_required, and there is no body to classify from. Same
-    // best-effort spirit as classifyBestEffort's own catch - a broken
-    // credential leaves this one message uncategorized rather than failing
-    // the job, since the same account's sync job already surfaces the
-    // problem to the user.
+    // Mail auth failed: the account is now flagged reauth_required, and
+    // there is no body to classify from. Same best-effort spirit as
+    // classifyBestEffort's own catch.
     return;
   }
   const categories = await listEmailCategoriesByAccountId({ accountId });
@@ -85,8 +82,8 @@ export async function classifyEmailMessage({
   );
 }
 
-// null return means "nothing to classify from" - either a genuine Gmail
-// auth failure (account flagged reauth_required, caller returns early) or,
+// null return means "nothing to classify from" - either a genuine mail auth
+// failure (account flagged reauth_required, caller returns early) or,
 // implicitly, never for any other error: anything else still throws and
 // fails the job like before, since only a dead credential is safe to treat
 // as "not this message's problem."
@@ -102,11 +99,11 @@ async function ensureMessageBodyBestEffort({
   try {
     return await ensureMessageBody({ provider, message });
   } catch (error) {
-    if (!isAuthGmailError(error)) {
+    if (!isMailAuthError(error)) {
       throw error;
     }
     logger.warn(
-      `Gmail auth failed while classifying message ${message.id} for account ${accountId}, marking reauth_required`,
+      `Mail auth failed while classifying message ${message.id} for account ${accountId}, marking reauth_required`,
       error,
     );
     await updateEmailAccountSyncState({ id: accountId, syncState: 'reauth_required' });

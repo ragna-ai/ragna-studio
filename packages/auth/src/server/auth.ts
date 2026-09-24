@@ -57,6 +57,8 @@ export const auth = betterAuth({
       clientId: config.microsoftClientId,
       clientSecret: config.getSecret('MICROSOFT_CLIENT_SECRET'),
       tenantId: config.microsoftTenantId,
+      // Entra sends no email_verified; xms_edov (optional ID-token claim in the app registration) is Microsoft's nOAuth-safe signal.
+      mapProfileToUser: (profile) => ({ emailVerified: profile.xms_edov === true }),
     },
     linkedin: {
       clientId: config.linkedInClientId,
