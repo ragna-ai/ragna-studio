@@ -1,4 +1,4 @@
-import { useWebSocket } from '@vueuse/core';
+import { useIntervalFn, useWebSocket } from '@vueuse/core';
 
 export type WebSocketFrameType =
   | 'subscribe'
@@ -97,7 +97,7 @@ const {
   heartbeat: {
     message: 'ping',
     responseMessage: 'pong',
-    interval: HEARTBEAT_INTERVAL_MS,
+    scheduler: (cb) => useIntervalFn(cb, HEARTBEAT_INTERVAL_MS, { immediate: false }),
     pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
   },
   autoReconnect: {
