@@ -1,31 +1,25 @@
-import type { Dataset, DatasetColumn } from '@repo/database';
+import type { Dataset, DatasetColumn, DatasetOrigin } from '@repo/database';
 import { createDataset } from '@repo/database';
 
-/**
- * Creates a dataset on behalf of an agent tool call (`datasetCreate`).
- * Always stamps `origin: 'agent'` (the grid badge) and the tool context's
- * `workspaceId`, so an agent's dataset lands in the same workspace as the
- * chat/workflow that created it (docs/datasets.md decision 11).
- */
+export interface CreateDatasetForAgentInput {
+  userId: string;
+  workspaceId: string;
+  name: string;
+  description?: string;
+  columns: DatasetColumn[];
+  origin: DatasetOrigin;
+}
+
+// Stamps the calling tool's origin (agent chat vs. MCP) so a created
+// dataset lands in the same workspace as its caller (docs/datasets.md
+// decision 11) with the correct grid badge (PRD docs/mcp/prd.md P6).
 export async function createDatasetForAgent({
   userId,
   workspaceId,
   name,
   description,
   columns,
-}: {
-  userId: string;
-  workspaceId: string;
-  name: string;
-  description?: string;
-  columns: DatasetColumn[];
-}): Promise<Dataset> {
-  return createDataset({
-    userId,
-    workspaceId,
-    name,
-    description,
-    columns,
-    origin: 'agent',
-  });
+  origin,
+}: CreateDatasetForAgentInput): Promise<Dataset> {
+  return createDataset({ userId, workspaceId, name, description, columns, origin });
 }

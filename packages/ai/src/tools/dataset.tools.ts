@@ -1,4 +1,10 @@
-import type { Dataset, DatasetColumn, DatasetRow } from '@repo/database';
+import type {
+  Dataset,
+  DatasetColumn,
+  DatasetColumnType,
+  DatasetRow,
+  DatasetRowWriter,
+} from '@repo/database';
 import {
   createDatasetRow,
   findDatasetsForAgent,
@@ -22,17 +28,18 @@ import type {
 import { tool } from 'ai';
 import * as z from 'zod';
 import { createDatasetForAgent } from '../services/dataset.service';
+import type { ToolDefinition } from './tool-definition';
 
-// Seven tools, one family (docs/datasets.md decision 3/4,
-// docs/datasets/export-and-row-reorder.md decision 6): the agent tool picker
-// shows a single "Datasets" toggle that expands to all of these at
-// tool-build time (see agent.tools.ts).
+// Seven tools, one family (docs/datasets.md decision 3/4): the agent tool
+// picker shows a single "Datasets" toggle that expands to all of these at
+// tool-build time (see agent.tools.ts). Each is defined once, transport-
+// neutral, here; getDatasetXTool below adapts it to an AI SDK tool for chat
+// and workflows, and the MCP endpoint (apps/api) adapts the same definition
+// for Claude Desktop (docs/mcp/prd.md section 4).
 
 // Every schema here is a flat top-level z.object: Anthropic's tool
-// `input_schema` requires a top-level `type: "object"`, and a top-level
-// union (e.g. z.discriminatedUnion) compiles to `anyOf` with no `type`,
-// which the API rejects. Unions nested inside a property (e.g. a cell
-// value) are fine.
+// input_schema needs a top-level "type": "object", which a top-level union
+// does not produce.
 const rowValueSchema = z.union([z.string(), z.number(), z.null()]);
 const rowDataSchema = z
   .record(z.string(), rowValueSchema)
@@ -52,8 +59,7 @@ const columnInputSchema = z.object({
 });
 
 // Workspace hard filter (docs/datasets.md decision 11): the whole family
-// only sees/touches the tool context's workspace. userId remains the
-// underlying security boundary.
+// only sees/touches the tool context's workspace.
 function isDatasetInScope(datasetRecord: Dataset, workspaceId: string): boolean {
   return datasetRecord.workspaceId === workspaceId;
 }
@@ -78,11 +84,33 @@ async function loadDatasetInScope({
   return { dataset: datasetRecord };
 }
 
-function toColumnOutput(column: DatasetColumn) {
+export interface DatasetColumnOutput {
+  id: string;
+  name: string;
+  type: DatasetColumnType;
+  options?: string[];
+}
+
+export interface DatasetOutput {
+  id: string;
+  name: string;
+  description: string | null;
+  columns: DatasetColumnOutput[];
+}
+
+export interface DatasetRowOutput {
+  id: string;
+  data: DatasetRow['data'];
+  writtenBy: DatasetRowWriter;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function toColumnOutput(column: DatasetColumn): DatasetColumnOutput {
   return { id: column.id, name: column.name, type: column.type, options: column.options };
 }
 
-function toDatasetOutput(datasetRecord: Dataset) {
+function toDatasetOutput(datasetRecord: Dataset): DatasetOutput {
   return {
     id: datasetRecord.id,
     name: datasetRecord.name,
@@ -92,11 +120,13 @@ function toDatasetOutput(datasetRecord: Dataset) {
 }
 
 // Row ids and timestamps are always included so the model can reason about
-// recency ("skip rows updated in the last hour") without a separate call.
-function toRowOutput(row: DatasetRow, projectedColumnIds?: string[]) {
+// recency without a separate call; writtenBy lets an agent see rows that
+// came from outside it (docs/mcp/prd.md P6).
+function toRowOutput(row: DatasetRow, projectedColumnIds?: string[]): DatasetRowOutput {
   return {
     id: row.id,
     data: projectedColumnIds ? projectRowData(row.data, projectedColumnIds) : row.data,
+    writtenBy: row.writtenBy,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -115,15 +145,9 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-// When a model appends or moves several rows in one turn (e.g. a multi-step
-// plan, or a batch of reprioritizations), the AI SDK runs those tool calls
-// concurrently, so their DB writes can land out of the order the model
-// intended. The dataset-row lock inside `createDatasetRow`/`moveDatasetRow`
-// keeps sort keys themselves collision-free, but only if calls reach the
-// database in the right order in the first place. This in-process FIFO
-// queue provides that: each call's turn starts only after the previous one
-// (for the same dataset) has finished, matching call/emission order. Shared
-// between `datasetAppendRow` and `datasetMoveRow`
+// FIFO queue per dataset so concurrent appends/moves (e.g. a multi-step plan
+// in one turn) reach the database in call order; the row lock inside
+// createDatasetRow/moveDatasetRow then keeps sort keys collision-free
 // (docs/datasets/export-and-row-reorder.md decision 6).
 const datasetRowLocks = new Map<string, Promise<unknown>>();
 
@@ -135,9 +159,7 @@ function withDatasetRowLock<T>(datasetId: string, fn: () => Promise<T>): Promise
     () => undefined,
   );
   datasetRowLocks.set(datasetId, tail);
-  // Drop the entry once the queue drains, so the map doesn't grow with
-  // every dataset ever appended to. Only if this tail is still current:
-  // a call chained meanwhile has replaced it and owns the entry now.
+  // Drop the entry once drained, unless a later call already replaced it.
   tail.then(() => {
     if (datasetRowLocks.get(datasetId) === tail) {
       datasetRowLocks.delete(datasetId);
@@ -158,7 +180,38 @@ const datasetCreateInputSchema = z.object({
 });
 
 type DatasetCreateInput = z.infer<typeof datasetCreateInputSchema>;
-type DatasetCreateOutput = { dataset: ReturnType<typeof toDatasetOutput> } | { error: string };
+type DatasetCreateOutput = { dataset: DatasetOutput } | { error: string };
+
+export const datasetCreateDefinition: ToolDefinition<
+  typeof datasetCreateInputSchema,
+  DatasetCreateOutput
+> = {
+  name: 'datasetCreate',
+  description:
+    'Create a new dataset: a structured table with typed columns (text, number, date, select) that both you and the user can read and edit. Use it to keep durable, structured state, e.g. a task queue or a plan.',
+  inputSchema: datasetCreateInputSchema,
+  access: 'write',
+  async execute(input, ctx) {
+    const { error, data: createdDataset } = await tryCatch(
+      () =>
+        createDatasetForAgent({
+          userId: ctx.userId,
+          workspaceId: ctx.workspaceId,
+          name: input.name,
+          description: input.description,
+          columns: input.columns,
+          origin: ctx.origin,
+        }),
+      { retryOnFailure: false },
+    );
+
+    if (error !== null || !createdDataset) {
+      return { error: toErrorMessage(error, 'Failed to create dataset.') };
+    }
+
+    return { dataset: toDatasetOutput(createdDataset) };
+  },
+};
 
 export const getDatasetCreateTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -166,29 +219,11 @@ export const getDatasetCreateTool = (
   workspaceId: string,
 ): Tool<DatasetCreateInput, DatasetCreateOutput> =>
   tool({
-    description:
-      'Create a new dataset: a structured table with typed columns (text, number, date, select) that both you and the user can read and edit. Use it to keep durable, structured state, e.g. a task queue or a self-authored plan. Datasets you create are marked as agent-created in the grid.',
-    inputSchema: datasetCreateInputSchema,
+    description: datasetCreateDefinition.description,
+    inputSchema: datasetCreateDefinition.inputSchema,
     execute: async (input) => {
       writer.write({ type: 'data-dataset', data: { action: 'create' }, transient: true });
-
-      const { error, data: createdDataset } = await tryCatch(
-        () =>
-          createDatasetForAgent({
-            userId,
-            workspaceId,
-            name: input.name,
-            description: input.description,
-            columns: input.columns,
-          }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !createdDataset) {
-        return { error: toErrorMessage(error, 'Failed to create dataset.') };
-      }
-
-      return { dataset: toDatasetOutput(createdDataset) };
+      return datasetCreateDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -204,9 +239,54 @@ const datasetFindInputSchema = z.object({
 });
 
 type DatasetFindInput = z.infer<typeof datasetFindInputSchema>;
-type DatasetFindOutput =
-  | { datasets: ReturnType<typeof toDatasetOutput>[]; note?: string }
-  | { error: string };
+type DatasetFindOutput = { datasets: DatasetOutput[]; note?: string } | { error: string };
+
+export const datasetFindDefinition: ToolDefinition<
+  typeof datasetFindInputSchema,
+  DatasetFindOutput
+> = {
+  name: 'datasetFind',
+  description:
+    'Find datasets you or the user have created, returning each one\'s id and column schema so you can then call datasetListRows/datasetAppendRow/datasetUpdateRow. If a default dataset is already pinned for you, its id and schema are in your system prompt and you usually don\'t need this tool.',
+  inputSchema: datasetFindInputSchema,
+  access: 'read',
+  annotations: { readOnlyHint: true },
+  async execute(input, ctx) {
+    const { error, data: datasets } = await tryCatch(
+      () =>
+        findDatasetsForAgent({
+          userId: ctx.userId,
+          workspaceId: ctx.workspaceId,
+          query: input.query,
+        }),
+      { retryOnFailure: false },
+    );
+
+    if (error !== null || !datasets) {
+      return { error: toErrorMessage(error, 'Failed to search datasets.') };
+    }
+
+    if (datasets.length > 0 || !input.query) {
+      return { datasets: datasets.map(toDatasetOutput) };
+    }
+
+    // A missed query (typo, wrong wording) would otherwise cost a second,
+    // broader call; dataset counts are small, so fall back to the full list.
+    const { error: fallbackError, data: allDatasets } = await tryCatch(
+      () => findDatasetsForAgent({ userId: ctx.userId, workspaceId: ctx.workspaceId }),
+      { retryOnFailure: false },
+    );
+
+    if (fallbackError !== null || !allDatasets) {
+      return { error: toErrorMessage(fallbackError, 'Failed to search datasets.') };
+    }
+
+    return {
+      datasets: allDatasets.map(toDatasetOutput),
+      note: `No dataset name or description matched "${input.query}"; showing all datasets instead.`,
+    };
+  },
+};
 
 export const getDatasetFindTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -214,41 +294,11 @@ export const getDatasetFindTool = (
   workspaceId: string,
 ): Tool<DatasetFindInput, DatasetFindOutput> =>
   tool({
-    description:
-      'Find datasets you or the user have created, returning each one\'s id and column schema so you can then call datasetListRows/datasetAppendRow/datasetUpdateRow. If a default dataset is already pinned for you, its id and schema are in your system prompt and you usually don\'t need this tool.',
-    inputSchema: datasetFindInputSchema,
+    description: datasetFindDefinition.description,
+    inputSchema: datasetFindDefinition.inputSchema,
     execute: async (input) => {
       writer.write({ type: 'data-dataset', data: { action: 'find' }, transient: true });
-
-      const { error, data: datasets } = await tryCatch(
-        () => findDatasetsForAgent({ userId, workspaceId, query: input.query }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !datasets) {
-        return { error: toErrorMessage(error, 'Failed to search datasets.') };
-      }
-
-      if (datasets.length > 0 || !input.query) {
-        return { datasets: datasets.map(toDatasetOutput) };
-      }
-
-      // A missed query (typo, wrong wording) would otherwise cost the model a
-      // second, broader call. Dataset counts are small, so answer with the
-      // full in-scope list right away and say why.
-      const { error: fallbackError, data: allDatasets } = await tryCatch(
-        () => findDatasetsForAgent({ userId, workspaceId }),
-        { retryOnFailure: false },
-      );
-
-      if (fallbackError !== null || !allDatasets) {
-        return { error: toErrorMessage(fallbackError, 'Failed to search datasets.') };
-      }
-
-      return {
-        datasets: allDatasets.map(toDatasetOutput),
-        note: `No dataset name or description matched "${input.query}"; showing all datasets instead.`,
-      };
+      return datasetFindDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -277,7 +327,56 @@ const datasetListRowsInputSchema = z.object({
 });
 
 type DatasetListRowsInput = z.infer<typeof datasetListRowsInputSchema>;
-type DatasetListRowsOutput = { rows: ReturnType<typeof toRowOutput>[] } | { error: string };
+type DatasetListRowsOutput = { rows: DatasetRowOutput[] } | { error: string };
+
+export const datasetListRowsDefinition: ToolDefinition<
+  typeof datasetListRowsInputSchema,
+  DatasetListRowsOutput
+> = {
+  name: 'datasetListRows',
+  description:
+    'List the (non-deleted) rows of a dataset, in dataset order (creation order unless rearranged), optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
+  inputSchema: datasetListRowsInputSchema,
+  access: 'read',
+  annotations: { readOnlyHint: true },
+  async execute(input, ctx) {
+    const scoped = await loadDatasetInScope({
+      datasetId: input.datasetId,
+      userId: ctx.userId,
+      workspaceId: ctx.workspaceId,
+    });
+    if ('error' in scoped) {
+      return scoped;
+    }
+
+    // Same trust boundary as writes: unknown column ids are a visible tool
+    // error, not silently empty fields.
+    if (input.columns) {
+      const unknownColumnIds = findUnknownColumnIds(scoped.dataset.columns, input.columns);
+      if (unknownColumnIds.length > 0) {
+        return { error: `Unknown column ids: ${unknownColumnIds.join(', ')}.` };
+      }
+    }
+
+    // Default to the cap, not "unlimited", when the caller omits `limit`:
+    // this tool's response goes straight into the model's context window.
+    const { error, data: rows } = await tryCatch(
+      () =>
+        getDatasetRows({
+          datasetId: input.datasetId,
+          filter: input.filter,
+          limit: input.limit ?? MAX_LIST_ROWS_LIMIT,
+        }),
+      { retryOnFailure: false },
+    );
+
+    if (error !== null || !rows) {
+      return { error: toErrorMessage(error, 'Failed to list dataset rows.') };
+    }
+
+    return { rows: rows.map((row) => toRowOutput(row, input.columns)) };
+  },
+};
 
 export const getDatasetListRowsTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -285,48 +384,15 @@ export const getDatasetListRowsTool = (
   workspaceId: string,
 ): Tool<DatasetListRowsInput, DatasetListRowsOutput> =>
   tool({
-    description:
-      'List the (non-deleted) rows of a dataset, in dataset order (creation order unless rearranged), optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
-    inputSchema: datasetListRowsInputSchema,
+    description: datasetListRowsDefinition.description,
+    inputSchema: datasetListRowsDefinition.inputSchema,
     execute: async (input) => {
       writer.write({
         type: 'data-dataset',
         data: { action: 'listRows', datasetId: input.datasetId },
         transient: true,
       });
-
-      const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-      if ('error' in scoped) {
-        return scoped;
-      }
-
-      // Same trust boundary as writes: unknown column ids are a visible tool
-      // error, not silently empty fields.
-      if (input.columns) {
-        const unknownColumnIds = findUnknownColumnIds(scoped.dataset.columns, input.columns);
-        if (unknownColumnIds.length > 0) {
-          return { error: `Unknown column ids: ${unknownColumnIds.join(', ')}.` };
-        }
-      }
-
-      // Default to the cap, not "unlimited", when the model omits `limit`:
-      // this tool's response goes straight into the model's context window,
-      // unlike the grid's own unlimited read.
-      const { error, data: rows } = await tryCatch(
-        () =>
-          getDatasetRows({
-            datasetId: input.datasetId,
-            filter: input.filter,
-            limit: input.limit ?? MAX_LIST_ROWS_LIMIT,
-          }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !rows) {
-        return { error: toErrorMessage(error, 'Failed to list dataset rows.') };
-      }
-
-      return { rows: rows.map((row) => toRowOutput(row, input.columns)) };
+      return datasetListRowsDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -338,7 +404,44 @@ const datasetGetRowInputSchema = z.object({
 });
 
 type DatasetGetRowInput = z.infer<typeof datasetGetRowInputSchema>;
-type DatasetGetRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+type DatasetGetRowOutput = { row: DatasetRowOutput } | { error: string };
+
+export const datasetGetRowDefinition: ToolDefinition<
+  typeof datasetGetRowInputSchema,
+  DatasetGetRowOutput
+> = {
+  name: 'datasetGetRow',
+  description:
+    'Read a single dataset row in full by its id. Use this after a column-projected datasetListRows scan to load the complete data of the row you picked.',
+  inputSchema: datasetGetRowInputSchema,
+  access: 'read',
+  annotations: { readOnlyHint: true },
+  async execute(input, ctx) {
+    const scoped = await loadDatasetInScope({
+      datasetId: input.datasetId,
+      userId: ctx.userId,
+      workspaceId: ctx.workspaceId,
+    });
+    if ('error' in scoped) {
+      return scoped;
+    }
+
+    const { error, data: row } = await tryCatch(
+      () => getDatasetRowById({ datasetId: input.datasetId, rowId: input.rowId }),
+      { retryOnFailure: false },
+    );
+
+    if (error !== null) {
+      return { error: toErrorMessage(error, 'Failed to read dataset row.') };
+    }
+
+    if (!row) {
+      return { error: 'Row not found.' };
+    }
+
+    return { row: toRowOutput(row) };
+  },
+};
 
 export const getDatasetGetRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -346,35 +449,15 @@ export const getDatasetGetRowTool = (
   workspaceId: string,
 ): Tool<DatasetGetRowInput, DatasetGetRowOutput> =>
   tool({
-    description:
-      'Read a single dataset row in full by its id. Use this after a column-projected datasetListRows scan to load the complete data of the row you picked.',
-    inputSchema: datasetGetRowInputSchema,
+    description: datasetGetRowDefinition.description,
+    inputSchema: datasetGetRowDefinition.inputSchema,
     execute: async (input) => {
       writer.write({
         type: 'data-dataset',
         data: { action: 'getRow', datasetId: input.datasetId, rowId: input.rowId },
         transient: true,
       });
-
-      const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-      if ('error' in scoped) {
-        return scoped;
-      }
-
-      const { error, data: row } = await tryCatch(
-        () => getDatasetRowById({ datasetId: input.datasetId, rowId: input.rowId }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null) {
-        return { error: toErrorMessage(error, 'Failed to read dataset row.') };
-      }
-
-      if (!row) {
-        return { error: 'Row not found.' };
-      }
-
-      return { row: toRowOutput(row) };
+      return datasetGetRowDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -386,7 +469,47 @@ const datasetAppendRowInputSchema = z.object({
 });
 
 type DatasetAppendRowInput = z.infer<typeof datasetAppendRowInputSchema>;
-type DatasetAppendRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+type DatasetAppendRowOutput = { row: DatasetRowOutput } | { error: string };
+
+export const datasetAppendRowDefinition: ToolDefinition<
+  typeof datasetAppendRowInputSchema,
+  DatasetAppendRowOutput
+> = {
+  name: 'datasetAppendRow',
+  description:
+    'Append a new row to a dataset. Values are validated against the dataset\'s column schema (unknown columns and out-of-range select values are rejected). Note: if a workflow run retries after a failure, this can duplicate a previous append; read the dataset first to check whether the row already exists.',
+  inputSchema: datasetAppendRowInputSchema,
+  access: 'write',
+  execute(input, ctx) {
+    return withDatasetRowLock(input.datasetId, async () => {
+      const scoped = await loadDatasetInScope({
+        datasetId: input.datasetId,
+        userId: ctx.userId,
+        workspaceId: ctx.workspaceId,
+      });
+      if ('error' in scoped) {
+        return scoped;
+      }
+
+      const { error, data: row } = await tryCatch(
+        () =>
+          createDatasetRow({
+            datasetId: input.datasetId,
+            userId: ctx.userId,
+            data: input.data,
+            writtenBy: ctx.origin,
+          }),
+        { retryOnFailure: false },
+      );
+
+      if (error !== null || !row) {
+        return { error: toErrorMessage(error, 'Failed to append dataset row.') };
+      }
+
+      return { row: toRowOutput(row) };
+    });
+  },
+};
 
 export const getDatasetAppendRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -394,33 +517,15 @@ export const getDatasetAppendRowTool = (
   workspaceId: string,
 ): Tool<DatasetAppendRowInput, DatasetAppendRowOutput> =>
   tool({
-    description:
-      'Append a new row to a dataset. Values are validated against the dataset\'s column schema (unknown columns and out-of-range select values are rejected). Note: if a workflow run retries after a failure, this can duplicate a previous append; read the dataset first to check whether the row already exists.',
-    inputSchema: datasetAppendRowInputSchema,
+    description: datasetAppendRowDefinition.description,
+    inputSchema: datasetAppendRowDefinition.inputSchema,
     execute: async (input) => {
       writer.write({
         type: 'data-dataset',
         data: { action: 'appendRow', datasetId: input.datasetId },
         transient: true,
       });
-
-      return withDatasetRowLock(input.datasetId, async () => {
-        const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-        if ('error' in scoped) {
-          return scoped;
-        }
-
-        const { error, data: row } = await tryCatch(
-          () => createDatasetRow({ datasetId: input.datasetId, userId, data: input.data }),
-          { retryOnFailure: false },
-        );
-
-        if (error !== null || !row) {
-          return { error: toErrorMessage(error, 'Failed to append dataset row.') };
-        }
-
-        return { row: toRowOutput(row) };
-      });
+      return datasetAppendRowDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -433,7 +538,47 @@ const datasetUpdateRowInputSchema = z.object({
 });
 
 type DatasetUpdateRowInput = z.infer<typeof datasetUpdateRowInputSchema>;
-type DatasetUpdateRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+type DatasetUpdateRowOutput = { row: DatasetRowOutput } | { error: string };
+
+export const datasetUpdateRowDefinition: ToolDefinition<
+  typeof datasetUpdateRowInputSchema,
+  DatasetUpdateRowOutput
+> = {
+  name: 'datasetUpdateRow',
+  description:
+    'Partially update an existing dataset row, e.g. flipping status from "todo" to "done". Only the given columns change; the rest of the row is left as-is.',
+  inputSchema: datasetUpdateRowInputSchema,
+  access: 'write',
+  annotations: { destructiveHint: true },
+  async execute(input, ctx) {
+    const scoped = await loadDatasetInScope({
+      datasetId: input.datasetId,
+      userId: ctx.userId,
+      workspaceId: ctx.workspaceId,
+    });
+    if ('error' in scoped) {
+      return scoped;
+    }
+
+    const { error, data: row } = await tryCatch(
+      () =>
+        updateDatasetRow({
+          datasetId: input.datasetId,
+          rowId: input.rowId,
+          userId: ctx.userId,
+          data: input.data,
+          writtenBy: ctx.origin,
+        }),
+      { retryOnFailure: false },
+    );
+
+    if (error !== null || !row) {
+      return { error: toErrorMessage(error, 'Failed to update dataset row.') };
+    }
+
+    return { row: toRowOutput(row) };
+  },
+};
 
 export const getDatasetUpdateRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -441,37 +586,15 @@ export const getDatasetUpdateRowTool = (
   workspaceId: string,
 ): Tool<DatasetUpdateRowInput, DatasetUpdateRowOutput> =>
   tool({
-    description:
-      'Partially update an existing dataset row, e.g. flipping status from "todo" to "done". Only the given columns change; the rest of the row is left as-is.',
-    inputSchema: datasetUpdateRowInputSchema,
+    description: datasetUpdateRowDefinition.description,
+    inputSchema: datasetUpdateRowDefinition.inputSchema,
     execute: async (input) => {
       writer.write({
         type: 'data-dataset',
         data: { action: 'updateRow', datasetId: input.datasetId, rowId: input.rowId },
         transient: true,
       });
-
-      const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-      if ('error' in scoped) {
-        return scoped;
-      }
-
-      const { error, data: row } = await tryCatch(
-        () =>
-          updateDatasetRow({
-            datasetId: input.datasetId,
-            rowId: input.rowId,
-            userId,
-            data: input.data,
-          }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !row) {
-        return { error: toErrorMessage(error, 'Failed to update dataset row.') };
-      }
-
-      return { row: toRowOutput(row) };
+      return datasetUpdateRowDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
 
@@ -487,7 +610,49 @@ const datasetMoveRowInputSchema = z.object({
 });
 
 type DatasetMoveRowInput = z.infer<typeof datasetMoveRowInputSchema>;
-type DatasetMoveRowOutput = { row: ReturnType<typeof toRowOutput> } | { error: string };
+type DatasetMoveRowOutput = { row: DatasetRowOutput } | { error: string };
+
+export const datasetMoveRowDefinition: ToolDefinition<
+  typeof datasetMoveRowInputSchema,
+  DatasetMoveRowOutput
+> = {
+  name: 'datasetMoveRow',
+  description:
+    'Reprioritize a dataset row by changing its position, e.g. "move the research step before the drafting step". Omit afterRowId to move the row to the top; otherwise it lands directly after the row with that id.',
+  inputSchema: datasetMoveRowInputSchema,
+  access: 'write',
+  annotations: { idempotentHint: true },
+  execute(input, ctx) {
+    return withDatasetRowLock(input.datasetId, async () => {
+      const scoped = await loadDatasetInScope({
+        datasetId: input.datasetId,
+        userId: ctx.userId,
+        workspaceId: ctx.workspaceId,
+      });
+      if ('error' in scoped) {
+        return scoped;
+      }
+
+      const { error, data: row } = await tryCatch(
+        () =>
+          moveDatasetRow({
+            datasetId: input.datasetId,
+            userId: ctx.userId,
+            rowId: input.rowId,
+            afterRowId: input.afterRowId,
+            writtenBy: ctx.origin,
+          }),
+        { retryOnFailure: false },
+      );
+
+      if (error !== null || !row) {
+        return { error: toErrorMessage(error, 'Failed to move dataset row.') };
+      }
+
+      return { row: toRowOutput(row) };
+    });
+  },
+};
 
 export const getDatasetMoveRowTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,
@@ -495,41 +660,27 @@ export const getDatasetMoveRowTool = (
   workspaceId: string,
 ): Tool<DatasetMoveRowInput, DatasetMoveRowOutput> =>
   tool({
-    description:
-      'Reprioritize a dataset row by changing its position, e.g. "move the research step before the drafting step". Omit afterRowId to move the row to the top; otherwise it lands directly after the row with that id.',
-    inputSchema: datasetMoveRowInputSchema,
+    description: datasetMoveRowDefinition.description,
+    inputSchema: datasetMoveRowDefinition.inputSchema,
     execute: async (input) => {
       writer.write({
         type: 'data-dataset',
         data: { action: 'moveRow', datasetId: input.datasetId, rowId: input.rowId },
         transient: true,
       });
-
-      return withDatasetRowLock(input.datasetId, async () => {
-        const scoped = await loadDatasetInScope({ datasetId: input.datasetId, userId, workspaceId });
-        if ('error' in scoped) {
-          return scoped;
-        }
-
-        const { error, data: row } = await tryCatch(
-          () =>
-            moveDatasetRow({
-              datasetId: input.datasetId,
-              userId,
-              rowId: input.rowId,
-              afterRowId: input.afterRowId,
-            }),
-          { retryOnFailure: false },
-        );
-
-        if (error !== null || !row) {
-          return { error: toErrorMessage(error, 'Failed to move dataset row.') };
-        }
-
-        return { row: toRowOutput(row) };
-      });
+      return datasetMoveRowDefinition.execute(input, { userId, workspaceId, origin: 'agent' });
     },
   });
+
+export const datasetToolDefinitions: ToolDefinition<z.ZodObject, unknown>[] = [
+  datasetCreateDefinition,
+  datasetFindDefinition,
+  datasetListRowsDefinition,
+  datasetGetRowDefinition,
+  datasetAppendRowDefinition,
+  datasetUpdateRowDefinition,
+  datasetMoveRowDefinition,
+];
 
 export type DatasetCreateToolInput = InferToolInput<ReturnType<typeof getDatasetCreateTool>>;
 export type DatasetCreateToolOutput = InferToolOutput<ReturnType<typeof getDatasetCreateTool>>;

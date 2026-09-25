@@ -15,12 +15,17 @@ export interface DatasetColumn {
 }
 
 // 'user' = created via the grid, 'agent' = created by a tool call
-// (datasetCreate). Purely a UI badge; ownership/access is unaffected.
-export type DatasetOrigin = 'user' | 'agent';
+// (datasetCreate), 'mcp' = created by an MCP client (docs/mcp/prd.md P6).
+// Purely a UI badge; ownership/access is unaffected.
+export type DatasetOrigin = 'user' | 'agent' | 'mcp';
 
 // Keyed by column id (not name), so renaming a column never breaks data
 // already stored in a row.
 export type DatasetRowData = Record<string, string | number | null>;
+
+// Who last wrote a row's data (docs/mcp/prd.md P6): the grid shows a badge
+// on 'mcp' rows. Set on create, update and move.
+export type DatasetRowWriter = 'user' | 'agent' | 'mcp';
 
 const emptyColumns: DatasetColumn[] = [];
 
@@ -70,6 +75,7 @@ export const datasetRow = pgTable(
     // multi-step plan in one turn). createdAt can't be used for this: rows
     // created concurrently can commit out of the order they were requested.
     sortOrder: text('sort_order').notNull(),
+    writtenBy: text('written_by').notNull().$type<DatasetRowWriter>().default('user'),
     ...timestamps,
   },
   (table) => [index('datasetRow_datasetId_idx').on(table.datasetId)],

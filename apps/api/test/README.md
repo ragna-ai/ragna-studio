@@ -74,6 +74,24 @@ Tests are grouped by domain folder, one folder per feature area:
 - `test/agent-context-document/` — upload/rename/retry/delete for an
   agent's context documents. Every document is created via a real R2
   upload, faked the same way `test/imagegen/`'s reference-upload is.
+- `test/mcp/` — the MCP server (docs/mcp/prd.md): `mcp-endpoint.test.ts`
+  covers `POST /mcp` (token/audience/session-cookie/disabled/revoked
+  rejections, `tools/list` following live settings, a write call rejected
+  under `read` access, append/update stamping `written_by = 'mcp'` and
+  landing in `mcp_tool_calls`, and workspace isolation),
+  `mcp-settings.test.ts` covers the session-authenticated
+  `/mcp-settings` REST (C4 in docs/mcp/slices.md). `support/mcp-fixtures.ts`
+  seeds an `oauthClient` row directly (normally CIMD-owned) and mints access
+  tokens via the jwt() plugin's server-only `signJWT`, sidestepping the real
+  CIMD/consent/token-exchange dance, which the OAuth dance itself stays
+  manual-tested (Claude Desktop) rather than automated here.
+  `support/jwks-fetch-bridge.ts` patches `globalThis.fetch` so
+  `requireMcpAuth`'s real HTTP fetch to `${baseURL}/jwks` (the one exception
+  to this harness's "no port, no server boot" model, which token
+  verification requires) resolves via `app.request()` instead of hitting a
+  socket. `bunfig.toml` preloads `test/mcp-env.preload.ts` (no imports, sets
+  `MCP_ENABLED=true`) ahead of `test/preload.ts`, since `@repo/config` reads
+  `process.env` once at first import.
 - `test/smoke/` — cross-cutting harness tests: the health check and the DB
   safety guard (`db-safety.test.ts`), not tied to any one feature.
 

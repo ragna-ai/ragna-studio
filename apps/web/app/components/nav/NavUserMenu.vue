@@ -4,11 +4,13 @@ import {
   ChevronsUpDownIcon,
   CoinsIcon,
   LogOutIcon,
+  PlugIcon,
   SettingsIcon,
   SparklesIcon,
   UserIcon,
 } from '@lucide/vue';
 import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
+import { useGetMcpSettings } from '~/features/mcp/composables/useMcpApi';
 import { createInitials } from '~/lib/utils';
 
 defineProps<{
@@ -26,6 +28,10 @@ const displayedCredits = computed(() => {
   const credits = creditBalance.value?.credit.balanceCredits;
   return credits === undefined ? null : Math.round(credits);
 });
+
+// Hidden when MCP is disabled server-side (GET /mcp-settings -> 404).
+const { data: mcpSettings } = useGetMcpSettings();
+const showMcpSettingsLink = computed(() => mcpSettings.value !== undefined);
 
 const initials = computed(() => createInitials(session.value?.user?.name));
 
@@ -128,6 +134,16 @@ async function signOut() {
           <NuxtLink to="/account">
             <SettingsIcon class="mr-2 size-4 stroke-1.5" />
             {{ $t('nav.userMenu.settings') }}
+          </NuxtLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          v-if="showMcpSettingsLink"
+          as-child
+          class="cursor-pointer px-4 py-2"
+        >
+          <NuxtLink to="/settings/mcp">
+            <PlugIcon class="mr-2 size-4 stroke-1.5" />
+            {{ $t('nav.userMenu.mcp') }}
           </NuxtLink>
         </DropdownMenuItem>
       </DropdownMenuGroup>

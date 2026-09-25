@@ -23,10 +23,13 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/cimd": "^1.7.6",
+    "@better-auth/mcp": "^1.7.6",
+    "@better-auth/oauth-provider": "^1.7.6",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/queue": "workspace:*",
-    "better-auth": "^1.7.5",
+    "better-auth": "^1.7.6",
     "jose": "^6.2.12"
   },
   "devDependencies": {

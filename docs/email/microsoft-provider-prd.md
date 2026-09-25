@@ -1,7 +1,7 @@
 # Microsoft (Outlook) mailbox provider
 
-> **Status: in-progress** (approved by Sven 2026-09-24, all design questions
-> answered, open points resolved; all five slices built 2026-09-24, apps/api 482 pass / 0 fail, api/worker/mail/database type-check clean; awaiting Sven's db:push and manual Outlook test, not committed). Adds Microsoft
+> **Status: implemented** (merged to main via PR #22, 2026-09-24; all design questions
+> answered; apps/api 482 pass / 0 fail; connect and first sync live-tested with Outlook, reply/forward/send and large attachments not yet). Adds Microsoft
 > Graph as the second `MailProvider` next to Gmail. Builds on
 > [prd.md](./prd.md) "Future directions" (provider enum, opaque
 > `syncCursor`, everything behind `MailProvider`).

@@ -64,9 +64,7 @@ const columnCount = 6;
           </div>
         </TableCell>
         <TableCell>
-          <Badge
-            :variant="dataset.origin === 'agent' ? 'secondary' : 'outline'"
-          >
+          <Badge :variant="dataset.origin === 'user' ? 'outline' : 'secondary'">
             {{ t(`dataset.origin.${dataset.origin}`) }}
           </Badge>
         </TableCell>

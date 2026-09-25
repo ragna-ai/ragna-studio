@@ -15,6 +15,8 @@ import { documentController } from './controllers/document.controller';
 import { emailController } from './controllers/email.controller';
 import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
+import { mcpSettingsController } from './controllers/mcp-settings.controller';
+import { mcpController } from './controllers/mcp.controller';
 import { mediaController } from './controllers/media.controller';
 import { notificationController } from './controllers/notification.controller';
 import { overviewController } from './controllers/overview.controller';
@@ -70,6 +72,8 @@ export const app = new Hono()
   .route('/', folderController)
   .route('/', taskController)
   .route('/', taskLabelController)
+  .route('/', mcpController)
+  .route('/', mcpSettingsController)
   .route('/', wsController)
   // Error
   .onError((err, c) => {

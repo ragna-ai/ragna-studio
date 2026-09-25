@@ -47,6 +47,7 @@
       "account": "Account",
       "statistics": "Statistics",
       "settings": "Settings",
+      "mcp": "MCP",
       "signOut": "Sign out",
       "credits": "{count} credits"
     }
@@ -775,7 +776,8 @@
     },
     "origin": {
       "user": "User",
-      "agent": "Agent"
+      "agent": "Agent",
+      "mcp": "MCP"
     },
     "deleteConfirm": {
       "title": "Delete dataset",
@@ -825,7 +827,8 @@
       "expandRow": "Expand row",
       "moveRowUp": "Move row up",
       "moveRowDown": "Move row down",
-      "editCell": "Edit {column}"
+      "editCell": "Edit {column}",
+      "writtenByMcp": "Written by a connected app via MCP"
     },
     "columnManager": {
       "title": "Columns",
@@ -1250,6 +1253,81 @@
       "neverSynced": "Not synced yet",
       "syncFailed": "Failed to sync your mailbox. Try again in a moment.",
       "reauthRequiredToast": "Mailbox access expired. Reconnect in settings to resume syncing."
+    }
+  },
+  "mcp": {
+    "settings": {
+      "title": "MCP",
+      "subtitle": "Let external AI apps like Claude Desktop read and write your Ragna data.",
+      "notAvailable": {
+        "title": "MCP is not available",
+        "message": "This feature isn't enabled for your instance yet."
+      },
+      "loadError": "Failed to load MCP settings.",
+      "masterToggle": {
+        "title": "Enable MCP",
+        "label": "Allow external AI apps to access Ragna (MCP)"
+      },
+      "disableConfirm": {
+        "title": "Turn off MCP?",
+        "message": "This disconnects every connected app immediately. You'll need to reconnect them if you turn MCP back on.",
+        "confirm": "Turn off"
+      },
+      "connectorUrl": {
+        "title": "Connector URL",
+        "howTo": "In Claude Desktop, go to Settings > Connectors > Add custom connector and paste this URL.",
+        "copied": "Connector URL copied"
+      },
+      "access": {
+        "title": "Resource access",
+        "subtitle": "Choose what each integration may do in the connected workspace."
+      },
+      "connections": {
+        "title": "Connected apps",
+        "empty": "No connected apps yet.",
+        "table": {
+          "client": "App",
+          "workspace": "Workspace",
+          "connected": "Connected",
+          "lastUsed": "Last used"
+        },
+        "neverUsed": "Never",
+        "revoke": "Revoke",
+        "revokeConfirm": {
+          "title": "Revoke connection",
+          "message": "This disconnects the app immediately. It will need to reconnect."
+        },
+        "revokeSuccess": "Connection revoked"
+      }
+    },
+    "integrations": {
+      "datasets": "Datasets"
+    },
+    "accessLevel": {
+      "off": "Off",
+      "read": "Read",
+      "write": "Read & write"
+    },
+    "consent": {
+      "pageTitle": "Connect app",
+      "title": "Connect this app to Ragna",
+      "subtitle": "{client} wants to access your Ragna data.",
+      "workspaceLabel": "Workspace",
+      "workspacePlaceholder": "Select a workspace",
+      "accessLabel": "This app will be able to:",
+      "approve": "Approve",
+      "deny": "Deny",
+      "genericError": "Something went wrong. Please try again.",
+      "invalidRequest": {
+        "title": "Invalid request",
+        "message": "This page only works as part of a connection request from an app like Claude Desktop."
+      },
+      "disabled": {
+        "title": "MCP is turned off",
+        "message": "Turn on MCP in your settings before connecting an app.",
+        "settingsLink": "Go to MCP settings"
+      },
+      "testimonial": "Bring your Ragna workspace into the tools you already use."
     }
   }
 }
