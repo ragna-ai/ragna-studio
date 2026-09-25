@@ -73,7 +73,20 @@ export const auth = betterAuth({
   },
   // MIDDLEWARE
   hooks: {},
-  user: {},
+  user: {
+    // Runs on every sign-up, account link, and OAuth sign-in (with the fresh
+    // provider email each time), so removing an email from the allowlist
+    // locks out an already-registered user on their next login too.
+    validateUserInfo: ({ user }) => {
+      const { allowedLoginEmails } = config;
+      if (allowedLoginEmails.length === 0) return;
+      if (allowedLoginEmails.includes(user.email?.toLowerCase() ?? '')) return;
+      return {
+        error: 'email_not_allowed',
+        errorDescription: 'This email is not permitted to sign in.',
+      };
+    },
+  },
   account: {
     encryptOAuthTokens: true,
     accountLinking: {

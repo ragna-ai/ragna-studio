@@ -21,8 +21,18 @@ const { t } = useI18n();
 useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
+const route = useRoute();
 const errorMessage = ref<string | null>(null);
 const signingIn = ref<SocialProvider | null>(null);
+
+// The OAuth callback (e.g. a rejected email allowlist check) redirects back
+// here with these query params instead of resolving signIn.social() directly.
+if (typeof route.query.error === 'string') {
+  errorMessage.value =
+    typeof route.query.error_description === 'string'
+      ? route.query.error_description
+      : t('auth.login.genericError');
+}
 
 async function signIn(provider: SocialProvider) {
   errorMessage.value = null;

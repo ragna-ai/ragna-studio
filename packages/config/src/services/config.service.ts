@@ -289,6 +289,19 @@ const ConfigSchema = z.object({
   APPLE_TEAM_ID: z.string().optional().default(''),
   APPLE_KEY_ID: z.string().optional().default(''),
   APPLE_PRIVATE_KEY: z.string().optional().default(''),
+
+  // Login allowlist: empty means everyone can sign in. Set in prod to
+  // restrict the demo to a fixed set of emails.
+  ALLOWED_LOGIN_EMAILS: z
+    .string()
+    .optional()
+    .default('')
+    .transform((val) =>
+      val
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter((email) => email.length > 0),
+    ),
 });
 
 type ParsedConfig = z.output<typeof ConfigSchema>;
@@ -531,6 +544,10 @@ export class ConfigService {
 
   get googleClientId(): string {
     return this._config.GOOGLE_CLIENT_ID;
+  }
+
+  get allowedLoginEmails(): string[] {
+    return this._config.ALLOWED_LOGIN_EMAILS;
   }
 
   get linkedInScopes(): string[] {
