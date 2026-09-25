@@ -8,8 +8,10 @@ export interface DatasetColumn {
   options?: string[];
 }
 
-// 'user' = created in the grid, 'agent' = created via the datasetCreate tool.
-export type DatasetOrigin = 'user' | 'agent';
+// 'user' = created in the grid, 'agent' = via the datasetCreate tool, 'mcp' = via an MCP client.
+export type DatasetOrigin = 'user' | 'agent' | 'mcp';
+
+export type DatasetRowWriter = 'user' | 'agent' | 'mcp';
 
 // Keyed by column id, not name.
 export type DatasetRowData = Record<string, string | number | null>;
@@ -43,6 +45,7 @@ export interface DatasetRow {
   id: string;
   datasetId: string;
   data: DatasetRowData;
+  writtenBy: DatasetRowWriter;
   createdAt: string;
   updatedAt: string;
 }

@@ -20,7 +20,9 @@
     "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {
+    "@better-auth/mcp": "1.7.6",
     "@hono/zod-validator": "^0.9.1",
+    "@modelcontextprotocol/server": "^2.1.0",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",

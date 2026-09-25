@@ -18,6 +18,7 @@ export * from './email-thread.repo';
 export * from './folder.repo';
 export * from './gen-image.repo';
 export * from './gen-video.repo';
+export * from './mcp.repo';
 export * from './media.repo';
 export * from './memory.repo';
 export * from './notification.repo';

@@ -289,6 +289,51 @@ const ConfigSchema = z.object({
   APPLE_TEAM_ID: z.string().optional().default(''),
   APPLE_KEY_ID: z.string().optional().default(''),
   APPLE_PRIVATE_KEY: z.string().optional().default(''),
+
+  // Login allowlist: empty means everyone can sign in. Set in prod to
+  // restrict the demo to a fixed set of emails.
+  ALLOWED_LOGIN_EMAILS: z
+    .string()
+    .optional()
+    .default('')
+    .transform((val) =>
+      val
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter((email) => email.length > 0),
+    ),
+
+  // MCP server (docs/mcp/prd.md): kill switch (P2) and the CIMD client ID
+  // allowlist (P4).
+  MCP_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val === 'true')
+    .default(false),
+  MCP_ALLOWED_CLIENT_IDS: z
+    .string()
+    .optional()
+    .default('')
+    .transform((val) =>
+      val
+        .split(',')
+        .map((clientId) => clientId.trim())
+        .filter((clientId) => clientId.length > 0),
+    ),
+  MCP_ACCESS_TOKEN_TTL_SECONDS: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const parsed = Number(val);
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : 60 * 60;
+    }),
+  MCP_REFRESH_TOKEN_TTL_SECONDS: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const parsed = Number(val);
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : 30 * 24 * 60 * 60;
+    }),
 });
 
 type ParsedConfig = z.output<typeof ConfigSchema>;
@@ -559,6 +604,26 @@ export class ConfigService {
 
   get appleKeyId(): string {
     return this._config.APPLE_KEY_ID;
+  }
+
+  get mcpEnabled(): boolean {
+    return this._config.MCP_ENABLED;
+  }
+
+  get mcpAllowedClientIds(): string[] {
+    return this._config.MCP_ALLOWED_CLIENT_IDS;
+  }
+
+  get mcpResourceUrl(): string {
+    return `${this.apiBaseUrl.replace(/\/$/, '')}/mcp`;
+  }
+
+  get mcpAccessTokenTtlSeconds(): number {
+    return this._config.MCP_ACCESS_TOKEN_TTL_SECONDS;
+  }
+
+  get mcpRefreshTokenTtlSeconds(): number {
+    return this._config.MCP_REFRESH_TOKEN_TTL_SECONDS;
   }
 
   // Secret getters - use carefully, never log these

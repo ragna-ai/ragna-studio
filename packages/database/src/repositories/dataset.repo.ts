@@ -1,7 +1,14 @@
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
-import type { Dataset, DatasetColumn, DatasetOrigin, DatasetRow, DatasetRowData } from '../schema';
+import type {
+  Dataset,
+  DatasetColumn,
+  DatasetOrigin,
+  DatasetRow,
+  DatasetRowData,
+  DatasetRowWriter,
+} from '../schema';
 import { dataset, datasetRow } from '../schema';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
@@ -12,6 +19,7 @@ export type {
   DatasetOrigin,
   DatasetRow,
   DatasetRowData,
+  DatasetRowWriter,
 } from '../schema';
 
 // Size guardrails (docs/datasets.md decision 8): keep tool responses inside
@@ -409,10 +417,12 @@ export async function createDatasetRow({
   datasetId,
   userId,
   data,
+  writtenBy = 'user',
 }: {
   datasetId: string;
   userId: string;
   data: DatasetRowData;
+  writtenBy?: DatasetRowWriter;
 }): Promise<DatasetRow> {
   return db.transaction(async (tx) => {
     const [lockedDataset] = await tx
@@ -449,7 +459,7 @@ export async function createDatasetRow({
 
     const [createdRow] = await tx
       .insert(datasetRow)
-      .values({ datasetId, data, sortOrder })
+      .values({ datasetId, data, sortOrder, writtenBy })
       .returning();
 
     if (!createdRow) {
@@ -476,11 +486,13 @@ export async function moveDatasetRow({
   userId,
   rowId,
   afterRowId,
+  writtenBy = 'user',
 }: {
   datasetId: string;
   userId: string;
   rowId: string;
   afterRowId?: string | null;
+  writtenBy?: DatasetRowWriter;
 }): Promise<DatasetRow> {
   return db.transaction(async (tx) => {
     const [lockedDataset] = await tx
@@ -528,7 +540,7 @@ export async function moveDatasetRow({
 
     const [movedRow] = await tx
       .update(datasetRow)
-      .set({ sortOrder, updatedAt: new Date() })
+      .set({ sortOrder, updatedAt: new Date(), writtenBy })
       .where(and(eq(datasetRow.id, rowId), eq(datasetRow.datasetId, datasetId)))
       .returning();
 
@@ -572,12 +584,14 @@ export async function updateDatasetRow({
   rowId,
   userId,
   data,
+  writtenBy = 'user',
 }: {
   datasetId: string;
   rowId: string;
   userId: string;
   // Partial: only the given columns are merged into the row's existing data.
   data: DatasetRowData;
+  writtenBy?: DatasetRowWriter;
 }): Promise<DatasetRow> {
   const datasetRecord = await getDatasetById({ datasetId, userId });
   if (!datasetRecord) {
@@ -597,7 +611,7 @@ export async function updateDatasetRow({
 
   const [updatedRow] = await db
     .update(datasetRow)
-    .set({ data: mergedData })
+    .set({ data: mergedData, writtenBy })
     .where(eq(datasetRow.id, rowId))
     .returning();
 

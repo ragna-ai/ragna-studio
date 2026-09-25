@@ -21,8 +21,19 @@ import { folder } from './folder.schema';
 import { genImage, genImageReference } from './genimage.schema';
 import { genVideo } from './genvideo.schema';
 import { chatAttachment, media } from './media.schema';
+import { mcpConnection, mcpSettings, mcpToolCall } from './mcp.schema';
 import { agentMemory } from './memory.schema';
 import { notification } from './notification.schema';
+import {
+  jwks,
+  oauthAccessToken,
+  oauthClient,
+  oauthClientAssertion,
+  oauthClientResource,
+  oauthConsent,
+  oauthRefreshToken,
+  oauthResource,
+} from './oauth-provider.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
@@ -74,6 +85,17 @@ const schema = {
   taskLabel,
   taskToTaskLabel,
   workspace,
+  jwks,
+  oauthClient,
+  oauthResource,
+  oauthClientResource,
+  oauthRefreshToken,
+  oauthAccessToken,
+  oauthConsent,
+  oauthClientAssertion,
+  mcpSettings,
+  mcpConnection,
+  mcpToolCall,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -108,6 +130,14 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.emailAccount.userId,
       optional: true,
     }),
+    // MCP (docs/mcp/prd.md): one settings row per user, created on first
+    // opt-in; several connections, one per connected client (P9).
+    mcpSettings: r.one.mcpSettings({
+      from: r.user.id,
+      to: r.mcpSettings.userId,
+      optional: true,
+    }),
+    mcpConnections: r.many.mcpConnection(),
   },
   account: {
     user: r.one.user({
@@ -120,6 +150,118 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.session.userId,
       to: r.user.id,
+      optional: false,
+    }),
+  },
+  jwks: {},
+  oauthClient: {
+    user: r.one.user({
+      from: r.oauthClient.userId,
+      to: r.user.id,
+      optional: true,
+    }),
+    accessTokens: r.many.oauthAccessToken(),
+    refreshTokens: r.many.oauthRefreshToken(),
+    consents: r.many.oauthConsent(),
+    resourceLinks: r.many.oauthClientResource(),
+  },
+  oauthResource: {
+    clientLinks: r.many.oauthClientResource(),
+  },
+  oauthClientResource: {
+    client: r.one.oauthClient({
+      from: r.oauthClientResource.clientId,
+      to: r.oauthClient.clientId,
+      optional: false,
+    }),
+    resource: r.one.oauthResource({
+      from: r.oauthClientResource.resourceId,
+      to: r.oauthResource.identifier,
+      optional: false,
+    }),
+  },
+  oauthRefreshToken: {
+    client: r.one.oauthClient({
+      from: r.oauthRefreshToken.clientId,
+      to: r.oauthClient.clientId,
+      optional: false,
+    }),
+    session: r.one.session({
+      from: r.oauthRefreshToken.sessionId,
+      to: r.session.id,
+      optional: true,
+    }),
+    user: r.one.user({
+      from: r.oauthRefreshToken.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    accessTokens: r.many.oauthAccessToken(),
+  },
+  oauthAccessToken: {
+    client: r.one.oauthClient({
+      from: r.oauthAccessToken.clientId,
+      to: r.oauthClient.clientId,
+      optional: false,
+    }),
+    session: r.one.session({
+      from: r.oauthAccessToken.sessionId,
+      to: r.session.id,
+      optional: true,
+    }),
+    user: r.one.user({
+      from: r.oauthAccessToken.userId,
+      to: r.user.id,
+      optional: true,
+    }),
+    refreshToken: r.one.oauthRefreshToken({
+      from: r.oauthAccessToken.refreshId,
+      to: r.oauthRefreshToken.id,
+      optional: true,
+    }),
+  },
+  oauthConsent: {
+    client: r.one.oauthClient({
+      from: r.oauthConsent.clientId,
+      to: r.oauthClient.clientId,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.oauthConsent.userId,
+      to: r.user.id,
+      optional: true,
+    }),
+  },
+  oauthClientAssertion: {},
+  mcpSettings: {
+    user: r.one.user({
+      from: r.mcpSettings.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  mcpConnection: {
+    user: r.one.user({
+      from: r.mcpConnection.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.mcpConnection.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    client: r.one.oauthClient({
+      from: r.mcpConnection.clientId,
+      to: r.oauthClient.clientId,
+      optional: true,
+    }),
+    toolCalls: r.many.mcpToolCall(),
+  },
+  mcpToolCall: {
+    connection: r.one.mcpConnection({
+      from: r.mcpToolCall.connectionId,
+      to: r.mcpConnection.id,
       optional: false,
     }),
   },

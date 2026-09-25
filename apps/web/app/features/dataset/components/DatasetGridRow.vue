@@ -3,6 +3,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   Maximize2Icon,
+  PlugIcon,
   Trash2Icon,
 } from '@lucide/vue';
 import DatasetGridSelectCell from '~/features/dataset/components/DatasetGridSelectCell.vue';
@@ -95,6 +96,16 @@ function inputValueOf(event: Event): string {
         >
           <ArrowDownIcon class="size-3.5 stroke-1.5 text-muted-foreground" />
         </Button>
+        <TooltipProvider v-if="row.writtenBy === 'mcp'">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Badge variant="outline" class="ml-1 gap-1 px-1.5 py-0">
+                <PlugIcon class="size-3 stroke-1.5" />
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>{{ t('dataset.grid.writtenByMcp') }}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </TableCell>
     <TableCell v-for="column in columns" :key="column.id">

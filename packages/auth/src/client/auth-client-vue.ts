@@ -1,5 +1,20 @@
+import { oauthProviderClient } from '@better-auth/oauth-provider/client';
 import { adminClient, lastLoginMethodClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/vue';
+
+// Hand-typed like AuthClient below (oauthProviderClient()'s own type isn't
+// portable either): POST /oauth2/consent. The installed dist declares this
+// endpoint's result as `OAuthRedirectResult | { redirect: boolean; url:
+// string }`, so `redirect` is `boolean`, not the `true` the deny path alone
+// would suggest.
+export interface OAuthConsentAcceptResult {
+  redirect: boolean;
+  url: string;
+}
+export interface OAuthConsentAcceptResponse {
+  data: OAuthConsentAcceptResult | null;
+  error: { code?: string; message?: string; status: number; statusText: string } | null;
+}
 
 // better-auth's plugin-aware client type can't be bundled into a portable
 // .d.ts here: naming it pulls in internal better-auth/core types that aren't
@@ -22,6 +37,9 @@ export type AuthClient = Omit<ReturnType<typeof createAuthClient>, 'hydrateSessi
   getLastUsedLoginMethod: () => string | null;
   isLastUsedLoginMethod: (method: string) => boolean;
   clearLastUsedLoginMethod: () => void;
+  oauth2: {
+    consent: (data: { accept: boolean }) => Promise<OAuthConsentAcceptResponse>;
+  };
 };
 export type AuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Session'];
 
@@ -29,5 +47,8 @@ export type AuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Sess
 // same instance is used for sign-in, session reads, and sign-out. This keeps
 // credentials consistent, which the OAuth state cookie round-trip depends on.
 export function createAppAuthClient(options?: Parameters<typeof createAuthClient>[0]): AuthClient {
-  return createAuthClient({ ...options, plugins: [adminClient(), lastLoginMethodClient()] });
+  return createAuthClient({
+    ...options,
+    plugins: [adminClient(), lastLoginMethodClient(), oauthProviderClient()],
+  });
 }

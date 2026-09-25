@@ -21,8 +21,26 @@ const { t } = useI18n();
 useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
+const route = useRoute();
+const { public: { apiBaseUrl } } = useRuntimeConfig();
 const errorMessage = ref<string | null>(null);
 const signingIn = ref<SocialProvider | null>(null);
+
+// The OAuth callback (e.g. a rejected email allowlist check) redirects back
+// here with these query params instead of resolving signIn.social() directly.
+if (typeof route.query.error === 'string') {
+  errorMessage.value =
+    typeof route.query.error_description === 'string'
+      ? route.query.error_description
+      : t('auth.login.genericError');
+}
+
+// A pending MCP authorize request (docs/mcp/slices.md, C3): resume it instead of the normal home page.
+const isOAuthAuthorizeResume = computed(
+  () =>
+    typeof route.query.client_id === 'string' &&
+    typeof route.query.sig === 'string',
+);
 
 async function signIn(provider: SocialProvider) {
   errorMessage.value = null;
@@ -30,11 +48,14 @@ async function signIn(provider: SocialProvider) {
   // Absolute URLs back to this web app. A relative path would resolve against
   // the API origin (baseURL) and land the user on the API, not the app.
   const appOrigin = window.location.origin;
+  const pendingAuthorizeQuery = window.location.search;
   try {
     const { error } = await authClient.signIn.social({
       provider,
-      callbackURL: `${appOrigin}/`,
-      errorCallbackURL: `${appOrigin}/auth/login`,
+      callbackURL: isOAuthAuthorizeResume.value
+        ? `${apiBaseUrl}/auth/oauth2/authorize${pendingAuthorizeQuery}`
+        : `${appOrigin}/`,
+      errorCallbackURL: `${appOrigin}/auth/login${pendingAuthorizeQuery}`,
     });
     if (error) {
       errorMessage.value = error.message ?? t('auth.login.genericError');

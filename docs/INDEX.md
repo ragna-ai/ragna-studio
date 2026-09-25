@@ -15,8 +15,8 @@ work first, shipped reference and dead/historical docs last.
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
-| [Microsoft (Outlook) mailbox provider](./email/microsoft-provider-prd.md) | in-progress (approved by Sven 2026-09-24, all design questions answered, open points resolved; all five slices built 2026-09-24, apps/api 482 pass / 0 fail, api/worker/mail/database type-check clean; awaiting Sven's db:push and manual Outlook test, not committed) |
-| [Microsoft provider: implementation slices](./email/microsoft-provider-slices.md) | in-progress (approved 2026-09-24; all slices and the integration pass done same day, awaiting Sven's verification) |
+| [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
+| [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
 
 ## Decided
@@ -55,6 +55,8 @@ work first, shipped reference and dead/historical docs last.
 | [Per-service memory and CPU limits](./docker-deploy/resource-limits.md) | implemented (2026-09-23) |
 | [Documents Feature (PRD)](./documents/prd.md) | implemented (branch `feat/documents`, 2026-07-18) |
 | [Gmail Sync: Detect and Surface Dead Credentials (change request)](./email/gmail-reauth-change-request.md) | implemented (raised, decided, and built 2026-08-30; commit left to Sven per repo convention) |
+| [Microsoft (Outlook) mailbox provider](./email/microsoft-provider-prd.md) | implemented (merged to main via PR #22, 2026-09-24; all design questions answered; apps/api 482 pass / 0 fail; connect and first sync live-tested with Outlook, reply/forward/send and large attachments not yet) |
+| [Microsoft provider: implementation slices](./email/microsoft-provider-slices.md) | implemented (approved and built 2026-09-24, merged via PR #22) |
 | [Email Client (PRD)](./email/prd.md) | implemented (2026-08-14, branch feat/email-client) |
 | [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |

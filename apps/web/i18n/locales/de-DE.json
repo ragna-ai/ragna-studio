@@ -47,6 +47,7 @@
       "account": "Konto",
       "statistics": "Statistiken",
       "settings": "Einstellungen",
+      "mcp": "MCP",
       "signOut": "Abmelden",
       "credits": "{count} Credits"
     }
@@ -781,7 +782,8 @@
     },
     "origin": {
       "user": "Nutzer",
-      "agent": "Agent"
+      "agent": "Agent",
+      "mcp": "MCP"
     },
     "deleteConfirm": {
       "title": "Datensatz löschen",
@@ -831,7 +833,8 @@
       "expandRow": "Zeile erweitern",
       "moveRowUp": "Zeile nach oben verschieben",
       "moveRowDown": "Zeile nach unten verschieben",
-      "editCell": "{column} bearbeiten"
+      "editCell": "{column} bearbeiten",
+      "writtenByMcp": "Geschrieben von einer verbundenen App über MCP"
     },
     "columnManager": {
       "title": "Spalten",
@@ -1256,6 +1259,81 @@
       "neverSynced": "Noch nicht synchronisiert",
       "syncFailed": "Synchronisierung deines Postfachs fehlgeschlagen. Versuche es gleich noch einmal.",
       "reauthRequiredToast": "Postfachzugriff abgelaufen. Verbinde dich in den Einstellungen erneut, um die Synchronisierung fortzusetzen."
+    }
+  },
+  "mcp": {
+    "settings": {
+      "title": "MCP",
+      "subtitle": "Erlaube externen KI-Apps wie Claude Desktop, auf deine Ragna-Daten zuzugreifen.",
+      "notAvailable": {
+        "title": "MCP ist nicht verfügbar",
+        "message": "Diese Funktion ist für deine Instanz noch nicht aktiviert."
+      },
+      "loadError": "MCP-Einstellungen konnten nicht geladen werden.",
+      "masterToggle": {
+        "title": "MCP aktivieren",
+        "label": "Externen KI-Apps Zugriff auf Ragna erlauben (MCP)"
+      },
+      "disableConfirm": {
+        "title": "MCP deaktivieren?",
+        "message": "Dadurch werden alle verbundenen Apps sofort getrennt. Du musst sie erneut verbinden, wenn du MCP wieder einschaltest.",
+        "confirm": "Deaktivieren"
+      },
+      "connectorUrl": {
+        "title": "Connector-URL",
+        "howTo": "Gehe in Claude Desktop zu Einstellungen > Connectors > Benutzerdefinierten Connector hinzufügen und füge diese URL ein.",
+        "copied": "Connector-URL kopiert"
+      },
+      "access": {
+        "title": "Ressourcenzugriff",
+        "subtitle": "Lege fest, was jede Integration im verbundenen Arbeitsbereich darf."
+      },
+      "connections": {
+        "title": "Verbundene Apps",
+        "empty": "Noch keine verbundenen Apps.",
+        "table": {
+          "client": "App",
+          "workspace": "Arbeitsbereich",
+          "connected": "Verbunden",
+          "lastUsed": "Zuletzt genutzt"
+        },
+        "neverUsed": "Nie",
+        "revoke": "Trennen",
+        "revokeConfirm": {
+          "title": "Verbindung trennen",
+          "message": "Dadurch wird die App sofort getrennt. Sie muss sich erneut verbinden."
+        },
+        "revokeSuccess": "Verbindung getrennt"
+      }
+    },
+    "integrations": {
+      "datasets": "Datensätze"
+    },
+    "accessLevel": {
+      "off": "Aus",
+      "read": "Lesen",
+      "write": "Lesen & schreiben"
+    },
+    "consent": {
+      "pageTitle": "App verbinden",
+      "title": "Diese App mit Ragna verbinden",
+      "subtitle": "{client} möchte auf deine Ragna-Daten zugreifen.",
+      "workspaceLabel": "Arbeitsbereich",
+      "workspacePlaceholder": "Arbeitsbereich auswählen",
+      "accessLabel": "Diese App kann Folgendes tun:",
+      "approve": "Genehmigen",
+      "deny": "Ablehnen",
+      "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+      "invalidRequest": {
+        "title": "Ungültige Anfrage",
+        "message": "Diese Seite funktioniert nur als Teil einer Verbindungsanfrage einer App wie Claude Desktop."
+      },
+      "disabled": {
+        "title": "MCP ist ausgeschaltet",
+        "message": "Schalte MCP in deinen Einstellungen ein, bevor du eine App verbindest.",
+        "settingsLink": "Zu den MCP-Einstellungen"
+      },
+      "testimonial": "Bring deinen Ragna-Arbeitsbereich in die Tools, die du bereits nutzt."
     }
   }
 }

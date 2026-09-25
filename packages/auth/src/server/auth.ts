@@ -1,10 +1,17 @@
+import { cimd } from '@better-auth/cimd';
+import { fetchClientMetadataResource } from '@better-auth/cimd/node';
+import { mcp } from '@better-auth/mcp';
 import { config } from '@repo/config';
 import { createWorkspace, db } from '@repo/database';
 import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, lastLoginMethod, testUtils } from 'better-auth/plugins';
+import { admin, jwt, lastLoginMethod, testUtils } from 'better-auth/plugins';
+
+// Real permissions come from mcp_settings (docs/mcp/prd.md P1); offline_access
+// is only here because OAuth Provider gates refresh-token issuance on it.
+const MCP_SCOPES = ['mcp', 'offline_access'] as const;
 
 // LinkedIn requires these scopes for sign-in (openid/profile/email) and
 // posting on the user's behalf (w_member_social). Used unless an operator
@@ -31,7 +38,31 @@ export const auth = betterAuth({
   // integration tests (better-auth has no email/password provider, so
   // tests can't sign up through the API). Gated on NODE_ENV so it's absent
   // in dev and production.
-  plugins: [admin(), lastLoginMethod(), ...(config.isTest ? [testUtils()] : [])],
+  plugins: [
+    admin(),
+    lastLoginMethod(),
+    ...(config.isTest ? [testUtils()] : []),
+    ...(config.mcpEnabled
+      ? [
+          jwt(),
+          mcp({
+            loginPage: `${config.appUrl}/auth/login`,
+            consentPage: `${config.appUrl}/oauth/consent`,
+            resource: config.mcpResourceUrl,
+            scopes: [...MCP_SCOPES],
+            accessTokenExpiresIn: config.mcpAccessTokenTtlSeconds,
+            refreshTokenExpiresIn: config.mcpRefreshTokenTtlSeconds,
+            allowDynamicClientRegistration: false,
+          }),
+          cimd({
+            fetchClientMetadataResource,
+            metadataProfile: 'mcp-2026-07-28',
+            isMetadataDocumentUrlAllowed: (clientIdUrl) =>
+              config.mcpAllowedClientIds.includes(clientIdUrl),
+          }),
+        ]
+      : []),
+  ],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
   trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
