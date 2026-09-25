@@ -131,12 +131,7 @@ export const auth = betterAuth({
       ipAddressHeaders: ['cf-connecting-ip'],
     },
     cookiePrefix: 'app',
-    // Web (app.*) and API (api.*) are on separate subdomains in prod, so
-    // without a shared cookie domain every auth cookie is host-only to the
-    // API's origin: the session still works (API calls always hit that
-    // host), but the client-readable last-login-method cookie becomes
-    // invisible to the web app's JS. Unset in dev, where both apps share
-    // the literal host `localhost` (cookies ignore port) and already work.
+    // Needed so cookies are visible across app.* and api.* subdomains in prod.
     ...(config.cookieDomain
       ? { crossSubDomainCookies: { enabled: true, domain: config.cookieDomain } }
       : {}),

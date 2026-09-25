@@ -93,9 +93,7 @@ const ConfigSchema = z.object({
       return `http://localhost:${port}`;
     }),
   API_BASE_URL: z.string().optional(),
-  // Shared parent domain (e.g. ".ragna.io") for better-auth cookies. Only
-  // needed when the web app and API live on different subdomains in prod;
-  // leave unset in dev, where both share the literal host "localhost".
+  // Shared parent domain (e.g. ".ragna.io") for better-auth cookies.
   COOKIE_DOMAIN: z.string().optional(),
 
   // Logging
