@@ -131,6 +131,10 @@ export const auth = betterAuth({
       ipAddressHeaders: ['cf-connecting-ip'],
     },
     cookiePrefix: 'app',
+    // Needed so cookies are visible across app.* and api.* subdomains in prod.
+    ...(config.cookieDomain
+      ? { crossSubDomainCookies: { enabled: true, domain: config.cookieDomain } }
+      : {}),
   },
   // EXPERIMENTAL
   // experimental: { joins: true },
