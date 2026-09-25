@@ -3,6 +3,7 @@ import type { McpAccess } from '@repo/database';
 import { findMcpConnection, getMcpSettings, recordMcpToolCall, touchMcpConnection } from '@repo/database';
 import type { ToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
+import { logger } from '@repo/logger';
 import { requireMcpAuth } from '@better-auth/mcp';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createMcpHandler, getOAuthProtectedResourceMetadataUrl, McpServer } from '@modelcontextprotocol/server';
@@ -73,6 +74,29 @@ function toMcpToolCallResult(output: unknown): CallToolResult {
   };
 }
 
+// Best-effort: the tool's write already committed, so a failure here must not surface to the client.
+async function recordMcpToolCallOutcome(
+  scope: McpConnectionScope,
+  definition: ToolDefinition<z.ZodObject, unknown>,
+  result: CallToolResult,
+): Promise<void> {
+  try {
+    await touchMcpConnection({ connectionId: scope.connectionId });
+    if (definition.access === 'write') {
+      await recordMcpToolCall({
+        connectionId: scope.connectionId,
+        toolName: definition.name,
+        isError: result.isError ?? false,
+      });
+    }
+  } catch (error) {
+    logger.warn(
+      `Failed to record MCP tool call bookkeeping for tool ${definition.name} (connection ${scope.connectionId})`,
+      error,
+    );
+  }
+}
+
 // The one MCP adapter (docs/mcp/prd.md section 4): turns a transport-neutral
 // ToolDefinition into an MCP tool, recording writes and touching the
 // connection's last_used_at (P7).
@@ -96,14 +120,7 @@ function registerMcpTool(
       });
       const result = toMcpToolCallResult(output);
 
-      await touchMcpConnection({ connectionId: scope.connectionId });
-      if (definition.access === 'write') {
-        await recordMcpToolCall({
-          connectionId: scope.connectionId,
-          toolName: definition.name,
-          isError: result.isError ?? false,
-        });
-      }
+      await recordMcpToolCallOutcome(scope, definition, result);
 
       return result;
     },

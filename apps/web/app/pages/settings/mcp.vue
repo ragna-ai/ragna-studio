@@ -188,7 +188,7 @@ async function handleRevoke(connectionId: string) {
           </CardContent>
         </Card>
 
-        <Card class="mx-auto w-full max-w-2xl">
+        <Card v-if="data.enabled" class="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>{{ t('mcp.settings.connections.title') }}</CardTitle>
           </CardHeader>
