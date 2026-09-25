@@ -12,7 +12,6 @@ interface SocialProviderOption {
 const SOCIAL_PROVIDERS: SocialProviderOption[] = [
   { provider: 'google', icon: 'logos:google-icon' },
   { provider: 'microsoft', icon: 'logos:microsoft-icon' },
-  { provider: 'apple', icon: 'logos:apple' },
 ];
 
 definePageMeta({ layout: 'auth' });

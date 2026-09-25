@@ -93,6 +93,8 @@ const ConfigSchema = z.object({
       return `http://localhost:${port}`;
     }),
   API_BASE_URL: z.string().optional(),
+  // Shared parent domain (e.g. ".ragna.io") for better-auth cookies.
+  COOKIE_DOMAIN: z.string().optional(),
 
   // Logging
   LOG_LEVEL: z.enum(['trace', 'normal', 'debug', 'info', 'warn', 'error']).default('info'),
@@ -429,6 +431,10 @@ export class ConfigService {
     return this._config.API_BASE_URL || `${this._config.APP_URL}/`;
   }
 
+  get cookieDomain(): string | undefined {
+    return this._config.COOKIE_DOMAIN;
+  }
+
   get logLevel(): string {
     return this._config.LOG_LEVEL;
   }
@@ -576,6 +582,10 @@ export class ConfigService {
 
   get googleClientId(): string {
     return this._config.GOOGLE_CLIENT_ID;
+  }
+
+  get allowedLoginEmails(): string[] {
+    return this._config.ALLOWED_LOGIN_EMAILS;
   }
 
   get linkedInScopes(): string[] {
