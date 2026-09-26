@@ -24,8 +24,6 @@ export default defineNuxtConfig({
   ],
   // CONFIG
   runtimeConfig: {
-    // img-src/media-src origins, overridable via NUXT_CSP_MEDIA_ORIGINS
-    cspMediaOrigins: 'https://static.ragna.io,https://images.ragna.io',
     public: {
       apiBaseUrl: 'http://localhost:3010', // default value for dev
     },
@@ -36,7 +34,6 @@ export default defineNuxtConfig({
   // HSTS/X-Content-Type-Options/X-Frame-Options/X-XSS-Protection stay owned by
   // Traefik's shared default-security-headers (same as ragna-api), only CSP
   // needs to live here since its nonce has to be generated per-request.
-  // connect-src/img-src/media-src origins are added at runtime in server/plugins/csp.ts
   security: {
     enabled: !isDev,
     headers: {
@@ -47,9 +44,17 @@ export default defineNuxtConfig({
       crossOriginEmbedderPolicy: false,
       contentSecurityPolicy: {
         'default-src': ["'self'"],
-        'connect-src': ["'self'"],
-        'img-src': ["'self'", 'data:'],
-        'media-src': ["'self'"],
+        // local containers override directives via NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_* env vars
+        'connect-src': ["'self'", 'https://api.ragna.io', 'wss://api.ragna.io'],
+        'img-src': [
+          "'self'",
+          'data:',
+          'https://static.ragna.io',
+          'https://images.ragna.io',
+        ],
+        // generated videos are served from the same R2 bucket/domain as images
+        // (packages/storage/src/lib/video-urls.ts -> getPublicMediaUrl)
+        'media-src': ["'self'", 'https://images.ragna.io'],
         // vue-i18n falls back to its JIT (`new Function`) message compiler for
         // any t(`...${dynamicKey}`) call, since the key can't be statically
         // precompiled at build time. That pattern is used throughout the app
