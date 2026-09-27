@@ -12,9 +12,6 @@ IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-api"
 TAG="latest"
 DOCKERFILE="$PROJECT_ROOT/apps/api/Dockerfile"
 
-# Get version from package.json
-VERSION=$(node -p "require('$PROJECT_ROOT/package.json').version" 2>/dev/null || echo "0.0.0")
-
 # Parse arguments
 PUSH=false
 PLATFORM=""
@@ -55,7 +52,6 @@ echo "Building Ragna Studio API Image"
 echo "========================================"
 echo "Image:    $IMAGE_NAME"
 echo "Tag:      $TAG"
-echo "Version:  $VERSION"
 echo "Platform: ${PLATFORM:-auto}"
 echo "========================================"
 
@@ -65,8 +61,7 @@ if [ -n "$PLATFORM" ]; then
   PLATFORM_ARG="--platform $PLATFORM"
 fi
 
-# Build the image with both tags
-  # --tag "$IMAGE_NAME:$VERSION" \
+# Build the image
 docker build \
   --tag "$IMAGE_NAME:$TAG" \
   --file "$DOCKERFILE" \

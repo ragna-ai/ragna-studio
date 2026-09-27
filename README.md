@@ -1,5 +1,7 @@
 # RAGNA Studio
 
+[![CI](https://github.com/ragna-ai/ragna-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/ragna-ai/ragna-studio/actions/workflows/ci.yml)
+
 An AI Agent First App where humans and ai-agents work on the same things: chats, documents, datasets, tasks, and media.
 
 <!-- TODO: screenshot or short GIF of the app -->

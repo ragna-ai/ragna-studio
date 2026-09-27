@@ -1,0 +1,26 @@
+name: GHCR cleanup
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      # Multi-arch aware: build-push-action stores provenance as child manifests,
+      # which a plain "delete untagged" would remove and break tagged images.
+      - uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          owner: ragna-ai
+          packages: ragna-studio-api,ragna-studio-webapp,ragna-studio-worker,ragna-studio-webbrowser,ragna-studio-migrate
+          keep-n-tagged: 5
+          exclude-tags: latest
+          delete-untagged: true
+          # Rollout: check the first run's log, then remove this line.
+          dry-run: true

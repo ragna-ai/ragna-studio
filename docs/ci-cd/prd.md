@@ -1,6 +1,8 @@
 # CI/CD with GitHub Actions (PRD)
 
-> **Status: decided** (2026-09-27). Phase 1 and 2 approved; phase 3 deferred.
+> **Status: implemented** (2026-09-27, phase 1 and 2). Phase 3 deferred.
+> GHCR cleanup ships with `dry-run: true`; remove it after checking the
+> first run's log.
 
 The repo has no `.github/` folder. Nothing checks a PR before merge, and
 Docker images are built and pushed by hand via `scripts/build-*.sh`
@@ -106,6 +108,19 @@ numbers are estimates; the first real CI runs replace them.
   image, `mode=max`. Counts toward the 10 GB cache allowance; GitHub
   evicts the oldest entries first.
 - **Permissions:** `contents: read`, `packages: write`.
+
+### Versioning
+
+- **The git tag is the only version.** Release with
+  `git tag v0.3.0 && git push origin v0.3.0`. First tag: `v0.3.0`.
+- **SemVer for the whole app:** MAJOR for breaks that need manual steps
+  (DB, API, config), MINOR for features, PATCH for fixes.
+- **`package.json` versions are not maintained.** All packages are
+  `private` and linked via `workspace:*`, so their `version` fields are
+  never read.
+- **The webapp shows the version** in the help menu: `release.yml` passes
+  it as build arg `APP_VERSION`, which `apps/web/Dockerfile` exposes as
+  `VITE_APP_VERSION`. Local builds and `pnpm dev` show `dev`.
 
 ### Build scripts
 
