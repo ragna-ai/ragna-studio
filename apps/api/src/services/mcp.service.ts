@@ -1,10 +1,9 @@
-import { auth } from '@repo/auth/server';
+import { auth, requireMcpAuth } from '@repo/auth/server';
 import type { McpAccess } from '@repo/database';
 import { findMcpConnection, getMcpSettings, recordMcpToolCall, touchMcpConnection } from '@repo/database';
 import type { ToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
-import { requireMcpAuth } from '@better-auth/mcp';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createMcpHandler, getOAuthProtectedResourceMetadataUrl, McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';
