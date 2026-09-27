@@ -56,3 +56,7 @@ _bak
 
 # Obsidian vault
 .obsidian/
+
+# Claude Code (personal settings and worktrees)
+.claude/settings.local.json
+.claude/worktrees/
