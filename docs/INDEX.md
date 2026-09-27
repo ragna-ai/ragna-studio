@@ -25,7 +25,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
-| [CI/CD with GitHub Actions (PRD)](./ci-cd/prd.md) | decided (2026-09-27) |
 
 ## Proposed
 
@@ -33,6 +32,7 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
+| [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
 | [Workflows: human in the loop (approval node)](./workflow/workflows-human-in-the-loop.md) | proposed |
@@ -49,6 +49,7 @@ work first, shipped reference and dead/historical docs last.
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
 | [Chat branching (PRD)](./chat/branching.md) | implemented (2026-08-08) |
+| [CI/CD with GitHub Actions (PRD)](./ci-cd/prd.md) | implemented (2026-09-27, phase 1 and 2) |
 | [Credit System (PRD)](./credits/prd.md) | implemented (merged via PR #13, 2026-07-29) |
 | [Database migrations and seeding in production](./database/migrations-and-seed.md) | implemented (2026-09-19) |
 | [Datasets: shared structured state for humans and agents](./datasets/datasets.md) | implemented (2026-07-17) |

@@ -40,7 +40,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source and build
 COPY --from=pruner /app/out/full .
+ARG APP_VERSION
 ENV NODE_ENV=production
+ENV VITE_APP_VERSION=$APP_VERSION
 RUN pnpm turbo build --filter=@repo/web
 
 # ============================================================

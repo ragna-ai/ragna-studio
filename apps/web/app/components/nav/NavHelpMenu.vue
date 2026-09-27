@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { HelpCircleIcon } from '@lucide/vue';
 
-const version = import.meta.env.VITE_APP_VERSION;
+const version = import.meta.env.VITE_APP_VERSION || 'dev';
 </script>
 
 <template>
