@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "media domain: type registry, sniffing, extraction, refcounted deletion",
+  "license": "AGPL-3.0-only",
   "files": [
     "dist"
   ],

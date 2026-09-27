@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "CSV, xlsx and PDF export writers",
+  "license": "AGPL-3.0-only",
   "files": [
     "dist"
   ],
