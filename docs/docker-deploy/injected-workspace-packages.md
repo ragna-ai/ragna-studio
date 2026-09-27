@@ -318,3 +318,10 @@ How this interacts with the dev workflows (all verified empirically):
   file. The usual `pnpm dev` is unaffected because it filters to the
   three apps and doesn't watch packages at all; after a package edit you
   run the filtered build anyway, and that syncs.
+- **Turbo cache hits do NOT sync**: turbo restores `dist/` from its cache
+  without running the script, so the hook never fires. On a fresh CI runner
+  the injected copies are created at install time without `dist/` (it's
+  gitignored), so a consumer rebuilt against cached packages fails to
+  resolve them (2026-09-27: `@repo/web` could not resolve
+  `@repo/auth/client`). CI therefore runs without a turbo cache. Locally
+  this is masked because earlier real builds already synced the copies.
