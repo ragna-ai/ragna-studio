@@ -5,9 +5,14 @@
 > the first manual tag `v0.3.0` has tested the image pipeline.
 
 Today a release is a manual tag (`git tag v0.3.0 && git push origin v0.3.0`),
-which triggers `release.yml`. There is no changelog and no GitHub Release.
-This doc compares tools that would automate the version bump, changelog,
-and GitHub Release.
+which triggers `release.yml`. It builds the images and creates the GitHub
+Release with auto-generated notes (merged PR titles). There is no
+`CHANGELOG.md` and no version prompt. This doc compares tools that would
+automate the version bump and changelog file.
+
+**Update (2026-09-27):** since `release.yml` now creates the GitHub Release,
+release-it would mainly add `CHANGELOG.md` and the interactive version prompt.
+If adopted, set `github.release: false` so the release isn't created twice.
 
 ## Constraints
 
@@ -56,12 +61,12 @@ Setup sketch for the follow-up PR:
 
 - Root devDependencies: `release-it`, `@release-it/conventional-changelog`.
 - `.release-it.json`: `npm.publish: false`, `git.tagName: "v${version}"`,
-  `github.release: true`, plugin with `preset: conventionalcommits` and
-  `enh` mapped to an "Enhancements" section, `infile: CHANGELOG.md`.
-- Root script: `"release": "release-it"`. GitHub auth via
-  `GITHUB_TOKEN=$(gh auth token) pnpm release`, or `github.web: true` to open
-  a pre-filled release page instead.
-- First run bumps to `0.3.0` (root `package.json` gets a `version` field).
+  `github.release: false` (CI creates it), plugin with
+  `preset: conventionalcommits` and `enh` mapped to an "Enhancements"
+  section, `infile: CHANGELOG.md`.
+- Root script: `"release": "release-it"`.
+- First run continues from the latest tag (`v0.3.0`); the root
+  `package.json` gets a `version` field.
 
 **Branch protection:** if `main` later requires PRs, allow admin bypass so
 the release commit can be pushed. Branch protection on private repos isn't
