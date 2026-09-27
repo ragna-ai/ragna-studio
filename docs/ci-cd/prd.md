@@ -163,6 +163,18 @@ until deleted.
   it off.
 - **Permissions:** `packages: write`.
 
+## Action pinning (2026-09-27)
+
+- **Third-party actions are pinned to a commit SHA** with the version as a
+  comment: `pnpm/action-setup` and `dataaxiom/ghcr-cleanup-action`. A moved
+  tag can't swap in different code; this matters most for the cleanup
+  action, which has `packages: write`.
+- **`actions/*` and `docker/*` stay on major tags** (GitHub and a verified
+  publisher).
+- **No Dependabot version updates.** Sven doesn't want PRs just for
+  upgrades. Dependabot alerts are on (notification only, no security-update
+  PRs). Update the two pins by hand alongside regular dependency upgrades.
+
 ## Phase 3: API tests (deferred)
 
 Cost fits (see estimate). The work is the setup:
