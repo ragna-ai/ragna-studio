@@ -108,6 +108,9 @@ numbers are estimates; the first real CI runs replace them.
   image, `mode=max`. Counts toward the 10 GB cache allowance; GitHub
   evicts the oldest entries first.
 - **Permissions:** `contents: read`, `packages: write`.
+- **GitHub Release:** after all images are built, a `github-release` job runs
+  `gh release create <tag> --generate-notes` (notes from merged PR titles
+  since the previous release). Needs `contents: write`.
 
 ### Versioning
 
