@@ -22,5 +22,3 @@ jobs:
           keep-n-tagged: 5
           exclude-tags: latest
           delete-untagged: true
-          # Rollout: check the first run's log, then remove this line.
-          dry-run: true

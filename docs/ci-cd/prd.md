@@ -1,8 +1,8 @@
 # CI/CD with GitHub Actions (PRD)
 
 > **Status: implemented** (2026-09-27, phase 1 and 2). Phase 3 deferred.
-> GHCR cleanup ships with `dry-run: true`; remove it after checking the
-> first run's log.
+> First release `v0.3.0` built and deployed; the cleanup dry run kept the
+> attestation children as expected, so `dry-run` was removed.
 
 The repo has no `.github/` folder. Nothing checks a PR before merge, and
 Docker images are built and pushed by hand via `scripts/build-*.sh`
