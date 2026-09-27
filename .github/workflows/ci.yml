@@ -33,12 +33,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - uses: actions/cache@v6
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-${{ runner.os }}-
-
+      # No turbo cache: a cache hit restores packages/*/dist without running the build
+      # script, so pnpm never syncs the injected copies consumers resolve through.
       # Build first: check-types resolves workspace packages through their dist/ types.
       - run: pnpm build
       - run: pnpm check-types
