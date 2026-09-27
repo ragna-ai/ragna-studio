@@ -28,7 +28,8 @@ useHead({
 // Computed
 const sideBarTabs = computed(() => [
   { id: 'profile', icon: UserIcon, label: t('user.tabs.profile') },
-  { id: 'social', icon: Link2Icon, label: t('user.tabs.social') },
+  // not 'social': ad blockers hide elements whose id contains "social"
+  { id: 'accounts', icon: Link2Icon, label: t('user.tabs.accounts') },
   { id: 'language', icon: LanguagesIcon, label: t('user.tabs.language') },
   { id: 'sidebar', icon: PanelLeftIcon, label: t('user.tabs.sidebar') },
   { id: 'credits', icon: CoinsIcon, label: t('user.tabs.credits') },
@@ -54,7 +55,7 @@ const sideBarTabs = computed(() => [
         <template #profile>
           <UserProfileSettings />
         </template>
-        <template #social>
+        <template #accounts>
           <UserSocialSettings />
         </template>
         <template #language>

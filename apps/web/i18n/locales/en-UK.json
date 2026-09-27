@@ -657,7 +657,7 @@
   "user": {
     "tabs": {
       "profile": "Profile",
-      "social": "Connected accounts",
+      "accounts": "Connected accounts",
       "language": "Language",
       "sidebar": "Sidebar",
       "credits": "Credits"

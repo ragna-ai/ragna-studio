@@ -663,7 +663,7 @@
   "user": {
     "tabs": {
       "profile": "Profil",
-      "social": "Verbundene Konten",
+      "accounts": "Verbundene Konten",
       "language": "Sprache",
       "sidebar": "Seitenleiste",
       "credits": "Credits"
