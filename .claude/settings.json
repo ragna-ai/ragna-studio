@@ -1,16 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "0"
-  },
-  "permissions": {
-    "defaultMode": "bypassPermissions",
-    "allow": ["WebFetch", "Read(//Users/sven/var/ragna/ragna-cloud-mono/**)"]
-  },
-  "model": "claude-sonnet-5",
-  "sandbox": {
-    "enabled": false
-  },
   "hooks": {
     "PreToolUse": [
       {
