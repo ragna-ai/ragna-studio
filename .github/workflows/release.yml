@@ -56,8 +56,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: APP_VERSION=${{ steps.meta.outputs.version }}
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
   github-release:
     needs: build

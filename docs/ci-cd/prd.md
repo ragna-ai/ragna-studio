@@ -104,9 +104,12 @@ numbers are estimates; the first real CI runs replace them.
   `docker/build-push-action`.
 - **Tags** from `metadata-action`: `1.2.0`, `1.2`, and `latest`.
   `docker-compose.yml` keeps pulling `:latest`, so deploy is unchanged.
-- **Layer cache:** `cache-from/cache-to: type=gha` with one `scope` per
-  image, `mode=max`. Counts toward the 10 GB cache allowance; GitHub
-  evicts the oldest entries first.
+- **No layer cache.** `cache-from/cache-to: type=gha` was removed
+  (2026-09-28): GHA cache is scoped per ref, tags are one-shot and never
+  rebuilt, so every release wrote a fresh ~2.5 GB of blobs that could
+  never be read back, at one point consuming 9.6 GB of the 10 GB repo
+  cache allowance for zero benefit. Each release now does a cold
+  `docker build`.
 - **Permissions:** `contents: read`, `packages: write`.
 - **GitHub Release:** after all images are built, a `github-release` job runs
   `gh release create <tag> --generate-notes` (notes from merged PR titles
