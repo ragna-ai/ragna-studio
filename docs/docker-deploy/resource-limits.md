@@ -5,7 +5,7 @@ Status: implemented (2026-09-23)
 ## Why
 
 The production host is a single 4 vCPU / 7.75GB KVM VM with no swap
-configured, running every service (`webapp`, `api`, `worker`,
+configured, running every service (`frontend`, `backend`, `worker`,
 `webbrowser`, `postgres`, `redis`) plus Traefik, CrowdSec, and WireGuard
 outside this compose file. Without per-container limits, a runaway
 process (e.g. `worker` under heavy ffmpeg/image/video-gen jobs, or a
@@ -20,8 +20,8 @@ swarm-only `deploy.resources.limits` block).
 
 | service    | mem_limit | cpus | reasoning                                        |
 | ---------- | --------- | ---- | ------------------------------------------------- |
-| webapp     | 512m      | 1.0  | static/SPA host, idle usage ~52MB                  |
-| api        | 1024m     | 1.5  | AI SDK streaming, idle usage ~195MB                |
+| frontend   | 512m      | 1.0  | static/SPA host, idle usage ~52MB                  |
+| backend    | 1024m     | 1.5  | AI SDK streaming, idle usage ~195MB                |
 | worker     | 2048m     | 2.0  | ffmpeg + image/video-gen jobs spike hardest        |
 | webbrowser | 1536m     | 1.5  | headless Chromium spikes per open page             |
 | postgres   | 1024m     | 1.5  | shared_buffers + query cache                       |
@@ -39,8 +39,8 @@ After `docker compose up -d` on 2026-09-23, all six containers restarted
 healthy and `docker inspect` confirmed the limits landed:
 
 ```
-webapp:     mem=536870912   (512MB)  nanocpus=1000000000 (1.0)
-api:        mem=1073741824  (1GB)    nanocpus=1500000000 (1.5)
+frontend:   mem=536870912   (512MB)  nanocpus=1000000000 (1.0)
+backend:    mem=1073741824  (1GB)    nanocpus=1500000000 (1.5)
 worker:     mem=2147483648  (2GB)    nanocpus=2000000000 (2.0)
 webbrowser: mem=1610612736  (1.5GB)  nanocpus=1500000000 (1.5)
 postgres:   mem=1073741824  (1GB)    nanocpus=1500000000 (1.5)

@@ -5,8 +5,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TARGETS=(api webapp worker webbrowser migrate)
-CORE_TARGETS=(api webapp worker migrate)
+TARGETS=(backend frontend worker webbrowser migrate)
+CORE_TARGETS=(backend frontend worker migrate)
 
 # Pick the target off argv if it's already given (non-interactive use),
 # leaving the rest of argv to forward to the underlying build script.

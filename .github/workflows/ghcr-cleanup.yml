@@ -18,7 +18,7 @@ jobs:
       - uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           owner: ragna-ai
-          packages: ragna-studio-api,ragna-studio-webapp,ragna-studio-worker,ragna-studio-webbrowser,ragna-studio-migrate
+          packages: ragna-studio-backend,ragna-studio-frontend,ragna-studio-worker,ragna-studio-webbrowser,ragna-studio-migrate
           keep-n-tagged: 5
           exclude-tags: latest
           delete-untagged: true

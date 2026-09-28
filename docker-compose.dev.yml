@@ -17,7 +17,7 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
 
-  webapp:
+  frontend:
     cpus: 1
     restart: no
     profiles:
@@ -25,7 +25,7 @@ services:
     ports:
       - ${APP_PORT:-3000}:3000
 
-  api:
+  backend:
     cpus: 1
     restart: no
     profiles:

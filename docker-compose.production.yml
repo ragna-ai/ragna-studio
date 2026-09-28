@@ -1,29 +1,29 @@
 services:
-  webapp:
+  frontend:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ragna-webapp.rule=Host(`app.ragna.io`)"
-      - "traefik.http.routers.ragna-webapp.entrypoints=https"
-      - "traefik.http.services.ragna-webapp.loadbalancer.server.port=3000"
-      - "traefik.http.routers.ragna-webapp.service=ragna-webapp"
-      - "traefik.http.routers.ragna-webapp.middlewares=default@file"
-      - "traefik.http.routers.ragna-webapp.tls=true"
-      - "traefik.http.routers.ragna-webapp.tls.certresolver=http"
+      - "traefik.http.routers.ragna-frontend.rule=Host(`app.ragna.io`)"
+      - "traefik.http.routers.ragna-frontend.entrypoints=https"
+      - "traefik.http.services.ragna-frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.ragna-frontend.service=ragna-frontend"
+      - "traefik.http.routers.ragna-frontend.middlewares=default@file"
+      - "traefik.http.routers.ragna-frontend.tls=true"
+      - "traefik.http.routers.ragna-frontend.tls.certresolver=http"
       - "traefik.docker.network=traefik_net"
     networks:
       traefik_net:
         ipv4_address: 172.18.7.1
 
-  api:
+  backend:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ragna-api.rule=Host(`api.ragna.io`)"
-      - "traefik.http.routers.ragna-api.entrypoints=https"
-      - "traefik.http.services.ragna-api.loadbalancer.server.port=3010"
-      - "traefik.http.routers.ragna-api.service=ragna-api"
-      - "traefik.http.routers.ragna-api.middlewares=default@file"
-      - "traefik.http.routers.ragna-api.tls=true"
-      - "traefik.http.routers.ragna-api.tls.certresolver=http"
+      - "traefik.http.routers.ragna-backend.rule=Host(`api.ragna.io`)"
+      - "traefik.http.routers.ragna-backend.entrypoints=https"
+      - "traefik.http.services.ragna-backend.loadbalancer.server.port=3010"
+      - "traefik.http.routers.ragna-backend.service=ragna-backend"
+      - "traefik.http.routers.ragna-backend.middlewares=default@file"
+      - "traefik.http.routers.ragna-backend.tls=true"
+      - "traefik.http.routers.ragna-backend.tls.certresolver=http"
       - "traefik.docker.network=traefik_net"
     networks:
       traefik_net:

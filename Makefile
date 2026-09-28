@@ -12,10 +12,10 @@ build:
 	./scripts/build.sh
 
 build-core:
-	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh && ./scripts/build-migrate.sh
+	./scripts/build-backend.sh && ./scripts/build-frontend.sh && ./scripts/build-worker.sh && ./scripts/build-migrate.sh
 
 build-all:
-	./scripts/build-api.sh && ./scripts/build-webapp.sh && ./scripts/build-worker.sh && ./scripts/build-webbrowser.sh && ./scripts/build-migrate.sh
+	./scripts/build-backend.sh && ./scripts/build-frontend.sh && ./scripts/build-worker.sh && ./scripts/build-webbrowser.sh && ./scripts/build-migrate.sh
 
 # ── Docker (production compose) ──────────────────────────────────────────────
 up-prod:
@@ -41,8 +41,8 @@ help:
 	@echo "Targets:"
 	@echo "  dev                Run the application in local development mode (hot-reload, no Docker)"
 	@echo "  build              Build the application"
-	@echo "  build-core         Build the core components (API, Webapp, Worker)"
-	@echo "  build-all          Build all components (API, Webapp, Worker, Webbrowser)"
+	@echo "  build-core         Build the core components (Backend, Frontend, Worker)"
+	@echo "  build-all          Build all components (Backend, Frontend, Worker, Webbrowser)"
 	@echo "  up-prod            Start the application in production mode using Docker Compose"
 	@echo "  down-prod          Stop the application in production mode using Docker Compose"
 	@echo "  up-dev             Start the application in development mode using Docker Compose"
