@@ -33,9 +33,9 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  webapp:
-    image: ghcr.io/ragna-ai/ragna-studio-webapp:latest
-    container_name: ragna_studio_webapp
+  frontend:
+    image: ghcr.io/ragna-ai/ragna-studio-frontend:latest
+    container_name: ragna_studio_frontend
     restart: always
     mem_limit: 512m
     cpus: 1.0
@@ -46,7 +46,7 @@ services:
     networks:
       - app_net
     depends_on:
-      - api
+      - backend
 
   worker:
     image: ghcr.io/ragna-ai/ragna-studio-worker:latest
@@ -68,9 +68,9 @@ services:
       seed:
         condition: service_completed_successfully
 
-  api:
-    image: ghcr.io/ragna-ai/ragna-studio-api:latest
-    container_name: ragna_studio_api
+  backend:
+    image: ghcr.io/ragna-ai/ragna-studio-backend:latest
+    container_name: ragna_studio_backend
     restart: always
     mem_limit: 1024m
     cpus: 1.5

@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: api
+          - image: backend
             dockerfile: apps/api/Dockerfile
-          - image: webapp
+          - image: frontend
             dockerfile: apps/web/Dockerfile
           - image: worker
             dockerfile: apps/worker/Dockerfile

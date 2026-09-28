@@ -96,7 +96,7 @@ numbers are estimates; the first real CI runs replace them.
 
 - **Trigger:** `push` of tags matching `v*.*.*`. No builds on branch
   pushes.
-- **Matrix** over the five images (`api`, `webapp`, `worker`,
+- **Matrix** over the five images (`backend`, `frontend`, `worker`,
   `webbrowser`, `migrate`), each with its Dockerfile path. Jobs run in
   parallel.
 - **Actions:** `docker/login-action` (with `GITHUB_TOKEN`),
@@ -121,7 +121,7 @@ numbers are estimates; the first real CI runs replace them.
 - **`package.json` versions are not maintained.** All packages are
   `private` and linked via `workspace:*`, so their `version` fields are
   never read.
-- **The webapp shows the version** in the help menu: `release.yml` passes
+- **The frontend shows the version** in the help menu: `release.yml` passes
   it as build arg `APP_VERSION`, which `apps/web/Dockerfile` exposes as
   `VITE_APP_VERSION`. Local builds and `pnpm dev` show `dev`.
 
@@ -197,7 +197,7 @@ Write a short follow-up spec when phase 1 and 2 are live.
   adding `buildkit-cache-dance`.
 - `webbrowser` bundles Chromium. Check its image size against the 10 GB
   cache.
-- GHCR packages are lowercase (`ragna-ai/ragna-studio-api`); the cleanup
+- GHCR packages are lowercase (`ragna-ai/ragna-studio-backend`); the cleanup
   action needs exact names.
 - The existing `:latest` images were pushed by hand. Check they're linked
   to the repo so `GITHUB_TOKEN` can push and delete them. If not, link

@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Configuration
-IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-webapp"
+IMAGE_NAME="ghcr.io/ragna-ai/ragna-studio-frontend"
 TAG="latest"
 DOCKERFILE="$PROJECT_ROOT/apps/web/Dockerfile"
 
@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "========================================"
-echo "Building Ragna Studio Webapp Image"
+echo "Building Ragna Studio Frontend Image"
 echo "========================================"
 echo "Image:    $IMAGE_NAME"
 echo "Tag:      $TAG"
