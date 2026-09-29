@@ -58,9 +58,9 @@ catalog:
   tsdown: ^0.23.0
   typescript: 6.0.3
   zod: 4.6.5
-  oxfmt: ^0.68.0
-  oxlint: ^1.83.0
-  ai: ^7.0.107
+  oxfmt: ^0.71.0
+  oxlint: ^1.86.0
+  ai: ^7.0.122
 
 updateConfig:
   ignoreDependencies:
