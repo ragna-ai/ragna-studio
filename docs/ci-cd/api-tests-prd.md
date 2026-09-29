@@ -38,8 +38,8 @@ Service containers are the common choice. Dummy env beats secrets.
 
 A second job, `api-tests`, in `.github/workflows/ci.yml`.
 
-- **Trigger:** `pull_request` only, through `if: github.event_name == 'pull_request'`.
-  The file's `paths-ignore` for docs still applies.
+- **Trigger:** `pull_request` only, with docs-only PRs skipped at the job
+  level (see [Required checks](#required-checks)).
 - **Postgres:** `pgvector/pgvector:0.8.6-pg18-trixie` as a service, the same
   image as `docker-compose.yml`. Superuser `postgres`, with a health check.
   `test:setup` creates `studio_test` and the extensions itself, so the
@@ -83,7 +83,20 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
   pin together with local Bun.
 - Wall time of the job. The PRD estimate for CI was 60 to 90 seconds per run.
 
-## Decisions
+## Required checks
 
-Pending: make `api-tests` a required check on `main`. It is set by hand in the
-GitHub settings and is not part of the repo.
+Decided 2026-09-29. The `Protect main` ruleset gets `ci` and `api-tests` as
+required status checks, so a red PR cannot merge.
+
+- **No `push` trigger.** `main` only changes through a PR, so a run after the
+  merge adds little for a solo project. The known gap: two green PRs can
+  combine into a red `main`. Accepted. "Require branches to be up to date" is
+  not enabled.
+- **Docs skip at the job level, not the workflow level.** A workflow skipped
+  by `paths-ignore` leaves required checks pending forever. A job skipped by
+  `if:` counts as passing. A small `changes` job diffs the PR against its base
+  (`git diff --name-only`) and outputs `code=false` when every file is under
+  `docs/` or ends in `.md`. `ci` and `api-tests` need it and run only when
+  `code` is `true`. This keeps the "docs-only changes skip CI" decision in
+  [prd.md](./prd.md) working with required checks.
+- The ruleset lives in the GitHub settings, not in the repo.

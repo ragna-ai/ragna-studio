@@ -73,8 +73,11 @@ numbers are estimates; the first real CI runs replace them.
 
 `.github/workflows/ci.yml`
 
-- **Triggers:** `pull_request` (any branch) and `push` to `main`.
-- **Skip docs-only changes:** `paths-ignore: ['docs/**', '**/*.md']`.
+- **Triggers:** `pull_request` only. (Originally also `push` to `main`;
+  dropped 2026-09-29, see [api-tests-prd.md](./api-tests-prd.md#required-checks).)
+- **Docs-only changes:** originally skipped via `paths-ignore`. Since
+  2026-09-29 skipped per job (a `changes` job gates `ci` and `api-tests`),
+  because a skipped workflow leaves required checks pending.
   16 of 74 non-merge commits in the last 30 days touched only docs.
 - **Concurrency:** one group per branch/PR with `cancel-in-progress: true`,
   so a new push cancels the outdated run.
@@ -211,7 +214,8 @@ Write a short follow-up spec when phase 1 and 2 are live.
 ## Decisions (Sven, 2026-09-27)
 
 1. Ship phase 1 and phase 2 together.
-2. Docs-only changes (`docs/**`, `*.md`) skip CI entirely.
+2. Docs-only changes (`docs/**`, `*.md`) skip CI. Since 2026-09-29 this is
+   done per job, not per workflow, so required checks still report.
 3. Cleanup keeps `latest` plus the 5 newest tagged versions per image.
 
 ## Sources
