@@ -53,7 +53,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -85,4 +85,5 @@ jobs:
       # Same no-turbo-cache reasoning as the ci job: build through pnpm so injected copies sync.
       - run: pnpm turbo run build --filter=@repo/api...
       - run: pnpm test:setup
-      - run: pnpm test:api
+      # Not `pnpm test:api`: turbo's strict env mode strips the DB_* vars from its tasks.
+      - run: pnpm --filter @repo/api test

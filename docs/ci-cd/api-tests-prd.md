@@ -57,7 +57,11 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
   which `@repo/config` loads when `NODE_ENV=test`.
 - **Steps:** checkout, pnpm, Node 24, Bun, `pnpm install --frozen-lockfile`,
   `pnpm turbo run build --filter=@repo/api...`, `pnpm test:setup`,
-  `pnpm test:api`.
+  `pnpm --filter @repo/api test`.
+- **Tests run without turbo.** `pnpm test:api` goes through `turbo run`, whose
+  strict env mode drops `DB_*` and the other job-level vars. The tests then
+  fall back to the default password and fail with "password authentication
+  failed for user postgres". Locally a root `.env` hides this.
 - **Build through pnpm, no turbo cache.** Same reason as the `ci` job: a cache
   hit skips the build script, so injected copies are never synced.
 - **Actions pinned to SHAs**, like the other workflows.
