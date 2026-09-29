@@ -76,8 +76,6 @@ export const aiModel = pgTable(
     pricing: jsonb('pricing').$type<AiModelPricing>(),
     ...timestamps,
   },
-  // Lets the seed script upsert by (provider, model) instead of reset()-ing
-  // the whole table on every run (packages/database/src/seed/index.ts).
   (table) => [uniqueIndex('ai_model_provider_model_idx').on(table.provider, table.model)],
 );
 

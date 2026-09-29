@@ -1,11 +1,16 @@
 import { db } from '../db';
 import * as schema from '../schema';
 
-// Upserts by (provider, model) so this is safe to run on every deploy
-// (docker-compose.yml's `seed` service) instead of only once by hand: it
-// never touches rows it didn't insert, unlike drizzle-seed's reset(), which
-// used to truncate every table first.
+// Safe to run on every deploy (docker-compose.yml's `seed` service): it only
+// seeds an empty table. Admins swap the `model` of a family slot to newer
+// releases in the DB, so re-inserting by (provider, model) would re-add
+// outdated models next to the swapped ones.
 async function seedAiModels() {
+  const existing = await db.query.aiModel.findFirst();
+  if (existing) {
+    return;
+  }
+
   await db.insert(schema.aiModel).values([
     {
       provider: 'openai',
@@ -121,7 +126,7 @@ async function seedAiModels() {
       displayName: 'FLUX 3 Video',
       description: 'Video generation with draft/enhance by Black Forest Labs.',
     },
-  ]).onConflictDoNothing({ target: [schema.aiModel.provider, schema.aiModel.model] });
+  ]);
 }
 
 // Bootstraps the one default agent template by name, since it has no
