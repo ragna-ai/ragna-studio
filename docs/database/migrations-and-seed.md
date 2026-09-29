@@ -62,9 +62,13 @@ throw, it just connects to the wrong thing.
 table before inserting. Safe for "run once by hand on a fresh dev database,"
 not safe as an automated step that runs on every deploy. It's now:
 
-- `seedAiModels()` — `INSERT ... ON CONFLICT (provider, model) DO NOTHING`,
-  backed by a new unique index (`ai_model_provider_model_idx` on
-  `ai_models`). Existing rows are never touched.
+- `seedAiModels()` — returns early if `ai_models` has any row, otherwise
+  inserts the full list. Admins swap the `model` of a family slot (e.g.
+  `gpt-5.6-sol` to a newer release) in the DB and keep the rest of the row.
+  Upserting by `(provider, model)` saw the old model as missing and re-added
+  it next to the swapped one, so the seed only bootstraps an empty table.
+  New seed entries do not reach existing installs, add those by hand. The
+  unique index `ai_model_provider_model_idx` stays as a plain integrity guard.
 - `seedDefaultAgent()` — checks for an existing `agentTemplate` named
   `'RAGNA Agent'` first and returns early if found (no natural unique
   business key there, so this is an app-level check rather than a DB
