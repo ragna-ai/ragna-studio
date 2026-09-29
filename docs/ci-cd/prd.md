@@ -178,7 +178,9 @@ until deleted.
   upgrades. Dependabot alerts are on (notification only, no security-update
   PRs). Update the two pins by hand alongside regular dependency upgrades.
 
-## Phase 3: API tests (deferred)
+## Phase 3: API tests
+
+Now specced in [api-tests-prd.md](./api-tests-prd.md). Original notes:
 
 Cost fits (see estimate). The work is the setup:
 
