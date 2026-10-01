@@ -21,6 +21,7 @@
     "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {
+    "@hono/bun": "^1.0.0",
     "@hono/zod-validator": "^0.9.1",
     "@modelcontextprotocol/server": "^2.1.0",
     "@repo/ai": "workspace:*",
