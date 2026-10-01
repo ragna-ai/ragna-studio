@@ -1,6 +1,6 @@
 # RAGNA Studio
 
-**The AI workspace where agents work in your spreadsheets, on your schedule, on your servers.**
+**The self-hosted AI workspace where agents are your co-workers.**
 
 RAGNA Studio gives your agents a place to work.
 They read your documents, keep their state in datasets, delegate to each other, and run on a schedule while you sleep.

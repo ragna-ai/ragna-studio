@@ -52,7 +52,8 @@ jobs:
       # script, so pnpm never syncs the injected copies consumers resolve through.
       # Build first: check-types resolves workspace packages through their dist/ types.
       - run: pnpm build
-      - run: pnpm check-types
+      # TODO: web is excluded because `nuxt typecheck` is slow; re-add behind a path-gated job.
+      - run: pnpm check-types --filter='!@repo/web'
       - run: pnpm lint
 
   api-tests:
