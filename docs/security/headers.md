@@ -44,7 +44,7 @@ default (see `node_modules/nuxt-security/dist/defaultConfig.mjs`):
 | --- | --- | --- |
 | `default-src` | `'self'` | catch-all for directives not explicitly listed (`worker-src`, `manifest-src`, `media-src`, ...) |
 | `connect-src` | `'self' https://api.ragna.io wss://api.ragna.io` | XHR/fetch/WebSocket to the API + live features (`useWebSocketChannel.ts`) |
-| `img-src` | `'self' data: https://static.ragna.io https://images.ragna.io` | `images.ragna.io` is the real R2 media domain (`packages/storage/src/lib/image-urls.ts`); `static.ragna.io` is currently unused dead weight, left over from the commented-out `image.cloudflare` provider config below |
+| `img-src` | `'self' data: blob: https://static.ragna.io https://images.ragna.io` | `blob:` is needed for local upload previews (`URL.createObjectURL` in chat/task attachments and image/video gen forms); `images.ragna.io` is the real R2 media domain (`packages/storage/src/lib/image-urls.ts`); `static.ragna.io` is currently unused dead weight, left over from the commented-out `image.cloudflare` provider config below |
 | `media-src` | `'self' https://images.ragna.io` | generated videos (`<video>`) come from the same R2 domain/bucket as images (`video-urls.ts` -> `getPublicMediaUrl`); this is a separate directive from `img-src`, not covered by it |
 | `font-src` | `'self'` | `@nuxt/fonts` self-hosts Google Fonts at build time, no external font host is ever called |
 | `style-src` | `'self' 'unsafe-inline'` | no external style host needed |

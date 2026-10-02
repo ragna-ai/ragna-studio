@@ -49,6 +49,7 @@ export default defineNuxtConfig({
         'img-src': [
           "'self'",
           'data:',
+          'blob:',
           'https://static.ragna.io',
           'https://images.ragna.io',
         ],
