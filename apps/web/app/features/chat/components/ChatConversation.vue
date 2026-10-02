@@ -43,8 +43,6 @@ const inputText = ref('');
 const { mutateAsync: createNewChat } = useCreateChat();
 const invalidateCreditBalance = useInvalidateCreditBalance();
 const chatAttachments = useChatAttachments(ensureChat);
-// Drop anywhere over the conversation, not just the input (decision 7):
-// the overlay covers the whole container while a drag is over it.
 const { isOverDropZone } = useDropZone(conversationRef, {
   multiple: true,
   onDrop: (files) => {
@@ -89,18 +87,27 @@ const { messages, sendMessage, status, error, stop } = useChat({
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: chatTransport,
   onData: (dataPart) => {
-    if (dataPart.type === 'data-imageGen') {
-      lastGenerationEvent.value = {
-        kind: 'imageGen',
-        prompt: extractGenerationPrompt(dataPart.data),
-      };
-    } else if (dataPart.type === 'data-videoGen') {
-      lastGenerationEvent.value = {
-        kind: 'videoGen',
-        prompt: extractGenerationPrompt(dataPart.data),
-      };
-    } else {
-      // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
+    switch (dataPart.type) {
+      case 'data-imageGen':
+        lastGenerationEvent.value = {
+          kind: 'imageGen',
+          prompt: extractGenerationPrompt(dataPart.data),
+        };
+        break;
+      case 'data-videoGen':
+        lastGenerationEvent.value = {
+          kind: 'videoGen',
+          prompt: extractGenerationPrompt(dataPart.data),
+        };
+        break;
+      case 'data-chatTitle':
+        useHead({
+          title: (dataPart.data as { title: string }).title,
+        });
+        break;
+      default:
+        // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
+        return;
     }
   },
   // A turn that wasn't aborted just settled a charge server-side

@@ -618,10 +618,7 @@ function toChatMessageRow(message: UIMessage, chatId: string) {
 
 // Auto-continue (sendAutomaticallyWhen in ChatConversation.vue) resends the
 // already-persisted last message instead of a new one; skip re-appending it.
-function isEchoOfLastPersistedMessage(
-  message: unknown,
-  lastPersisted: { id: string } | undefined,
-) {
+function isEchoOfLastPersistedMessage(message: unknown, lastPersisted: { id: string } | undefined) {
   return (
     lastPersisted !== undefined &&
     typeof message === 'object' &&
@@ -777,7 +774,7 @@ export async function runChatStream(
           titlePromise.then((title) => {
             updateChatTitleById({ chatId: userChat.id, userId, title });
             dataStream.write({
-              type: 'data-chat-title',
+              type: 'data-chatTitle',
               data: { title },
               transient: true, // no history
             });
