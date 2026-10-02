@@ -37,7 +37,7 @@
     "@repo/workflow": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
     "fractional-indexing": "^4.0.0",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "zod": "catalog:"
   },
   "devDependencies": {
