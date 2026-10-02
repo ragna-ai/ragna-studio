@@ -20,7 +20,7 @@ make up-dev-full              # pulls the images and starts the whole stack
 
 The stack starts in order. Postgres comes up first. The `migrate` container applies the schema. The `seed` container adds the model catalog and the default agent. Then the backend, worker, frontend, and webbrowser start. Both one-shot containers are idempotent, so upgrading is just pulling newer images and starting again.
 
-Open [localhost:3000](http://localhost:3000). Login uses OAuth, so configure at least one provider (Google, Microsoft, or Apple) in `.env`.
+Open [localhost:3000](http://localhost:3000). Login uses OAuth, so configure at least one provider (Google, Microsoft) in `.env`.
 
 <details>
 <summary>What you need to self-host</summary>
@@ -30,7 +30,7 @@ Open [localhost:3000](http://localhost:3000). Login uses OAuth, so configure at 
 | PostgreSQL 18 with pgvector (the compose file ships the image) | Everything |
 | Redis | Queues and schedules |
 | S3-compatible storage (configured for Cloudflare R2) | Files and generated media |
-| One OAuth login: Google, Microsoft, or Apple | Sign-in |
+| One OAuth login: Google, Microsoft | Sign-in |
 | At least one LLM key | Chat and agents |
 
 Optional pieces, each enabled by its own env vars:
@@ -167,8 +167,33 @@ due to the modular system which can be freely configured by you and your ai agen
 
 </details>
 
+## Architecture
+
+```mermaid
+flowchart TB
+  User[Browser user] --> Web[Web app: Nuxt SPA]
+  Web -->|REST, WebSocket| Api[API: Hono]
+  Desktop[MCP client, e.g. Claude Desktop] -->|MCP| Api
+  Login[OAuth: Google, Microsoft] <--> Api
+  Api --> Queue[Redis job queues]
+  Queue --> Worker[Worker: jobs, workflows, crons, ai-agents]
+  Api --> Agents[AI Agents and Tools]
+  Worker --> Agents
+  Agents --> LLMs[LLM providers]
+  Agents --> Browser[Webbrowser]
+  Agents --> Search[Web search]
+  Agents --> Gen[Image and video models]
+  Agents --> Datasets[Datasets, documents, tasks]
+  Api <--> Mail[Email: Gmail, Outlook]
+  Worker <--> Mail
+  Api --> DB[(PostgreSQL + pgvector)]
+  Worker --> DB
+  Api --> Files[(S3 / R2 media)]
+  Worker --> Files
+```
+
 <details>
-<summary>Architecture</summary>
+<summary>Repository layout and stack</summary>
 
 ```
 apps/
@@ -178,7 +203,7 @@ apps/
   webbrowser/   Scraping and browser automation service         :3011
 packages/
   database/     Drizzle ORM schema and migrations (Postgres + pgvector)
-  auth/         better-auth (Google, Microsoft, Apple) and MCP OAuth
+  auth/         better-auth (Google, Microsoft) and MCP OAuth
   ai/           Vercel AI SDK provider setup and agent tools
   queue/        BullMQ queues, job DTOs
   workflow/     Workflow definitions, validation, cron helpers
