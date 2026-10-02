@@ -23,7 +23,7 @@
   "dependencies": {
     "@hono/bun": "^1.0.0",
     "@hono/zod-validator": "^0.9.1",
-    "@modelcontextprotocol/server": "^2.1.0",
+    "@modelcontextprotocol/server": "^2.2.0",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
@@ -37,7 +37,7 @@
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "hono": "^4.13.10",
+    "hono": "^4.13.12",
     "http-status-codes": "^2.3.0",
     "unstorage": "^1.17.5",
     "zod": "catalog:"

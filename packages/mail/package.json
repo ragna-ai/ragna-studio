@@ -37,7 +37,7 @@
     "html-to-text": "^10.0.1",
     "isomorphic-dompurify": "^4.4.0",
     "marked": "18.0.14",
-    "nodemailer": "^10.0.12",
+    "nodemailer": "^10.0.13",
     "nodemailer-brevo-transport": "^2.2.1",
     "turndown": "^7.2.4"
   },
