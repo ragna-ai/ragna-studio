@@ -89,19 +89,40 @@ const { messages, sendMessage, status, error, stop } = useChat({
   sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   transport: chatTransport,
   onData: (dataPart) => {
-    if (dataPart.type === 'data-imageGen') {
-      lastGenerationEvent.value = {
-        kind: 'imageGen',
-        prompt: extractGenerationPrompt(dataPart.data),
-      };
-    } else if (dataPart.type === 'data-videoGen') {
-      lastGenerationEvent.value = {
-        kind: 'videoGen',
-        prompt: extractGenerationPrompt(dataPart.data),
-      };
-    } else {
-      // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
+    switch (dataPart.type) {
+      case 'data-imageGen':
+        lastGenerationEvent.value = {
+          kind: 'imageGen',
+          prompt: extractGenerationPrompt(dataPart.data),
+        };
+        break;
+      case 'data-videoGen':
+        lastGenerationEvent.value = {
+          kind: 'videoGen',
+          prompt: extractGenerationPrompt(dataPart.data),
+        };
+        break;
+      case 'data-chatTitle':
+        useHead({
+          title: (dataPart.data as { title: string }).title,
+        });
+        break;
+      default:
+        return;
     }
+    // if (dataPart.type === 'data-imageGen') {
+    //   lastGenerationEvent.value = {
+    //     kind: 'imageGen',
+    //     prompt: extractGenerationPrompt(dataPart.data),
+    //   };
+    // } else if (dataPart.type === 'data-videoGen') {
+    //   lastGenerationEvent.value = {
+    //     kind: 'videoGen',
+    //     prompt: extractGenerationPrompt(dataPart.data),
+    //   };
+    // } else {
+    //   // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
+    // }
   },
   // A turn that wasn't aborted just settled a charge server-side
   // (docs/credits/prd.md, "Frontend"), so the cached balance is stale.
