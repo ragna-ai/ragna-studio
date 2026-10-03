@@ -6,7 +6,7 @@ import {
   upsertQueueJobScheduler,
   WORKFLOW_SCHEDULE_TICK_JOB,
   WORKFLOW_SCHEDULES_QUEUE,
-  WorkflowScheduleTickJobDto,
+  workflowScheduleTickJobSchema,
 } from '@repo/queue';
 
 // Redis is treated as a cache of the DB's schedule state (workflows-scheduling.md,
@@ -29,7 +29,7 @@ export async function reconcileSchedules(): Promise<void> {
       repeat: { pattern: workflow.scheduleCron, tz: workflow.scheduleTimezone ?? undefined },
       job: {
         name: WORKFLOW_SCHEDULE_TICK_JOB,
-        data: new WorkflowScheduleTickJobDto({ workflowId: workflow.id }).toJSON(),
+        data: workflowScheduleTickJobSchema.parse({ workflowId: workflow.id }),
         opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
       },
     });

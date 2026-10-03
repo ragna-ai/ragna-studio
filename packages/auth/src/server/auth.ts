@@ -3,8 +3,9 @@ import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { mcp } from '@better-auth/mcp';
 import { config } from '@repo/config';
 import { createWorkspace, db } from '@repo/database';
+import { logger } from '@repo/logger';
 import * as schema from '@repo/database/schema';
-import { queue, WELCOME_EMAIL_JOB, WelcomeEmailJobDto } from '@repo/queue';
+import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, testUtils } from 'better-auth/plugins';
@@ -141,13 +142,14 @@ export const auth = betterAuth({
           // flood the real Redis-backed email queue on every test run.
           if (config.isTest) return;
 
-          await queue.email().add(
-            WELCOME_EMAIL_JOB,
-            WelcomeEmailJobDto.fromJSON({
-              email: user.email,
-              name: user.name,
-            }),
-          );
+          try {
+            await queue.email().add(
+              WELCOME_EMAIL_JOB,
+              welcomeEmailJobSchema.parse({ email: user.email, name: user.name }),
+            );
+          } catch (error) {
+            logger.error('Failed to enqueue welcome email', { userId: user.id, error });
+          }
         },
       },
     },

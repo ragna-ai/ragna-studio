@@ -12,7 +12,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { DOCUMENT_KINDS, MIME_TYPE_BY_MEDIA_KIND, sniffMediaKind, type MediaKind } from '@repo/media';
-import { EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, ExtractAgentContextDocumentJobDto, queue } from '@repo/queue';
+import { EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, extractAgentContextDocumentJobSchema, queue } from '@repo/queue';
 import { deleteObjects, uploadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
@@ -218,7 +218,7 @@ async function enqueueAgentContextDocumentExtraction({
   const { error } = await tryCatch(() =>
     queue
       .agentContextDocument()
-      .add(EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, new ExtractAgentContextDocumentJobDto({ documentId }).toJSON()),
+      .add(EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, extractAgentContextDocumentJobSchema.parse({ documentId })),
   );
 
   if (error === null) {

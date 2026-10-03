@@ -82,8 +82,8 @@ import { isMailNotFoundError } from '@repo/mail/provider';
 import {
   EMAIL_DRAFT_JOB,
   EMAIL_SYNC_JOB,
-  EmailDraftJobDto,
-  EmailSyncJobDto,
+  emailDraftJobSchema,
+  emailSyncJobSchema,
   queue,
 } from '@repo/queue';
 import { downloadObjectBuffer } from '@repo/storage';
@@ -255,7 +255,7 @@ export async function connectEmailAccount({
   }
 
   const { error: enqueueError } = await tryCatch(() =>
-    queue.emailSync().add(EMAIL_SYNC_JOB, EmailSyncJobDto.fromJSON({ accountId: account.id })),
+    queue.emailSync().add(EMAIL_SYNC_JOB, emailSyncJobSchema.parse({ accountId: account.id })),
   );
 
   if (enqueueError !== null) {
@@ -295,7 +295,7 @@ export async function syncEmailAccountNowForUser({
   const account = await loadEmailAccount({ userId });
 
   const { error } = await tryCatch(() =>
-    queue.emailSync().add(EMAIL_SYNC_JOB, EmailSyncJobDto.fromJSON({ accountId: account.id }), {
+    queue.emailSync().add(EMAIL_SYNC_JOB, emailSyncJobSchema.parse({ accountId: account.id }), {
       jobId: account.id,
     }),
   );
@@ -2438,7 +2438,7 @@ export async function triggerEmailDraftForUser({
   const { error } = await tryCatch(() =>
     queue.emailDraft().add(
       EMAIL_DRAFT_JOB,
-      EmailDraftJobDto.fromJSON({
+      emailDraftJobSchema.parse({
         accountId: account.id,
         threadId: thread.id,
         replyToMessageId: message.id,

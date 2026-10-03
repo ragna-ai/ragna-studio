@@ -7,7 +7,7 @@ import {
   enqueueNotification,
   GEN_VIDEO_JOB,
   GEN_VIDEOS_QUEUE,
-  GenVideoJobDto,
+  genVideoJobSchema,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 
@@ -24,7 +24,7 @@ export function registerGenVideoJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case GEN_VIDEO_JOB: {
-          const { genVideoId } = GenVideoJobDto.fromJSON(job.data);
+          const { genVideoId } = genVideoJobSchema.parse(job.data);
           await processGenVideo(genVideoId);
           break;
         }

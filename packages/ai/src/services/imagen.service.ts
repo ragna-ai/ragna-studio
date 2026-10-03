@@ -15,7 +15,7 @@ import {
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { applyImageWatermark } from '@repo/media';
-import { GEN_IMAGES_JOB, GenImagesJobDto, queue } from '@repo/queue';
+import { GEN_IMAGES_JOB, genImagesJobSchema, queue } from '@repo/queue';
 import {
   buildImageUrls,
   downloadObjectBuffer,
@@ -278,7 +278,7 @@ async function enqueueGenImagesJob(
   const genImageIds = records.map((record) => record.id);
 
   const { error } = await tryCatch(() =>
-    queue.genImages().add(GEN_IMAGES_JOB, new GenImagesJobDto({ genImageIds }).toJSON()),
+    queue.genImages().add(GEN_IMAGES_JOB, genImagesJobSchema.parse({ genImageIds })),
   );
 
   if (error === null) {

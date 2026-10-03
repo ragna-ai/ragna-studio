@@ -1,6 +1,6 @@
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, EMAIL_CLASSIFY_JOB, EMAIL_CLASSIFY_QUEUE, EmailClassifyJobDto } from '@repo/queue';
+import { createWorker, EMAIL_CLASSIFY_JOB, EMAIL_CLASSIFY_QUEUE, emailClassifyJobSchema } from '@repo/queue';
 import { classifyEmailMessage } from '../mail/email-classify.service';
 
 export function registerEmailClassifyJobProcessor(): Worker<any, any, string> {
@@ -11,7 +11,7 @@ export function registerEmailClassifyJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case EMAIL_CLASSIFY_JOB: {
-          const { accountId, messageId } = EmailClassifyJobDto.fromJSON(job.data);
+          const { accountId, messageId } = emailClassifyJobSchema.parse(job.data);
           await classifyEmailMessage({ accountId, messageId });
           break;
         }

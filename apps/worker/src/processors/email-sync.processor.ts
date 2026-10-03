@@ -1,6 +1,6 @@
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, EMAIL_SYNC_JOB, EMAIL_SYNC_QUEUE, EmailSyncJobDto } from '@repo/queue';
+import { createWorker, EMAIL_SYNC_JOB, EMAIL_SYNC_QUEUE, emailSyncJobSchema } from '@repo/queue';
 import { syncEmailAccount } from '../mail/email-sync.service';
 
 // The seed import (~50 threads, each a separate Gmail fetch) can take a
@@ -16,7 +16,7 @@ export function registerEmailSyncJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case EMAIL_SYNC_JOB: {
-          const { accountId } = EmailSyncJobDto.fromJSON(job.data);
+          const { accountId } = emailSyncJobSchema.parse(job.data);
           await syncEmailAccount(accountId);
           break;
         }

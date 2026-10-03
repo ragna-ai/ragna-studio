@@ -1,27 +1,9 @@
-interface ExtractAgentContextDocumentJobData {
-  documentId: string;
-}
+import { z } from 'zod';
 
-const EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB = 'extract-agent-context-document-job';
+export const extractAgentContextDocumentJobSchema = z.object({
+  documentId: z.uuidv7(),
+});
 
-class ExtractAgentContextDocumentJobDto {
-  documentId: string;
+export type ExtractAgentContextDocumentJobData = z.infer<typeof extractAgentContextDocumentJobSchema>;
 
-  constructor(data: ExtractAgentContextDocumentJobData) {
-    this.documentId = data.documentId;
-  }
-
-  static fromJSON(data: ExtractAgentContextDocumentJobData): ExtractAgentContextDocumentJobDto {
-    return new ExtractAgentContextDocumentJobDto({
-      documentId: data.documentId,
-    });
-  }
-
-  toJSON(): ExtractAgentContextDocumentJobData {
-    return {
-      documentId: this.documentId,
-    };
-  }
-}
-
-export { ExtractAgentContextDocumentJobDto, EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB };
+export const EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB = 'extract-agent-context-document-job';

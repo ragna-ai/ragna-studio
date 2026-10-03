@@ -29,6 +29,7 @@
     "@better-auth/oauth-provider": "^1.7.7",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/logger": "workspace:*",
     "@repo/queue": "workspace:*",
     "better-auth": "^1.7.7",
     "jose": "^6.2.12"

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 // Id-list payload (docs/imagegen/worker-execution-prd.md decision 3): a
 // gen-images job carries only the ids of the pending rows the request side
 // already inserted. Every typed field (prompt, settings, provider/model,
@@ -6,31 +8,10 @@
 // widened strings. This is the whole point of the pending-row model
 // videogen already ships: the row is both the typed payload carrier and the
 // result channel.
-interface GenImagesJobData {
-  genImageIds: string[];
-}
+export const genImagesJobSchema = z.object({
+  genImageIds: z.array(z.uuidv7()),
+});
 
-const GEN_IMAGES_JOB = 'gen-images-job';
+export type GenImagesJobData = z.infer<typeof genImagesJobSchema>;
 
-class GenImagesJobDto {
-  genImageIds: string[];
-
-  constructor(data: GenImagesJobData) {
-    this.genImageIds = data.genImageIds;
-  }
-
-  static fromJSON(data: GenImagesJobData): GenImagesJobDto {
-    return new GenImagesJobDto({
-      genImageIds: data.genImageIds,
-    });
-  }
-
-  toJSON(): GenImagesJobData {
-    return {
-      genImageIds: this.genImageIds,
-    };
-  }
-}
-
-export { GEN_IMAGES_JOB, GenImagesJobDto };
-export type { GenImagesJobData };
+export const GEN_IMAGES_JOB = 'gen-images-job';

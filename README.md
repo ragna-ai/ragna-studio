@@ -172,11 +172,11 @@ due to the modular system which can be freely configured by you and your ai agen
 ```mermaid
 flowchart TB
   User[Browser user] --> Web[Web app: Nuxt SPA]
-  Web -->|REST, WebSocket| Api[API: Hono]
+  Web -->|REST, WebSocket| Api[Backend API: Bun + Hono + Zod]
   Desktop[MCP client, e.g. Claude Desktop] -->|MCP| Api
   Login[OAuth: Google, Microsoft] <--> Api
-  Api --> Queue[Redis job queues]
-  Queue --> Worker[Worker: jobs, workflows, crons, ai-agents]
+  Api --> Queue[BullMQ: Redis job queues]
+  Queue --> Worker[BullMQ Workers: jobs, workflows, crons, ai-agents]
   Api --> Agents[AI Agents and Tools]
   Worker --> Agents
   Agents --> LLMs[LLM providers]

@@ -7,7 +7,7 @@ import {
   enqueueNotification,
   GEN_IMAGES_JOB,
   GEN_IMAGES_QUEUE,
-  GenImagesJobDto,
+  genImagesJobSchema,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 
@@ -25,7 +25,7 @@ export function registerGenImagesJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case GEN_IMAGES_JOB: {
-          const { genImageIds } = GenImagesJobDto.fromJSON(job.data);
+          const { genImageIds } = genImagesJobSchema.parse(job.data);
           await processGenImages(genImageIds);
           break;
         }

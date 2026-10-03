@@ -1,27 +1,9 @@
-interface WorkflowRunJobData {
-  runId: string;
-}
+import { z } from 'zod';
 
-const WORKFLOW_RUN_JOB = 'workflow-run-job';
+export const workflowRunJobSchema = z.object({
+  runId: z.uuidv7(),
+});
 
-class WorkflowRunJobDto {
-  runId: string;
+export type WorkflowRunJobData = z.infer<typeof workflowRunJobSchema>;
 
-  constructor(data: WorkflowRunJobData) {
-    this.runId = data.runId;
-  }
-
-  static fromJSON(data: WorkflowRunJobData): WorkflowRunJobDto {
-    return new WorkflowRunJobDto({
-      runId: data.runId,
-    });
-  }
-
-  toJSON(): WorkflowRunJobData {
-    return {
-      runId: this.runId,
-    };
-  }
-}
-
-export { WorkflowRunJobDto, WORKFLOW_RUN_JOB };
+export const WORKFLOW_RUN_JOB = 'workflow-run-job';

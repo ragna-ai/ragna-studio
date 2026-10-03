@@ -5,7 +5,7 @@ import {
   createWorker,
   enqueueNotification,
   WORKFLOW_RUN_JOB,
-  WorkflowRunJobDto,
+  workflowRunJobSchema,
   WORKFLOWS_QUEUE,
 } from '@repo/queue';
 import type { WorkflowRunStatus } from '@repo/workflow';
@@ -35,7 +35,7 @@ export function registerWorkflowJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case WORKFLOW_RUN_JOB: {
-          const { runId } = WorkflowRunJobDto.fromJSON(job.data);
+          const { runId } = workflowRunJobSchema.parse(job.data);
 
           // The engine only records step-level failures and rethrows,
           // leaving the run 'running' so a BullMQ retry can resume it. This

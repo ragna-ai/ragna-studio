@@ -1,7 +1,14 @@
 import { logger } from '@repo/logger';
 import { sendEmail } from '@repo/mail';
-import type { VerifyEmailJobDto, WelcomeEmailJobDto, Worker } from '@repo/queue';
-import { createWorker, EMAILS_QUEUE, VERIFY_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
+import type { Worker } from '@repo/queue';
+import {
+  createWorker,
+  EMAILS_QUEUE,
+  VERIFY_EMAIL_JOB,
+  verifyEmailJobSchema,
+  WELCOME_EMAIL_JOB,
+  welcomeEmailJobSchema,
+} from '@repo/queue';
 
 export function registerSendEmailJobProcessor(): Worker<any, any, string> {
   const emailWorker = createWorker({
@@ -11,7 +18,7 @@ export function registerSendEmailJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case VERIFY_EMAIL_JOB: {
-          const { email, url } = job.data as VerifyEmailJobDto;
+          const { email, url } = verifyEmailJobSchema.parse(job.data);
 
           await sendEmail({
             to: email,
@@ -25,7 +32,7 @@ export function registerSendEmailJobProcessor(): Worker<any, any, string> {
           break;
         }
         case WELCOME_EMAIL_JOB: {
-          const { email, name } = job.data as WelcomeEmailJobDto;
+          const { email, name } = welcomeEmailJobSchema.parse(job.data);
 
           await sendEmail({
             to: email,

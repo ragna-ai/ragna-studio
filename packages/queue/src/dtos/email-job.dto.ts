@@ -1,59 +1,19 @@
-interface VerifyEmailJobData {
-  email: string;
-  url: string;
-}
+import { z } from 'zod';
 
-const VERIFY_EMAIL_JOB = 'send-verification-email-job';
+export const verifyEmailJobSchema = z.object({
+  email: z.email(),
+  url: z.string().trim().min(1),
+});
 
-class VerifyEmailJobDto {
-  email: string;
-  url: string;
+export type VerifyEmailJobData = z.infer<typeof verifyEmailJobSchema>;
 
-  constructor(data: VerifyEmailJobData) {
-    this.email = data.email;
-    this.url = data.url;
-  }
+export const VERIFY_EMAIL_JOB = 'send-verification-email-job';
 
-  static fromJSON(data: VerifyEmailJobData): VerifyEmailJobDto {
-    return new VerifyEmailJobDto({
-      email: data.email,
-      url: data.url,
-    });
-  }
+export const welcomeEmailJobSchema = z.object({
+  email: z.email(),
+  name: z.string().trim().min(1),
+});
 
-  toJSON(): VerifyEmailJobData {
-    return {
-      email: this.email,
-      url: this.url,
-    };
-  }
-}
+export type WelcomeEmailJobData = z.infer<typeof welcomeEmailJobSchema>;
 
-const WELCOME_EMAIL_JOB = 'send-welcome-email-job';
-
-class WelcomeEmailJobDto {
-  email: string;
-  name: string;
-
-  constructor(data: { email: string; name: string }) {
-    this.email = data.email;
-    this.name = data.name;
-  }
-
-  static fromJSON(data: { email: string; name: string }): WelcomeEmailJobDto {
-    return new WelcomeEmailJobDto({
-      email: data.email,
-      name: data.name,
-    });
-  }
-
-  toJSON(): { email: string; name: string } {
-    return {
-      email: this.email,
-      name: this.name,
-    };
-  }
-}
-
-export { WelcomeEmailJobDto, WELCOME_EMAIL_JOB };
-export { VerifyEmailJobDto, VERIFY_EMAIL_JOB };
+export const WELCOME_EMAIL_JOB = 'send-welcome-email-job';

@@ -19,7 +19,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { applyVideoWatermark } from '@repo/media';
-import { GEN_VIDEO_JOB, GenVideoJobDto, queue } from '@repo/queue';
+import { GEN_VIDEO_JOB, genVideoJobSchema, queue } from '@repo/queue';
 import {
   buildVideoUrls,
   downloadObjectBuffer,
@@ -291,7 +291,7 @@ export async function createGenVideoRecord(params: CreateGenVideoParams): Promis
  */
 async function enqueueGenVideoJob(record: GenVideo): Promise<GenVideoDto> {
   const { error } = await tryCatch(() =>
-    queue.genVideo().add(GEN_VIDEO_JOB, new GenVideoJobDto({ genVideoId: record.id }).toJSON()),
+    queue.genVideo().add(GEN_VIDEO_JOB, genVideoJobSchema.parse({ genVideoId: record.id })),
   );
 
   if (error === null) {

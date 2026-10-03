@@ -13,8 +13,8 @@ import {
   WORKFLOW_RUN_JOB,
   WORKFLOW_SCHEDULE_TICK_JOB,
   WORKFLOW_SCHEDULES_QUEUE,
-  WorkflowRunJobDto,
-  WorkflowScheduleTickJobDto,
+  workflowRunJobSchema,
+  workflowScheduleTickJobSchema,
 } from '@repo/queue';
 
 export function registerWorkflowScheduleJobProcessor(): Worker<any, any, string> {
@@ -25,7 +25,7 @@ export function registerWorkflowScheduleJobProcessor(): Worker<any, any, string>
 
       switch (job.name) {
         case WORKFLOW_SCHEDULE_TICK_JOB: {
-          const { workflowId } = WorkflowScheduleTickJobDto.fromJSON(job.data);
+          const { workflowId } = workflowScheduleTickJobSchema.parse(job.data);
           await processScheduleTick({ workflowId });
           break;
         }
@@ -81,7 +81,7 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
   try {
     await queue
       .workflow()
-      .add(WORKFLOW_RUN_JOB, new WorkflowRunJobDto({ runId: run.id }).toJSON(), {
+      .add(WORKFLOW_RUN_JOB, workflowRunJobSchema.parse({ runId: run.id }), {
         attempts: 3,
       });
   } catch (error) {

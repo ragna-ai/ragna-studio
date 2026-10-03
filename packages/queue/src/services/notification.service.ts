@@ -1,5 +1,5 @@
 import type { NotificationData, NotificationType } from '../constants';
-import { NOTIFY_USER_JOB, NotifyUserJobDto } from '../dtos';
+import { NOTIFY_USER_JOB, parseNotifyUserJob } from '../dtos';
 import { queue } from '../queues';
 
 export function enqueueNotification<T extends NotificationType>({
@@ -11,7 +11,5 @@ export function enqueueNotification<T extends NotificationType>({
   type: T;
   data: NotificationData<T>;
 }) {
-  return queue
-    .notification()
-    .add(NOTIFY_USER_JOB, new NotifyUserJobDto({ userId, type, data }).toJSON());
+  return queue.notification().add(NOTIFY_USER_JOB, parseNotifyUserJob({ userId, type, data }));
 }

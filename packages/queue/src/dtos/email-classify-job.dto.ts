@@ -1,36 +1,13 @@
+import { z } from 'zod';
+
 // Enqueued by email-sync for every new message (docs/email/prd.md, "Worker
 // jobs"): fetches the body, persists it, classifies with the account's
 // category set, and enqueues email-draft when auto-draft applies.
-interface EmailClassifyJobData {
-  accountId: string;
-  messageId: string;
-}
+export const emailClassifyJobSchema = z.object({
+  accountId: z.uuidv7(),
+  messageId: z.uuidv7(),
+});
 
-const EMAIL_CLASSIFY_JOB = 'email-classify-job';
+export type EmailClassifyJobData = z.infer<typeof emailClassifyJobSchema>;
 
-class EmailClassifyJobDto {
-  accountId: string;
-  messageId: string;
-
-  constructor(data: EmailClassifyJobData) {
-    this.accountId = data.accountId;
-    this.messageId = data.messageId;
-  }
-
-  static fromJSON(data: EmailClassifyJobData): EmailClassifyJobDto {
-    return new EmailClassifyJobDto({
-      accountId: data.accountId,
-      messageId: data.messageId,
-    });
-  }
-
-  toJSON(): EmailClassifyJobData {
-    return {
-      accountId: this.accountId,
-      messageId: this.messageId,
-    };
-  }
-}
-
-export { EMAIL_CLASSIFY_JOB, EmailClassifyJobDto };
-export type { EmailClassifyJobData };
+export const EMAIL_CLASSIFY_JOB = 'email-classify-job';

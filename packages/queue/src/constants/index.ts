@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const CRON_QUEUE_NAME = '__cron__';
 export const ONBOARDINGS_QUEUE = 'onboardings-queue';
 export const EMAILS_QUEUE = 'emails-queue';
@@ -15,22 +17,57 @@ export const EMAIL_DRAFT_QUEUE = 'email-draft-queue';
 // the single source of truth: adding a new notification scenario is one entry
 // here plus a matching builder in the worker's notification registry. Nothing
 // else in the stack (schema, API, web) needs to change.
-export interface NotificationDataMap {
+export const notificationDataSchemas = {
   // `workflowName` is snapshotted at emit time so the presenter can interpolate
   // it without a lookup, and it reflects the name as it was when the run ran.
-  workflow_run_succeeded: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
-  workflow_run_failed: { workflowId: string; runId: string; workflowName: string; workspaceId: string };
-  task_reminder_due: { taskId: string; workspaceId: string; taskNumber: number; taskTitle: string };
+  workflow_run_succeeded: z.object({
+    workflowId: z.uuidv7(),
+    runId: z.uuidv7(),
+    workflowName: z.string().trim().min(1),
+    workspaceId: z.uuidv7(),
+  }),
+  workflow_run_failed: z.object({
+    workflowId: z.uuidv7(),
+    runId: z.uuidv7(),
+    workflowName: z.string().trim().min(1),
+    workspaceId: z.uuidv7(),
+  }),
+  task_reminder_due: z.object({
+    taskId: z.uuidv7(),
+    workspaceId: z.uuidv7(),
+    taskNumber: z.number(),
+    taskTitle: z.string().trim().min(1),
+  }),
   // `prompt` is snapshotted at emit time so the presenter can render without
   // a lookup; truncate it for display in the presenter, not here.
-  video_generation_succeeded: { genVideoId: string; workspaceId: string; prompt: string };
-  video_generation_failed: { genVideoId: string; workspaceId: string; prompt: string };
+  video_generation_succeeded: z.object({
+    genVideoId: z.uuidv7(),
+    workspaceId: z.uuidv7(),
+    prompt: z.string().trim().min(1),
+  }),
+  video_generation_failed: z.object({
+    genVideoId: z.uuidv7(),
+    workspaceId: z.uuidv7(),
+    prompt: z.string().trim().min(1),
+  }),
   // One notification per batch (docs/imagegen/worker-execution-prd.md
   // decision 5): genImageIds carries every row the job filled in, so the
   // presenter can link straight to the library without a lookup.
-  image_generation_succeeded: { genImageIds: string[]; workspaceId: string; prompt: string };
-  image_generation_failed: { genImageIds: string[]; workspaceId: string; prompt: string };
-}
+  image_generation_succeeded: z.object({
+    genImageIds: z.array(z.uuidv7()),
+    workspaceId: z.uuidv7(),
+    prompt: z.string().trim().min(1),
+  }),
+  image_generation_failed: z.object({
+    genImageIds: z.array(z.uuidv7()),
+    workspaceId: z.uuidv7(),
+    prompt: z.string().trim().min(1),
+  }),
+} as const;
+
+export type NotificationDataMap = {
+  [T in keyof typeof notificationDataSchemas]: z.infer<(typeof notificationDataSchemas)[T]>;
+};
 
 export type NotificationType = keyof NotificationDataMap;
 

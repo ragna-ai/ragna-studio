@@ -1,7 +1,7 @@
 import { createNotification } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, NOTIFICATIONS_QUEUE, NOTIFY_USER_JOB, NotifyUserJobDto } from '@repo/queue';
+import { createWorker, NOTIFICATIONS_QUEUE, NOTIFY_USER_JOB, parseNotifyUserJob } from '@repo/queue';
 
 export function registerNotificationJobProcessor(): Worker<any, any, string> {
   const notificationWorker = createWorker({
@@ -11,7 +11,7 @@ export function registerNotificationJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case NOTIFY_USER_JOB: {
-          const { userId, type, data } = NotifyUserJobDto.fromJSON(job.data);
+          const { userId, type, data } = parseNotifyUserJob(job.data);
           await createNotification({ userId, type, data });
           break;
         }

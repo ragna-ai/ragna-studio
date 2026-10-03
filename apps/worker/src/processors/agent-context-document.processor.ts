@@ -14,7 +14,7 @@ import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
   createWorker,
   EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB,
-  ExtractAgentContextDocumentJobDto,
+  extractAgentContextDocumentJobSchema,
 } from '@repo/queue';
 import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
@@ -57,7 +57,7 @@ export function registerAgentContextDocumentJobProcessor(): Worker<any, any, str
 
       switch (job.name) {
         case EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB: {
-          const { documentId } = ExtractAgentContextDocumentJobDto.fromJSON(job.data);
+          const { documentId } = extractAgentContextDocumentJobSchema.parse(job.data);
           await extractAgentContextDocument(documentId);
           break;
         }
