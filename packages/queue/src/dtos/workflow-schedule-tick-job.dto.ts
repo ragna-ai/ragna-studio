@@ -1,27 +1,9 @@
-interface WorkflowScheduleTickJobData {
-  workflowId: string;
-}
+import { z } from 'zod';
 
-const WORKFLOW_SCHEDULE_TICK_JOB = 'workflow-schedule-tick-job';
+export const workflowScheduleTickJobSchema = z.object({
+  workflowId: z.uuidv7(),
+});
 
-class WorkflowScheduleTickJobDto {
-  workflowId: string;
+export type WorkflowScheduleTickJobData = z.infer<typeof workflowScheduleTickJobSchema>;
 
-  constructor(data: WorkflowScheduleTickJobData) {
-    this.workflowId = data.workflowId;
-  }
-
-  static fromJSON(data: WorkflowScheduleTickJobData): WorkflowScheduleTickJobDto {
-    return new WorkflowScheduleTickJobDto({
-      workflowId: data.workflowId,
-    });
-  }
-
-  toJSON(): WorkflowScheduleTickJobData {
-    return {
-      workflowId: this.workflowId,
-    };
-  }
-}
-
-export { WorkflowScheduleTickJobDto, WORKFLOW_SCHEDULE_TICK_JOB };
+export const WORKFLOW_SCHEDULE_TICK_JOB = 'workflow-schedule-tick-job';

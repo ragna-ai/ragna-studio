@@ -20,7 +20,7 @@ import { logger } from '@repo/logger';
 import { emailBodyToText } from '@repo/mail/content';
 import { isMailAuthError, type MailProvider } from '@repo/mail/provider';
 import type { EmailClassifyJobData } from '@repo/queue';
-import { EMAIL_DRAFT_JOB, EmailDraftJobDto, queue } from '@repo/queue';
+import { EMAIL_DRAFT_JOB, emailDraftJobSchema, queue } from '@repo/queue';
 import { getMailProviderForAccount } from './mail-provider';
 import { ensureMessageBody, type PersistedMessageBody } from './message-body';
 
@@ -74,11 +74,11 @@ export async function classifyEmailMessage({
 
   await queue.emailDraft().add(
     EMAIL_DRAFT_JOB,
-    new EmailDraftJobDto({
+    emailDraftJobSchema.parse({
       accountId,
       threadId: message.threadId,
       replyToMessageId: message.id,
-    }).toJSON(),
+    }),
   );
 }
 

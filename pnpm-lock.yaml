@@ -654,6 +654,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@repo/queue':
         specifier: workspace:*
         version: link:../queue
@@ -995,6 +998,9 @@ importers:
       bullmq:
         specifier: ^6.3.11
         version: 6.3.11(ioredis@5.11.1)(pg@8.23.0)
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*

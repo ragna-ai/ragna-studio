@@ -31,7 +31,7 @@ import type {
   MailSyncMessageAdded,
   MailSyncMessageDeleted,
 } from '@repo/mail/provider';
-import { EMAIL_CLASSIFY_JOB, EmailClassifyJobDto, queue } from '@repo/queue';
+import { EMAIL_CLASSIFY_JOB, emailClassifyJobSchema, queue } from '@repo/queue';
 import { getMailProviderForAccount } from './mail-provider';
 import { persistMessageBody } from './message-body';
 import { fromParticipant, summarizeThread, toParticipants } from './participants';
@@ -391,7 +391,7 @@ async function importAddedMessage({
     .emailClassify()
     .add(
       EMAIL_CLASSIFY_JOB,
-      new EmailClassifyJobDto({ accountId: account.id, messageId: messageRow.id }).toJSON(),
+      emailClassifyJobSchema.parse({ accountId: account.id, messageId: messageRow.id }),
     );
 }
 

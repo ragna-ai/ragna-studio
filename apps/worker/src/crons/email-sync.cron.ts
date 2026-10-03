@@ -1,6 +1,6 @@
 import { listEmailAccountsDueForSync } from '@repo/database';
 import { logger } from '@repo/logger';
-import { EMAIL_SYNC_JOB, EmailSyncJobDto, queue } from '@repo/queue';
+import { EMAIL_SYNC_JOB, emailSyncJobSchema, queue } from '@repo/queue';
 
 // Fans out one email-sync job per connected account still due for syncing
 // (docs/email/prd.md, "Worker jobs"; listEmailAccountsDueForSync excludes
@@ -16,7 +16,7 @@ export async function emailSyncCronProcessor(): Promise<void> {
   for (const account of accounts) {
     await queue
       .emailSync()
-      .add(EMAIL_SYNC_JOB, new EmailSyncJobDto({ accountId: account.id }).toJSON(), {
+      .add(EMAIL_SYNC_JOB, emailSyncJobSchema.parse({ accountId: account.id }), {
         jobId: account.id,
       });
   }

@@ -1,27 +1,9 @@
-interface GenVideoJobData {
-  genVideoId: string;
-}
+import { z } from 'zod';
 
-const GEN_VIDEO_JOB = 'gen-video-job';
+export const genVideoJobSchema = z.object({
+  genVideoId: z.uuidv7(),
+});
 
-class GenVideoJobDto {
-  genVideoId: string;
+export type GenVideoJobData = z.infer<typeof genVideoJobSchema>;
 
-  constructor(data: GenVideoJobData) {
-    this.genVideoId = data.genVideoId;
-  }
-
-  static fromJSON(data: GenVideoJobData): GenVideoJobDto {
-    return new GenVideoJobDto({
-      genVideoId: data.genVideoId,
-    });
-  }
-
-  toJSON(): GenVideoJobData {
-    return {
-      genVideoId: this.genVideoId,
-    };
-  }
-}
-
-export { GEN_VIDEO_JOB, GenVideoJobDto };
+export const GEN_VIDEO_JOB = 'gen-video-job';

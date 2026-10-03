@@ -5,9 +5,9 @@ import {
   createWorker,
   EMAILS_QUEUE,
   VERIFY_EMAIL_JOB,
-  VerifyEmailJobDto,
+  verifyEmailJobSchema,
   WELCOME_EMAIL_JOB,
-  WelcomeEmailJobDto,
+  welcomeEmailJobSchema,
 } from '@repo/queue';
 
 export function registerSendEmailJobProcessor(): Worker<any, any, string> {
@@ -18,7 +18,7 @@ export function registerSendEmailJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case VERIFY_EMAIL_JOB: {
-          const { email, url } = VerifyEmailJobDto.fromJSON(job.data);
+          const { email, url } = verifyEmailJobSchema.parse(job.data);
 
           await sendEmail({
             to: email,
@@ -32,7 +32,7 @@ export function registerSendEmailJobProcessor(): Worker<any, any, string> {
           break;
         }
         case WELCOME_EMAIL_JOB: {
-          const { email, name } = WelcomeEmailJobDto.fromJSON(job.data);
+          const { email, name } = welcomeEmailJobSchema.parse(job.data);
 
           await sendEmail({
             to: email,

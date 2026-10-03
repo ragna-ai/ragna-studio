@@ -1,6 +1,6 @@
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, EMAIL_DRAFT_JOB, EMAIL_DRAFT_QUEUE, EmailDraftJobDto } from '@repo/queue';
+import { createWorker, EMAIL_DRAFT_JOB, EMAIL_DRAFT_QUEUE, emailDraftJobSchema } from '@repo/queue';
 import { generateEmailDraft } from '../mail/email-draft.service';
 
 // A draft agent run can involve several tool calls before it writes the
@@ -16,7 +16,7 @@ export function registerEmailDraftJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case EMAIL_DRAFT_JOB: {
-          const { accountId, threadId, replyToMessageId, agentId } = EmailDraftJobDto.fromJSON(job.data);
+          const { accountId, threadId, replyToMessageId, agentId } = emailDraftJobSchema.parse(job.data);
           await generateEmailDraft({ accountId, threadId, replyToMessageId, agentId });
           break;
         }

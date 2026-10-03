@@ -20,8 +20,8 @@ import {
   WORKFLOW_RUN_JOB,
   WORKFLOW_SCHEDULE_TICK_JOB,
   WORKFLOW_SCHEDULES_QUEUE,
-  WorkflowRunJobDto,
-  WorkflowScheduleTickJobDto,
+  workflowRunJobSchema,
+  workflowScheduleTickJobSchema,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 import type { WorkflowDefinition } from '@repo/workflow';
@@ -284,7 +284,7 @@ export async function publishWorkflowForWorkspace({
       repeat: { pattern: schedule.cron, tz: schedule.timezone },
       job: {
         name: WORKFLOW_SCHEDULE_TICK_JOB,
-        data: new WorkflowScheduleTickJobDto({ workflowId }).toJSON(),
+        data: workflowScheduleTickJobSchema.parse({ workflowId }),
         opts: { attempts: 1, removeOnComplete: true, removeOnFail: { age: 24 * 3600 } },
       },
     });
@@ -343,7 +343,7 @@ export async function startWorkflowRun({
   }
 
   const { error: enqueueError } = await tryCatch(() =>
-    queue.workflow().add(WORKFLOW_RUN_JOB, new WorkflowRunJobDto({ runId: run.id }).toJSON(), {
+    queue.workflow().add(WORKFLOW_RUN_JOB, workflowRunJobSchema.parse({ runId: run.id }), {
       attempts: 3,
     }),
   );
