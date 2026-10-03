@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { scrapePage } from './services/browser.service';
+import { UrlNotAllowedError } from './utils/url-guard';
 import { scrapeQuerySchema } from './validation/scrape.schema';
 
 export const app = new Hono()
@@ -26,6 +27,12 @@ export const app = new Hono()
         const result = await scrapePage(url);
         return c.json(result);
       } catch (error) {
+        if (error instanceof UrlNotAllowedError) {
+          logger.warn('Rejected scrape request for a URL that is not allowed');
+          throw new HTTPException(StatusCodes.BAD_REQUEST, {
+            message: 'URL is not allowed',
+          });
+        }
         logger.error(`Failed to scrape ${url}:`, error);
         throw new HTTPException(StatusCodes.INTERNAL_SERVER_ERROR, {
           message: 'An error occurred while scraping the page',

@@ -1,6 +1,6 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
-import type { Browser, Page } from 'puppeteer';
+import type { Browser, HTTPRequest, Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import anonymizeUaPlugin from 'puppeteer-extra-plugin-anonymize-ua';
@@ -8,6 +8,7 @@ import blockResourcesPlugin from 'puppeteer-extra-plugin-block-resources';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import TurndownService from 'turndown';
 import { Semaphore } from '../utils/semaphore';
+import { assertPublicUrl, isPublicUrl } from '../utils/url-guard';
 
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
@@ -94,6 +95,10 @@ function toMarkdown(bodyHtml: string): string {
 }
 
 async function getPageContents(url: string): Promise<{ meta: PageMeta; bodyHtml: string }> {
+  // Reject before a tab is opened. Redirect hops and sub-requests are checked
+  // again in the request handler below.
+  await assertPublicUrl(url);
+
   const browser = await getBrowser();
   const page = await browser.newPage();
 
@@ -136,20 +141,66 @@ async function getPageContents(url: string): Promise<{ meta: PageMeta; bodyHtml:
 
 async function blockNonEssentialRequests(page: Page): Promise<void> {
   await page.setRequestInterception(true);
+  // Page scripts often hit the same host many times. Cache the verdict per
+  // tab so each host is resolved once.
+  const verdicts = new Map<string, Promise<boolean>>();
+  // The request event is fire-and-forget, so run the async work detached.
   page.on('request', (request) => {
+    void handleRequest(request, verdicts);
+  });
+}
+
+const ALLOWED_RESOURCE_TYPES = ['script', 'xhr', 'fetch', 'document'];
+
+// Puppeteer emits a new 'request' event for every redirect hop under
+// interception, so this runs for each hop as well as the first request.
+async function handleRequest(
+  request: HTTPRequest,
+  verdicts: Map<string, Promise<boolean>>,
+): Promise<void> {
+  try {
     if (request.isInterceptResolutionHandled()) {
       return;
     }
-    const allowedTypes = ['script', 'xhr', 'fetch', 'document'];
-    // continue()/abort() aren't awaited here — the request event is
-    // fire-and-forget. A race with page/frame teardown (e.g. our navigation
-    // timeout firing) can reject them; swallow that instead of letting it
-    // become an unhandled rejection.
-    const settled = allowedTypes.includes(request.resourceType())
-      ? request.continue()
-      : request.abort();
-    settled.catch(() => {});
-  });
+    if (!ALLOWED_RESOURCE_TYPES.includes(request.resourceType())) {
+      await request.abort();
+      return;
+    }
+
+    const url = request.url();
+    const host = hostKey(url);
+    let verdict = verdicts.get(host);
+    if (!verdict) {
+      verdict = isPublicUrl(url);
+      verdicts.set(host, verdict);
+    }
+    const allowed = await verdict;
+
+    // Another handler (e.g. an adblock plugin) may have resolved the request
+    // while the lookup was pending.
+    if (request.isInterceptResolutionHandled()) {
+      return;
+    }
+    if (allowed) {
+      await request.continue();
+    } else {
+      logger.warn('Blocked request to a non-public address');
+      await request.abort('blockedbyclient');
+    }
+  } catch {
+    // continue()/abort() can reject when the page or frame is torn down
+    // (e.g. our navigation timeout fired). That is not an error here, and an
+    // unhandled rejection would take down the whole service.
+  }
+}
+
+// Verdicts are per scheme, host and port. Non-URL strings get their own key.
+function hostKey(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
 }
 
 async function removeUnwantedElements(page: Page): Promise<void> {
