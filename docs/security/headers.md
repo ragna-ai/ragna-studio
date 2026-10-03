@@ -2,9 +2,8 @@
 
 > **Status: implemented** (2026-09-21).
 
-`app.ragna.io` and `api.ragna.io` both sit behind Traefik (see
-`docker-compose.production.yml` + the operator's `dynamic_conf.yml`, the
-latter isn't in this repo). Response headers are split across two owners:
+`app.ragna.io` and `api.ragna.io` both sit behind Traefik, configured
+by the operator outside this repo (including `dynamic_conf.yml`). Response headers are split across two owners:
 
 - **Traefik** (`default-security-headers` in `dynamic_conf.yml`, applied via
   the shared `default@file` chain to both routers): `Strict-Transport-Security`,

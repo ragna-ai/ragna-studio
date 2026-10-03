@@ -82,8 +82,8 @@ pnpm test:api     # integration suite against the swapped DB
 Status: done locally 2026-08-02 (274/0 `test:api` after the swap). Prod
 pending.
 
-The production override (`docker-compose.production.yml`) does not touch
-the postgres service, so prod uses the same image line, container name,
+Production deploys are handled outside this repo. The postgres service is
+not overridden there, so prod uses the same image line, container name,
 and env vars. The steps above run verbatim on the prod host. What does
 NOT happen automatically: deploying the compose change recreates the
 container with the new image, but nothing runs step 4. Running the new
