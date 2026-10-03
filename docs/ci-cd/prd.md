@@ -6,8 +6,8 @@
 
 The repo has no `.github/` folder. Nothing checks a PR before merge, and
 Docker images are built and pushed by hand via `scripts/build-*.sh`
-(`ghcr.io/ragna-ai/ragna-studio-*:latest`). Deploy is a manual
-`make up-prod` on the server.
+(`ghcr.io/ragna-ai/ragna-studio-*:latest`). At the time, deploy was
+manual. Production deploys are now handled outside this repo.
 
 ## Goals
 
@@ -21,8 +21,8 @@ Docker images are built and pushed by hand via `scripts/build-*.sh`
 
 ## Non-goals
 
-- **Auto-deploy.** Deploy stays manual (`make up-prod`). No SSH keys or
-  server secrets in GitHub.
+- **Auto-deploy.** Production deploys are handled outside this repo. No SSH
+  keys or server secrets in GitHub.
 - **API tests in CI** (`pnpm test:api`). Deferred to phase 3, see
   "API tests" below. Cost is not the blocker.
 - **Multi-arch images.** Production runs `linux/amd64` only. `arm64`

@@ -1,5 +1,4 @@
 .PHONY: dev build build-core build-all \
-        up-prod down-prod \
         up-dev down-dev \
         up-dev-full down-dev-full \
         help
@@ -16,13 +15,6 @@ build-core:
 
 build-all:
 	./scripts/build-backend.sh && ./scripts/build-frontend.sh && ./scripts/build-worker.sh && ./scripts/build-webbrowser.sh && ./scripts/build-migrate.sh
-
-# ── Docker (production compose) ──────────────────────────────────────────────
-up-prod:
-	docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
-
-down-prod:
-	docker compose down
 
 # ── Docker (dev compose) ─────────────────────────────────────────────────────
 up-dev:
@@ -43,8 +35,6 @@ help:
 	@echo "  build              Build the application"
 	@echo "  build-core         Build the core components (Backend, Frontend, Worker)"
 	@echo "  build-all          Build all components (Backend, Frontend, Worker, Webbrowser)"
-	@echo "  up-prod            Start the application in production mode using Docker Compose"
-	@echo "  down-prod          Stop the application in production mode using Docker Compose"
 	@echo "  up-dev             Start the application in development mode using Docker Compose"
 	@echo "  up-dev-full        Start the application in full development mode using Docker Compose"
 	@echo "  down-dev           Stop the application in development mode using Docker Compose"
