@@ -1,6 +1,11 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
-import type { Browser, HTTPRequest, Page } from 'puppeteer';
+import {
+  DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
+  type Browser,
+  type HTTPRequest,
+  type Page,
+} from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import anonymizeUaPlugin from 'puppeteer-extra-plugin-anonymize-ua';
@@ -11,8 +16,18 @@ import { Semaphore } from '../utils/semaphore';
 import { assertPublicUrl, isPublicUrl } from '../utils/url-guard';
 
 puppeteer.use(StealthPlugin());
-puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
-puppeteer.use(blockResourcesPlugin({ blockedTypes: new Set(['image', 'stylesheet', 'font']) }));
+puppeteer.use(
+  AdblockerPlugin({
+    blockTrackers: true,
+    interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
+  }),
+);
+puppeteer.use(
+  blockResourcesPlugin({
+    blockedTypes: new Set(['image', 'stylesheet', 'font']),
+    interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
+  }),
+);
 puppeteer.use(anonymizeUaPlugin());
 
 const turndownService = new TurndownService();
@@ -70,7 +85,14 @@ async function getBrowser(): Promise<Browser> {
   }
 
   browserPromise = puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+    pipe: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--js-flags=--jitless',
+    ],
   });
 
   return browserPromise;
@@ -144,26 +166,20 @@ async function blockNonEssentialRequests(page: Page): Promise<void> {
   // Page scripts often hit the same host many times. Cache the verdict per
   // tab so each host is resolved once.
   const verdicts = new Map<string, Promise<boolean>>();
-  // The request event is fire-and-forget, so run the async work detached.
-  page.on('request', (request) => {
-    void handleRequest(request, verdicts);
-  });
+  page.on('request', (request) => handleRequest(request, verdicts));
 }
 
 const ALLOWED_RESOURCE_TYPES = ['script', 'xhr', 'fetch', 'document'];
 
-// Puppeteer emits a new 'request' event for every redirect hop under
-// interception, so this runs for each hop as well as the first request.
+const BLOCK_PRIORITY = DEFAULT_INTERCEPT_RESOLUTION_PRIORITY + 100;
+
 async function handleRequest(
   request: HTTPRequest,
   verdicts: Map<string, Promise<boolean>>,
 ): Promise<void> {
   try {
-    if (request.isInterceptResolutionHandled()) {
-      return;
-    }
     if (!ALLOWED_RESOURCE_TYPES.includes(request.resourceType())) {
-      await request.abort();
+      await request.abort('failed', BLOCK_PRIORITY);
       return;
     }
 
@@ -174,24 +190,14 @@ async function handleRequest(
       verdict = isPublicUrl(url);
       verdicts.set(host, verdict);
     }
-    const allowed = await verdict;
 
-    // Another handler (e.g. an adblock plugin) may have resolved the request
-    // while the lookup was pending.
-    if (request.isInterceptResolutionHandled()) {
-      return;
-    }
-    if (allowed) {
-      await request.continue();
+    if (await verdict) {
+      await request.continue(undefined, DEFAULT_INTERCEPT_RESOLUTION_PRIORITY);
     } else {
       logger.warn('Blocked request to a non-public address');
-      await request.abort('blockedbyclient');
+      await request.abort('blockedbyclient', BLOCK_PRIORITY);
     }
-  } catch {
-    // continue()/abort() can reject when the page or frame is torn down
-    // (e.g. our navigation timeout fired). That is not an error here, and an
-    // unhandled rejection would take down the whole service.
-  }
+  } catch {}
 }
 
 // Verdicts are per scheme, host and port. Non-URL strings get their own key.
