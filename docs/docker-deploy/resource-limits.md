@@ -14,7 +14,7 @@ the kernel OOM-killer against an unrelated container instead of its own.
 
 ## Limits
 
-Set via `mem_limit`/`cpus` in `docker-compose.yml` (legacy Compose v2
+Set via `mem_limit`/`cpus` in `docker/docker-compose.yml` (legacy Compose v2
 top-level fields, honored by plain `docker compose up`, unlike the
 swarm-only `deploy.resources.limits` block).
 

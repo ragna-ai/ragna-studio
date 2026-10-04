@@ -18,13 +18,13 @@ build-all:
 
 # ── Docker (dev compose) ─────────────────────────────────────────────────────
 up-dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
 
 up-dev-full:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile "full" up -d
+	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml --profile "full" up -d
 
 down-dev:
-	docker compose down
+	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml down
 
 # ── Help ─────────────────────────────────────────────────────────────────────
 help:

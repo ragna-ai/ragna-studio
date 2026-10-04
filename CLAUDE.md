@@ -81,7 +81,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 **migrations**: Local dev: push schema directly to DB with `db:push`, don't hand-write SQL. Anything destined for
 production goes through `db:generate` (commits SQL under `packages/database/drizzle/`) and is applied by the
-`migrate` service — see `packages/database/src/scripts/migrate.ts` and the `migrate` entry in `docker-compose.yml`.
+`migrate` service — see `packages/database/src/scripts/migrate.ts` and the `migrate` entry in `docker/docker-compose.yml`.
 `db:push` must never run against a production database.
 
 **new DB tables**: Register every new table in `packages/database/src/schema/relations.ts` (add it to the `defineRelations` `schema` object plus its FK relations), not just export it from `schema/index.ts`. The `db` instance is built with `drizzle({ relations })`, so a table missing from that graph throws a runtime "database relation is missing" error, even for plain query-builder calls.

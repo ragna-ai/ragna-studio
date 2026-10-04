@@ -106,7 +106,7 @@ numbers are estimates; the first real CI runs replace them.
   `docker/setup-buildx-action`, `docker/metadata-action`,
   `docker/build-push-action`.
 - **Tags** from `metadata-action`: `1.2.0`, `1.2`, and `latest`.
-  `docker-compose.yml` keeps pulling `:latest`, so deploy is unchanged.
+  `docker/docker-compose.yml` keeps pulling `:latest`, so deploy is unchanged.
 - **No layer cache.** `cache-from/cache-to: type=gha` was removed
   (2026-09-28): GHA cache is scoped per ref, tags are one-shot and never
   rebuilt, so every release wrote a fresh ~2.5 GB of blobs that could
@@ -188,7 +188,7 @@ Now specced in [api-tests-prd.md](./api-tests-prd.md). Original notes:
 Cost fits (see estimate). The work is the setup:
 
 - Service containers for `pgvector/pgvector:0.8.6-pg18-trixie` and
-  `redis:8.8.0-alpine3.23`, same images as `docker-compose.yml`.
+  `redis:8.8.0-alpine3.23`, same images as `docker/docker-compose.yml`.
 - `oven-sh/setup-bun`, since `apps/api` tests run with `bun test`.
 - `pnpm test:setup` has to run against the service containers, with a CI
   env file instead of the local `.env`.

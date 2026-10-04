@@ -21,7 +21,7 @@ running: `docker compose stop api worker webapp`.
 
 ## 3. Swap the image
 
-In `docker-compose.yml`:
+In `docker/docker-compose.yml`:
 
 ```yaml
 # before
@@ -90,7 +90,7 @@ container with the new image, but nothing runs step 4. Running the new
 image without the REINDEX risks silently wrong text-index queries, so both
 must happen in one maintenance window:
 
-1. Hold the `docker-compose.yml` commit until the window.
+1. Hold the `docker/docker-compose.yml` commit until the window.
 2. On the host: step 1 (backup), `docker compose stop webapp api worker`,
    pull the compose change, `docker compose pull postgres && docker
    compose up -d postgres`, then steps 4 and 5, then start the app
@@ -105,7 +105,7 @@ is required. A one-liner mounted into `/docker-entrypoint-initdb.d/`
 (runs on empty data dirs only, inert on existing volumes) covers that:
 
 ```yaml
-# postgres service in docker-compose.yml
+# postgres service in docker/docker-compose.yml
 volumes:
   - postgres_data:/var/lib/postgresql/data/
   - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-vector.sql:ro

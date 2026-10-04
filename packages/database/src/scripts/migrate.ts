@@ -1,7 +1,6 @@
 // Applies pending SQL migrations from ./drizzle against DATABASE_URL. This
-// is what runs on every deploy (see the `migrate` service in
-// docker-compose.yml) so a fresh Postgres ends up with the full schema
-// without anyone needing drizzle-kit or the TS source installed.
+// is what runs on every deploy, so a fresh Postgres ends up with the full
+// schema without anyone needing drizzle-kit or the TS source installed.
 //
 // Guarded by a Postgres advisory lock: drizzle-orm's migrate() has no
 // locking of its own (drizzle-team/drizzle-orm#874), so two containers

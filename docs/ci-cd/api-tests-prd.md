@@ -41,7 +41,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
 - **Trigger:** `pull_request` only, with docs-only PRs skipped at the job
   level (see [Required checks](#required-checks)).
 - **Postgres:** `pgvector/pgvector:0.8.6-pg18-trixie` as a service, the same
-  image as `docker-compose.yml`. Superuser `postgres`, with a health check.
+  image as `docker/docker-compose.yml`. Superuser `postgres`, with a health check.
   `test:setup` creates `studio_test` and the extensions itself, so the
   `docker/postgres-init.sql` mount is not needed.
 - **No Redis.** Every queue call is faked with `mock.module()`

@@ -1,8 +1,7 @@
 // Dumps the Postgres database to a timestamped .sql file under backups/ at
 // the repo root. Runs pg_dump *inside* the running postgres container
 // (docker exec) rather than on the host, so the dump tool version always
-// matches the server (see docker-compose.yml's postgres image tag) without
-// requiring postgres-client tools to be installed locally.
+// matches the server without requiring postgres-client tools locally.
 //
 // Usage: pnpm --filter @repo/database db:backup [containerName]
 // Restore: psql "$DATABASE_URL" < backups/<file>.sql

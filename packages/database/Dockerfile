@@ -7,7 +7,7 @@
 # migrations (packages/database/drizzle) against DATABASE_URL; the `seed`
 # compose service overrides it to run dist/seed/index.mjs (idempotent
 # upserts) instead. Both exit when done and run ahead of api/worker
-# (docker-compose.yml, `depends_on: condition: service_completed_successfully`)
+# (docker/docker-compose.yml, `depends_on: condition: service_completed_successfully`)
 # so N app replicas never race a migration or seed run on boot.
 
 # ============================================================
