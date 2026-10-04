@@ -80,7 +80,7 @@ Cost check: a full 5M-char corpus is roughly 1.25M tokens, about $0.03 on
   extensions. Existing volumes get it via the runbook. Fresh volumes get
   it automatically: `docker/postgres-init.sql` (one line,
   `CREATE EXTENSION IF NOT EXISTS vector;`) mounted into
-  `/docker-entrypoint-initdb.d/` in `docker-compose.yml` — runs only on
+  `/docker-entrypoint-initdb.d/` in `docker/docker-compose.yml` — runs only on
   empty data dirs, inert on existing volumes. Ships with the
   implementation.
 - No other infrastructure: embeddings go through the OpenAI API (key

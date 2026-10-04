@@ -1,8 +1,7 @@
 import { db } from '../db';
 import * as schema from '../schema';
 
-// Safe to run on every deploy (docker-compose.yml's `seed` service): it only
-// seeds an empty table. Admins swap the `model` of a family slot to newer
+// Safe to run on every deploy: it only seeds an empty table. Admins swap the `model` of a family slot to newer
 // releases in the DB, so re-inserting by (provider, model) would re-add
 // outdated models next to the swapped ones.
 async function seedAiModels() {

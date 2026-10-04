@@ -28,7 +28,7 @@ data.
    `@repo/database`'s dependency tree (`pg`, `drizzle-orm`, `@repo/workflow`,
    `@repo/utils`) is pure JS, unlike `@repo/media`'s glibc-linked native
    addon, so Alpine is safe here.
-3. `docker-compose.yml` runs that image as two one-shot services:
+3. `docker/docker-compose.yml` runs that image as two one-shot services:
    - `migrate` — `CMD ["node", "dist/scripts/migrate.mjs"]`, applies pending
      SQL from `./drizzle`.
    - `seed` — same image, `command: ["node", "dist/seed/index.mjs"]`,

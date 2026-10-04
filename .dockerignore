@@ -55,7 +55,7 @@ coverage
 
 # Docker
 Dockerfile*
-docker-compose*.yml
+docker
 .dockerignore
 
 # Scripts (not needed in image)
