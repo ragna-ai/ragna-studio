@@ -41,8 +41,6 @@ services:
     cpus: 1.0
     environment:
       NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://localhost:3010}
-      NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_CONNECT_SRC: "${NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_CONNECT_SRC:-'self' http://localhost:3010 ws://localhost:3010}"
-      NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_IMG_SRC: "${NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_IMG_SRC:-'self' data: blob: https://static.ragna.io https://images.ragna.io}"
     security_opt:
       - no-new-privileges:true
     networks:
