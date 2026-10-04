@@ -11,20 +11,9 @@ Thanks for your interest in contributing.
 
 ## Local setup
 
-You need Node.js 24 or newer, pnpm, and Docker.
+Follow [docs/development.md](docs/development.md) to run the stack from source. Login uses OAuth, so configure at least one provider in `.env`.
 
-```bash
-cp .env.example .env     # fill in secrets, storage, one OAuth provider, and one AI key
-pnpm install
-make up-dev              # starts Postgres, Redis, and the other dev services
-pnpm dev                 # runs all apps and packages
-```
-
-The web app runs on [localhost:3000](http://localhost:3000). The API runs on port 3010.
-
-Login uses OAuth, so configure at least one provider in `.env`.
-
-The repo is a pnpm and Turborepo monorepo. See [docs/](docs/README.md) for design docs and PRDs.
+The repo is a pnpm and Turborepo monorepo. See [docs/architecture.md](docs/architecture.md) for the layout and [docs/](docs/README.md) for design docs and PRDs.
 
 ## Making a change
 
