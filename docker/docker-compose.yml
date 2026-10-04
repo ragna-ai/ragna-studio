@@ -39,8 +39,8 @@ services:
     restart: always
     mem_limit: 512m
     cpus: 1.0
-    env_file:
-      - .env
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://localhost:3010}
     security_opt:
       - no-new-privileges:true
     networks:
@@ -96,8 +96,11 @@ services:
     restart: always
     mem_limit: 1536m
     cpus: 1.5
-    env_file:
-      - .env
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-warn}
+      BROWSER_NAVIGATION_TIMEOUT: ${BROWSER_NAVIGATION_TIMEOUT:-25000}
+      BROWSER_BODY_LOAD_TIMEOUT: ${BROWSER_BODY_LOAD_TIMEOUT:-10000}
+      BROWSER_MAX_CONCURRENCY: ${BROWSER_MAX_CONCURRENCY:-4}
     security_opt:
       - no-new-privileges:true
     networks:

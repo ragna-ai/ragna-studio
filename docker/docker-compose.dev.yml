@@ -22,6 +22,9 @@ services:
     restart: no
     profiles:
       - full
+    environment:
+      - "NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_CONNECT_SRC=${NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_CONNECT_SRC:-'self' http://localhost:3010 ws://localhost:3010}"
+      - "NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_IMG_SRC=${NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_IMG_SRC:-'self' data: blob: https://static.ragna.io https://images.ragna.io}"
     ports:
       - ${APP_PORT:-3000}:3000
 
