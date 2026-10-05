@@ -11,7 +11,8 @@ import { requireAllowedOrigin } from '../middlewares/originMiddleware';
 import {
   authorizeChannel,
   chatIdFromChannel,
-  ensureSocketSessionValid,
+  closeExpiredSocket,
+  isSocketSessionValid,
   publishFrame,
   sendFrame,
 } from '../services/channel.service';
@@ -98,7 +99,9 @@ export const wsController = new Hono()
           try {
             switch (type) {
               case 'subscribe': {
-                if (!(await ensureSocketSessionValid(raw, channel, upgradeHeaders, session.id))) {
+                const sessionValid = await isSocketSessionValid(upgradeHeaders, session.id);
+                if (!sessionValid) {
+                  closeExpiredSocket(raw, channel);
                   return;
                 }
 
@@ -128,7 +131,9 @@ export const wsController = new Hono()
               }
 
               case 'message': {
-                if (!(await ensureSocketSessionValid(raw, channel, upgradeHeaders, session.id))) {
+                const sessionValid = await isSocketSessionValid(upgradeHeaders, session.id);
+                if (!sessionValid) {
+                  closeExpiredSocket(raw, channel);
                   return;
                 }
 

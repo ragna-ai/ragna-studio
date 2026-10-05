@@ -75,21 +75,19 @@ export function publishFrame(ws: ChatServerWebSocket, frame: OutgoingWsFrame): v
 const WS_POLICY_VIOLATION_CODE = 1008;
 
 /**
- * Re-checks the upgrade session against better-auth. If it is gone, expired,
- * or replaced by a different session, sends a 401 error frame, closes the
- * socket and returns false.
+ * Re-checks the upgrade session against better-auth. False when it is gone,
+ * expired, or replaced by a different session.
  */
-export async function ensureSocketSessionValid(
-  ws: ChatServerWebSocket,
-  channel: string,
+export async function isSocketSessionValid(
   upgradeHeaders: Headers,
   openedSessionId: string,
 ): Promise<boolean> {
   const current = await auth.api.getSession({ headers: upgradeHeaders });
-  if (current?.session.id === openedSessionId) {
-    return true;
-  }
+  return current?.session.id === openedSessionId;
+}
 
+/** Sends a 401 error frame and closes the socket. */
+export function closeExpiredSocket(ws: ChatServerWebSocket, channel: string): void {
   const message = 'Session expired';
   sendFrame(ws, {
     channel,
@@ -97,5 +95,4 @@ export async function ensureSocketSessionValid(
     payload: { code: StatusCodes.UNAUTHORIZED, message },
   });
   ws.close(WS_POLICY_VIOLATION_CODE, message);
-  return false;
 }
