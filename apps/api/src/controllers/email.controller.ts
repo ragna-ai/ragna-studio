@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { emailSendBodyLimit } from '../middlewares/bodyLimit';
 import {
   ActiveDraftConflictError,
   addAutoDraftSenderForUser,
@@ -299,27 +300,33 @@ export const emailController = new Hono()
    * changed the draft in the editor before sending) persisted onto the
    * draft row alongside the `sent` status update.
    */
-  .post('/draft/:draftId/send', validEmailDraftIdParam, validSendEmailDraftBody, async (c) => {
-    const user = c.get('user');
-    const { draftId } = c.req.valid('param');
-    const body = c.req.valid('form');
+  .post(
+    '/draft/:draftId/send',
+    emailSendBodyLimit,
+    validEmailDraftIdParam,
+    validSendEmailDraftBody,
+    async (c) => {
+      const user = c.get('user');
+      const { draftId } = c.req.valid('param');
+      const body = c.req.valid('form');
 
-    const result = await sendEmailDraftForUser({
-      userId: user.id,
-      draftId,
-      to: body.to,
-      cc: body.cc,
-      bcc: body.bcc,
-      subject: body.subject,
-      html: body.html,
-      text: body.text,
-      content: body.content,
-      mediaIds: body.mediaId,
-      files: body.files,
-    });
+      const result = await sendEmailDraftForUser({
+        userId: user.id,
+        draftId,
+        to: body.to,
+        cc: body.cc,
+        bcc: body.bcc,
+        subject: body.subject,
+        html: body.html,
+        text: body.text,
+        content: body.content,
+        mediaIds: body.mediaId,
+        files: body.files,
+      });
 
-    return c.json(result, StatusCodes.CREATED);
-  })
+      return c.json(result, StatusCodes.CREATED);
+    },
+  )
   // --- Compose / send -----------------------------------------------------
   /**
    * [POST] /email/send
@@ -328,7 +335,7 @@ export const emailController = new Hono()
    * (repeated, existing media-library picks), `files` (repeated, fresh
    * uploads attached directly without ever touching R2).
    */
-  .post('/send', validSendEmailBody, async (c) => {
+  .post('/send', emailSendBodyLimit, validSendEmailBody, async (c) => {
     const user = c.get('user');
     const body = c.req.valid('form');
 
@@ -369,19 +376,14 @@ export const emailController = new Hono()
   /**
    * [POST] /email/message/:messageId/trash
    */
-  .post(
-    '/message/:messageId/trash',
-    validEmailMessageIdParam,
-    validTrashActionBody,
-    async (c) => {
-      const user = c.get('user');
-      const { messageId } = c.req.valid('param');
-      const { trashed } = c.req.valid('json');
+  .post('/message/:messageId/trash', validEmailMessageIdParam, validTrashActionBody, async (c) => {
+    const user = c.get('user');
+    const { messageId } = c.req.valid('param');
+    const { trashed } = c.req.valid('json');
 
-      const message = await setMessageTrashedForUser({ userId: user.id, messageId, trashed });
-      return c.json({ message });
-    },
-  )
+    const message = await setMessageTrashedForUser({ userId: user.id, messageId, trashed });
+    return c.json({ message });
+  })
   /**
    * [POST] /email/message/:messageId/star
    */

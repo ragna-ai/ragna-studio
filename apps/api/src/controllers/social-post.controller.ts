@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { singleUploadBodyLimit } from '../middlewares/bodyLimit';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   attachSocialPostMedia,
@@ -113,7 +114,7 @@ export const socialPostController = new Hono()
    * optional `altText` field. Drafts only, JPEG/PNG/GIF only, 10 MB cap, and
    * at most 9 images per post (enforced in the service).
    */
-  .post('/:socialPostId/media', validSocialPostIdParam, async (c) => {
+  .post('/:socialPostId/media', singleUploadBodyLimit, validSocialPostIdParam, async (c) => {
     const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');

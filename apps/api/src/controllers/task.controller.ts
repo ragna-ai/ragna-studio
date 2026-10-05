@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { multiUploadBodyLimit } from '../middlewares/bodyLimit';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   listTaskAttachments,
@@ -154,7 +155,7 @@ export const taskController = new Hono()
    * Upload one or more files in a single multipart request (`files` field)
    * and attach them to the task.
    */
-  .post('/:taskId/attachments', validTaskIdParam, async (c) => {
+  .post('/:taskId/attachments', multiUploadBodyLimit, validTaskIdParam, async (c) => {
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 

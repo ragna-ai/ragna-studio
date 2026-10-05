@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { DEFAULT_BODY_LIMIT_BYTES } from '../../src/middlewares/bodyLimit';
 
 // Metadata CRUD for /workspace/:workspaceId/chat (docs/testing/strategy.md,
 // priority 3). Streaming/WebSocket chat (runChatStream, ws.controller.ts)
@@ -308,24 +307,5 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId', () => {
     });
     const body = chatListResponseSchema.parse(await listResponse.json());
     expect(body.chats).toEqual([]);
-  });
-});
-
-describe('request body limit', () => {
-  beforeEach(async () => {
-    await truncateAllTables();
-  });
-
-  test('413s a JSON body over the 5 MB default', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const agentId = await createAgent(cookieHeader, workspaceId);
-
-    const response = await app.request(`/workspace/${workspaceId}/chat`, {
-      method: 'POST',
-      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ agentId, title: 'x'.repeat(DEFAULT_BODY_LIMIT_BYTES) }),
-    });
-
-    expect(response.status).toBe(StatusCodes.REQUEST_TOO_LONG);
   });
 });

@@ -28,7 +28,6 @@ import { genVideoController } from './controllers/videogen.controller';
 import { workflowController } from './controllers/workflow.controller';
 import { workspaceController } from './controllers/workspace.controller';
 import { wsController } from './controllers/ws.controller';
-import { requestBodyLimit } from './middlewares/bodyLimit';
 import { allowedOrigins } from './utils/allowed-origins';
 
 export const app = new Hono()
@@ -46,8 +45,6 @@ export const app = new Hono()
       credentials: true,
     }),
   )
-  // Body size limit (one effective limit per route)
-  .use(requestBodyLimit)
   // Timeout middleware (15 minutes)
   // .use('*', timeout(15 * 60 * 1000))
   // Auth handler
