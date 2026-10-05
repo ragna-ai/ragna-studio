@@ -34,7 +34,7 @@ export type ImageResolution = (typeof imageResolutions)[number];
 
 export type ImageReferenceInput =
   | { origin: 'genImage'; genImageId: string }
-  | { origin: 'upload'; storageKey: string };
+  | { origin: 'upload'; mediaId: string };
 
 export interface GeneratedImageReference {
   origin: 'upload' | 'genImage';
@@ -90,14 +90,15 @@ export interface GenerateImagesBody {
 }
 
 export interface ReferenceUploadResponse {
-  storageKey: string;
+  mediaId: string;
+  imgUrl: string;
 }
 
 /**
  * The subset of a generated image's settings the preview dialog can hand
  * back to the form. Reference images are deliberately excluded: the response
  * only carries a display `imgUrl` for each one, not the `genImageId` /
- * `storageKey` a new request would need to resubmit it.
+ * `mediaId` a new request would need to resubmit it.
  */
 export interface ReuseImageSettings {
   provider: string;

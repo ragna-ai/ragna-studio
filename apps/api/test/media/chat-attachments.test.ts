@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/middlewares/bodyLimit';
 
 // Chat attachment upload/delete (docs/media-library/prd.md,
 // unified-media-prd.md). Auth/authorization for /workspace/:workspaceId/*
@@ -251,6 +252,37 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
     });
 
     expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
+  });
+});
+
+describe('POST /workspace/:workspaceId/chat/:chatId/attachments (file count)', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
+
+  test('400s more than 5 files in one request and stores nothing', async () => {
+    const { workspaceId, cookieHeader, chatId } = await seedChat();
+    const files = Array.from({ length: MAX_FILES_PER_UPLOAD_REQUEST + 1 }, (_, index) =>
+      csvFile(`data-${index}.csv`),
+    );
+
+    const { status } = await uploadAttachments(cookieHeader, workspaceId, chatId, files);
+
+    expect(status).toBe(StatusCodes.BAD_REQUEST);
+    expect(uploadObjectBufferMock).not.toHaveBeenCalled();
+  });
+
+  test('accepts exactly 5 files', async () => {
+    const { workspaceId, cookieHeader, chatId } = await seedChat();
+    const files = Array.from({ length: MAX_FILES_PER_UPLOAD_REQUEST }, (_, index) =>
+      csvFile(`data-${index}.csv`),
+    );
+
+    const { status, attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, files);
+
+    expect(status).toBe(StatusCodes.CREATED);
+    expect(attachments).toHaveLength(MAX_FILES_PER_UPLOAD_REQUEST);
   });
 });
 

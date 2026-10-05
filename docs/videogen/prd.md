@@ -7,6 +7,12 @@
 > (`packages/ai/src/services/imagen.service.ts`, `apps/web/app/features/image/`)
 > wherever possible; deviates only where video latency forces it.
 
+> **Update (2026-10-05):** `frame-upload` now stores the file via
+> `@repo/media` as a workspace media row and returns `{ mediaId, imgUrl }`.
+> Generate bodies take `{ origin: 'upload', mediaId }`, resolved
+> workspace-scoped (404 otherwise). The `storageKey` round trip described
+> below no longer exists; abandoned uploads are swept by the media-sweep cron.
+
 Users can generate videos from a text prompt, optionally animating a first-frame
 image, on a dedicated `/text-to-video` page and through a chat agent tool.
 Results are stored in R2 and listed per workspace, like generated images.

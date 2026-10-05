@@ -45,6 +45,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { getAgentForWorkspace } from './agent.service';
 import { assertCanSpend } from './credit.service';
 
 // CHAT CRUD (docs/api-standards/prd.md, WP4)
@@ -349,6 +350,10 @@ export async function createChatForWorkspace({
   userId: string;
   agentId?: string;
 }): Promise<Chat> {
+  if (agentId) {
+    await getAgentForWorkspace({ workspaceId, agentId });
+  }
+
   const resolvedAgentId = agentId ?? (await resolveDefaultAgentId({ workspaceId, userId }));
 
   const { error, data: chatRecord } = await tryCatch(() =>

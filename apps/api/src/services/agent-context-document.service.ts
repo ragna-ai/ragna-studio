@@ -21,6 +21,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
 
 const MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 25;
@@ -338,6 +339,10 @@ export async function uploadAgentContextDocuments({
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
+  }
+
+  if (files.length > MAX_FILES_PER_UPLOAD_REQUEST) {
+    throw new BadRequestException(`At most ${MAX_FILES_PER_UPLOAD_REQUEST} files per request`);
   }
 
   const { error: listError, data: existingDocuments } = await tryCatch(() =>

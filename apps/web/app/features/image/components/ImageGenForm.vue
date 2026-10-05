@@ -46,7 +46,7 @@ const advancedOptionsOpen = ref(false);
 const referenceImagesEnabled = ref(false);
 const referenceMode = ref<ReferenceMode>('genImage');
 const selectedGenImageIds = ref<string[]>([]);
-const uploadedReferences = ref<{ storageKey: string; previewUrl: string }[]>(
+const uploadedReferences = ref<{ mediaId: string; previewUrl: string }[]>(
   [],
 );
 
@@ -140,9 +140,9 @@ function resolveReferenceImages(): ImageReferenceInput[] | undefined {
       origin: 'genImage' as const,
       genImageId,
     })),
-    ...uploadedReferences.value.map(({ storageKey }) => ({
+    ...uploadedReferences.value.map(({ mediaId }) => ({
       origin: 'upload' as const,
-      storageKey,
+      mediaId,
     })),
   ].slice(0, referenceCap.value);
 
@@ -189,9 +189,9 @@ function handleReferenceFileChange(event: Event) {
   if (!file || isReferenceCapReached.value) return;
 
   uploadReference(file, {
-    onSuccess: ({ storageKey }) => {
+    onSuccess: ({ mediaId }) => {
       uploadedReferences.value.push({
-        storageKey,
+        mediaId,
         previewUrl: URL.createObjectURL(file),
       });
     },
@@ -496,7 +496,7 @@ watch(
           >
             <div
               v-for="(reference, index) in uploadedReferences"
-              :key="reference.storageKey"
+              :key="reference.mediaId"
               class="relative"
             >
               <img

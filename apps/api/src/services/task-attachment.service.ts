@@ -18,6 +18,7 @@ import {
 } from '@repo/media';
 import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
 
 // TASK ATTACHMENTS (docs/tasks/attachments-prd.md)
 //
@@ -184,6 +185,10 @@ export async function uploadTaskAttachments({
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
+  }
+
+  if (files.length > MAX_FILES_PER_UPLOAD_REQUEST) {
+    throw new BadRequestException(`At most ${MAX_FILES_PER_UPLOAD_REQUEST} files per request`);
   }
 
   // Validate every file before touching R2 or the database: the first

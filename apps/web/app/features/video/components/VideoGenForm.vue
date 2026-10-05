@@ -42,7 +42,7 @@ const advancedOptionsOpen = ref(false);
 const frameEnabled = ref(false);
 const frameMode = ref<FrameMode>('genImage');
 const selectedGenImageId = ref<string | null>(null);
-const uploadedFrame = ref<{ storageKey: string; previewUrl: string } | null>(
+const uploadedFrame = ref<{ mediaId: string; previewUrl: string } | null>(
   null,
 );
 
@@ -137,7 +137,7 @@ function resolveFrame() {
   if (frameMode.value === 'upload' && uploadedFrame.value) {
     return {
       origin: 'upload' as const,
-      storageKey: uploadedFrame.value.storageKey,
+      mediaId: uploadedFrame.value.mediaId,
     };
   }
   return undefined;
@@ -172,10 +172,10 @@ function handleFileChange(event: Event) {
   if (!file) return;
 
   uploadFrame(file, {
-    onSuccess: ({ storageKey }) => {
+    onSuccess: ({ mediaId }) => {
       clearUploadedFrame();
       uploadedFrame.value = {
-        storageKey,
+        mediaId,
         previewUrl: URL.createObjectURL(file),
       };
     },

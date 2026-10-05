@@ -1,5 +1,5 @@
 import type { GenImageStatus } from '@repo/database';
-import { createGenImageRecords, createMedia } from '@repo/database';
+import { createGenImageRecords, createMedia, getMediaById } from '@repo/database';
 import { getImgGenBucketNameForUser } from '@repo/storage';
 import {
   deleteObjectsMock,
@@ -14,6 +14,8 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+
+const SINGLE_UPLOAD_LIMIT_BYTES = 11 * 1024 * 1024;
 
 // imagegen (docs/testing/strategy.md's "Blocked on mock infrastructure",
 // now unblocked). Auth/authorization are covered exhaustively in test/auth/
@@ -34,6 +36,16 @@ import { app } from '../../src/app';
 // tests, to prove generation really was deferred to the worker rather than
 // running synchronously. The reference-upload route does need the storage
 // mock.
+
+// Smallest valid 1x1 PNG: upload validation sniffs content, not file.type.
+const ONE_PX_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+function pngFile(name: string): File {
+  return new File([Buffer.from(ONE_PX_PNG_BASE64, 'base64')], name, { type: 'image/png' });
+}
+
+const uploadResponseSchema = z.object({ mediaId: z.string().min(1), imgUrl: z.string().min(1) });
 
 const genImageSchema = z.object({
   id: z.string(),
@@ -289,6 +301,33 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(generateImageMock).not.toHaveBeenCalled();
   });
+
+  test("404s when an uploaded reference is another workspace's media", async () => {
+    const owner = await seedAuthenticatedUser();
+    const attacker = await seedAuthenticatedUser();
+    const { aiModelId } = await seedImageAiModel({ provider: 'bfl' });
+
+    const formData = new FormData();
+    formData.append('file', pngFile('ref.png'));
+    const uploadResponse = await app.request(
+      `/workspace/${owner.workspaceId}/gen-image/reference-upload`,
+      { method: 'POST', headers: { cookie: owner.cookieHeader }, body: formData },
+    );
+    const { mediaId } = uploadResponseSchema.parse(await uploadResponse.json());
+
+    const response = await app.request(`/workspace/${attacker.workspaceId}/gen-image`, {
+      method: 'POST',
+      headers: { cookie: attacker.cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        aiModelId,
+        prompt: 'a red bicycle',
+        referenceImages: [{ origin: 'upload', mediaId }],
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(generateImageMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /workspace/:workspaceId/gen-image/reference-upload', () => {
@@ -297,16 +336,11 @@ describe('POST /workspace/:workspaceId/gen-image/reference-upload', () => {
     resetProviderMocks();
   });
 
-  test('uploads a reference image through the faked storage client', async () => {
+  test('stores the upload as a workspace image media row and returns its id', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
 
     const formData = new FormData();
-    formData.append(
-      'file',
-      new File([new Uint8Array([1, 2, 3])], 'ref.png', {
-        type: 'image/png',
-      }),
-    );
+    formData.append('file', pngFile('ref.png'));
 
     const response = await app.request(`/workspace/${workspaceId}/gen-image/reference-upload`, {
       method: 'POST',
@@ -315,8 +349,10 @@ describe('POST /workspace/:workspaceId/gen-image/reference-upload', () => {
     });
 
     expect(response.status).toBe(StatusCodes.CREATED);
-    const body = z.object({ storageKey: z.string().min(1) }).parse(await response.json());
-    expect(body.storageKey).toContain('images/references');
+    const body = uploadResponseSchema.parse(await response.json());
+    const mediaRow = await getMediaById({ id: body.mediaId });
+    expect(mediaRow?.ownerWorkspaceId).toBe(workspaceId);
+    expect(mediaRow?.mimeType).toBe('image/png');
     expect(uploadObjectBufferMock).toHaveBeenCalledTimes(1);
   });
 
@@ -336,6 +372,25 @@ describe('POST /workspace/:workspaceId/gen-image/reference-upload', () => {
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  });
+
+  test('rejects a non-image file that claims an image mime type', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const formData = new FormData();
+    formData.append(
+      'file',
+      new File([new Uint8Array([1, 2, 3])], 'ref.png', { type: 'image/png' }),
+    );
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image/reference-upload`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+      body: formData,
+    });
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(uploadObjectBufferMock).not.toHaveBeenCalled();
   });
 });
 
@@ -459,5 +514,28 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
     });
     const listBody = listResponseSchema.parse(await listResponse.json());
     expect(listBody.genImages).toEqual([]);
+  });
+});
+
+describe('POST /workspace/:workspaceId/gen-image/reference-upload (body limit)', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
+
+  test('413s a body over the 11 MB single-upload limit', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const formData = new FormData();
+    formData.append('file', new File([new Uint8Array(SINGLE_UPLOAD_LIMIT_BYTES + 1)], 'big.png', { type: 'image/png' }));
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-image/reference-upload`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+      body: formData,
+    });
+
+    expect(response.status).toBe(StatusCodes.REQUEST_TOO_LONG);
+    expect(uploadObjectBufferMock).not.toHaveBeenCalled();
   });
 });

@@ -15,6 +15,7 @@ import {
   updateDatasetForUser,
   updateDatasetRowForUser,
 } from '../services/dataset.service';
+import { buildAttachmentContentDisposition } from '../utils/content-disposition';
 import {
   validCreateDatasetBody,
   validCreateDatasetRowBody,
@@ -131,7 +132,7 @@ export const datasetController = new Hono()
 
     return c.body(new Uint8Array(file.bytes), 200, {
       'Content-Type': file.contentType,
-      'Content-Disposition': `attachment; filename="${file.filename}"`,
+      'Content-Disposition': buildAttachmentContentDisposition(file.filename),
     });
   })
   /**

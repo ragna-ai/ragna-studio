@@ -10,6 +10,7 @@ import {
   listDocuments,
   updateDocumentForUser,
 } from '../services/document.service';
+import { buildAttachmentContentDisposition } from '../utils/content-disposition';
 import {
   validCreateDocumentBody,
   validDocumentExportQuery,
@@ -117,6 +118,6 @@ export const documentController = new Hono()
 
     return c.body(new Uint8Array(file.bytes), 200, {
       'Content-Type': file.contentType,
-      'Content-Disposition': `attachment; filename="${file.filename}"`,
+      'Content-Disposition': buildAttachmentContentDisposition(file.filename),
     });
   });

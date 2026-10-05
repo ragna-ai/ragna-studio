@@ -59,7 +59,7 @@ export const genImageController = new Hono()
    * on it. Multipart upload: a `file` field. PNG/JPEG/WEBP only, 10 MB cap.
    */
   .post('/reference-upload', async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
 
     const body = await c.req.parseBody();
     const file = body.file;
@@ -68,9 +68,9 @@ export const genImageController = new Hono()
       throw new BadRequestException('A file is required');
     }
 
-    const { storageKey } = await uploadGenImageReference({ userId: user.id, file });
+    const uploaded = await uploadGenImageReference({ workspaceId: workspace.id, file });
 
-    return c.json({ storageKey }, StatusCodes.CREATED);
+    return c.json(uploaded, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/gen-image/:genImageId

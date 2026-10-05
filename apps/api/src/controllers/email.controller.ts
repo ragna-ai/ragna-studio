@@ -39,6 +39,7 @@ import {
   updateEmailCategoryForUser,
   updateEmailDraftForUser,
 } from '../services/email.service';
+import { buildAttachmentContentDisposition } from '../utils/content-disposition';
 import {
   validArchiveActionBody,
   validAutoDraftSenderIdParam,
@@ -424,7 +425,7 @@ export const emailController = new Hono()
 
     return c.body(new Uint8Array(file.data), 200, {
       'Content-Type': file.mimeType,
-      'Content-Disposition': `attachment; filename="${file.filename}"`,
+      'Content-Disposition': buildAttachmentContentDisposition(file.filename),
     });
   })
   // --- Threads ----------------------------------------------------------

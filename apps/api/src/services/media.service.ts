@@ -14,6 +14,7 @@ import {
   DOCUMENT_KINDS,
   extractText,
   IMAGE_KINDS,
+  MIME_TYPE_BY_MEDIA_KIND,
   sniffMediaKind,
   storeMedia,
   type MediaKind,
@@ -26,6 +27,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
 
 // MEDIA CORE (docs/media-library/prd.md, unified-media-prd.md)
 //
@@ -257,6 +259,10 @@ export async function uploadChatAttachments({
     throw new BadRequestException('At least one file is required');
   }
 
+  if (files.length > MAX_FILES_PER_UPLOAD_REQUEST) {
+    throw new BadRequestException(`At most ${MAX_FILES_PER_UPLOAD_REQUEST} files per request`);
+  }
+
   // Validate every file before touching R2 or the database: the first
   // failure rejects the whole batch and nothing has been stored yet.
   const validatedFiles: ValidatedChatAttachmentFile[] = [];
@@ -394,6 +400,60 @@ export async function deleteWorkspaceMediaObjects({
   }
 }
 
+// IMAGE INPUT UPLOAD
+
+const MAX_IMAGE_INPUT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+export interface UploadedImageInputResponse {
+  mediaId: string;
+  imgUrl: string;
+}
+
+/**
+ * Stores an image used as generation input (gen-image reference, gen-video
+ * frame) as a workspace media row. Type is checked by content sniffing, never
+ * the client-sent `file.type`. The row stays unreferenced until a generate
+ * call links it, so abandoned uploads fall to the media-sweep cron.
+ */
+export async function storeWorkspaceImageInput({
+  workspaceId,
+  file,
+}: {
+  workspaceId: string;
+  file: File;
+}): Promise<UploadedImageInputResponse> {
+  if (file.size > MAX_IMAGE_INPUT_FILE_BYTES) {
+    throw new BadRequestException('Image must be 10 MB or smaller');
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const sniffed = sniffMediaKind(buffer, file.name, { accept: IMAGE_KINDS });
+
+  if (!sniffed) {
+    throw new BadRequestException('Unsupported image type. Use PNG, JPEG, or WEBP.');
+  }
+
+  const { error, data: mediaRow } = await tryCatch(() =>
+    storeMedia({
+      owner: { workspaceId },
+      buffer,
+      filename: file.name,
+      kind: sniffed.kind,
+      origin: 'uploaded',
+    }),
+  );
+
+  if (error !== null || !mediaRow) {
+    logger.error('Failed to store image input', error);
+    throw new InternalServerErrorException('Failed to upload image');
+  }
+
+  return {
+    mediaId: mediaRow.id,
+    imgUrl: buildChatUploadImageUrls({ ownerId: workspaceId, mediaId: mediaRow.id }).imgUrl,
+  };
+}
+
 // LIST
 
 export interface MediaListItem {
@@ -455,6 +515,29 @@ export async function getDownloadableMedia({
   }
 
   if (!mediaRow || mediaRow.ownerWorkspaceId !== workspaceId) {
+    throw new NotFoundException('Media not found');
+  }
+
+  return mediaRow;
+}
+
+/**
+ * Loads a workspace-owned image media row, throwing 404 for a missing row,
+ * another workspace's row, or a non-image row. Shared by every endpoint that
+ * accepts a client-sent mediaId as image input (gen-image references,
+ * gen-video frames).
+ */
+export async function getOwnedImageMedia({
+  workspaceId,
+  mediaId,
+}: {
+  workspaceId: string;
+  mediaId: string;
+}): Promise<Media> {
+  const mediaRow = await getDownloadableMedia({ workspaceId, mediaId });
+  const imageMimeTypes = IMAGE_KINDS.map((kind) => MIME_TYPE_BY_MEDIA_KIND[kind]);
+
+  if (!imageMimeTypes.includes(mediaRow.mimeType)) {
     throw new NotFoundException('Media not found');
   }
 

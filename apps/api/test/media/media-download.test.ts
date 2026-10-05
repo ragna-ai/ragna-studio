@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { buildAttachmentContentDisposition } from '../../src/utils/content-disposition';
 
 // GET /workspace/:workspaceId/media/:mediaId/download (docs/media-library/
 // prd.md, decision 1: "owner access check ... in v1 membership of the
@@ -90,7 +91,7 @@ describe('GET /workspace/:workspaceId/media/:mediaId/download', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(response.headers.get('content-type')).toBe(mediaType);
-    expect(response.headers.get('content-disposition')).toBe(`attachment; filename="${filename}"`);
+    expect(response.headers.get('content-disposition')).toBe(buildAttachmentContentDisposition(filename));
     const body = await response.text();
     expect(body.length).toBeGreaterThan(0);
   });

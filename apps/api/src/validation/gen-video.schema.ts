@@ -13,12 +13,13 @@ export const validGenVideoIdParam = myzValidator(
 // Same ownership split as gen_videos.frameOrigin (docs/videogen/prd.md
 // decision 3): a 'genImage' frame references another workspace image the
 // caller doesn't own (resolved to a storage key in the service); an
-// 'upload' frame owns the object produced by the frame-upload endpoint
-// below. A discriminated union is fine for HTTP validation; the flat-object
+// 'upload' frame names a workspace media row by id, produced by the
+// frame-upload endpoint (the client never sends a storage key).
+// A discriminated union is fine for HTTP validation; the flat-object
 // rule only applies to AI tool schemas.
 const genVideoFrameSchema = z.discriminatedUnion('origin', [
   z.object({ origin: z.literal('genImage'), genImageId: z.uuidv7() }),
-  z.object({ origin: z.literal('upload'), storageKey: z.string().min(1) }),
+  z.object({ origin: z.literal('upload'), mediaId: z.uuidv7() }),
 ]);
 
 // Veo (google-vertex) only documents 1080p for 16:9; 9:16 stays at 720p

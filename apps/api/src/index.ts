@@ -2,6 +2,7 @@ import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import { setTimeout } from 'node:timers/promises';
 import { app } from './app';
+import { MAX_REQUEST_BODY_BYTES } from './middlewares/bodyLimit';
 import { websocket } from './ws/socket';
 
 function main() {
@@ -13,6 +14,7 @@ function main() {
     port,
     fetch: app.fetch,
     idleTimeout: 0,
+    maxRequestBodySize: MAX_REQUEST_BODY_BYTES,
     websocket: {
       ...websocket,
       // ws.publish() excludes the sending socket by default. Every WS

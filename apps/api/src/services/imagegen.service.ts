@@ -1,6 +1,5 @@
 import type { GenerateImagesInput, GenImageDto } from '@repo/ai';
 import { imageGenProviders, requestGenImages } from '@repo/ai';
-import { config } from '@repo/config';
 import type { GenImage, GenImageReferenceWithMedia, GenImageWithMedia } from '@repo/database';
 import {
   deleteGenImageByIdAndWorkspaceId,
@@ -12,18 +11,19 @@ import {
 } from '@repo/database';
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import { createMediaForObject, deleteMediaIfUnreferenced } from '@repo/media';
-import { buildImageUrls, getImgRefBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
+import { deleteMediaIfUnreferenced } from '@repo/media';
+import { buildImageUrls } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
-import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import type { UploadedImageInputResponse } from './media.service';
+import { getOwnedImageMedia, storeWorkspaceImageInput } from './media.service';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 export type GenImageReferenceInput =
   | { origin: 'genImage'; genImageId: string }
-  | { origin: 'upload'; storageKey: string };
+  | { origin: 'upload'; mediaId: string };
 
 // The HTTP body swaps generateImagesSchema's provider + model pair for a
 // single aiModelId, and its resolved-storage-key referenceImages for the
@@ -320,35 +320,6 @@ interface ResolvedReferenceImage {
 }
 
 /**
- * Mints a media row for an 'upload' reference: the reference-upload endpoint
- * below already put the bytes in R2 and handed the client back a bare
- * storage key (docs/media-library/migration-prd.md non-goal: zero frontend
- * changes), so this is where that key finally gets its media row, mime type
- * inferred from the key's own extension (the same mapping the upload
- * endpoint used to name the file).
- */
-async function createUploadedReferenceMedia({
-  workspaceId,
-  storageKey,
-}: {
-  workspaceId: string;
-  storageKey: string;
-}): Promise<ResolvedReferenceImage> {
-  const extension = storageKey.split('.').pop() ?? '';
-  const mimeType = REFERENCE_MIME_TYPE_BY_EXTENSION[extension] ?? 'application/octet-stream';
-
-  const mediaRow = await createMediaForObject({
-    owner: { workspaceId },
-    bucket: config.cfImagesBucketName,
-    storageKey,
-    mimeType,
-    origin: 'uploaded',
-  });
-
-  return { origin: 'upload', mediaId: mediaRow.id, storageKey };
-}
-
-/**
  * Resolves one reference entry into the mediaId/storageKey pair
  * requestGenImages (@repo/ai) expects: mediaId to link once the output rows
  * exist, storageKey to download the bytes to condition the generation on. A
@@ -363,7 +334,8 @@ async function resolveReferenceImage({
   workspaceId: string;
 }): Promise<ResolvedReferenceImage> {
   if (reference.origin === 'upload') {
-    return createUploadedReferenceMedia({ workspaceId, storageKey: reference.storageKey });
+    const mediaRow = await getOwnedImageMedia({ workspaceId, mediaId: reference.mediaId });
+    return { origin: 'upload', mediaId: mediaRow.id, storageKey: mediaRow.storageKey };
   }
 
   const { error, data: genImage } = await tryCatch(() =>
@@ -490,64 +462,17 @@ export async function generateImagesForWorkspace({
   return { genImages: created.map(toGenImageResponseFromDto) };
 }
 
-// Same 10 MB cap as gen-video's frame upload (videogen.service.ts), PNG/
-// JPEG/WEBP for the same reason: reference images may come from more
-// varied sources than a generated-image download.
-const REFERENCE_EXTENSION_BY_MIME_TYPE = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-} as const;
-type AllowedReferenceMimeType = keyof typeof REFERENCE_EXTENSION_BY_MIME_TYPE;
-const MAX_REFERENCE_FILE_BYTES = 10 * 1024 * 1024;
-
-// Reverse of the map above, for createUploadedReferenceMedia: by the time a
-// generate request resolves an 'upload' reference, only the storage key
-// (and thus its extension) survives the round trip to the client and back.
-const REFERENCE_MIME_TYPE_BY_EXTENSION: Record<string, AllowedReferenceMimeType> = {
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  webp: 'image/webp',
-};
-
-function isAllowedReferenceMimeType(mimeType: string): mimeType is AllowedReferenceMimeType {
-  return mimeType in REFERENCE_EXTENSION_BY_MIME_TYPE;
-}
-
 /**
  * [POST] /workspace/:workspaceId/gen-image/reference-upload
- * Uploads a reference image ahead of a generate request, mirroring
- * uploadGenVideoFrame (videogen.service.ts): validate, buffer, upload to R2
- * under the user's reference-image prefix, hand back the storage key for
- * the generate call above to reference.
+ * Stores a reference image as a workspace media row ahead of a generate
+ * request, which then references it by mediaId.
  */
 export async function uploadGenImageReference({
-  userId,
+  workspaceId,
   file,
 }: {
-  userId: string;
+  workspaceId: string;
   file: File;
-}): Promise<{ storageKey: string }> {
-  if (!isAllowedReferenceMimeType(file.type)) {
-    throw new BadRequestException('Unsupported image type. Use PNG, JPEG, or WEBP.');
-  }
-
-  if (file.size > MAX_REFERENCE_FILE_BYTES) {
-    throw new BadRequestException('Image must be 10 MB or smaller');
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { bucketName, prefix } = getImgRefBucketNameForUser(userId);
-  const key = `${prefix}/${randomUUID()}.${REFERENCE_EXTENSION_BY_MIME_TYPE[file.type]}`;
-
-  const { error } = await tryCatch(() =>
-    uploadObjectBuffer({ bucketName, key, buffer, contentType: file.type }),
-  );
-
-  if (error !== null) {
-    logger.error('Failed to upload reference image', error);
-    throw new InternalServerErrorException('Failed to upload reference image');
-  }
-
-  return { storageKey: key };
+}): Promise<UploadedImageInputResponse> {
+  return storeWorkspaceImageInput({ workspaceId, file });
 }

@@ -6,6 +6,12 @@
 > negative prompt, seed, and reference images. Mirrors
 > `docs/videogen/prd.md` wherever the two features overlap.
 
+> **Update (2026-10-05):** `reference-upload` now stores the file via
+> `@repo/media` as a workspace media row and returns `{ mediaId, imgUrl }`.
+> Generate bodies take `{ origin: 'upload', mediaId }`, resolved
+> workspace-scoped (404 otherwise). The `storageKey` round trip described
+> below no longer exists; abandoned uploads are swept by the media-sweep cron.
+
 Users can steer an image generation beyond the prompt: exclude content with a
 negative prompt, reproduce a result with a seed, and condition on up to four
 reference images picked from the gallery or uploaded. Which of those are

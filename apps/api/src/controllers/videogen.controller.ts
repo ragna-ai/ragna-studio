@@ -62,7 +62,7 @@ export const genVideoController = new Hono()
    * Multipart upload: a `file` field. PNG/JPEG/WEBP only, 10 MB cap.
    */
   .post('/frame-upload', async (c) => {
-    const user = c.get('user');
+    const workspace = c.get('workspace');
 
     const body = await c.req.parseBody();
     const file = body.file;
@@ -71,9 +71,9 @@ export const genVideoController = new Hono()
       throw new BadRequestException('A file is required');
     }
 
-    const { storageKey } = await uploadGenVideoFrame({ userId: user.id, file });
+    const uploaded = await uploadGenVideoFrame({ workspaceId: workspace.id, file });
 
-    return c.json({ storageKey }, StatusCodes.CREATED);
+    return c.json(uploaded, StatusCodes.CREATED);
   })
   /**
    * [POST] /workspace/:workspaceId/gen-video/:genVideoId/enhance
