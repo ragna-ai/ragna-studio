@@ -27,7 +27,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
+import {
+  MAX_FILES_PER_UPLOAD_REQUEST,
+  MAX_UPLOAD_FILE_BYTES,
+  MAX_UPLOAD_FILE_MB,
+} from '../utils/upload-limits';
 
 // MEDIA CORE (docs/media-library/prd.md, unified-media-prd.md)
 //
@@ -36,7 +40,6 @@ import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
 // client mime), the type registry, extraction, storage placement, and
 // refcounted deletion.
 
-const MAX_CHAT_ATTACHMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 const EXTRACTED_TEXT_CHAR_CAP = 50_000;
 const TRUNCATION_MARKER = '\n[truncated]';
 
@@ -76,8 +79,8 @@ function validateChatAttachmentFile({
     return { error: `"${filename}" is empty` };
   }
 
-  if (fileSize > MAX_CHAT_ATTACHMENT_FILE_BYTES) {
-    return { error: `"${filename}" is larger than 10 MB` };
+  if (fileSize > MAX_UPLOAD_FILE_BYTES) {
+    return { error: `"${filename}" is larger than ${MAX_UPLOAD_FILE_MB} MB` };
   }
 
   const sniffed = sniffMediaKind(buffer, filename, { accept: CHAT_ATTACHMENT_ACCEPTED_KINDS });
@@ -402,8 +405,6 @@ export async function deleteWorkspaceMediaObjects({
 
 // IMAGE INPUT UPLOAD
 
-const MAX_IMAGE_INPUT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-
 export interface UploadedImageInputResponse {
   mediaId: string;
   imgUrl: string;
@@ -422,8 +423,8 @@ export async function storeWorkspaceImageInput({
   workspaceId: string;
   file: File;
 }): Promise<UploadedImageInputResponse> {
-  if (file.size > MAX_IMAGE_INPUT_FILE_BYTES) {
-    throw new BadRequestException('Image must be 10 MB or smaller');
+  if (file.size > MAX_UPLOAD_FILE_BYTES) {
+    throw new BadRequestException(`Image must be ${MAX_UPLOAD_FILE_MB} MB or smaller`);
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

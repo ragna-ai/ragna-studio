@@ -1,15 +1,11 @@
 import type { MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { PayloadTooLargeException } from '../exceptions';
+import { MAX_FILES_PER_UPLOAD_REQUEST, MAX_UPLOAD_FILE_BYTES, MB } from '../utils/upload-limits';
 
-const MB = 1024 * 1024;
-
-/** Max files accepted by one multi-file upload request. */
-export const MAX_FILES_PER_UPLOAD_REQUEST = 5;
-
-// Per-file cap is 10 MB; the extra MB covers multipart overhead.
-const SINGLE_UPLOAD_BODY_LIMIT_BYTES = 11 * MB;
-const MULTI_UPLOAD_BODY_LIMIT_BYTES = 51 * MB;
+// The extra MB covers multipart overhead.
+const SINGLE_UPLOAD_BODY_LIMIT_BYTES = MAX_UPLOAD_FILE_BYTES + MB;
+const MULTI_UPLOAD_BODY_LIMIT_BYTES = MAX_FILES_PER_UPLOAD_REQUEST * MAX_UPLOAD_FILE_BYTES + MB;
 // Provider attachment cap is 25 MB (MAX_TOTAL_ATTACHMENT_BYTES in email.service.ts).
 const EMAIL_SEND_BODY_LIMIT_BYTES = 26 * MB;
 

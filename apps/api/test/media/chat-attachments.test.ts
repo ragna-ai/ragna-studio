@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/middlewares/bodyLimit';
+import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/utils/upload-limits';
 
 // Chat attachment upload/delete (docs/media-library/prd.md,
 // unified-media-prd.md). Auth/authorization for /workspace/:workspaceId/*

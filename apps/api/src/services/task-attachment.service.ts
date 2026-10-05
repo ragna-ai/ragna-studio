@@ -18,7 +18,11 @@ import {
 } from '@repo/media';
 import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
-import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
+import {
+  MAX_FILES_PER_UPLOAD_REQUEST,
+  MAX_UPLOAD_FILE_BYTES,
+  MAX_UPLOAD_FILE_MB,
+} from '../utils/upload-limits';
 
 // TASK ATTACHMENTS (docs/tasks/attachments-prd.md)
 //
@@ -27,7 +31,6 @@ import { MAX_FILES_PER_UPLOAD_REQUEST } from '../middlewares/bodyLimit';
 // (PRD decision "Scope"), so unlike chat this never calls @repo/media's
 // `extractText`.
 
-const MAX_TASK_ATTACHMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 // Task attachments accept every media kind the platform knows, same as chat
 // (docs/tasks/attachments-prd.md doesn't define a narrower set).
@@ -55,8 +58,8 @@ function validateTaskAttachmentFile({
     return { error: `"${filename}" is empty` };
   }
 
-  if (fileSize > MAX_TASK_ATTACHMENT_FILE_BYTES) {
-    return { error: `"${filename}" is larger than 10 MB` };
+  if (fileSize > MAX_UPLOAD_FILE_BYTES) {
+    return { error: `"${filename}" is larger than ${MAX_UPLOAD_FILE_MB} MB` };
   }
 
   const sniffed = sniffMediaKind(buffer, filename, { accept: TASK_ATTACHMENT_ACCEPTED_KINDS });
