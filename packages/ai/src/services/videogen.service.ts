@@ -595,7 +595,7 @@ async function downloadFrameImage(
   }
 
   const { buffer } = await downloadObjectBuffer(
-    config.cfImagesBucketName,
+    record.frameMedia.bucket,
     record.frameMedia.storageKey,
   );
 

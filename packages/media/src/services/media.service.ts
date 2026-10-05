@@ -74,18 +74,23 @@ export async function storeMedia({
 
   await uploadObjectBuffer({ bucketName: bucket, key: storageKey, buffer, contentType: mimeType });
 
-  return createMedia({
-    id: mediaId,
-    ownerUserId: owner.userId ?? null,
-    ownerWorkspaceId: owner.workspaceId ?? null,
-    bucket,
-    storageKey,
-    filename,
-    mimeType,
-    size: buffer.byteLength,
-    origin,
-    extractedText: extractedText ?? null,
-  });
+  try {
+    return await createMedia({
+      id: mediaId,
+      ownerUserId: owner.userId ?? null,
+      ownerWorkspaceId: owner.workspaceId ?? null,
+      bucket,
+      storageKey,
+      filename,
+      mimeType,
+      size: buffer.byteLength,
+      origin,
+      extractedText: extractedText ?? null,
+    });
+  } catch (createError) {
+    await deleteMediaObjects([{ bucket, storageKey }]);
+    throw createError;
+  }
 }
 
 export interface CreateMediaForObjectInput {
@@ -128,9 +133,10 @@ export async function createMediaForObject({
 // DELETION (docs/media-library/prd.md decision 2,
 // docs/media-library/migration-prd.md decision 4)
 
-async function deleteMediaObjects(objects: { bucket: string; storageKey: string }[]): Promise<void> {
+/** Returns true only when every object was confirmed deleted. Never throws. */
+async function deleteMediaObjects(objects: { bucket: string; storageKey: string }[]): Promise<boolean> {
   if (objects.length === 0) {
-    return;
+    return true;
   }
 
   const storageKeysByBucket: Record<string, string[]> = {};
@@ -138,19 +144,25 @@ async function deleteMediaObjects(objects: { bucket: string; storageKey: string 
     (storageKeysByBucket[bucket] ??= []).push(storageKey);
   }
 
+  let allDeleted = true;
+
   for (const bucket of Object.keys(storageKeysByBucket)) {
     const storageKeys = storageKeysByBucket[bucket];
     const { error, data } = await tryCatch(() => deleteObjects(bucket, storageKeys));
 
-    if (error !== null) {
+    if (error !== null || !data) {
       logger.error('Failed to delete media objects from R2', { error, bucket, storageKeys });
+      allDeleted = false;
       continue;
     }
 
-    if (data && data.errors.length > 0) {
+    if (data.errors.length > 0) {
       logger.error('Failed to delete some media objects from R2', { bucket, keys: data.errors });
+      allDeleted = false;
     }
   }
+
+  return allDeleted;
 }
 
 /**
@@ -186,7 +198,15 @@ export async function deleteMediaIfUnreferenced({ mediaId }: { mediaId: string }
     return;
   }
 
-  await deleteMediaObjects([{ bucket: mediaRow.bucket, storageKey: mediaRow.storageKey }]);
+  const objectsDeleted = await deleteMediaObjects([
+    { bucket: mediaRow.bucket, storageKey: mediaRow.storageKey },
+  ]);
+
+  // Keep the row so the sweep retries; dropping it would orphan the object.
+  if (!objectsDeleted) {
+    return;
+  }
+
   await deleteMediaById({ id: mediaId });
 }
 
