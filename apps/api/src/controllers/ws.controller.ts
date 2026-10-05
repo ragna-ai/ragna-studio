@@ -44,7 +44,7 @@ export const wsController = new Hono()
     upgradeWebSocket((c: Context<AuthEnv>) => {
       const user = c.get('user');
       const session = c.get('session');
-      const upgradeHeaders = c.req.raw.headers;
+      const reqRawHeaders = c.req.raw.headers;
 
       // Granted channels for this socket only, populated on a successful
       // `subscribe`. A topic string from the client is a request, never a
@@ -99,7 +99,7 @@ export const wsController = new Hono()
           try {
             switch (type) {
               case 'subscribe': {
-                const sessionValid = await isSocketSessionValid(upgradeHeaders, session.id);
+                const sessionValid = await isSocketSessionValid(reqRawHeaders, session.id);
                 if (!sessionValid) {
                   closeExpiredSocket(raw, channel);
                   return;
@@ -131,7 +131,7 @@ export const wsController = new Hono()
               }
 
               case 'message': {
-                const sessionValid = await isSocketSessionValid(upgradeHeaders, session.id);
+                const sessionValid = await isSocketSessionValid(reqRawHeaders, session.id);
                 if (!sessionValid) {
                   closeExpiredSocket(raw, channel);
                   return;
