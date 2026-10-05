@@ -1,6 +1,8 @@
 // file: channel.service.ts
 
+import { auth } from '@repo/auth/server';
 import { getChatByIdForUser } from '@repo/database';
+import { StatusCodes } from 'http-status-codes';
 import type { ChatServerWebSocket } from '../ws/socket';
 import type { OutgoingWsFrame } from '../ws/protocol';
 
@@ -68,4 +70,32 @@ export function sendFrame(ws: ChatServerWebSocket, frame: OutgoingWsFrame): void
 // later Redis bridge for multi-instance scale-out only touches this function.
 export function publishFrame(ws: ChatServerWebSocket, frame: OutgoingWsFrame): void {
   ws.publish(frame.channel, JSON.stringify(frame));
+}
+
+const WS_POLICY_VIOLATION_CODE = 1008;
+
+/**
+ * Re-checks the upgrade session against better-auth. If it is gone, expired,
+ * or replaced by a different session, sends a 401 error frame, closes the
+ * socket and returns false.
+ */
+export async function ensureSocketSessionValid(
+  ws: ChatServerWebSocket,
+  channel: string,
+  upgradeHeaders: Headers,
+  openedSessionId: string,
+): Promise<boolean> {
+  const current = await auth.api.getSession({ headers: upgradeHeaders });
+  if (current?.session.id === openedSessionId) {
+    return true;
+  }
+
+  const message = 'Session expired';
+  sendFrame(ws, {
+    channel,
+    type: 'error',
+    payload: { code: StatusCodes.UNAUTHORIZED, message },
+  });
+  ws.close(WS_POLICY_VIOLATION_CODE, message);
+  return false;
 }

@@ -11,6 +11,7 @@ import { requireAllowedOrigin } from '../middlewares/originMiddleware';
 import {
   authorizeChannel,
   chatIdFromChannel,
+  ensureSocketSessionValid,
   publishFrame,
   sendFrame,
 } from '../services/channel.service';
@@ -42,6 +43,7 @@ export const wsController = new Hono()
     upgradeWebSocket((c: Context<AuthEnv>) => {
       const user = c.get('user');
       const session = c.get('session');
+      const upgradeHeaders = c.req.raw.headers;
 
       // Granted channels for this socket only, populated on a successful
       // `subscribe`. A topic string from the client is a request, never a
@@ -93,96 +95,93 @@ export const wsController = new Hono()
 
           const { channel, type, payload } = envelope;
 
-          switch (type) {
-            case 'subscribe': {
-              // Each new subscribe re-validates the session.
-              if (Date.now() >= session.expiresAt.getTime()) {
-                sendFrame(raw, {
-                  channel,
-                  type: 'error',
-                  payload: { code: StatusCodes.UNAUTHORIZED, message: 'Session expired' },
-                });
+          try {
+            switch (type) {
+              case 'subscribe': {
+                if (!(await ensureSocketSessionValid(raw, channel, upgradeHeaders, session.id))) {
+                  return;
+                }
+
+                const authorized = await authorizeChannel(channel, user.id);
+                if (!authorized) {
+                  sendFrame(raw, {
+                    channel,
+                    type: 'error',
+                    payload: {
+                      code: StatusCodes.FORBIDDEN,
+                      message: 'Not authorized for this channel',
+                    },
+                  });
+                  return;
+                }
+
+                raw.subscribe(channel);
+                grantedChannels.add(channel);
+                sendFrame(raw, { channel, type: 'subscribed' });
                 return;
               }
 
-              const authorized = await authorizeChannel(channel, user.id);
-              if (!authorized) {
-                sendFrame(raw, {
-                  channel,
-                  type: 'error',
-                  payload: {
-                    code: StatusCodes.FORBIDDEN,
-                    message: 'Not authorized for this channel',
-                  },
-                });
+              case 'unsubscribe': {
+                raw.unsubscribe(channel);
+                grantedChannels.delete(channel);
                 return;
               }
 
-              raw.subscribe(channel);
-              grantedChannels.add(channel);
-              sendFrame(raw, { channel, type: 'subscribed' });
-              return;
-            }
+              case 'message': {
+                if (!(await ensureSocketSessionValid(raw, channel, upgradeHeaders, session.id))) {
+                  return;
+                }
 
-            case 'unsubscribe': {
-              raw.unsubscribe(channel);
-              grantedChannels.delete(channel);
-              return;
-            }
+                if (!grantedChannels.has(channel)) {
+                  sendFrame(raw, {
+                    channel,
+                    type: 'error',
+                    payload: {
+                      code: StatusCodes.FORBIDDEN,
+                      message: 'Not subscribed to this channel',
+                    },
+                  });
+                  return;
+                }
 
-            case 'message': {
-              if (!grantedChannels.has(channel)) {
-                sendFrame(raw, {
-                  channel,
-                  type: 'error',
-                  payload: {
-                    code: StatusCodes.FORBIDDEN,
-                    message: 'Not subscribed to this channel',
-                  },
-                });
-                return;
-              }
+                const chatId = chatIdFromChannel(channel);
+                const messagePayload = parseMessagePayload(payload);
 
-              const chatId = chatIdFromChannel(channel);
-              const messagePayload = parseMessagePayload(payload);
+                if (!chatId || !messagePayload) {
+                  sendFrame(raw, {
+                    channel,
+                    type: 'error',
+                    payload: { code: StatusCodes.BAD_REQUEST, message: 'Invalid message payload' },
+                  });
+                  return;
+                }
 
-              if (!chatId || !messagePayload) {
-                sendFrame(raw, {
-                  channel,
-                  type: 'error',
-                  payload: { code: StatusCodes.BAD_REQUEST, message: 'Invalid message payload' },
-                });
-                return;
-              }
-
-              try {
                 await runChatStream(
                   {
                     chatId,
                     userId: user.id,
                     message: messagePayload.message,
                   },
-                  (uiMsgChunk) =>
-                    publishFrame(raw, { channel, type: 'chunk', payload: uiMsgChunk }),
+                  (uiMsgChunk) => publishFrame(raw, { channel, type: 'chunk', payload: uiMsgChunk }),
                 );
                 publishFrame(raw, { channel, type: 'done' });
-              } catch (error) {
-                sendFrame(raw, { channel, type: 'error', payload: toErrorPayload(error) });
-              }
-              return;
-            }
-
-            case 'abort': {
-              if (!grantedChannels.has(channel)) {
                 return;
               }
 
-              const chatId = chatIdFromChannel(channel);
-              if (chatId) {
-                abortChatRun(chatId);
+              case 'abort': {
+                if (!grantedChannels.has(channel)) {
+                  return;
+                }
+
+                const chatId = chatIdFromChannel(channel);
+                if (chatId) {
+                  abortChatRun(chatId);
+                }
+                return;
               }
-              return;
             }
+          } catch (error) {
+            sendFrame(raw, { channel, type: 'error', payload: toErrorPayload(error) });
           }
         },
 
