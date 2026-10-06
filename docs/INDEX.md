@@ -36,6 +36,7 @@ work first, shipped reference and dead/historical docs last.
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
+| [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | proposed (2026-10-06) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
 | [Workflows: human in the loop (approval node)](./workflow/workflows-human-in-the-loop.md) | proposed |
 
