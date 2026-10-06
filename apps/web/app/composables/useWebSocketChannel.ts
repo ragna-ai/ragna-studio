@@ -36,7 +36,9 @@ function isWebSocketFrame(value: unknown): value is WebSocketFrame {
 
 function getWebSocketUrl(): string {
   const { public: publicConfig } = useRuntimeConfig();
-  return `${publicConfig.apiBaseUrl.replace(/^http/, 'ws')}/ws`;
+  const url = toWebSocketUrl(publicConfig.apiBaseUrl);
+  url.pathname = `${url.pathname.replace(/\/$/, '')}/ws`;
+  return url.toString();
 }
 
 /** Re-sends a `subscribe` for every channel that still has listeners. */

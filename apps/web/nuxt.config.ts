@@ -26,11 +26,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: 'http://localhost:3010', // default value for dev
+      mediaUrl: '',
     },
   },
   // SECURITY
-  // apps/web has no server/ routes of its own (all data goes to apps/api
-  // cross-origin), so the request-time middlewares below are no-ops here.
+  // apps/web has no server routes of its own (only the CSP plugin in server/plugins;
+  // all data goes to apps/api cross-origin), so the request-time middlewares below are no-ops here.
   // HSTS/X-Content-Type-Options/X-Frame-Options/X-XSS-Protection stay owned by
   // Traefik's shared default-security-headers (same as ragna-api), only CSP
   // needs to live here since its nonce has to be generated per-request.
@@ -44,18 +45,10 @@ export default defineNuxtConfig({
       crossOriginEmbedderPolicy: false,
       contentSecurityPolicy: {
         'default-src': ["'self'"],
-        // local containers override directives via NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_* env vars
-        'connect-src': ["'self'", 'https://api.ragna.io', 'wss://api.ragna.io'],
-        'img-src': [
-          "'self'",
-          'data:',
-          'blob:',
-          'https://static.ragna.io',
-          'https://images.ragna.io',
-        ],
-        // generated videos are served from the same R2 bucket/domain as images
-        // (packages/storage/src/lib/video-urls.ts -> getPublicMediaUrl)
-        'media-src': ["'self'", 'https://images.ragna.io'],
+        // API and media origins are appended at runtime by server/plugins/csp-origins.ts
+        'connect-src': ["'self'"],
+        'img-src': ["'self'", 'data:', 'blob:'],
+        'media-src': ["'self'"],
         // vue-i18n falls back to its JIT (`new Function`) message compiler for
         // any t(`...${dynamicKey}`) call, since the key can't be statically
         // precompiled at build time. That pattern is used throughout the app
@@ -117,12 +110,8 @@ export default defineNuxtConfig({
   },
   // IMAGE
   image: {
-    // provider: 'cloudflare',
     format: ['avif', 'webp'],
     quality: 80,
-    cloudflare: {
-      baseURL: 'https://static.ragna.io',
-    },
   },
   // FONTS
   fonts: {
