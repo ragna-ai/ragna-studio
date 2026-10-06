@@ -21,7 +21,7 @@ import { logger } from '@repo/logger';
 import { applyVideoWatermark } from '@repo/media';
 import { GEN_VIDEO_JOB, genVideoJobSchema, queue } from '@repo/queue';
 import {
-  buildVideoUrls,
+  toPublicMediaUrl,
   downloadObjectBuffer,
   getVideoDraftBucketNameForUser,
   getVideoGenBucketNameForUser,
@@ -200,7 +200,7 @@ function toGenVideoDto(record: GenVideo, media: Media | null = null): GenVideoDt
     parentGenVideoId: record.parentGenVideoId,
     visibleWatermark: record.visibleWatermark,
     videoUrl: media
-      ? buildVideoUrls({ userId: record.userId, key: media.storageKey }).videoUrl
+      ? toPublicMediaUrl(media.storageKey)
       : undefined,
     createdAt: record.createdAt,
   };
@@ -666,7 +666,7 @@ async function generateEnhanceVideo(
     throw new Error(`Parent draft ${record.parentGenVideoId} has no persisted draft cache`);
   }
 
-  const { buffer } = await downloadObjectBuffer(config.cfImagesBucketName, parent.draftCacheKey);
+  const { buffer } = await downloadObjectBuffer(config.s3ImagesBucketName, parent.draftCacheKey);
 
   const result = await generateVideo({
     model: getVideoModel({ provider: record.provider, model: record.model }),
@@ -801,7 +801,7 @@ export async function runGenVideo({
 
   const createdMedia = await createMedia({
     ownerWorkspaceId: record.workspaceId,
-    bucket: config.cfImagesBucketName,
+    bucket: config.s3ImagesBucketName,
     storageKey: result.storageKey,
     filename: result.storageKey.split('/').pop() ?? result.storageKey,
     mimeType: 'video/mp4',

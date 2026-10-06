@@ -53,7 +53,6 @@ export interface GeneratedImage {
   prompt: string;
   // Undefined until the row completes (docs/imagegen/worker-execution-prd.md
   // decision 7): a pending/processing/failed row has no object yet.
-  rawUrl?: string;
   imgUrl?: string;
   createdAt: string;
   // Nullable on the wire (the DB columns have no default), even though

@@ -95,7 +95,7 @@ async function extractAgentContextDocument(documentId: string): Promise<void> {
 
   const { error: extractError, data: text } = await tryCatch(async () => {
     const { buffer } = await downloadObjectBuffer(
-      config.cfDocumentsBucketName,
+      config.s3DocumentsBucketName,
       agentContextDocument.storageKey,
     );
     const kind = mediaKindForMimeType(agentContextDocument.mimeType);

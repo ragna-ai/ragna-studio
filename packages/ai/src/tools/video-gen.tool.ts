@@ -1,5 +1,5 @@
 import { getGenImageByIdAndWorkspaceId } from '@repo/database';
-import { buildVideoUrls } from '@repo/storage';
+import { toPublicMediaUrl } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import type {
   InferToolInput,
@@ -139,7 +139,7 @@ export const getGeneratedVideo = (
         }
 
         const videoUrl = completed.media
-          ? buildVideoUrls({ userId, key: completed.media.storageKey }).videoUrl
+          ? toPublicMediaUrl(completed.media.storageKey)
           : undefined;
 
         return { video: { id: completed.id, status: 'completed', videoUrl } };

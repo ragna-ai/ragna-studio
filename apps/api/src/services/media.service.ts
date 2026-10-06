@@ -9,7 +9,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
-  buildChatUploadImageUrls,
+  toChatUploadImageUrl,
   deleteMediaIfUnreferenced,
   DOCUMENT_KINDS,
   extractText,
@@ -171,7 +171,7 @@ function buildChatAttachmentUrl({
   kind: MediaKind;
 }): string {
   if (IMAGE_KINDS.includes(kind)) {
-    return buildChatUploadImageUrls({ ownerId: workspaceId, mediaId }).imgUrl;
+    return toChatUploadImageUrl({ ownerId: workspaceId, mediaId });
   }
 
   // Private documents bucket: no public URL, only the authenticated
@@ -451,7 +451,7 @@ export async function storeWorkspaceImageInput({
 
   return {
     mediaId: mediaRow.id,
-    imgUrl: buildChatUploadImageUrls({ ownerId: workspaceId, mediaId: mediaRow.id }).imgUrl,
+    imgUrl: toChatUploadImageUrl({ ownerId: workspaceId, mediaId: mediaRow.id }),
   };
 }
 

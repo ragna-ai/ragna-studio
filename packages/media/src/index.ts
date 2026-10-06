@@ -16,7 +16,7 @@ export { sniffMediaKind } from './services/registry.service';
 export { extractText } from './services/extract.service';
 
 export {
-  buildChatUploadImageUrls,
+  toChatUploadImageUrl,
   getChatUploadImageKey,
   getMediaDocumentKey,
 } from './lib/media-keys';

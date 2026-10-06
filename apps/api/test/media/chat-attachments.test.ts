@@ -143,10 +143,10 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
     expect(attachment?.filename).toBe('pixel.png');
     expect(attachment?.mediaType).toBe('image/png');
     expect(attachment?.size).toBe(file.size);
-    // Images resolve to the public CDN URL (@repo/storage's
-    // buildChatUploadImageUrls), never the private download route.
+    // Images resolve to the public CDN URL (@repo/media's
+    // toChatUploadImageUrl), never the private download route.
     expect(attachment?.url).toBe(
-      `https://images.ragna.io/${workspaceId}/images/chat-uploads/${attachment?.mediaId}`,
+      `https://media.test/${workspaceId}/images/chat-uploads/${attachment?.mediaId}`,
     );
     expect(uploadObjectBufferMock).toHaveBeenCalledTimes(1);
   });
