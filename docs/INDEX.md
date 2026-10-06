@@ -31,7 +31,6 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
-| [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | proposed (2026-10-05) |
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
