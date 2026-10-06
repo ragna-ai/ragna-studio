@@ -4,6 +4,8 @@ name: CI
 # Jobs skipped by `if:` count as passing, so docs-only PRs skip at the job level.
 on:
   pull_request:
+    # ready_for_review starts the run when a draft is marked ready.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,6 +16,8 @@ permissions:
 
 jobs:
   changes:
+    # Drafts skip CI; every other job needs this one, so they skip too.
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}

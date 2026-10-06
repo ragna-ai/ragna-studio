@@ -12,6 +12,8 @@ const docsDir = join(import.meta.dirname, '..', 'docs');
 const outFile = join(docsDir, 'INDEX.md');
 
 const HEADING_LINE = /^#\s+(.+)/;
+// Line-leading only, so prose that mentions "no `Status:` line" isn't parsed as one.
+const STATUS_LINE = /^\s*(>\s*)?(\*\*)?status:/i;
 
 // The six canonical values from docs/README.md, ordered by how useful they
 // are to see first: active work, then backlog, then shipped reference,
@@ -47,7 +49,7 @@ function findTitle(lines) {
 }
 
 function findStatus(lines) {
-  const statusLineIndex = lines.findIndex((line, i) => i < 20 && /status:/i.test(line));
+  const statusLineIndex = lines.findIndex((line, i) => i < 20 && STATUS_LINE.test(line));
   if (statusLineIndex === -1) return undefined;
 
   const paragraph = [lines[statusLineIndex]];

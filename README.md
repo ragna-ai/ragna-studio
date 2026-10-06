@@ -7,7 +7,6 @@
 #### The self-hosted AI workspace where agents are your co-workers.
 
 [![GitHub release](https://img.shields.io/github/v/release/ragna-ai/ragna-studio?style=flat&logo=github)](https://github.com/ragna-ai/ragna-studio/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/ragna-ai/ragna-studio/ci.yml?branch=main&style=flat&logo=githubactions&logoColor=white&label=CI)](https://github.com/ragna-ai/ragna-studio/actions/workflows/ci.yml)
 [![Docker images](https://img.shields.io/badge/docker-ghcr.io-2496ED?style=flat&logo=docker&logoColor=white)](https://github.com/orgs/ragna-ai/packages?repo_name=ragna-studio)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat)](LICENSE)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen?style=flat)](#privacy)
@@ -23,16 +22,6 @@ You host it. You own the data. You bring your own model keys, or run local model
 <!-- TODO: hero GIF: an agent filling dataset rows while the grid is open -->
 
 </div>
-
-## Quickstart
-
-```bash
-cp .env.example .env          # fill in secrets, storage, one OAuth provider, and one AI key
-make up-dev-full              # pulls the images and starts the whole stack
-```
-
-Open [localhost:3000](http://localhost:3000) and sign in with Google or Microsoft.
-See [self-hosting](docs/self-hosting.md) for requirements and optional providers.
 
 ## Agents with their own expertise
 
