@@ -1,13 +1,13 @@
 # Self-hosting: run ragna-studio outside ragna.io
 
-**Status: proposed** (2026-10-06). Replaces the localhost-only [self-hosting.md](../self-hosting.md).
+**Status: in-progress** (2026-10-06). Replaces the localhost-only [self-hosting.md](../self-hosting.md).
 
 ## Problem
 
 The repo is public and the README calls the product "self-hosted". In
 practice, a self-hosted instance is broken in visible ways:
 
-1. **Media URLs point at ragna.io.** `getPublicMediaUrl` in
+1. **Media URLs point at ragna.io.** `toPublicMediaUrl` in
    `packages/storage/src/lib/image-urls.ts` hardcodes
    `https://images.ragna.io/${key}`. A self-hoster's images and videos land
    in *their* bucket, but every URL points at *our* CDN. Nothing renders.
@@ -107,7 +107,7 @@ New env var `MEDIA_URL`, the public base URL of the images bucket
 (for example `https://images.example.com` or
 `http://localhost:9000/ragna-images`).
 
-- `getPublicMediaUrl` returns `${MEDIA_URL}/${key}`. It stays the
+- `toPublicMediaUrl` returns `${MEDIA_URL}/${key}`. It stays the
   single source of truth for media URLs.
 - There is no ragna.io default. It would silently point every self-hosted
   instance at our CDN again.
