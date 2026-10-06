@@ -1,0 +1,50 @@
+---
+title: Self-hosting
+description: Run RAGNA Studio on your own server, behind your own domains.
+sidebar:
+  order: 0
+  label: Overview
+---
+
+This section runs RAGNA Studio on your own server, behind your own domains. For a quick local try-out, see the [Quickstart](/getting-started/quickstart).
+
+## Requirements
+
+- One Linux VM with Docker and Docker Compose. Images are multi-arch (amd64, arm64).
+- About 8 GB RAM.
+- Two DNS records pointing at the VM.
+- Two S3-compatible buckets.
+- One OAuth app (Google or Microsoft).
+- At least one LLM API key.
+
+Postgres 18 with pgvector and Redis ship in the compose file.
+
+## The stack
+
+| Service | Role |
+| --- | --- |
+| `frontend` | The web app, on port 3000 |
+| `backend` | The API, on port 3010 |
+| `worker` | Background jobs and scheduled workflows |
+| `webbrowser` | Headless browser for agents that read web pages |
+| `postgres` | Database, with pgvector |
+| `redis` | Queues |
+| `migrate` | Applies the schema on start, then exits |
+| `seed` | Adds the model catalog and the default agent, then exits |
+
+## Steps
+
+<Steps>
+  <Step title="Install">
+    Get the code and start the stack. See [Installation](/self-hosting/installation).
+  </Step>
+  <Step title="Configure">
+    Set domains, secrets and OAuth in [Configuration](/self-hosting/configuration), and buckets in [Storage](/self-hosting/storage).
+  </Step>
+  <Step title="Expose">
+    Put a [reverse proxy](/self-hosting/reverse-proxy) with TLS in front of the app and the API.
+  </Step>
+  <Step title="Extend">
+    Turn on [optional providers](/self-hosting/optional-providers) such as embeddings, image generation or email.
+  </Step>
+</Steps>

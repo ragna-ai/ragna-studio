@@ -1,0 +1,57 @@
+---
+title: Storage
+description: Set up the two S3-compatible buckets for images and documents.
+sidebar:
+  order: 3
+---
+
+Create two buckets: one for images and one for documents. Only the images bucket is public-read. Keep the documents bucket private.
+
+| Var | Meaning |
+| --- | --- |
+| `S3_ENDPOINT` | Endpoint of your S3 provider |
+| `S3_REGION` | Optional, default `auto`. R2 wants `auto`. AWS needs the bucket's real region. |
+| `S3_ACCESS_KEY_ID` | Access key |
+| `S3_SECRET_ACCESS_KEY` | Secret key |
+| `S3_IMAGES_BUCKET_NAME` | Public-read bucket for images and generated media |
+| `S3_DOCUMENTS_BUCKET_NAME` | Private bucket for documents |
+| `MEDIA_URL` | Public base URL of the images bucket |
+| `NUXT_PUBLIC_MEDIA_URL` | Same value as `MEDIA_URL`, for the frontend CSP |
+
+If `MEDIA_URL` is missing, the backend and worker log a startup warning and media has no host.
+
+## Providers
+
+<Tabs>
+  <TabItem label="Cloudflare R2">
+    The endpoint is `https://<account-id>.r2.cloudflarestorage.com`. For a jurisdiction such as `eu`, use `https://<account-id>.eu.r2.cloudflarestorage.com`.
+
+    ```bash title=".env"
+    S3_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
+    S3_REGION="auto"
+    S3_IMAGES_BUCKET_NAME="studio-images"
+    S3_DOCUMENTS_BUCKET_NAME="studio-documents"
+    MEDIA_URL="https://images.example.com"
+    NUXT_PUBLIC_MEDIA_URL="https://images.example.com"
+    ```
+
+    Attach a custom domain to the images bucket and use it as `MEDIA_URL`.
+  </TabItem>
+  <TabItem label="AWS S3">
+    Use the regional endpoint and set the bucket's real region.
+
+    ```bash title=".env"
+    S3_ENDPOINT="https://s3.eu-central-1.amazonaws.com"
+    S3_REGION="eu-central-1"
+    S3_IMAGES_BUCKET_NAME="studio-images"
+    S3_DOCUMENTS_BUCKET_NAME="studio-documents"
+    MEDIA_URL="https://studio-images.s3.eu-central-1.amazonaws.com"
+    NUXT_PUBLIC_MEDIA_URL="https://studio-images.s3.eu-central-1.amazonaws.com"
+    ```
+
+    The images bucket must allow public reads. A CDN such as CloudFront in front of it also works. Use its URL as `MEDIA_URL`.
+  </TabItem>
+  <TabItem label="Other">
+    Any S3-compatible server works, including one on localhost. Running it is up to you. We don't ship or support one.
+  </TabItem>
+</Tabs>

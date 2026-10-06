@@ -1,0 +1,28 @@
+---
+title: Reverse proxy
+description: Put TLS in front of the app and the API.
+sidebar:
+  order: 4
+---
+
+The frontend and backend listen on `127.0.0.1` only. A reverse proxy exposes them on your two domains with TLS.
+
+## Caddy
+
+Caddy gets TLS certificates automatically. It proxies WebSockets without extra config, so live features work out of the box.
+
+```text title="Caddyfile"
+app.example.com {
+	reverse_proxy 127.0.0.1:3000
+}
+
+api.example.com {
+	reverse_proxy 127.0.0.1:3010
+}
+```
+
+Point both DNS records at the VM and open ports 80 and 443.
+
+## Other proxies
+
+Other proxies work too. They must pass the WebSocket upgrade for the API.

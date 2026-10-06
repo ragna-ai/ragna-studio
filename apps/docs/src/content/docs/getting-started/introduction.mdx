@@ -1,0 +1,44 @@
+---
+title: Introduction
+description: What RAGNA Studio is and the two ways to run it.
+sidebar:
+  order: 0
+---
+
+RAGNA Studio is an AI workspace where agents are your co-workers. Your agents read your documents and keep their state in datasets. They delegate to each other and run on a schedule.
+
+## Core ideas
+
+- **Workspaces** hold every resource: agents, datasets, documents, tasks, chats, workflows and media. Agents only see the workspace they run in.
+- **Agents** are specialists. Each has its own instructions, model, tools and knowledge documents. It keeps a memory that it writes itself.
+- **Datasets** are tables with typed columns. You edit them in a grid. Agents read and write them through tools, so a dataset works as a queue and as durable agent state.
+- **Workflows** run on a visual canvas and a cron schedule. A team node lets a lead agent delegate to up to five specialists in parallel. Every run keeps a full trace.
+
+## Two ways to run it
+
+| | Hosted | Self-hosted |
+| --- | --- | --- |
+| Where | [app.ragna.io](https://app.ragna.io) | Your own server |
+| Setup | Sign in and start | Docker Compose on one VM |
+
+The self-hosted version is open source under [AGPL-3.0](https://github.com/ragna-ai/ragna-studio/blob/main/LICENSE). You host it, you own the data, and you bring your own model keys or run local models.
+
+To try it on your own machine, follow the [Quickstart](/getting-started/quickstart). To run it for a team, see [Self-hosting](/self-hosting).
+
+## Supported providers
+
+| Area | Providers |
+| --- | --- |
+| Chat and agents | Anthropic, OpenAI, Google (GenAI and Vertex), Mistral, LM Studio (local) |
+| Embeddings | OpenAI |
+| Images | FLUX (Black Forest Labs), OpenAI, Imagen |
+| Video | FLUX 3 video, Veo |
+| Web search | SerpAPI |
+| Email | Gmail, Outlook |
+| Sign-in | Google, Microsoft |
+| Database | PostgreSQL 18 with pgvector |
+| File storage | Any S3-compatible storage (Cloudflare R2, AWS S3, ...) |
+
+## Privacy
+
+RAGNA Studio sends no telemetry. A self-hosted instance only reaches the services you configure, such as your LLM provider, storage and mail account.

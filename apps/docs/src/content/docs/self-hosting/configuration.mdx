@@ -1,0 +1,76 @@
+---
+title: Configuration
+description: Domains, secrets, OAuth sign-in and who may sign up.
+sidebar:
+  order: 2
+---
+
+All settings live in `.env`. The [environment variables](/reference/environment-variables) reference lists every one.
+
+## Domains
+
+Use two hosts. The single-domain layout is not supported.
+
+| Host | Service | Container port |
+| --- | --- | --- |
+| `app.example.com` | frontend | 3000 |
+| `api.example.com` | backend | 3010 |
+
+```bash title=".env"
+APP_URL="https://app.example.com"
+API_BASE_URL="https://api.example.com"
+NUXT_PUBLIC_API_BASE_URL="https://api.example.com"
+TRUSTED_ORIGINS="https://app.example.com"
+COOKIE_DOMAIN=".example.com"
+```
+
+- `NUXT_PUBLIC_API_BASE_URL` must be the public **https** API URL. The frontend derives the `wss://` WebSocket URL from it.
+- `COOKIE_DOMAIN` is the parent domain. It is needed because app and api are separate hosts.
+- `TRUSTED_ORIGINS` is a comma-separated list of allowed origins.
+
+## Secrets
+
+Generate these values yourself:
+
+```bash
+openssl rand -base64 32
+```
+
+- `BETTER_AUTH_SECRET`
+- `ENCRYPTION_PASSWORD` (at least 16 characters, enforced at startup)
+- `DB_PASSWORD`
+- `REDIS_PASSWORD`
+
+Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
+
+<Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
+  Never change `BETTER_AUTH_SECRET` after the first start. Stored OAuth tokens become unreadable. That affects connected Gmail, Outlook and LinkedIn accounts. Every session also ends.
+</Aside>
+
+Set `ENCRYPTION_PASSWORD` once and keep it.
+
+## OAuth
+
+Sign-in uses OAuth. Configure at least one provider: Google (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) or Microsoft (`MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID`).
+
+The redirect URI per provider is:
+
+```text
+https://api.example.com/auth/callback/<provider>
+```
+
+Use `google`, `microsoft` or `linkedin` as `<provider>`. LinkedIn is not a sign-in option here. Use it only to publish drafts.
+
+## Restricting sign-up
+
+By default everyone who can reach the app and has an account at your OAuth provider can sign in. Restrict it with a comma-separated list:
+
+```bash title=".env"
+ALLOWED_LOGIN_EMAILS="you@example.com,teammate@example.com"
+```
+
+An empty value allows everyone.
+
+## Language base URL
+
+Set `NUXT_PUBLIC_I18N_BASE_URL` to your app URL, for example `https://app.example.com`. It replaces the default `https://ragna.io` used for language links.
