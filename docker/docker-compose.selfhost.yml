@@ -1,0 +1,33 @@
+# Self-host override: publishes the app on localhost only. Put a reverse proxy in front for public access.
+
+services:
+  migrate:
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+
+  seed:
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+
+  frontend:
+    ports:
+      - 127.0.0.1:3000:3000
+
+  backend:
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBBROWSER_BASE_URL=http://webbrowser:3011
+    ports:
+      - 127.0.0.1:3010:3010
+
+  worker:
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379

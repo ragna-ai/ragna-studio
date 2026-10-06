@@ -47,24 +47,29 @@ function pngFile(name: string): File {
 
 const uploadResponseSchema = z.object({ mediaId: z.string().min(1), imgUrl: z.string().min(1) });
 
-const genImageSchema = z.object({
+const genImageSchema = z.strictObject({
   id: z.string(),
   status: z.enum(['pending', 'processing', 'completed', 'failed']),
   error: z.string().nullable(),
   prompt: z.string(),
+  createdAt: z.string(),
+  aspectRatio: z.string().nullable(),
+  resolution: z.string().nullable(),
+  seed: z.number().nullable(),
+  negativePrompt: z.string().nullable(),
+  visibleWatermark: z.boolean(),
   provider: z.string(),
   model: z.string(),
   // Undefined until the row completes (docs/imagegen/worker-execution-prd.md
   // decision 7).
   imgUrl: z.string().optional(),
-  rawUrl: z.string().optional(),
-  referenceImages: z.array(z.object({ origin: z.string(), imgUrl: z.string() })),
+  referenceImages: z.array(z.strictObject({ origin: z.string(), imgUrl: z.string() })),
 });
 
-const generateResponseSchema = z.object({ genImages: z.array(genImageSchema) });
-const listResponseSchema = z.object({
+const generateResponseSchema = z.strictObject({ genImages: z.array(genImageSchema) });
+const listResponseSchema = z.strictObject({
   genImages: z.array(genImageSchema),
-  meta: z.object({ totalCount: z.number() }),
+  meta: z.strictObject({ totalCount: z.number() }),
 });
 
 // The render is done by apps/worker's gen-images processor (out of scope
@@ -172,12 +177,10 @@ describe('GET /workspace/:workspaceId/gen-image', () => {
 
     expect(byId.get(completed.id)?.status).toBe('completed');
     expect(byId.get(completed.id)?.imgUrl).toBeDefined();
-    expect(byId.get(completed.id)?.rawUrl).toBeDefined();
     expect(byId.get(completed.id)?.error).toBeNull();
 
     expect(byId.get(pending.id)?.status).toBe('pending');
     expect(byId.get(pending.id)?.imgUrl).toBeUndefined();
-    expect(byId.get(pending.id)?.rawUrl).toBeUndefined();
 
     expect(byId.get(failed.id)?.status).toBe('failed');
     expect(byId.get(failed.id)?.error).toBe('Image generation failed');
@@ -208,7 +211,6 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
       expect(image.status).toBe('pending');
       expect(image.prompt).toBe('a red bicycle');
       expect(image.imgUrl).toBeUndefined();
-      expect(image.rawUrl).toBeUndefined();
     }
     // Proves generation didn't run synchronously in the API process
     // (docs/imagegen/worker-execution-prd.md): only the worker's gen-images

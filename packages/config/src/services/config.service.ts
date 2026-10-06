@@ -242,13 +242,14 @@ const ConfigSchema = z.object({
   // External APIs
   SERP_API_KEY: z.string().optional().default(''),
 
-  // Cloudflare R2
-  CF_REGION: z.string().optional().default('auto'),
-  CF_ACCOUNT_ID: z.string().optional().default(''),
-  CF_ACCESS_KEY_ID: z.string().optional().default(''),
-  CF_SECRET_ACCESS_KEY: z.string().optional().default(''),
-  CF_IMAGES_BUCKET_NAME: z.string().optional().default(''),
-  CF_DOCUMENTS_BUCKET_NAME: z.string().optional().default(''),
+  // S3-compatible object storage
+  S3_ENDPOINT: z.string().optional().default(''),
+  S3_REGION: z.string().optional().default('auto'),
+  S3_ACCESS_KEY_ID: z.string().optional().default(''),
+  S3_SECRET_ACCESS_KEY: z.string().optional().default(''),
+  S3_IMAGES_BUCKET_NAME: z.string().optional().default(''),
+  S3_DOCUMENTS_BUCKET_NAME: z.string().optional().default(''),
+  MEDIA_URL: z.string().optional().default(''),
 
   // AI Service Base URLs
   BFL_API_BASE_URL: OptionalBaseUrlSchema,
@@ -349,6 +350,10 @@ export class ConfigService {
       // Validate and parse environment variables
       this._config = ConfigSchema.parse(process.env);
 
+      if (!this._config.MEDIA_URL) {
+        console.warn('MEDIA_URL is not set: public media URLs will have no host');
+      }
+
       // Track sensitive keys
       this._secrets = new Set([
         'ENCRYPTION_PASSWORD',
@@ -360,7 +365,7 @@ export class ConfigService {
         'STRIPE_SECRET_KEY',
         'STRIPE_WEBHOOK_SECRET',
         'SERP_API_KEY',
-        'CF_SECRET_ACCESS_KEY',
+        'S3_SECRET_ACCESS_KEY',
         'BFL_API_KEY',
         'OPENAI_API_KEY',
         'ANTHROPIC_API_KEY',
@@ -515,24 +520,28 @@ export class ConfigService {
     return this._config.STRIPE_PRICE_ID_LARGE_MONTHLY;
   }
 
-  get cfRegion(): string {
-    return this._config.CF_REGION;
+  get s3Endpoint(): string {
+    return this._config.S3_ENDPOINT.replace(/\/+$/, '');
   }
 
-  get cfAccountId(): string {
-    return this._config.CF_ACCOUNT_ID;
+  get s3Region(): string {
+    return this._config.S3_REGION;
   }
 
-  get cfAccessKeyId(): string {
-    return this._config.CF_ACCESS_KEY_ID;
+  get s3AccessKeyId(): string {
+    return this._config.S3_ACCESS_KEY_ID;
   }
 
-  get cfImagesBucketName(): string {
-    return this._config.CF_IMAGES_BUCKET_NAME;
+  get s3ImagesBucketName(): string {
+    return this._config.S3_IMAGES_BUCKET_NAME;
   }
 
-  get cfDocumentsBucketName(): string {
-    return this._config.CF_DOCUMENTS_BUCKET_NAME;
+  get s3DocumentsBucketName(): string {
+    return this._config.S3_DOCUMENTS_BUCKET_NAME;
+  }
+
+  get mediaUrl(): string {
+    return this._config.MEDIA_URL.replace(/\/+$/, '');
   }
 
   // AI service URLs (non-sensitive)
@@ -646,7 +655,7 @@ export class ConfigService {
   getSecret(key: 'STRIPE_SECRET_KEY'): string;
   getSecret(key: 'STRIPE_WEBHOOK_SECRET'): string;
   getSecret(key: 'SERP_API_KEY'): string;
-  getSecret(key: 'CF_SECRET_ACCESS_KEY'): string;
+  getSecret(key: 'S3_SECRET_ACCESS_KEY'): string;
   getSecret(key: 'BFL_API_KEY'): string;
   getSecret(key: 'OPENAI_API_KEY'): string;
   getSecret(key: 'ANTHROPIC_API_KEY'): string;

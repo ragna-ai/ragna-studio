@@ -85,7 +85,7 @@ async function uploadAgentContextDocumentFile({
   const key = `agents/${agentId}/${documentId}/${randomUUID()}`;
 
   await uploadObjectBuffer({
-    bucketName: config.cfDocumentsBucketName,
+    bucketName: config.s3DocumentsBucketName,
     key,
     buffer,
     contentType,
@@ -105,7 +105,7 @@ async function deleteAgentContextDocumentObjects(storageKeys: string[]): Promise
   }
 
   const { error, data } = await tryCatch(() =>
-    deleteObjects(config.cfDocumentsBucketName, storageKeys),
+    deleteObjects(config.s3DocumentsBucketName, storageKeys),
   );
 
   if (error !== null) {

@@ -26,7 +26,7 @@ import {
 import { createLinkedinClient } from '@repo/linkedin';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
-import { getPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
+import { toPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -41,7 +41,7 @@ import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
 
 // Same bucket packages/ai's imagen.service.ts uploads generated images to
-// (config.cfImagesBucketName). User uploads live under a `social/{userId}/`
+// (config.s3ImagesBucketName). User uploads live under a `social/{userId}/`
 // prefix so they don't collide with generated-image keys.
 const MAX_MEDIA_PER_POST = 9;
 
@@ -83,7 +83,7 @@ function toMediaResponse(row: SocialPostMedia, media: Media): SocialPostMediaRes
     mimeType: row.mimeType,
     altText: row.altText,
     sortOrder: row.sortOrder,
-    imageUrl: getPublicMediaUrl(media.storageKey),
+    imageUrl: toPublicMediaUrl(media.storageKey),
   };
 }
 
@@ -342,7 +342,7 @@ export async function attachSocialPostMedia({
   const key = `social/${userId}/${randomUUID()}.${MEDIA_EXTENSION_BY_MIME_TYPE[file.type]}`;
 
   const { error: uploadError } = await tryCatch(() =>
-    uploadObjectBuffer({ bucketName: config.cfImagesBucketName, key, buffer, contentType: file.type }),
+    uploadObjectBuffer({ bucketName: config.s3ImagesBucketName, key, buffer, contentType: file.type }),
   );
 
   if (uploadError !== null) {
@@ -353,7 +353,7 @@ export async function attachSocialPostMedia({
   const { error: mediaError, data: mediaRow } = await tryCatch(() =>
     createMedia({
       ownerWorkspaceId: workspaceId,
-      bucket: config.cfImagesBucketName,
+      bucket: config.s3ImagesBucketName,
       storageKey: key,
       filename: key.split('/').pop() ?? key,
       mimeType: file.type,

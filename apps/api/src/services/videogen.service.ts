@@ -11,7 +11,7 @@ import {
 import type { GenVideoFrameOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
-import { buildVideoUrls } from '@repo/storage';
+import { toPublicMediaUrl } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -63,7 +63,7 @@ function toGenVideoResponse(record: GenVideoWithMedia): GenVideoResponse {
     createdAt: record.createdAt,
     videoUrl:
       record.status === 'completed' && record.media
-        ? buildVideoUrls({ userId: record.userId, key: record.media.storageKey }).videoUrl
+        ? toPublicMediaUrl(record.media.storageKey)
         : undefined,
   };
 }

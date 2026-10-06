@@ -17,7 +17,7 @@ import { logger } from '@repo/logger';
 import { applyImageWatermark } from '@repo/media';
 import { GEN_IMAGES_JOB, genImagesJobSchema, queue } from '@repo/queue';
 import {
-  buildImageUrls,
+  toPublicMediaUrl,
   downloadObjectBuffer,
   getImgGenBucketNameForUser,
   uploadObjectBuffer,
@@ -142,7 +142,7 @@ type GenImageReferenceDto = { origin: GenImageReferenceOrigin; imgUrl: string };
 // settings behind a generation and can load them back into the form, so the
 // dto needs to carry those settings, not just the prompt and image URLs.
 // status/error and the optional urls mirror videogen.service.ts's
-// GenVideoDto: rawUrl/imgUrl are undefined until the row completes
+// GenVideoDto: imgUrl is undefined until the row completes
 // (docs/imagegen/worker-execution-prd.md decision 7).
 export type GenImageDto = {
   id: string;
@@ -158,21 +158,18 @@ export type GenImageDto = {
   provider: string;
   model: string;
   referenceImages: GenImageReferenceDto[];
-  rawUrl?: string;
   imgUrl?: string;
 };
 
 // media is only set for a completed row; every call site below hands in a
 // just-inserted pending row, a just-failed row, or (from runGenImages) a
 // completed row with its freshly created media, so the default keeps
-// rawUrl/imgUrl undefined for the first two.
+// imgUrl undefined for the first two.
 function toGenImageDto(
   record: GenImage,
   media: Media | null,
   referenceImageDtos: GenImageReferenceDto[],
 ): GenImageDto {
-  const urls = media ? buildImageUrls({ userId: record.userId, key: media.storageKey }) : undefined;
-
   return {
     id: record.id,
     status: record.status,
@@ -187,8 +184,7 @@ function toGenImageDto(
     provider: record.provider,
     model: record.model,
     referenceImages: referenceImageDtos,
-    rawUrl: urls?.rawUrl,
-    imgUrl: urls?.imgUrl,
+    imgUrl: media ? toPublicMediaUrl(media.storageKey) : undefined,
   };
 }
 
@@ -197,12 +193,11 @@ function toGenImageDto(
 // same reference set (docs/media-library/migration-prd.md decision 6), so
 // this only needs to run once, the same way the pre-split createGenImages did.
 function buildReferenceImageDtos(
-  userId: string,
   referenceImages: GenerateImagesInput['referenceImages'],
 ): GenImageReferenceDto[] {
   return (referenceImages ?? []).map((reference) => ({
     origin: reference.origin,
-    imgUrl: buildImageUrls({ userId, key: reference.storageKey }).imgUrl,
+    imgUrl: toPublicMediaUrl(reference.storageKey),
   }));
 }
 
@@ -304,7 +299,7 @@ async function enqueueGenImagesJob(
  */
 export async function requestGenImages(params: CreateImageParams): Promise<GenImageDto[]> {
   const records = await createGenImageBatch(params);
-  const referenceImageDtos = buildReferenceImageDtos(params.userId, params.referenceImages);
+  const referenceImageDtos = buildReferenceImageDtos(params.referenceImages);
 
   return enqueueGenImagesJob(records, referenceImageDtos);
 }
@@ -587,7 +582,7 @@ export async function runGenImages({
     uploads.map((upload, index) =>
       createMedia({
         ownerWorkspaceId: rows[index].workspaceId,
-        bucket: config.cfImagesBucketName,
+        bucket: config.s3ImagesBucketName,
         storageKey: upload.storageKey,
         filename: upload.storageKey.split('/').pop() ?? upload.storageKey,
         mimeType: 'image/png',

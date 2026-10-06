@@ -8,11 +8,11 @@
 // row (a workspace id in v1).
 
 import { config } from '@repo/config';
-import { buildImageUrls } from '@repo/storage';
+import { toPublicMediaUrl } from '@repo/storage';
 import { IMAGE_KINDS, type MediaKind } from '../types';
 
 // Chat-uploaded images land in the public images bucket, so the existing
-// CDN convention (buildImageUrls, images.ragna.io) can render and fetch
+// CDN convention (toPublicMediaUrl) can render and fetch
 // them.
 export function getChatUploadImageKey({
   ownerId,
@@ -24,14 +24,14 @@ export function getChatUploadImageKey({
   return `${ownerId}/images/chat-uploads/${mediaId}`;
 }
 
-export function buildChatUploadImageUrls({
+export function toChatUploadImageUrl({
   ownerId,
   mediaId,
 }: {
   ownerId: string;
   mediaId: string;
-}): { rawUrl: string; imgUrl: string } {
-  return buildImageUrls({ userId: ownerId, key: getChatUploadImageKey({ ownerId, mediaId }) });
+}): string {
+  return toPublicMediaUrl(getChatUploadImageKey({ ownerId, mediaId }));
 }
 
 // Everything else (pdf, docx, pptx, xlsx, csv, txt, md) goes to the private
@@ -66,13 +66,13 @@ export function resolveMediaStoragePlacement({
 }): MediaStoragePlacement {
   if (IMAGE_KINDS.includes(kind)) {
     return {
-      bucket: config.cfImagesBucketName,
+      bucket: config.s3ImagesBucketName,
       storageKey: getChatUploadImageKey({ ownerId, mediaId }),
     };
   }
 
   return {
-    bucket: config.cfDocumentsBucketName,
+    bucket: config.s3DocumentsBucketName,
     storageKey: getMediaDocumentKey({ ownerId, mediaId }),
   };
 }

@@ -1,5 +1,5 @@
 import { getGenImageRowsByIds } from '@repo/database';
-import { buildImageUrls } from '@repo/storage';
+import { toPublicMediaUrl } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import type {
   InferToolInput,
@@ -107,7 +107,7 @@ async function pollGenImagesUntilSettled(genImageIds: string[]) {
 }
 
 function toGeneratedAgentImages(
-  rows: { id: string; userId: string; media: { storageKey: string } | null }[],
+  rows: { id: string; media: { storageKey: string } | null }[],
 ): GeneratedAgentImage[] {
   // Defensive filter, not an expected branch: a 'completed' row always has
   // its media set by runGenImages before the status flips
@@ -115,7 +115,7 @@ function toGeneratedAgentImages(
   // practice) case where that invariant doesn't hold.
   return rows.flatMap((row) => {
     if (!row.media) return [];
-    const { imgUrl } = buildImageUrls({ userId: row.userId, key: row.media.storageKey });
+    const imgUrl = toPublicMediaUrl(row.media.storageKey);
     return [{ id: row.id, imgUrl }];
   });
 }

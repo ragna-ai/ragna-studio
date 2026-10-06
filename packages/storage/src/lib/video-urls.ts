@@ -1,5 +1,4 @@
 import { config } from '@repo/config';
-import { getPublicMediaUrl } from './image-urls';
 
 // Same bucket as generated images, new prefix. Serves mp4s from the
 // existing public domain instead of a dedicated video bucket.
@@ -8,7 +7,7 @@ export function getVideoGenBucketNameForUser(userId: string): {
   prefix: string;
 } {
   return {
-    bucketName: config.cfImagesBucketName,
+    bucketName: config.s3ImagesBucketName,
     prefix: `${userId}/videos/generated`,
   };
 }
@@ -20,7 +19,7 @@ export function getVideoFrameBucketNameForUser(userId: string): {
   prefix: string;
 } {
   return {
-    bucketName: config.cfImagesBucketName,
+    bucketName: config.s3ImagesBucketName,
     prefix: `${userId}/videos/frames`,
   };
 }
@@ -34,17 +33,7 @@ export function getVideoDraftBucketNameForUser(userId: string): {
   prefix: string;
 } {
   return {
-    bucketName: config.cfImagesBucketName,
+    bucketName: config.s3ImagesBucketName,
     prefix: `${userId}/videos/drafts`,
-  };
-}
-
-export function buildVideoUrls({ userId, key }: { userId: string; key: string }): {
-  rawUrl: string;
-  videoUrl: string;
-} {
-  return {
-    rawUrl: `https://${config.cfImagesBucketName}.${userId}.r2.cloudflarestorage.com/${key}`,
-    videoUrl: getPublicMediaUrl(key),
   };
 }

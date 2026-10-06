@@ -5,7 +5,7 @@
 // real S3-compatible client with no business logic of their own worth
 // preserving in tests, matching docs/testing/strategy.md's "External
 // boundaries" (mocked at the package boundary). Everything else the
-// package exports (`buildImageUrls`, `buildVideoUrls`, the bucket-name
+// package exports (`toPublicMediaUrl`, the bucket-name
 // helpers) is a pure function with no I/O, so it stays real via the spread
 // below rather than being reimplemented here.
 //

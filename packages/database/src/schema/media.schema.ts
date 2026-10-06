@@ -23,8 +23,8 @@ export const media = pgTable(
     ownerWorkspaceId: text('owner_workspace_id').references(() => workspace.id, {
       onDelete: 'cascade',
     }),
-    // Bucket the object lives in: cfImagesBucketName (public, images) or
-    // cfDocumentsBucketName (private, everything else). Kept on the row so
+    // Bucket the object lives in: s3ImagesBucketName (public, images) or
+    // s3DocumentsBucketName (private, everything else). Kept on the row so
     // deletion never has to guess the bucket from the mime type.
     bucket: text('bucket').notNull(),
     storageKey: text('storage_key').notNull(),

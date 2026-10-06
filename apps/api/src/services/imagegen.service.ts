@@ -12,7 +12,7 @@ import {
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
-import { buildImageUrls } from '@repo/storage';
+import { toPublicMediaUrl } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
 import type { UploadedImageInputResponse } from './media.service';
@@ -38,7 +38,7 @@ export type GenerateImagesForWorkspaceInput = Omit<
 };
 
 // status/error and the optional urls mirror @repo/ai's GenImageDto
-// (docs/imagegen/worker-execution-prd.md decision 7): rawUrl/imgUrl are
+// (docs/imagegen/worker-execution-prd.md decision 7): imgUrl is
 // undefined until the worker fills the row in.
 export interface GenImageResponse {
   id: string;
@@ -54,11 +54,10 @@ export interface GenImageResponse {
   provider: string;
   model: string;
   referenceImages: { origin: GenImageReferenceOrigin; imgUrl: string }[];
-  rawUrl?: string;
   imgUrl?: string;
 }
 
-// Reference thumbnails resolve through buildImageUrls the same way the
+// Reference thumbnails resolve through toPublicMediaUrl the same way the
 // generated image itself does: it works for any key regardless of prefix,
 // so 'upload' and 'genImage' references (different owners, same bucket)
 // need no special-casing here. The storage key comes off the reference's
@@ -66,11 +65,10 @@ export interface GenImageResponse {
 // column.
 function toReferenceImageResponse(
   reference: GenImageReferenceWithMedia,
-  userId: string,
 ): { origin: GenImageReferenceOrigin; imgUrl: string } {
   return {
     origin: reference.origin,
-    imgUrl: buildImageUrls({ userId, key: reference.media.storageKey }).imgUrl,
+    imgUrl: toPublicMediaUrl(reference.media.storageKey),
   };
 }
 
@@ -82,10 +80,6 @@ function toReferenceImageResponse(
 // (docs/imagegen/worker-execution-prd.md decision 1), so the urls stay
 // undefined until the worker fills the row in.
 function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
-  const urls = record.media
-    ? buildImageUrls({ userId: record.userId, key: record.media.storageKey })
-    : undefined;
-
   return {
     id: record.id,
     status: record.status,
@@ -100,10 +94,9 @@ function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
     provider: record.provider,
     model: record.model,
     referenceImages: record.references.map((reference) =>
-      toReferenceImageResponse(reference, record.userId),
+      toReferenceImageResponse(reference),
     ),
-    rawUrl: urls?.rawUrl,
-    imgUrl: urls?.imgUrl,
+    imgUrl: record.media ? toPublicMediaUrl(record.media.storageKey) : undefined,
   };
 }
 
@@ -128,7 +121,6 @@ function toGenImageResponseFromDto(dto: GenImageDto): GenImageResponse {
     provider: dto.provider,
     model: dto.model,
     referenceImages: dto.referenceImages,
-    rawUrl: dto.rawUrl,
     imgUrl: dto.imgUrl,
   };
 }
