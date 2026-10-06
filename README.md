@@ -119,7 +119,7 @@ See [all features](docs/features.md).
 | Email | Gmail, Outlook |
 | Sign-in | Google, Microsoft |
 | Database | PostgreSQL 18 with pgvector |
-| File storage | S3-compatible (configured for Cloudflare R2) |
+| File storage | Any S3-compatible storage (Cloudflare R2, AWS S3, ...) |
 
 ## Privacy
 
