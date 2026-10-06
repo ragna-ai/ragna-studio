@@ -34,6 +34,16 @@ import { app } from '../../src/app';
 // gen-video processor, out of scope here, so no `ai` mock is needed for
 // this file. The frame-upload route does need the storage mock.
 
+// Smallest valid 1x1 PNG: upload validation sniffs content, not file.type.
+const ONE_PX_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+function pngFile(name: string): File {
+  return new File([Buffer.from(ONE_PX_PNG_BASE64, 'base64')], name, { type: 'image/png' });
+}
+
+const uploadResponseSchema = z.object({ mediaId: z.string().min(1), imgUrl: z.string().min(1) });
+
 const genVideoSchema = z.object({
   id: z.string(),
   prompt: z.string(),
@@ -180,6 +190,58 @@ describe('POST /workspace/:workspaceId/gen-video', () => {
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
+
+  test('accepts an uploaded frame owned by the same workspace', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const formData = new FormData();
+    formData.append('file', pngFile('frame.png'));
+    const uploadResponse = await app.request(`/workspace/${workspaceId}/gen-video/frame-upload`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+      body: formData,
+    });
+    const { mediaId } = uploadResponseSchema.parse(await uploadResponse.json());
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-video`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: 'a drone shot over a city',
+        provider: 'google-vertex',
+        model: 'veo-3.1-generate-001',
+        frame: { origin: 'upload', mediaId },
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+  });
+
+  test("404s when an uploaded frame is another workspace's media", async () => {
+    const owner = await seedAuthenticatedUser();
+    const attacker = await seedAuthenticatedUser();
+
+    const formData = new FormData();
+    formData.append('file', pngFile('frame.png'));
+    const uploadResponse = await app.request(
+      `/workspace/${owner.workspaceId}/gen-video/frame-upload`,
+      { method: 'POST', headers: { cookie: owner.cookieHeader }, body: formData },
+    );
+    const { mediaId } = uploadResponseSchema.parse(await uploadResponse.json());
+
+    const response = await app.request(`/workspace/${attacker.workspaceId}/gen-video`, {
+      method: 'POST',
+      headers: { cookie: attacker.cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        prompt: 'a drone shot over a city',
+        provider: 'google-vertex',
+        model: 'veo-3.1-generate-001',
+        frame: { origin: 'upload', mediaId },
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
 });
 
 describe('POST /workspace/:workspaceId/gen-video/frame-upload', () => {
@@ -188,14 +250,11 @@ describe('POST /workspace/:workspaceId/gen-video/frame-upload', () => {
     resetProviderMocks();
   });
 
-  test('uploads a first-frame image through the faked storage client', async () => {
+  test('stores the upload as a workspace image media row and returns its id', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
 
     const formData = new FormData();
-    formData.append(
-      'file',
-      new File([new Uint8Array([1, 2, 3])], 'frame.png', { type: 'image/png' }),
-    );
+    formData.append('file', pngFile('frame.png'));
 
     const response = await app.request(`/workspace/${workspaceId}/gen-video/frame-upload`, {
       method: 'POST',
@@ -204,8 +263,10 @@ describe('POST /workspace/:workspaceId/gen-video/frame-upload', () => {
     });
 
     expect(response.status).toBe(StatusCodes.CREATED);
-    const body = z.object({ storageKey: z.string().min(1) }).parse(await response.json());
-    expect(body.storageKey).toContain('videos/frames');
+    const body = uploadResponseSchema.parse(await response.json());
+    const mediaRow = await getMediaById({ id: body.mediaId });
+    expect(mediaRow?.ownerWorkspaceId).toBe(workspaceId);
+    expect(mediaRow?.mimeType).toBe('image/png');
     expect(uploadObjectBufferMock).toHaveBeenCalledTimes(1);
   });
 
@@ -225,6 +286,25 @@ describe('POST /workspace/:workspaceId/gen-video/frame-upload', () => {
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  });
+
+  test('rejects a non-image file that claims an image mime type', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const formData = new FormData();
+    formData.append(
+      'file',
+      new File([new Uint8Array([1, 2, 3])], 'frame.png', { type: 'image/png' }),
+    );
+
+    const response = await app.request(`/workspace/${workspaceId}/gen-video/frame-upload`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+      body: formData,
+    });
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(uploadObjectBufferMock).not.toHaveBeenCalled();
   });
 });
 

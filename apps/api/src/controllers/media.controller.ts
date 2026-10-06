@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import { downloadMedia, listMediaForWorkspace } from '../services/media.service';
+import { buildAttachmentContentDisposition } from '../utils/content-disposition';
 import { validMediaIdParam } from '../validation';
 
 export const mediaController = new Hono()
@@ -33,6 +34,6 @@ export const mediaController = new Hono()
 
     return c.body(new Uint8Array(file.bytes), 200, {
       'Content-Type': file.contentType,
-      'Content-Disposition': `attachment; filename="${file.filename}"`,
+      'Content-Disposition': buildAttachmentContentDisposition(file.filename),
     });
   });

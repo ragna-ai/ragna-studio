@@ -10,16 +10,6 @@ export function getImgGenBucketNameForUser(userId: string): {
   };
 }
 
-export function getImgRefBucketNameForUser(userId: string): {
-  bucketName: string;
-  prefix: string;
-} {
-  return {
-    bucketName: config.cfImagesBucketName,
-    prefix: `${userId}/images/references`,
-  };
-}
-
 /**
  * The single source of truth for the public CDN URL of an object in the
  * images bucket (images and mp4s alike). Never hand-roll this domain at a

@@ -165,6 +165,20 @@ describe('POST /workspace/:workspaceId/chat', () => {
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
+
+  test("404s when the agentId belongs to another user's workspace", async () => {
+    const userA = await seedAuthenticatedUser();
+    const userB = await seedAuthenticatedUser();
+    const agentIdB = await createAgent(userB.cookieHeader, userB.workspaceId);
+
+    const response = await app.request(`/workspace/${userA.workspaceId}/chat`, {
+      method: 'POST',
+      headers: { cookie: userA.cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ agentId: agentIdB }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
 });
 
 describe('GET /workspace/:workspaceId/chat/:chatId', () => {

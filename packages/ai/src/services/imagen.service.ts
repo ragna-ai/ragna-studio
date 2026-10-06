@@ -451,7 +451,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
       Promise.all(
         first.references.map(async (reference) => {
           const { buffer } = await downloadObjectBuffer(
-            config.cfImagesBucketName,
+            reference.media.bucket,
             reference.media.storageKey,
           );
           return buffer;

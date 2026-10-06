@@ -1,6 +1,5 @@
 import type { GenerateVideoInput } from '@repo/ai';
 import { requestEnhanceGenVideo, requestGenVideo } from '@repo/ai';
-import { config } from '@repo/config';
 import type { GenVideo, GenVideoWithMedia } from '@repo/database';
 import {
   deleteGenVideoByIdAndWorkspaceId,
@@ -11,23 +10,24 @@ import {
 } from '@repo/database';
 import type { GenVideoFrameOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import { createMediaForObject, deleteMediaIfUnreferenced } from '@repo/media';
-import { buildVideoUrls, getVideoFrameBucketNameForUser, uploadObjectBuffer } from '@repo/storage';
+import { deleteMediaIfUnreferenced } from '@repo/media';
+import { buildVideoUrls } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
-import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import type { UploadedImageInputResponse } from './media.service';
+import { getOwnedImageMedia, storeWorkspaceImageInput } from './media.service';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 export type GenVideoFrameInput =
   | { origin: 'genImage'; genImageId: string }
-  | { origin: 'upload'; storageKey: string };
+  | { origin: 'upload'; mediaId: string };
 
 export interface GenVideoResponse {
   id: string;
@@ -110,37 +110,10 @@ export async function listGenVideos({
 }
 
 /**
- * Mints a media row for an uploaded frame: the frame-upload endpoint below
- * already put the bytes in R2 and handed the client back a bare storage key
- * (docs/media-library/migration-prd.md non-goal: zero frontend changes), so
- * this is where that key finally gets its media row, mime type inferred
- * from the key's own extension (the same mapping the upload endpoint used
- * to name the file).
- */
-async function createUploadedFrameMedia({
-  workspaceId,
-  storageKey,
-}: {
-  workspaceId: string;
-  storageKey: string;
-}): Promise<{ id: string }> {
-  const extension = storageKey.split('.').pop() ?? '';
-  const mimeType = FRAME_MIME_TYPE_BY_EXTENSION[extension] ?? 'application/octet-stream';
-
-  return createMediaForObject({
-    owner: { workspaceId },
-    bucket: config.cfImagesBucketName,
-    storageKey,
-    mimeType,
-    origin: 'uploaded',
-  });
-}
-
-/**
  * Resolves the optional first-frame input into the `frameOrigin` /
  * `frameMediaId` pair `requestGenVideo` (@repo/ai) expects. An `upload`
- * frame mints its own media row (its object already exists, from the
- * frame-upload endpoint below); a `genImage` frame links the referenced gen
+ * frame is a workspace-owned image media row (from the frame-upload endpoint
+ * below); a `genImage` frame links the referenced gen
  * image's existing media row (no copy), and is a workspace-scoped lookup so
  * a caller can't animate another workspace's image (docs/videogen/prd.md
  * decision 3).
@@ -157,7 +130,7 @@ async function resolveFrame({
   }
 
   if (frame.origin === 'upload') {
-    const mediaRow = await createUploadedFrameMedia({ workspaceId, storageKey: frame.storageKey });
+    const mediaRow = await getOwnedImageMedia({ workspaceId, mediaId: frame.mediaId });
     return { frameOrigin: 'upload', frameMediaId: mediaRow.id };
   }
 
@@ -379,64 +352,17 @@ export async function deleteGenVideo({
   await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
 }
 
-// Same 10 MB cap as social-post media uploads
-// (social-post-media.service.ts), plus WEBP since first-frame images may
-// come from more varied sources than a social post attachment.
-const FRAME_EXTENSION_BY_MIME_TYPE = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-} as const;
-type AllowedFrameMimeType = keyof typeof FRAME_EXTENSION_BY_MIME_TYPE;
-const MAX_FRAME_FILE_BYTES = 10 * 1024 * 1024;
-
-// Reverse of the map above, for resolveFrame's 'upload' branch: by the time
-// a generate request resolves an uploaded frame, only the storage key (and
-// thus its extension) survives the round trip to the client and back.
-const FRAME_MIME_TYPE_BY_EXTENSION: Record<string, AllowedFrameMimeType> = {
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  webp: 'image/webp',
-};
-
-function isAllowedFrameMimeType(mimeType: string): mimeType is AllowedFrameMimeType {
-  return mimeType in FRAME_EXTENSION_BY_MIME_TYPE;
-}
-
 /**
  * [POST] /workspace/:workspaceId/gen-video/frame-upload
- * Uploads a first-frame image for image-to-video generation, following the
- * social post media upload pattern: validate, buffer, upload to R2 under
- * the user's video-frame prefix, hand back the storage key for the create
- * call above to reference.
+ * Stores a first-frame image as a workspace media row ahead of an
+ * image-to-video request, which then references it by mediaId.
  */
 export async function uploadGenVideoFrame({
-  userId,
+  workspaceId,
   file,
 }: {
-  userId: string;
+  workspaceId: string;
   file: File;
-}): Promise<{ storageKey: string }> {
-  if (!isAllowedFrameMimeType(file.type)) {
-    throw new BadRequestException('Unsupported image type. Use PNG, JPEG, or WEBP.');
-  }
-
-  if (file.size > MAX_FRAME_FILE_BYTES) {
-    throw new BadRequestException('Image must be 10 MB or smaller');
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { bucketName, prefix } = getVideoFrameBucketNameForUser(userId);
-  const key = `${prefix}/${randomUUID()}.${FRAME_EXTENSION_BY_MIME_TYPE[file.type]}`;
-
-  const { error } = await tryCatch(() =>
-    uploadObjectBuffer({ bucketName, key, buffer, contentType: file.type }),
-  );
-
-  if (error !== null) {
-    logger.error('Failed to upload video frame image', error);
-    throw new InternalServerErrorException('Failed to upload frame image');
-  }
-
-  return { storageKey: key };
+}): Promise<UploadedImageInputResponse> {
+  return storeWorkspaceImageInput({ workspaceId, file });
 }

@@ -30,6 +30,7 @@ import { getPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MB } from '../utils/upload-limits';
 import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 
 // Returned instead of a generic 400 so the web app can show a "connect
@@ -43,7 +44,6 @@ export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
 // (config.cfImagesBucketName). User uploads live under a `social/{userId}/`
 // prefix so they don't collide with generated-image keys.
 const MAX_MEDIA_PER_POST = 9;
-const MAX_MEDIA_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const MEDIA_EXTENSION_BY_MIME_TYPE = {
   'image/jpeg': 'jpg',
@@ -332,8 +332,8 @@ export async function attachSocialPostMedia({
     throw new BadRequestException('Unsupported image type. Use JPEG, PNG, or GIF.');
   }
 
-  if (file.size > MAX_MEDIA_FILE_BYTES) {
-    throw new BadRequestException('Image must be 10 MB or smaller');
+  if (file.size > MAX_UPLOAD_FILE_BYTES) {
+    throw new BadRequestException(`Image must be ${MAX_UPLOAD_FILE_MB} MB or smaller`);
   }
 
   const resolvedAltText = altText && altText.length > 0 ? altText : null;

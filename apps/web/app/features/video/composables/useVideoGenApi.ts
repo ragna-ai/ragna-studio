@@ -126,7 +126,7 @@ export type GenVideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export type VideoFrameInput =
   | { origin: 'genImage'; genImageId: string }
-  | { origin: 'upload'; storageKey: string };
+  | { origin: 'upload'; mediaId: string };
 
 export interface GeneratedVideo {
   id: string;
@@ -178,7 +178,8 @@ export interface GenerateVideoBody {
 }
 
 export interface FrameUploadResponse {
-  storageKey: string;
+  mediaId: string;
+  imgUrl: string;
 }
 
 // The grid polls while any row on the fetched page is still rendering: the

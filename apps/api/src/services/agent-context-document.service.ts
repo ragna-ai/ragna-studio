@@ -21,8 +21,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import {
+  MAX_FILES_PER_UPLOAD_REQUEST,
+  MAX_UPLOAD_FILE_BYTES,
+  MAX_UPLOAD_FILE_MB,
+} from '../utils/upload-limits';
 
-const MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_AGENT_CONTEXT_DOCUMENTS_PER_AGENT = 25;
 
 type AgentContextDocumentValidation = { kind: MediaKind; mimeType: string } | { error: string };
@@ -46,8 +50,8 @@ function validateAgentContextDocumentFile({
     return { error: `"${filename}" is empty` };
   }
 
-  if (fileSize > MAX_AGENT_CONTEXT_DOCUMENT_FILE_BYTES) {
-    return { error: `"${filename}" is larger than 10 MB` };
+  if (fileSize > MAX_UPLOAD_FILE_BYTES) {
+    return { error: `"${filename}" is larger than ${MAX_UPLOAD_FILE_MB} MB` };
   }
 
   const sniffed = sniffMediaKind(buffer, filename, { accept: DOCUMENT_KINDS });
@@ -338,6 +342,10 @@ export async function uploadAgentContextDocuments({
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
+  }
+
+  if (files.length > MAX_FILES_PER_UPLOAD_REQUEST) {
+    throw new BadRequestException(`At most ${MAX_FILES_PER_UPLOAD_REQUEST} files per request`);
   }
 
   const { error: listError, data: existingDocuments } = await tryCatch(() =>

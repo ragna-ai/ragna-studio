@@ -57,6 +57,15 @@ export class NotFoundException extends HTTPException {
   }
 }
 
+// Payload Too Large (413) Exception
+export class PayloadTooLargeException extends HTTPException {
+  constructor(message?: string) {
+    super(StatusCodes.REQUEST_TOO_LONG, {
+      message: message || ReasonPhrases.REQUEST_TOO_LONG,
+    });
+  }
+}
+
 // Unprocessable Entity (422) Exception
 export class UnprocessableEntityException extends HTTPException {
   constructor(message?: string) {

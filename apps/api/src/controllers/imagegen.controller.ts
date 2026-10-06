@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { singleUploadBodyLimit } from '../middlewares/bodyLimit';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   deleteGenImage,
@@ -58,8 +59,8 @@ export const genImageController = new Hono()
    * Uploads a reference image ahead of a generate request that conditions
    * on it. Multipart upload: a `file` field. PNG/JPEG/WEBP only, 10 MB cap.
    */
-  .post('/reference-upload', async (c) => {
-    const user = c.get('user');
+  .post('/reference-upload', singleUploadBodyLimit, async (c) => {
+    const workspace = c.get('workspace');
 
     const body = await c.req.parseBody();
     const file = body.file;
@@ -68,9 +69,9 @@ export const genImageController = new Hono()
       throw new BadRequestException('A file is required');
     }
 
-    const { storageKey } = await uploadGenImageReference({ userId: user.id, file });
+    const uploaded = await uploadGenImageReference({ workspaceId: workspace.id, file });
 
-    return c.json({ storageKey }, StatusCodes.CREATED);
+    return c.json(uploaded, StatusCodes.CREATED);
   })
   /**
    * [DELETE] /workspace/:workspaceId/gen-image/:genImageId
