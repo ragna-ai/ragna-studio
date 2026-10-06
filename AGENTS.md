@@ -126,9 +126,9 @@ All changes to `apps/api` are test-driven. That includes packages reached throug
 - Test at the HTTP boundary (`app.request()`), grouped by domain folder. Assert behavior, not internals.
   Conventions, fixtures and mocks: `apps/api/test/README.md` and `docs/testing/strategy.md`.
 - Mock only external services (AI providers, storage, mail, LinkedIn), never our own code.
-- Run tests only via `pnpm --filter @repo/api test [path]`, never plain `bun test`. The script holds a
-  machine-wide lock, because every run truncates the shared `studio_test` database; parallel agents queue
-  instead of wiping each other's rows.
+- Run tests with `pnpm --filter @repo/api test [path]`. Every run truncates the shared `studio_test`
+  database, so the test preload takes a Postgres advisory lock (`acquireTestSuiteLock` in `@repo/testing`);
+  parallel agents queue instead of wiping each other's rows.
 - Run the narrowest path while iterating (`test/chat`), the whole suite once before handing back.
 - One-time database setup: `pnpm --filter @repo/api test:setup`.
 
