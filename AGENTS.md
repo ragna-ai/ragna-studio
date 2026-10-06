@@ -110,7 +110,27 @@ Always load the clean-code skill.
 - no git commit,
 - no browser verification
 
-The user handles verification and commits.
+The user handles verification and commits. The one exception is running tests: agents run the tests
+for what they change (see TDD below).
+
+### TDD (apps/api)
+
+All changes to `apps/api` are test-driven. That includes packages reached through it (`@repo/database`,
+`@repo/media`, ...): test them through the API, not with separate package tests.
+
+1. **Red:** write a failing test for the behavior first. Run it and see it fail for the expected reason.
+2. **Green:** write the minimum code that makes it pass.
+3. **Refactor:** clean up with the tests green.
+
+- **Bug fixes start with a test that reproduces the bug.** No reproduction, no fix.
+- Test at the HTTP boundary (`app.request()`), grouped by domain folder. Assert behavior, not internals.
+  Conventions, fixtures and mocks: `apps/api/test/README.md` and `docs/testing/strategy.md`.
+- Mock only external services (AI providers, storage, mail, LinkedIn), never our own code.
+- Run tests with `pnpm --filter @repo/api test [path]`. Every run truncates the shared `studio_test`
+  database, so the test preload takes a Postgres advisory lock (`acquireTestSuiteLock` in `@repo/testing`);
+  parallel agents queue instead of wiping each other's rows.
+- Run the narrowest path while iterating (`test/chat`), the whole suite once before handing back.
+- One-time database setup: `pnpm --filter @repo/api test:setup`.
 
 # Browser use
 
