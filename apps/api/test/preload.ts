@@ -13,7 +13,7 @@
 // contexts resolve them to the same virtual-store slot, but if one of them
 // silently stops mocking after a lockfile change, this is the place to
 // re-register it. See docs/docker-deploy/injected-workspace-packages.md.
-import { linkedinModuleMock, queueModuleMock } from '@repo/testing';
+import { acquireTestSuiteLock, linkedinModuleMock, queueModuleMock } from '@repo/testing';
 import { mock } from 'bun:test';
 import { emailQueueModuleMock } from './email/support/email-queue.mock';
 import { mailProviderModuleMock } from './email/support/mail-provider.mock';
@@ -36,3 +36,5 @@ mock.module('@repo/queue', () => queueModuleMock);
 // two lines up.
 mock.module('@repo/mail/provider', () => mailProviderModuleMock);
 mock.module('@repo/queue', () => emailQueueModuleMock);
+
+await acquireTestSuiteLock();
