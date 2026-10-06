@@ -36,7 +36,7 @@ The current `self-hosting.md` only covers `make up-dev-full` on localhost.
 | Target | Who | Notes |
 | --- | --- | --- |
 | Linux VM | Anyone with a server and a domain | Docker Compose, own reverse proxy with TLS |
-| Localhost | Trying it out, including Macs | Docker Compose, MinIO instead of a cloud bucket |
+| Localhost | Trying it out, including Macs | Docker Compose, any S3-compatible storage the user runs or rents |
 
 ## Goals
 
@@ -44,7 +44,6 @@ The current `self-hosting.md` only covers `make up-dev-full` on localhost.
   following one doc. No ragna.io domain is involved.
 - Any S3-compatible storage works (R2, AWS, MinIO, others) through one set
   of `S3_*` env vars.
-- Localhost works without any cloud account for storage.
 - Apple Silicon runs native images.
 - The current production deploy keeps working, with a documented migration
   step.
@@ -72,18 +71,27 @@ MinIO or AWS bucket through `CF_*` names:
 
 | Old | New | Notes |
 | --- | --- | --- |
-| `CF_ACCOUNT_ID` | `S3_ENDPOINT` | Full endpoint URL. Required. |
-| `CF_REGION` | `S3_REGION` | Signing region, passed to s3mini. Default `auto`. |
+| `CF_ACCOUNT_ID` + `CF_REGION` | `S3_ENDPOINT` | Full endpoint URL. Required. Both old values become part of the hostname. |
+| (none) | `S3_REGION` | New. Signing region, passed to s3mini. Optional, default `auto`. |
 | `CF_ACCESS_KEY_ID` | `S3_ACCESS_KEY_ID` | |
 | `CF_SECRET_ACCESS_KEY` | `S3_SECRET_ACCESS_KEY` | Secret, read via `getSecret`. |
 | `CF_IMAGES_BUCKET_NAME` | `S3_IMAGES_BUCKET_NAME` | |
 | `CF_DOCUMENTS_BUCKET_NAME` | `S3_DOCUMENTS_BUCKET_NAME` | |
 
+`CF_REGION` is not renamed to `S3_REGION`. The two mean different things:
+
+- `CF_REGION` is the R2 jurisdiction (`eu`). Today it only goes into the
+  hostname and is never used for signing.
+- `S3_REGION` is the SigV4 signing region. R2 expects `auto`. AWS needs the
+  bucket's real region (for example `eu-central-1`). Copying `eu` into
+  `S3_REGION` would break every R2 request.
+
 `createS3Client` uses `${S3_ENDPOINT}/${bucketName}` (path-style, which
 MinIO, AWS and R2 all accept) and passes `S3_REGION` to s3mini. The R2
 special case (account id plus jurisdiction host segment) goes away. An R2
 install sets `S3_ENDPOINT=https://<account-id>.<jurisdiction>.r2.cloudflarestorage.com`
-(without the jurisdiction segment outside the EU) and `S3_REGION=auto`.
+(the jurisdiction segment only for buckets in a jurisdiction, such as
+`eu`) and leaves `S3_REGION` unset.
 
 There is no fallback to the old names in code. `config` getters are renamed
 to match (`s3ImagesBucketName`, and so on).
@@ -95,18 +103,18 @@ carry the mapping table above.
 
 ### 2. Configurable public media URL
 
-New env var `MEDIA_PUBLIC_URL`, the public base URL of the images bucket
+New env var `MEDIA_URL`, the public base URL of the images bucket
 (for example `https://images.example.com` or
 `http://localhost:9000/ragna-images`).
 
-- `getPublicMediaUrl` returns `${MEDIA_PUBLIC_URL}/${key}`. It stays the
+- `getPublicMediaUrl` returns `${MEDIA_URL}/${key}`. It stays the
   single source of truth for media URLs.
 - There is no ragna.io default. It would silently point every self-hosted
   instance at our CDN again.
 - When it is missing, backend and worker log a warning at startup that
   names the variable, and keep running. Media URLs are then built without a
   host and don't render. Everything else works.
-- **Migration:** production sets `MEDIA_PUBLIC_URL=https://images.ragna.io`
+- **Migration:** production sets `MEDIA_URL=https://images.ragna.io`
   before this release deploys.
 
 ### Production config
@@ -138,7 +146,7 @@ can't be fixed at build time.
   plus `data:`/`blob:` where needed.
 - A small Nitro plugin adds the two runtime origins to the CSP:
   `NUXT_PUBLIC_API_BASE_URL` (as `https://` and `wss://`, or `http://` and
-  `ws://` on localhost) for `connect-src`, and `NUXT_PUBLIC_MEDIA_PUBLIC_URL`
+  `ws://` on localhost) for `connect-src`, and `NUXT_PUBLIC_MEDIA_URL`
   for `img-src` and `media-src`.
 - The per-directive `NUXT_SECURITY_HEADERS_CONTENT_SECURITY_POLICY_*`
   overrides in `.env.example` and the dev compose go away.
@@ -146,7 +154,7 @@ can't be fixed at build time.
   come from runtime config (`APP_URL`).
 
 The frontend container gets one more non-secret env var
-(`NUXT_PUBLIC_MEDIA_PUBLIC_URL`), in line with PR #60's least-privilege env.
+(`NUXT_PUBLIC_MEDIA_URL`), in line with PR #60's least-privilege env.
 
 ### 5. Self-host compose override
 
@@ -166,15 +174,7 @@ This is deliberately not the production compose we deleted in `afae45d`.
 That one carried our Traefik setup. This one contains no proxy and nothing
 specific to ragna.io.
 
-### 6. MinIO for localhost
-
-A `minio` service under a new `minio` compose profile, plus a one-shot
-`minio-init` container that creates both buckets and makes the images
-bucket publicly readable. `.env.example` gets a commented MinIO block
-(`S3_ENDPOINT=http://localhost:9000`,
-`MEDIA_PUBLIC_URL=http://localhost:9000/<images-bucket>`).
-
-### 7. Multi-arch images
+### 6. Multi-arch images
 
 `release.yml` builds `linux/amd64` and `linux/arm64` for all five images.
 All base images (`node`, `oven/bun:debian`, Debian `chromium`, Debian
@@ -182,7 +182,7 @@ All base images (`node`, `oven/bun:debian`, Debian `chromium`, Debian
 runners (`ubuntu-24.04-arm`), one job per platform, merged into one
 manifest. QEMU emulation would be simpler but much slower to build.
 
-### 8. Rewrite `docs/self-hosting.md`
+### 7. Rewrite `docs/self-hosting.md`
 
 Written last, against the finished setup. It is also the source for the
 planned Starlight docs. Sections:
@@ -196,7 +196,9 @@ planned Starlight docs. Sections:
    `ENCRYPTION_PASSWORD` must never change, or stored secrets become
    unreadable.
 4. **Storage:** two buckets, public read on images only, `S3_ENDPOINT`,
-   `MEDIA_PUBLIC_URL`. R2, AWS and MinIO examples.
+   `S3_REGION`, `MEDIA_URL`. Example values for R2 and AWS. For localhost,
+   one paragraph: any S3-compatible server works, running it is up to the
+   user. We don't ship or support one.
 5. **OAuth:** the redirect URI per provider
    (`https://api.example.com/auth/callback/<provider>`).
 6. **Start:** `make up`, what `migrate` and `seed` do.
@@ -207,16 +209,16 @@ planned Starlight docs. Sections:
    go forward.
 10. **Optional providers:** today's list, plus SMTP (only the verify and
     welcome emails need it) and one line on Stripe/credits.
-11. **Localhost and Mac:** the MinIO profile, no proxy, no TLS.
+11. **Localhost and Mac:** the dev compose, no proxy, no TLS, storage as in 4.
 
 ## Rollout
 
-1. `S3_*` rename, `MEDIA_PUBLIC_URL`, `rawUrl` removal (1 to 3). Set the
+1. `S3_*` rename, `MEDIA_URL`, `rawUrl` removal (1 to 3). Set the
    new vars in production before this deploys, drop `CF_*` after.
 2. Frontend CSP (4).
-3. Compose override, MinIO profile, Makefile targets (5, 6).
-4. Multi-arch release (7). Independent of the rest.
-5. Rewrite `self-hosting.md` and test it on a fresh VM (8).
+3. Compose override and Makefile targets (5).
+4. Multi-arch release (6). Independent of the rest.
+5. Rewrite `self-hosting.md` and test it on a fresh VM (7).
 
 ## Open questions
 
