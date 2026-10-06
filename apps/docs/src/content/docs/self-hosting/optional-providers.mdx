@@ -1,0 +1,18 @@
+---
+title: Optional providers
+description: Embeddings, media generation, web search, email and more.
+sidebar:
+  order: 5
+---
+
+Each provider is enabled by its own env vars. The [environment variables](/reference/environment-variables) reference lists the exact names.
+
+- An OpenAI key for embeddings, which power retrieval over large knowledge bases
+- A Black Forest Labs key for FLUX images and video, or Google Vertex for Imagen and Veo
+- A SerpAPI key for web search
+- Google or Microsoft OAuth with mail scopes for the email client
+- A LinkedIn app for publishing drafts
+- SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`). Only the verify and welcome emails need it.
+- An email allowlist (`ALLOWED_LOGIN_EMAILS`), see [Restricting sign-up](/self-hosting/configuration#restricting-sign-up)
+
+Stripe and credits are off by default (`CREDITS_ENABLED="false"`).

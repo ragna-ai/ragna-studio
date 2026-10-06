@@ -1,0 +1,25 @@
+---
+title: Upgrades and backups
+description: Pull new images and keep your data safe.
+sidebar:
+  order: 6
+---
+
+## Upgrades
+
+Docker images use the `:latest` tag.
+
+```bash
+docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.selfhost.yml pull
+make up
+```
+
+Migrations run automatically and only go forward.
+
+## Backups
+
+The state you own is Postgres, Redis and both buckets. Backups are up to you.
+
+<Aside type="caution" title="Keep your secrets with your backups">
+  Encrypted values in the database, such as stored OAuth tokens, are only readable with the same `BETTER_AUTH_SECRET` and `ENCRYPTION_PASSWORD`. Store both safely, next to your backups.
+</Aside>

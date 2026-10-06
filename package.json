@@ -5,6 +5,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --filter=@repo/web --filter=@repo/api --filter=@repo/worker",
     "dev:all": "turbo run dev",
+    "dev:docs": "turbo run dev --filter=@repo/docs",
     "lint": "oxlint",
     "check-types": "turbo run check-types",
     "gen": "turbo gen",

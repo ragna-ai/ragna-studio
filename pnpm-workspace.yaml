@@ -36,6 +36,7 @@ allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true
   esbuild: false
+  workerd: false
   msgpackr-extract: true
   puppeteer: true
   sharp: true

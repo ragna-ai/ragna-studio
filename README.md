@@ -15,7 +15,7 @@ Your agents read your documents and keep their state in datasets.<br />
 They delegate to each other and run on a schedule while you sleep.<br />
 You host it. You own the data. You bring your own model keys, or run local models.
 
-[**Quickstart**](#quickstart) &nbsp;&bull;&nbsp; [Self-hosting](docs/self-hosting.md) &nbsp;&bull;&nbsp; [Features](docs/features.md) &nbsp;&bull;&nbsp; [Contributing](CONTRIBUTING.md)
+[**Quickstart**](#quickstart) &nbsp;&bull;&nbsp; [Self-hosting](https://docs.ragna.io/self-hosting/) &nbsp;&bull;&nbsp; [Features](docs/features.md) &nbsp;&bull;&nbsp; [Contributing](CONTRIBUTING.md)
 
 <br />
 
@@ -130,7 +130,7 @@ It only reaches the services you configure, such as your LLM provider, storage, 
 
 | Document | Start here when you need |
 | --- | --- |
-| [Self-hosting](docs/self-hosting.md) | Requirements, optional providers, and how the stack starts. |
+| [Self-hosting](https://docs.ragna.io/self-hosting/) | Requirements, optional providers, and how the stack starts. |
 | [Features](docs/features.md) | The full list of what ships in the box. |
 | [Development](docs/development.md) | Running from source, local schema changes, and tests. |
 | [Architecture](docs/architecture.md) | The system diagram, repository layout, and stack. |

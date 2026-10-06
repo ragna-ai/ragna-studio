@@ -1,0 +1,51 @@
+---
+title: Installation
+description: Get the code, fill in .env and start the stack with Docker Compose.
+sidebar:
+  order: 1
+---
+
+## Get the code
+
+```bash
+git clone https://github.com/ragna-ai/ragna-studio.git
+cd ragna-studio
+cp .env.example .env
+```
+
+All settings go into `.env`. Before the first start, set your domains, secrets, storage, one OAuth provider and one AI key. See [Configuration](/self-hosting/configuration) and [Storage](/self-hosting/storage).
+
+## Start
+
+```bash
+make up
+```
+
+`make up` runs the base compose file plus `docker/docker-compose.selfhost.yml`. This override sets the in-network hosts for Postgres, Redis and the webbrowser. It overrides the `localhost` values from `.env.example`.
+
+The stack starts in order:
+
+<Steps>
+  <Step title="Data stores">
+    Postgres and Redis come up.
+  </Step>
+  <Step title="Migrate">
+    `migrate` applies the schema.
+  </Step>
+  <Step title="Seed">
+    `seed` adds the model catalog and the default agent.
+  </Step>
+  <Step title="Services">
+    The backend, worker, frontend and webbrowser start.
+  </Step>
+</Steps>
+
+`migrate` and `seed` run once per start and are idempotent.
+
+The frontend and backend listen on `127.0.0.1` only (ports 3000 and 3010). Put a [reverse proxy](/self-hosting/reverse-proxy) in front of them.
+
+## Stop
+
+```bash
+make down
+```

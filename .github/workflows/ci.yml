@@ -30,7 +30,7 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          if git diff --name-only "origin/$BASE_REF...HEAD" | grep -qvE '^docs/|\.md$'; then
+          if git diff --name-only "origin/$BASE_REF...HEAD" | grep -qvE '^(apps/)?docs/|\.md$'; then
             echo "code=true" >> "$GITHUB_OUTPUT"
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
@@ -55,7 +55,8 @@ jobs:
       # No turbo cache: a cache hit restores packages/*/dist without running the build
       # script, so pnpm never syncs the injected copies consumers resolve through.
       # Build first: check-types resolves workspace packages through their dist/ types.
-      - run: pnpm build
+      # Docs are built and previewed by Cloudflare Workers Builds, not here.
+      - run: pnpm build --filter='!@repo/docs'
       # TODO: web is excluded because `nuxt typecheck` is slow; re-add behind a path-gated job.
       - run: pnpm check-types --filter='!@repo/web'
       - run: pnpm lint

@@ -1,0 +1,45 @@
+---
+title: Quickstart
+description: Run RAGNA Studio on your own machine for a local try-out.
+sidebar:
+  order: 1
+---
+
+This runs the whole stack on localhost. It needs no proxy and no TLS. For a server setup, see [Self-hosting](/self-hosting).
+
+## Before you start
+
+You need Docker with Docker Compose, `git` and `make`. You also need:
+
+- One S3-compatible bucket setup, see [Storage](/self-hosting/storage).
+- One OAuth app (Google or Microsoft), see [Configuration](/self-hosting/configuration#oauth).
+- At least one LLM API key.
+
+## Run it
+
+<Steps>
+  <Step title="Get the code">
+    ```bash
+    git clone https://github.com/ragna-ai/ragna-studio.git
+    cd ragna-studio
+    cp .env.example .env
+    ```
+  </Step>
+  <Step title="Fill in .env">
+    Set the secrets, storage, one OAuth provider and one AI key. The [environment variables](/reference/environment-variables) reference lists every setting.
+  </Step>
+  <Step title="Start the stack">
+    ```bash
+    make up-dev-full
+    ```
+
+    This starts the whole stack with all ports published.
+  </Step>
+  <Step title="Open the app">
+    Open [localhost:3000](http://localhost:3000). The API is on port 3010.
+  </Step>
+</Steps>
+
+<Aside type="danger" title="Not for public servers">
+  The dev compose publishes every port, including Postgres and Redis. Do not use it on a public server.
+</Aside>
