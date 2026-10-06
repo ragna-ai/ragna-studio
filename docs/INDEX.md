@@ -18,7 +18,6 @@ work first, shipped reference and dead/historical docs last.
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
-| [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | in-progress (2026-10-06) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
 
 ## Decided
@@ -72,6 +71,7 @@ work first, shipped reference and dead/historical docs last.
 | [Unified media service + anydoc extraction (PRD)](./media-library/unified-media-prd.md) | implemented (merged via PR #16, `feat: unified media service (@repo/media) + anydoc extraction`, 2026-08-04) |
 | [Notifications](./notifications/notifications.md) | implemented (delivery by polling) |
 | [Security response headers](./security/headers.md) | implemented (2026-09-21) |
+| [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |
 | [Tasks / Kanban Board (PRD)](./tasks/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Live Team Chat over WebSocket (PRD)](./team-chat/prd.md) | implemented (phase 1 only, merged via PR #5, 2026-07-19) |

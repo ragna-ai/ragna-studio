@@ -1,6 +1,6 @@
 # Self-hosting: run ragna-studio outside ragna.io
 
-**Status: in-progress** (2026-10-06). Replaces the localhost-only [self-hosting.md](../self-hosting.md).
+**Status: implemented** (2026-10-06, PR #64). Replaces the localhost-only [self-hosting.md](../self-hosting.md).
 
 ## Problem
 
@@ -225,3 +225,10 @@ planned Starlight docs. Sections:
 1. **Image bucket naming.** Gen-image and gen-video inputs live under a
    `chat-uploads/` prefix (`buildChatUploadImageUrls`). Out of scope here,
    but a self-hoster browsing the bucket will see it.
+2. **nuxt-security hook.** `csp-origins.ts` re-fires `nuxt-security:ready`.
+   nuxt-security 2.6.0 marks it `@deprecated`. An upgrade may need a
+   different hook.
+3. **i18n base URL.** `NUXT_PUBLIC_I18N_BASE_URL` is expected to override
+   the i18n base URL, but we have not tested it.
+4. **Strict API schemas.** Existing API tests still use `z.object` instead
+   of `z.strictObject`.
