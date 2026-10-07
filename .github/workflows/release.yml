@@ -128,14 +128,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Fetch install script
-        run: |
-          curl -fsSL "https://raw.githubusercontent.com/$REPO/$TAG/scripts/install.sh" -o install.sh
-          sha256sum install.sh > install.sh.sha256
-        env:
-          TAG: ${{ github.ref_name }}
-          REPO: ${{ github.repository }}
-      - run: gh release create "$TAG" install.sh install.sh.sha256 --repo "$REPO" --title "$TAG" --generate-notes --verify-tag
+      - run: gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes --verify-tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}

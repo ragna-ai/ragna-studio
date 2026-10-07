@@ -26,10 +26,10 @@ curl -fsSL https://get.ragna.io | sh
     The script downloads the compose files of the latest release into `~/ragna-studio`. Set `RAGNA_DIR` to use another folder.
   </Step>
   <Step title="Configure">
-    It creates `.env` with generated secrets. Then it asks for your OAuth app, storage and AI keys.
+    It creates `.env` with generated secrets and pins the release as `RAGNA_VERSION`. Then it asks for your OAuth app, storage and AI keys.
   </Step>
   <Step title="Start">
-    It pulls the images and starts the stack.
+    It pulls the images of that release and starts the stack.
   </Step>
   <Step title="Open the app">
     Open [localhost:3000](http://localhost:3000). The API is on port 3010.
@@ -43,17 +43,18 @@ If a setting is missing, the script lists it and stops. Fill it in `~/ragna-stud
 To read the script before running it:
 
 ```bash
-curl -fsSLO https://github.com/ragna-ai/ragna-studio/releases/latest/download/install.sh
-curl -fsSLO https://github.com/ragna-ai/ragna-studio/releases/latest/download/install.sh.sha256
-sha256sum -c install.sh.sha256
+curl -fsSL https://get.ragna.io -o install.sh
+less install.sh
 sh install.sh
 ```
 
-On macOS, use `shasum -a 256 -c install.sh.sha256`.
-
 ## Upgrade
 
-Run the script again. It keeps your `.env`, refreshes the compose files, pulls the new images and restarts.
+```bash
+curl -fsSL https://get.ragna.io | sh -s -- --upgrade
+```
+
+This moves `RAGNA_VERSION` to the latest release, refreshes the compose files, pulls the new images and restarts. Your `.env` stays as it is otherwise. Running the script without `--upgrade` keeps the pinned release.
 
 ## Stop
 

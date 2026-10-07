@@ -2,13 +2,13 @@
 # Installs RAGNA Studio on localhost with Docker Compose.
 #
 #   curl -fsSL https://get.ragna.io | sh
+#   curl -fsSL https://get.ragna.io | sh -s -- --upgrade
 #
 # Settings (environment variables):
 #   RAGNA_DIR  install folder, default: $HOME/ragna-studio
 #
-# Compose files come from the latest release, matching the :latest images.
-#
-# Running it again keeps .env, refreshes the compose files, pulls new images and restarts.
+# The first run pins the latest release as RAGNA_VERSION in .env. Compose files and images
+# both come from that release. Re-runs stay on it; --upgrade moves to the newest release.
 
 set -eu
 
@@ -36,19 +36,52 @@ check_requirements() {
   docker info >/dev/null 2>&1 || fail "Docker is not running."
 }
 
+usage() {
+  echo "Usage: install.sh [--upgrade]"
+  echo "  --upgrade  move an existing install to the latest release"
+}
+
+parse_args() {
+  UPGRADE=0
+  for arg in "$@"; do
+    case $arg in
+      --upgrade) UPGRADE=1 ;;
+      --help | -h)
+        usage
+        exit 0
+        ;;
+      *)
+        usage >&2
+        fail "Unknown option: $arg"
+        ;;
+    esac
+  done
+}
+
+# Image tags drop the leading "v" of the git tag (v0.5.0 -> 0.5.0).
 resolve_latest_version() {
   tag=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" |
-    sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p')
+    sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
   [ -n "$tag" ] || fail "Could not find the latest release."
   echo "$tag"
+}
+
+resolve_version() {
+  if [ "$UPGRADE" = 1 ] || [ ! -f "$INSTALL_DIR/.env" ]; then
+    resolve_latest_version
+    return
+  fi
+  pinned=$(read_env RAGNA_VERSION)
+  [ -n "$pinned" ] || fail "RAGNA_VERSION is missing in $INSTALL_DIR/.env. Run with --upgrade to pin the latest release."
+  echo "$pinned"
 }
 
 download_files() {
   version=$1
   mkdir -p "$INSTALL_DIR/docker"
   for file in $DOWNLOAD_FILES; do
-    curl -fsSL "https://raw.githubusercontent.com/$REPO/$version/$file" -o "$INSTALL_DIR/$file" ||
-      fail "Download failed: $file ($version)"
+    curl -fsSL "https://raw.githubusercontent.com/$REPO/v$version/$file" -o "$INSTALL_DIR/$file" ||
+      fail "Download failed: $file (v$version)"
   done
 }
 
@@ -180,15 +213,17 @@ start_stack() {
 }
 
 main() {
+  parse_args "$@"
   INSTALL_DIR=${RAGNA_DIR:-"$HOME/ragna-studio"}
 
   check_requirements
-  version=$(resolve_latest_version)
+  version=$(resolve_version)
   info "Installing RAGNA Studio $version into $INSTALL_DIR"
   download_files "$version"
 
   if [ ! -f "$INSTALL_DIR/.env" ]; then
     create_env_file
+    set_env RAGNA_VERSION "$version"
     if has_tty; then
       trap 'stty echo </dev/tty 2>/dev/null' EXIT INT TERM
       echo
@@ -196,6 +231,8 @@ main() {
       ask_storage
       ask_ai_keys
     fi
+  elif [ "$UPGRADE" = 1 ]; then
+    set_env RAGNA_VERSION "$version"
   fi
 
   missing=$(missing_settings)
@@ -210,6 +247,7 @@ main() {
   echo
   info "RAGNA Studio is running at $APP_URL"
   echo "Settings: $INSTALL_DIR/.env"
+  echo "Upgrade:  curl -fsSL https://get.ragna.io | sh -s -- --upgrade"
   echo "Logs:     docker compose -p ragna_studio logs -f"
   echo "Stop:     docker compose -p ragna_studio down"
 }
