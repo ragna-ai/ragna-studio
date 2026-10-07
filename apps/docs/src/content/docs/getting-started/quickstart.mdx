@@ -9,37 +9,60 @@ This runs the whole stack on localhost. It needs no proxy and no TLS. For a serv
 
 ## Before you start
 
-You need Docker with Docker Compose, `git` and `make`. You also need:
+You need Docker with Docker Compose v2, `curl` and `openssl`. You also need:
 
 - One S3-compatible bucket setup, see [Storage](/self-hosting/storage).
-- One OAuth app (Google or Microsoft), see [Configuration](/self-hosting/configuration#oauth).
+- One OAuth app (Google or Microsoft), see [Configuration](/self-hosting/configuration#oauth). Use `http://localhost:3010/auth/callback/<provider>` as the redirect URI.
 - At least one LLM API key.
 
-## Run it
+## Install
+
+```bash
+curl -fsSL https://get.ragna.io | sh
+```
 
 <Steps>
-  <Step title="Get the code">
-    ```bash
-    git clone https://github.com/ragna-ai/ragna-studio.git
-    cd ragna-studio
-    cp .env.example .env
-    ```
+  <Step title="Download">
+    The script downloads the compose files of the latest release into `~/ragna-studio`. Set `RAGNA_DIR` to use another folder.
   </Step>
-  <Step title="Fill in .env">
-    Set the secrets, storage, one OAuth provider and one AI key. The [environment variables](/reference/environment-variables) reference lists every setting.
+  <Step title="Configure">
+    It creates `.env` with generated secrets. Then it asks for your OAuth app, storage and AI keys.
   </Step>
-  <Step title="Start the stack">
-    ```bash
-    make up-dev-full
-    ```
-
-    This starts the whole stack with all ports published.
+  <Step title="Start">
+    It pulls the images and starts the stack.
   </Step>
   <Step title="Open the app">
     Open [localhost:3000](http://localhost:3000). The API is on port 3010.
   </Step>
 </Steps>
 
-<Aside type="danger" title="Not for public servers">
-  The dev compose publishes every port, including Postgres and Redis. Do not use it on a public server.
+If a setting is missing, the script lists it and stops. Fill it in `~/ragna-studio/.env` and run the script again. The [environment variables](/reference/environment-variables) reference lists every setting.
+
+### Inspect first
+
+To read the script before running it:
+
+```bash
+curl -fsSLO https://github.com/ragna-ai/ragna-studio/releases/latest/download/install.sh
+curl -fsSLO https://github.com/ragna-ai/ragna-studio/releases/latest/download/install.sh.sha256
+sha256sum -c install.sh.sha256
+sh install.sh
+```
+
+On macOS, use `shasum -a 256 -c install.sh.sha256`.
+
+## Upgrade
+
+Run the script again. It keeps your `.env`, refreshes the compose files, pulls the new images and restarts.
+
+## Stop
+
+```bash
+docker compose -p ragna_studio down
+```
+
+Your data stays in the Docker volumes.
+
+<Aside type="caution" title="Localhost only">
+  The app and the API listen on `127.0.0.1` only. To serve them to others, follow [Self-hosting](/self-hosting).
 </Aside>
