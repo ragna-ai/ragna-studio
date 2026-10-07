@@ -20,21 +20,39 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.diff.outputs.code }}
+      code: ${{ steps.detect.outputs.code }}
+      api: ${{ steps.detect.outputs.api }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - id: diff
+      # Turbo maps changed files to packages and their dependents. It ignores root
+      # files outside any package, so those that affect CI force a full run.
+      - id: detect
         env:
-          BASE_REF: ${{ github.base_ref }}
+          BASE: origin/${{ github.base_ref }}
         run: |
-          if git diff --name-only "origin/$BASE_REF...HEAD" | grep -qvE '^(apps/)?docs/|\.md$'; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "code=false" >> "$GITHUB_OUTPUT"
+          # Each step fails the job on error: an empty result would silently skip CI.
+          turbo_version=$(jq -r .devDependencies.turbo package.json)
+          turbo_result=$(npx --yes "turbo@$turbo_version" query affected --packages --base "$BASE" --head HEAD)
+          package_names=$(echo "$turbo_result" | jq -re '.data.affectedPackages.items[].name')
+          affected=$(echo "$package_names" | grep -vxE '//|@repo/docs' || true)
+
+          root_changed=false
+          if git diff --name-only "$BASE...HEAD" |
+            grep -qxE 'package\.json|pnpm-workspace\.yaml|turbo\.json|\.npmrc|\.oxfmtrc\.json|\.env\.testing|\.github/workflows/ci\.yml'; then
+            root_changed=true
           fi
+
+          code=false
+          api=false
+          if [ "$root_changed" = true ] || [ -n "$affected" ]; then code=true; fi
+          if [ "$root_changed" = true ] || echo "$affected" | grep -qx '@repo/api'; then api=true; fi
+
+          echo "Affected packages: ${affected:-none}, root files changed: $root_changed"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "api=$api" >> "$GITHUB_OUTPUT"
 
   ci:
     needs: changes
@@ -63,7 +81,7 @@ jobs:
 
   api-tests:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
