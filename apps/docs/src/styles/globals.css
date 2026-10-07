@@ -3,6 +3,10 @@
 /* ============================================================
  * Nimbus Theme — THE file you edit to customize your site.
  *
+ * Colors follow the RAGNA brand palette (navy + teal ramps). Step names
+ * like `navy-600` refer to that palette. Teal is the only interactive
+ * accent: links and focus rings. Light is the docs default.
+ *
  * Architecture:
  *   1. CSS custom properties (--nb-*) define the design tokens
  *   2. `@theme` block exposes them to Tailwind so utilities like
@@ -23,44 +27,49 @@
 	color-scheme: light;
 
 	/* Surfaces (paired with foregrounds for contrast) */
-	--nb-background: oklch(0.99 0 0);
-	--nb-foreground: oklch(0.21 0 0);
+	--nb-background: #f4f7fb; /* navy-50 */
+	--nb-foreground: #081523; /* navy-950 */
 
-	--nb-card: oklch(1 0 0);
+	--nb-card: #ffffff;
 	--nb-card-foreground: var(--nb-foreground);
 
-	--nb-muted: oklch(0.985 0 0);
-	--nb-muted-foreground: oklch(0.556 0 0);
+	--nb-muted: #e4ecf5; /* navy-100 */
+	--nb-muted-foreground: #3d5776; /* navy-600 */
 
-	--nb-accent: oklch(0.967 0 0);
+	--nb-accent: #e4ecf5; /* navy-100 */
 	--nb-accent-foreground: var(--nb-foreground);
 
 	/* Primary action / brand */
-	--nb-primary: oklch(0.145 0 0);
-	--nb-primary-foreground: oklch(0.97 0 0);
-	--nb-primary-hover: oklch(0.371 0 0);
+	--nb-primary: #081523; /* navy-950 */
+	--nb-primary-foreground: #ffffff;
+	--nb-primary-hover: #10243c; /* navy-800 */
 
 	/* Borders / focus */
-	--nb-border: oklch(0.92 0 0);
-	--nb-border-strong: oklch(0.87 0 0);
+	--nb-border: #cbd9ea; /* navy-200 */
+	--nb-border-strong: #9fb8d4; /* navy-300 */
 	--nb-selected: var(--nb-border);
-	--nb-ring: oklch(0.145 0 0 / 0.35);
+	/* Running text in docs content. Dark mode dims it to 90% to avoid halation. */
+	--nb-prose-foreground: var(--nb-foreground);
+
+	/* Prose links: the RAGNA brand accent (teal). */
+	--nb-link: #027367; /* teal-700 */
+	--nb-ring: #0f9485; /* teal-600 */
 
 	/* Status colors — paired (saturated for text/border + muted for bg) */
-	--nb-info: oklch(0.45 0.18 255);
-	--nb-info-foreground: oklch(0.45 0.18 255);
-	--nb-info-muted: oklch(0.965 0.015 255);
+	--nb-info: #2266a4;
+	--nb-info-foreground: #2266a4;
+	--nb-info-muted: oklch(0.965 0.015 250);
 
-	--nb-success: oklch(0.42 0.14 152);
-	--nb-success-foreground: oklch(0.42 0.14 152);
-	--nb-success-muted: oklch(0.965 0.015 152);
+	--nb-success: #21763c;
+	--nb-success-foreground: #21763c;
+	--nb-success-muted: oklch(0.965 0.015 150);
 
-	--nb-warning: oklch(0.48 0.15 65);
-	--nb-warning-foreground: oklch(0.48 0.15 65);
-	--nb-warning-muted: oklch(0.97 0.02 70);
+	--nb-warning: #865901;
+	--nb-warning-foreground: #865901;
+	--nb-warning-muted: oklch(0.97 0.02 75);
 
- 	--nb-danger: oklch(0.47 0.18 25);
- 	--nb-danger-foreground: oklch(0.47 0.18 25);
+ 	--nb-danger: #9c433f;
+ 	--nb-danger-foreground: #9c433f;
  	--nb-danger-muted: oklch(0.965 0.015 25);
  
 	/* API method palette — shared source of truth for the method chip across the
@@ -90,22 +99,28 @@
 	/* Used only by the API reference (registry: api-layout); harmless elsewhere. */
 	--nb-code-rail-width: 34rem;
 
-	/* Typography — self-hosted via @fontsource-variable in BaseLayout.astro */
+	/* Typography: RAGNA product type scale (Minor Third, 1.2, base 1rem).
+	   Fonts are self-hosted via @fontsource-variable in BaseLayout.astro. */
 	--nb-font-sans:
-		"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+		"Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", Roboto,
 		sans-serif;
 	--nb-font-mono:
-		"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code",
+		"Geist Mono Variable", "Geist Mono", ui-monospace, "Cascadia Code",
 		"Source Code Pro", Menlo, Consolas, monospace;
-	--nb-h1-size: 2.1875rem;
+	--nb-h1-size: 2.074rem;
+	--nb-h1-leading: 1.2;
 	--nb-h1-weight: 600;
-	--nb-h1-tracking: -0.025em;
-	--nb-h2-size: 1.3rem;
+	--nb-h1-tracking: -0.02em;
+	--nb-h2-size: 1.44rem;
+	--nb-h2-leading: 1.3;
 	--nb-h2-weight: 600;
 	--nb-h2-tracking: -0.015em;
-	--nb-h3-size: 1.1rem;
+	--nb-h3-size: 1.2rem;
+	--nb-h3-leading: 1.35;
 	--nb-h3-weight: 600;
 	--nb-h3-tracking: -0.01em;
+	--nb-h4-size: 1rem;
+	--nb-h4-leading: 1.5;
 	--nb-h4-weight: 600;
 
 	/* Shadows */
@@ -125,42 +140,44 @@
 [data-mode="dark"] {
 	color-scheme: dark;
 
-	--nb-background: oklch(0.192 0 0);
-	--nb-foreground: oklch(0.925 0 0);
+	--nb-background: #081523; /* navy-950 */
+	--nb-foreground: #f4f7fb; /* navy-50 */
 
-	--nb-card: oklch(0.168 0 0);
+	--nb-card: #0c1b2e; /* navy-900 */
 	--nb-card-foreground: var(--nb-foreground);
 
-	--nb-muted: oklch(0.264 0 0);
-	--nb-muted-foreground: oklch(0.708 0 0);
+	--nb-muted: #10243c; /* navy-800 */
+	--nb-muted-foreground: #9fb8d4; /* navy-300 */
 
-	--nb-accent: oklch(0.269 0 0);
+	--nb-accent: #10243c; /* navy-800 */
 	--nb-accent-foreground: var(--nb-foreground);
 
-	--nb-primary: oklch(0.9 0 0);
-	--nb-primary-foreground: oklch(0.085 0 0);
-	--nb-primary-hover: oklch(0.7 0 0);
+	--nb-primary: #f4f7fb; /* navy-50 */
+	--nb-primary-foreground: #081523; /* navy-950 */
+	--nb-primary-hover: #cbd9ea; /* navy-200 */
 
-	--nb-border: oklch(0.285 0 0);
-	--nb-border-strong: oklch(0.371 0 0);
+	--nb-border: #10243c; /* navy-800 */
+	--nb-border-strong: #243c58; /* navy-700 */
 	--nb-selected: var(--nb-border);
-	--nb-ring: oklch(0.9 0 0 / 0.35);
+	--nb-prose-foreground: color-mix(in oklch, var(--nb-foreground) 90%, transparent);
+	--nb-link: #19b8a6; /* teal-500 */
+	--nb-ring: #50cfbd; /* teal-400 */
 
-	--nb-info: oklch(0.75 0.12 255);
-	--nb-info-foreground: oklch(0.75 0.12 255);
-	--nb-info-muted: oklch(0.17 0.03 260);
+	--nb-info: #7cbdff;
+	--nb-info-foreground: #7cbdff;
+	--nb-info-muted: oklch(0.21 0.03 250);
 
-	--nb-success: oklch(0.72 0.12 150);
-	--nb-success-foreground: oklch(0.72 0.12 150);
-	--nb-success-muted: oklch(0.17 0.025 153);
+	--nb-success: #7ccd8e;
+	--nb-success-foreground: #7ccd8e;
+	--nb-success-muted: oklch(0.21 0.03 150);
 
-	--nb-warning: oklch(0.78 0.11 80);
-	--nb-warning-foreground: oklch(0.78 0.11 80);
-	--nb-warning-muted: oklch(0.19 0.03 70);
+	--nb-warning: #e4ac59;
+	--nb-warning-foreground: #e4ac59;
+	--nb-warning-muted: oklch(0.21 0.03 75);
 
- 	--nb-danger: oklch(0.72 0.14 25);
- 	--nb-danger-foreground: oklch(0.72 0.14 25);
- 	--nb-danger-muted: oklch(0.17 0.03 25);
+ 	--nb-danger: #fb9890;
+ 	--nb-danger-foreground: #fb9890;
+ 	--nb-danger-muted: oklch(0.21 0.03 25);
  
 	/* API method palette — dark lines; text and tint follow the status tokens. */
 	--nb-m-get-line: oklch(0.765 0.177 163.223 / 0.25);
@@ -225,7 +242,6 @@
 /* ---- Minimal overrides the plugin doesn't cover ---- */
 html {
 	font-family: var(--nb-font-sans);
-	font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 body {
@@ -258,6 +274,11 @@ body {
 	:focus-visible {
 		outline: 2px solid var(--nb-ring);
 		outline-offset: 2px;
+	}
+	/* Skip-link and navigation targets get focus programmatically. A ring
+	   around the whole content column would only show up as stray lines. */
+	[tabindex="-1"]:focus-visible {
+		outline: none;
 	}
 }
 
@@ -306,7 +327,7 @@ pre.astro-code {
 	overflow-x: auto;
 	font-family: var(--nb-font-mono);
 	font-size: 0.875rem;
-	line-height: 1.625;
+	line-height: 1.7;
 }
 pre.astro-code > code {
 	background: transparent;

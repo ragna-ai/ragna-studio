@@ -1,9 +1,9 @@
 /* Docs markdown styling scoped to docs content containers only. */
 
 .docs-content {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.75;
-  color: var(--nb-foreground);
+  color: var(--nb-prose-foreground);
   /* Break a long unbroken token (URL, hash, no-space string) so it wraps within
      the content column instead of leaking past the page width. Inherited, so it
      covers headings, paragraphs, list items, and inline code; `pre` code blocks
@@ -65,6 +65,7 @@
 /* Markdown heading typography is token-driven from globals.css. */
 .docs-content :where(h1:not([class])) {
   font-size: var(--nb-h1-size);
+  line-height: var(--nb-h1-leading);
   font-weight: var(--nb-h1-weight);
   letter-spacing: var(--nb-h1-tracking);
   margin-top: 0;
@@ -72,6 +73,7 @@
 
 .docs-content :where(h2:not([class])) {
   font-size: var(--nb-h2-size);
+  line-height: var(--nb-h2-leading);
   font-weight: var(--nb-h2-weight);
   letter-spacing: var(--nb-h2-tracking);
   margin-top: 2.5rem;
@@ -79,16 +81,20 @@
 
 .docs-content :where(h3:not([class])) {
   font-size: var(--nb-h3-size);
+  line-height: var(--nb-h3-leading);
   font-weight: var(--nb-h3-weight);
   letter-spacing: var(--nb-h3-tracking);
   margin-top: 2rem;
 }
 
 .docs-content :where(h4:not([class]), h5:not([class]), h6:not([class])) {
+  font-size: var(--nb-h4-size);
+  line-height: var(--nb-h4-leading);
   font-weight: var(--nb-h4-weight);
 }
 
 .docs-content :where(h1:not([class]), h2:not([class]), h3:not([class]), h4:not([class])) {
+  color: var(--nb-foreground);
   scroll-margin-top: 5rem;
 }
 
@@ -142,7 +148,7 @@
   border: 1px solid var(--nb-border);
   border-radius: 0.375rem;
   padding: 0.125rem 0.375rem;
-  font-size: 0.8125em;
+  font-size: 0.875em;
   font-weight: 450;
 }
 
@@ -186,6 +192,9 @@
   border-radius: 0.75rem;
   border: 1px solid var(--nb-border);
   table-layout: auto;
+  /* Tables are reference data, not reading text: the `small` text style. */
+  font-size: 0.875rem;
+  line-height: 1.43;
 }
 
 /* Wide tables scroll within this box at all widths instead of overflowing the
@@ -209,7 +218,6 @@
 .docs-content :where(th:not([class])) {
   background: var(--nb-muted);
   font-weight: 600;
-  font-size: 0.8125rem;
   white-space: nowrap;
 }
 
@@ -235,9 +243,9 @@
 }
 
 .docs-content :where(a:not([class])) {
-  color: var(--nb-foreground);
+  color: var(--nb-link);
   text-decoration-line: underline;
-  text-decoration-color: var(--nb-border-strong);
+  text-decoration-color: color-mix(in oklch, var(--nb-link) 40%, transparent);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   font-weight: 500;
@@ -245,7 +253,7 @@
 }
 
 .docs-content :where(a:not([class]):hover) {
-  text-decoration-color: var(--nb-foreground);
+  text-decoration-color: var(--nb-link);
 }
 
 /* ---- Long-tail prose vocabulary ----
