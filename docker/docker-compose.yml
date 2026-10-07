@@ -6,7 +6,7 @@ volumes:
 
 services:
   migrate:
-    image: ghcr.io/ragna-ai/ragna-studio-migrate:latest
+    image: ghcr.io/ragna-ai/ragna-studio-migrate:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_migrate
     restart: "no"
     env_file:
@@ -19,7 +19,7 @@ services:
       - postgres
 
   seed:
-    image: ghcr.io/ragna-ai/ragna-studio-migrate:latest
+    image: ghcr.io/ragna-ai/ragna-studio-migrate:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_seed
     restart: "no"
     command: ["node", "dist/seed/index.mjs"]
@@ -34,7 +34,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    image: ghcr.io/ragna-ai/ragna-studio-frontend:latest
+    image: ghcr.io/ragna-ai/ragna-studio-frontend:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_frontend
     restart: always
     mem_limit: 512m
@@ -50,7 +50,7 @@ services:
       - backend
 
   worker:
-    image: ghcr.io/ragna-ai/ragna-studio-worker:latest
+    image: ghcr.io/ragna-ai/ragna-studio-worker:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_worker
     restart: always
     mem_limit: 2048m
@@ -70,7 +70,7 @@ services:
         condition: service_completed_successfully
 
   backend:
-    image: ghcr.io/ragna-ai/ragna-studio-backend:latest
+    image: ghcr.io/ragna-ai/ragna-studio-backend:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_backend
     restart: always
     mem_limit: 1024m
@@ -92,7 +92,7 @@ services:
         condition: service_completed_successfully
 
   webbrowser:
-    image: ghcr.io/ragna-ai/ragna-studio-webbrowser:latest
+    image: ghcr.io/ragna-ai/ragna-studio-webbrowser:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_webbrowser
     restart: always
     mem_limit: 1536m
