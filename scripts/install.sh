@@ -5,7 +5,7 @@
 #   curl -fsSL https://get.ragna.io | sh -s -- --upgrade
 #
 # Settings (environment variables):
-#   RAGNA_DIR  install folder, default: $HOME/ragna-studio
+#   RAGNA_DIR  install folder, default: ./ragna-studio in the current folder
 #
 # The first run pins the latest release as RAGNA_VERSION in .env. Compose files and images
 # both come from that release. Re-runs stay on it; --upgrade moves to the newest release.
@@ -56,6 +56,15 @@ parse_args() {
         ;;
     esac
   done
+}
+
+# A fresh .env next to existing volumes would hold new DB and Redis passwords that the old data doesn't accept.
+ensure_install_dir_matches() {
+  [ -f "$INSTALL_DIR/.env" ] && return
+  [ "$UPGRADE" = 1 ] && fail "No install found in $INSTALL_DIR. Run from the folder that contains ragna-studio, or set RAGNA_DIR."
+  if docker volume inspect ragna_studio_postgres_data >/dev/null 2>&1; then
+    fail "RAGNA Studio is already installed elsewhere on this machine. Run from the folder that contains ragna-studio, or set RAGNA_DIR."
+  fi
 }
 
 # Image tags drop the leading "v" of the git tag (v0.5.0 -> 0.5.0).
@@ -214,9 +223,10 @@ start_stack() {
 
 main() {
   parse_args "$@"
-  INSTALL_DIR=${RAGNA_DIR:-"$HOME/ragna-studio"}
+  INSTALL_DIR=${RAGNA_DIR:-"$PWD/ragna-studio"}
 
   check_requirements
+  ensure_install_dir_matches
   version=$(resolve_version)
   info "Installing RAGNA Studio $version into $INSTALL_DIR"
   download_files "$version"

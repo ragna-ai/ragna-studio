@@ -23,7 +23,7 @@ curl -fsSL https://get.ragna.io | sh
 
 <Steps>
   <Step title="Download">
-    The script downloads the compose files of the latest release into `~/ragna-studio`. Set `RAGNA_DIR` to use another folder.
+    The script creates a `ragna-studio` folder in your current folder and downloads the compose files of the latest release into it. Set `RAGNA_DIR` to use another folder.
   </Step>
   <Step title="Configure">
     It creates `.env` with generated secrets and pins the release as `RAGNA_VERSION`. Then it asks for your OAuth app, storage and AI keys.
@@ -36,7 +36,7 @@ curl -fsSL https://get.ragna.io | sh
   </Step>
 </Steps>
 
-If a setting is missing, the script lists it and stops. Fill it in `~/ragna-studio/.env` and run the script again. The [environment variables](/reference/environment-variables) reference lists every setting.
+If a setting is missing, the script lists it and stops. Fill it in `ragna-studio/.env` and run the script again from the same folder. The [environment variables](/reference/environment-variables) reference lists every setting.
 
 ### Inspect first
 
@@ -49,6 +49,8 @@ sh install.sh
 ```
 
 ## Upgrade
+
+Run it from the folder that contains `ragna-studio`:
 
 ```bash
 curl -fsSL https://get.ragna.io | sh -s -- --upgrade
