@@ -299,11 +299,11 @@ importers:
       '@cloudflare/nimbus-docs':
         specifier: ^0.16.0
         version: 0.16.0(@types/node@26.4.1)(astro@7.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@types/node@26.4.1)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(jiti@2.7.0)(terser@5.49.2)(yaml@2.9.0))(esbuild@0.28.2)(jiti@2.7.0)(supports-color@10.2.2)(terser@5.49.2)
-      '@fontsource-variable/inter':
-        specifier: ^5.2.8
+      '@fontsource-variable/geist':
+        specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource-variable/jetbrains-mono':
-        specifier: ^5.2.8
+      '@fontsource-variable/geist-mono':
+        specifier: ^5.3.0
         version: 5.3.0
       '@iconify-json/ph':
         specifier: ^1.2.0
@@ -2680,11 +2680,11 @@ packages:
   '@floating-ui/vue@1.1.11':
     resolution: {integrity: sha512-HzHKCNVxnGS35r9fCHBc3+uCnjw9IWIlCPL683cGgM9Kgj2BiAl8x1mS7vtvP6F9S/e/q4O6MApwSHj8hNLGfw==}
 
-  '@fontsource-variable/inter@5.3.0':
-    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+  '@fontsource-variable/geist-mono@5.3.0':
+    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
 
-  '@fontsource-variable/jetbrains-mono@5.3.0':
-    resolution: {integrity: sha512-F32xpS2NsGYoQi2ADSkKTgpJj7ozajsGgDJ8woTnqjmIB+dxDIqImjl4pXZVEExu8UFZ2ndhmX18EBS/hdz3Lw==}
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
 
   '@hono/bun@1.0.0':
     resolution: {integrity: sha512-akUaWoKyW2wv+WKZZQCeRqZEN3NovPF8z/60dEBNJJ2ini9HBNo/0jLZLFyJW8xOiipncYyzGKgOuM+NZsaOzA==}
@@ -12080,7 +12080,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.1
       '@emnapi/runtime': 1.11.1
-      '@napi-rs/wasm-runtime': 1.2.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      '@napi-rs/wasm-runtime': 1.2.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
     optional: true
 
   '@bruits/satteri-win32-arm64-msvc@0.10.5':
@@ -12759,9 +12759,9 @@ snapshots:
       - '@vue/composition-api'
       - vue
 
-  '@fontsource-variable/inter@5.3.0': {}
+  '@fontsource-variable/geist-mono@5.3.0': {}
 
-  '@fontsource-variable/jetbrains-mono@5.3.0': {}
+  '@fontsource-variable/geist@5.3.0': {}
 
   '@hono/bun@1.0.0(hono@4.13.12)':
     dependencies:
@@ -13672,13 +13672,6 @@ snapshots:
     optional: true
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
-    optional: true
-
-  '@napi-rs/wasm-runtime@1.2.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
-    dependencies:
-      '@emnapi/core': 1.11.1
-      '@emnapi/runtime': 1.11.1
-      '@tybys/wasm-util': 0.10.3
     optional: true
 
   '@napi-rs/wasm-runtime@1.2.2(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':

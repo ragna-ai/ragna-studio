@@ -12,26 +12,27 @@
 import type { OGImageOptions } from "astro-og-canvas";
 
 export const ogCardConfig = {
+  // RAGNA brand: navy-950 to navy-900, teal-500 accent edge.
   bgGradient: [
-    [11, 11, 12],
-    [26, 26, 28],
+    [8, 21, 35],
+    [12, 27, 46],
   ],
-  border: { color: [39, 39, 42], width: 2, side: "inline-start" },
+  border: { color: [25, 184, 166], width: 4, side: "inline-start" },
   padding: 96,
-  fonts: ["./public/fonts/Inter-Bold.ttf"],
+  fonts: ["./public/fonts/Geist-SemiBold.ttf"],
   font: {
     title: {
-      color: [250, 250, 250],
+      color: [244, 247, 251],
       size: 64,
-      weight: "Bold",
-      families: ["Inter"],
+      weight: "SemiBold",
+      families: ["Geist"],
       lineHeight: 1.1,
     },
     description: {
-      color: [161, 161, 170],
+      color: [159, 184, 212],
       size: 32,
-      weight: "Bold",
-      families: ["Inter"],
+      weight: "SemiBold",
+      families: ["Geist"],
       lineHeight: 1.3,
     },
   },
