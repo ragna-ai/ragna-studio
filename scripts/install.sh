@@ -31,7 +31,7 @@ require_command() {
 check_requirements() {
   require_command curl
   require_command openssl
-  require_command docker
+  command -v docker >/dev/null 2>&1 || fail "Docker is required but not installed. See https://docs.docker.com/engine/install/"
   docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 is required (docker compose)."
   docker info >/dev/null 2>&1 || fail "Docker is not running."
 }
@@ -59,12 +59,25 @@ parse_args() {
 }
 
 # A fresh .env next to existing volumes would hold new DB and Redis passwords that the old data doesn't accept.
+is_installer_dir() {
+  [ -f "$INSTALL_DIR/.env" ] && grep -q '^RAGNA_VERSION=' "$INSTALL_DIR/.env"
+}
+
+existing_install_dir() {
+  container=$(docker ps -aq --filter label=com.docker.compose.project=ragna_studio | head -n 1)
+  [ -n "$container" ] || return 0
+  docker inspect "$container" --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+}
+
 ensure_install_dir_matches() {
-  [ -f "$INSTALL_DIR/.env" ] && return
+  is_installer_dir && return
+  [ -f "$INSTALL_DIR/.env" ] && fail "$INSTALL_DIR/.env was not created by this installer. Use another folder or set RAGNA_DIR."
   [ "$UPGRADE" = 1 ] && fail "No install found in $INSTALL_DIR. Run from the folder that contains ragna-studio, or set RAGNA_DIR."
-  if docker volume inspect ragna_studio_postgres_data >/dev/null 2>&1; then
-    fail "RAGNA Studio is already installed elsewhere on this machine. Run from the folder that contains ragna-studio, or set RAGNA_DIR."
-  fi
+  docker volume inspect ragna_studio_postgres_data >/dev/null 2>&1 || return 0
+
+  existing=$(existing_install_dir)
+  [ -n "$existing" ] && fail "RAGNA Studio is already set up in $existing. Use that install, or set RAGNA_DIR to it."
+  fail "RAGNA Studio data already exists on this machine (Docker volume ragna_studio_postgres_data). Run from the folder that contains ragna-studio, or set RAGNA_DIR."
 }
 
 # Image tags drop the leading "v" of the git tag (v0.5.0 -> 0.5.0).
@@ -76,13 +89,11 @@ resolve_latest_version() {
 }
 
 resolve_version() {
-  if [ "$UPGRADE" = 1 ] || [ ! -f "$INSTALL_DIR/.env" ]; then
+  if [ "$UPGRADE" = 1 ] || ! is_installer_dir; then
     resolve_latest_version
     return
   fi
-  pinned=$(read_env RAGNA_VERSION)
-  [ -n "$pinned" ] || fail "RAGNA_VERSION is missing in $INSTALL_DIR/.env. Run with --upgrade to pin the latest release."
-  echo "$pinned"
+  read_env RAGNA_VERSION
 }
 
 download_files() {
