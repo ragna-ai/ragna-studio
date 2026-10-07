@@ -1,27 +1,44 @@
 ---
 title: Installation
-description: Get the code, fill in .env and start the stack with Docker Compose.
+description: Install with one command, set your domains and start the stack with Docker Compose.
 sidebar:
   order: 1
 ---
 
-## Get the code
+## Install
+
+Run the installer on the server, in the folder where RAGNA Studio should live:
 
 ```bash
-git clone https://github.com/ragna-ai/ragna-studio.git
-cd ragna-studio
-cp .env.example .env
+curl -fsSL https://get.ragna.io | sh
 ```
 
-All settings go into `.env`. Before the first start, set your domains, secrets, storage, one OAuth provider and one AI key. See [Configuration](/self-hosting/configuration) and [Storage](/self-hosting/storage).
+It creates a `ragna-studio` folder with:
 
-## Start
+- the compose files and `postgres-init.sql` of the latest release,
+- `.env` with generated secrets and the release pinned as `RAGNA_VERSION`.
+
+Then it asks for your domains, OAuth app, storage and AI keys, and starts the stack. To read the script first, see [Inspect first](/getting-started/quickstart#inspect-first).
+
+## Domains
+
+Enter the public URLs your reverse proxy will serve, for example `https://app.example.com` and `https://api.example.com`. The installer sets `APP_URL`, `API_BASE_URL`, their public counterparts, `TRUSTED_ORIGINS` and `COOKIE_DOMAIN`, see [Configuration](/self-hosting/configuration#domains). The OAuth redirect URI it prints uses your API URL.
+
+If app and API don't share a parent domain, the installer can't derive `COOKIE_DOMAIN` and asks you to set it yourself.
+
+## Change settings later
+
+Edit `ragna-studio/.env`, then run the installer again from the same folder:
 
 ```bash
-make up
+curl -fsSL https://get.ragna.io | sh
 ```
 
-`make up` runs the base compose file plus `docker/docker-compose.selfhost.yml`. This override sets the in-network hosts for Postgres, Redis and the webbrowser. It overrides the `localhost` values from `.env.example`.
+It keeps your `.env` and restarts every service whose settings changed.
+
+## What starts
+
+The installer runs the base compose file plus `docker/docker-compose.selfhost.yml`. This override sets the in-network hosts for Postgres, Redis and the webbrowser. It overrides the `localhost` values from `.env`.
 
 The stack starts in order:
 
@@ -47,5 +64,7 @@ The frontend and backend listen on `127.0.0.1` only (ports 3000 and 3010). Put a
 ## Stop
 
 ```bash
-make down
+docker compose -p ragna_studio down
 ```
+
+Your data stays in the Docker volumes.
