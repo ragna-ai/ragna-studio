@@ -13,8 +13,7 @@
 set -eu
 
 REPO="ragna-ai/ragna-studio"
-API_URL="http://localhost:3010"
-APP_URL="http://localhost:3000"
+LOCAL_APP_URL="http://localhost:3000"
 DOWNLOAD_FILES="docker/docker-compose.yml docker/docker-compose.selfhost.yml docker/postgres-init.sql .env.example"
 
 info() { printf '\033[1m%s\033[0m\n' "$*"; }
@@ -117,6 +116,7 @@ set_env() {
       index($0, ENVIRON["KEY"] "=") == 1 { print ENVIRON["KEY"] "='\''" ENVIRON["VALUE"] "'\''"; next }
       { print }
     ' "$env_file" >"$env_file.tmp"
+    chmod 600 "$env_file.tmp"
     mv "$env_file.tmp" "$env_file"
   else
     printf "%s='%s'\n" "$key" "$value" >>"$env_file"
@@ -161,6 +161,56 @@ create_env_file() {
   set_env REDIS_PASSWORD "$(openssl rand -hex 24)"
 }
 
+url_host() {
+  echo "$1" | sed 's#^[a-z]*://##; s#[:/].*##'
+}
+
+normalize_url() {
+  url=${1%/}
+  case $url in http://* | https://*) echo "$url" ;; *) fail "Not a URL: $1" ;; esac
+}
+
+# The cookie domain is the app host or its parent, whichever the API host sits under:
+# app.example.com + api.example.com -> .example.com, example.com + api.example.com -> .example.com
+shared_cookie_domain() {
+  app_host=$(url_host "$1")
+  api_host=$(url_host "$2")
+  for candidate in "$app_host" "${app_host#*.}"; do
+    case $candidate in *.*) ;; *) continue ;; esac
+    case $api_host in *."$candidate")
+      echo ".$candidate"
+      return
+      ;;
+    esac
+  done
+}
+
+ask_domains() {
+  info "Domains"
+  echo "Press Enter to run on localhost. On a server, enter the public URLs of your reverse proxy."
+  app_url=$(prompt "App URL (default: $LOCAL_APP_URL)")
+  if [ -z "$app_url" ]; then
+    echo
+    return
+  fi
+  app_url=$(normalize_url "$app_url")
+  api_url=$(normalize_url "$(prompt "API URL, e.g. https://api.example.com")")
+
+  set_env APP_URL "$app_url"
+  set_env TRUSTED_ORIGINS "$app_url"
+  set_env NUXT_PUBLIC_I18N_BASE_URL "$app_url"
+  set_env API_BASE_URL "$api_url"
+  set_env NUXT_PUBLIC_API_BASE_URL "$api_url"
+
+  cookie_domain=$(shared_cookie_domain "$app_url" "$api_url")
+  if [ -n "$cookie_domain" ]; then
+    set_env COOKIE_DOMAIN "$cookie_domain"
+  else
+    warn "App and API don't share a parent domain. Set COOKIE_DOMAIN in .env yourself, see https://docs.ragna.io/self-hosting/configuration#domains"
+  fi
+  echo
+}
+
 ask_oauth() {
   info "Sign-in (OAuth)"
   echo "Create an OAuth app at Google or Microsoft first. See https://docs.ragna.io/self-hosting/configuration#oauth"
@@ -177,7 +227,7 @@ ask_oauth() {
       ;;
     *) fail "Unknown provider: $provider" ;;
   esac
-  echo "Redirect URI for your OAuth app: $API_URL/auth/callback/$provider"
+  echo "Redirect URI for your OAuth app: $(read_env API_BASE_URL)/auth/callback/$provider"
   echo
 }
 
@@ -248,6 +298,7 @@ main() {
     if has_tty; then
       trap 'stty echo </dev/tty 2>/dev/null' EXIT INT TERM
       echo
+      ask_domains
       ask_oauth
       ask_storage
       ask_ai_keys
@@ -266,7 +317,9 @@ main() {
 
   start_stack
   echo
-  info "RAGNA Studio is running at $APP_URL"
+  app_url=$(read_env APP_URL)
+  info "RAGNA Studio is running at $app_url"
+  [ "$app_url" = "$LOCAL_APP_URL" ] || echo "Until your reverse proxy is set up: $LOCAL_APP_URL on this machine"
   echo "Settings: $INSTALL_DIR/.env"
   echo "Upgrade:  curl -fsSL https://get.ragna.io | sh -s -- --upgrade"
   echo "Logs:     docker compose -p ragna_studio logs -f"

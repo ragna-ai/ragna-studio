@@ -30,18 +30,14 @@ COOKIE_DOMAIN=".example.com"
 
 ## Secrets
 
-Generate these values yourself:
-
-```bash
-openssl rand -base64 32
-```
+The installer generates these on the first run:
 
 - `BETTER_AUTH_SECRET`
 - `ENCRYPTION_PASSWORD` (at least 16 characters, enforced at startup)
 - `DB_PASSWORD`
 - `REDIS_PASSWORD`
 
-Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
+To set one by hand, use `openssl rand -base64 32`. Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
 
 <Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
   Never change `BETTER_AUTH_SECRET` after the first start. Stored OAuth tokens become unreadable. That affects connected Gmail, Outlook and LinkedIn accounts. Every session also ends.

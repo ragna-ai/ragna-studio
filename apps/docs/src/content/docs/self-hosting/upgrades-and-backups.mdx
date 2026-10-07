@@ -1,18 +1,19 @@
 ---
 title: Upgrades and backups
-description: Pull new images and keep your data safe.
+description: Upgrade to a new release and keep your data safe.
 sidebar:
   order: 6
 ---
 
 ## Upgrades
 
-Docker images use the tag in `RAGNA_VERSION`, or `:latest` if it isn't set. To upgrade a pinned install, set `RAGNA_VERSION` to the new release first.
+Run the installer with `--upgrade`, from the folder that contains `ragna-studio`:
 
 ```bash
-docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.selfhost.yml pull
-make up
+curl -fsSL https://get.ragna.io | sh -s -- --upgrade
 ```
+
+It moves `RAGNA_VERSION` in `.env` to the latest release, downloads that release's compose files, pulls the images and restarts. The rest of `.env` stays as it is.
 
 Migrations run automatically and only go forward.
 
