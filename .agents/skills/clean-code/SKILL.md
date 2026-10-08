@@ -19,6 +19,7 @@ Write code the next person can read and change without asking you. Assume that p
 10. **Leave it cleaner.** Remove dead code, unused imports, and stray console logs you touch.
 11. **Prefer early returns.** Guard invalid cases up front and return. Avoid deep `if/else` nesting or `state ? :` chains; keep the happy path at the left margin.
 12. **Comment only if otherwise unclear.** If the code is clear, no comment is needed. Barely use `//` comments; prefer a docstring for functions and types. If you must comment, explain _why_, not _what_. Prefer to not comment at all and feel free to cleanup (delete) no longer needed comments.
+13. **No spec references in code.** Never cite `specs/...` files, PRD section names or decision numbers in comments, test names or strings. Write the reason itself; specs are snapshots that drift, and the commit or PR is where code links to its spec. CI fails on `specs/` in code files (see the allowlist in `.github/workflows/ci.yml`).
 
 ## TypeScript
 
