@@ -1,12 +1,12 @@
 // packages/media/src/services/watermark.service.ts
 //
-// Visible AI-disclosure badge (docs/ai-labeling/prd.md part 2, Art. 50(4)):
+// Visible AI-disclosure badge (specs/ai-labeling/prd.md part 2, Art. 50(4)):
 // burns a small "AI generated" badge into an output's bottom-right corner.
 // Provider-independent, used by both imagen.service.ts and
 // videogen.service.ts (@repo/ai) after generation, before upload. Never sent
 // to a provider: this only touches what we store.
 //
-// Best-effort by design (docs/ai-labeling/prd.md "Failure semantics"): a
+// Best-effort by design (specs/ai-labeling/prd.md "Failure semantics"): a
 // failed watermark must never lose a paid generation, so this module throws
 // on failure rather than swallowing errors, and deliberately does not depend
 // on @repo/logger. The caller decides what "best-effort" means (log a
@@ -21,7 +21,7 @@ import sharp from 'sharp';
 import { buildWatermarkFfmpegArgs, probeVideoDimensions } from '../lib/watermark-ffmpeg.util';
 
 // System-installed ffmpeg, resolved via PATH: brew on dev machines, apt in
-// the Docker image (both put it on PATH, docs/ai-labeling/prd.md "ffmpeg
+// the Docker image (both put it on PATH, specs/ai-labeling/prd.md "ffmpeg
 // comes from the system, not npm"). No config knob: every environment this
 // runs in already has ffmpeg on PATH, so an override would have nothing to
 // point at.
@@ -173,7 +173,7 @@ function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
 /**
  * Burns the badge into a video's bottom-right corner. Runs in the videogen
  * path (worker process, every route: standard, draft, enhance) after
- * generation, before upload. Version-proof pipeline (docs/ai-labeling/prd.md
+ * generation, before upload. Version-proof pipeline (specs/ai-labeling/prd.md
  * "Processing"): probe the input's real dimensions first (there is no
  * ffprobe), rasterize the badge in Node at the exact pixel size the overlay
  * needs, then a single `overlay` pass with precomputed integer offsets. No

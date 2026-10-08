@@ -14,7 +14,7 @@ import {
   setReadMock,
 } from './support/mail-provider.mock';
 
-// Thread listing/detail (docs/email/prd.md, "API": "Threads/messages: list
+// Thread listing/detail (specs/email/prd.md, "API": "Threads/messages: list
 // from local index... thread detail (stored bodies, live fetch + persist
 // for gaps)"). Folder derivation, category/label filters, and pagination
 // all live in listEmailThreadsForUser/listEmailThreads (email.service.ts /
@@ -146,7 +146,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([matching.thread.id]);
   });
 
-  // docs/email/bugs.md #1: a category view with no folder must still hide
+  // specs/email/bugs.md #1: a category view with no folder must still hide
   // trash/spam, even though the trashed message still carries the matching
   // category (Gmail moves-to-trash without clearing classification).
   test('categoryId excludes a trashed thread even though it still matches the category', async () => {
@@ -198,7 +198,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([matching.thread.id]);
   });
 
-  // docs/email/bugs.md #1: no folder, no category, no label - the plain
+  // specs/email/bugs.md #1: no folder, no category, no label - the plain
   // "list everything" view must not surface trash either.
   test('no filter at all still excludes trash/spam', async () => {
     const { cookieHeader, accountId } = await connectAccount();
@@ -211,7 +211,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([inbox.thread.id]);
   });
 
-  // docs/email/bugs.md #1: "trashed" is the one view that must still show
+  // specs/email/bugs.md #1: "trashed" is the one view that must still show
   // trash - the fix must not exclude it there too.
   test('trashed folder still shows trash even with a category filter applied', async () => {
     const { cookieHeader, accountId } = await connectAccount();
@@ -332,7 +332,7 @@ describe('GET /email/thread/:threadId', () => {
   });
 });
 
-// GET must stay a pure, idempotent read (docs/email/prd.md). Marking a
+// GET must stay a pure, idempotent read (specs/email/prd.md). Marking a
 // thread read on open was tried and reverted: it made an incidental refetch
 // silently undo an explicit "mark unread" from the client. Marking read is
 // the client's job, through the existing POST /email/thread/:threadId/read

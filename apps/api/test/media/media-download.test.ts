@@ -10,7 +10,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { buildAttachmentContentDisposition } from '../../src/utils/content-disposition';
 
-// GET /workspace/:workspaceId/media/:mediaId/download (docs/media-library/
+// GET /workspace/:workspaceId/media/:mediaId/download (specs/media-library/
 // prd.md, decision 1: "owner access check ... in v1 membership of the
 // owning workspace"). The interesting case here is media.service.ts's own
 // ownerWorkspaceId check (getDownloadableMedia), which is distinct from

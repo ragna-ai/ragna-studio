@@ -56,7 +56,7 @@ function isAllowedMediaMimeType(mimeType: string): mimeType is AllowedMediaMimeT
   return mimeType in MEDIA_EXTENSION_BY_MIME_TYPE;
 }
 
-// storageKey lives on the joined media row now (docs/media-library/
+// storageKey lives on the joined media row now (specs/media-library/
 // migration-prd.md), not directly on social_post_media; added back onto the
 // flat response here since the frontend DTO still expects it alongside
 // mediaId (external DTOs unchanged). Field set matches the frontend's
@@ -272,7 +272,7 @@ export async function updateSocialPostForUser({
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId
  * Deletes the row (its social_post_media links cascade with it), then
- * refcount-deletes each attached media (docs/media-library/migration-prd.md
+ * refcount-deletes each attached media (specs/media-library/migration-prd.md
  * decision 5): an image may still be shared by another post or the
  * gen_images row it came from, so only a zero reference count actually
  * removes the R2 object.
@@ -440,7 +440,7 @@ export async function updateSocialPostMediaAltTextForUser({
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId/media/:mediaId
  * Removes the link, then refcount-deletes the underlying media
- * (docs/media-library/migration-prd.md decision 5): unlink first, so the
+ * (specs/media-library/migration-prd.md decision 5): unlink first, so the
  * count no longer includes the link being removed.
  */
 export async function removeSocialPostMedia({

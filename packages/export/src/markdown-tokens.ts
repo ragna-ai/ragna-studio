@@ -20,7 +20,7 @@ export function asMarkedToken(token: Token): MarkedToken {
 
 /**
  * Parses markdown into marked's token tree exactly once
- * (docs/datasets/export-and-row-reorder.md "Document export" decision 2):
+ * (specs/datasets/export-and-row-reorder.md "Document export" decision 2):
  * the text, PDF, and docx writers all walk this same tree, so there is
  * never a second parser.
  */

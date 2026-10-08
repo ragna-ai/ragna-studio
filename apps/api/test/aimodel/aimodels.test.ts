@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// GET /aimodel (docs/testing/strategy.md, priority 3). Not workspace-scoped,
+// GET /aimodel (specs/testing/strategy.md, priority 3). Not workspace-scoped,
 // just authMiddleware. Auth/authorization are covered exhaustively in
 // test/auth/; this file only checks the aimodel feature's own behavior:
 // listing models and deriving the deduped/capitalized providers list.

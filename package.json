@@ -15,7 +15,7 @@
     "pkg:update": "pnpm update -i -r -L",
     "db:push": "pnpm --filter @repo/database db:push",
     "db:backup": "pnpm --filter @repo/database db:backup",
-    "docs:index": "node scripts/docs-index.mjs",
+    "specs:index": "node scripts/specs-index.mjs",
     "ci": "pnpm clean --lockfile && pnpm install"
   },
   "devDependencies": {

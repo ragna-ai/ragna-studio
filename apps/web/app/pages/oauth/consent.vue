@@ -39,7 +39,7 @@ const { data: clientInfo } = useGetOAuthClientPublic(clientId);
 const clientHostname = computed(() =>
   clientId.value ? clientHost(clientId.value) : null,
 );
-// Host always shown; name is best-effort (docs/mcp/prd.md section 2, phishing resistance).
+// Host always shown; name is best-effort (specs/mcp/prd.md section 2, phishing resistance).
 const clientDisplayLabel = computed(() => {
   const name = clientInfo.value?.client_name;
   return name ? `${name} (${clientHostname.value})` : clientHostname.value;

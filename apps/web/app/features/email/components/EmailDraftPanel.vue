@@ -9,7 +9,7 @@ import type { EmailDraft, SendEmailResponse } from '~/features/email/types';
 
 // The one draft surface, used by all five entry points (new, reply,
 // reply-all, forward, AI) and rendered inline wherever a thread's active
-// draft appears (docs/email/drafts-change-request.md, section 2). Recipients,
+// draft appears (specs/email/drafts-change-request.md, section 2). Recipients,
 // subject and body come straight off `draft` - seeding happens server-side
 // at creation, this panel only renders what it's given and hosts the
 // discard action; EmailComposer.vue owns the autosave/send mutations
@@ -54,7 +54,7 @@ const kindLabel = computed(() => {
 });
 // Forward and new mail start with empty recipients, so focus goes there;
 // reply already has a recipient and starts the cursor in the body instead
-// (docs/email/drafts-change-request.md, section 2, spells out forward/reply -
+// (specs/email/drafts-change-request.md, section 2, spells out forward/reply -
 // extending the same rule to `new` is this panel's own judgement call).
 const bodyAutofocus = computed<'start' | 'end' | undefined>(() => (props.draft.kind === 'reply' ? 'start' : undefined));
 const recipientsAutofocus = computed(() => props.draft.kind !== 'reply');

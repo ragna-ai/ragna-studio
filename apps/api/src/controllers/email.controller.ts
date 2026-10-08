@@ -453,7 +453,7 @@ export const emailController = new Hono()
   })
   /**
    * [POST] /email/thread/bulk/trash
-   * Mass-trash (docs/email/mass-deletion-change-request.md): trashes up to
+   * Mass-trash (specs/email/mass-deletion-change-request.md): trashes up to
    * 50 threads in one request, tolerant of individual failures. Registered
    * before /thread/:threadId's dynamic siblings so "bulk" is never matched
    * as a thread id (the literal "trash" suffix would otherwise collide with

@@ -48,7 +48,7 @@ const isUploading = computed(() =>
 );
 // Text or a finished upload is enough to send; an in-flight upload blocks
 // it, so the outgoing message never references an attachment that doesn't
-// exist yet (docs/media-library/prd.md, decision 7).
+// exist yet (specs/media-library/prd.md, decision 7).
 const canSubmit = computed(
   () =>
     (text.value.trim().length > 0 || hasFinishedAttachment.value) &&

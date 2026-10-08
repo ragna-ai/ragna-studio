@@ -148,7 +148,7 @@ const trashLabel = computed(() =>
       </Popover>
     </template>
 
-    <!-- Mass-trash controls (docs/email/mass-deletion-change-request.md):
+    <!-- Mass-trash controls (specs/email/mass-deletion-change-request.md):
          always rendered so the bar's width doesn't shift as selection state
          changes - disabled/greyed rather than hidden, same as every other
          disabled state in this bar. -->

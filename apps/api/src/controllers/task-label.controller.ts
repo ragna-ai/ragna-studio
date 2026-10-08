@@ -17,7 +17,7 @@ export const taskLabelController = new Hono()
   /**
    * [GET] /workspace/:workspaceId/task-label
    * Lists every label in the workspace. Not paginated: a workspace's label
-   * set is small and naturally bounded (docs/api-standards/prd.md,
+   * set is small and naturally bounded (specs/api-standards/prd.md,
    * "Pagination").
    */
   .get('/', async (c) => {

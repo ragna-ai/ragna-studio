@@ -12,7 +12,7 @@ export const creditUsageFeatures = ['chat', 'workflow', 'team'] as const;
 export type CreditUsageFeature = (typeof creditUsageFeatures)[number];
 
 // CREDIT ACCOUNT
-// The balance holder (docs/credits/prd.md, "Balance holder"). One per user
+// The balance holder (specs/credits/prd.md, "Balance holder"). One per user
 // in v1: `userId` is unique, so this is a 1:1 extension of `users` today.
 // When organisations land, add a nullable `organisationId` FK alongside
 // `userId` (plus a check that exactly one is set) and repoint resolution;
@@ -27,7 +27,7 @@ export const creditAccount = pgTable('credit_accounts', {
   // Denormalised cache of sum(credit_ledger.amount_micro_credits). The
   // ledger is the source of truth; this column exists so the spend gate is
   // one indexed read instead of an aggregate over an ever-growing table. May
-  // go negative (docs/credits/prd.md, "Overdraft").
+  // go negative (specs/credits/prd.md, "Overdraft").
   balanceMicroCredits: bigint('balance_micro_credits', { mode: 'bigint' }).notNull().default(0n),
   ...timestamps,
 });
@@ -36,12 +36,12 @@ export type CreditAccount = typeof creditAccount.$inferSelect;
 export type NewCreditAccount = typeof creditAccount.$inferInsert;
 
 // CREDIT USAGE EVENT
-// The audit trail: one row per charged LLM run (docs/credits/prd.md,
+// The audit trail: one row per charged LLM run (specs/credits/prd.md,
 // "Schema"). `provider` / `model` / `modelDisplayName` are denormalised so a
 // historical charge renders the same after the model row is renamed or
 // deleted. This is a correctness rule, not an optimisation:
 // `listCreditUsageEvents` deliberately never joins `ai_models` for display
-// (docs/credits/prd.md, "Data fetching").
+// (specs/credits/prd.md, "Data fetching").
 export const creditUsageEvent = pgTable(
   'credit_usage_events',
   {
@@ -93,7 +93,7 @@ export type CreditUsageEvent = typeof creditUsageEvent.$inferSelect;
 export type NewCreditUsageEvent = typeof creditUsageEvent.$inferInsert;
 
 // CREDIT LEDGER
-// Append-only: rows are never updated or deleted (docs/credits/prd.md,
+// Append-only: rows are never updated or deleted (specs/credits/prd.md,
 // "Schema"). `balanceAfterMicroCredits` is stored rather than derived so the
 // history reads without a window function and a corrupted balance is easy
 // to spot.

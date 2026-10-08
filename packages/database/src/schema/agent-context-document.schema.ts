@@ -6,7 +6,7 @@ export type AgentContextDocumentStatus = 'pending' | 'ready' | 'failed';
 
 // AGENT CONTEXT DOCUMENT
 // One row per uploaded document, hard-tied to a single agent (no pool, no
-// sharing, see docs/agent-context-documents.md). Replacing the file re-uses
+// sharing, see specs/agent-context-documents.md). Replacing the file re-uses
 // the same row: `storageKey` changes, `status` goes back to 'pending', and
 // the worker re-extracts under the same id.
 export const agentContextDocument = pgTable(

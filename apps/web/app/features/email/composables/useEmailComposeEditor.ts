@@ -38,7 +38,7 @@ export interface UseEmailComposeEditorOptions {
 
 /**
  * One Tiptap Editor instance for the compose/reply/draft-edit box
- * (docs/email/html-content-change-request.md: editor is HTML-native,
+ * (specs/email/html-content-change-request.md: editor is HTML-native,
  * `contentType: 'html'` below). Same command surface as
  * ~/features/document/composables/useDocumentEditor.ts and
  * ~/features/task/composables/useTaskDescriptionEditor.ts (mirrored, not

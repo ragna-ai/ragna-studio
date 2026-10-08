@@ -48,7 +48,7 @@ import {
 import { getAgentForWorkspace } from './agent.service';
 import { assertCanSpend } from './credit.service';
 
-// CHAT CRUD (docs/api-standards/prd.md, WP4)
+// CHAT CRUD (specs/api-standards/prd.md, WP4)
 //
 // Every function below is called after the workspace guard has already
 // verified the caller owns `:workspaceId`; access is scoped by workspaceId,
@@ -70,7 +70,7 @@ export interface ChatSummaryResponse {
       displayName: string;
     };
   };
-  // Branching provenance (docs/chat/branching.md): set when this chat was
+  // Branching provenance (specs/chat/branching.md): set when this chat was
   // created via "Branch from here", null for an ordinary chat.
   forkedFrom: { chatId: string; title: string } | null;
 }
@@ -164,7 +164,7 @@ export interface ChatSearchResponse {
 /**
  * [GET] /workspace/:workspaceId/chat/search
  * Substring search (pg_trgm) across a workspace's chats: matches by title or
- * by message content (docs/chat/search-prd.md). Results are one row per
+ * by message content (specs/chat/search-prd.md). Results are one row per
  * matching chat, most-recently-matching first; each row carries up to
  * `snippetsPerChat` highlighted message excerpts, most recent first.
  */
@@ -371,7 +371,7 @@ export async function createChatForWorkspace({
 /**
  * [POST] /workspace/:workspaceId/chat/:chatId/branch
  * Copies chatId's messages up to and including messageId into a brand new
- * chat (docs/chat/branching.md). The source chat is never modified.
+ * chat (specs/chat/branching.md). The source chat is never modified.
  */
 export async function branchChatForWorkspace({
   workspaceId,
@@ -430,7 +430,7 @@ export async function renameChatForWorkspace({
  * [DELETE] /workspace/:workspaceId/chat/:chatId
  * The chat_attachment rows cascade-delete with the chat row, so their
  * mediaIds must be captured before the delete to run the refcount check
- * afterwards (docs/media-library/prd.md, decision 2).
+ * afterwards (specs/media-library/prd.md, decision 2).
  */
 export async function deleteChatForWorkspace({
   workspaceId,
@@ -499,7 +499,7 @@ function mergeConsecutiveUserMessages(messages: UIMessage[]): UIMessage[] {
   return merged;
 }
 
-// CHAT ATTACHMENT MODEL RESOLUTION (docs/media-library/prd.md, decision 5)
+// CHAT ATTACHMENT MODEL RESOLUTION (specs/media-library/prd.md, decision 5)
 //
 // File parts carry URLs the client got back from the upload/download routes.
 // The persisted UIMessage rows always keep those original parts unchanged,
@@ -688,7 +688,7 @@ export async function runChatStream(
 
     // Refuse before any model call happens if the workspace owner is out of
     // credits, or if the chat's model has no chargeable pricing
-    // (docs/credits/prd.md, "The WS chat path" and "Pricing"). Throws
+    // (specs/credits/prd.md, "The WS chat path" and "Pricing"). Throws
     // PaymentRequiredException or InternalServerErrorException, which
     // ws.controller.ts already maps to an error frame. `null` means
     // CREDITS_ENABLED is off; settlement in streamText's onEnd below is
@@ -745,7 +745,7 @@ export async function runChatStream(
     // Persist the user message before streaming starts. `onEnd` skips
     // persistence on abort/error, and the next turn rebuilds history from the
     // DB alone, so saving it only on success would silently drop the message
-    // from the conversation (docs/chat/chat-message-persistence.md).
+    // from the conversation (specs/chat/chat-message-persistence.md).
     if (lastUiMessage?.role === 'user') {
       const { error: persistError } = await tryCatch(() =>
         upsertChatMessages([toChatMessageRow(lastUiMessage, userChat.id)]),
@@ -814,7 +814,7 @@ export async function runChatStream(
           maxOutputTokens: modelSettings.maxOutputTokens,
           reasoning: modelSettings.reasoning,
           tools,
-          // Matches the workflow/team-node agent step caps (docs/workflow/workflows-team-node.md).
+          // Matches the workflow/team-node agent step caps (specs/workflow/workflows-team-node.md).
           stopWhen: stepCountIs(15),
           onStart(st) {
             logger.debug('Request started', {
@@ -833,11 +833,11 @@ export async function runChatStream(
 
             // No gate result means CREDITS_ENABLED is off: gating and
             // settling are always skipped together, or accounts that were
-            // never checked would get charged (docs/credits/prd.md,
+            // never checked would get charged (specs/credits/prd.md,
             // "Call sites"). A provider-side error mid-generation still
             // consumes input tokens, but V1 charges nothing for it, same as
             // the persistence onEnd below skips isAborted/'error' turns
-            // (docs/credits/prd.md, "Non-goals": "Failed and aborted runs").
+            // (specs/credits/prd.md, "Non-goals": "Failed and aborted runs").
             if (!creditSpendState || res.finishReason === 'error') {
               return;
             }
@@ -845,7 +845,7 @@ export async function runChatStream(
             // Settlement must never break a finished turn: the response is
             // already streamed by then. A dropped charge is a bug to fix in
             // reconciliation, not a reason to fail a completed chat turn
-            // (docs/credits/prd.md, "Settlement transaction").
+            // (specs/credits/prd.md, "Settlement transaction").
             const normUsage = normalizeUsage(agent.aiModel.provider, res.steps);
             const { error: creditUsageError } = await tryCatch(() =>
               settleCreditUsage({
@@ -918,7 +918,7 @@ export async function runChatStream(
     // This loop only ends after `onEnd` above has resolved: the SDK awaits it
     // in the stream's flush. Releasing the in-flight slot below therefore
     // guarantees the next turn's history fetch sees this turn's persisted
-    // messages (docs/chat/chat-message-persistence.md).
+    // messages (specs/chat/chat-message-persistence.md).
     for await (const uiMessageChunk of uiMessageStream) {
       onChunk(uiMessageChunk);
     }

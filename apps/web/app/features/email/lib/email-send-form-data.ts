@@ -2,7 +2,7 @@ import type { SendEmailDraftVariables } from '~/features/email/types';
 
 // Multipart body builder for POST /email/draft/:draftId/send
 // (apps/api/src/controllers/email.controller.ts). Every compose flow now
-// edits a draft first (docs/email/drafts-change-request.md), so this is the
+// edits a draft first (specs/email/drafts-change-request.md), so this is the
 // only send path left on the client - there is no more plain, non-draft
 // /email/send caller.
 

@@ -88,7 +88,7 @@ function handleToggleSelectAll() {
   }
 }
 
-// Always confirms, regardless of selection size (docs/email/
+// Always confirms, regardless of selection size (specs/email/
 // mass-deletion-change-request.md, "Confirmation"): bulk selection is a new,
 // less-familiar action surface, unlike the single-thread trash button.
 async function handleBulkTrash() {

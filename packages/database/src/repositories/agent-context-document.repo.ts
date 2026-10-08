@@ -101,7 +101,7 @@ export async function deleteAgentContextDocumentById({
 }
 
 // Every non-`pending` document across all agents, for the chunk backfill
-// script (docs/agent/agent-context-retrieval.md, "Migration / backfill"):
+// script (specs/agent/agent-context-retrieval.md, "Migration / backfill"):
 // re-running extraction on these produces chunks for documents that predate
 // the chunk table, or re-embeds them if the embedding model ever changes.
 export async function getNonPendingAgentContextDocumentIds(): Promise<string[]> {

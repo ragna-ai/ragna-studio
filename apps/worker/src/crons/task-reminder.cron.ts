@@ -3,7 +3,7 @@ import { listTasksDueForReminder, markTaskReminderSent } from '@repo/database';
 import { logger } from '@repo/logger';
 import { enqueueNotification } from '@repo/queue';
 
-// Fires task due-date reminders onto the notification bell (docs/tasks/prd.md,
+// Fires task due-date reminders onto the notification bell (specs/tasks/prd.md,
 // "Reminders"). `listTasksDueForReminder` already applies the fire-time,
 // status, and fire-once filters, so this cron only has to notify and stamp.
 // Best-effort per task: one failure must never block the rest of the batch,

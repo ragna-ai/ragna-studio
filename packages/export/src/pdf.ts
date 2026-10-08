@@ -5,7 +5,7 @@ import type { ExportFile, TabularExport, TabularExportColumnType, TabularExportV
 
 const PDF_CONTENT_TYPE = 'application/pdf';
 
-// Cap a PDF cell at ~500 characters (docs/datasets/export-and-row-reorder.md
+// Cap a PDF cell at ~500 characters (specs/datasets/export-and-row-reorder.md
 // open question 1): a single essay-length cell (the reason DatasetRowPanel
 // exists) shouldn't stretch the table across dozens of pages. CSV and xlsx
 // always carry the full value.
@@ -14,7 +14,7 @@ const PDF_CELL_MAX_CHARS = 500;
 // More than 6 columns switches to landscape so cells keep a readable width.
 const LANDSCAPE_COLUMN_THRESHOLD = 6;
 
-// `date` columns render European-style, `dd.mm.yyyy` (docs/datasets/export-and-row-reorder.md
+// `date` columns render European-style, `dd.mm.yyyy` (specs/datasets/export-and-row-reorder.md
 // decision 2, "Date formatting"), before the length cap below applies.
 function formatPdfCell(value: TabularExportValue, columnType: TabularExportColumnType): string {
   if (value === null) {
@@ -74,7 +74,7 @@ function toDatasetPdfDefinition(input: TabularExport): PdfDocumentDefinition {
 }
 
 /**
- * `pdfmake` writer (docs/datasets/export-and-row-reorder.md decision 2):
+ * `pdfmake` writer (specs/datasets/export-and-row-reorder.md decision 2):
  * title, export date, then one table with a repeating header row and text
  * wrapping. Landscape when the dataset has more than 6 columns. Uses
  * pdfmake's bundled Roboto vfs fonts (registered once in `pdfmake-instance.ts`).

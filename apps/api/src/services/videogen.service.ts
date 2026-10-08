@@ -115,7 +115,7 @@ export async function listGenVideos({
  * frame is a workspace-owned image media row (from the frame-upload endpoint
  * below); a `genImage` frame links the referenced gen
  * image's existing media row (no copy), and is a workspace-scoped lookup so
- * a caller can't animate another workspace's image (docs/videogen/prd.md
+ * a caller can't animate another workspace's image (specs/videogen/prd.md
  * decision 3).
  */
 async function resolveFrame({
@@ -144,7 +144,7 @@ async function resolveFrame({
   }
 
   // mediaId is null for a pending/processing/failed row
-  // (docs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // (specs/imagegen/worker-execution-prd.md decision 1): a generation that
   // hasn't produced an object yet has no frame to animate.
   if (!genImage || !genImage.mediaId) {
     throw new NotFoundException('Frame image not found in this workspace');
@@ -157,7 +157,7 @@ async function resolveFrame({
 // no typed error classes there) when the resolved provider's capability map
 // rejects the request: unsupported aspect ratio, out-of-range duration, or
 // a seed/negativePrompt/draft the provider doesn't support
-// (docs/videogen/prd-v2.md decision 5). All of these messages start with
+// (specs/videogen/prd-v2.md decision 5). All of these messages start with
 // "Provider ", which is the only signal available to tell them apart from
 // a genuine infra failure, mirroring isInvalidAfterTaskIdError in
 // task.service.ts. They are a bad request, not a server error, so they
@@ -170,7 +170,7 @@ function isCapabilityViolationError(error: Error): boolean {
  * [POST] /workspace/:workspaceId/gen-video
  * Requests a video generation: inserts a pending row and enqueues the
  * render job (requestGenVideo in @repo/ai), then responds immediately. The
- * worker does the slow part (docs/videogen/prd.md). `requestGenVideo`'s own
+ * worker does the slow part (specs/videogen/prd.md). `requestGenVideo`'s own
  * result only carries a few fields (id/status/prompt/error/videoUrl/
  * createdAt), so the full row is re-read here to fill out the response
  * contract's aspectRatio/resolution/duration/generateAudio/model.
@@ -245,7 +245,7 @@ export async function generateVideoForWorkspace({
 // requestEnhanceGenVideo (@repo/ai) throws a plain Error for each of its
 // three failure cases (repo convention, no typed error classes there);
 // matched by message the same way, since that is the only signal available
-// (docs/videogen/prd-v2.md "API (apps/api)"):
+// (specs/videogen/prd-v2.md "API (apps/api)"):
 // - not found in the caller's workspace -> 404, same as any other
 //   workspace-scoped lookup miss in this file.
 // - not a completed BFL draft -> 400, an invalid-state request, mirroring
@@ -319,7 +319,7 @@ export async function enhanceGenVideoForWorkspace({
 /**
  * [DELETE] /workspace/:workspaceId/gen-video/:genVideoId
  * Deletes the row, then refcount-deletes its output media and its frame
- * media (docs/media-library/migration-prd.md decision 5): a 'genImage'
+ * media (specs/media-library/migration-prd.md decision 5): a 'genImage'
  * frame shares its media row with that gen_images row, so it only
  * disappears once nothing references it anymore, mirroring imagegen's
  * deleteGenImage. Either mediaId may be null (a pending row has no output

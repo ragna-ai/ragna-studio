@@ -80,7 +80,7 @@ export const agent = pgTable(
     // `systemPrompt` (behavior). Null/empty both mean "no context".
     context: text('context'),
     tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
-    // Soft pin (docs/datasets.md decision 10): when set, the dataset's id and
+    // Soft pin (specs/datasets.md decision 10): when set, the dataset's id and
     // schema are injected into this agent's instructions so it can skip
     // `datasetFind` and go straight to row operations. Deleting the dataset
     // nulls this out and the agent degrades to lookup mode.

@@ -21,7 +21,7 @@ const { data, pending } = useHomeOverview();
 
 // Computed
 // One default per section so the template never has to guard against
-// `undefined` while the first fetch is in flight (docs/home/prd.md,
+// `undefined` while the first fetch is in flight (specs/home/prd.md,
 // "Response": per-section `{ items, total }`).
 const tasks = computed(() => data.value?.tasks.items ?? []);
 const tasksTotal = computed(() => data.value?.tasks.total ?? 0);
@@ -39,7 +39,7 @@ const calendarTasks = computed(() => data.value?.calendarTasks ?? []);
 <template>
   <!-- Two independent flex columns instead of a grid: cards differ in
        height, and grid rows would align tracks and leave a gap under the
-       shorter card of each row (docs/home/prd.md, "UI design"). Desktop
+       shorter card of each row (specs/home/prd.md, "UI design"). Desktop
        placement matches the PRD order (Tasks, Agents / Workflows, Calendar,
        Chats, Documents); on mobile the columns stack, so the order becomes
        Tasks, Documents, Workflows, Calendar, Agents, Chats. -->
@@ -96,7 +96,7 @@ const calendarTasks = computed(() => data.value?.calendarTasks ?? []);
 
       <!-- Agents card skips the shell's quick-create footer: its tile grid
            already includes a dashed "create agent" tile that covers both
-           the create action and the empty state (docs/home/prd.md, "Agents
+           the create action and the empty state (specs/home/prd.md, "Agents
            card"). -->
       <HomeOverviewCard
         :icon="BotIcon"

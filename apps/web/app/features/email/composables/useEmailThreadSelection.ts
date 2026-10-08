@@ -20,7 +20,7 @@ export interface EmailThreadSelection {
 
 /**
  * Owns the set of checked thread ids for the mass-trash selection UI
- * (docs/email/mass-deletion-change-request.md). Pure UI-lifecycle state, no
+ * (specs/email/mass-deletion-change-request.md). Pure UI-lifecycle state, no
  * query-client dependency: the bulk-trash mutation (useEmailThreadApi.ts's
  * `useBulkTrashThreads`) reads `selectedIds` and clears the selection itself
  * on success.

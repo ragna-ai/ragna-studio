@@ -4,7 +4,7 @@ import { agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 
 // AGENT CONTEXT DOCUMENT CHUNK
-// Retrieval unit for Phase 3 (docs/agent/agent-context-retrieval.md). One row
+// Retrieval unit for Phase 3 (specs/agent/agent-context-retrieval.md). One row
 // per chunk of a document's extracted text, embedded for cosine search.
 // `agentId` is denormalized from the document so search can filter on one
 // column without a join through agent_context_documents. No vector index:

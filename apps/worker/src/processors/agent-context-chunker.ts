@@ -1,5 +1,5 @@
 // Deterministic chunker for agent context documents
-// (docs/agent/agent-context-retrieval.md, "Chunking"). No LLM: paragraphs are
+// (specs/agent/agent-context-retrieval.md, "Chunking"). No LLM: paragraphs are
 // packed into target-sized chunks, oversized paragraphs are split at sentence
 // boundaries (hard-split as a last resort), and each chunk after the first
 // carries a fixed-length overlap from the previous one for retrieval context.

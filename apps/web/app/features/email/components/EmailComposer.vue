@@ -125,7 +125,7 @@ async function saveDraftNow(flush: boolean) {
   }
 }
 
-// Debounced ~1s after the last edit (docs/email/drafts-change-request.md,
+// Debounced ~1s after the last edit (specs/email/drafts-change-request.md,
 // section 3), and debounced *here* rather than in EmailDraftPanel.vue: the
 // real cost per call isn't building the snapshot object, it's
 // `getHtml()`/`getText()` re-serializing the whole editor document, and

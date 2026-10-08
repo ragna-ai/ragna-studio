@@ -117,7 +117,7 @@ export const datasetController = new Hono()
   /**
    * [GET] /workspace/:workspaceId/dataset/:datasetId/export
    * Downloads the dataset as CSV, Excel (xlsx), PDF, or Markdown
-   * (docs/datasets/export-and-row-reorder.md).
+   * (specs/datasets/export-and-row-reorder.md).
    */
   .get('/:datasetId/export', validDatasetIdParam, validDatasetExportQuery, async (c) => {
     const workspace = c.get('workspace');

@@ -33,7 +33,7 @@ export const taskController = new Hono()
    * [GET] /workspace/:workspaceId/task
    * Lists every task in the workspace, ordered by sortOrder, with labels,
    * assigned agent, and subtask counts. Not paginated: a board needs every
-   * card (docs/tasks/prd.md, "List"). Optional filters: status, priority,
+   * card (specs/tasks/prd.md, "List"). Optional filters: status, priority,
    * taskLabelId.
    */
   .get('/', validTaskListQuery, async (c) => {

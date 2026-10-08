@@ -58,7 +58,7 @@ export async function updateEmailCategory({
 
 // FK on email_messages.categoryId is `onDelete: 'set null'`, so deleting a
 // category just uncategorizes its messages, it never touches them
-// (docs/email/prd.md, "Database").
+// (specs/email/prd.md, "Database").
 export async function deleteEmailCategory({
   id,
   accountId,

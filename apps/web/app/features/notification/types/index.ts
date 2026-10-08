@@ -32,7 +32,7 @@ export interface NotificationDataMap {
     workspaceId: string;
     prompt: string;
   };
-  // One notification per batch (docs/imagegen/worker-execution-prd.md
+  // One notification per batch (specs/imagegen/worker-execution-prd.md
   // decision 5): genImageIds carries every row the job filled in.
   image_generation_succeeded: {
     genImageIds: string[];

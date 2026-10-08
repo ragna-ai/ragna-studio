@@ -2,7 +2,7 @@
 
 # Own project, container and network names, so dev and a self-host test install
 # can run side by side and `down -v` on one can't delete the other's volumes. See
-# docs/docker-deploy/dev-project-name.md.
+# specs/docker-deploy/dev-project-name.md.
 name: ragna_studio_dev
 
 services:

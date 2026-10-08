@@ -72,7 +72,7 @@ function invalidateTaskLists(
 }
 
 /**
- * Backs both the board and the list view (docs/tasks/prd.md, "Tasks page"):
+ * Backs both the board and the list view (specs/tasks/prd.md, "Tasks page"):
  * one shared query per filter set, so switching views never refetches
  * differently. Not paginated: a board needs every card.
  */
@@ -238,7 +238,7 @@ export function useMoveTask() {
     onSettled: () =>
       // Board/list reconciliation after both success and error/rollback:
       // the board owns its own local column state for the optimistic drag,
-      // this is the server-truth resync (docs/tasks/prd.md, "Board view").
+      // this is the server-truth resync (specs/tasks/prd.md, "Board view").
       // Returned so the mutation stays pending until the refetch lands, not
       // just until the invalidation is queued (same fix as useMoveDatasetRow
       // in the dataset composable) — otherwise a fast second drag reads a

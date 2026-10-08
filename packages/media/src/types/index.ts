@@ -1,7 +1,7 @@
 // packages/media/src/types/index.ts
 
 // The single type vocabulary for every file the platform stores
-// (docs/media-library/unified-media-prd.md, decision 2). Renamed from the
+// (specs/media-library/unified-media-prd.md, decision 2). Renamed from the
 // old chat-only `ChatMediaKind`: agent context documents and chat
 // attachments now share it, and `pptx` joins as a new supported kind.
 export type MediaKind =

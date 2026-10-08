@@ -15,7 +15,7 @@ export function slugify(value: string): string {
 }
 
 // Mirrors the server's `<slug>-<yyyy-mm-dd>.<ext>` naming
-// (docs/datasets/export-and-row-reorder.md), used when the response carries
+// (specs/datasets/export-and-row-reorder.md), used when the response carries
 // no (or an unparsable) Content-Disposition header.
 export function buildExportFilename(title: string, extension: string): string {
   const today = new Date().toISOString().slice(0, 10);

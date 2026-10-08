@@ -11,7 +11,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 
 // Route-level tests for GET /credit/balance and GET /credit/usage
-// (docs/credits/prd.md, "API"). Both are user-global (authMiddleware only,
+// (specs/credits/prd.md, "API"). Both are user-global (authMiddleware only,
 // no workspaceGuard), so the only auth check is a session cookie.
 
 const balanceResponseSchema = z.object({

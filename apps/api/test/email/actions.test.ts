@@ -13,7 +13,7 @@ import {
   setTrashedMock,
 } from './support/mail-provider.mock';
 
-// Mailbox actions (docs/email/prd.md, "API": "Actions: archive, trash, star,
+// Mailbox actions (specs/email/prd.md, "API": "Actions: archive, trash, star,
 // read/unread (Gmail write + local update)"). Every assertion below checks
 // both halves of applyMessageAction/applyThreadAction (email.service.ts):
 // the fake MailProvider method was called with the right providerMessageId,
@@ -194,7 +194,7 @@ describe('POST /email/message/:messageId/read', () => {
     expect(row?.isUnread).toBe(true);
   });
 
-  // docs/email/bugs.md #5: the response body is what the web client actually
+  // specs/email/bugs.md #5: the response body is what the web client actually
   // reads to update the UI (useSetMessageRead's onSuccess) - asserting only
   // the DB row, like the two tests above, would miss a bug where the flag
   // persists correctly but the JSON payload sent back doesn't reflect it.
@@ -212,7 +212,7 @@ describe('POST /email/message/:messageId/read', () => {
     expect(body.message.isUnread).toBe(false);
   });
 
-  // docs/email/bugs.md #5: exercises both directions back to back on the
+  // specs/email/bugs.md #5: exercises both directions back to back on the
   // same message, proving the toggle isn't a one-way "always ends up read"
   // bug - each call's persisted flag must match that call's own `read`
   // value, not just the first one.
@@ -294,7 +294,7 @@ describe('thread-level actions loop every message', () => {
     }
   });
 
-  // docs/email/bugs.md #5: a thread where only one of two messages is
+  // specs/email/bugs.md #5: a thread where only one of two messages is
   // unread must still flip the flag on the one that's actually unread -
   // applyThreadAction calls setRead on every message regardless of its
   // current state, so this proves the mixed case doesn't get lost.

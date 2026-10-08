@@ -111,7 +111,7 @@ const { messages, sendMessage, status, error, stop } = useChat({
     }
   },
   // A turn that wasn't aborted just settled a charge server-side
-  // (docs/credits/prd.md, "Frontend"), so the cached balance is stale.
+  // (specs/credits/prd.md, "Frontend"), so the cached balance is stale.
   // Aborted turns charge nothing (onEnd's early return on `isAborted`), so
   // there's nothing new to fetch.
   onFinish: ({ isAbort }) => {

@@ -5,7 +5,7 @@ export interface CreateDocumentEditorOptions {
   content?: string;
   /**
    * Default 'markdown'. 'html' builds an instance with no `@tiptap/markdown`
-   * extension loaded at all (docs/email/html-content-change-request.md), so
+   * extension loaded at all (specs/email/html-content-change-request.md), so
    * `getMarkdown()` isn't just discouraged on it, it doesn't exist at
    * runtime - callers must use `getHTML()`/`getText()` and pass
    * `{ contentType: 'html' }` to every later `setContent()` call too, since

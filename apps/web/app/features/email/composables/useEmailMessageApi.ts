@@ -151,7 +151,7 @@ export function useSetMessageRead() {
 }
 
 // Attachment metadata is resolved live, never persisted
-// (docs/email/prd.md, "Attachments stay fetch-on-demand"), so this is a
+// (specs/email/prd.md, "Attachments stay fetch-on-demand"), so this is a
 // plain lazy query, only enabled once a message is expanded
 // (see EmailMessageAttachments.vue).
 

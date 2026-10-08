@@ -3,7 +3,7 @@ import { myzValidator } from '../utils/validator-wrapper';
 
 const primaryId = z.uuidv7();
 
-// 3 or 6 digit hex color, e.g. #f00 or #ff0000 (docs/tasks/prd.md: "color,
+// 3 or 6 digit hex color, e.g. #f00 or #ff0000 (specs/tasks/prd.md: "color,
 // not null, hex string").
 const hexColor = z
   .string()

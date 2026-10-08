@@ -1,5 +1,5 @@
 // Mirrors apps/api/src/services/credit.service.ts's response shapes
-// (docs/credits/prd.md, "API"). Credits belong to the account, not a
+// (specs/credits/prd.md, "API"). Credits belong to the account, not a
 // workspace, so these are user-global, unlike most other feature types here.
 
 export type CreditUsageFeature = 'chat' | 'workflow' | 'team';

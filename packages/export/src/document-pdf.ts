@@ -113,7 +113,7 @@ function tableToContent(table: Tokens.Table): PdfContent {
 }
 
 // Walks one block-level token into pdfmake content. Unsupported tokens
-// degrade to their raw markdown text (docs/datasets/export-and-row-reorder.md
+// degrade to their raw markdown text (specs/datasets/export-and-row-reorder.md
 // "Document export" decision 2: "never an error").
 function blockToContent(rawToken: Token): PdfContent {
   const token = asMarkedToken(rawToken);
@@ -153,7 +153,7 @@ function toDocumentPdfDefinition({ title, markdown }: DocumentExport): PdfDocume
 }
 
 /**
- * `pdfmake` writer for documents (docs/datasets/export-and-row-reorder.md
+ * `pdfmake` writer for documents (specs/datasets/export-and-row-reorder.md
  * "Document export" decision 2): title, then a block-by-block rendering of
  * the parsed markdown (headings, paragraphs with bold/italic/inline code,
  * nested lists, blockquotes, code blocks, horizontal rules, colored links,

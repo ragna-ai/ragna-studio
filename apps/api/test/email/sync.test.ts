@@ -13,7 +13,7 @@ import {
 } from './support/email-queue.mock';
 import { resetMailProviderMock } from './support/mail-provider.mock';
 
-// Manual "Sync now" (docs/email/prd.md, "API": "enqueues the same email-sync
+// Manual "Sync now" (specs/email/prd.md, "API": "enqueues the same email-sync
 // job the cron fans out, deduped per account via the BullMQ jobId").
 // email.service.ts's syncEmailAccountNowForUser always calls
 // `queue.emailSync().add(..., { jobId: account.id })`; the fake queue

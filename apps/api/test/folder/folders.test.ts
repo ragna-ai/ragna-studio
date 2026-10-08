@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD for /workspace/:workspaceId/folder (docs/testing/strategy.md,
+// Plain CRUD for /workspace/:workspaceId/folder (specs/testing/strategy.md,
 // priority 3). Auth/authorization are covered exhaustively in test/auth/;
 // this file only checks the folder feature's own behavior.
 

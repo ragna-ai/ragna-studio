@@ -27,9 +27,9 @@ export interface SeedTokenPricedAiModelResult {
 
 /**
  * Seeds a minimal `ai_models` row with `kind: 'token'` pricing, the only
- * pricing kind the v1 credit charger implements (docs/credits/prd.md,
+ * pricing kind the v1 credit charger implements (specs/credits/prd.md,
  * "Pricing"). `settleCreditUsage` reads `pricing` from a real row inside its
- * transaction, and the credit gates' pricing check (docs/credits/review-
+ * transaction, and the credit gates' pricing check (specs/credits/review-
  * 2026-07-29.md, finding 1) needs a real `aiModelId` to pass around, so
  * charging tests can't get away with an in-memory pricing object alone.
  */
@@ -84,7 +84,7 @@ export interface SeedCreditAccountResult {
  * for isolation/ordering assertions actually exists. Defaults to a 0
  * balance: the account exists but the gate still refuses, matching
  * `resolveCreditSpendState`'s "no account" vs "zero balance" distinction
- * (docs/credits/prd.md, "Account creation").
+ * (specs/credits/prd.md, "Account creation").
  */
 export async function seedCreditAccount(
   params: SeedCreditAccountParams,

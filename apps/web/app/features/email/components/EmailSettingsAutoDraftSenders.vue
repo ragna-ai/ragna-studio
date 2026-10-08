@@ -8,7 +8,7 @@ import {
 } from '~/features/email/composables/useEmailAutoDraftSenderApi';
 
 // Senders on this list always trigger auto-draft, independent of category
-// (docs/email/prd.md, "Auto-draft replies").
+// (specs/email/prd.md, "Auto-draft replies").
 
 // Composables
 const { t } = useI18n();

@@ -3,7 +3,7 @@
 // The canonical LLM-facing representation for message bodies prefers the
 // sender's plain-text part, falling back to a markdown conversion of the
 // HTML part (see `toCanonicalText`). Received-mail display uses a
-// sanitized HTML iframe instead (see docs/email/html-content-change-request.md).
+// sanitized HTML iframe instead (see specs/email/html-content-change-request.md).
 //
 // Uses `@truto/turndown-plugin-gfm`, not the original: the original crashes
 // on a `<table>` with zero `<tr>` rows, which real newsletter HTML hits

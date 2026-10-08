@@ -113,7 +113,7 @@ export const chatController = new Hono()
   /**
    * [POST] /workspace/:workspaceId/chat/:chatId/branch
    * Copies the chat's messages up to and including messageId into a new,
-   * independent chat (docs/chat/branching.md). The source chat is untouched.
+   * independent chat (specs/chat/branching.md). The source chat is untouched.
    */
   .post('/:chatId/branch', validChatIdParam, validBranchChatBody, async (c) => {
     const workspace = c.get('workspace');

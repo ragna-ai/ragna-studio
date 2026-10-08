@@ -103,7 +103,7 @@ export const documentController = new Hono()
   /**
    * [GET] /workspace/:workspaceId/document/:documentId/export
    * Downloads the document as Markdown, plain text, PDF, or Word (docx)
-   * (docs/datasets/export-and-row-reorder.md "Document export").
+   * (specs/datasets/export-and-row-reorder.md "Document export").
    */
   .get('/:documentId/export', validDocumentIdParam, validDocumentExportQuery, async (c) => {
     const workspace = c.get('workspace');

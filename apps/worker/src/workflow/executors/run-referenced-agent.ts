@@ -26,7 +26,7 @@ import { noopWriter } from './noop-writer';
 // class (rather than a plain Error) so the step's recorded error message
 // reads as "Insufficient credits", distinguishable from a generic run
 // failure once it reaches upsertRunStep's `error` text column
-// (docs/credits/prd.md, "Call sites": "A run refused mid-execution fails the
+// (specs/credits/prd.md, "Call sites": "A run refused mid-execution fails the
 // run with a reason the UI can distinguish from a generic error").
 export class InsufficientCreditsError extends Error {
   constructor(workspaceId: string) {
@@ -43,7 +43,7 @@ export class InsufficientCreditsError extends Error {
 // InsufficientCreditsError because this is a platform configuration
 // problem, not something the user can fix by buying credits, so the run
 // step's error text should read as a config bug rather than "out of
-// credits" (docs/credits/prd.md, "Pricing").
+// credits" (specs/credits/prd.md, "Pricing").
 export class ModelNotChargeableError extends Error {
   constructor(workspaceId: string) {
     super(
@@ -96,7 +96,7 @@ function toWorkflowUsage(usage: GenerateTextUsage): WorkflowTokenUsage {
 
 // Metadata a delegate call attaches to its own tool-call entry once the
 // member run it triggered has finished: the member's own tool calls (kept
-// flat, not a nested trace, see docs/workflow/workflows-team-node.md), how
+// flat, not a nested trace, see specs/workflow/workflows-team-node.md), how
 // long the member run took, and its total token usage.
 export type DelegateCallMeta = {
   calls?: WorkflowToolCall[];
@@ -191,7 +191,7 @@ export type ReferencedAgentRun = {
 // Pre-run gate, shared by every LLM call a workflow run makes on a user's
 // behalf: the agent node's referenced-agent path, its inline default-agent
 // path, the team node's lead call, and each team member's delegate call
-// (docs/credits/prd.md: "Every text LLM call made on a user's behalf in
+// (specs/credits/prd.md: "Every text LLM call made on a user's behalf in
 // chat and workflows debits their credit account"). Returns null both when
 // credits are off (skipped entirely, no query) and when the billing entity
 // has no account; either way the caller's later settleWorkflowUsage call
@@ -205,7 +205,7 @@ export type ReferencedAgentRun = {
 // model yet. A model with no pricing, or a `kind` the charger doesn't
 // implement (v1 only implements 'token'), is not chargeable, so the run is
 // refused here rather than left to fail inside settlement after the model
-// call already ran (docs/credits/prd.md, "Pricing").
+// call already ran (specs/credits/prd.md, "Pricing").
 export async function gateCreditSpend({
   workspaceId,
   pricing,
@@ -240,7 +240,7 @@ export async function gateCreditSpend({
 // The agent's output is already final by the time this runs; a settlement
 // failure (a transient DB error, say) must not throw away a completed run
 // over a bookkeeping problem, same reasoning as the chat path
-// (docs/credits/prd.md, "Settlement transaction"). A dropped charge is a
+// (specs/credits/prd.md, "Settlement transaction"). A dropped charge is a
 // reconciliation bug to fix later, not a reason to fail the node.
 export async function settleWorkflowUsage({
   spendState,
@@ -341,7 +341,7 @@ export async function runReferencedAgent({
 
   // Gated after the agent (and its model's pricing) is known, so an
   // unpriced model is refused here rather than at the end of a run
-  // (docs/credits/prd.md, "Pricing").
+  // (specs/credits/prd.md, "Pricing").
   const spendState = await gateCreditSpend({ workspaceId, pricing: agent.aiModel.pricing });
 
   const { instructions, retrievalMode } = await buildAgentInstructions({
@@ -360,9 +360,9 @@ export async function runReferencedAgent({
     // Workflows already run inside the worker process and need the
     // video/images to exist before downstream steps run, so the video-gen
     // tool awaits the render inline instead of the chat fire-and-forget path
-    // (docs/videogen/prd.md decision 2), and the image-gen tool calls the
+    // (specs/videogen/prd.md decision 2), and the image-gen tool calls the
     // generation service directly instead of going through the
-    // queue-awaiting facade (docs/imagegen/worker-execution-prd.md decision
+    // queue-awaiting facade (specs/imagegen/worker-execution-prd.md decision
     // 6).
     runsInWorker: true,
     retrievalMode,
@@ -381,7 +381,7 @@ export async function runReferencedAgent({
     reasoning: modelSettings.reasoning,
     // A plan-executing agent node can exhaust the chat-level step budget
     // immediately (schema read + row list + work + row update already
-    // costs 4), see docs/datasets.md decision 6. Flat 15 for every workflow
+    // costs 4), see specs/datasets.md decision 6. Flat 15 for every workflow
     // agent run; chat is unaffected and stays at 5 above.
     stopWhen: stepCountIs(15),
     onStepFinish: logTraceStepDebug(`agent "${agentRecord.name}"`),

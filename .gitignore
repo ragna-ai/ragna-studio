@@ -56,7 +56,7 @@ _bak
 
 # Obsidian vault
 .obsidian/
-docs/Scrapings/
+specs/Scrapings/
 
 # Claude Code (personal settings and worktrees)
 .claude/settings.local.json

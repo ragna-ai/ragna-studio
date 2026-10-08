@@ -54,7 +54,7 @@ const aiModelCapabilitiesSchema = z.object({
   maxReferenceImages: z.number().optional(),
 });
 const aiModelMetaSchema = z.record(z.string(), z.any());
-// Pricing (docs/credits/prd.md, "Pricing"): discriminated by `kind`, same
+// Pricing (specs/credits/prd.md, "Pricing"): discriminated by `kind`, same
 // shape as AiModelPricing in aimodel.schema.ts. V1 only implements `token`;
 // `image`/`video` are declared so v2 is additive.
 const aiModelPricingSchema = z

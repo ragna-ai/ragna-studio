@@ -1,12 +1,12 @@
 // apps/worker/src/mail/email-draft.service.ts
 //
-// Runs the configured agent to draft a reply for a thread (docs/email/
+// Runs the configured agent to draft a reply for a thread (specs/email/
 // prd.md, "Worker jobs"), triggered either automatically by classify or by
 // the manual "Draft with AI" endpoint. The draft row is created 'generating'
 // before the agent runs so the UI can show progress, then flipped to
 // 'ready'/'discarded' once the run settles.
 //
-// No credit gate/settlement here: v1's credit system (docs/credits/prd.md)
+// No credit gate/settlement here: v1's credit system (specs/credits/prd.md)
 // only implements 'chat' | 'workflow' | 'team' spend, and its settlement
 // helper (settleWorkflowUsage, ../workflow/executors/run-referenced-agent.ts)
 // keys its idempotency/refType on a workflow run's runId/nodeId, which an
@@ -88,7 +88,7 @@ export async function generateEmailDraft({
   }
 
   // origin/kind are set once at creation and never change afterwards
-  // (docs/email/drafts-change-request.md, "Wire contract"). Every worker-
+  // (specs/email/drafts-change-request.md, "Wire contract"). Every worker-
   // generated draft is an AI reply: v1 has no auto-draft path for a new
   // message or a forward, only "Draft with AI" on an existing thread.
   const draft = await createEmailDraft({
@@ -107,7 +107,7 @@ export async function generateEmailDraft({
   try {
     markdownContent = await runDraftAgent({ account, provider, agentId, threadId });
   } catch (error) {
-    // Best-effort by design (docs/email/prd.md, "Worker jobs"): a failed
+    // Best-effort by design (specs/email/prd.md, "Worker jobs"): a failed
     // draft is discarded, not retried, and never fails the BullMQ job.
     logger.error(`Failed to generate email draft ${draft.id} for thread ${threadId}`, error);
     await updateEmailDraft({ id: draft.id, accountId, status: 'discarded' });
@@ -117,7 +117,7 @@ export async function generateEmailDraft({
   // The agent only ever writes markdown (DRAFT_TASK_INSTRUCTIONS); converted
   // to HTML once, here, so `content` is never briefly markdown in a
   // now-HTML column, e.g. if pushDraftToProvider below bails out early
-  // (docs/email/html-content-change-request.md, "AI-generated drafts").
+  // (specs/email/html-content-change-request.md, "AI-generated drafts").
   const htmlBody = markdownToHtml(markdownContent);
   await updateEmailDraft({
     id: draft.id,
@@ -128,7 +128,7 @@ export async function generateEmailDraft({
   });
 
   // Pushed to the provider as soon as the draft turns 'ready', without
-  // waiting for a user edit (docs/email/drafts-change-request.md,
+  // waiting for a user edit (specs/email/drafts-change-request.md,
   // "Decisions": "AI drafts to Gmail" / "Scope > 3"), so the draft is
   // reviewable from the provider's own mobile app too. Best-effort: never
   // fails this job, see pushDraftToProvider.
@@ -209,7 +209,7 @@ async function runDraftAgent({
 
 // Stored bodies cover every post-connect message; ensureMessageBody fetches
 // and persists the rare gap (an older, pre-connect message opened for the
-// first time) live from the provider (docs/email/prd.md, "Sync model").
+// first time) live from the provider (specs/email/prd.md, "Sync model").
 async function buildThreadContext({
   provider,
   messages,
@@ -298,7 +298,7 @@ function ensureReplySubject(subject: string | null): string {
 // identical quoted history byte for byte, whether the draft is sent from
 // the provider or from our own review UI. The quote is stored in its own
 // `quotedHtml`/`quotedText` columns, separate from the agent's `content`/
-// `text` (docs/email/quote-iframe-change-request.md), so the compose UI can
+// `text` (specs/email/quote-iframe-change-request.md), so the compose UI can
 // render it read-only instead of parsing it into the live editor.
 function buildQuoteFields({
   context,
@@ -319,7 +319,7 @@ function buildQuoteFields({
 // Best-effort: the draft is already usable from our own review UI once
 // 'ready', so a push failure here is logged and swallowed rather than
 // failing the draft job; providerDraftId simply stays null
-// (docs/email/drafts-change-request.md, "Scope > 3").
+// (specs/email/drafts-change-request.md, "Scope > 3").
 async function pushDraftToProvider({
   account,
   provider,
@@ -436,7 +436,7 @@ async function pushDraftToProvider({
       subject: context.subject,
       // The provider's own web/mobile UI renders the text/html part; text
       // is the plain-text MIME sibling derived from the same HTML we just
-      // stored, not the markdown source (docs/email/html-content-change-
+      // stored, not the markdown source (specs/email/html-content-change-
       // request.md, "Outgoing MIME assembly").
       text,
       html,

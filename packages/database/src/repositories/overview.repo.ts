@@ -4,12 +4,12 @@ import { db } from '../db';
 import type { TaskPriority, TaskStatus } from '../schema';
 import { task } from '../schema';
 
-// The only statuses the tasks card shows (docs/home/prd.md, "Task
+// The only statuses the tasks card shows (specs/home/prd.md, "Task
 // statuses"): the overview is about work needing attention, so done,
 // canceled, and the potentially large backlog stay out.
 const OVERVIEW_TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review'];
 
-// Home overview (docs/home/prd.md): small, purpose-built reads for the home
+// Home overview (specs/home/prd.md): small, purpose-built reads for the home
 // page's dashboard cards. Distinct from the paginated list functions in
 // task.repo.ts/chat.repo.ts/workflow.repo.ts/agent.repo.ts/document.repo.ts,
 // which carry pagination/filter machinery the overview doesn't need.
@@ -26,7 +26,7 @@ export type RecentTask = {
 
 /**
  * Latest tasks for the tasks card, newest first. Only todo, in-progress,
- * and in-review tasks are included (docs/home/prd.md, "Task statuses").
+ * and in-review tasks are included (specs/home/prd.md, "Task statuses").
  */
 export async function getRecentTasksByWorkspaceId({
   workspaceId,
@@ -54,7 +54,7 @@ export async function getRecentTasksByWorkspaceId({
 /**
  * Workspace task total for the tasks card. Counts only todo, in-progress,
  * and in-review tasks, the same rule `getRecentTasksByWorkspaceId` applies
- * to its list (docs/home/prd.md, "Task statuses").
+ * to its list (specs/home/prd.md, "Task statuses").
  */
 export async function getActiveTaskCountByWorkspaceId({
   workspaceId,
@@ -79,7 +79,7 @@ export type CalendarTask = {
 
 /**
  * Tasks due inside [start, end] for the calendar card, due-date ascending.
- * Same status rule as the tasks card (docs/home/prd.md, "Task statuses"):
+ * Same status rule as the tasks card (specs/home/prd.md, "Task statuses"):
  * only work still needing attention shows up. Includes the assigned agent
  * so the calendar can render its avatar per task.
  */
@@ -120,7 +120,7 @@ export type RecentChat = {
 
 /**
  * Latest chats for the chats card, newest first, with the agent name for
- * display (docs/home/prd.md, "Chats" DTO notes).
+ * display (specs/home/prd.md, "Chats" DTO notes).
  */
 export async function getRecentChatsByWorkspaceId({
   workspaceId,
@@ -148,7 +148,7 @@ export type RecentWorkflow = {
 /**
  * Latest workflows for the workflows card, newest first, each with its
  * latest run's status (limit 1, `createdAt` desc; empty when the workflow
- * has never run) (docs/home/prd.md, "Workflows" DTO notes).
+ * has never run) (specs/home/prd.md, "Workflows" DTO notes).
  */
 export async function getRecentWorkflowsByWorkspaceId({
   workspaceId,
@@ -182,7 +182,7 @@ export type RecentAgent = {
 
 /**
  * Latest agents for the agents card, newest first, with the model's
- * display name (docs/home/prd.md, "Agents" DTO notes).
+ * display name (specs/home/prd.md, "Agents" DTO notes).
  */
 export async function getRecentAgentsByWorkspaceId({
   workspaceId,
@@ -208,7 +208,7 @@ export type RecentDocument = {
 
 /**
  * Latest documents for the documents card, newest first
- * (docs/home/prd.md, "Documents" DTO notes).
+ * (specs/home/prd.md, "Documents" DTO notes).
  */
 export async function getRecentDocumentsByWorkspaceId({
   workspaceId,

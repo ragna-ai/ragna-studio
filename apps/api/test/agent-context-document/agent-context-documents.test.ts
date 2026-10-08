@@ -10,7 +10,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// agent-context-document (docs/testing/strategy.md's "Blocked on mock
+// agent-context-document (specs/testing/strategy.md's "Blocked on mock
 // infrastructure", now unblocked). Auth/authorization are covered
 // exhaustively in test/auth/ and test/workspace/workspace-authorization.
 // test.ts; this file only checks the feature's own behavior. Every route

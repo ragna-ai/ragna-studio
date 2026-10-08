@@ -6,7 +6,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// /notification: plain user-scoped routes (docs/testing/strategy.md,
+// /notification: plain user-scoped routes (specs/testing/strategy.md,
 // priority 3). Auth/authorization are covered exhaustively in test/auth/;
 // this file only checks the notification feature's own behavior.
 //

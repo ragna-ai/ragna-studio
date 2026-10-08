@@ -1,6 +1,6 @@
 // packages/testing/src/mocks/linkedin-provider.mock.ts
 //
-// Mocks `@repo/linkedin` at the package boundary (docs/testing/strategy.md,
+// Mocks `@repo/linkedin` at the package boundary (specs/testing/strategy.md,
 // "External boundaries"): it's a thin wrapper around LinkedIn's real REST
 // API with no business logic of its own worth preserving in tests, and
 // apps/api imports it directly, so mocking the whole package (rather than
@@ -80,7 +80,7 @@ export function resetLinkedinProviderMock(): void {
 // resolves to a different path than the one apps/api imports, so the
 // mock.module call below never reaches the app on its own. Sharing one
 // module object keeps LinkedinApiError identity consistent across both
-// registrations. See docs/docker-deploy/injected-workspace-packages.md.
+// registrations. See specs/docker-deploy/injected-workspace-packages.md.
 export const linkedinModuleMock = {
   ...linkedinPackage,
   createLinkedinClient: createLinkedinClientMock,

@@ -1,7 +1,7 @@
 // Column type accepted by the export writers. Mirrors the dataset column
 // types (`DatasetColumnType` in @repo/database) by value, but this package
 // stays decoupled from datasets on purpose: it knows formats, not resources
-// (docs/datasets/export-and-row-reorder.md decision 1), so a future document
+// (specs/datasets/export-and-row-reorder.md decision 1), so a future document
 // export can reuse it with its own column types.
 export type TabularExportColumnType = 'text' | 'number' | 'date' | 'select';
 
@@ -27,7 +27,7 @@ export interface TabularExport {
 
 /**
  * Format-agnostic input for the document writers (`toDocumentMarkdown`/
- * `toDocumentText`/`toDocumentPdf`/`toDocumentDocx`), docs/datasets/export-and-row-reorder.md
+ * `toDocumentText`/`toDocumentPdf`/`toDocumentDocx`), specs/datasets/export-and-row-reorder.md
  * "Document export": `markdown` is the document's canonical `content`
  * (documents/prd.md), parsed once and shared by every writer that needs
  * structure (see `markdown-tokens.ts`).

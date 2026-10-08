@@ -50,7 +50,7 @@ export const notificationDataSchemas = {
     workspaceId: z.uuidv7(),
     prompt: z.string().trim().min(1),
   }),
-  // One notification per batch (docs/imagegen/worker-execution-prd.md
+  // One notification per batch (specs/imagegen/worker-execution-prd.md
   // decision 5): genImageIds carries every row the job filled in, so the
   // presenter can link straight to the library without a lookup.
   image_generation_succeeded: z.object({

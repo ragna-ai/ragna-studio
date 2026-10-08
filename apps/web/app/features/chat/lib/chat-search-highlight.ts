@@ -22,7 +22,7 @@ function escapeForRegExp(value: string): string {
 /**
  * Splits `text` into plain/matched segments around every case-insensitive
  * occurrence of `query`, for Google-style match highlighting
- * (docs/chat/search-prd.md, "Result layout").
+ * (specs/chat/search-prd.md, "Result layout").
  */
 export function splitForHighlight(
   text: string,

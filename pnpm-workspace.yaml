@@ -12,7 +12,7 @@ injectWorkspacePackages: true
 # node_modules/.pnpm/ that nothing refreshes on rebuild. This re-syncs a
 # package's injected copies whenever its `build` script runs through pnpm,
 # keeping the edit-then-rebuild workflow correct. See
-# docs/docker-deploy/injected-workspace-packages.md.
+# specs/docker-deploy/injected-workspace-packages.md.
 syncInjectedDepsAfterScripts:
   - build
 

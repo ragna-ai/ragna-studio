@@ -188,7 +188,7 @@ export const AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.pptx,.xlsx,.csv,.txt,.md';
 
 // While any listed document is still 'pending', poll for its terminal
-// status. 'failed' is terminal and doesn't poll (docs/agent-context-documents.md).
+// status. 'failed' is terminal and doesn't poll (specs/agent-context-documents.md).
 const AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS = 2000;
 
 function contextDocumentBasePath(

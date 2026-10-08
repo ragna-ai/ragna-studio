@@ -371,7 +371,7 @@ export async function startWorkflowRun({
 /**
  * [GET] /workspace/:workspaceId/workflow/:workflowId/run
  * Lists every run of a workflow, latest first. Runs are naturally bounded
- * per workflow (docs/api-standards/prd.md), so this returns everything
+ * per workflow (specs/api-standards/prd.md), so this returns everything
  * rather than paginating.
  */
 export async function listWorkflowRuns({

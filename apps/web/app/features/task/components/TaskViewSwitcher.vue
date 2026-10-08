@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ListIcon, SquareKanbanIcon, type LucideIcon } from '@lucide/vue';
 
-// Segmented view switcher (docs/tasks/prd.md, "Tasks page"): built as an
+// Segmented view switcher (specs/tasks/prd.md, "Tasks page"): built as an
 // extensible list, not a boolean toggle, so a future calendar view is a
 // third entry rather than a rewrite.
 export type TaskView = 'board' | 'list';

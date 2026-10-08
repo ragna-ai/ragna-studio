@@ -44,7 +44,7 @@ const assignedAgentColumns = { columns: { id: true, name: true } } as const;
 
 /**
  * Board/list query: every task in the workspace with its labels, assigned
- * agent, and subtask count, ordered by `sortOrder` (docs/tasks/prd.md,
+ * agent, and subtask count, ordered by `sortOrder` (specs/tasks/prd.md,
  * "List"). Not paginated on purpose, a board needs every card.
  */
 export async function listTasks({
@@ -226,7 +226,7 @@ async function nextTaskNumber(
 }
 
 // Appends to the bottom of the target status column: one key past the
-// column's current last row (docs/tasks/prd.md, "Ordering: fractional
+// column's current last row (specs/tasks/prd.md, "Ordering: fractional
 // indexing").
 async function sortOrderAtBottomOfColumn(
   tx: TaskTransaction,
@@ -317,7 +317,7 @@ async function replaceTaskLabels(
   }
 }
 
-// Reminder re-arm rule (docs/tasks/prd.md, "Reminders"), shared by the API's
+// Reminder re-arm rule (specs/tasks/prd.md, "Reminders"), shared by the API's
 // PATCH endpoint and the agent's updateTask tool since both call this
 // function: touching dueDate or remindDaysBeforeDue clears reminderSentAt so
 // a rescheduled reminder fires again. `'dueDate' in fields` (rather than
@@ -341,7 +341,7 @@ function reminderRearmFields(
 
 /**
  * Server-side rank computation for a drag or an agent move
- * (docs/tasks/prd.md, "Ordering: fractional indexing"): loads the target
+ * (specs/tasks/prd.md, "Ordering: fractional indexing"): loads the target
  * column's neighbors and slots the task in right after `afterTaskId`
  * (omitted = top of column), then writes status + sortOrder in one call.
  */
@@ -457,7 +457,7 @@ export type TaskDueForReminder = {
 };
 
 /**
- * For the reminder cron (docs/tasks/prd.md, "Reminders"): tasks with a due
+ * For the reminder cron (specs/tasks/prd.md, "Reminders"): tasks with a due
  * date and an offset, not yet reminded, not done/canceled, whose fire time
  * (`dueDate - remindDaysBeforeDue days`) has passed. Joins the workspace to
  * resolve the owner, the notification recipient in v1.

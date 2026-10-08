@@ -9,7 +9,7 @@ function escapeMarkdownCell(text: string): string {
   return text.replace(/\|/g, '\\|').replace(/\r\n|\r|\n/g, '<br>');
 }
 
-// `date` columns render European-style, `dd.mm.yyyy` (docs/datasets/export-and-row-reorder.md
+// `date` columns render European-style, `dd.mm.yyyy` (specs/datasets/export-and-row-reorder.md
 // decision 2, "Date formatting"); every other type is unformatted.
 function formatMarkdownDataCell(value: TabularExportValue, columnType: TabularExportColumnType): string {
   if (value === null) {
@@ -25,7 +25,7 @@ function toMarkdownRow(cells: string[]): string {
 }
 
 /**
- * Hand-rolled Markdown writer (docs/datasets/export-and-row-reorder.md
+ * Hand-rolled Markdown writer (specs/datasets/export-and-row-reorder.md
  * decision 2): `# <dataset name>` heading, then a GFM table (header row,
  * `---` separator row, one line per data row). No dependency. An empty
  * dataset still writes its header row (open question 2).

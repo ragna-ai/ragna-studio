@@ -18,7 +18,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 
 // Pure math: computeCharge and ceilDiv (packages/database/src/repositories/
 // credit.repo.ts), module-private in production and exported only for
-// tests (docs/credits/prd.md, "Account creation").
+// tests (specs/credits/prd.md, "Account creation").
 describe('ceilDiv', () => {
   test('rounds up on inexact division, always in the platform favour', () => {
     expect(ceilDiv(10n, 3n)).toBe(4n);
@@ -44,11 +44,11 @@ describe('computeCharge', () => {
       cacheWriteTokens: 0,
     });
 
-    // docs/credits/prd.md worked example: 9,000,000 + 12,000,000 nanoUSD.
+    // specs/credits/prd.md worked example: 9,000,000 + 12,000,000 nanoUSD.
     expect(charge.costNanoUsd).toBe(21_000_000n);
   });
 
-  // Regression: docs/credits/review-2026-07-29.md, finding 3
+  // Regression: specs/credits/review-2026-07-29.md, finding 3
   // (CREDIT_MARKUP_BPS parsing silently swallowed bad values). Fixed in
   // packages/config/src/services/config.service.ts (commit 651c7d2): a
   // "NULL" env value now disables markup, normalizing to exactly 10_000 bps
@@ -81,7 +81,7 @@ describe('computeCharge', () => {
     });
 
     expect(charge.markupBps).toBe(15_000);
-    // docs/credits/prd.md worked example: 31.5 credits.
+    // specs/credits/prd.md worked example: 31.5 credits.
     expect(charge.chargedMicroCredits).toBe(31_500_000n);
   });
 
@@ -115,7 +115,7 @@ describe('computeCharge', () => {
       cacheWriteTokens: 100,
     });
 
-    // Charged as if nothing were cached (docs/credits/prd.md, "Cached tokens").
+    // Charged as if nothing were cached (specs/credits/prd.md, "Cached tokens").
     expect(charge.costNanoUsd).toBe(3_000_000n); // 1000 * 3000
     expect(charge.chargedMicroCredits).toBe(3_000_000n);
 
@@ -196,7 +196,7 @@ describe('settleCreditUsage', () => {
     expect(settlement).not.toBeNull();
     expect(settlement?.balanceAfterMicroCredits).toBeLessThan(0n);
 
-    // docs/credits/prd.md, "Overdraft": the *next* request is refused.
+    // specs/credits/prd.md, "Overdraft": the *next* request is refused.
     const spendState = await resolveCreditSpendState({ workspaceId });
     expect(spendState?.allowed).toBe(false);
   });

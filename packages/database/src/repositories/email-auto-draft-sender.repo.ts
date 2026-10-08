@@ -47,7 +47,7 @@ export async function removeEmailAutoDraftSender({
     .where(and(eq(emailAutoDraftSender.id, id), eq(emailAutoDraftSender.accountId, accountId)));
 }
 
-// Checked by the classifier job for every new message (docs/email/prd.md,
+// Checked by the classifier job for every new message (specs/email/prd.md,
 // "Auto-draft replies"): a sender on this list always triggers auto-draft,
 // independent of category. Case-insensitive: Gmail addresses are not
 // case-sensitive, and the stored casing may not match what a header parser

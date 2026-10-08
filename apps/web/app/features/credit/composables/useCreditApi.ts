@@ -8,7 +8,7 @@ import type {
   CreditUsageManyResponse,
 } from '~/features/credit/types';
 
-// Credits belong to the user's account, not a workspace (docs/credits/prd.md,
+// Credits belong to the user's account, not a workspace (specs/credits/prd.md,
 // "API"), so these routes are user-global and the query keys carry no
 // workspaceId, unlike every other use<Resource>Api.ts in this app.
 export const creditKeys = {
@@ -23,7 +23,7 @@ export const creditKeys = {
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
 /**
- * The user's credit balance, for the user menu (docs/credits/prd.md,
+ * The user's credit balance, for the user menu (specs/credits/prd.md,
  * "Frontend": "fetched once per session, refetched after a chat turn ends").
  * `staleTime: Infinity` is what makes it "once per session": Vue Query never
  * refetches this on its own, only `useInvalidateCreditBalance()` does.

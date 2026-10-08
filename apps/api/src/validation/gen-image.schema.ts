@@ -10,7 +10,7 @@ export const validGenImageIdParam = myzValidator(
   z.object({ genImageId: z.uuidv7() }),
 );
 
-// Same ownership split as gen_images.referenceImages (docs/imagegen/prd.md
+// Same ownership split as gen_images.referenceImages (specs/imagegen/prd.md
 // decision 4): a 'genImage' reference points at another workspace image the
 // caller doesn't own (resolved to a storage key in the service); an
 // 'upload' reference names a workspace media row by id, produced by the
@@ -25,7 +25,7 @@ const genImageReferenceSchema = z.discriminatedUnion('origin', [
 // generateImagesSchema (@repo/ai) is the service-level shape: it takes a
 // resolved provider + model pair and already-resolved reference storage
 // keys. The HTTP body instead carries a single aiModelId (one lookup yields
-// provider, model and capabilities together, docs/imagegen/prd.md decision
+// provider, model and capabilities together, specs/imagegen/prd.md decision
 // 2) and a reference list that still needs resolving, so both are swapped
 // out here and resolved in imagegen.service.ts.
 export const validGenerateImagesBody = myzValidator(

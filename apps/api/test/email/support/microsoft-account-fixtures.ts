@@ -6,7 +6,7 @@
 // directly (a comma-separated list), so tests seed it here instead of
 // driving a real OAuth consent flow. Two scope forms are covered because
 // Microsoft's token response may echo scopes as full resource URIs or as
-// short names (docs/email/microsoft-provider-prd.md's open question,
+// short names (specs/email/microsoft-provider-prd.md's open question,
 // resolved by making the check accept both).
 import { db } from '@repo/database';
 import { account } from '@repo/database/schema';
