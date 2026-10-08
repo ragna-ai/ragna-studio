@@ -62,7 +62,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
   strict env mode drops `DB_*` and the other job-level vars. The tests then
   fall back to the default password and fail with "password authentication
   failed for user postgres". Locally a root `.env` hides this.
-- **Build through pnpm, no turbo cache.** Same reason as the `ci` job: a cache
+- **Build through pnpm, no turbo cache.** Same reason as the `build-and-check` job: a cache
   hit skips the build script, so injected copies are never synced.
 - **Actions pinned to SHAs**, like the other workflows.
 
@@ -85,7 +85,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
 
 ## Required checks
 
-Decided 2026-09-29. The `Protect main` ruleset gets `ci` and `api-tests` as
+Decided 2026-09-29. The `Protect main` ruleset gets `build-and-check` (originally `ci`) and `api-tests` as
 required status checks, so a red PR cannot merge.
 
 - **No `push` trigger.** `main` only changes through a PR, so a run after the
@@ -96,7 +96,7 @@ required status checks, so a red PR cannot merge.
   by `paths-ignore` leaves required checks pending forever. A job skipped by
   `if:` counts as passing. A small `changes` job diffs the PR against its base
   (`git diff --name-only`) and outputs `code=false` when every file is under
-  `docs/` or ends in `.md`. `ci` and `api-tests` need it and run only when
+  `docs/` or ends in `.md`. `build-and-check` and `api-tests` need it and run only when
   `code` is `true`. This keeps the "docs-only changes skip CI" decision in
   [prd.md](./prd.md) working with required checks.
 - The ruleset lives in the GitHub settings, not in the repo.

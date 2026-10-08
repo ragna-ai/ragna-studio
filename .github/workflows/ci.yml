@@ -54,7 +54,7 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "api=$api" >> "$GITHUB_OUTPUT"
 
-  ci:
+  build-and-check:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -75,8 +75,7 @@ jobs:
       # Build first: check-types resolves workspace packages through their dist/ types.
       # Docs are built and previewed by Cloudflare Workers Builds, not here.
       - run: pnpm build --filter='!@repo/docs'
-      # TODO: web is excluded because `nuxt typecheck` is slow; re-add behind a path-gated job.
-      - run: pnpm check-types --filter='!@repo/web'
+      - run: pnpm check-types
       - run: pnpm lint
 
   api-tests:
@@ -122,7 +121,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Same no-turbo-cache reasoning as the ci job: build through pnpm so injected copies sync.
+      # Same no-turbo-cache reasoning as the build-and-check job: build through pnpm so injected copies sync.
       - run: pnpm turbo run build --filter=@repo/api...
       - run: pnpm test:setup
       # Not `pnpm test:api`: turbo's strict env mode strips the DB_* vars from its tasks.
