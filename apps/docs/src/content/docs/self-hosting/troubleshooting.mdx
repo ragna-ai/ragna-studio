@@ -1,0 +1,54 @@
+---
+title: Troubleshooting
+description: Common problems with the installer and the stack, and how to fix them.
+sidebar:
+  order: 8
+---
+
+Start with the logs. Run this from the folder that contains `ragna-studio`:
+
+```bash
+docker compose -p ragna_studio logs -f
+```
+
+Add a service name, such as `backend` or `migrate`, to see only its logs.
+
+## Installer
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| `Docker Compose v2 is required` | Only the old `docker-compose` binary is installed. Install the compose plugin, or Docker Desktop. |
+| `Docker is not running` | Start Docker Desktop, or the Docker service on Linux. |
+| `These settings are missing` | A required value in `.env` is empty. Fill it in `ragna-studio/.env` and run the installer again. |
+| `RAGNA Studio is already set up in ...` | This machine already has an install. Run the installer from that folder, or set `RAGNA_DIR` to it. |
+| `RAGNA Studio data already exists on this machine` | The Docker volume of an earlier install still exists. Use the old folder. If you want to start over, delete the volumes, see [Quickstart](/getting-started/quickstart#everyday-commands). |
+| `RAGNA Studio did not start` | A service failed or didn't become healthy within 5 minutes. Check the logs. |
+
+## Startup
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| `migrate` fails with `ECONNREFUSED` on port 5432 | Releases before the Postgres health check started `migrate` too early on the first start. Run the installer again, or upgrade. |
+| `backend` exits with `Encryption password must be at least 16 characters long` | `ENCRYPTION_PASSWORD` is too short. Set a generated value. Only do this before the first start, see [Security](/self-hosting/security#secrets). |
+| `backend` or `migrate` can't log in to Postgres | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value. |
+| Log warning `MEDIA_URL is not set` | No storage configured. Fine if you skipped storage, see [Storage](/self-hosting/storage). |
+
+## Sign-in
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| The provider shows `redirect_uri_mismatch` | The redirect URI in your OAuth client doesn't match. It must be `<API_BASE_URL>/auth/callback/<provider>`, for example `https://api.example.com/auth/callback/google`. |
+| Sign-in succeeds, but you land on the sign-in page again | The session cookie doesn't reach the app. Check `COOKIE_DOMAIN` (the shared parent domain, for example `.example.com`) and `TRUSTED_ORIGINS`, see [Configuration](/self-hosting/configuration#domains). |
+| A user can't sign in | `ALLOWED_LOGIN_EMAILS` is set and doesn't contain their address. |
+
+## Using the app
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| Uploads and image generation fail | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage). |
+| Images don't load | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL. |
+| Live updates don't arrive | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy). |
+
+## Changed `.env`?
+
+Run the installer again from the same folder. It restarts every service whose settings changed. For a manual setup, run the `up -d --wait` command from [Install using Docker Compose](/self-hosting/install-options/docker-compose#step-3-start-everything) again.

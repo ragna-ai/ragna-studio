@@ -10,11 +10,20 @@ This section runs RAGNA Studio on your own server, behind your own domains. For 
 
 ## Requirements
 
-- One Linux VM with Docker and Docker Compose. Images are multi-arch (amd64, arm64).
-- About 8 GB RAM.
-- Two DNS records pointing at the VM.
-- Two S3-compatible buckets.
-- One OAuth app (Google or Microsoft).
+### Server
+
+| | Minimum | Recommended |
+| --- | --- | --- |
+| RAM | 2 GB (enough to try it out) | 8 GB (regular use, several agents browsing at once) |
+| CPU | 2 vCPU (enough to try it out) | 4 vCPU (regular use, several agents browsing at once) |
+| CPU architecture | amd64 or arm64 | |
+| OS | Linux with Docker Engine and the Docker Compose v2 plugin | |
+
+### Domains and services
+
+- Two DNS records pointing at the server.
+- Optional: two S3-compatible buckets for uploads and generated media.
+- One OAuth client (Google or Microsoft).
 - At least one LLM API key.
 
 Postgres 18 with pgvector and Redis ship in the compose file.
@@ -36,7 +45,7 @@ Postgres 18 with pgvector and Redis ship in the compose file.
 
 <Steps>
   <Step title="Install">
-    Run the installer. See [Installation](/self-hosting/installation).
+    Pick one of the [install options](/self-hosting/install-options): the one-line setup or Docker Compose by hand.
   </Step>
   <Step title="Configure">
     Set domains, secrets and OAuth in [Configuration](/self-hosting/configuration), and buckets in [Storage](/self-hosting/storage).
@@ -46,5 +55,8 @@ Postgres 18 with pgvector and Redis ship in the compose file.
   </Step>
   <Step title="Extend">
     Turn on [optional providers](/self-hosting/optional-providers) such as embeddings, image generation or email.
+  </Step>
+  <Step title="Secure">
+    Go through the [security checklist](/self-hosting/security) before you share the app.
   </Step>
 </Steps>

@@ -37,7 +37,7 @@ The installer generates these on the first run:
 - `DB_PASSWORD`
 - `REDIS_PASSWORD`
 
-To set one by hand, use `openssl rand -base64 32`. Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
+To set one by hand, use `openssl rand -hex 32`. Use hex: `DB_PASSWORD` becomes part of the database URL, so characters like `/` break the connection. Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
 
 <Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
   Never change `BETTER_AUTH_SECRET` after the first start. Stored OAuth tokens become unreadable. That affects connected Gmail, Outlook and LinkedIn accounts. Every session also ends.
@@ -48,6 +48,8 @@ Set `ENCRYPTION_PASSWORD` once and keep it.
 ## OAuth
 
 Sign-in uses OAuth. Configure at least one provider: Google (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) or Microsoft (`MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID`).
+
+Create an OAuth client at the provider to get the client ID and secret. Google calls it an OAuth client (Google Auth Platform, Clients). Microsoft calls it an app registration (Microsoft Entra ID).
 
 The redirect URI per provider is:
 
