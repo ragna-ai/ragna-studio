@@ -30,9 +30,7 @@ export async function getAgentContextDocumentsByAgentId({
   });
 }
 
-// Ownership-scoped lookup for API routes: callers already resolved the agent
-// via `getAgentById({ agentId, userId })`, so this only needs to confirm the
-// document belongs to that agent.
+// Callers already resolved the agent via `getAgentByIdAndWorkspaceId`; this confirms the document belongs to it.
 export async function getAgentContextDocumentByIdAndAgentId({
   id,
   agentId,

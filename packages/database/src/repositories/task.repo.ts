@@ -206,7 +206,9 @@ export async function createTask({
     if (labelIds && labelIds.length > 0) {
       await tx
         .insert(taskToTaskLabel)
-        .values(labelIds.map((taskLabelId) => ({ taskId: createdTask.id, taskLabelId })));
+        .values(
+          labelIds.map((taskLabelId) => ({ workspaceId, taskId: createdTask.id, taskLabelId })),
+        );
     }
 
     return createdTask;
@@ -296,7 +298,7 @@ export async function updateTask({
     }
 
     if (labelIds !== undefined) {
-      await replaceTaskLabels(tx, { taskId: id, labelIds });
+      await replaceTaskLabels(tx, { taskId: id, workspaceId, labelIds });
     }
 
     return updatedTask;
@@ -305,14 +307,14 @@ export async function updateTask({
 
 async function replaceTaskLabels(
   tx: TaskTransaction,
-  { taskId, labelIds }: { taskId: string; labelIds: string[] },
+  { taskId, workspaceId, labelIds }: { taskId: string; workspaceId: string; labelIds: string[] },
 ): Promise<void> {
   await tx.delete(taskToTaskLabel).where(eq(taskToTaskLabel.taskId, taskId));
 
   if (labelIds.length > 0) {
     await tx
       .insert(taskToTaskLabel)
-      .values(labelIds.map((taskLabelId) => ({ taskId, taskLabelId })));
+      .values(labelIds.map((taskLabelId) => ({ workspaceId, taskId, taskLabelId })));
   }
 }
 

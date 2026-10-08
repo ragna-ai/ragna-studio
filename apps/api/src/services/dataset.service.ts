@@ -368,7 +368,7 @@ export async function updateDatasetRowForUser({
   }
 
   const { error, data: updatedRow } = await tryCatch(() =>
-    updateDatasetRow({ datasetId, rowId, userId: datasetRecord.userId, data }),
+    updateDatasetRow({ datasetId, rowId, workspaceId, data }),
   );
 
   if (error !== null || !updatedRow) {
@@ -407,9 +407,7 @@ export async function deleteDatasetRow({
     throw new NotFoundException('Dataset row not found');
   }
 
-  const { error } = await tryCatch(() =>
-    softDeleteDatasetRow({ datasetId, rowId, userId: datasetRecord.userId }),
-  );
+  const { error } = await tryCatch(() => softDeleteDatasetRow({ datasetId, rowId, workspaceId }));
 
   if (error !== null) {
     logger.error('Failed to delete dataset row', error);

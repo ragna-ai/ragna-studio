@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
@@ -49,6 +49,7 @@ export const dataset = pgTable(
   (table) => [
     index('dataset_userId_idx').on(table.userId),
     index('dataset_workspaceId_idx').on(table.workspaceId),
+    unique('datasets_workspace_id_unique').on(table.workspaceId, table.id),
   ],
 );
 

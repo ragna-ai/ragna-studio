@@ -20,6 +20,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { throwIfForeignReference } from '../utils/foreign-reference';
 
 // Every function below runs after the workspace guard has verified the
 // caller owns `:workspaceId`; access is scoped
@@ -172,6 +173,10 @@ export async function createTaskForUser({
     }),
   );
 
+  if (error !== null) {
+    throwIfForeignReference(error);
+  }
+
   if (error !== null || !createdTask) {
     logger.error('Failed to create task', error);
     throw new InternalServerErrorException('Failed to create task');
@@ -261,6 +266,7 @@ export async function updateTaskForUser({
   );
 
   if (error !== null) {
+    throwIfForeignReference(error);
     logger.error('Failed to update task', error);
     throw new InternalServerErrorException('Failed to update task');
   }

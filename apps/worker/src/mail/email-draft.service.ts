@@ -169,7 +169,7 @@ async function runDraftAgent({
 
   const { instructions, retrievalMode } = await buildAgentInstructions({
     agentId,
-    userId: account.userId,
+    workspaceId: agentRecord.workspaceId,
     tools: agent.tools,
     systemPrompt: agent.systemPrompt,
     context: agent.context,

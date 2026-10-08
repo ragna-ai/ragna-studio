@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Agent } from '../schema';
-import { agent } from '../schema';
+import { agent, task } from '../schema';
 import type { ICreateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
 
@@ -162,9 +162,7 @@ export async function getAgentByIdAndWorkspaceId({
   return agentRecord ?? null;
 }
 
-// Ownership lookup for callers outside the workspace-guarded HTTP routes
-// (e.g. workflow executors resolving an agent the running user referenced):
-// scoped by userId instead, since there is no workspace guard in that path.
+// Per-user lookup for email, which has no workspace scope by design.
 export async function getAgentById({
   agentId,
   userId,
@@ -259,5 +257,11 @@ export async function deleteAgentById({
   agentId: string;
   workspaceId: string;
 }): Promise<void> {
-  await db.delete(agent).where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(task)
+      .set({ assignedAgentId: null })
+      .where(and(eq(task.assignedAgentId, agentId), eq(task.workspaceId, workspaceId)));
+    await tx.delete(agent).where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)));
+  });
 }

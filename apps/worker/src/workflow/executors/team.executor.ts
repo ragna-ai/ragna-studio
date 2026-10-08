@@ -12,7 +12,7 @@ import {
 } from '@repo/ai';
 import type { ToolSet } from '@repo/ai';
 import type { AiModelPricing } from '@repo/database';
-import { getAgentById, getDefaultAgent } from '@repo/database';
+import { getAgentByIdAndWorkspaceId, getDefaultAgent } from '@repo/database';
 import type { TeamConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
 import { noopWriter } from './noop-writer';
@@ -41,9 +41,12 @@ async function resolveMembers(
 ): Promise<ResolvedMember[]> {
   return Promise.all(
     members.map(async (member) => {
-      const agentRecord = await getAgentById({ agentId: member.agentId, userId: ctx.userId });
+      const agentRecord = await getAgentByIdAndWorkspaceId({
+        agentId: member.agentId,
+        workspaceId: ctx.workspaceId,
+      });
       if (!agentRecord) {
-        throw new Error(`Agent "${member.agentId}" not found for this user`);
+        throw new Error(`Agent "${member.agentId}" not found in this workspace`);
       }
       return { agentId: member.agentId, role: member.role, name: agentRecord.name };
     }),
@@ -190,14 +193,17 @@ async function resolveReferencedLead(
   ctx: ExecutorContext,
   briefing: string,
 ): Promise<LeadSetup> {
-  const agentRecord = await getAgentById({ agentId: leadAgentId, userId: ctx.userId });
+  const agentRecord = await getAgentByIdAndWorkspaceId({
+    agentId: leadAgentId,
+    workspaceId: ctx.workspaceId,
+  });
   if (!agentRecord) {
-    throw new Error(`Agent "${leadAgentId}" not found for this user`);
+    throw new Error(`Agent "${leadAgentId}" not found in this workspace`);
   }
   const lead = withAiModel(agentRecord);
   const { instructions, retrievalMode } = await buildAgentInstructions({
     agentId: leadAgentId,
-    userId: ctx.userId,
+    workspaceId: ctx.workspaceId,
     tools: lead.tools,
     systemPrompt: lead.systemPrompt,
     context: lead.context,

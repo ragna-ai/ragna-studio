@@ -22,10 +22,15 @@ Tests are grouped by domain folder, one folder per feature area:
 - `test/folder/` — folder CRUD, including the "documents move to root, not
   deleted" cascade on folder delete.
 - `test/task/` — task CRUD (filters, subtask/reminder business rules, move)
-  and task-label CRUD.
+  and task-label CRUD. `task-workspace-references.test.ts` covers the
+  workspace-scoped `assignedAgentId`/`labelIds` references.
+- `test/document/` — documents. Today only the workspace-scoped `folderId`
+  reference (API and `createDocument` tool).
+- `test/database/` — `@repo/database` helpers that need a real database error.
 - `test/dataset/` — dataset CRUD, export, and row CRUD/reorder (soft delete,
   pagination, `afterRowId` ordering).
-- `test/agent/` — agent CRUD and the `/memory` GET/PUT endpoints.
+- `test/agent/` — agent CRUD, the `/memory` GET/PUT endpoints, and the
+  workspace-scoped `defaultDatasetId` reference.
 - `test/notification/` — notification list/unread-count/read/read-all/delete.
   User-scoped, not workspace-scoped, and has no `POST` route (notifications
   are created by other flows); fixtures are seeded directly via
@@ -101,15 +106,15 @@ under `test/`, following this pattern.
 
 ## One-time setup (per fresh docker volume)
 
-Creates `studio_test` if it doesn't exist yet and pushes the current drizzle
-schema into it:
+Drops and recreates `studio_test`, then pushes the current drizzle schema into
+the fresh database:
 
 ```bash
 pnpm --filter @repo/api test:setup
 ```
 
-Re-run this after schema changes (it's a plain `drizzle-kit push --force`,
-safe to run repeatedly). This delegates to `pnpm --filter @repo/testing
+Re-run this after schema changes (safe to run repeatedly; it wipes the test
+database each time, so no other test run may be in progress). This delegates to `pnpm --filter @repo/testing
 test:setup` (`packages/testing/scripts/setup-test-db.ts`), which is
 db-agnostic (no apps/api-specific paths), so `apps/worker`'s future test
 suite can run the exact same command instead of duplicating it.

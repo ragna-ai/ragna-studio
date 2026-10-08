@@ -11,6 +11,7 @@ import { toDocumentDocx, toDocumentMarkdown, toDocumentPdf, toDocumentText } fro
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import { throwIfForeignReference } from '../utils/foreign-reference';
 
 export interface DocumentResponse {
   id: string;
@@ -207,6 +208,10 @@ export async function createDocumentForUser({
     createDocument({ workspaceId, folderId, title, content, createdByUserId: userId }),
   );
 
+  if (error !== null) {
+    throwIfForeignReference(error);
+  }
+
   if (error !== null || !createdDocument) {
     logger.error('Failed to create document', error);
     throw new InternalServerErrorException('Failed to create document');
@@ -238,6 +243,7 @@ export async function updateDocumentForUser({
   );
 
   if (error !== null) {
+    throwIfForeignReference(error);
     logger.error('Failed to update document', error);
     throw new InternalServerErrorException('Failed to update document');
   }

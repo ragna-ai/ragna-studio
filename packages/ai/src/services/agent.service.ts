@@ -6,7 +6,7 @@ import type {
   Dataset,
 } from '@repo/database';
 import {
-  getDatasetById,
+  getDatasetByWorkspaceId,
   getMemoryByAgentId,
   getReadyAgentContextDocumentMeta,
   getReadyAgentContextDocumentsForPrompt,
@@ -22,7 +22,7 @@ export const AGENT_CONTEXT_INJECTION_THRESHOLD = 30_000;
 
 type BuildInstructionsInput = {
   agentId: string;
-  userId: string;
+  workspaceId: string;
   tools: string[];
   systemPrompt: string;
   context: string | null;
@@ -59,13 +59,13 @@ async function loadAgentMemoryContent(
  * memory does: ownership is re-checked here (not just at pin time), and a
  * lookup failure or a dataset that no longer belongs to this user logs a
  * warning and the prompt continues without it.
- * @param userId The agent owner's user id, for the ownership check.
+ * @param workspaceId The agent's workspace id; the dataset must live in it.
  * @param tools The list of tools enabled for the agent.
  * @param defaultDatasetId The agent's pinned dataset id, if any.
  * @returns The pinned dataset, or undefined if there is none to inject.
  */
 async function loadPinnedDataset(
-  userId: string,
+  workspaceId: string,
   tools: string[],
   defaultDatasetId: string | null | undefined,
 ): Promise<Dataset | undefined> {
@@ -74,7 +74,7 @@ async function loadPinnedDataset(
   }
 
   const { data: datasetRecord, error } = await tryCatch(() =>
-    getDatasetById({ datasetId: defaultDatasetId, userId }),
+    getDatasetByWorkspaceId({ datasetId: defaultDatasetId, workspaceId }),
   );
 
   if (error !== null) {
@@ -266,12 +266,12 @@ export interface AgentInstructionsResult {
 
 /**
  * Builds the agent's instructions by combining the system prompt, context, documents (or document index), memory content, and pinned dataset.
- * @param payload The input object containing agentId, userId, tools, systemPrompt, context, and defaultDatasetId.
+ * @param payload The input object containing agentId, workspaceId, tools, systemPrompt, context, and defaultDatasetId.
  * @returns The combined instructions, and whether retrieval mode applies.
  */
 export async function buildAgentInstructions({
   agentId,
-  userId,
+  workspaceId,
   tools,
   systemPrompt,
   context,
@@ -280,7 +280,7 @@ export async function buildAgentInstructions({
   const [memoryContent, agentContext, pinnedDataset] = await Promise.all([
     loadAgentMemoryContent(agentId, tools),
     loadAgentContext(agentId),
-    loadPinnedDataset(userId, tools, defaultDatasetId),
+    loadPinnedDataset(workspaceId, tools, defaultDatasetId),
   ]);
 
   const instructions = buildInstructions(

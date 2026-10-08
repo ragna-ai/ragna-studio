@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  foreignKey,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  unique,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { dataset } from './dataset.schema';
@@ -83,10 +92,8 @@ export const agent = pgTable(
     // Soft pin: when set, the dataset's id and
     // schema are injected into this agent's instructions so it can skip
     // `datasetFind` and go straight to row operations. Deleting the dataset
-    // nulls this out and the agent degrades to lookup mode.
-    defaultDatasetId: text('default_dataset_id').references(() => dataset.id, {
-      onDelete: 'set null',
-    }),
+    // nulls this out (the repo clears it first) and the agent degrades to lookup mode.
+    defaultDatasetId: text('default_dataset_id'),
     settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()
@@ -98,6 +105,12 @@ export const agent = pgTable(
     index('agent_aiModelId_idx').on(table.aiModelId),
     index('agent_workspaceId_idx').on(table.workspaceId),
     index('agent_defaultDatasetId_idx').on(table.defaultDatasetId),
+    unique('agents_workspace_id_unique').on(table.workspaceId, table.id),
+    foreignKey({
+      columns: [table.workspaceId, table.defaultDatasetId],
+      foreignColumns: [dataset.workspaceId, dataset.id],
+      name: 'agents_default_dataset_workspace_fk',
+    }),
     // isDefault is unique per scope: a workspace-scoped agent's scope is its
     // own workspaceId, an unassigned agent's scope is "no workspace". Two
     // partial indexes because a single unique index would treat every NULL

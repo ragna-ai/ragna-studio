@@ -1,4 +1,4 @@
-import { index, pgTable, text } from 'drizzle-orm/pg-core';
+import { foreignKey, index, pgTable, text } from 'drizzle-orm/pg-core';
 import { agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { folder } from './folder.schema';
@@ -20,9 +20,9 @@ export const document = pgTable(
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
-    // Null = root level. Folder delete moves documents to root (set null),
-    // it never deletes them.
-    folderId: text('folder_id').references(() => folder.id, { onDelete: 'set null' }),
+    // Null = root level. Folder delete moves documents to root (the repo
+    // clears folderId first), it never deletes them.
+    folderId: text('folder_id'),
     title: text('title').notNull(),
     content: text('content').notNull().default(''),
     createdByUserId: text('created_by_user_id').references(() => user.id, {
@@ -33,7 +33,14 @@ export const document = pgTable(
     }),
     ...timestamps,
   },
-  (table) => [index('document_workspaceId_idx').on(table.workspaceId)],
+  (table) => [
+    index('document_workspaceId_idx').on(table.workspaceId),
+    foreignKey({
+      columns: [table.workspaceId, table.folderId],
+      foreignColumns: [folder.workspaceId, folder.id],
+      name: 'documents_folder_workspace_fk',
+    }),
+  ],
 );
 
 export type Document = typeof document.$inferSelect;

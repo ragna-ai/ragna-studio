@@ -733,7 +733,7 @@ export async function runChatStream(
     const validModelMessages = await convertToModelMessages(modelFacingMessages);
     const { instructions, retrievalMode } = await buildAgentInstructions({
       agentId: agent.id,
-      userId,
+      workspaceId: agent.workspaceId,
       tools: agent.tools,
       systemPrompt: agent.systemPrompt,
       context: agent.context,

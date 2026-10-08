@@ -1,6 +1,7 @@
 import {
   createDataset,
   createDatasetRow,
+  createWorkspace,
   db,
   deleteMcpConnection,
   getDatasetRowById,
@@ -267,5 +268,47 @@ describe('POST /mcp: tools/call', () => {
     };
 
     expect(body.result.isError).toBe(true);
+  });
+
+  test('workspace isolation: a dataset in another workspace of the same user is not found', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    await seedMcpConnection({ userId, workspaceId, access: { datasets: 'write' } });
+    const token = await mintMcpAccessToken({ userId });
+
+    const otherWorkspace = await createWorkspace({ ownerId: userId, name: 'Other' });
+    const siblingDataset = await createDataset({
+      userId,
+      workspaceId: otherWorkspace.id,
+      name: 'Sibling',
+      columns: [{ id: 'status', name: 'Status', type: 'text' }],
+    });
+    const siblingRow = await createDatasetRow({
+      datasetId: siblingDataset.id,
+      userId,
+      data: { status: 'todo' },
+    });
+
+    const calls: Array<[string, Record<string, unknown>]> = [
+      ['datasetListRows', { datasetId: siblingDataset.id }],
+      ['datasetGetRow', { datasetId: siblingDataset.id, rowId: siblingRow.id }],
+      ['datasetAppendRow', { datasetId: siblingDataset.id, data: { status: 'new' } }],
+      [
+        'datasetUpdateRow',
+        { datasetId: siblingDataset.id, rowId: siblingRow.id, data: { status: 'done' } },
+      ],
+    ];
+
+    for (const [toolName, args] of calls) {
+      const response = await callTool(token, toolName, args);
+      const body = (await response.json()) as { result: { isError: boolean } };
+      expect(body.result.isError).toBe(true);
+    }
+
+    const untouchedRow = await getDatasetRowById({
+      datasetId: siblingDataset.id,
+      rowId: siblingRow.id,
+    });
+    expect(untouchedRow?.data).toEqual({ status: 'todo' });
   });
 });
