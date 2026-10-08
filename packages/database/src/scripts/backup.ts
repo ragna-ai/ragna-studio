@@ -13,7 +13,7 @@ import { createWriteStream } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { config } from '@repo/config';
 
-const DEFAULT_CONTAINER = 'ragna_studio_postgresql';
+const DEFAULT_CONTAINER = 'ragna_studio_dev_postgresql';
 
 function findRepoRoot(startDir: string): string {
   let dir = startDir;
