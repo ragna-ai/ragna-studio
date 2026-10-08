@@ -19,10 +19,10 @@
     "ci": "pnpm clean --lockfile && pnpm install"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.11.6",
+    "@turbo/gen": "^2.11.7",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "^2.11.6",
+    "turbo": "^2.11.7",
     "typescript": "catalog:"
   },
   "engines": {

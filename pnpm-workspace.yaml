@@ -49,11 +49,13 @@ catalog:
   tsdown: ^0.23.0
   typescript: 6.0.3
   zod: 4.6.5
-  oxfmt: ^0.71.0
-  oxlint: ^1.86.0
-  ai: ^7.0.127
+  oxfmt: ^0.72.0
+  oxlint: ^1.87.0
+  ai: ^7.0.133
 
 updateConfig:
   ignoreDependencies:
     - '@types/node'
     - 'typescript'
+    # v2 needs upstream fixes before we can move
+    - 'vue-stream-markdown'
