@@ -26,7 +26,9 @@ export default defineNitroPlugin(async (nitroApp) => {
   };
 
   nitroApp.hooks.hook('nuxt-security:routeRules', (routeRules) => {
-    const csp = routeRules['/**']?.headers?.contentSecurityPolicy;
+    const headers = routeRules['/**']?.headers;
+    if (!headers) return;
+    const csp = headers.contentSecurityPolicy;
     if (!csp) return;
 
     for (const directive of CSP_DIRECTIVES) {
