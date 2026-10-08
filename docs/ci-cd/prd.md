@@ -78,7 +78,7 @@ numbers are estimates; the first real CI runs replace them.
 - **Triggers:** `pull_request` only. (Originally also `push` to `main`;
   dropped 2026-09-29, see [api-tests-prd.md](./api-tests-prd.md#required-checks).)
 - **Docs-only changes:** originally skipped via `paths-ignore`. Since
-  2026-09-29 skipped per job (a `changes` job gates `ci` and `api-tests`),
+  2026-09-29 skipped per job (a `changes` job gates `build-and-check` and `api-tests`),
   because a skipped workflow leaves required checks pending.
   16 of 74 non-merge commits in the last 30 days touched only docs.
 - **Concurrency:** one group per branch/PR with `cancel-in-progress: true`,
@@ -90,8 +90,15 @@ numbers are estimates; the first real CI runs replace them.
   4. `pnpm install --frozen-lockfile`
   5. Restore/save `.turbo` via `actions/cache`
   6. `pnpm lint`, `pnpm check-types`, `pnpm build`
+- **Job name:** `build-and-check` (renamed from `ci` on 2026-10-08, since it
+  builds as well). The required check in the ruleset was renamed with it.
+- **Web type-check** runs again since 2026-10-08. It was excluded because
+  `nuxt typecheck` took over 4 minutes: 265 s of that was one
+  `useForwardPropsEmits(props, emits)` call over Vue Flow's `FlowEmits` in
+  `components/ai-elements/canvas/Canvas.vue`. Passing the emit through
+  `unknown` skips that comparison; the web check now takes about 13 s.
 - **Permissions:** `contents: read` only.
-- **Branch protection:** require the `ci` check on `main`. Set by hand in
+- **Branch protection:** require the `build-and-check` check on `main`. Set by hand in
   the GitHub settings; not part of the repo.
 - **README:** add the CI status badge.
 

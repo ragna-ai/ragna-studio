@@ -24,8 +24,11 @@ const props = withDefaults(defineProps<FlowProps>(), {
 
 const emits = defineEmits<FlowEmits>();
 const slots = defineSlots<FlowSlots>();
-// @ts-expect-error: VueFlow has a lot of dynamic slots that TypeScript can't know about
-const forwarded = useForwardPropsEmits(props, emits);
+
+type EmitByName = (name: string, ...args: unknown[]) => void;
+// Through unknown on purpose: letting TS relate FlowEmits' dozens of overloads to reka-ui's
+// emit parameter took ~265 s of type-check time. Runtime forwarding is unchanged.
+const forwarded = useForwardPropsEmits(props, emits as unknown as EmitByName);
 
 // VueFlow's dynamic slots each carry a different, mutually incompatible props
 // shape, so the union can't be assigned to any single slot's expected type.
