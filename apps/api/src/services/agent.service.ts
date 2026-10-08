@@ -144,15 +144,25 @@ export interface UpdateAgentInput {
  * [PATCH] /workspace/:workspaceId/agent/:agentId
  * Partial update. Replaces the old upsert endpoint's update half.
  */
-export async function updateAgentForWorkspace({
-  workspaceId,
-  agentId,
-  ...fields
-}: UpdateAgentInput): Promise<Agent> {
+export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<Agent> {
+  const { workspaceId, agentId } = input;
   await loadAgentInWorkspace({ agentId, workspaceId });
 
   const { error, data: updatedAgent } = await tryCatch(() =>
-    updateAgent({ agentId, workspaceId, ...fields }),
+    updateAgent({
+      agentId,
+      workspaceId,
+      userId: input.userId,
+      name: input.name,
+      description: input.description,
+      aiModelId: input.aiModelId,
+      systemPrompt: input.systemPrompt,
+      context: input.context,
+      tools: input.tools,
+      isDefault: input.isDefault,
+      defaultDatasetId: input.defaultDatasetId,
+      settings: input.settings,
+    }),
   );
 
   if (error !== null) {
