@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai';
+import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai/client';
 import type { ToolUIPart } from 'ai';
 import {
   Tool,
