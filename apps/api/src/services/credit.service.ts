@@ -15,7 +15,7 @@ import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, PaymentRequiredException } from '../exceptions';
 
-// 1 credit = 1,000,000 micro-credits (docs/credits/prd.md, "The unit").
+// 1 credit = 1,000,000 micro-credits (specs/credits/prd.md, "The unit").
 const MICRO_CREDITS_PER_CREDIT = 1_000_000;
 
 export interface CreditBalanceResponse {
@@ -25,7 +25,7 @@ export interface CreditBalanceResponse {
 
 // Deliberately omits costNanoUsd, actualCostNanoUsd, markupBps, and
 // unitPrices: those are platform margin, not the user's business
-// (docs/credits/prd.md, "API"). Mapping through this interface explicitly,
+// (specs/credits/prd.md, "API"). Mapping through this interface explicitly,
 // rather than returning the row, is what keeps them from leaking.
 export interface CreditUsageResponse {
   id: string;
@@ -46,20 +46,20 @@ export interface CreditUsageListResponse {
 
 /**
  * The single place that decides what "out of credits" means
- * (docs/credits/prd.md, "apps/api — the gate policy"). `creditGuard`, the WS
+ * (specs/credits/prd.md, "apps/api — the gate policy"). `creditGuard`, the WS
  * chat path in chat.service.ts, and this function's mirror in the worker are
  * the three entry points; all three answer to this one policy.
  *
  * Returns `null` immediately, without querying, when `CREDITS_ENABLED` is
  * off, so the system can ship dark. Otherwise throws `PaymentRequiredException`
  * when the workspace's owner has no credit account, or its balance is not
- * positive (docs/credits/prd.md, "Overdraft": gate on `balance > 0`).
+ * positive (specs/credits/prd.md, "Overdraft": gate on `balance > 0`).
  *
  * `pricing` is the target model's pricing, when the caller already knows
  * which model it's about to spend on. A model with no pricing, or a `kind`
  * the charger doesn't implement (v1 only implements `token`), is not
  * chargeable, so the run is refused here rather than left to fail inside
- * settlement after the model call already ran (docs/credits/prd.md,
+ * settlement after the model call already ran (specs/credits/prd.md,
  * "Pricing"). That's a platform configuration problem, not the user being
  * out of credits, hence `InternalServerErrorException` rather than
  * `PaymentRequiredException`. `pricing === undefined` means the caller
@@ -105,11 +105,11 @@ export async function assertCanSpend({
 /**
  * Resolves the calling user's own credit account state for the user-global
  * `/credit/balance` and `/credit/usage` routes, which have no `:workspaceId`
- * in scope (docs/credits/prd.md, "API": "credits belong to the account, not
+ * in scope (specs/credits/prd.md, "API": "credits belong to the account, not
  * to a workspace"). A direct read on `credit_accounts.userId`, distinct from
  * `resolveCreditSpendState`'s workspace-locator gate. Never creates an
  * account: "no account" comes back as `null`, the same as
- * `resolveCreditSpendState` (docs/credits/prd.md, "Account creation": only
+ * `resolveCreditSpendState` (specs/credits/prd.md, "Account creation": only
  * `grantCredits` creates one).
  */
 async function resolveOwnCreditSpendState({
@@ -130,7 +130,7 @@ async function resolveOwnCreditSpendState({
 /**
  * [GET] /credit/balance
  * A user with no credit account yet reads the same as a zero balance
- * (docs/credits/prd.md, "Account creation"), rather than a 404 or an error.
+ * (specs/credits/prd.md, "Account creation"), rather than a 404 or an error.
  */
 export async function getCreditBalanceForUser({
   userId,
@@ -143,7 +143,7 @@ export async function getCreditBalanceForUser({
   return {
     balanceCredits: Number(balanceMicroCredits) / MICRO_CREDITS_PER_CREDIT,
     // bigint is not JSON-serialisable, so this crosses the API boundary as a
-    // string (docs/credits/prd.md, "API").
+    // string (specs/credits/prd.md, "API").
     balanceMicroCredits: balanceMicroCredits.toString(),
   };
 }
@@ -165,7 +165,7 @@ function toCreditUsageResponse(event: CreditUsageEvent): CreditUsageResponse {
 /**
  * [GET] /credit/usage
  * Paginated history of what the user's account has spent credits on,
- * newest first by default (docs/api-standards/prd.md, "Pagination").
+ * newest first by default (specs/api-standards/prd.md, "Pagination").
  */
 export async function listCreditUsageForUser({
   userId,

@@ -3,7 +3,7 @@ import type { ToolDefinition } from '@repo/ai';
 import { datasetToolDefinitions } from '@repo/ai';
 import type * as z from 'zod';
 
-// The integration registry (docs/mcp/prd.md, "Scope of the layer"): datasets
+// The integration registry (specs/mcp/prd.md, "Scope of the layer"): datasets
 // today, more resource types register here as they become MCP integrations.
 export const mcpIntegrationDefinitions: Record<McpIntegrationId, ToolDefinition<z.ZodObject, unknown>[]> =
   {

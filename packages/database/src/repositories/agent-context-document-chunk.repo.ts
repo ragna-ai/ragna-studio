@@ -14,7 +14,7 @@ export interface ReplaceAgentContextDocumentChunksInput {
 }
 
 // Runs as a single transaction so a `ready` document always has its chunks
-// in place (docs/agent/agent-context-retrieval.md, "Pipeline changes"
+// in place (specs/agent/agent-context-retrieval.md, "Pipeline changes"
 // invariant): the document row and its chunks flip together, never one
 // without the other.
 export async function replaceAgentContextDocumentChunksAndMarkReady({
@@ -71,7 +71,7 @@ export interface AgentContextDocumentChunkSearchResult {
 
 // Exact cosine scan over one agent's chunks, joined to `ready` documents so
 // a document mid-replace drops out of search even if its old chunks still
-// exist for a moment (docs/agent/agent-context-retrieval.md, "Data model").
+// exist for a moment (specs/agent/agent-context-retrieval.md, "Data model").
 export async function searchAgentContextDocumentChunks({
   agentId,
   queryEmbedding,
@@ -109,7 +109,7 @@ export interface AgentContextDocumentMeta {
 
 // Returns sizes only, never `extractedText` itself (up to 5MB per document),
 // so prompt building can decide injection vs. retrieval mode without loading
-// the text it might not even use (docs/agent/agent-context-retrieval.md).
+// the text it might not even use (specs/agent/agent-context-retrieval.md).
 export async function getReadyAgentContextDocumentMeta({
   agentId,
 }: {

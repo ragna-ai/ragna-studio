@@ -205,7 +205,7 @@ export function useSetThreadTrashed(
 
 /**
  * [POST] /email/thread/bulk/trash - mass-trash
- * (docs/email/mass-deletion-change-request.md). Same optimistic/onSettled
+ * (specs/email/mass-deletion-change-request.md). Same optimistic/onSettled
  * shape as useSetThreadTrashed above: every requested thread is removed from
  * the current list immediately (bulk-trash always leaves every view except
  * Trash itself, same rule as the single-thread `trashed: true` case), and

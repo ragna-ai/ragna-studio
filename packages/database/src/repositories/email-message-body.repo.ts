@@ -15,7 +15,7 @@ export async function getEmailMessageBody({
   return found ?? null;
 }
 
-// Lazy-persist write path (docs/email/prd.md, "Sync model"): the first
+// Lazy-persist write path (specs/email/prd.md, "Sync model"): the first
 // fetch for any reason (classify job, thread-view live fetch) upserts here,
 // so a second fetch of the same message is a plain read with no provider
 // call.

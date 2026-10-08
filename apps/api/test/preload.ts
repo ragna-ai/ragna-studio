@@ -12,7 +12,7 @@
 // through). The ai and storage mocks don't need this today because both
 // contexts resolve them to the same virtual-store slot, but if one of them
 // silently stops mocking after a lockfile change, this is the place to
-// re-register it. See docs/docker-deploy/injected-workspace-packages.md.
+// re-register it. See specs/docker-deploy/injected-workspace-packages.md.
 import { acquireTestSuiteLock, linkedinModuleMock, queueModuleMock } from '@repo/testing';
 import { mock } from 'bun:test';
 import { emailQueueModuleMock } from './email/support/email-queue.mock';

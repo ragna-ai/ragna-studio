@@ -10,7 +10,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// social-post (docs/testing/strategy.md's "Blocked on mock infrastructure",
+// social-post (specs/testing/strategy.md's "Blocked on mock infrastructure",
 // now unblocked). Auth/authorization are covered exhaustively in test/auth/
 // and test/workspace/workspace-authorization.test.ts; this file only checks
 // the social-post feature's own behavior. CRUD needs no mock at all;

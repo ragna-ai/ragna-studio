@@ -1,7 +1,7 @@
 // apps/worker/src/mail/email-classify.service.ts
 //
 // Classifies one newly-synced message into the account's category set and
-// decides whether it should auto-draft (docs/email/prd.md, "Worker jobs").
+// decides whether it should auto-draft (specs/email/prd.md, "Worker jobs").
 // Best-effort by design: an LLM failure leaves the message uncategorized
 // rather than failing the job, so a flaky classify call never blocks the
 // sync pipeline behind it.

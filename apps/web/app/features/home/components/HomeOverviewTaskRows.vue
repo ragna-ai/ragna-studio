@@ -17,7 +17,7 @@ const { formatDate } = useDateTimeFormat();
 
 // Computed
 // Client-side grouping only, same pattern as TaskListView.vue
-// (docs/home/prd.md, "Tasks card"): the API returns a flat recency-sorted
+// (specs/home/prd.md, "Tasks card"): the API returns a flat recency-sorted
 // list, and header counts are within-card counts, not workspace totals.
 const groups = computed(() =>
   STATUS_COLUMNS.map((column) => ({

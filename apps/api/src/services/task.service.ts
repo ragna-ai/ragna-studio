@@ -5,7 +5,7 @@ import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
 
 // Every function below runs after the workspace guard has verified the
-// caller owns `:workspaceId` (docs/api-standards/prd.md); access is scoped
+// caller owns `:workspaceId` (specs/api-standards/prd.md); access is scoped
 // by workspaceId, never userId.
 
 /**
@@ -36,7 +36,7 @@ async function getTaskOrThrow({
   return taskRecord;
 }
 
-// One-level subtask rule (docs/tasks/prd.md, "Schema"): a task that already
+// One-level subtask rule (specs/tasks/prd.md, "Schema"): a task that already
 // has a parent cannot itself become a parent. Shared by create and PATCH.
 async function assertParentIsTopLevel({
   workspaceId,
@@ -58,7 +58,7 @@ async function assertParentIsTopLevel({
 
 /**
  * [GET] /workspace/:workspaceId/task
- * Not paginated: a board needs every card (docs/tasks/prd.md, "List").
+ * Not paginated: a board needs every card (specs/tasks/prd.md, "List").
  */
 export async function listTasksForWorkspace({
   workspaceId,
@@ -169,7 +169,7 @@ type UpdateTaskFields = {
   assignedAgentId?: string | null;
 };
 
-// Reminder rule (docs/tasks/prd.md, "PATCH"): remindDaysBeforeDue can only be
+// Reminder rule (specs/tasks/prd.md, "PATCH"): remindDaysBeforeDue can only be
 // (re)armed if the task ends up with a due date. If this request doesn't
 // touch dueDate, the existing task must already have one.
 async function assertReminderHasDueDate({
@@ -193,7 +193,7 @@ async function assertReminderHasDueDate({
   }
 }
 
-// Parent rule (docs/tasks/prd.md, "PATCH"): a task with subtasks cannot
+// Parent rule (specs/tasks/prd.md, "PATCH"): a task with subtasks cannot
 // become a subtask itself, on top of the same one-level check create uses.
 async function assertParentTaskChangeIsValid({
   workspaceId,
@@ -253,7 +253,7 @@ export async function updateTaskForUser({
 
 // The repo throws a plain Error (no typed error class) when `afterTaskId`
 // isn't in the target workspace/status column; matched by message since
-// that's the only signal it gives us (docs/tasks/prd.md, "Move").
+// that's the only signal it gives us (specs/tasks/prd.md, "Move").
 function isInvalidAfterTaskIdError(error: Error): boolean {
   return error.message.includes('afterTaskId does not belong to the target');
 }

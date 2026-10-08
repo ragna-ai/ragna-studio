@@ -20,4 +20,4 @@ A dedicated `packages/database/Dockerfile` image runs `db:migrate`/`db:seed`
 as one-shot `docker/docker-compose.yml` services ahead of `api`/`worker`. Full
 design, the Postgres advisory lock, why seeding had to become idempotent,
 and how to reconcile a pre-existing `db:push`-only database:
-[docs/database/migrations-and-seed.md](../../docs/database/migrations-and-seed.md).
+[specs/database/migrations-and-seed.md](../../docs/database/migrations-and-seed.md).

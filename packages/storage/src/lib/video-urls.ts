@@ -24,7 +24,7 @@ export function getVideoFrameBucketNameForUser(userId: string): {
   };
 }
 
-// Persisted BFL draft bundles (docs/videogen/prd-v2.md decision 3). No
+// Persisted BFL draft bundles (specs/videogen/prd-v2.md decision 3). No
 // public URL helper: the encrypted .bin is never served to the browser, the
 // worker is the only reader (it downloads its own upload for the enhance
 // path).

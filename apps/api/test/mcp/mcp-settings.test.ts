@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { seedMcpConnection, seedOAuthClient, TEST_MCP_CLIENT_ID } from './support/mcp-fixtures';
 
-// /mcp-settings: C4 (docs/mcp/slices.md), session-authenticated REST for the
+// /mcp-settings: C4 (specs/mcp/slices.md), session-authenticated REST for the
 // settings page slice 4 builds against.
 
 const mcpSettingsResponseSchema = z.object({

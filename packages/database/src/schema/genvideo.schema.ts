@@ -7,7 +7,7 @@ import { workspace } from './workspace.schema';
 
 export type GenVideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
 // '16:9' / '9:16' are Veo's ratios; the rest are BFL flux-3-video's
-// (docs/videogen/prd-v2.md schema section).
+// (specs/videogen/prd-v2.md schema section).
 export type GenVideoAspectRatio =
   | '21:9'
   | '2:1'
@@ -36,7 +36,7 @@ export const genVideo = pgTable(
       .references(() => workspace.id, { onDelete: 'cascade' }),
     status: text('status').notNull().$type<GenVideoStatus>().default('pending'),
     // The rendered output's media row. Null until the worker uploads the mp4
-    // and creates it (docs/media-library/migration-prd.md); no onDelete
+    // and creates it (specs/media-library/migration-prd.md); no onDelete
     // action, same as chat_attachment.media_id.
     mediaId: text('media_id').references(() => media.id),
     // Set on failure, cleared on a retry.
@@ -51,7 +51,7 @@ export const genVideo = pgTable(
     duration: integer('duration'),
     generateAudio: boolean('generate_audio').notNull().default(true),
     seed: integer('seed'),
-    // Art. 50(4) visible-disclosure toggle (docs/ai-labeling/prd.md part 2):
+    // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2):
     // whether the "AI generated" badge was burned into this output. Enhance
     // rows copy this from their parent draft (requestEnhanceGenVideo).
     visibleWatermark: boolean('visible_watermark').notNull().default(false),
@@ -59,7 +59,7 @@ export const genVideo = pgTable(
     // The first-frame image's media row. Set together with frameOrigin; no
     // onDelete action, same as mediaId above.
     frameMediaId: text('frame_media_id').references(() => media.id),
-    // Draft/enhance (docs/videogen/prd-v2.md decision 1). A draft is a normal
+    // Draft/enhance (specs/videogen/prd-v2.md decision 1). A draft is a normal
     // row with isDraft: true; enhance is a separate row pointing back at it
     // via parentGenVideoId, never an in-place upgrade.
     isDraft: boolean('is_draft').notNull().default(false),

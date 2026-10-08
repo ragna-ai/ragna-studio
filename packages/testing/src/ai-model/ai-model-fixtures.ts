@@ -18,7 +18,7 @@ export interface SeedImageAiModelResult {
 
 // Defaults every capability on, so a test only has to turn one off to
 // exercise imagegen's capability gating (apps/api/src/services/
-// imagegen.service.ts's assertCapabilitiesSupportRequest, docs/imagegen/
+// imagegen.service.ts's assertCapabilitiesSupportRequest, specs/imagegen/
 // prd.md decision 1).
 const defaultCapabilities: AiModelCapabilities = {
   canGenerateImage: true,

@@ -116,7 +116,7 @@ function handleExpandRow(rowId: string) {
 
 // Moving up means "place this row after the one two positions above it"
 // (or at the top, once fewer than two rows separate it from the top).
-// docs/datasets/export-and-row-reorder.md, user experience section.
+// specs/datasets/export-and-row-reorder.md, user experience section.
 function handleMoveRowUp(rowId: string) {
   const index = props.rows.findIndex((row) => row.id === rowId);
   if (index <= 0) {

@@ -6,7 +6,7 @@ import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 // DOCUMENT
-// Markdown is the canonical format (docs/documents/prd.md): agent tools and
+// Markdown is the canonical format (specs/documents/prd.md): agent tools and
 // the Tiptap editor both read/write `content` directly, the editor only
 // parses/serializes markdown at its own edges.
 // Authorship: exactly one of createdByUserId / createdByAgentId is set. No
@@ -21,7 +21,7 @@ export const document = pgTable(
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
     // Null = root level. Folder delete moves documents to root (set null),
-    // it never deletes them (docs/documents/prd.md).
+    // it never deletes them (specs/documents/prd.md).
     folderId: text('folder_id').references(() => folder.id, { onDelete: 'set null' }),
     title: text('title').notNull(),
     content: text('content').notNull().default(''),

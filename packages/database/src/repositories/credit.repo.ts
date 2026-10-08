@@ -33,7 +33,7 @@ export interface CreditSettlement {
 
 // Mirrors NormalizedUsage from packages/ai/src/usage.ts, duplicated rather
 // than imported: @repo/database must not depend on @repo/ai's AI-SDK types
-// (docs/credits/prd.md, "Code placement"). The field names match exactly by
+// (specs/credits/prd.md, "Code placement"). The field names match exactly by
 // convention. Call sites must map the fields EXPLICITLY (see chat.service.ts),
 // not spread `...normalizeUsage(...)`: normalizeUsage also returns
 // noCacheInputTokens, which is display-only and deliberately absent here, and
@@ -75,7 +75,7 @@ export interface GrantCreditsParams {
 // Credit accounts are never per-workspace: one user's workspaces all draw
 // from one balance. This answers "who pays for work done here", by
 // resolving workspace -> owner -> account and reading the balance in one
-// join. See docs/credits/prd.md, "Billing entity resolution".
+// join. See specs/credits/prd.md, "Billing entity resolution".
 //
 // Returns a result, never throws for business reasons. `null` means the
 // billing entity has no credit account, which the caller treats as
@@ -142,7 +142,7 @@ export async function getCreditSpendStateForUser({
 }
 
 // Post-flight settlement. One transaction. Idempotent on `idempotencyKey`;
-// `null` means this run was already settled (docs/credits/prd.md,
+// `null` means this run was already settled (specs/credits/prd.md,
 // "Settlement transaction").
 export async function settleCreditUsage(
   params: SettleCreditUsageParams,
@@ -152,7 +152,7 @@ export async function settleCreditUsage(
       // Read inside the transaction, not accepted from the caller: the
       // snapshot written to `unitPrices` is then guaranteed to be the row
       // the charge was computed from, and no call site can pass stale or
-      // hand-rolled prices (docs/credits/prd.md, "Account creation").
+      // hand-rolled prices (specs/credits/prd.md, "Account creation").
       const aiModelRow = await tx.query.aiModel.findFirst({
         where: { id: params.aiModelId },
         columns: { provider: true, model: true, displayName: true, pricing: true },
@@ -164,7 +164,7 @@ export async function settleCreditUsage(
 
       const { pricing } = aiModelRow;
       // Fails closed, matching the `capabilities` convention
-      // (docs/credits/prd.md, "Pricing"). The gate should have refused the
+      // (specs/credits/prd.md, "Pricing"). The gate should have refused the
       // run before it started on a model with no chargeable pricing;
       // getting here means pricing changed mid-run, a configuration bug.
       if (!pricing || pricing.kind !== 'token') {
@@ -182,7 +182,7 @@ export async function settleCreditUsage(
       });
 
       // Unconditional debit: v1 permits the balance to go negative
-      // (docs/credits/prd.md, "Overdraft"). The `UPDATE ... RETURNING`
+      // (specs/credits/prd.md, "Overdraft"). The `UPDATE ... RETURNING`
       // serialises concurrent settlements on the same account at the row
       // level, so `balanceAfter` stays consistent even with several chats
       // streaming at once.
@@ -263,7 +263,7 @@ export async function settleCreditUsage(
 // Resolves a user's credit account, creating one (zero balance) if this is
 // their first grant. The only account-creation path in the system:
 // resolveCreditSpendState (the gate) must never create one lazily on a read
-// (docs/credits/prd.md, "Account creation"). The grant script uses this to
+// (specs/credits/prd.md, "Account creation"). The grant script uses this to
 // turn an email into a `creditAccountId` before calling grantCredits below.
 export async function getOrCreateCreditAccountByUserId({
   userId,
@@ -332,7 +332,7 @@ export async function grantCredits({
 
 // History endpoint. No join: `modelDisplayName` etc. are denormalised onto
 // the row precisely so this never has to reach into `ai_models`
-// (docs/credits/prd.md, "Data fetching").
+// (specs/credits/prd.md, "Data fetching").
 export async function listCreditUsageEvents({
   creditAccountId,
   limit,
@@ -372,7 +372,7 @@ interface ChargeBreakdown {
 // package). Module-private; exported only so a unit test can exercise the
 // rounding directly.
 //
-// docs/credits/prd.md, "The charge formula":
+// specs/credits/prd.md, "The charge formula":
 //   costNanoUsd = billableInput * nanoUsdPerInputToken
 //               + billableOutput * nanoUsdPerOutputToken
 //   chargedMicroCredits = ceilDiv(costNanoUsd * markupBps, 10_000n)
@@ -383,7 +383,7 @@ interface ChargeBreakdown {
 // uncachedInput + cacheRead + cacheWrite === billableInput by construction,
 // so the margin breakdown can never disagree with what the user was
 // charged, whereas an unpopulated provider-supplied field would silently
-// read as zero (docs/credits/prd.md, "The charge formula").
+// read as zero (specs/credits/prd.md, "The charge formula").
 export function computeCharge({
   pricing,
   billableInputTokens,

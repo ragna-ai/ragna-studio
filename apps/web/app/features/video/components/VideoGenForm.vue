@@ -76,7 +76,7 @@ const form = useForm({
         // reconciliation watcher below), but a model swap can leave stale
         // form/store state around, so gate here too: the server rejects an
         // unsupported combination outright, the form should never send one
-        // (docs/videogen/prd-v2.md "Web (apps/web)").
+        // (specs/videogen/prd-v2.md "Web (apps/web)").
         negativePrompt: capability.value.supportsNegativePrompt
           ? value.negativePrompt.trim() || undefined
           : undefined,
@@ -102,7 +102,7 @@ const selectedModel = computed(() =>
   videoModels.value.find((model) => model.id === modelId.value),
 );
 
-// Per-provider constraints for the selected model (docs/videogen/prd-v2.md
+// Per-provider constraints for the selected model (specs/videogen/prd-v2.md
 // decision 5): Veo and BFL disagree on aspect ratios, duration range, seed/
 // negative-prompt, and draft support, so the form renders and reconciles
 // against this rather than a single fixed set of controls.
@@ -120,7 +120,7 @@ const showAdvancedOptions = computed(
 
 // Only a completed row has a media object to animate: pending/processing/
 // failed rows 404 server-side (apps/api's videogen.service.ts resolveFrame,
-// docs/imagegen/worker-execution-prd.md decision 1).
+// specs/imagegen/worker-execution-prd.md decision 1).
 const genImages = computed(
   () => genImageData.value?.genImages.filter((image) => image.status === 'completed') ?? [],
 );
@@ -197,7 +197,7 @@ watch(
 );
 
 // Reconciles persisted settings that are no longer valid when the selected
-// model's provider changes (docs/videogen/prd-v2.md "Web (apps/web)"): the
+// model's provider changes (specs/videogen/prd-v2.md "Web (apps/web)"): the
 // server rejects an out-of-capability combination outright, so the form
 // never submits one instead of leaving it to a 4xx round trip.
 watch(
@@ -216,7 +216,7 @@ watch(
   { immediate: true },
 );
 
-// 1080p only exists for 16:9 on Veo (docs/videogen/prd.md); clamp a
+// 1080p only exists for 16:9 on Veo (specs/videogen/prd.md); clamp a
 // persisted or user-picked combination that's no longer valid. Runs after
 // the watcher above, which is what may have just changed aspectRatio.
 watch(
@@ -296,7 +296,7 @@ watch(
       </Select>
 
       <!-- Veo keeps today's fixed 4/6/8s picker; BFL's 5-20s range drives a
-      slider instead (docs/videogen/prd-v2.md "Web (apps/web)"). -->
+      slider instead (specs/videogen/prd-v2.md "Web (apps/web)"). -->
       <Select v-if="!capability.supportsDraft" v-model="duration">
         <SelectTrigger class="w-24 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.duration')" />

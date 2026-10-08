@@ -56,7 +56,7 @@ export function useCreateTaskLabel() {
       toast.success('Label created');
     },
     onError: (error) => {
-      // Surfaces the API's duplicate-name 400 (docs/tasks/prd.md, "Labels").
+      // Surfaces the API's duplicate-name 400 (specs/tasks/prd.md, "Labels").
       toast.error(extractErrorMessage(error, 'Failed to create label'));
     },
   });
@@ -89,7 +89,7 @@ export function useUpdateTaskLabel() {
   });
 }
 
-/** Cascades the join rows only; never touches tasks (docs/tasks/prd.md). */
+/** Cascades the join rows only; never touches tasks (specs/tasks/prd.md). */
 export function useDeleteTaskLabel() {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();

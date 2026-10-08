@@ -4,7 +4,7 @@ import { getCreditBalanceForUser, listCreditUsageForUser } from '../services/cre
 import { validPaginationQuery } from '../validation';
 
 // Credits belong to the account, not to a workspace, so these are
-// user-global routes (docs/credits/prd.md, "API"): `authMiddleware` only, no
+// user-global routes (specs/credits/prd.md, "API"): `authMiddleware` only, no
 // `workspaceGuard`.
 export const creditController = new Hono()
   .basePath('/credit')

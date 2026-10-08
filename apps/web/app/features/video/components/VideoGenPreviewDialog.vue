@@ -19,7 +19,7 @@ interface Props {
   video: GeneratedVideo | null;
   // Whether an enhance already exists (non-failed) for this draft, so the
   // Enhance button here can carry the same disabled state as the grid tile
-  // it was opened from (docs/videogen/prd-v2.md decision 2). The server
+  // it was opened from (specs/videogen/prd-v2.md decision 2). The server
   // check is still authoritative on submit.
   hasActiveEnhance?: boolean;
 }

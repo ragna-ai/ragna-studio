@@ -10,7 +10,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, testUtils } from 'better-auth/plugins';
 
-// Real permissions come from mcp_settings (docs/mcp/prd.md P1); offline_access
+// Real permissions come from mcp_settings (specs/mcp/prd.md P1); offline_access
 // is only here because OAuth Provider gates refresh-token issuance on it.
 const MCP_SCOPES = ['mcp', 'offline_access'] as const;
 
@@ -80,7 +80,7 @@ export const auth = betterAuth({
       // Google only issues a refresh token on a consenting grant. Needed so
       // the Gmail account-linking flow (linkSocial() with gmail.modify,
       // apps/web) gets a refresh token to store, even though the base
-      // sign-in scopes stay plain openid/profile/email (docs/email/prd.md,
+      // sign-in scopes stay plain openid/profile/email (specs/email/prd.md,
       // "Auth and account connection").
       accessType: 'offline',
       prompt: 'consent',
@@ -134,7 +134,7 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           // Every user needs a workspace to create anything in (WP0 of
-          // docs/api-standards/prd.md: workspaceId is a required container).
+          // specs/api-standards/prd.md: workspaceId is a required container).
           await createWorkspace({ ownerId: user.id, name: 'Personal' });
 
           // Integration tests seed users through this same hook (see

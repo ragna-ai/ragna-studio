@@ -7,11 +7,11 @@ import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support
 import { resetEmailQueueMock } from './support/email-queue.mock';
 import { buildFakeMailThread, fetchThreadMock, resetMailProviderMock, searchMock } from './support/mail-provider.mock';
 
-// Search (docs/email/prd.md, "API": "search (Gmail q= proxy)"). Gmail's own
+// Search (specs/email/prd.md, "API": "search (Gmail q= proxy)"). Gmail's own
 // search does the matching; email.service.ts's searchEmailForUser only
 // hydrates the returned provider thread ids against the local index,
 // falling back to a live fetch + persist for a thread id we haven't seen
-// before (docs/email/prd.md, "Threads/messages").
+// before (specs/email/prd.md, "Threads/messages").
 
 beforeEach(async () => {
   await truncateAllTables();

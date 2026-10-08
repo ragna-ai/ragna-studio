@@ -19,7 +19,7 @@ type UsageStep = Awaited<ReturnType<typeof generateText>>['steps'][number];
 const VERIFIED_PROVIDERS = new Set(['anthropic', 'openai', 'google-genai', 'google-vertex']);
 
 export interface NormalizedUsage {
-  /** What the credit system charges for input, per docs/credits/prd.md. */
+  /** What the credit system charges for input, per specs/credits/prd.md. */
   billableInputTokens: number;
   /** What the credit system charges for output. */
   billableOutputTokens: number;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Cron fans out one job per connected account (docs/email/prd.md, "Worker
+// Cron fans out one job per connected account (specs/email/prd.md, "Worker
 // jobs"). The job reads the account's stored syncCursor off the DB rather
 // than carrying it in the payload, same reasoning as gen-images-job.dto.ts's
 // id-list payload.

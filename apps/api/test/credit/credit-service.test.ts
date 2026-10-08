@@ -10,9 +10,9 @@ import { assertCanSpend } from '../../src/services/credit.service';
 
 // assertCanSpend (apps/api/src/services/credit.service.ts) is the single
 // gate policy shared by creditGuard, the WS chat path, and its worker
-// mirror (docs/credits/prd.md, "apps/api — the gate policy"). None of its
+// mirror (specs/credits/prd.md, "apps/api — the gate policy"). None of its
 // callers are in scope for Phase 1 (streaming chat/WS and apps/worker are
-// both deferred, docs/testing/strategy.md), so it's exercised directly here
+// both deferred, specs/testing/strategy.md), so it's exercised directly here
 // rather than through a route.
 describe('assertCanSpend', () => {
   beforeEach(async () => {
@@ -38,14 +38,14 @@ describe('assertCanSpend', () => {
     await seedCreditAccount({ userId, balanceMicroCredits: 5_000_000n });
 
     // pricing omitted entirely: the enqueue-time creditGuard case
-    // (docs/credits/prd.md), where no node's model is resolved yet.
+    // (specs/credits/prd.md), where no node's model is resolved yet.
     const spendState = await assertCanSpend({ workspaceId });
 
     expect(spendState?.allowed).toBe(true);
     expect(spendState?.balanceMicroCredits).toBe(5_000_000n);
   });
 
-  // Regression: docs/credits/review-2026-07-29.md, finding 1 ("the gate
+  // Regression: specs/credits/review-2026-07-29.md, finding 1 ("the gate
   // never checks model pricing, so 'fail closed' is not implemented"). Fixed
   // in the current code (assertCanSpend's `pricing` check, below); these
   // tests lock that fix in.

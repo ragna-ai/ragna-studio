@@ -36,7 +36,7 @@ export const validCreateAgentBody = myzValidator(
 );
 
 // PATCH: every field is optional, only the ones sent are updated. Splits the
-// old upsert endpoint's update half (docs/api-standards/prd.md).
+// old upsert endpoint's update half (specs/api-standards/prd.md).
 export const validUpdateAgentBody = myzValidator(
   'json',
   z.object({

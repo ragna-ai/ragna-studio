@@ -8,7 +8,7 @@ export interface EmailFolderConfig {
   labelKey: string;
 }
 
-// Order drives the sidebar's system-folder list (docs/email/prd.md,
+// Order drives the sidebar's system-folder list (specs/email/prd.md,
 // "Web": "sidebar: system folders").
 export const EMAIL_FOLDERS: EmailFolderConfig[] = [
   { id: 'inbox', icon: InboxIcon, labelKey: 'email.folder.inbox' },

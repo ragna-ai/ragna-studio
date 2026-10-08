@@ -1,6 +1,6 @@
 # API tests
 
-Integration tests for `apps/api`, per `docs/testing/strategy.md`. Tests call
+Integration tests for `apps/api`, per `specs/testing/strategy.md`. Tests call
 `app.request()` in-process (no port, no server boot) against a real,
 dedicated Postgres database (`studio_test`) and the real docker Redis.
 
@@ -56,7 +56,7 @@ Tests are grouped by domain folder, one folder per feature area:
 - `test/imagegen/` — image generation CRUD. Like videogen below, the AI
   provider call happens only in `apps/worker`'s gen-images processor, never
   synchronously in an `apps/api` request (`POST /` inserts a batch of
-  pending rows and enqueues a real BullMQ job, docs/imagegen/
+  pending rows and enqueues a real BullMQ job, specs/imagegen/
   worker-execution-prd.md), so completed/failed rows are seeded directly via
   the repo for the tests that need one. This domain needs the storage mock
   (for `reference-upload`) but not the AI one; `generateImageMock` is still
@@ -74,13 +74,13 @@ Tests are grouped by domain folder, one folder per feature area:
 - `test/agent-context-document/` — upload/rename/retry/delete for an
   agent's context documents. Every document is created via a real R2
   upload, faked the same way `test/imagegen/`'s reference-upload is.
-- `test/mcp/` — the MCP server (docs/mcp/prd.md): `mcp-endpoint.test.ts`
+- `test/mcp/` — the MCP server (specs/mcp/prd.md): `mcp-endpoint.test.ts`
   covers `POST /mcp` (token/audience/session-cookie/disabled/revoked
   rejections, `tools/list` following live settings, a write call rejected
   under `read` access, append/update stamping `written_by = 'mcp'` and
   landing in `mcp_tool_calls`, and workspace isolation),
   `mcp-settings.test.ts` covers the session-authenticated
-  `/mcp-settings` REST (C4 in docs/mcp/slices.md). `support/mcp-fixtures.ts`
+  `/mcp-settings` REST (C4 in specs/mcp/slices.md). `support/mcp-fixtures.ts`
   seeds an `oauthClient` row directly (normally CIMD-owned) and mints access
   tokens via the jwt() plugin's server-only `signJWT`, sidestepping the real
   CIMD/consent/token-exchange dance, which the OAuth dance itself stays
@@ -135,13 +135,13 @@ bun test
   `@repo/database` connection: two files running at once means one file's
   truncate can wipe rows a different file's in-flight request still needs,
   surfacing as flaky foreign-key violations rather than a clean assertion
-  failure. `docs/testing/strategy.md`'s "truncate between tests" isolation
+  failure. `specs/testing/strategy.md`'s "truncate between tests" isolation
   model assumes serial execution; `maxConcurrency = 1` is what actually
   makes that true, not just a performance knob.
 - The db truncate/guard and auth-seed helpers all live in `@repo/testing`
   (`packages/testing`), a private, build-free package: its `exports` point
   straight at `src/`, so both `bun test` here and Playwright later (Phase 2
-  of `docs/testing/strategy.md`) can import it without a build step.
+  of `specs/testing/strategy.md`) can import it without a build step.
   - `getConnectedDatabaseName()` / `assertConnectedToTestDatabase()`
     (`packages/testing/src/db/db-guard.ts`): every mutating helper calls the
     assertion first. `test/smoke/db-safety.test.ts` asserts the same thing
@@ -169,7 +169,7 @@ bun test
 
 ## External-provider mocks
 
-`docs/testing/strategy.md`'s "External boundaries" (AI providers, R2
+`specs/testing/strategy.md`'s "External boundaries" (AI providers, R2
 storage, LinkedIn, Redis/BullMQ) are faked with Bun's `mock.module()`,
 registered by `packages/testing/src/mocks/` (`ai-provider.mock.ts`,
 `storage-provider.mock.ts`, `linkedin-provider.mock.ts`,
@@ -184,7 +184,7 @@ happens in two places:
   made inside that copy keys on a different resolved path than the one
   apps/api's code (and, for `@repo/queue`, `@repo/ai`'s bundled dist, which
   imports it as an external specifier) imports, so the mock would silently
-  never apply. See `docs/docker-deploy/injected-workspace-packages.md`.
+  never apply. See `specs/docker-deploy/injected-workspace-packages.md`.
 - `@repo/testing`'s module body still runs every `mock.module()` call as a
   side effect: every test file that needs a mock imports it for fixtures
   (`seedAuthenticatedUser`, `truncateAllTables`, ...), listed before its
@@ -214,7 +214,7 @@ exports, so everything else the package exports keeps working unmocked:
   test process both resolve `ai` to the same real npm package. Neither
   `test/imagegen/` nor `test/videogen/` exercises this mock today: both
   domains' `POST /` routes only insert pending rows and enqueue a job
-  (docs/imagegen/worker-execution-prd.md, docs/videogen/prd.md), the
+  (specs/imagegen/worker-execution-prd.md, specs/videogen/prd.md), the
   provider call itself runs from `apps/worker`'s processors instead. Both
   domains' `POST /` tests assert `generateImageMock` was *not* called, to
   prove generation was really deferred rather than run inline. It's kept

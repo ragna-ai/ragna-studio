@@ -9,7 +9,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// authMiddleware tests (docs/testing/strategy.md, "Auth"). GET /workspace is
+// authMiddleware tests (specs/testing/strategy.md, "Auth"). GET /workspace is
 // the vehicle: authMiddleware only, no workspaceGuard, so a pass/fail here
 // isolates session handling from workspace authorization
 // (test/workspace/workspace-authorization.test.ts covers that layer, grouped

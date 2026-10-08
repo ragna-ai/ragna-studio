@@ -4,7 +4,7 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 /**
  * Image-generation input flags read from `ai_models.capabilities`
- * (docs/imagegen/prd.md). Fail closed: an absent or falsy flag means the
+ * (specs/imagegen/prd.md). Fail closed: an absent or falsy flag means the
  * input is unavailable, not that it defaults to on. The maintainer seeds
  * these per model by hand, so an unseeded row is `{}` and every advanced
  * option renders disabled.

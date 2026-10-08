@@ -165,7 +165,7 @@ const categoriesQuery = useGetEmailCategories();
 const allDraftsQuery = useGetAllDrafts();
 
 // `/mail/draft/:draftId` (new mail, no thread below it - see the entry
-// points table in docs/email/drafts-change-request.md, section 2). Only
+// points table in specs/email/drafts-change-request.md, section 2). Only
 // fetches once a draftId is actually being viewed; a 404 (draft already
 // sent/discarded elsewhere) surfaces as `standaloneDraftQuery.isError`,
 // rendered as a "not found" message rather than an error toast.
@@ -308,7 +308,7 @@ function loadMoreThreads() {
   if (threadsQuery.hasNextPage.value) threadsQuery.fetchNextPage();
 }
 
-// Compose creates the local draft row up front (docs/email/drafts-change-request.md,
+// Compose creates the local draft row up front (specs/email/drafts-change-request.md,
 // "Creation timing"), then routes to its own page - EmailDraftPanel is the
 // only surface that ever renders it, there's no more modal to open here. A
 // `kind: 'new'` draft carries no `threadId`, so it can never hit the

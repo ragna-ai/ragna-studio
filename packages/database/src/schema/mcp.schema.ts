@@ -9,7 +9,7 @@ export type McpAccess = Partial<Record<McpIntegrationId, McpAccessLevel>>;
 
 const emptyMcpAccess: McpAccess = {};
 
-// One row per user (docs/mcp/prd.md, "Settings page"): the master toggle
+// One row per user (specs/mcp/prd.md, "Settings page"): the master toggle
 // and per-integration access. Missing key in `access` means 'off'.
 export const mcpSettings = pgTable('mcp_settings', {
   userId: text('user_id')

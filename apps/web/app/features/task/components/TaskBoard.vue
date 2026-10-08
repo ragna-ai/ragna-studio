@@ -17,7 +17,7 @@ const { mutate: createTask, isPending: isCreatingTask } = useCreateTask();
 
 // Refs
 // Local per-column arrays that vue-draggable-plus mutates directly during a
-// drag (docs/tasks/prd.md, "Board view"). Re-synced from `props.tasks`
+// drag (specs/tasks/prd.md, "Board view"). Re-synced from `props.tasks`
 // whenever the shared query refetches: there's no realtime sync in v1, so
 // this is also how agent-made changes appear after a reload.
 type ColumnState = Record<TaskStatus, TaskWithBoardInfo[]>;
@@ -46,7 +46,7 @@ watch(
 // vue-draggable-plus already spliced the dragged card into its destination
 // column's array by the time `@end` fires; `nextTick` just guards against
 // that sync landing on the following microtask. `afterTaskId` is the id of
-// the card now directly above the dropped one (docs/tasks/prd.md, "Move");
+// the card now directly above the dropped one (specs/tasks/prd.md, "Move");
 // an empty column means top-of-column, so it's omitted.
 function handleDragEnd(event: DraggableEvent<TaskWithBoardInfo>) {
   const toStatus = (event.to as HTMLElement | undefined)?.dataset.status as

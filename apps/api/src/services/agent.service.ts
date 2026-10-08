@@ -18,7 +18,7 @@ import { deleteAgentContextDocumentsForAgent } from './agent-context-document.se
  * Loads an agent scoped to its workspace, throwing 404 if it doesn't exist
  * there. Callers rely on the workspace guard having already verified
  * `workspaceId` belongs to the authenticated user
- * (docs/api-standards/prd.md): no separate userId check is needed here.
+ * (specs/api-standards/prd.md): no separate userId check is needed here.
  */
 async function loadAgentInWorkspace({
   agentId,
@@ -46,7 +46,7 @@ async function loadAgentInWorkspace({
 /**
  * [GET] /workspace/:workspaceId/agent
  * Lists a workspace's agents, paginated, plus the total count for the exact
- * same filter (docs/api-standards/prd.md, "Pagination").
+ * same filter (specs/api-standards/prd.md, "Pagination").
  */
 export async function listAgentsForWorkspace({
   workspaceId,
@@ -112,7 +112,7 @@ export interface CreateAgentInput {
 /**
  * [POST] /workspace/:workspaceId/agent
  * Creates an agent in the given workspace. Replaces the old upsert
- * endpoint's create half (docs/api-standards/prd.md).
+ * endpoint's create half (specs/api-standards/prd.md).
  */
 export async function createAgentForWorkspace(input: CreateAgentInput): Promise<Agent> {
   const { error, data: createdAgent } = await tryCatch(() => createAgent(input));

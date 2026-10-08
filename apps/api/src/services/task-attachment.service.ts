@@ -24,7 +24,7 @@ import {
   MAX_UPLOAD_FILE_MB,
 } from '../utils/upload-limits';
 
-// TASK ATTACHMENTS (docs/tasks/attachments-prd.md)
+// TASK ATTACHMENTS (specs/tasks/attachments-prd.md)
 //
 // Straight port of media.service.ts's chat-attachment orchestration onto
 // tasks. Files only: no text extraction, no agent visibility into contents
@@ -33,7 +33,7 @@ import {
 
 
 // Task attachments accept every media kind the platform knows, same as chat
-// (docs/tasks/attachments-prd.md doesn't define a narrower set).
+// (specs/tasks/attachments-prd.md doesn't define a narrower set).
 const TASK_ATTACHMENT_ACCEPTED_KINDS: readonly MediaKind[] = [...IMAGE_KINDS, ...DOCUMENT_KINDS];
 
 // UPLOAD

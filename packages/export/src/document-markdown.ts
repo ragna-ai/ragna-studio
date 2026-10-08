@@ -3,7 +3,7 @@ import type { DocumentExport, ExportFile } from './types';
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 
 /**
- * Markdown writer for documents (docs/datasets/export-and-row-reorder.md
+ * Markdown writer for documents (specs/datasets/export-and-row-reorder.md
  * "Document export" decision 2): `# <title>` heading, blank line, then the
  * stored content verbatim (it's already markdown). No dependency, no
  * parsing needed. An empty document still exports a title-only file

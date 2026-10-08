@@ -16,7 +16,7 @@ export const useImageGenSettingsStore = defineStore('image-gen-settings', () => 
     '1K',
   );
   const count = useLocalStorage('image-gen-count', 1);
-  // Visible "AI generated" badge burn-in (docs/ai-labeling/prd.md), off by
+  // Visible "AI generated" badge burn-in (specs/ai-labeling/prd.md), off by
   // default; provider-independent, so no capability gating in the form.
   const visibleWatermark = useLocalStorage('image-gen-visible-watermark', false);
 

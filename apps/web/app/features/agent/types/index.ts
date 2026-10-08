@@ -15,7 +15,7 @@ export interface AgentSettings {
 export interface Agent {
   id: string;
   userId: string;
-  // Every agent lives in exactly one workspace (docs/api-standards/prd.md).
+  // Every agent lives in exactly one workspace (specs/api-standards/prd.md).
   workspaceId: string;
   aiModelId: string;
   name: string;
@@ -26,7 +26,7 @@ export interface Agent {
   isDefault: boolean;
   settings?: AgentSettings | null;
   aiModel?: AgentAiModelRef;
-  // Soft pin (docs/datasets.md decision 10): the dataset injected into this
+  // Soft pin (specs/datasets.md decision 10): the dataset injected into this
   // agent's system prompt when the `datasets` tool is enabled.
   defaultDatasetId?: string | null;
 }
@@ -45,7 +45,7 @@ export interface AgentManyResponse {
 // workspaceId is never part of the body: it comes from the path
 // (`/workspace/:workspaceId/agent`). The client knows whether it is
 // creating or editing, so create and update are separate requests instead
-// of one upsert (docs/api-standards/prd.md).
+// of one upsert (specs/api-standards/prd.md).
 export type CreateAgentRequest = Omit<
   Agent,
   'id' | 'userId' | 'workspaceId' | 'aiModel'
@@ -78,7 +78,7 @@ export interface AgentContextDocument {
 }
 
 // The mode the agent's prompt pipeline picks based on total ready extracted
-// text vs. injectionThreshold (docs/agent/agent-context-retrieval.md).
+// text vs. injectionThreshold (specs/agent/agent-context-retrieval.md).
 export type AgentContextDocumentMode = 'inject' | 'retrieval';
 
 export interface AgentContextDocumentSummary {

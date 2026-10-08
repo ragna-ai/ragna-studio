@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Id-list payload (docs/imagegen/worker-execution-prd.md decision 3): a
+// Id-list payload (specs/imagegen/worker-execution-prd.md decision 3): a
 // gen-images job carries only the ids of the pending rows the request side
 // already inserted. Every typed field (prompt, settings, provider/model,
 // reference images) lives on those rows, so the worker reads them back off

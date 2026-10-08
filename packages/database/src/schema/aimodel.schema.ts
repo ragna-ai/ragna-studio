@@ -18,7 +18,7 @@ export interface AiModelMeta {
 }
 
 // Discriminated by `kind` so v2 (image/video) is additive, no migration
-// needed (docs/credits/prd.md, "Pricing"). V1 only implements `token`; a
+// needed (specs/credits/prd.md, "Pricing"). V1 only implements `token`; a
 // model with no pricing, or a `kind` the charger doesn't implement yet, is
 // not chargeable and the credit gate refuses to start a run on it, same as
 // the `capabilities` fail-closed convention above.
@@ -71,7 +71,7 @@ export const aiModel = pgTable(
     description: text('description').notNull(),
     capabilities: jsonb('capabilities').default({}).notNull().$type<AiModelCapabilities>(),
     meta: jsonb('meta').default({}).notNull().$type<AiModelMeta>(),
-    // Set by hand, same as capabilities: no seeding here (docs/credits/prd.md,
+    // Set by hand, same as capabilities: no seeding here (specs/credits/prd.md,
     // "Pricing"). Null means "not chargeable".
     pricing: jsonb('pricing').$type<AiModelPricing>(),
     ...timestamps,

@@ -38,7 +38,7 @@ export type GenerateImagesForWorkspaceInput = Omit<
 };
 
 // status/error and the optional urls mirror @repo/ai's GenImageDto
-// (docs/imagegen/worker-execution-prd.md decision 7): imgUrl is
+// (specs/imagegen/worker-execution-prd.md decision 7): imgUrl is
 // undefined until the worker fills the row in.
 export interface GenImageResponse {
   id: string;
@@ -61,7 +61,7 @@ export interface GenImageResponse {
 // generated image itself does: it works for any key regardless of prefix,
 // so 'upload' and 'genImage' references (different owners, same bucket)
 // need no special-casing here. The storage key comes off the reference's
-// joined media row now (docs/media-library/migration-prd.md), not a jsonb
+// joined media row now (specs/media-library/migration-prd.md), not a jsonb
 // column.
 function toReferenceImageResponse(
   reference: GenImageReferenceWithMedia,
@@ -77,7 +77,7 @@ function toReferenceImageResponse(
 // endpoint gets already-shaped DTOs back from requestGenImages, so both need
 // to end up at the same response shape (toGenImageResponseFromDto below).
 // record.media is null for a pending/processing/failed row
-// (docs/imagegen/worker-execution-prd.md decision 1), so the urls stay
+// (specs/imagegen/worker-execution-prd.md decision 1), so the urls stay
 // undefined until the worker fills the row in.
 function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
   return {
@@ -170,7 +170,7 @@ export async function listGenImages({
  * [DELETE] /workspace/:workspaceId/gen-image/:genImageId
  * Deletes the row (its gen_image_reference links cascade with it), then
  * refcount-deletes the output media and every referenced media
- * (docs/media-library/migration-prd.md decision 5): a reference may still
+ * (specs/media-library/migration-prd.md decision 5): a reference may still
  * be shared by a sibling row from the same batch request, another gen_images
  * row entirely, or a social post, so only a zero reference count actually
  * removes the R2 object.
@@ -207,7 +207,7 @@ export async function deleteGenImage({
   }
 
   // deleted.mediaId is null for a pending/processing/failed row
-  // (docs/imagegen/worker-execution-prd.md decision 1): nothing to
+  // (specs/imagegen/worker-execution-prd.md decision 1): nothing to
   // refcount-delete for those, same filter as videogen's deleteGenVideo.
   const mediaIds = [deleted.mediaId, ...referenceMediaIds].filter(
     (mediaId): mediaId is string => mediaId !== null,
@@ -262,7 +262,7 @@ async function loadImageAiModel(aiModelId: string): Promise<AiModel> {
 
 /**
  * Server-side half of the capability gating the form applies client-side
- * (docs/imagegen/prd.md decision 1): fail closed, so a flag that is absent,
+ * (specs/imagegen/prd.md decision 1): fail closed, so a flag that is absent,
  * null or false means the field is rejected rather than silently dropped.
  * Naming both the field and the model in the message keeps a hand-crafted
  * request as debuggable as a UI-driven one.
@@ -316,7 +316,7 @@ interface ResolvedReferenceImage {
  * requestGenImages (@repo/ai) expects: mediaId to link once the output rows
  * exist, storageKey to download the bytes to condition the generation on. A
  * 'genImage' entry is a workspace-scoped lookup so a caller can't condition
- * on another workspace's image (docs/imagegen/prd.md decision 4).
+ * on another workspace's image (specs/imagegen/prd.md decision 4).
  */
 async function resolveReferenceImage({
   reference,
@@ -340,7 +340,7 @@ async function resolveReferenceImage({
   }
 
   // mediaId/media are null for a pending/processing/failed row
-  // (docs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // (specs/imagegen/worker-execution-prd.md decision 1): a generation that
   // hasn't produced an object yet has nothing to condition on, so it's
   // rejected the same as a genImageId that doesn't exist at all.
   if (!genImage || !genImage.mediaId || !genImage.media) {
@@ -379,7 +379,7 @@ async function resolveReferenceImages({
 // capability gating happens entirely in assertCapabilitiesSupportRequest,
 // before any row is inserted), but keeping the same convention here means a
 // future provider-side check added there surfaces correctly without another
-// API-layer change (docs/imagegen/worker-execution-prd.md decision 4).
+// API-layer change (specs/imagegen/worker-execution-prd.md decision 4).
 function isCapabilityViolationError(error: Error): boolean {
   return error.message.startsWith('Provider ');
 }
@@ -389,7 +389,7 @@ function isCapabilityViolationError(error: Error): boolean {
  * Requests image generation from a prompt: inserts pending rows and
  * enqueues the render job (requestGenImages in @repo/ai), then responds
  * immediately. The worker (gen-images.processor.ts) does the slow part; no
- * await, no timeout mapping (docs/imagegen/worker-execution-prd.md decision
+ * await, no timeout mapping (specs/imagegen/worker-execution-prd.md decision
  * 4). Mirrors generateVideoForWorkspace's shape.
  */
 export async function generateImagesForWorkspace({

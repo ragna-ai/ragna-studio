@@ -55,7 +55,7 @@ async function resolveMcpConnectionScope({
 const toolErrorOutputSchema = z.object({ error: z.string() });
 const jsonObjectOutputSchema = z.record(z.string(), z.unknown());
 
-// PRD mapping (docs/mcp/prd.md section 3): an `{ error }` output becomes
+// PRD mapping (specs/mcp/prd.md section 3): an `{ error }` output becomes
 // `isError: true` with the message as text; anything else becomes
 // `structuredContent` plus the same JSON as text. Returns the SDK's own
 // CallToolResult type directly rather than a hand-rolled shape, so it's
@@ -96,7 +96,7 @@ async function recordMcpToolCallOutcome(
   }
 }
 
-// The one MCP adapter (docs/mcp/prd.md section 4): turns a transport-neutral
+// The one MCP adapter (specs/mcp/prd.md section 4): turns a transport-neutral
 // ToolDefinition into an MCP tool, recording writes and touching the
 // connection's last_used_at (P7).
 function registerMcpTool(
@@ -161,7 +161,7 @@ function methodNotAllowedMcpResponse(): Response {
 
 // requireMcpAuth verifies the bearer token (signature, expiry, audience =
 // the /mcp resource) and hands us the claims. Everything after that -
-// connection lookup and settings - is ours (docs/mcp/prd.md section 3).
+// connection lookup and settings - is ours (specs/mcp/prd.md section 3).
 const mcpAuthGate = requireMcpAuth(
   auth,
   async (request, claims) => {

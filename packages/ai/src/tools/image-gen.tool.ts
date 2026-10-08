@@ -59,7 +59,7 @@ export type GeneratedAgentImage = {
   imgUrl: string;
 };
 
-// The pending branch is decision 6's poll-cap fallback (docs/imagegen/
+// The pending branch is decision 6's poll-cap fallback (specs/imagegen/
 // worker-execution-prd.md): the chat path waited up to POLL_TIMEOUT_MS and
 // the batch still hadn't settled, so the ids are handed back instead of a
 // URL the model doesn't have yet, the same degrade-to-pending shape the
@@ -73,7 +73,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Chat-path poll cap (docs/imagegen/worker-execution-prd.md decision 6): a
+// Chat-path poll cap (specs/imagegen/worker-execution-prd.md decision 6): a
 // batch normally settles in a few seconds, so 1s steps keep the poll
 // responsive without hammering the DB, and 60s is far above a realistic
 // batch's ceiling before degrading to the pending-ids fallback.
@@ -87,7 +87,7 @@ function isSettled(status: string): boolean {
 /**
  * Polls gen_images rows by status until every row in the batch reaches a
  * terminal state or the cap is hit, reading the same rows the web grid polls
- * (docs/imagegen/worker-execution-prd.md decision 6): no QueueEvents, no
+ * (specs/imagegen/worker-execution-prd.md decision 6): no QueueEvents, no
  * awaited job, just the pending-row model videogen already ships.
  */
 async function pollGenImagesUntilSettled(genImageIds: string[]) {
@@ -124,7 +124,7 @@ function toGeneratedAgentImages(
 // batch and runs it inline, no queue hop. Otherwise (chat, running in the
 // API process) the request side enqueues the batch onto the worker and this
 // polls the rows until they settle or the cap is hit
-// (docs/imagegen/worker-execution-prd.md decision 6): the one deviation from
+// (specs/imagegen/worker-execution-prd.md decision 6): the one deviation from
 // videogen's tool, since inline images are this tool's whole point and a
 // batch only takes seconds, not minutes.
 async function generateAgentImages({
@@ -194,7 +194,7 @@ export const getGeneratedImages = (
       // model via getDefaultAiModelByModality and never sees
       // ai_models.capabilities, so generateAgentImages' underlying calls are
       // what drop either field for a model that doesn't support it (fail
-      // closed, docs/imagegen/prd.md decision 7) rather than erroring.
+      // closed, specs/imagegen/prd.md decision 7) rather than erroring.
       const { error, data: output } = await tryCatch(
         () => generateAgentImages({ input, userId, workspaceId, runsInWorker }),
         { retryOnFailure: false },

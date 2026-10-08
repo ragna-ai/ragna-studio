@@ -29,7 +29,7 @@ const props = defineProps<{
   isActive: boolean;
   isTrashedFolder: boolean;
   isSelected: boolean;
-  /** Any thread is selected right now - keeps every row's checkbox visible, not just the hovered one (docs/email/mass-deletion-change-request.md, "Toolbar placement"). */
+  /** Any thread is selected right now - keeps every row's checkbox visible, not just the hovered one (specs/email/mass-deletion-change-request.md, "Toolbar placement"). */
   selectionActive: boolean;
 }>();
 

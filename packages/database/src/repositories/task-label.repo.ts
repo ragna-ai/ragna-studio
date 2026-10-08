@@ -58,7 +58,7 @@ export async function updateTaskLabel({
 }
 
 // Cascades the join rows in tasks_to_task_labels only (FK onDelete:
-// 'cascade'), never touches the tasks themselves (docs/tasks/prd.md, "Labels").
+// 'cascade'), never touches the tasks themselves (specs/tasks/prd.md, "Labels").
 export async function deleteTaskLabel({
   id,
   workspaceId,

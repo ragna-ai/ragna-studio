@@ -1,6 +1,6 @@
 // packages/media/src/services/extract.service.ts
 //
-// EXTRACTION ENGINE (docs/media-library/unified-media-prd.md, decisions 3
+// EXTRACTION ENGINE (specs/media-library/unified-media-prd.md, decisions 3
 // & 5). `extractText` is the single choke point every consumer (chat
 // attachment upload, agent context document processing) goes through, and
 // the seam where an async/queued extraction would go if it's ever needed.

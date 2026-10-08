@@ -11,9 +11,9 @@ Thanks for your interest in contributing.
 
 ## Local setup
 
-Follow [docs/development.md](docs/development.md) to run the stack from source. Login uses OAuth, so configure at least one provider in `.env`.
+Follow [specs/development.md](specs/development.md) to run the stack from source. Login uses OAuth, so configure at least one provider in `.env`.
 
-The repo is a pnpm and Turborepo monorepo. See [docs/architecture.md](docs/architecture.md) for the layout and [docs/](docs/README.md) for design docs and PRDs.
+The repo is a pnpm and Turborepo monorepo. See [specs/architecture.md](specs/architecture.md) for the layout and [specs/](specs/README.md) for design docs and PRDs.
 
 ## Making a change
 

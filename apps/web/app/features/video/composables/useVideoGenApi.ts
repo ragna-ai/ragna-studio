@@ -27,7 +27,7 @@ export const videoGenKeys = {
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
-// Veo on Vertex and BFL flux-3-video (docs/videogen/prd-v2.md). Kept in sync
+// Veo on Vertex and BFL flux-3-video (specs/videogen/prd-v2.md). Kept in sync
 // by hand with packages/ai/src/services/videogen.service.ts's
 // videoGenProviders: the web can't import that module's runtime value
 // directly, it would pull the server-only AI SDK into the browser bundle.
@@ -53,7 +53,7 @@ export type VideoGenResolution = (typeof videoGenResolutions)[number];
 
 // Veo's duration picker stays a fixed 4/6/8s select (today's form); BFL
 // instead drives a 5-20s slider off videoGenCapabilities.bfl.durationRange,
-// docs/videogen/prd-v2.md "Web (apps/web)".
+// specs/videogen/prd-v2.md "Web (apps/web)".
 export const videoGenDurations = [4, 6, 8] as const;
 
 export interface VideoGenCapability {
@@ -66,7 +66,7 @@ export interface VideoGenCapability {
 }
 
 // Mirrors packages/ai/src/services/videogen.service.ts's videoGenCapabilities
-// (docs/videogen/prd-v2.md decision 5), the same way videoGenAspectRatios/
+// (specs/videogen/prd-v2.md decision 5), the same way videoGenAspectRatios/
 // videoGenResolutions above already mirror that package's v1 constants
 // instead of importing its runtime module. Drives both the form's per-model
 // UI and the reconciliation of persisted settings when the model's provider
@@ -142,13 +142,13 @@ export interface GeneratedVideo {
   model: string;
   createdAt: string;
   videoUrl?: string;
-  // BFL draft/enhance (docs/videogen/prd-v2.md decision 1): isDraft flags a
+  // BFL draft/enhance (specs/videogen/prd-v2.md decision 1): isDraft flags a
   // fast preview render; parentGenVideoId is set on the enhance row it
   // produced, pointing back at the draft it replays at full quality.
   isDraft: boolean;
   parentGenVideoId: string | null;
   // Applied to draft rows at generation time and copied from the parent
-  // draft onto its enhance row server-side (docs/ai-labeling/prd.md); the
+  // draft onto its enhance row server-side (specs/ai-labeling/prd.md); the
   // form has nothing to send on the enhance mutation, this is display only.
   visibleWatermark: boolean;
 }
@@ -183,7 +183,7 @@ export interface FrameUploadResponse {
 }
 
 // The grid polls while any row on the fetched page is still rendering: the
-// temporary stand-in for WS push (docs/videogen/prd.md decision 8).
+// temporary stand-in for WS push (specs/videogen/prd.md decision 8).
 const VIDEO_GEN_POLL_INTERVAL_MS = 5000;
 
 function hasInFlightRow(genVideos: GeneratedVideo[]): boolean {
@@ -249,7 +249,7 @@ export function useGenerateVideo() {
 
 /**
  * Turns a completed BFL draft into a new pending row that re-renders it at
- * full quality (docs/videogen/prd-v2.md decisions 1, 2). The one-enhance-
+ * full quality (specs/videogen/prd-v2.md decisions 1, 2). The one-enhance-
  * per-draft check is authoritative on the server (a 409 when a pending/
  * processing/completed enhance already exists for the draft); a failure
  * here always refetches the list too, since it means the grid's local

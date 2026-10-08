@@ -1,6 +1,6 @@
 // packages/media/src/services/registry.service.ts
 //
-// The media type registry (docs/media-library/unified-media-prd.md,
+// The media type registry (specs/media-library/unified-media-prd.md,
 // decision 2): one table keyed by MediaKind carrying everything that used
 // to live in two separate sniffers (sniffChatMediaKind,
 // sniffAgentContextDocumentKind). The registry is data, consumers are

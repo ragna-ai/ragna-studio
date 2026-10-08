@@ -132,7 +132,7 @@ export async function getDataset({
   return loadOwnedDataset({ workspaceId, datasetId });
 }
 
-// EXPORT (docs/datasets/export-and-row-reorder.md)
+// EXPORT (specs/datasets/export-and-row-reorder.md)
 
 export type DatasetExportFormat = 'csv' | 'xlsx' | 'pdf' | 'md';
 
@@ -173,7 +173,7 @@ function slugifyDatasetName(name: string): string {
   return slug.length > 0 ? slug : 'dataset';
 }
 
-// `<dataset-name-slug>-<yyyy-mm-dd>.<ext>` (docs/datasets/export-and-row-reorder.md
+// `<dataset-name-slug>-<yyyy-mm-dd>.<ext>` (specs/datasets/export-and-row-reorder.md
 // "User experience", Export).
 function toDatasetExportFilename(datasetName: string, format: DatasetExportFormat): string {
   const exportDate = new Date().toISOString().slice(0, 10);
@@ -182,7 +182,7 @@ function toDatasetExportFilename(datasetName: string, format: DatasetExportForma
 
 /**
  * Maps a dataset and its rows to the format-agnostic `TabularExport` input
- * (docs/datasets/export-and-row-reorder.md decision 1): the package knows
+ * (specs/datasets/export-and-row-reorder.md decision 1): the package knows
  * formats, not datasets. Headers are column names, cell values are resolved
  * by column id (not name, matching the row's own storage key), rows follow
  * grid order (`getDatasetRows` already orders by `sortOrder` and excludes
@@ -198,7 +198,7 @@ function toTabularExport(datasetRecord: Dataset, rows: DatasetRow[]): TabularExp
 
 /**
  * [GET] /workspace/:workspaceId/dataset/:datasetId/export
- * Generation is synchronous in the request (docs/datasets/export-and-row-reorder.md
+ * Generation is synchronous in the request (specs/datasets/export-and-row-reorder.md
  * decision 2): datasets are bounded by MAX_ROWS_PER_DATASET/
  * MAX_COLUMNS_PER_DATASET, well inside a request budget. An empty dataset
  * still produces a file (open question 2): the writers handle a header-only
@@ -416,7 +416,7 @@ export async function deleteDatasetRow({
 
 // The repo throws a plain Error (no typed error class) for these two cases;
 // matched by message since that's the only signal it gives us
-// (docs/datasets/export-and-row-reorder.md decision 4, mirroring
+// (specs/datasets/export-and-row-reorder.md decision 4, mirroring
 // isInvalidAfterTaskIdError in task.service.ts).
 function isRowNotFoundError(error: Error): boolean {
   return error.message === 'Dataset row not found';
@@ -429,7 +429,7 @@ function isInvalidAfterRowIdError(error: Error): boolean {
 /**
  * [POST] /workspace/:workspaceId/dataset/:datasetId/row/:rowId/move
  * Server computes the new sortOrder from the dataset's row order
- * (docs/datasets/export-and-row-reorder.md decision 5).
+ * (specs/datasets/export-and-row-reorder.md decision 5).
  */
 export async function moveDatasetRowForUser({
   workspaceId,

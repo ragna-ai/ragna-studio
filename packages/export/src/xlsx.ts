@@ -23,7 +23,7 @@ function toHeaderRow(columns: TabularExport['columns']): Row {
 }
 
 // `number` columns become numeric cells; `date` columns render European-style,
-// `dd.mm.yyyy` (docs/datasets/export-and-row-reorder.md decision 2, "Date
+// `dd.mm.yyyy` (specs/datasets/export-and-row-reorder.md decision 2, "Date
 // formatting"); everything else stays text as stored.
 function toDataCell(value: TabularExportValue, columnType: TabularExportColumnType) {
   if (value === null) {
@@ -42,7 +42,7 @@ function toDataRow(row: TabularExportValue[], columns: TabularExport['columns'])
 }
 
 /**
- * `write-excel-file` writer (docs/datasets/export-and-row-reorder.md
+ * `write-excel-file` writer (specs/datasets/export-and-row-reorder.md
  * decision 2): one worksheet named after the dataset, a bold header row,
  * `number` columns as numeric cells, everything else as text. An empty
  * dataset still writes its header row (open question 2).

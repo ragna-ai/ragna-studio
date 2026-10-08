@@ -5,7 +5,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 
 // Plain CRUD + the run lifecycle for /workspace/:workspaceId/workflow
-// (docs/testing/strategy.md, priority 3; docs/credits/prd.md for the run
+// (specs/testing/strategy.md, priority 3; specs/credits/prd.md for the run
 // route's creditGuard). Auth/authorization are covered exhaustively in
 // test/auth/ and test/workspace/workspace-authorization.test.ts; this file
 // only checks the workflow feature's own behavior. Worker execution of an

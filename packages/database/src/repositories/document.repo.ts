@@ -6,7 +6,7 @@ import { document } from '../schema';
 export type { Document, NewDocument } from '../schema';
 
 // Author names are resolved through relations, not a denormalized column
-// (docs/documents/prd.md): whichever of createdByUser/createdByAgent is
+// (specs/documents/prd.md): whichever of createdByUser/createdByAgent is
 // non-null identifies the author.
 export type DocumentWithRelations = Document & {
   folder: Folder | null;
@@ -91,7 +91,7 @@ export async function createDocument({
 
 type UpdateDocumentFields = Partial<Pick<NewDocument, 'title' | 'content' | 'folderId'>>;
 
-// Last-writer-wins update (also the autosave endpoint, see docs/documents/prd.md):
+// Last-writer-wins update (also the autosave endpoint, see specs/documents/prd.md):
 // no version check, whichever call lands last is what's stored.
 export async function updateDocument({
   documentId,

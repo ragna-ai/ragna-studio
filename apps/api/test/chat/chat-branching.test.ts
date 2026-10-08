@@ -10,7 +10,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// "Branch from here" (docs/chat/branching.md): copies a chat's messages up
+// "Branch from here" (specs/chat/branching.md): copies a chat's messages up
 // to and including a given message into a brand new, independent chat.
 // Auth/authorization for /workspace/:workspaceId/* in general are covered
 // exhaustively in test/auth/; this file checks the branch endpoint's own

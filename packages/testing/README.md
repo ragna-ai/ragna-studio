@@ -26,4 +26,4 @@ with `Export named 'X' not found in module ...node_modules/.pnpm/@repo+testing..
 If the sync doesn't cut it, the fallback is `pnpm clean` + `pnpm install`.
 
 Full background, including why the LinkedIn mock needs re-registration from
-`apps/api/test/preload.ts`: `docs/docker-deploy/injected-workspace-packages.md`.
+`apps/api/test/preload.ts`: `specs/docker-deploy/injected-workspace-packages.md`.

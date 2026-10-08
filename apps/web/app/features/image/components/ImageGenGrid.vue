@@ -10,10 +10,10 @@ import type {
 interface Props {
   // Fetched once by the /text-to-image page and shared with the form's
   // reference picker, rather than this grid running its own query for the
-  // same list (docs/imagegen/prd.md). Already includes pending/processing/
+  // same list (specs/imagegen/prd.md). Already includes pending/processing/
   // failed rows: the form's mutation prepends them into the cached list on
   // submit, and useGetGenImages polls while any are unfinished
-  // (docs/imagegen/worker-execution-prd.md decision 7).
+  // (specs/imagegen/worker-execution-prd.md decision 7).
   genImages: GeneratedImage[];
   isError: boolean;
 }

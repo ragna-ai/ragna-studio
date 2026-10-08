@@ -4,7 +4,7 @@ import { workspace } from './workspace.schema';
 
 // FOLDER
 // Flat grouping for documents within a workspace, no nesting in v1 (see
-// docs/documents/prd.md).
+// specs/documents/prd.md).
 export const folder = pgTable(
   'folders',
   {

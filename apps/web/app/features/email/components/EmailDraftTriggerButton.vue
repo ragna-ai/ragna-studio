@@ -7,7 +7,7 @@ import { Spinner } from '~/components/ui/spinner';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { useTriggerEmailDraft } from '~/features/email/composables/useEmailDraftApi';
 
-// "Draft with AI" (docs/email/prd.md): agent select preselects the
+// "Draft with AI" (specs/email/prd.md): agent select preselects the
 // account's default agent, overridable per use. Agents are workspace
 // resources while the email account is per-user (PRD "Open questions"), so
 // this lists agents from the user's active workspace, same source the

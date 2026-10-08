@@ -1,7 +1,7 @@
 import { embed, embedMany } from 'ai';
 import { getEmbeddingModel } from '../factories';
 
-// Fixed constants, not per-agent config (docs/agent/agent-context-retrieval.md,
+// Fixed constants, not per-agent config (specs/agent/agent-context-retrieval.md,
 // "Embeddings"): a model change means a full re-embed via the backfill
 // script, not a live migration, so there is nothing to make configurable.
 export const EMBEDDING_PROVIDER = 'openai';

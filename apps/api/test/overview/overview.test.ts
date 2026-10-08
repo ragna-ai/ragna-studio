@@ -6,7 +6,7 @@ import { app } from '../../src/app';
 
 // Aggregated read for /workspace/:workspaceId/overview: five capped
 // sections (tasks, chats, workflows, agents, documents) plus a workspace
-// total per section (docs/home/prd.md). Auth/authorization are covered
+// total per section (specs/home/prd.md). Auth/authorization are covered
 // exhaustively in test/auth/; this file only checks the overview feature's
 // own aggregation, cap, and total-count behavior.
 

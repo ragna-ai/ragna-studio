@@ -37,7 +37,7 @@ const { mutateAsync: deleteTask } = useDeleteTask();
 const task = computed(() => taskData.value?.task);
 const labels = computed(() => labelsData.value?.taskLabels ?? []);
 
-// The title field is a page-owned h1 (docs/tasks/prd.md, task detail page),
+// The title field is a page-owned h1 (specs/tasks/prd.md, task detail page),
 // not the breadcrumb's current item; the breadcrumb's last item is a
 // read-only "TSK-<n>: <title>" label instead. It reads from the `title` ref
 // (not `task.value.title`) so it stays live with the h1 while a debounced

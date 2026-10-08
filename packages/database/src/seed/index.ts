@@ -114,7 +114,7 @@ async function seedAiModels() {
       description: 'High-quality video generation by Google Veo.',
     },
     // Listed after the Veo rows so it is never the modality default
-    // (docs/videogen/prd-v2.md goals). Adds draft mode, see
+    // (specs/videogen/prd-v2.md goals). Adds draft mode, see
     // videoGenCapabilities in @repo/ai's videogen.service.ts.
     {
       provider: 'bfl',

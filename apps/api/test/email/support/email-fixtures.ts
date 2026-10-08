@@ -137,7 +137,7 @@ export interface SeededThreadWithMessage {
 /**
  * Directly inserts one thread + one message (+ optionally its body),
  * modeling what the sync poller would have written for a piece of existing
- * mail (docs/email/prd.md, "Sync model"). `withBody: false` sets up the
+ * mail (specs/email/prd.md, "Sync model"). `withBody: false` sets up the
  * lazy-persistence gap: a message row with no `email_message_bodies` row
  * yet, so `getEmailThreadDetailForUser` has to live-fetch it.
  */
@@ -192,7 +192,7 @@ export async function seedEmailThreadWithMessage(
  * tests. Defaults to an AI reply draft (origin/kind), the shape every
  * pre-drafts-change-request test in this suite already seeds; pass
  * `origin`/`kind`/`to`/`providerDraftId`/etc. to model a user draft or one
- * already pushed to Gmail (docs/email/drafts-change-request.md).
+ * already pushed to Gmail (specs/email/drafts-change-request.md).
  */
 export function seedEmailDraft(params: {
   accountId: string;
@@ -204,9 +204,9 @@ export function seedEmailDraft(params: {
   to?: EmailParticipant[];
   subject?: string | null;
   content?: string;
-  /** Plain-text MIME sibling of `content` (docs/email/html-content-change-request.md). */
+  /** Plain-text MIME sibling of `content` (specs/email/html-content-change-request.md). */
   text?: string;
-  /** Read-only quoted history, split out of content/text (docs/email/quote-iframe-change-request.md). */
+  /** Read-only quoted history, split out of content/text (specs/email/quote-iframe-change-request.md). */
   quotedHtml?: string | null;
   quotedText?: string | null;
   attachments?: EmailDraftAttachment[];

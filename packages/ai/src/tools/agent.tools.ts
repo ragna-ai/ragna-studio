@@ -39,15 +39,15 @@ export type AgentToolContext = {
   // worker. Workflow executors (team.executor.ts, run-referenced-agent.ts)
   // pass true: they already run inside the worker process. The video tool
   // uses this to skip the queue and await runGenVideo inline
-  // (docs/videogen/prd.md decision 2); the image tool uses it to skip the
+  // (specs/videogen/prd.md decision 2); the image tool uses it to skip the
   // queue and insert+run the batch inline (createGenImagesWithDefaultModel)
   // instead of enqueueing and polling like the chat path, since the API
   // process is exactly what the queue hop exists to keep out of image
-  // generation (docs/imagegen/worker-execution-prd.md decision 6).
+  // generation (specs/imagegen/worker-execution-prd.md decision 6).
   runsInWorker?: boolean;
   // Wired automatically when buildAgentInstructions decides the agent's
   // context needs retrieval, not part of the agent's own tool checklist
-  // (docs/agent/agent-context-retrieval.md, "Search tool").
+  // (specs/agent/agent-context-retrieval.md, "Search tool").
   retrievalMode?: boolean;
 };
 
@@ -55,7 +55,7 @@ type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => 
 
 // One toolset per stored agent-tool id (AgentTool, agent.schema.ts). Most
 // ids map to a single tool; `datasets` is a family behind one toggle
-// (docs/datasets.md decision 4). The AI SDK has no grouping concept of its
+// (specs/datasets.md decision 4). The AI SDK has no grouping concept of its
 // own: a ToolSet is just a record, so composition happens here and only the
 // enabled tools are ever constructed or sent to the model.
 const toolsets: Record<AgentTool, ToolsetFactory> = {

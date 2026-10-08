@@ -14,7 +14,7 @@ import { sql, type AnyColumn, type SQL } from 'drizzle-orm';
 // row's new key (symptom: a row's key cycles between a few values instead
 // of converging toward the end being moved to). `COLLATE "C"` forces byte
 // order so the DB's ordering matches the library's. See
-// docs/database/fractional-indexing-collation.md for the full writeup.
+// specs/database/fractional-indexing-collation.md for the full writeup.
 
 /**
  * Orders `column` ascending by raw byte value (`COLLATE "C"`), not
