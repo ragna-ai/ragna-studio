@@ -63,6 +63,11 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: APP_VERSION=${{ steps.meta.outputs.version }}
+          # Registry cache, not gha: gha is ref-scoped, so a new tag never reads the previous tag's cache.
+          # pull: a changed base image misses the cache instead of reusing stale layers.
+          pull: true
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}:buildcache-${{ matrix.platform-slug }}
+          cache-to: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}:buildcache-${{ matrix.platform-slug }},mode=max
           outputs: type=image,name=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest

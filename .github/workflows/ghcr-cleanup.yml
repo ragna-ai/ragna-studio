@@ -20,5 +20,6 @@ jobs:
           owner: ragna-ai
           packages: ragna-studio-backend,ragna-studio-frontend,ragna-studio-worker,ragna-studio-webbrowser,ragna-studio-migrate
           keep-n-tagged: 5
-          exclude-tags: latest
+          # buildcache-*: the release workflow's registry layer cache.
+          exclude-tags: latest,buildcache-*
           delete-untagged: true
