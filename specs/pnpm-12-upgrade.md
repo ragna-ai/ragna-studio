@@ -33,6 +33,10 @@ A rewrite of pnpm from TypeScript to Rust, shipped stable on 2026-08-26 as a nat
 - After switching to reading `PNPM_VERSION` from `package.json`: re-ran `docker build --no-cache --target base` for both `apps/api` and `apps/web` and confirmed `pnpm --version` inside each image reports `12.4.1` (i.e. the extracted value, not a hardcoded one).
 - `apps/worker` and `apps/webbrowser` use the same two base-image patterns (Debian-slim and Alpine respectively) already validated above and weren't rebuilt individually.
 
+### Update 2026-10-08: hash dropped
+
+`packageManager` is now a bare `pnpm@<version>` (bumped to `12.10.1`). Corepack, the only tool that checked the sha512 suffix, is gone, and neither `vp env pin` nor `pnpm self-update` writes it. Bumping is now `vp env pin pnpm@latest`. The Dockerfile sed pattern no longer requires the `+`: `s/.*"packageManager": *"pnpm@\([0-9][0-9.]*\).*/\1/p`.
+
 ### Not yet verified
 
 - `pnpm test:api` was not re-run under pnpm 12.
