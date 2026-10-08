@@ -3,7 +3,6 @@ import { Background } from '@vue-flow/background';
 import type {
   ConnectionLineProps,
   EdgeProps,
-  FlowEmits,
   FlowProps,
   FlowSlots,
   NodeProps,
@@ -11,7 +10,7 @@ import type {
 import { VueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import { useForwardPropsEmits } from 'reka-ui';
+import { useForwardProps } from 'reka-ui';
 
 const props = withDefaults(defineProps<FlowProps>(), {
   deleteKeyCode: () => ['Backspace', 'Delete'],
@@ -22,10 +21,10 @@ const props = withDefaults(defineProps<FlowProps>(), {
   zoomOnDoubleClick: false,
 });
 
-const emits = defineEmits<FlowEmits>();
 const slots = defineSlots<FlowSlots>();
-// @ts-expect-error: VueFlow has a lot of dynamic slots that TypeScript can't know about
-const forwarded = useForwardPropsEmits(props, emits);
+// No defineEmits: listeners fall through $attrs to <VueFlow>. Typing FlowEmits through
+// useForwardPropsEmits cost ~265 s of type-check time.
+const forwarded = useForwardProps(props);
 
 // VueFlow's dynamic slots each carry a different, mutually incompatible props
 // shape, so the union can't be assigned to any single slot's expected type.
