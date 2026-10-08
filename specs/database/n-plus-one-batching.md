@@ -1,6 +1,6 @@
 # Batch per-item queries (N+1)
 
-**Status: in-progress** (2026-10-08). Follows the "Database queries" rule in
+**Status: implemented** (PR #92, 2026-10-08). Open: email search (`resolveSearchThread`) still hydrates per thread. Follows the "Database queries" rule in
 `AGENTS.md` (PR #91).
 
 ## Problem
