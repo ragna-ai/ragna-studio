@@ -30,7 +30,7 @@ export const jwks = pgTable('jwks', {
 });
 
 // OAUTH CLIENT: one row per connected app, keyed by the CIMD client ID URL
-// (clientId, specs/mcp/prd.md P4). Discovery-owned rows are created and kept
+// (clientId). Discovery-owned rows are created and kept
 // in sync by @better-auth/cimd; not written directly by @repo/database.
 export const oauthClient = pgTable(
   'oauth_clients',

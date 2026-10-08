@@ -26,7 +26,7 @@ type BuildInstructionsInput = {
   tools: string[];
   systemPrompt: string;
   context: string | null;
-  /** Soft pin (specs/datasets.md decision 10), null/undefined = no pin. */
+  /** Soft pin, null/undefined = no pin. */
   defaultDatasetId?: string | null;
 };
 
@@ -136,8 +136,7 @@ export interface AgentContextLoadResult {
 }
 
 /**
- * Loads the agent's ready-document context for prompt injection (Phase 3,
- * specs/agent/agent-context-retrieval.md, "Prompt injection changes"). Meta
+ * Loads the agent's ready-document context for prompt injection. Meta
  * (name + char count, not the text itself) is loaded first, so the mode
  * decision never pays for full document text it might not use:
  *  - at or below the injection threshold, the full documents are loaded and

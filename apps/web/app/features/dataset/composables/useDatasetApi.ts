@@ -66,8 +66,8 @@ export function useGetDataset(
 
 /**
  * Unpaginated dataset list for the agent "Default dataset" picker
- * (specs/api-standards/prd.md: a resource lives in exactly one workspace, so
- * the picker only ever shows the agent's own workspace).
+ * (a resource lives in exactly one workspace, so the picker only ever shows
+ * the agent's own workspace).
  */
 export function useGetAllDatasetsForPicker() {
   const { $api } = useNuxtApp();

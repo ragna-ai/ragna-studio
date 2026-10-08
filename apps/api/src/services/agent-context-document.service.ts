@@ -66,8 +66,8 @@ function validateAgentContextDocumentFile({
 }
 
 /**
- * Uploads one document's bytes to R2 under a fresh key, per the layout in
- * specs/agent-context-documents.md: `agents/{agentId}/{documentId}/{uploadId}`.
+ * Uploads one document's bytes to R2 under a fresh key,
+ * `agents/{agentId}/{documentId}/{uploadId}`.
  * A replace calls this again with the same `documentId` but gets a new
  * `uploadId`, so the old object is never overwritten in place.
  */
@@ -256,8 +256,7 @@ export interface AgentContextDocumentResponse {
 // Never includes `extractedText` itself (can be up to 500k chars, see the
 // PRD's limits table) or `storageKey` (an internal R2 detail), only its
 // length: no route in the Web UI needs the full text, but the panel needs
-// the size to show the inject-vs-retrieval mode (specs/agent/
-// agent-context-retrieval.md, "Web UI").
+// the size to show the inject-vs-retrieval mode.
 function toDocumentResponse(document: AgentContextDocument): AgentContextDocumentResponse {
   return {
     id: document.id,
@@ -286,8 +285,7 @@ export interface AgentContextDocumentListResponse {
 /**
  * [GET] /workspace/:workspaceId/agent/:agentId/context-document
  * List an agent's documents, oldest first, plus a summary of the total ready
- * text and which prompting mode it puts the agent in (specs/agent/
- * agent-context-retrieval.md, "Prompt injection changes"). Never returns
+ * text and which prompting mode it puts the agent in. Never returns
  * extractedText.
  */
 export async function listAgentContextDocuments({

@@ -42,7 +42,7 @@ export const genImage = pgTable(
     resolution: text('resolution').$type<GenImageResolution>(),
     seed: integer('seed'),
     negativePrompt: text('negative_prompt'),
-    // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2):
+    // EU AI Act Art. 50(4) visible-disclosure toggle:
     // whether the "AI generated" badge was burned into this output.
     visibleWatermark: boolean('visible_watermark').notNull().default(false),
     ...timestamps,

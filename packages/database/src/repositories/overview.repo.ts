@@ -120,7 +120,7 @@ export type RecentChat = {
 
 /**
  * Latest chats for the chats card, newest first, with the agent name for
- * display (specs/home/prd.md, "Chats" DTO notes).
+ * display.
  */
 export async function getRecentChatsByWorkspaceId({
   workspaceId,
@@ -148,7 +148,7 @@ export type RecentWorkflow = {
 /**
  * Latest workflows for the workflows card, newest first, each with its
  * latest run's status (limit 1, `createdAt` desc; empty when the workflow
- * has never run) (specs/home/prd.md, "Workflows" DTO notes).
+ * has never run).
  */
 export async function getRecentWorkflowsByWorkspaceId({
   workspaceId,
@@ -182,7 +182,7 @@ export type RecentAgent = {
 
 /**
  * Latest agents for the agents card, newest first, with the model's
- * display name (specs/home/prd.md, "Agents" DTO notes).
+ * display name.
  */
 export async function getRecentAgentsByWorkspaceId({
   workspaceId,
@@ -207,8 +207,7 @@ export type RecentDocument = {
 };
 
 /**
- * Latest documents for the documents card, newest first
- * (specs/home/prd.md, "Documents" DTO notes).
+ * Latest documents for the documents card, newest first.
  */
 export async function getRecentDocumentsByWorkspaceId({
   workspaceId,

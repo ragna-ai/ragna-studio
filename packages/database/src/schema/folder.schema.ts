@@ -3,8 +3,7 @@ import { primaryIdColumn, timestamps } from './common.schema';
 import { workspace } from './workspace.schema';
 
 // FOLDER
-// Flat grouping for documents within a workspace, no nesting in v1 (see
-// specs/documents/prd.md).
+// Flat grouping for documents within a workspace, no nesting in v1.
 export const folder = pgTable(
   'folders',
   {

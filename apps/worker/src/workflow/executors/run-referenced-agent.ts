@@ -94,7 +94,7 @@ function toWorkflowUsage(usage: GenerateTextUsage): WorkflowTokenUsage {
 
 // Metadata a delegate call attaches to its own tool-call entry once the
 // member run it triggered has finished: the member's own tool calls (kept
-// flat, not a nested trace, see specs/workflow/workflows-team-node.md), how
+// flat, not a nested trace), how
 // long the member run took, and its total token usage.
 export type DelegateCallMeta = {
   calls?: WorkflowToolCall[];
@@ -376,7 +376,7 @@ export async function runReferencedAgent({
     reasoning: modelSettings.reasoning,
     // A plan-executing agent node can exhaust the chat-level step budget
     // immediately (schema read + row list + work + row update already
-    // costs 4), see specs/datasets.md decision 6. Flat 15 for every workflow
+    // costs 4). Flat 15 for every workflow
     // agent run; chat is unaffected and stays at 5 above.
     stopWhen: stepCountIs(15),
     onStepFinish: logTraceStepDebug(`agent "${agentRecord.name}"`),

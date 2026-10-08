@@ -11,7 +11,7 @@ import {
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 
-// Veo renders take 1-6 minutes (specs/videogen/prd.md, worker section). The
+// Veo renders take 1-6 minutes. The
 // default 30s lock would let BullMQ's stalled checker reclaim an in-flight
 // render, so the lock is stretched to comfortably outlast a 10-minute job.
 const LOCK_DURATION_MS = 10 * 60 * 1000;
@@ -38,7 +38,7 @@ export function registerGenVideoJobProcessor(): Worker<any, any, string> {
     },
     opts: {
       // Low on purpose: Veo renders are slow and expensive, so only a
-      // couple can run at once (specs/videogen/prd.md worker section).
+      // couple can run at once.
       concurrency: 2,
       lockDuration: LOCK_DURATION_MS,
     },

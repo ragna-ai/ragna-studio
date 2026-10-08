@@ -38,7 +38,7 @@ export function registerCronJobs() {
   addCronJob({
     name: 'email-sync',
     processor: emailSyncCronProcessor,
-    schedule: { every: config.emailSyncInterval }, // Default 5 minutes (specs/email/prd.md, "Config")
+    schedule: { every: config.emailSyncInterval }, // Default 5 minutes
   });
 
   logger.info('Cron jobs registered');

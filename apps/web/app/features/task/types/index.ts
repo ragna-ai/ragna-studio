@@ -52,7 +52,7 @@ export interface Task {
   updatedAt: string;
 }
 
-/** Board/list row: what GET /task returns (specs/tasks/prd.md, "List"). */
+/** Board/list row: what GET /task returns. */
 export interface TaskWithBoardInfo extends Task {
   labels: TaskLabel[];
   assignedAgent: TaskAssignedAgent | null;

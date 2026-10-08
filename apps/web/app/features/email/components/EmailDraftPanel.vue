@@ -54,8 +54,7 @@ const kindLabel = computed(() => {
 });
 // Forward and new mail start with empty recipients, so focus goes there;
 // reply already has a recipient and starts the cursor in the body instead
-// (specs/email/drafts-change-request.md, section 2, spells out forward/reply -
-// extending the same rule to `new` is this panel's own judgement call).
+// (the spec covers forward/reply; `new` follows the same rule by choice).
 const bodyAutofocus = computed<'start' | 'end' | undefined>(() => (props.draft.kind === 'reply' ? 'start' : undefined));
 const recipientsAutofocus = computed(() => props.draft.kind !== 'reply');
 

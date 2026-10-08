@@ -164,8 +164,7 @@ const categoriesQuery = useGetEmailCategories();
 // the per-thread "Draft" indicator badge in every other folder.
 const allDraftsQuery = useGetAllDrafts();
 
-// `/mail/draft/:draftId` (new mail, no thread below it - see the entry
-// points table in specs/email/drafts-change-request.md, section 2). Only
+// `/mail/draft/:draftId` (new mail, no thread below it). Only
 // fetches once a draftId is actually being viewed; a 404 (draft already
 // sent/discarded elsewhere) surfaces as `standaloneDraftQuery.isError`,
 // rendered as a "not found" message rather than an error toast.

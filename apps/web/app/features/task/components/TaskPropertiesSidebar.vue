@@ -40,7 +40,7 @@ const selectedLabelIds = computed(
 );
 
 // Reminder select's current value: a preset offset, the custom sentinel, or
-// off. Disabled entirely without a due date (specs/tasks/prd.md, task detail).
+// off. Disabled entirely without a due date.
 const reminderSelectValue = computed(() => {
   if (props.task.remindDaysBeforeDue === null) {
     return REMINDER_OFF;

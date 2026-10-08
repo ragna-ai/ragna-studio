@@ -18,7 +18,7 @@ import { getOrCreateQueue } from '../services/bullmq.service';
 // email-sync.cron.ts): re-adding with the same jobId is a no-op while a job
 // with that id still exists in Redis, complete or failed. Without eager
 // retention, a single failed sync permanently wedges that account's cron
-// tick and manual "Sync now" (production incident, see specs/email). The
+// tick and manual "Sync now" (production incident). The
 // worker already logs failures, so nothing is lost by not keeping the job
 // record; applies to all three email queues since classify/draft feed off
 // the same pipeline and share the failure mode.

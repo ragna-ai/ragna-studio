@@ -142,7 +142,7 @@ export async function getChatsByWorkspaceId({
           },
         },
       },
-      // Sidebar provenance badge ("forked from {title}"), specs/chat/branching.md.
+      // Sidebar provenance badge ("forked from {title}").
       forkedFromChat: {
         columns: { title: true },
       },

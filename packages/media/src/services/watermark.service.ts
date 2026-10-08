@@ -1,6 +1,6 @@
 // packages/media/src/services/watermark.service.ts
 //
-// Visible AI-disclosure badge (specs/ai-labeling/prd.md part 2, Art. 50(4)):
+// Visible AI-disclosure badge (EU AI Act Art. 50(4)):
 // burns a small "AI generated" badge into an output's bottom-right corner.
 // Provider-independent, used by both imagen.service.ts and
 // videogen.service.ts (@repo/ai) after generation, before upload. Never sent
@@ -21,8 +21,8 @@ import sharp from 'sharp';
 import { buildWatermarkFfmpegArgs, probeVideoDimensions } from '../lib/watermark-ffmpeg.util';
 
 // System-installed ffmpeg, resolved via PATH: brew on dev machines, apt in
-// the Docker image (both put it on PATH, specs/ai-labeling/prd.md "ffmpeg
-// comes from the system, not npm"). No config knob: every environment this
+// the Docker image (both put it on PATH; ffmpeg comes from the system, not
+// npm). No config knob: every environment this
 // runs in already has ffmpeg on PATH, so an override would have nothing to
 // point at.
 const FFMPEG_BINARY = 'ffmpeg';

@@ -199,7 +199,7 @@ function hasConflictingDraft(
 
 /**
  * Reads the existing draft off a 409 from `POST /email/draft` (one active
- * draft per thread - specs/email/drafts-change-request.md, "API changes"), so
+ * draft per thread), so
  * a caller can focus/scroll to it instead of surfacing the error as a toast.
  * Returns `null` for any other error, including a 409 whose body doesn't
  * match the assumed shape (see EmailDraftConflictResponse's doc comment).

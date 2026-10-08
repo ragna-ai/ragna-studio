@@ -75,8 +75,7 @@ const form = useForm({
         // provider's capability allows it (see the template and the
         // reconciliation watcher below), but a model swap can leave stale
         // form/store state around, so gate here too: the server rejects an
-        // unsupported combination outright, the form should never send one
-        // (specs/videogen/prd-v2.md "Web (apps/web)").
+        // unsupported combination outright, the form should never send one.
         negativePrompt: capability.value.supportsNegativePrompt
           ? value.negativePrompt.trim() || undefined
           : undefined,
@@ -119,8 +118,7 @@ const showAdvancedOptions = computed(
 );
 
 // Only a completed row has a media object to animate: pending/processing/
-// failed rows 404 server-side (apps/api's videogen.service.ts resolveFrame,
-// specs/imagegen/worker-execution-prd.md decision 1).
+// failed rows 404 server-side (apps/api's videogen.service.ts resolveFrame).
 const genImages = computed(
   () => genImageData.value?.genImages.filter((image) => image.status === 'completed') ?? [],
 );
@@ -197,7 +195,7 @@ watch(
 );
 
 // Reconciles persisted settings that are no longer valid when the selected
-// model's provider changes (specs/videogen/prd-v2.md "Web (apps/web)"): the
+// model's provider changes: the
 // server rejects an out-of-capability combination outright, so the form
 // never submits one instead of leaving it to a 4xx round trip.
 watch(
@@ -296,7 +294,7 @@ watch(
       </Select>
 
       <!-- Veo keeps today's fixed 4/6/8s picker; BFL's 5-20s range drives a
-      slider instead (specs/videogen/prd-v2.md "Web (apps/web)"). -->
+      slider instead. -->
       <Select v-if="!capability.supportsDraft" v-model="duration">
         <SelectTrigger class="w-24 border-0 shadow-none">
           <SelectValue :placeholder="t('videogen.form.duration')" />

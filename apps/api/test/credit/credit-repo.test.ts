@@ -44,12 +44,11 @@ describe('computeCharge', () => {
       cacheWriteTokens: 0,
     });
 
-    // specs/credits/prd.md worked example: 9,000,000 + 12,000,000 nanoUSD.
+    // 9,000,000 + 12,000,000 nanoUSD.
     expect(charge.costNanoUsd).toBe(21_000_000n);
   });
 
-  // Regression: specs/credits/review-2026-07-29.md, finding 3
-  // (CREDIT_MARKUP_BPS parsing silently swallowed bad values). Fixed in
+  // Regression: CREDIT_MARKUP_BPS parsing silently swallowed bad values. Fixed in
   // packages/config/src/services/config.service.ts (commit 651c7d2): a
   // "NULL" env value now disables markup, normalizing to exactly 10_000 bps
   // (1.0x, cost price) rather than falling back to the 15_000 default. The
@@ -81,7 +80,7 @@ describe('computeCharge', () => {
     });
 
     expect(charge.markupBps).toBe(15_000);
-    // specs/credits/prd.md worked example: 31.5 credits.
+    // 31.5 credits.
     expect(charge.chargedMicroCredits).toBe(31_500_000n);
   });
 
@@ -196,7 +195,7 @@ describe('settleCreditUsage', () => {
     expect(settlement).not.toBeNull();
     expect(settlement?.balanceAfterMicroCredits).toBeLessThan(0n);
 
-    // specs/credits/prd.md, "Overdraft": the *next* request is refused.
+    // Overdraft: the *next* request is refused.
     const spendState = await resolveCreditSpendState({ workspaceId });
     expect(spendState?.allowed).toBe(false);
   });

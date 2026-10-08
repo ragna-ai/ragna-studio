@@ -54,8 +54,7 @@ export const generateImagesSchema = z.object({
   // capability-driven and lives in apps/api, not here (see the vertex
   // branch of configProviderParams below).
   //
-  // Both mediaId and storageKey travel together (specs/media-library/
-  // migration-prd.md): storageKey downloads the bytes to condition the
+  // Both mediaId and storageKey travel together: storageKey downloads the bytes to condition the
   // generation on, mediaId is the link this call writes into
   // gen_image_reference once the output rows exist. apps/api's
   // imagegen.service.ts resolves both from the HTTP-level {origin, id}
@@ -70,7 +69,7 @@ export const generateImagesSchema = z.object({
     )
     .max(4)
     .optional(),
-  // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2).
+  // EU AI Act Art. 50(4) visible-disclosure toggle.
   // Default off; applied after generation, before upload, by
   // applyImageWatermark below.
   visibleWatermark: z.boolean().optional(),
@@ -290,8 +289,7 @@ async function enqueueGenImagesJob(
 }
 
 /**
- * Request side (API, chat tool, specs/imagegen/worker-execution-prd.md
- * decision 3): inserts the pending batch and enqueues the gen-images job,
+ * Request side (API, chat tool): inserts the pending batch and enqueues the gen-images job,
  * then returns immediately. The worker (gen-images.processor.ts) does the
  * slow part.
  */
@@ -364,7 +362,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         // @ai-sdk/google-vertex 5.0.63+ dropped Imagen entirely: image
         // requests now go through Gemini's generateContent, which has no
         // addWatermark or negativePrompt option. That's fine for the EU AI
-        // Act Art. 50(2) guardrail (specs/ai-labeling/prd.md part 1):
+        // Act Art. 50(2) guardrail:
         // Gemini image models apply SynthID unconditionally, with no
         // API-level toggle to disable it.
         if (negativePrompt) {

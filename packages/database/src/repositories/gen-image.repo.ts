@@ -199,8 +199,7 @@ export async function updateGenImageStatusByIds({
 
 // Reference media ids for a gen image, read BEFORE deleteGenImageByIdAndWorkspaceId
 // below: the delete cascades gen_image_reference rows away, so a caller that
-// needs to refcount those media ids afterward (specs/media-library/
-// migration-prd.md decision 5) must collect them first.
+// needs to refcount those media ids afterward must collect them first.
 export async function getGenImageReferenceMediaIds({
   genImageId,
 }: {

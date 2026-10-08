@@ -32,8 +32,7 @@ import {
 // `extractText`.
 
 
-// Task attachments accept every media kind the platform knows, same as chat
-// (specs/tasks/attachments-prd.md doesn't define a narrower set).
+// Task attachments accept every media kind the platform knows, same as chat.
 const TASK_ATTACHMENT_ACCEPTED_KINDS: readonly MediaKind[] = [...IMAGE_KINDS, ...DOCUMENT_KINDS];
 
 // UPLOAD

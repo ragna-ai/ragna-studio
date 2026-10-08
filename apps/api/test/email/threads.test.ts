@@ -14,9 +14,8 @@ import {
   setReadMock,
 } from './support/mail-provider.mock';
 
-// Thread listing/detail (specs/email/prd.md, "API": "Threads/messages: list
-// from local index... thread detail (stored bodies, live fetch + persist
-// for gaps)"). Folder derivation, category/label filters, and pagination
+// Thread listing/detail: lists come from the local index, detail serves
+// stored bodies and fetches + persists missing ones live. Folder derivation, category/label filters, and pagination
 // all live in listEmailThreadsForUser/listEmailThreads (email.service.ts /
 // email-thread.repo.ts); this file drives them through the real index
 // rather than re-deriving expected SQL, by seeding threads/messages
@@ -146,7 +145,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([matching.thread.id]);
   });
 
-  // specs/email/bugs.md #1: a category view with no folder must still hide
+  // A category view with no folder must still hide
   // trash/spam, even though the trashed message still carries the matching
   // category (Gmail moves-to-trash without clearing classification).
   test('categoryId excludes a trashed thread even though it still matches the category', async () => {
@@ -198,7 +197,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([matching.thread.id]);
   });
 
-  // specs/email/bugs.md #1: no folder, no category, no label - the plain
+  // No folder, no category, no label - the plain
   // "list everything" view must not surface trash either.
   test('no filter at all still excludes trash/spam', async () => {
     const { cookieHeader, accountId } = await connectAccount();
@@ -211,7 +210,7 @@ describe('GET /email/thread (filters)', () => {
     expect(body.threads.map((t) => t.id)).toEqual([inbox.thread.id]);
   });
 
-  // specs/email/bugs.md #1: "trashed" is the one view that must still show
+  // "Trashed" is the one view that must still show
   // trash - the fix must not exclude it there too.
   test('trashed folder still shows trash even with a category filter applied', async () => {
     const { cookieHeader, accountId } = await connectAccount();

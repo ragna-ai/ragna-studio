@@ -10,8 +10,8 @@ import {
   useUpdateEmailCategory,
 } from '~/features/email/composables/useEmailCategoryApi';
 
-// Categories steer the auto-classifier (specs/email/prd.md: `description` is
-// fed to the classifier prompt as-is), so each row's description is an
+// Categories steer the auto-classifier (`description` is fed to the
+// classifier prompt as-is), so each row's description is an
 // editable free-text field, not just a label.
 const DEFAULT_COLOR = '#78716c';
 

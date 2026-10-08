@@ -14,8 +14,7 @@ export interface ReplaceAgentContextDocumentChunksInput {
 }
 
 // Runs as a single transaction so a `ready` document always has its chunks
-// in place (specs/agent/agent-context-retrieval.md, "Pipeline changes"
-// invariant): the document row and its chunks flip together, never one
+// in place: the document row and its chunks flip together, never one
 // without the other.
 export async function replaceAgentContextDocumentChunksAndMarkReady({
   documentId,

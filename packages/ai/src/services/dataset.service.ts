@@ -12,7 +12,7 @@ export interface CreateDatasetForAgentInput {
 
 // Stamps the calling tool's origin (agent chat vs. MCP) so a created
 // dataset lands in the same workspace as its caller
-// with the correct grid badge (PRD specs/mcp/prd.md P6).
+// with the correct grid badge.
 export async function createDatasetForAgent({
   userId,
   workspaceId,

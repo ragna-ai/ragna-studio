@@ -53,7 +53,7 @@ export interface CreditUsageListResponse {
  * Returns `null` immediately, without querying, when `CREDITS_ENABLED` is
  * off, so the system can ship dark. Otherwise throws `PaymentRequiredException`
  * when the workspace's owner has no credit account, or its balance is not
- * positive (specs/credits/prd.md, "Overdraft": gate on `balance > 0`).
+ * positive (the gate is `balance > 0`).
  *
  * `pricing` is the target model's pricing, when the caller already knows
  * which model it's about to spend on. A model with no pricing, or a `kind`
@@ -109,8 +109,7 @@ export async function assertCanSpend({
  * A direct read on `credit_accounts.userId`, distinct from
  * `resolveCreditSpendState`'s workspace-locator gate. Never creates an
  * account: "no account" comes back as `null`, the same as
- * `resolveCreditSpendState` (specs/credits/prd.md, "Account creation": only
- * `grantCredits` creates one).
+ * `resolveCreditSpendState` (only `grantCredits` creates one).
  */
 async function resolveOwnCreditSpendState({
   userId,

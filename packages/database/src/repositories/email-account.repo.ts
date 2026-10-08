@@ -34,8 +34,7 @@ export async function getEmailAccountById({ id }: { id: string }): Promise<Email
 }
 
 // Every connected account still worth polling, for the sync cron's fan-out
-// (specs/email/prd.md, "Worker jobs": one email-sync job per connected
-// account). Excludes 'reauth_required' accounts: their stored credentials
+// (one email-sync job per connected account). Excludes 'reauth_required' accounts: their stored credentials
 // are known dead until the user reconnects,
 // so re-enqueuing them every tick would just repeat the same failing Gmail
 // call. Reconnecting flips the row back to a syncState this query includes

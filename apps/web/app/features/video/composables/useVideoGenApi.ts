@@ -52,8 +52,7 @@ export const videoGenResolutions = ['720p', '1080p'] as const;
 export type VideoGenResolution = (typeof videoGenResolutions)[number];
 
 // Veo's duration picker stays a fixed 4/6/8s select (today's form); BFL
-// instead drives a 5-20s slider off videoGenCapabilities.bfl.durationRange,
-// specs/videogen/prd-v2.md "Web (apps/web)".
+// instead drives a 5-20s slider off videoGenCapabilities.bfl.durationRange.
 export const videoGenDurations = [4, 6, 8] as const;
 
 export interface VideoGenCapability {

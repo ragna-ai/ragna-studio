@@ -32,8 +32,7 @@ export type DatasetWithRowCount = Dataset & { rowCount: number };
 
 type DatasetTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// VALIDATION (shared by the REST endpoints and the agent tools, per
-// specs/datasets.md decision 2)
+// VALIDATION (shared by the REST endpoints and the agent tools)
 
 export type RowValidationResult = { valid: true } | { valid: false; error: string };
 
@@ -143,8 +142,7 @@ export async function createDataset({
   return createdDataset;
 }
 
-// Access boundary for the agent tool family (specs/api-standards/prd.md,
-// "dataset tool factory" note): a tool call is scoped by the acting user,
+// Access boundary for the agent tool family: a tool call is scoped by the acting user,
 // not a workspace. Kept for `@repo/ai`; the REST API uses
 // `getDatasetByWorkspaceId` below instead (access is workspace ownership,
 // per the container model).

@@ -31,7 +31,7 @@ import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/utils/upload-limits';
 // local, no network), so tier-2 text storage is exercised for real too.
 
 // Smallest possible valid 1x1 transparent PNG (67 bytes) — a real fixture
-// file rather than a mock, per specs/testing/strategy.md.
+// file rather than a mock.
 const ONE_PX_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -45,7 +45,7 @@ function csvFile(name = 'data.csv', content = 'name,age\nAda,36\nGrace,85\n'): F
 
 // A real one-slide .pptx (generated with pptxgenjs), not a hand-rolled zip:
 // anydoc's toMarkdownBytes parses the actual OOXML package, so the fixture
-// needs to be one, per specs/testing/strategy.md's "real fixture" preference.
+// needs to be one.
 const PPTX_FIXTURE_PATH = join(import.meta.dir, 'fixtures', 'sample.pptx');
 
 function pptxFile(name = 'slides.pptx'): File {
@@ -175,7 +175,7 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
     expect(mediaRow?.extractedText).toContain('| Grace | 85 |');
   });
 
-  test('uploads a pptx and stores its extracted text (specs/media-library/unified-media-prd.md, pptx addition)', async () => {
+  test('uploads a pptx and stores its extracted text', async () => {
     const { workspaceId, cookieHeader, chatId } = await seedChat();
     const file = pptxFile();
 

@@ -243,8 +243,7 @@ export async function generateVideoForWorkspace({
 
 // requestEnhanceGenVideo (@repo/ai) throws a plain Error for each of its
 // three failure cases (repo convention, no typed error classes there);
-// matched by message the same way, since that is the only signal available
-// (specs/videogen/prd-v2.md "API (apps/api)"):
+// matched by message the same way, since that is the only signal available:
 // - not found in the caller's workspace -> 404, same as any other
 //   workspace-scoped lookup miss in this file.
 // - not a completed BFL draft -> 400, an invalid-state request, mirroring

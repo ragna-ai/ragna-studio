@@ -89,7 +89,7 @@ export function useUpdateTaskLabel() {
   });
 }
 
-/** Cascades the join rows only; never touches tasks (specs/tasks/prd.md). */
+/** Cascades the join rows only; never touches tasks. */
 export function useDeleteTaskLabel() {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();

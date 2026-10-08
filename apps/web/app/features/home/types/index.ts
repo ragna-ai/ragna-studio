@@ -61,7 +61,7 @@ export interface HomeOverviewDocumentItem {
   updatedAt: string;
 }
 
-/** Per-section shape shared by all cards (specs/home/prd.md, "Response"):
+/** Per-section shape shared by all cards:
  * latest 5 items plus the workspace-wide total. */
 export interface HomeOverviewSection<TItem> {
   items: TItem[];

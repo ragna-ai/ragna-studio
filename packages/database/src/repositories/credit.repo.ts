@@ -75,7 +75,7 @@ export interface GrantCreditsParams {
 // Credit accounts are never per-workspace: one user's workspaces all draw
 // from one balance. This answers "who pays for work done here", by
 // resolving workspace -> owner -> account and reading the balance in one
-// join. See specs/credits/prd.md, "Billing entity resolution".
+// join.
 //
 // Returns a result, never throws for business reasons. `null` means the
 // billing entity has no credit account, which the caller treats as
@@ -370,7 +370,7 @@ interface ChargeBreakdown {
 // package). Module-private; exported only so a unit test can exercise the
 // rounding directly.
 //
-// specs/credits/prd.md, "The charge formula":
+// The charge formula:
 //   costNanoUsd = billableInput * nanoUsdPerInputToken
 //               + billableOutput * nanoUsdPerOutputToken
 //   chargedMicroCredits = ceilDiv(costNanoUsd * markupBps, 10_000n)

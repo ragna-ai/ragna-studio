@@ -153,7 +153,7 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
     _options: ReconnectToStreamOptions,
   ): Promise<ReadableStream<UIMessageChunk> | null> {
     // Resumable streams are deferred until the server-side chunk buffer
-    // lands (specs/team-chat/prd.md, "Later (explicitly deferred)").
+    // lands.
     return null;
   }
 }

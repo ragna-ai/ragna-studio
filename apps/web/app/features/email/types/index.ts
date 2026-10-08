@@ -1,5 +1,5 @@
 // Mirrors apps/api/src/services/email.service.ts response shapes (read-only
-// for this feature, see apps/api ownership note in specs/email/prd.md).
+// for this feature, apps/api owns them).
 // Dates cross the wire as ISO strings (JSON has no Date type), never `Date`.
 
 export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_required';
@@ -237,8 +237,7 @@ export interface MediaListResponse {
 }
 
 // --- Drafts ---------------------------------------------------------------
-// Wire contract per specs/email/drafts-change-request.md ("Wire contract"):
-// the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
+// Wire contract: the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
 
 export interface EmailDraftAttachment {
   /** Null when the attachment lives on the draft itself rather than a forwarded message. */
@@ -263,11 +262,11 @@ export interface EmailDraft {
   cc: EmailParticipant[];
   bcc: EmailParticipant[];
   subject: string | null;
-  /** HTML (specs/email/html-content-change-request.md flips this from markdown). */
+  /** HTML (was markdown before the HTML editor). */
   content: string;
   /** Plain-text MIME sibling of `content`, always written alongside it. */
   text: string;
-  /** Read-only quoted history, rendered via EmailContentIframe - never client-writable (specs/email/quote-iframe-change-request.md). Null for kind: 'new', or a draft created before this field existed. */
+  /** Read-only quoted history, rendered via EmailContentIframe - never client-writable. Null for kind: 'new', or a draft created before this field existed. */
   quotedHtml: string | null;
   /** Plain-text sibling of quotedHtml, same null semantics. */
   quotedText: string | null;

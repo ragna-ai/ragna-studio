@@ -14,7 +14,7 @@ import {
   type TaskStatus,
 } from '~/features/task/types';
 
-/** `TSK-<number>` display id (specs/tasks/prd.md, "Schema"). */
+/** `TSK-<number>` display id. */
 export function formatTaskDisplayId(taskNumber: number): string {
   return `TSK-${taskNumber}`;
 }

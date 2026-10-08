@@ -136,8 +136,7 @@ const DOCUMENT_EXPORT_FILE_EXTENSION: Record<DocumentExportFormat, string> = {
   docx: 'docx',
 };
 
-// Same slug rule as dataset export (specs/datasets/export-and-row-reorder.md
-// "User experience", Export): lowercase, ASCII, hyphen-separated, no leading
+// Same slug rule as dataset export: lowercase, ASCII, hyphen-separated, no leading
 // or trailing hyphens. Kept local to this service rather than shared with
 // `dataset.service.ts`: datasets and documents deliberately share no access
 // logic or mapping code (decision "A generic /export endpoint", rejected).

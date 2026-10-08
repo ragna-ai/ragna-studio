@@ -49,8 +49,8 @@ export function joinDraftContentWithQuote({
 
 // No length cap: the quote used to be truncated here (10,000 chars, closing
 // any tag left open at the cut) to protect the browser-side Tiptap editor
-// from hanging on a pathologically large blob (2026-08-15 freeze bug,
-// specs/email/bugs.md). That guard is gone now that the quote renders
+// from hanging on a pathologically large blob (2026-08-15 freeze bug).
+// That guard is gone now that the quote renders
 // read-only through EmailContentIframe instead of being parsed into the
 // editor - the same sandboxed
 // iframe already renders full, un-truncated message HTML of any size for

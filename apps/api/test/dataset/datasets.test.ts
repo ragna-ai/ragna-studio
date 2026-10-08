@@ -4,8 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD for /workspace/:workspaceId/dataset (specs/testing/
-// strategy.md, priority 3). Row endpoints live in dataset-rows.test.ts.
+// Plain CRUD for /workspace/:workspaceId/dataset. Row endpoints live in dataset-rows.test.ts.
 // Auth/authorization are covered exhaustively in test/auth/; this file only
 // checks the dataset feature's own behavior.
 

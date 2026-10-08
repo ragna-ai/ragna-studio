@@ -20,7 +20,7 @@ import * as z from 'zod';
 import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a task always belongs to a workspace (the workspace is
-// the board, specs/tasks/prd.md), and every chat (and therefore every tool
+// the board), and every chat (and therefore every tool
 // call) always has one. Tasks created via these tools inherit the chat's
 // workspace and are marked as agent-created.
 //

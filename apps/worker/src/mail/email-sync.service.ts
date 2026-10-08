@@ -391,8 +391,7 @@ async function importAddedMessage({
     );
 }
 
-// Reconciles email_drafts against Gmail's own drafts.list() (specs/email/
-// drafts-change-request.md, "Scope > 2"). Diffing the full list, rather than
+// Reconciles email_drafts against Gmail's own drafts.list(). Diffing the full list, rather than
 // correlating individual DRAFT-labelled history events to a specific draft,
 // sidesteps a real gap: MailDraftSummary deliberately hides the draft's
 // contained message id from callers outside @repo/mail (mail-provider.ts),
@@ -524,8 +523,7 @@ async function createReconciledDraft({
     origin: 'user',
     // Gmail's draft resource doesn't say reply vs. forward; a draft on a
     // thread we've indexed is treated as a reply, the more common case
-    // (specs/email/drafts-change-request.md, "Open points": flagged there as
-    // undetectable from the data the provider exposes).
+    // (undetectable from the data the provider exposes).
     kind: thread ? 'reply' : 'new',
     threadId: thread?.id ?? null,
     replyToMessageId: null,

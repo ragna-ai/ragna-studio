@@ -100,7 +100,7 @@ const selectedModel = computed(() =>
 // Only a completed row has a media object to condition on: the gallery
 // picker below must exclude pending/processing/failed rows, since
 // referencing one of those 404s server-side (apps/api's imagegen.service.ts
-// resolveReferenceImage, specs/imagegen/worker-execution-prd.md decision 1).
+// resolveReferenceImage).
 const referenceableGenImages = computed(() =>
   props.genImages.filter((image) => image.status === 'completed'),
 );

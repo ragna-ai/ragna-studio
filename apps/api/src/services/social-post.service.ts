@@ -56,8 +56,8 @@ function isAllowedMediaMimeType(mimeType: string): mimeType is AllowedMediaMimeT
   return mimeType in MEDIA_EXTENSION_BY_MIME_TYPE;
 }
 
-// storageKey lives on the joined media row now (specs/media-library/
-// migration-prd.md), not directly on social_post_media; added back onto the
+// storageKey lives on the joined media row now, not directly on
+// social_post_media; added back onto the
 // flat response here since the frontend DTO still expects it alongside
 // mediaId (external DTOs unchanged). Field set matches the frontend's
 // SocialPostMedia interface (useSocialPostApi.ts) exactly: workspace-internal

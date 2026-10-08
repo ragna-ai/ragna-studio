@@ -111,8 +111,8 @@ export const validEmailThreadListQuery = myzValidator(
     folder: emailFolderEnum.optional(),
     // stringbool(), not coerce.boolean(): query params arrive as strings,
     // and `Boolean("false")` is `true` in JS, so `?unreadOnly=false` would
-    // otherwise coerce to `true` (specs/chat/search-prd.md's caseSensitive
-    // hit this same trap; fixed here opportunistically).
+    // otherwise coerce to `true` (chat search's caseSensitive hit the same
+    // trap).
     unreadOnly: z.stringbool().optional(),
     starredOnly: z.stringbool().optional(),
     dateFrom: z.coerce.date().optional(),
@@ -194,8 +194,7 @@ const emailParticipantSchema = z.object({
 // A forward draft's carried-over attachment set, mirrors
 // EmailDraftAttachment (packages/database/src/schema/email.schema.ts).
 // `providerMessageId` is null when the attachment lives on the Gmail draft
-// itself rather than on a forwarded message (specs/email/
-// drafts-change-request.md, "Wire contract").
+// itself rather than on a forwarded message.
 const emailDraftAttachmentSchema = z.object({
   providerMessageId: z.string().min(1).nullable(),
   providerAttachmentId: z.string().min(1),

@@ -1,7 +1,6 @@
 // apps/worker/src/mail/email-draft.service.ts
 //
-// Runs the configured agent to draft a reply for a thread (specs/email/
-// prd.md, "Worker jobs"), triggered either automatically by classify or by
+// Runs the configured agent to draft a reply for a thread, triggered either automatically by classify or by
 // the manual "Draft with AI" endpoint. The draft row is created 'generating'
 // before the agent runs so the UI can show progress, then flipped to
 // 'ready'/'discarded' once the run settles.

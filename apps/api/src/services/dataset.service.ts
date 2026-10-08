@@ -173,8 +173,7 @@ function slugifyDatasetName(name: string): string {
   return slug.length > 0 ? slug : 'dataset';
 }
 
-// `<dataset-name-slug>-<yyyy-mm-dd>.<ext>` (specs/datasets/export-and-row-reorder.md
-// "User experience", Export).
+// `<dataset-name-slug>-<yyyy-mm-dd>.<ext>`.
 function toDatasetExportFilename(datasetName: string, format: DatasetExportFormat): string {
   const exportDate = new Date().toISOString().slice(0, 10);
   return `${slugifyDatasetName(datasetName)}-${exportDate}.${DATASET_EXPORT_FILE_EXTENSION[format]}`;
@@ -415,8 +414,7 @@ export async function deleteDatasetRow({
 }
 
 // The repo throws a plain Error (no typed error class) for these two cases;
-// matched by message since that's the only signal it gives us
-// (specs/datasets/export-and-row-reorder.md decision 4, mirroring
+// matched by message since that's the only signal it gives us (mirrors
 // isInvalidAfterTaskIdError in task.service.ts).
 function isRowNotFoundError(error: Error): boolean {
   return error.message === 'Dataset row not found';

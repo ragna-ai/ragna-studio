@@ -161,7 +161,7 @@ export async function getEmailThreadById({
 }
 
 // Plain lookup by the provider's own thread id, e.g. to hydrate a Gmail
-// search result (specs/email/prd.md, "API": search proxies Gmail's q=) back
+// search result (search proxies Gmail's q=) back
 // to our local thread row.
 export async function getEmailThreadByProviderThreadId({
   accountId,
@@ -177,8 +177,8 @@ export async function getEmailThreadByProviderThreadId({
   return found ?? null;
 }
 
-// Sync's deletion path (specs/email/prd.md, "Sync model": history.list
-// applies deletions and purges the local row) removes messages first, then
+// Sync's deletion path (history.list applies deletions and purges the local
+// row) removes messages first, then
 // calls this to drop threads left with none, since a thread with no
 // messages is meaningless.
 export async function deleteEmailThreadIfEmpty({ id }: { id: string }): Promise<void> {

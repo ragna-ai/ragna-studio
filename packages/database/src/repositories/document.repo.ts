@@ -91,7 +91,7 @@ export async function createDocument({
 
 type UpdateDocumentFields = Partial<Pick<NewDocument, 'title' | 'content' | 'folderId'>>;
 
-// Last-writer-wins update (also the autosave endpoint, see specs/documents/prd.md):
+// Last-writer-wins update (also the autosave endpoint):
 // no version check, whichever call lands last is what's stored.
 export async function updateDocument({
   documentId,

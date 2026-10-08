@@ -12,7 +12,7 @@ import { assertCanSpend } from '../../src/services/credit.service';
 // gate policy shared by creditGuard, the WS chat path, and its worker
 // mirror. None of its
 // callers are in scope for Phase 1 (streaming chat/WS and apps/worker are
-// both deferred, specs/testing/strategy.md), so it's exercised directly here
+// both deferred), so it's exercised directly here
 // rather than through a route.
 describe('assertCanSpend', () => {
   beforeEach(async () => {
@@ -45,8 +45,8 @@ describe('assertCanSpend', () => {
     expect(spendState?.balanceMicroCredits).toBe(5_000_000n);
   });
 
-  // Regression: specs/credits/review-2026-07-29.md, finding 1 ("the gate
-  // never checks model pricing, so 'fail closed' is not implemented"). Fixed
+  // Regression: the gate never checked model pricing, so "fail closed" was
+  // not implemented. Fixed
   // in the current code (assertCanSpend's `pricing` check, below); these
   // tests lock that fix in.
   describe('pricing gate (review finding 1)', () => {

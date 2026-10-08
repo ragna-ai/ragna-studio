@@ -55,7 +55,7 @@ function stopPreview(id: string) {
 
 // Veo only produces 16:9 or 9:16; BFL adds six more ratios plus 'auto',
 // whose actual rendered shape isn't known ahead of playback
-// (specs/videogen/prd-v2.md risk: "auto aspect ratio"). aspect-video is the
+// ("auto" aspect ratio). aspect-video is the
 // fallback box for that case.
 const TILE_ASPECT_CLASS: Record<VideoGenAspectRatio, string> = {
   '21:9': 'aspect-[21/9]',

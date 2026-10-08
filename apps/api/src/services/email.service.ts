@@ -1123,7 +1123,7 @@ async function applyMessageAction({
 
 // Shared by applyThreadAction (every message on a thread) and
 // getEmailThreadDetailForUser's best-effort mark-as-read-on-open (only the
-// messages that are actually unread, specs/email/bugs.md #3): applies
+// messages that are actually unread): applies
 // `action` to each message via the provider, then persists whatever the
 // provider actually reports back. Any single message's failure (provider
 // call or the local persist) is logged and that message falls back to its
@@ -1530,8 +1530,7 @@ export interface SendEmailInput {
   /**
    * Pre-resolved attachment bytes to send alongside whatever `mediaIds`/
    * `files` resolve to, e.g. a draft's forwarded-attachment carry-over
-   * (specs/email/drafts-change-request.md, "Scope > 5"; already fetched via
-   * `provider.getAttachment` by the caller).
+   * (already fetched via `provider.getAttachment` by the caller).
    */
   extraAttachments?: MailAttachmentInput[];
 }
@@ -1766,8 +1765,8 @@ async function resolveForwardAttachments({
 }
 
 // The message being replied to/forwarded may not have its HTML body
-// persisted yet (specs/email/prd.md's "Sync model" lazy-persist gap, the same
-// one getEmailThreadDetailForUser fills for the thread view): fetch it live
+// persisted yet (sync persists bodies lazily, the same gap
+// getEmailThreadDetailForUser fills for the thread view): fetch it live
 // and persist it when that happens, instead of quoting an empty body. A
 // message that turns out to have no HTML part at all (a plain-text-only
 // email, `htmlBody`/`body.html` genuinely null rather than just unpersisted)
@@ -1818,8 +1817,7 @@ export interface ReplyDraftQuote {
   quotedText: string;
 }
 
-// Server-side quoting (specs/email/drafts-change-request.md, "Wire contract":
-// amends prd.md's "the API never appends quotes server-side" - that was
+// Server-side quoting (the API used to never append quotes server-side - that was
 // right when a send was assembled in the browser, but a draft is now a
 // persisted server object, so the quote has to be in the row at creation.
 // Reuses the client's own helper
@@ -2125,8 +2123,7 @@ async function buildDraftSendMailInput({
   draft: EmailDraft;
 }): Promise<SendMailInput> {
   // Every push for a reply/forward draft re-supplies threading, dropping it
-  // on one save detaches the draft from its thread (specs/email/
-  // drafts-change-request.md, "Does Google support drafts?"). Falls back to
+  // on one save detaches the draft from its thread. Falls back to
   // untreaded once replyToMessageId turns null (source message purged),
   // same fallback sendEmailDraftForUser already used for the final send.
   const thread =

@@ -132,8 +132,8 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // Every user needs a workspace to create anything in (WP0 of
-          // specs/api-standards/prd.md: workspaceId is a required container).
+          // Every user needs a workspace to create anything in: workspaceId is
+          // a required container.
           await createWorkspace({ ownerId: user.id, name: 'Personal' });
 
           // Integration tests seed users through this same hook (see

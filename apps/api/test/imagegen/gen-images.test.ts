@@ -77,7 +77,7 @@ const listResponseSchema = z.strictObject({
 // storageKey is a convenience param: when present it mints its own media row
 // before the gen_images row is
 // created, leaving mediaId null otherwise (a pending/failed row has no
-// object yet, specs/imagegen/worker-execution-prd.md decision 1).
+// object yet).
 async function seedGenImage({
   userId,
   workspaceId,

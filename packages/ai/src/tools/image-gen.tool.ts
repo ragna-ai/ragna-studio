@@ -59,8 +59,7 @@ export type GeneratedAgentImage = {
   imgUrl: string;
 };
 
-// The pending branch is decision 6's poll-cap fallback (specs/imagegen/
-// worker-execution-prd.md): the chat path waited up to POLL_TIMEOUT_MS and
+// The pending branch is the poll-cap fallback: the chat path waited up to POLL_TIMEOUT_MS and
 // the batch still hadn't settled, so the ids are handed back instead of a
 // URL the model doesn't have yet, the same degrade-to-pending shape the
 // video tool always returns.
@@ -194,7 +193,7 @@ export const getGeneratedImages = (
       // model via getDefaultAiModelByModality and never sees
       // ai_models.capabilities, so generateAgentImages' underlying calls are
       // what drop either field for a model that doesn't support it (fail
-      // closed, specs/imagegen/prd.md decision 7) rather than erroring.
+      // closed) rather than erroring.
       const { error, data: output } = await tryCatch(
         () => generateAgentImages({ input, userId, workspaceId, runsInWorker }),
         { retryOnFailure: false },

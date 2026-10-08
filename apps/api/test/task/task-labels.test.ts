@@ -4,8 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD for /workspace/:workspaceId/task-label (specs/testing/
-// strategy.md, priority 3). Auth/authorization are covered exhaustively in
+// Plain CRUD for /workspace/:workspaceId/task-label. Auth/authorization are covered exhaustively in
 // test/auth/; this file only checks the task-label feature's own behavior.
 
 const taskLabelSchema = z.object({

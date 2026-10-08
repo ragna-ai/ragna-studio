@@ -34,7 +34,7 @@ export type {
   SweepUnreferencedMediaResult,
 } from './services/media.service';
 
-// Visible AI-disclosure watermark (specs/ai-labeling/prd.md part 2).
+// Visible AI-disclosure watermark (EU AI Act Art. 50(4)).
 export { applyImageWatermark, applyVideoWatermark } from './services/watermark.service';
 export type {
   ApplyImageWatermarkParams,

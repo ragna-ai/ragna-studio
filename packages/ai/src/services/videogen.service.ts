@@ -81,7 +81,7 @@ export const videoGenCapabilities: Record<VideoGenProvider, VideoGenCapability> 
   bfl: {
     aspectRatios: ['21:9', '2:1', '16:9', '4:3', '1:1', '3:4', '9:16', 'auto'],
     // Both resolution tiers are available at every ratio (verified SDK
-    // facts, specs/videogen/prd-v2.md).
+    // facts).
     resolutionsByAspectRatio: {
       '21:9': ['720p', '1080p'],
       '2:1': ['720p', '1080p'],
@@ -122,7 +122,7 @@ export const generateVideoSchema = z.object({
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
   draft: z.boolean().optional(),
-  // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2).
+  // EU AI Act Art. 50(4) visible-disclosure toggle.
   // Default off; applied after render, before upload, by
   // applyVideoWatermark below (uploadGeneratedVideo). Enhance rows copy it
   // from the parent draft (requestEnhanceGenVideo).
@@ -309,7 +309,7 @@ async function enqueueGenVideoJob(record: GenVideo): Promise<GenVideoDto> {
 }
 
 /**
- * Request side (API + chat tool, specs/videogen/prd.md decision 2): inserts
+ * Request side (API + chat tool): inserts
  * the pending row and enqueues the gen-video job, then returns immediately.
  * The worker (gen-video.processor.ts) does the slow part.
  */
@@ -473,8 +473,8 @@ interface UploadGeneratedVideoResult {
 // Every generation route (standard, draft, enhance, Veo and BFL alike)
 // funnels its output through here before it reaches storage, so this is the
 // one place that needs to know about visibleWatermark rather than each of
-// the three generate* functions below (specs/ai-labeling/prd.md part 2:
-// provider-independent, applies on every route).
+// the three generate* functions below (provider-independent, applies on
+// every route).
 //
 // Best-effort: a render is
 // paid for and must never be lost to a labeling bug, so a failed watermark
@@ -689,8 +689,7 @@ async function generateEnhanceVideo(
 }
 
 /**
- * Veo on Vertex (specs/videogen/prd.md, unchanged by v2 besides the
- * aspect-ratio type narrowing above).
+ * Veo on Vertex.
  */
 async function generateVertexVideo(
   record: GenVideoWithMedia,
@@ -710,7 +709,7 @@ async function generateVertexVideo(
     frameImages,
     // A retried Veo call re-renders the whole clip, several minutes and a
     // full generation cost for what BullMQ already treats as a hard
-    // failure (no job retries, specs/videogen/prd.md worker section), so the
+    // failure (no job retries), so the
     // SDK's own retry loop is turned off here too.
     maxRetries: 0,
     providerOptions: record.negativePrompt
@@ -759,8 +758,7 @@ async function generateAndUploadVideo(
 // runGenVideo's success path needs to hand the caller the freshly created
 // media row (for the video URL) alongside the updated GenVideo row;
 // updateGenVideoStatus itself only ever returns the plain row (no join), so
-// this is the one case where the two travel together (specs/media-library/
-// migration-prd.md decision 6).
+// this is the one case where the two travel together.
 export type RunGenVideoResult = GenVideo & { media: Media | null };
 
 /**

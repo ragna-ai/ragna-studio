@@ -204,9 +204,9 @@ export function seedEmailDraft(params: {
   to?: EmailParticipant[];
   subject?: string | null;
   content?: string;
-  /** Plain-text MIME sibling of `content` (specs/email/html-content-change-request.md). */
+  /** Plain-text MIME sibling of `content`. */
   text?: string;
-  /** Read-only quoted history, split out of content/text (specs/email/quote-iframe-change-request.md). */
+  /** Read-only quoted history, split out of content/text. */
   quotedHtml?: string | null;
   quotedText?: string | null;
   attachments?: EmailDraftAttachment[];

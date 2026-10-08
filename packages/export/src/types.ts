@@ -27,9 +27,8 @@ export interface TabularExport {
 
 /**
  * Format-agnostic input for the document writers (`toDocumentMarkdown`/
- * `toDocumentText`/`toDocumentPdf`/`toDocumentDocx`), specs/datasets/export-and-row-reorder.md
- * "Document export": `markdown` is the document's canonical `content`
- * (documents/prd.md), parsed once and shared by every writer that needs
+ * `toDocumentText`/`toDocumentPdf`/`toDocumentDocx`): `markdown` is the
+ * document's canonical `content`, parsed once and shared by every writer that needs
  * structure (see `markdown-tokens.ts`).
  */
 export interface DocumentExport {

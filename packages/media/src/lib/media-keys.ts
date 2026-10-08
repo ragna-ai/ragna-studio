@@ -1,8 +1,7 @@
 // packages/media/src/lib/media-keys.ts
 //
-// Media-scoped storage placement (specs/media-library/prd.md decision 3,
-// layering rule from specs/media-library/unified-media-prd.md decision 1:
-// only @repo/media knows which bucket a kind belongs in). No chatId in any
+// Media-scoped storage placement (only @repo/media knows which bucket a kind
+// belongs in). No chatId in any
 // key: deletion is row-driven (media.service.ts), and a library file isn't
 // owned by one chat. `ownerId` is whichever owner FK is set on the media
 // row (a workspace id in v1).
