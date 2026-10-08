@@ -199,9 +199,7 @@ function toGenVideoDto(record: GenVideo, media: Media | null = null): GenVideoDt
     isDraft: record.isDraft,
     parentGenVideoId: record.parentGenVideoId,
     visibleWatermark: record.visibleWatermark,
-    videoUrl: media
-      ? toPublicMediaUrl(media.storageKey)
-      : undefined,
+    videoUrl: media ? toPublicMediaUrl(media.storageKey) : undefined,
     createdAt: record.createdAt,
   };
 }
@@ -523,7 +521,9 @@ async function uploadGeneratedVideo(
 // Narrows the loosely-typed providerMetadata (Record<string, JSONObject>)
 // down to the draftCache URL without an `any` cast, using @ai-sdk/provider's
 // own JSON type guards.
-function extractDraftCacheUrl(providerMetadata: GenerateVideoResult['providerMetadata']): string | undefined {
+function extractDraftCacheUrl(
+  providerMetadata: GenerateVideoResult['providerMetadata'],
+): string | undefined {
   const bfl = providerMetadata.blackForestLabs;
 
   if (!bfl || !isJSONArray(bfl.videos)) {

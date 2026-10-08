@@ -182,17 +182,15 @@ export async function getEmailThreadByProviderThreadId({
 // calls this to drop threads left with none, since a thread with no
 // messages is meaningless.
 export async function deleteEmailThreadIfEmpty({ id }: { id: string }): Promise<void> {
-  await db
-    .delete(emailThread)
-    .where(
-      and(
-        eq(emailThread.id, id),
-        notExists(
-          db
-            .select({ one: sql`1` })
-            .from(emailMessage)
-            .where(eq(emailMessage.threadId, id)),
-        ),
+  await db.delete(emailThread).where(
+    and(
+      eq(emailThread.id, id),
+      notExists(
+        db
+          .select({ one: sql`1` })
+          .from(emailMessage)
+          .where(eq(emailMessage.threadId, id)),
       ),
-    );
+    ),
+  );
 }

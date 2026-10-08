@@ -59,11 +59,17 @@ Workflows can start manually or on a schedule. Both are initiated by our own sys
 5. **Connector interface, worker-owned.** Types in `@repo/workflow` (which stays free of HTTP client deps), implementations in `apps/worker/src/workflow/mail/`:
 
    ```ts
-   type MailMessage = { externalId: string; from: string; subject: string; date: string; bodyText: string };
+   type MailMessage = {
+     externalId: string;
+     from: string;
+     subject: string;
+     date: string;
+     bodyText: string;
+   };
    interface MailConnector {
      listNewMessages(args: {
        accessToken: string;
-       cursor: string | null;      // opaque, connector-defined (Gmail: historyId)
+       cursor: string | null; // opaque, connector-defined (Gmail: historyId)
        filter: EmailTriggerFilter;
        max: number;
      }): Promise<{ messages: MailMessage[]; nextCursor: string }>;
@@ -86,15 +92,15 @@ Workflows can start manually or on a schedule. Both are initiated by our own sys
 
 ## Changes by package
 
-| Area | Change |
-| --- | --- |
-| `@repo/workflow` | `email` member in the trigger `kind` union, `EmailTriggerFilter` + `MailMessage` + connector types, validation: email trigger structural checks |
-| `@repo/auth` | Google provider: `accessType: 'offline'`, `prompt: 'consent'` |
-| `@repo/database` | `workflows.trigger_kind`, `workflows.trigger_state` jsonb, `workflow_runs.external_event_id` + unique index, `triggered_by` accepts `'email'` (db:push); repo functions for cursor read/write |
-| `@repo/queue` | `workflow_trigger_disconnected` in `NotificationDataMap` |
-| `apps/worker` | Tick processor branches on trigger kind; `workflow/mail/` with connector interface dispatch + Gmail connector; token fetch via `auth.api.getAccessToken` |
-| `apps/api` | Publish: derive poll schedule + `trigger_kind` for email triggers, linked-account validation |
-| `apps/web` | Trigger form: email kind + filter fields, connect hint; `linkSocial` scope param in `useUserSocialAccounts`; list badge, `triggeredBy` badge, notification parser entry, i18n (`de-DE`, `en-UK`) |
+| Area             | Change                                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@repo/workflow` | `email` member in the trigger `kind` union, `EmailTriggerFilter` + `MailMessage` + connector types, validation: email trigger structural checks                                                  |
+| `@repo/auth`     | Google provider: `accessType: 'offline'`, `prompt: 'consent'`                                                                                                                                    |
+| `@repo/database` | `workflows.trigger_kind`, `workflows.trigger_state` jsonb, `workflow_runs.external_event_id` + unique index, `triggered_by` accepts `'email'` (db:push); repo functions for cursor read/write    |
+| `@repo/queue`    | `workflow_trigger_disconnected` in `NotificationDataMap`                                                                                                                                         |
+| `apps/worker`    | Tick processor branches on trigger kind; `workflow/mail/` with connector interface dispatch + Gmail connector; token fetch via `auth.api.getAccessToken`                                         |
+| `apps/api`       | Publish: derive poll schedule + `trigger_kind` for email triggers, linked-account validation                                                                                                     |
+| `apps/web`       | Trigger form: email kind + filter fields, connect hint; `linkSocial` scope param in `useUserSocialAccounts`; list badge, `triggeredBy` badge, notification parser entry, i18n (`de-DE`, `en-UK`) |
 
 ## Open questions for review
 

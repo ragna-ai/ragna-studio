@@ -138,9 +138,7 @@ export const getGeneratedVideo = (
           return { error: 'Video generation failed. Service currently unavailable.' };
         }
 
-        const videoUrl = completed.media
-          ? toPublicMediaUrl(completed.media.storageKey)
-          : undefined;
+        const videoUrl = completed.media ? toPublicMediaUrl(completed.media.storageKey) : undefined;
 
         return { video: { id: completed.id, status: 'completed', videoUrl } };
       }

@@ -28,13 +28,13 @@ Web renders node config forms from the Zod schemas (VeeValidate) and validates b
 
 ## Node catalog (v1)
 
-| Node type   | Config                                                              |
-| ----------- | ------------------------------------------------------------------- |
+| Node type   | Config                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------- |
 | `trigger`   | Manual or cron (see [workflows-scheduling.md](./workflows-scheduling.md)). Webhook later. |
-| `agent`     | References an `agents` row, or inline model + prompt. Runs via `@repo/ai`. |
-| `tool`      | One of the existing tools: think, webSearch, webBrowser, imageGen.  |
-| `condition` | Branch on an expression or an LLM classification.                   |
-| `transform` | Template string or field mapping between nodes.                     |
+| `agent`     | References an `agents` row, or inline model + prompt. Runs via `@repo/ai`.                |
+| `tool`      | One of the existing tools: think, webSearch, webBrowser, imageGen.                        |
+| `condition` | Branch on an expression or an LLM classification.                                         |
+| `transform` | Template string or field mapping between nodes.                                           |
 
 Later: `approval` (suspends the run until a user acts), specified in [workflows-human-in-the-loop.md](./workflows-human-in-the-loop.md).
 
@@ -44,33 +44,33 @@ Three tables in `packages/database/src/schema/`:
 
 **`workflows`**
 
-| Column                 | Purpose                                             |
-| ---------------------- | --------------------------------------------------- |
-| `id`, `user_id`        | Ownership.                                          |
-| `name`, `description`  | Display.                                            |
-| `definition`           | Draft graph as JSON, in vue-flow's native shape.    |
-| `published_definition` | Snapshot used for execution. Null until published.  |
+| Column                 | Purpose                                            |
+| ---------------------- | -------------------------------------------------- |
+| `id`, `user_id`        | Ownership.                                         |
+| `name`, `description`  | Display.                                           |
+| `definition`           | Draft graph as JSON, in vue-flow's native shape.   |
+| `published_definition` | Snapshot used for execution. Null until published. |
 
 The graph is stored exactly as the canvas produces it: `nodes[]` with position and typed `data`, plus `edges[]`. No translation layer between canvas and DB.
 
 **`workflow_runs`**
 
-| Column                       | Purpose                                                  |
-| ---------------------------- | -------------------------------------------------------- |
-| `id`, `workflow_id`          | Identity.                                                |
-| `status`                     | `pending` / `running` / `suspended` / `completed` / `failed`. |
-| `definition`                 | Snapshot of the published definition at enqueue time. Makes runs debuggable after later edits. |
-| `input`, `output`, `error`   | Run payloads as plain text. Output is the terminal node's output (JSON object keyed by node id when there are several terminals). |
-| `started_at`, `finished_at`  | Timing.                                                  |
+| Column                      | Purpose                                                                                                                           |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `workflow_id`         | Identity.                                                                                                                         |
+| `status`                    | `pending` / `running` / `suspended` / `completed` / `failed`.                                                                     |
+| `definition`                | Snapshot of the published definition at enqueue time. Makes runs debuggable after later edits.                                    |
+| `input`, `output`, `error`  | Run payloads as plain text. Output is the terminal node's output (JSON object keyed by node id when there are several terminals). |
+| `started_at`, `finished_at` | Timing.                                                                                                                           |
 
 **`workflow_run_steps`**
 
-| Column                      | Purpose                              |
-| --------------------------- | ------------------------------------ |
-| `run_id`, `node_id`         | Which node of which run.             |
-| `status`                    | Same enum as runs.                   |
+| Column                      | Purpose                                                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `run_id`, `node_id`         | Which node of which run.                                                                                                                         |
+| `status`                    | Same enum as runs.                                                                                                                               |
 | `input`, `output`, `error`  | Per-node payloads as plain text. `input` is the node's resolved `{{input}}` value (the upstream output, or the run input for trigger-fed nodes). |
-| `started_at`, `finished_at` | Timing.                              |
+| `started_at`, `finished_at` | Timing.                                                                                                                                          |
 
 Step rows serve two purposes: live run visualization on the canvas, and cheap resume. On retry or resume, nodes with a completed step row are skipped.
 

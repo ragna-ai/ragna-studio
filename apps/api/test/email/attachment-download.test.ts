@@ -4,7 +4,11 @@ import { StatusCodes } from 'http-status-codes';
 import { app } from '../../src/app';
 import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
-import { buildFakeMailMessage, fetchMessageMock, resetMailProviderMock } from './support/mail-provider.mock';
+import {
+  buildFakeMailMessage,
+  fetchMessageMock,
+  resetMailProviderMock,
+} from './support/mail-provider.mock';
 
 // GET /email/message/:messageId/attachment/:partId: the filename comes from
 // the external sender, so the Content-Disposition header must stay well-formed.

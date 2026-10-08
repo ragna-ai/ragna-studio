@@ -19,8 +19,11 @@ useHead({ title: t('mcp.consent.pageTitle') });
 const route = useRoute();
 const authClient = useAuth();
 
-const { data: settings, error: settingsError, isPending: isSettingsPending } =
-  useGetMcpSettings();
+const {
+  data: settings,
+  error: settingsError,
+  isPending: isSettingsPending,
+} = useGetMcpSettings();
 const { data: workspacesData, isPending: isWorkspacesPending } =
   useGetWorkspaces();
 const { mutateAsync: createConnection } = useCreateMcpConnection();
@@ -46,7 +49,9 @@ const clientDisplayLabel = computed(() => {
 });
 const workspaces = computed(() => workspacesData.value?.workspaces ?? []);
 const isMcpUnavailable = computed(
-  () => isMcpDisabledError(settingsError.value) || settings.value?.enabled === false,
+  () =>
+    isMcpDisabledError(settingsError.value) ||
+    settings.value?.enabled === false,
 );
 const isPending = computed(
   () => isSettingsPending.value || isWorkspacesPending.value,
@@ -81,7 +86,10 @@ async function approve() {
     }
     window.location.href = data.url;
   } catch (err) {
-    errorMessage.value = extractErrorMessage(err, t('mcp.consent.genericError'));
+    errorMessage.value = extractErrorMessage(
+      err,
+      t('mcp.consent.genericError'),
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -192,9 +200,7 @@ async function deny() {
               >
                 <span>{{ t(`mcp.integrations.${integration}`) }}</span>
                 <span>{{
-                  t(
-                    `mcp.accessLevel.${settings?.access[integration] ?? 'off'}`,
-                  )
+                  t(`mcp.accessLevel.${settings?.access[integration] ?? 'off'}`)
                 }}</span>
               </li>
             </ul>

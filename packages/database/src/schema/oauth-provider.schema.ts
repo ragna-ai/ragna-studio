@@ -113,10 +113,7 @@ export const oauthClientResource = pgTable(
   (table) => [
     index('oauthClientResource_clientId_idx').on(table.clientId),
     index('oauthClientResource_resourceId_idx').on(table.resourceId),
-    uniqueIndex('oauthClientResource_clientId_resourceId_idx').on(
-      table.clientId,
-      table.resourceId,
-    ),
+    uniqueIndex('oauthClientResource_clientId_resourceId_idx').on(table.clientId, table.resourceId),
   ],
 );
 

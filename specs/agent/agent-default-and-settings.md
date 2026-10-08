@@ -159,15 +159,15 @@ read sites need no change.
 
 ### Touched files
 
-| File | Part | Change |
-| --- | --- | --- |
-| `packages/database/src/schema/agent.schema.ts` | A | two partial unique indexes |
-| `packages/database/src/repositories/agent.repo.ts` | A+B | scoped default cleanup in transaction; fixed default lookup; clone settings in fallback; persist `settings` |
-| `apps/api/src/middlewares/validationMiddlewares.ts` | B | `settings` in `validUpsertAgentBody` |
-| `apps/api/src/controllers/agent.controller.ts` | B | pass `settings` through, normalize nulls |
-| `apps/web/app/features/agent/types/index.ts` | B | `AgentSettings` + `Agent.settings` |
-| `apps/web/app/features/agent/components/AgentUpsertForm.vue` | B | slider + number input in Settings tab |
-| `apps/web/app/components/ui/slider/` | B | new shadcn component (generated) |
+| File                                                         | Part | Change                                                                                                      |
+| ------------------------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------- |
+| `packages/database/src/schema/agent.schema.ts`               | A    | two partial unique indexes                                                                                  |
+| `packages/database/src/repositories/agent.repo.ts`           | A+B  | scoped default cleanup in transaction; fixed default lookup; clone settings in fallback; persist `settings` |
+| `apps/api/src/middlewares/validationMiddlewares.ts`          | B    | `settings` in `validUpsertAgentBody`                                                                        |
+| `apps/api/src/controllers/agent.controller.ts`               | B    | pass `settings` through, normalize nulls                                                                    |
+| `apps/web/app/features/agent/types/index.ts`                 | B    | `AgentSettings` + `Agent.settings`                                                                          |
+| `apps/web/app/features/agent/components/AgentUpsertForm.vue` | B    | slider + number input in Settings tab                                                                       |
+| `apps/web/app/components/ui/slider/`                         | B    | new shadcn component (generated)                                                                            |
 
 ### Resolved questions
 

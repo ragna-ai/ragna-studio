@@ -1,7 +1,12 @@
 import { toEuropeanDate, toEuropeanDateTime } from './date-format';
 import pdfMake from './pdfmake-instance';
 import type { PdfContent, PdfDocumentDefinition } from './pdfmake-instance';
-import type { ExportFile, TabularExport, TabularExportColumnType, TabularExportValue } from './types';
+import type {
+  ExportFile,
+  TabularExport,
+  TabularExportColumnType,
+  TabularExportValue,
+} from './types';
 
 const PDF_CONTENT_TYPE = 'application/pdf';
 

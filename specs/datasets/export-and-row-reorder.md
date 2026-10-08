@@ -59,13 +59,13 @@ Two gaps in datasets v1:
 
 ## Changes by package
 
-| Area | Change |
-| --- | --- |
-| `@repo/export` (new) | Scaffold via `pnpm gen package`. `TabularExport` type, `toCsv`, `toXlsx`, `toPdf`, `toMarkdown` writers with content types. Deps: `write-excel-file`, `pdfmake`. |
-| `@repo/database` | `moveDatasetRow` in `dataset.repo.ts` (dataset-lock transaction, `generateKeyBetween`). No schema change, no db:push. |
-| `@repo/ai` | `datasetMoveRow` tool in `dataset.tools.ts`; FIFO lock helper shared with `datasetAppendRow`; description touch-ups. |
-| `apps/api` | `dataset.controller.ts`: export route + move route. `dataset.service.ts`: dataset → `TabularExport` mapping, filename slug, move passthrough. |
-| `apps/web` | Export dropdown on the detail page (blob download via API client), row hover up/down buttons in `DatasetGrid.vue`, `useDatasetApi` additions, i18n (`de-DE`, `en-UK`). |
+| Area                 | Change                                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/export` (new) | Scaffold via `pnpm gen package`. `TabularExport` type, `toCsv`, `toXlsx`, `toPdf`, `toMarkdown` writers with content types. Deps: `write-excel-file`, `pdfmake`.       |
+| `@repo/database`     | `moveDatasetRow` in `dataset.repo.ts` (dataset-lock transaction, `generateKeyBetween`). No schema change, no db:push.                                                  |
+| `@repo/ai`           | `datasetMoveRow` tool in `dataset.tools.ts`; FIFO lock helper shared with `datasetAppendRow`; description touch-ups.                                                   |
+| `apps/api`           | `dataset.controller.ts`: export route + move route. `dataset.service.ts`: dataset → `TabularExport` mapping, filename slug, move passthrough.                          |
+| `apps/web`           | Export dropdown on the detail page (blob download via API client), row hover up/down buttons in `DatasetGrid.vue`, `useDatasetApi` additions, i18n (`de-DE`, `en-UK`). |
 
 ## Document export (scope addition, 2026-07-22)
 

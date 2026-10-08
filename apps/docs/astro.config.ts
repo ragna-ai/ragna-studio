@@ -1,27 +1,24 @@
-import { defineConfig } from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
-import nimbus, {
-  defineConfig as defineNimbusConfig,
-} from "@cloudflare/nimbus-docs";
-import { tableScroll } from "@cloudflare/nimbus-docs/markdown";
+import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+import nimbus, { defineConfig as defineNimbusConfig } from '@cloudflare/nimbus-docs';
+import { tableScroll } from '@cloudflare/nimbus-docs/markdown';
 
 const nimbusConfig = defineNimbusConfig({
-  site: "https://docs.ragna.io",
-  title: "RAGNA Docs",
-  description: "Documentation for RAGNA Studio.",
-  locale: "en",
-  github: "https://github.com/ragna-ai/ragna-studio",
-  editPattern:
-    "https://github.com/ragna-ai/ragna-studio/edit/main/apps/docs/{path}",
-  socialImageAlt: "RAGNA documentation preview",
+  site: 'https://docs.ragna.io',
+  title: 'RAGNA Docs',
+  description: 'Documentation for RAGNA Studio.',
+  locale: 'en',
+  github: 'https://github.com/ragna-ai/ragna-studio',
+  editPattern: 'https://github.com/ragna-ai/ragna-studio/edit/main/apps/docs/{path}',
+  socialImageAlt: 'RAGNA documentation preview',
   sidebar: {
     items: [
-      { label: "Getting started", autogenerate: { directory: "getting-started" } },
-      { label: "Self-hosting", autogenerate: { directory: "self-hosting" } },
-      { label: "Reference", autogenerate: { directory: "reference" } },
+      { label: 'Getting started', autogenerate: { directory: 'getting-started' } },
+      { label: 'Self-hosting', autogenerate: { directory: 'self-hosting' } },
+      { label: 'Reference', autogenerate: { directory: 'reference' } },
       {
-        label: "Contributing",
-        link: "https://github.com/ragna-ai/ragna-studio/blob/main/CONTRIBUTING.md",
+        label: 'Contributing',
+        link: 'https://github.com/ragna-ai/ragna-studio/blob/main/CONTRIBUTING.md',
       },
     ],
   },
@@ -29,7 +26,7 @@ const nimbusConfig = defineNimbusConfig({
 
 export default defineConfig({
   // nimbus:adapter
-  output: "static",
+  output: 'static',
   // Tailwind v4 via its Vite plugin (the integration Astro recommends for
   // Tailwind v4 — replaces the PostCSS plugin, which doesn't build under
   // Astro 7's Vite 8 bundler).
@@ -40,7 +37,7 @@ export default defineConfig({
   // a client-side router.
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: "hover",
+    defaultStrategy: 'hover',
   },
   integrations: [
     nimbus(nimbusConfig, {
@@ -51,8 +48,8 @@ export default defineConfig({
       // (heading hierarchy, code-block language, style, etc.) when you're
       // ready to enforce them — see `nimbus-docs lint --help`.
       rules: {
-        "nimbus/frontmatter-shape": "error",
-        "nimbus/internal-link": "error",
+        'nimbus/frontmatter-shape': 'error',
+        'nimbus/internal-link': 'error',
       },
       // Wrap wide tables so they scroll instead of overflowing the page
       // (styled by `.nb-table-scroll` in src/styles/prose.css).

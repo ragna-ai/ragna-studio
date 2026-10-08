@@ -28,7 +28,11 @@ const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
     <div v-if="data">
       <CreditUsageTable :usages="data.usages" :meta="meta" />
       <div class="pt-6 pb-10">
-        <PaginateControls v-model:page="page" v-model:limit="limit" :meta="meta" />
+        <PaginateControls
+          v-model:page="page"
+          v-model:limit="limit"
+          :meta="meta"
+        />
       </div>
     </div>
     <p v-else-if="error" class="text-sm text-destructive">

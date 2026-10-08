@@ -33,12 +33,18 @@ const hasCurrentSlot = computed(() => !!slots.current);
           >
             {{ item.label }}
           </BreadcrumbPage>
-          <BreadcrumbLink v-else-if="item.to" as-child class="text-muted-foreground">
+          <BreadcrumbLink
+            v-else-if="item.to"
+            as-child
+            class="text-muted-foreground"
+          >
             <NuxtLinkLocale :to="item.to">{{ item.label }}</NuxtLinkLocale>
           </BreadcrumbLink>
           <span v-else class="text-muted-foreground">{{ item.label }}</span>
         </BreadcrumbItem>
-        <BreadcrumbSeparator v-if="hasCurrentSlot || index < items.length - 1" />
+        <BreadcrumbSeparator
+          v-if="hasCurrentSlot || index < items.length - 1"
+        />
       </template>
       <BreadcrumbItem v-if="hasCurrentSlot" class="min-w-0">
         <slot name="current" />

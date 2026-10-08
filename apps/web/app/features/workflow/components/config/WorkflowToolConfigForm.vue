@@ -19,7 +19,9 @@ const { t } = useI18n();
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t(NODE_TYPE_LABEL_KEYS.tool) }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t(NODE_TYPE_LABEL_KEYS.tool)
+      }}</Label>
       <Select v-model="node.data.config.tool">
         <SelectTrigger class="w-full">
           <SelectValue :placeholder="t('workflow.toolConfig.selectTool')" />
@@ -33,7 +35,9 @@ const { t } = useI18n();
     </div>
 
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('common.input') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('common.input')
+      }}</Label>
       <Textarea v-model="node.data.config.input" rows="6" />
       <WorkflowTemplateHint class="mt-1" />
     </div>

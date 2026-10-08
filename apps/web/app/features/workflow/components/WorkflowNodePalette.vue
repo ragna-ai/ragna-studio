@@ -34,7 +34,9 @@ const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
 
 <template>
   <div class="flex flex-col gap-1">
-    <p class="px-1 pb-1 text-xs font-medium text-muted-foreground">{{ t('workflow.palette.addNode') }}</p>
+    <p class="px-1 pb-1 text-xs font-medium text-muted-foreground">
+      {{ t('workflow.palette.addNode') }}
+    </p>
     <Button
       v-for="type in NODE_TYPES"
       :key="type"

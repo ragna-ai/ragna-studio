@@ -18,13 +18,15 @@ const { locale } = useI18n();
     >
       <div class="min-w-0 grow">
         <p class="truncate font-medium text-foreground">{{ chat.title }}</p>
-        <p class="truncate text-xs text-muted-foreground">{{ chat.agentName }}</p>
+        <p class="truncate text-xs text-muted-foreground">
+          {{ chat.agentName }}
+        </p>
       </div>
       <NuxtTime
         :datetime="chat.updatedAt"
         :locale="locale"
         relative
-        class="shrink-0 whitespace-nowrap text-xs text-muted-foreground"
+        class="shrink-0 text-xs whitespace-nowrap text-muted-foreground"
       />
     </NuxtLinkLocale>
   </div>

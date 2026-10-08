@@ -8,13 +8,18 @@ import type { MediaListResponse } from '~/features/email/types';
  * `emailKeys` since it isn't email-account-scoped, it's workspace-scoped
  * like the rest of the media feature.
  */
-export function useGetWorkspaceMedia(options: { enabled: MaybeRefOrGetter<boolean> }) {
+export function useGetWorkspaceMedia(options: {
+  enabled: MaybeRefOrGetter<boolean>;
+}) {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<MediaListResponse>({
     queryKey: ['media', workspaceId, 'list'],
     queryFn: ({ signal }) =>
-      $api<MediaListResponse>(`/workspace/${toValue(workspaceId)}/media`, { method: 'GET', signal }),
+      $api<MediaListResponse>(`/workspace/${toValue(workspaceId)}/media`, {
+        method: 'GET',
+        signal,
+      }),
     enabled: () => !!toValue(workspaceId) && toValue(options.enabled),
   });
 }

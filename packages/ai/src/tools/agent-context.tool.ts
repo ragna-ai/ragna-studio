@@ -26,9 +26,7 @@ type SearchContextDocumentsResult = {
   content: string;
   distance: number;
 };
-type SearchContextDocumentsOutput =
-  | { results: SearchContextDocumentsResult[] }
-  | { error: string };
+type SearchContextDocumentsOutput = { results: SearchContextDocumentsResult[] } | { error: string };
 
 export const getSearchContextDocumentsTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,

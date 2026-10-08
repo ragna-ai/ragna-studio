@@ -72,4 +72,5 @@ export type NotificationDataMap = {
 export type NotificationType = keyof NotificationDataMap;
 
 // The payload for a given type, or the union across all types when unspecified.
-export type NotificationData<T extends NotificationType = NotificationType> = NotificationDataMap[T];
+export type NotificationData<T extends NotificationType = NotificationType> =
+  NotificationDataMap[T];

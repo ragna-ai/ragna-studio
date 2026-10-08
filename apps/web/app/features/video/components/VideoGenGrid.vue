@@ -43,7 +43,10 @@ function setVideoElement(id: string, el: unknown) {
 }
 
 function playPreview(id: string) {
-  void videoElements.get(id)?.play().catch(() => {});
+  void videoElements
+    .get(id)
+    ?.play()
+    .catch(() => {});
 }
 
 function stopPreview(id: string) {
@@ -69,7 +72,9 @@ const TILE_ASPECT_CLASS: Record<VideoGenAspectRatio, string> = {
 };
 
 function tileAspectClass(video: GeneratedVideo) {
-  return video.aspectRatio ? TILE_ASPECT_CLASS[video.aspectRatio] : 'aspect-video';
+  return video.aspectRatio
+    ? TILE_ASPECT_CLASS[video.aspectRatio]
+    : 'aspect-video';
 }
 
 function isEnhanceableDraft(video: GeneratedVideo) {
@@ -204,7 +209,9 @@ function handleEnhance(video: GeneratedVideo) {
 
   <VideoGenPreviewDialog
     :video="previewVideo"
-    :has-active-enhance="previewVideo ? hasActiveEnhance(previewVideo.id) : false"
+    :has-active-enhance="
+      previewVideo ? hasActiveEnhance(previewVideo.id) : false
+    "
     @close="previewVideo = null"
   />
 </template>

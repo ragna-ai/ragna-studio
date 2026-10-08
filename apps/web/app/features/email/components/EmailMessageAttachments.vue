@@ -2,7 +2,10 @@
 import { DownloadIcon, PaperclipIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
-import { useDownloadEmailAttachment, useGetEmailMessageAttachments } from '~/features/email/composables/useEmailMessageApi';
+import {
+  useDownloadEmailAttachment,
+  useGetEmailMessageAttachments,
+} from '~/features/email/composables/useEmailMessageApi';
 
 // Props
 const props = defineProps<{ messageId: string; expanded: boolean }>();
@@ -11,12 +14,20 @@ const props = defineProps<{ messageId: string; expanded: boolean }>();
 const { t } = useI18n();
 const messageIdRef = computed(() => props.messageId);
 const expandedRef = computed(() => props.expanded);
-const { data, isLoading } = useGetEmailMessageAttachments(messageIdRef, { enabled: expandedRef });
-const { mutate: downloadAttachment, variables: downloadingVariables, isPending: isDownloading } =
-  useDownloadEmailAttachment();
+const { data, isLoading } = useGetEmailMessageAttachments(messageIdRef, {
+  enabled: expandedRef,
+});
+const {
+  mutate: downloadAttachment,
+  variables: downloadingVariables,
+  isPending: isDownloading,
+} = useDownloadEmailAttachment();
 
 function isRowDownloading(partId: string): boolean {
-  return isDownloading.value && downloadingVariables.value?.attachment.partId === partId;
+  return (
+    isDownloading.value &&
+    downloadingVariables.value?.attachment.partId === partId
+  );
 }
 
 function formatBytes(bytes: number): string {
@@ -27,8 +38,14 @@ function formatBytes(bytes: number): string {
 </script>
 
 <template>
-  <div v-if="props.expanded && (isLoading || data?.attachments.length)" class="mt-3 border-t pt-2">
-    <div v-if="isLoading" class="flex items-center gap-2 text-xs text-muted-foreground">
+  <div
+    v-if="props.expanded && (isLoading || data?.attachments.length)"
+    class="mt-3 border-t pt-2"
+  >
+    <div
+      v-if="isLoading"
+      class="flex items-center gap-2 text-xs text-muted-foreground"
+    >
       <Spinner class="size-3" />
       {{ t('email.attachments.loading') }}
     </div>
@@ -40,14 +57,18 @@ function formatBytes(bytes: number): string {
       >
         <PaperclipIcon class="size-3 shrink-0 text-muted-foreground" />
         <span class="max-w-40 truncate">{{ attachment.filename }}</span>
-        <span class="text-muted-foreground">{{ formatBytes(attachment.size) }}</span>
+        <span class="text-muted-foreground">{{
+          formatBytes(attachment.size)
+        }}</span>
         <Button
           variant="ghost"
           size="icon"
           class="size-5"
           :disabled="isRowDownloading(attachment.partId)"
           :aria-label="t('email.attachments.download')"
-          @click="downloadAttachment({ messageId: props.messageId, attachment })"
+          @click="
+            downloadAttachment({ messageId: props.messageId, attachment })
+          "
         >
           <Spinner v-if="isRowDownloading(attachment.partId)" class="size-3" />
           <DownloadIcon v-else class="size-3" />

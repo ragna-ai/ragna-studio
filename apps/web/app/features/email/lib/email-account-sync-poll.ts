@@ -73,7 +73,10 @@ export function accountSyncRefetchIntervalMs(
   }
 
   const windowOpen = isManualAccountSyncActive.value;
-  const lastSyncedAtAdvanced = windowOpen && lastSyncedAt !== undefined && lastSyncedAt !== baselineLastSyncedAt;
+  const lastSyncedAtAdvanced =
+    windowOpen &&
+    lastSyncedAt !== undefined &&
+    lastSyncedAt !== baselineLastSyncedAt;
 
   if (hasObservedSyncing || lastSyncedAtAdvanced) {
     closeForcePollWindow();

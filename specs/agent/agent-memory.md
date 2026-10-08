@@ -10,13 +10,13 @@ This PRD describes **Phase 1**, which is the functional core: a write tool plus 
 
 These are settled. Do not re-open them.
 
-| Decision       | Choice                                                                                                                          |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Scope**      | Per **agent**. Memories belong to one agent, not to the user globally. Each agent has its own isolated pool.                    |
-| **Storage**    | **One row per agent** holding a single markdown document (not one row per fact). Row-per-fact adds no benefit at this scale and complicates the write tool. |
+| Decision       | Choice                                                                                                                                                           |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scope**      | Per **agent**. Memories belong to one agent, not to the user globally. Each agent has its own isolated pool.                                                     |
+| **Storage**    | **One row per agent** holding a single markdown document (not one row per fact). Row-per-fact adds no benefit at this scale and complicates the write tool.      |
 | **Write path** | Inline `memory` tool the model calls mid-conversation. Two actions, `append` and `replace` (Anthropic memory-tool style). Background auto-extraction is Phase 2. |
-| **Read path**  | Auto-inject: the agent's memory document is appended verbatim to the system prompt every turn. A `recallMemory` search tool is Phase 2. |
-| **Retrieval**  | None in Phase 1. The whole document is injected. pgvector is Phase 2 and would require chunking the document.                  |
+| **Read path**  | Auto-inject: the agent's memory document is appended verbatim to the system prompt every turn. A `recallMemory` search tool is Phase 2.                          |
+| **Retrieval**  | None in Phase 1. The whole document is injected. pgvector is Phase 2 and would require chunking the document.                                                    |
 
 ## Schema
 
@@ -56,9 +56,9 @@ Do **not** write a SQL migration by hand (repo convention: push schema directly)
 
 New file `packages/database/src/repositories/memory.repo.ts`, following the shape of `agent.repo.ts` and `chat.repo.ts`:
 
-| Function                             | Behavior                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------ |
-| `getMemoryByAgentId({ agentId })`    | The agent's memory row, or `null` if it has none yet.                           |
+| Function                             | Behavior                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `getMemoryByAgentId({ agentId })`    | The agent's memory row, or `null` if it has none yet.                                       |
 | `upsertMemory({ agentId, content })` | Insert the row, or update `content` on conflict with the unique `agentId`. Returns the row. |
 
 Everything is keyed by `agentId`, so the tool can only ever touch the calling agent's own row. Export from `packages/database/src/repositories/index.ts`.
@@ -69,7 +69,12 @@ Add `'memory'` to the `AgentTool` union in `packages/database/src/schema/agent.s
 
 ```ts
 export type AgentTool =
-  'think' | 'webSearch' | 'webBrowser' | 'imageGen' | 'linkedinDraft' | 'memory';
+  | 'think'
+  | 'webSearch'
+  | 'webBrowser'
+  | 'imageGen'
+  | 'linkedinDraft'
+  | 'memory';
 ```
 
 This makes `memory` a valid entry in an agent's `tools` array and in `activeTools`.
@@ -78,7 +83,7 @@ This makes `memory` a valid entry in an agent's `tools` array and in `activeTool
 
 New file `packages/ai/src/tools/memory.tool.ts`. Model this on `image-gen.tool.ts` and `linkedin-draft.tool.ts` (they show the writer + deps + `tryCatch` + repo-call pattern). `@repo/ai` already depends on `@repo/database`, so import the repo functions directly.
 
-The model always sees the current memory document in its system prompt (see read path), so the tool only needs to *edit* that document, not read it back. Two actions, modeled on the Anthropic memory tool:
+The model always sees the current memory document in its system prompt (see read path), so the tool only needs to _edit_ that document, not read it back. Two actions, modeled on the Anthropic memory tool:
 
 - Export `getMemoryTool(writer, agentId)` returning a single `tool({...})`.
 - Input schema (zod): a **flat `z.object`**, not a discriminated union. Anthropic's tool `input_schema` must have a top-level `type: "object"`; a `z.discriminatedUnion`/`z.union` compiles to top-level `anyOf` with no `type` and the API rejects it (`input_schema.type: Field required`). So use one object and enforce per-action requirements at runtime:
@@ -86,7 +91,7 @@ The model always sees the current memory document in its system prompt (see read
   - `text: z.string().optional()` — for `append`: appended as a new block at the end (blank-line separator if the doc is non-empty).
   - `old: z.string().optional()`, `new: z.string().optional()` — for `replace`: string-replace `old` with `new`; empty/omitted `new` deletes the matched text.
 - In `execute`, validate: `append` requires `text`, `replace` requires `old` (return `{ error }` if missing).
-- `.describe(...)` each field so the model knows *when* to write, e.g. "Save a durable fact about the user or task that will be useful in future conversations. Do not save transient or trivial details." Describe `replace` as the way to update or remove an existing fact.
+- `.describe(...)` each field so the model knows _when_ to write, e.g. "Save a durable fact about the user or task that will be useful in future conversations. Do not save transient or trivial details." Describe `replace` as the way to update or remove an existing fact.
 - On execute (read-modify-write): load the current row with `getMemoryByAgentId`, apply the edit to `content`, then `upsertMemory`. Emit a transient `data-memory` stream event first (mirror the `data-imageGen` write in `image-gen.tool.ts`).
 - For `replace`: if `old` is not found, or is found **more than once**, return `{ error }` and do not write. Requiring a unique match forces the model to quote enough surrounding context, the same guard the Anthropic `str_replace` tool uses.
 - Return a tiny confirmation (`{ ok: true }`) or `{ error }`. Do not echo the whole document back into the model context.
@@ -139,28 +144,28 @@ The workflow "referenced agent" branch of `executeAgent` (`apps/worker/src/workf
 
 ## Files touched (Phase 1, as built)
 
-| File                                                | Change                                  |
-| --------------------------------------------------- | --------------------------------------- |
-| `packages/database/src/schema/memory.schema.ts`     | New: `agent_memories` table.            |
-| `packages/database/src/schema/index.ts`             | Export the new schema.                  |
-| `packages/database/src/schema/relations.ts`         | Register `agentMemory` + agent one-to-one. |
-| `packages/database/src/repositories/memory.repo.ts` | New: `getMemoryByAgentId` / `upsertMemory`. |
-| `packages/database/src/repositories/index.ts`       | Export the new repo.                    |
-| `packages/database/src/schema/agent.schema.ts`      | Add `'memory'` to `AgentTool`.          |
-| `packages/ai/src/tools/memory.tool.ts`              | New: `getMemoryTool` (flat object schema). |
-| `packages/ai/src/tools/agent.tools.ts`              | Register tool + extend `AgentToolDeps`. |
-| `packages/ai/src/tools/index.ts`                    | Re-export `memory.tool`.                |
-| `packages/ai/src/services/agent.service.ts`         | New: `buildAgentInstructions` (gate + inject), shared by API and worker. |
-| `apps/api/src/controllers/chat.controller.ts`       | Call `buildAgentInstructions`; pass `agentId` dep. |
-| `apps/worker/src/workflow/executors/agent.executor.ts` | Call `buildAgentInstructions`; pass `agentId` dep to `tools()`. |
-| `apps/api/src/controllers/agent.controller.ts`      | `GET` + `PUT /:agentId/memory`.         |
-| `apps/api/src/middlewares/validationMiddlewares.ts` | New `validAgentMemoryBody`.             |
-| `apps/web/app/features/agent/composables/useAgentApi.ts` | `useGetAgentMemory` / `useUpdateAgentMemory`. |
-| `apps/web/app/features/agent/types/index.ts`        | Memory request/response types.          |
-| `apps/web/app/features/agent/components/AgentMemoryPanel.vue` | New: memory editor panel.      |
-| `apps/web/app/features/agent/components/AgentUpsertForm.vue` | "Memory" tab.                   |
-| `apps/web/app/features/agent/components/AgentToolList.vue` | `memory` tool toggle.             |
-| `apps/web/i18n/locales/{en-UK,de-DE}.json`          | `memory` tool strings.                  |
+| File                                                          | Change                                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `packages/database/src/schema/memory.schema.ts`               | New: `agent_memories` table.                                             |
+| `packages/database/src/schema/index.ts`                       | Export the new schema.                                                   |
+| `packages/database/src/schema/relations.ts`                   | Register `agentMemory` + agent one-to-one.                               |
+| `packages/database/src/repositories/memory.repo.ts`           | New: `getMemoryByAgentId` / `upsertMemory`.                              |
+| `packages/database/src/repositories/index.ts`                 | Export the new repo.                                                     |
+| `packages/database/src/schema/agent.schema.ts`                | Add `'memory'` to `AgentTool`.                                           |
+| `packages/ai/src/tools/memory.tool.ts`                        | New: `getMemoryTool` (flat object schema).                               |
+| `packages/ai/src/tools/agent.tools.ts`                        | Register tool + extend `AgentToolDeps`.                                  |
+| `packages/ai/src/tools/index.ts`                              | Re-export `memory.tool`.                                                 |
+| `packages/ai/src/services/agent.service.ts`                   | New: `buildAgentInstructions` (gate + inject), shared by API and worker. |
+| `apps/api/src/controllers/chat.controller.ts`                 | Call `buildAgentInstructions`; pass `agentId` dep.                       |
+| `apps/worker/src/workflow/executors/agent.executor.ts`        | Call `buildAgentInstructions`; pass `agentId` dep to `tools()`.          |
+| `apps/api/src/controllers/agent.controller.ts`                | `GET` + `PUT /:agentId/memory`.                                          |
+| `apps/api/src/middlewares/validationMiddlewares.ts`           | New `validAgentMemoryBody`.                                              |
+| `apps/web/app/features/agent/composables/useAgentApi.ts`      | `useGetAgentMemory` / `useUpdateAgentMemory`.                            |
+| `apps/web/app/features/agent/types/index.ts`                  | Memory request/response types.                                           |
+| `apps/web/app/features/agent/components/AgentMemoryPanel.vue` | New: memory editor panel.                                                |
+| `apps/web/app/features/agent/components/AgentUpsertForm.vue`  | "Memory" tab.                                                            |
+| `apps/web/app/features/agent/components/AgentToolList.vue`    | `memory` tool toggle.                                                    |
+| `apps/web/i18n/locales/{en-UK,de-DE}.json`                    | `memory` tool strings.                                                   |
 
 Then run `pnpm --filter @repo/database db:push`.
 

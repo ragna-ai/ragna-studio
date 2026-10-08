@@ -37,7 +37,9 @@ const {
 const providerRows = computed(() =>
   providers.map((provider) => ({
     provider,
-    account: accounts.value.find((account) => account.providerId === provider.id),
+    account: accounts.value.find(
+      (account) => account.providerId === provider.id,
+    ),
   })),
 );
 

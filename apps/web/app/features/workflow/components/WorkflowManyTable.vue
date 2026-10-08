@@ -111,7 +111,11 @@ const { formatDateTime } = useDateTimeFormat();
         <TableCell class="text-right whitespace-nowrap" @click.stop>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+              <Button
+                variant="outline"
+                size="icon"
+                :aria-label="t('common.actions')"
+              >
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>

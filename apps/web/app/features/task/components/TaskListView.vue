@@ -49,7 +49,10 @@ function rowClass(task: TaskWithBoardInfo): Record<string, boolean> {
       </TableEmpty>
       <template v-for="group in groups" :key="group.value">
         <TableRow class="hover:bg-transparent">
-          <TableCell colspan="6" class="bg-stone-50 text-xs font-semibold text-muted-foreground">
+          <TableCell
+            colspan="6"
+            class="bg-stone-50 text-xs font-semibold text-muted-foreground"
+          >
             {{ t(group.labelKey) }} · {{ group.tasks.length }}
           </TableCell>
         </TableRow>
@@ -59,12 +62,14 @@ function rowClass(task: TaskWithBoardInfo): Record<string, boolean> {
           class="cursor-pointer"
           @click="navigateTo(`/tasks/${task.id}`)"
         >
-          <TableCell class="whitespace-nowrap text-xs text-muted-foreground">
+          <TableCell class="text-xs whitespace-nowrap text-muted-foreground">
             {{ formatTaskDisplayId(task.number) }}
           </TableCell>
           <TableCell class="text-sm font-medium">{{ task.title }}</TableCell>
           <TableCell>
-            <div class="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div
+              class="flex items-center gap-1.5 text-sm text-muted-foreground"
+            >
               <component
                 :is="priorityIcon(task.priority)"
                 v-if="task.priority !== 'none'"
@@ -85,10 +90,10 @@ function rowClass(task: TaskWithBoardInfo): Record<string, boolean> {
               </Badge>
             </div>
           </TableCell>
-          <TableCell class="whitespace-nowrap text-sm" :class="rowClass(task)">
+          <TableCell class="text-sm whitespace-nowrap" :class="rowClass(task)">
             {{ task.dueDate ? formatDate(task.dueDate) : '—' }}
           </TableCell>
-          <TableCell class="whitespace-nowrap text-sm">
+          <TableCell class="text-sm whitespace-nowrap">
             <div v-if="task.assignedAgent" class="flex items-center gap-1.5">
               <UserIcon class="size-3.5 text-muted-foreground" />
               <span class="truncate">{{ task.assignedAgent.name }}</span>

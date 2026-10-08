@@ -33,7 +33,9 @@ const recentRuns = computed(() =>
 <template>
   <div class="flex flex-col gap-1.5">
     <div class="flex items-center justify-between px-1">
-      <p class="text-xs font-medium text-muted-foreground">{{ t('workflow.recentRuns.title') }}</p>
+      <p class="text-xs font-medium text-muted-foreground">
+        {{ t('workflow.recentRuns.title') }}
+      </p>
       <Button
         variant="ghost"
         size="sm"

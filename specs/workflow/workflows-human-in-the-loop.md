@@ -49,21 +49,21 @@ Out of scope for v1 (deliberately):
 8. **Cancel covers suspended runs.** The cancel endpoint currently allows `pending`/`running`; it additionally accepts `suspended`. This is the escape hatch that makes "no timeouts in v1" acceptable.
 
 9. **Sweeper and overlap interactions.**
-   - The stale-run sweeper never sees suspended runs (it only sweeps `pending`/`running`), so suspension itself is safe. The problem is the moment *after* resume: the run is `running` again, but `started_at` still dates from before the suspension. The sweeper cannot distinguish a freshly resumed run from a genuinely stuck one; both look like "running with an old `started_at`", so a run approved days after suspending would be marked `failed` within one sweep cycle. `startedAt` keeps its meaning (when the run first started). Instead, two new nullable timestamps on `workflow_runs` record the HIL lifecycle: `suspended_at` (set when the run suspends) and `resumed_at` (set on each `suspended` to `running` transition, overwritten on repeated suspends). The sweeper's running rule then checks `coalesce(resumed_at, started_at)` older than 2h. The pair also gives the UI the approval timeline: how long a run waited, and when it picked back up.
+   - The stale-run sweeper never sees suspended runs (it only sweeps `pending`/`running`), so suspension itself is safe. The problem is the moment _after_ resume: the run is `running` again, but `started_at` still dates from before the suspension. The sweeper cannot distinguish a freshly resumed run from a genuinely stuck one; both look like "running with an old `started_at`", so a run approved days after suspending would be marked `failed` within one sweep cycle. `startedAt` keeps its meaning (when the run first started). Instead, two new nullable timestamps on `workflow_runs` record the HIL lifecycle: `suspended_at` (set when the run suspends) and `resumed_at` (set on each `suspended` to `running` transition, overwritten on repeated suspends). The sweeper's running rule then checks `coalesce(resumed_at, started_at)` older than 2h. The pair also gives the UI the approval timeline: how long a run waited, and when it picked back up.
    - The schedule overlap guard (`hasActiveRun`) starts treating `suspended` as active. Otherwise an unattended schedule piles up a new pending approval every tick. The cost: a forgotten suspended run blocks its schedule until resolved or cancelled. The awaiting-approval notification and the runs list make that visible.
 
 10. **Authorization: owner only.** The resolve endpoint uses the same ownership check as the other run endpoints. Workspace-member approvals come later with proper roles.
 
 ## Changes by package
 
-| Area | Change |
-| --- | --- |
-| `@repo/workflow` | `approval` node type + config schema, `waiting` step status, `WorkflowStepResolution` type, validation update for approval `sourceHandle` |
-| `@repo/database` | `resolution` jsonb on `workflow_run_steps`, `suspended_at` / `resumed_at` timestamps on `workflow_runs` (db:push), repo functions: `resolveRunStep`, waiting-step lookups; `hasActiveRun` includes `suspended` |
-| `@repo/queue` | `workflow_run_awaiting_approval` in `NotificationDataMap` |
-| `apps/worker` | Approval executor, engine: waiting sentinel handling, suspend transition (sets `suspendedAt`), resume transition (sets `resumedAt`), suspend-aware deadlock guard, awaiting-approval notification; sweeper checks `coalesce(resumed_at, started_at)` |
-| `apps/api` | Resolve endpoint, cancel accepts `suspended` |
-| `apps/web` | Palette entry + config form, run view approval panel (message, editable content, comment, approve/reject), polling resumes after resolve, notification parser entry, i18n (`de-DE`, `en-UK`) |
+| Area             | Change                                                                                                                                                                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/workflow` | `approval` node type + config schema, `waiting` step status, `WorkflowStepResolution` type, validation update for approval `sourceHandle`                                                                                                            |
+| `@repo/database` | `resolution` jsonb on `workflow_run_steps`, `suspended_at` / `resumed_at` timestamps on `workflow_runs` (db:push), repo functions: `resolveRunStep`, waiting-step lookups; `hasActiveRun` includes `suspended`                                       |
+| `@repo/queue`    | `workflow_run_awaiting_approval` in `NotificationDataMap`                                                                                                                                                                                            |
+| `apps/worker`    | Approval executor, engine: waiting sentinel handling, suspend transition (sets `suspendedAt`), resume transition (sets `resumedAt`), suspend-aware deadlock guard, awaiting-approval notification; sweeper checks `coalesce(resumed_at, started_at)` |
+| `apps/api`       | Resolve endpoint, cancel accepts `suspended`                                                                                                                                                                                                         |
+| `apps/web`       | Palette entry + config form, run view approval panel (message, editable content, comment, approve/reject), polling resumes after resolve, notification parser entry, i18n (`de-DE`, `en-UK`)                                                         |
 
 ## Open questions for review
 

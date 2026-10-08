@@ -2,7 +2,11 @@
 // for this feature, apps/api owns them).
 // Dates cross the wire as ISO strings (JSON has no Date type), never `Date`.
 
-export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_required';
+export type EmailAccountSyncState =
+  | 'idle'
+  | 'syncing'
+  | 'error'
+  | 'reauth_required';
 
 // Matches apps/api/src/validation/email.schema.ts's `emailFolderEnum`.
 export type EmailFolder = 'inbox' | 'archived' | 'trashed' | 'starred' | 'sent';

@@ -2,12 +2,12 @@
   "name": "@repo/media",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "description": "media domain: type registry, sniffing, extraction, refcounted deletion",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"
   ],
+  "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",

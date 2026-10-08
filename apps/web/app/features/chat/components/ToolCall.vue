@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { GeneratedAgentImage, getGeneratedImagesOutput } from '@repo/ai/client';
+import type {
+  GeneratedAgentImage,
+  getGeneratedImagesOutput,
+} from '@repo/ai/client';
 import type { ToolUIPart } from 'ai';
 import {
   Tool,
@@ -30,7 +33,10 @@ const title = computed(() =>
 const icon = computed(() => TOOL_ICONS[toolId.value]);
 
 const generatedImages = computed<GeneratedAgentImage[]>(() => {
-  if (props.part.type !== 'tool-imageGen' || props.part.state !== 'output-available') {
+  if (
+    props.part.type !== 'tool-imageGen' ||
+    props.part.state !== 'output-available'
+  ) {
     return [];
   }
   // The generic UIMessage type erases per-tool output types.

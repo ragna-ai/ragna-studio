@@ -25,7 +25,9 @@ const DEFAULT_OPTIONS: ThreadPromptOptions = { maxCharacters: Number.POSITIVE_IN
 /** Thrown when the newest message alone exceeds `maxCharacters` — there's no older content left to drop. */
 export class MessageExceedsPromptBudgetError extends Error {
   constructor(characters: number, maxCharacters: number) {
-    super(`Message body is ${characters} characters, exceeds the ${maxCharacters} character prompt budget`);
+    super(
+      `Message body is ${characters} characters, exceeds the ${maxCharacters} character prompt budget`,
+    );
     this.name = 'MessageExceedsPromptBudgetError';
   }
 }

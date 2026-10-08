@@ -59,7 +59,8 @@ watch(selectedNodeId, (nodeId) => {
 
 // Composables
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
-const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
+const { mutateAsync: publishWorkflow, isPending: isPublishing } =
+  usePublishWorkflow();
 const { t } = useI18n();
 
 // Computed
@@ -73,7 +74,10 @@ const draftDefinition = computed(() =>
 );
 const hasUnpublishedChanges = computed(
   () =>
-    !isExecutionEquivalent(draftDefinition.value, props.workflow.publishedDefinition),
+    !isExecutionEquivalent(
+      draftDefinition.value,
+      props.workflow.publishedDefinition,
+    ),
 );
 
 // Functions
@@ -102,7 +106,10 @@ function toggleSettings() {
   }
 }
 
-async function handleSaveSettings(value: { name: string; description: string }) {
+async function handleSaveSettings(value: {
+  name: string;
+  description: string;
+}) {
   name.value = value.name;
   description.value = value.description;
   await handleSave();
@@ -131,13 +138,23 @@ async function handlePublish() {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <PageBreadcrumb :items="[{ label: t('workflow.list.title'), to: '/workflow' }]">
+        <PageBreadcrumb
+          :items="[{ label: t('workflow.list.title'), to: '/workflow' }]"
+        >
           <template #current>
-            <InlineNameField v-model:name="name" :label="t('workflow.editor.nameLabel')" @save="handleSave" />
+            <InlineNameField
+              v-model:name="name"
+              :label="t('workflow.editor.nameLabel')"
+              @save="handleSave"
+            />
           </template>
         </PageBreadcrumb>
         <p class="text-xs text-muted-foreground">
-          {{ workflow.publishedDefinition ? t('workflow.list.status.published') : t('workflow.list.status.draft') }}
+          {{
+            workflow.publishedDefinition
+              ? t('workflow.list.status.published')
+              : t('workflow.list.status.draft')
+          }}
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -225,6 +242,9 @@ async function handlePublish() {
       :workflow="workflow"
       :draft-definition="draftDefinition"
     />
-    <WorkflowRunsList v-model:open="isRunsListOpen" :workflow-id="workflow.id" />
+    <WorkflowRunsList
+      v-model:open="isRunsListOpen"
+      :workflow-id="workflow.id"
+    />
   </div>
 </template>

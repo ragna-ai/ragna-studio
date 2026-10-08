@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from '@lucide/vue';
+import {
+  CheckIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 import {
@@ -28,8 +34,10 @@ const editingName = ref('');
 const editingColor = ref(DEFAULT_COLOR);
 
 // Composables
-const { mutateAsync: createTaskLabel, isPending: isCreating } = useCreateTaskLabel();
-const { mutateAsync: updateTaskLabel, isPending: isRenaming } = useUpdateTaskLabel();
+const { mutateAsync: createTaskLabel, isPending: isCreating } =
+  useCreateTaskLabel();
+const { mutateAsync: updateTaskLabel, isPending: isRenaming } =
+  useUpdateTaskLabel();
 const { mutateAsync: deleteTaskLabel } = useDeleteTaskLabel();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
@@ -85,10 +93,15 @@ async function handleDelete(label: TaskLabel) {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{{ t('task.label.manageTitle') }}</DialogTitle>
-        <DialogDescription>{{ t('task.label.manageDescription') }}</DialogDescription>
+        <DialogDescription>{{
+          t('task.label.manageDescription')
+        }}</DialogDescription>
       </DialogHeader>
 
-      <form class="flex items-start gap-2" @submit.prevent.stop="createForm.handleSubmit">
+      <form
+        class="flex items-start gap-2"
+        @submit.prevent.stop="createForm.handleSubmit"
+      >
         <createForm.Field name="color">
           <template v-slot="{ field, state }">
             <input
@@ -97,7 +110,9 @@ async function handleDelete(label: TaskLabel) {
               class="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input"
               :value="state.value"
               :aria-label="t('task.label.colorLabel')"
-              @input="(e) => field.handleChange((e.target as HTMLInputElement).value)"
+              @input="
+                (e) => field.handleChange((e.target as HTMLInputElement).value)
+              "
             />
           </template>
         </createForm.Field>
@@ -124,7 +139,10 @@ async function handleDelete(label: TaskLabel) {
 
       <Separator v-if="props.labels.length > 0" />
 
-      <ul v-if="props.labels.length > 0" class="max-h-64 space-y-1 overflow-y-auto">
+      <ul
+        v-if="props.labels.length > 0"
+        class="max-h-64 space-y-1 overflow-y-auto"
+      >
         <li
           v-for="label in props.labels"
           :key="label.id"
@@ -164,7 +182,10 @@ async function handleDelete(label: TaskLabel) {
             </Button>
           </template>
           <template v-else>
-            <span class="size-4 shrink-0 rounded-full" :style="{ backgroundColor: label.color }" />
+            <span
+              class="size-4 shrink-0 rounded-full"
+              :style="{ backgroundColor: label.color }"
+            />
             <span class="flex-1 truncate text-sm">{{ label.name }}</span>
             <Button
               variant="ghost"
@@ -185,7 +206,9 @@ async function handleDelete(label: TaskLabel) {
           </template>
         </li>
       </ul>
-      <p v-else class="text-sm text-muted-foreground">{{ t('task.label.empty') }}</p>
+      <p v-else class="text-sm text-muted-foreground">
+        {{ t('task.label.empty') }}
+      </p>
 
       <DialogFooter>
         <Button variant="secondary" @click="open = false">

@@ -126,10 +126,10 @@ Rebuild `@repo/ai` after the bump.
 
 `genvideo.schema.ts` changes:
 
-| column | notes |
-| --- | --- |
-| isDraft | boolean, not null, default false |
-| draftCacheKey | nullable text; R2 key of the encrypted `.bin`, set when a draft completes |
+| column           | notes                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| isDraft          | boolean, not null, default false                                                                                                    |
+| draftCacheKey    | nullable text; R2 key of the encrypted `.bin`, set when a draft completes                                                           |
 | parentGenVideoId | nullable text, self-FK to `gen_videos.id` (needs the `AnyPgColumn` annotation for the self-reference), indexed; set on enhance rows |
 
 Widen `GenVideoAspectRatio` to the union of Veo and BFL ratios (`'21:9' |

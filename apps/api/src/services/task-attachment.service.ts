@@ -17,7 +17,11 @@ import {
   type SniffedMedia,
 } from '@repo/media';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import {
   MAX_FILES_PER_UPLOAD_REQUEST,
   MAX_UPLOAD_FILE_BYTES,
@@ -30,7 +34,6 @@ import {
 // tasks. Files only: no text extraction, no agent visibility into contents
 // (PRD decision "Scope"), so unlike chat this never calls @repo/media's
 // `extractText`.
-
 
 // Task attachments accept every media kind the platform knows, same as chat.
 const TASK_ATTACHMENT_ACCEPTED_KINDS: readonly MediaKind[] = [...IMAGE_KINDS, ...DOCUMENT_KINDS];
@@ -150,7 +153,9 @@ async function loadOwnedTask({
   workspaceId: string;
   taskId: string;
 }): Promise<TaskWithDetails> {
-  const { error, data: taskRecord } = await tryCatch(() => getTaskById({ id: taskId, workspaceId }));
+  const { error, data: taskRecord } = await tryCatch(() =>
+    getTaskById({ id: taskId, workspaceId }),
+  );
 
   if (error !== null) {
     logger.error(`Failed to load task ${taskId}`, error);
@@ -257,9 +262,7 @@ export async function listTaskAttachments({
 }): Promise<UploadTaskAttachmentsResponse> {
   await loadOwnedTask({ workspaceId, taskId });
 
-  const { error, data: attachments } = await tryCatch(() =>
-    getTaskAttachmentsByTaskId({ taskId }),
-  );
+  const { error, data: attachments } = await tryCatch(() => getTaskAttachmentsByTaskId({ taskId }));
 
   if (error !== null || !attachments) {
     logger.error(`Failed to list task attachments for task ${taskId}`, error);

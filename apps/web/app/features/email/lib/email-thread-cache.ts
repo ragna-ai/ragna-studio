@@ -26,17 +26,27 @@ const THREADS_QUERY_PREFIX = ['email', 'threads'];
  * output) - deriveThreadSummaryPatch never needs `body`, so it shouldn't
  * require it.
  */
-type ThreadSummarySource = Pick<EmailMessageDetail, 'labelIds' | 'isUnread' | 'isStarred' | 'categoryId'>;
+type ThreadSummarySource = Pick<
+  EmailMessageDetail,
+  'labelIds' | 'isUnread' | 'isStarred' | 'categoryId'
+>;
 
 /** Re-derives the list-row aggregate fields from a thread's current messages, same rule as apps/api's hydrateThreadSummary. */
 export function deriveThreadSummaryPatch(
   messages: ThreadSummarySource[],
-): Pick<EmailThreadSummary, 'labelIds' | 'isUnread' | 'isStarred' | 'categoryId' | 'messageCount'> {
+): Pick<
+  EmailThreadSummary,
+  'labelIds' | 'isUnread' | 'isStarred' | 'categoryId' | 'messageCount'
+> {
   return {
-    labelIds: Array.from(new Set(messages.flatMap((message) => message.labelIds))),
+    labelIds: Array.from(
+      new Set(messages.flatMap((message) => message.labelIds)),
+    ),
     isUnread: messages.some((message) => message.isUnread),
     isStarred: messages.some((message) => message.isStarred),
-    categoryId: messages.findLast((message) => message.categoryId !== null)?.categoryId ?? null,
+    categoryId:
+      messages.findLast((message) => message.categoryId !== null)?.categoryId ??
+      null,
     messageCount: messages.length,
   };
 }
@@ -58,7 +68,9 @@ export function patchThreadInLists(
           threads:
             'remove' in patch
               ? page.threads.filter((thread) => thread.id !== threadId)
-              : page.threads.map((thread) => (thread.id === threadId ? { ...thread, ...patch } : thread)),
+              : page.threads.map((thread) =>
+                  thread.id === threadId ? { ...thread, ...patch } : thread,
+                ),
         })),
       };
     },
@@ -88,17 +100,22 @@ export function patchThreadDetail(
 ): EmailMessageDetail[] | null {
   let mergedMessages: EmailMessageDetail[] | null = null;
 
-  queryClient.setQueryData<EmailThreadDetailResponse>(emailKeys.thread(threadId), (old) => {
-    if (!old) return old;
-    mergedMessages = old.messages.map((message) => {
-      const updated = updatedMessages.find((candidate) => candidate.id === message.id);
-      return updated ? { ...message, ...updated } : message;
-    });
-    return {
-      thread: { ...old.thread, ...deriveThreadSummaryPatch(mergedMessages) },
-      messages: mergedMessages,
-    };
-  });
+  queryClient.setQueryData<EmailThreadDetailResponse>(
+    emailKeys.thread(threadId),
+    (old) => {
+      if (!old) return old;
+      mergedMessages = old.messages.map((message) => {
+        const updated = updatedMessages.find(
+          (candidate) => candidate.id === message.id,
+        );
+        return updated ? { ...message, ...updated } : message;
+      });
+      return {
+        thread: { ...old.thread, ...deriveThreadSummaryPatch(mergedMessages) },
+        messages: mergedMessages,
+      };
+    },
+  );
 
   return mergedMessages;
 }

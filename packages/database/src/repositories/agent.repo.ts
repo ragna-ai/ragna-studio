@@ -231,9 +231,11 @@ export async function updateAgent({
   workspaceId,
   userId,
   ...fields
-}: { agentId: string; workspaceId: string; userId: string } & UpdateAgentFields): Promise<
-  Agent | null
-> {
+}: {
+  agentId: string;
+  workspaceId: string;
+  userId: string;
+} & UpdateAgentFields): Promise<Agent | null> {
   return db.transaction(async (tx) => {
     if (fields.isDefault) {
       await clearOtherDefaultAgentsInScope(tx, { userId, workspaceId, exceptAgentId: agentId });

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import TaskQuickAddInput from '~/features/task/components/TaskQuickAddInput.vue';
 import { useCreateTask } from '~/features/task/composables/useTaskApi';
-import { formatTaskDisplayId, statusLabelKey } from '~/features/task/lib/task-display';
+import {
+  formatTaskDisplayId,
+  statusLabelKey,
+} from '~/features/task/lib/task-display';
 import type { Task } from '~/features/task/types';
 
 // Props
@@ -33,7 +36,9 @@ function handleCreate(title: string) {
             {{ formatTaskDisplayId(subtask.number) }}
           </span>
           <span class="flex-1 truncate">{{ subtask.title }}</span>
-          <Badge variant="secondary">{{ t(statusLabelKey(subtask.status)) }}</Badge>
+          <Badge variant="secondary">{{
+            t(statusLabelKey(subtask.status))
+          }}</Badge>
         </NuxtLinkLocale>
       </li>
     </ul>

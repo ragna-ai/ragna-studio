@@ -5,7 +5,12 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
-import { buildFakeMailThread, fetchThreadMock, resetMailProviderMock, searchMock } from './support/mail-provider.mock';
+import {
+  buildFakeMailThread,
+  fetchThreadMock,
+  resetMailProviderMock,
+  searchMock,
+} from './support/mail-provider.mock';
 
 // Search proxies Gmail's q=. Gmail's own
 // search does the matching; email.service.ts's searchEmailForUser only
@@ -40,7 +45,9 @@ describe('GET /email/search', () => {
       Promise.resolve({ threadIds: [known.providerThreadId], nextPageToken: null }),
     );
 
-    const response = await app.request('/email/search?q=from%3Aboss', { headers: { cookie: cookieHeader } });
+    const response = await app.request('/email/search?q=from%3Aboss', {
+      headers: { cookie: cookieHeader },
+    });
 
     expect(response.status).toBe(StatusCodes.OK);
     const body = searchResponseSchema.parse(await response.json());
@@ -60,7 +67,9 @@ describe('GET /email/search', () => {
       Promise.resolve(buildFakeMailThread({ id: unknownProviderThreadId })),
     );
 
-    const response = await app.request('/email/search?q=invoice', { headers: { cookie: cookieHeader } });
+    const response = await app.request('/email/search?q=invoice', {
+      headers: { cookie: cookieHeader },
+    });
 
     expect(response.status).toBe(StatusCodes.OK);
     const body = searchResponseSchema.parse(await response.json());
@@ -73,7 +82,9 @@ describe('GET /email/search', () => {
     searchMock.mockImplementationOnce(() =>
       Promise.resolve({ threadIds: [unknownProviderThreadId], nextPageToken: null }),
     );
-    const secondResponse = await app.request('/email/search?q=invoice', { headers: { cookie: cookieHeader } });
+    const secondResponse = await app.request('/email/search?q=invoice', {
+      headers: { cookie: cookieHeader },
+    });
     const secondBody = searchResponseSchema.parse(await secondResponse.json());
     expect(secondBody.threads.map((t) => t.id)).toEqual(body.threads.map((t) => t.id));
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);

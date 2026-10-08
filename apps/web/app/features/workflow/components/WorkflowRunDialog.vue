@@ -23,10 +23,10 @@ const input = ref('');
 
 // Composables
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
-const { mutateAsync: publishWorkflow, isPending: isPublishing } = usePublishWorkflow();
-const { mutateAsync: createRun, isPending: isCreatingRun } = useCreateWorkflowRun(
-  () => props.workflow.id,
-);
+const { mutateAsync: publishWorkflow, isPending: isPublishing } =
+  usePublishWorkflow();
+const { mutateAsync: createRun, isPending: isCreatingRun } =
+  useCreateWorkflowRun(() => props.workflow.id);
 const { t } = useI18n();
 
 // Computed
@@ -35,7 +35,10 @@ const isPublished = computed(() => props.workflow.publishedDefinition !== null);
 // it and the live canvas means "Run" would silently use stale behavior.
 const hasUnpublishedChanges = computed(
   () =>
-    !isExecutionEquivalent(props.draftDefinition, props.workflow.publishedDefinition),
+    !isExecutionEquivalent(
+      props.draftDefinition,
+      props.workflow.publishedDefinition,
+    ),
 );
 const isBusy = computed(
   () => isSaving.value || isPublishing.value || isCreatingRun.value,
@@ -84,7 +87,10 @@ async function handlePublishAndRun() {
         </DialogDescription>
       </DialogHeader>
 
-      <Alert v-if="hasUnpublishedChanges" class="border-amber-500/50 text-amber-600">
+      <Alert
+        v-if="hasUnpublishedChanges"
+        class="border-amber-500/50 text-amber-600"
+      >
         <TriangleAlertIcon />
         <AlertTitle>{{ t('workflow.editor.unpublishedChanges') }}</AlertTitle>
         <AlertDescription>
@@ -96,10 +102,16 @@ async function handlePublishAndRun() {
         </AlertDescription>
       </Alert>
 
-      <Textarea v-model="input" rows="4" :placeholder="t('workflow.runDialog.inputPlaceholder')" />
+      <Textarea
+        v-model="input"
+        rows="4"
+        :placeholder="t('workflow.runDialog.inputPlaceholder')"
+      />
 
       <DialogFooter>
-        <Button variant="secondary" @click="open = false">{{ t('common.cancel') }}</Button>
+        <Button variant="secondary" @click="open = false">{{
+          t('common.cancel')
+        }}</Button>
         <Button
           v-if="hasUnpublishedChanges && isPublished"
           variant="outline"
@@ -113,7 +125,11 @@ async function handlePublishAndRun() {
           @click="hasUnpublishedChanges ? handlePublishAndRun() : handleRun()"
         >
           <Spinner v-if="isBusy" class="mr-2" />
-          {{ hasUnpublishedChanges ? t('workflow.runDialog.publishAndRun') : t('common.run') }}
+          {{
+            hasUnpublishedChanges
+              ? t('workflow.runDialog.publishAndRun')
+              : t('common.run')
+          }}
         </Button>
       </DialogFooter>
     </DialogContent>

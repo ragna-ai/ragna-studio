@@ -13,12 +13,21 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { Spinner } from '~/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 import EmailSyncStatusBadge from '~/features/email/components/EmailSyncStatusBadge.vue';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { EMAIL_FOLDERS } from '~/features/email/lib/email-folders';
 import { isManualAccountSyncActive } from '~/features/email/lib/email-account-sync-poll';
-import type { EmailAccount, EmailCategory, EmailFolder } from '~/features/email/types';
+import type {
+  EmailAccount,
+  EmailCategory,
+  EmailFolder,
+} from '~/features/email/types';
 
 // Props
 const props = defineProps<{
@@ -52,7 +61,10 @@ const { t } = useI18n();
 const { mutate: syncAccount, isPending: isSyncPending } = useSyncEmailAccount();
 
 // Watchers
-const emitSearch = useDebounceFn((value: string) => emit('search', value.trim()), 300);
+const emitSearch = useDebounceFn(
+  (value: string) => emit('search', value.trim()),
+  300,
+);
 watch(searchInput, emitSearch);
 
 // Computed
@@ -66,13 +78,23 @@ watch(searchInput, emitSearch);
 //   the enqueue -> worker-picks-it-up gap and fast syncs that finish
 //   between two poll ticks (email-account-sync-poll.ts).
 const isSyncing = computed(
-  () => props.account.syncState === 'syncing' || isSyncPending.value || isManualAccountSyncActive.value,
+  () =>
+    props.account.syncState === 'syncing' ||
+    isSyncPending.value ||
+    isManualAccountSyncActive.value,
 );
-const searchHintKey = computed(() => `email.sidebar.searchHint.${props.account.provider}`);
+const searchHintKey = computed(
+  () => `email.sidebar.searchHint.${props.account.provider}`,
+);
 
 // Functions
 function isActiveFolder(folder: EmailFolder): boolean {
-  return !props.isSearching && props.folder === folder && !props.categoryId && !props.labelId;
+  return (
+    !props.isSearching &&
+    props.folder === folder &&
+    !props.categoryId &&
+    !props.labelId
+  );
 }
 
 function handleSyncNow() {
@@ -84,14 +106,20 @@ function handleSyncNow() {
 <template>
   <div class="flex h-full w-64 shrink-0 flex-col border-r">
     <div class="shrink-0 space-y-3 p-3">
-      <Button class="w-full justify-start" :disabled="props.isComposing" @click="emit('compose')">
+      <Button
+        class="w-full justify-start"
+        :disabled="props.isComposing"
+        @click="emit('compose')"
+      >
         <Spinner v-if="props.isComposing" class="mr-2 size-4" />
         <PenSquareIcon v-else class="mr-2 size-4" />
         {{ t('email.sidebar.compose') }}
       </Button>
       <div class="flex items-center gap-1">
         <div class="relative flex-1">
-          <SearchIcon class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon
+            class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+          />
           <Input
             v-model="searchInput"
             class="h-8 pl-8 text-sm"
@@ -129,7 +157,10 @@ function handleSyncNow() {
               :class="{ 'bg-muted font-medium': isActiveFolder(config.id) }"
               @click="emit('selectFolder', config.id)"
             >
-              <component :is="config.icon" class="size-4 shrink-0 text-muted-foreground" />
+              <component
+                :is="config.icon"
+                class="size-4 shrink-0 text-muted-foreground"
+              />
               {{ t(config.labelKey) }}
             </button>
           </li>
@@ -147,7 +178,11 @@ function handleSyncNow() {
             >
               <FileEditIcon class="size-4 shrink-0 text-muted-foreground" />
               {{ t('email.sidebar.drafts') }}
-              <Badge v-if="props.pendingDraftsCount > 0" variant="secondary" class="ml-auto">
+              <Badge
+                v-if="props.pendingDraftsCount > 0"
+                variant="secondary"
+                class="ml-auto"
+              >
                 {{ props.pendingDraftsCount }}
               </Badge>
             </button>
@@ -155,16 +190,24 @@ function handleSyncNow() {
         </ul>
 
         <div v-if="props.categories.length > 0">
-          <p class="px-2 pb-1 text-xs font-medium text-muted-foreground">{{ t('email.sidebar.categories') }}</p>
+          <p class="px-2 pb-1 text-xs font-medium text-muted-foreground">
+            {{ t('email.sidebar.categories') }}
+          </p>
           <ul class="space-y-0.5">
             <li v-for="category in props.categories" :key="category.id">
               <button
                 type="button"
                 class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                :class="{ 'bg-muted font-medium': !props.isSearching && props.categoryId === category.id }"
+                :class="{
+                  'bg-muted font-medium':
+                    !props.isSearching && props.categoryId === category.id,
+                }"
                 @click="emit('selectCategory', category.id)"
               >
-                <span class="size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: category.color }" />
+                <span
+                  class="size-2.5 shrink-0 rounded-full"
+                  :style="{ backgroundColor: category.color }"
+                />
                 <span class="truncate">{{ category.name }}</span>
               </button>
             </li>
@@ -172,13 +215,18 @@ function handleSyncNow() {
         </div>
 
         <div v-if="props.labels.length > 0">
-          <p class="px-2 pb-1 text-xs font-medium text-muted-foreground">{{ t('email.sidebar.labels') }}</p>
+          <p class="px-2 pb-1 text-xs font-medium text-muted-foreground">
+            {{ t('email.sidebar.labels') }}
+          </p>
           <ul class="space-y-0.5">
             <li v-for="label in props.labels" :key="label">
               <button
                 type="button"
                 class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                :class="{ 'bg-muted font-medium': !props.isSearching && props.labelId === label }"
+                :class="{
+                  'bg-muted font-medium':
+                    !props.isSearching && props.labelId === label,
+                }"
                 @click="emit('selectLabel', label)"
               >
                 <TagIcon class="size-3.5 shrink-0 text-muted-foreground" />
@@ -192,7 +240,10 @@ function handleSyncNow() {
 
     <div class="shrink-0 space-y-2 border-t p-3">
       <div class="flex items-center justify-between gap-2">
-        <EmailSyncStatusBadge :sync-state="props.account.syncState" :last-synced-at="props.account.lastSyncedAt" />
+        <EmailSyncStatusBadge
+          :sync-state="props.account.syncState"
+          :last-synced-at="props.account.lastSyncedAt"
+        />
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
@@ -205,7 +256,10 @@ function handleSyncNow() {
                 :aria-label="t('email.sidebar.syncNow')"
                 @click="handleSyncNow"
               >
-                <RefreshCwIcon class="size-3.5" :class="{ 'animate-spin': isSyncing }" />
+                <RefreshCwIcon
+                  class="size-3.5"
+                  :class="{ 'animate-spin': isSyncing }"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

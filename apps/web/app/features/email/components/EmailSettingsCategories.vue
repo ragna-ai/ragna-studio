@@ -19,7 +19,8 @@ const DEFAULT_COLOR = '#78716c';
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
 const { data } = useGetEmailCategories();
-const { mutate: createCategory, isPending: isCreating } = useCreateEmailCategory();
+const { mutate: createCategory, isPending: isCreating } =
+  useCreateEmailCategory();
 const { mutate: updateCategory } = useUpdateEmailCategory();
 const { mutate: deleteCategory } = useDeleteEmailCategory();
 
@@ -36,9 +37,12 @@ function descriptionFor(categoryId: string, fallback: string): string {
   return descriptionDrafts.value[categoryId] ?? fallback;
 }
 
-const saveDescription = useDebounceFn((categoryId: string, description: string) => {
-  updateCategory({ categoryId, description });
-}, 600);
+const saveDescription = useDebounceFn(
+  (categoryId: string, description: string) => {
+    updateCategory({ categoryId, description });
+  },
+  600,
+);
 
 function handleDescriptionInput(categoryId: string, value: string) {
   descriptionDrafts.value = { ...descriptionDrafts.value, [categoryId]: value };
@@ -48,7 +52,10 @@ function handleDescriptionInput(categoryId: string, value: string) {
 function handleCreate() {
   const name = newName.value.trim();
   if (!name) return;
-  createCategory({ name, color: newColor.value }, { onSuccess: () => (newName.value = '') });
+  createCategory(
+    { name, color: newColor.value },
+    { onSuccess: () => (newName.value = '') },
+  );
 }
 
 async function handleDelete(categoryId: string, name: string) {
@@ -68,7 +75,9 @@ async function handleDelete(categoryId: string, name: string) {
   <Card class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.categories.title') }}</CardTitle>
-      <p class="text-sm text-muted-foreground">{{ t('email.settings.categories.subtitle') }}</p>
+      <p class="text-sm text-muted-foreground">
+        {{ t('email.settings.categories.subtitle') }}
+      </p>
     </CardHeader>
     <CardContent class="space-y-4">
       <form class="flex items-center gap-2" @submit.prevent="handleCreate">
@@ -93,15 +102,28 @@ async function handleDelete(categoryId: string, name: string) {
       <Separator v-if="categories.length > 0" />
 
       <ul v-if="categories.length > 0" class="space-y-4">
-        <li v-for="category in categories" :key="category.id" class="space-y-2 rounded-md border p-3">
+        <li
+          v-for="category in categories"
+          :key="category.id"
+          class="space-y-2 rounded-md border p-3"
+        >
           <div class="flex items-center gap-2">
-            <span class="size-3 shrink-0 rounded-full" :style="{ backgroundColor: category.color }" />
+            <span
+              class="size-3 shrink-0 rounded-full"
+              :style="{ backgroundColor: category.color }"
+            />
             <span class="flex-1 text-sm font-medium">{{ category.name }}</span>
             <div class="flex items-center gap-2">
               <Switch
                 :id="`autodraft-${category.id}`"
                 :model-value="category.autoDraft"
-                @update:model-value="(value) => updateCategory({ categoryId: category.id, autoDraft: value })"
+                @update:model-value="
+                  (value) =>
+                    updateCategory({
+                      categoryId: category.id,
+                      autoDraft: value,
+                    })
+                "
               />
               <Label :for="`autodraft-${category.id}`" class="text-xs">
                 {{ t('email.settings.categories.autoDraft') }}
@@ -121,11 +143,15 @@ async function handleDelete(categoryId: string, name: string) {
             :placeholder="t('email.settings.categories.descriptionPlaceholder')"
             rows="2"
             class="text-sm"
-            @update:model-value="(v) => handleDescriptionInput(category.id, String(v))"
+            @update:model-value="
+              (v) => handleDescriptionInput(category.id, String(v))
+            "
           />
         </li>
       </ul>
-      <p v-else class="text-sm text-muted-foreground">{{ t('email.settings.categories.empty') }}</p>
+      <p v-else class="text-sm text-muted-foreground">
+        {{ t('email.settings.categories.empty') }}
+      </p>
     </CardContent>
   </Card>
 </template>

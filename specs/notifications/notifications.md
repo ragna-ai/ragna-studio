@@ -57,7 +57,7 @@ notifications
 `export type NewNotification = typeof notification.$inferInsert;`
 
 **The row stores only the event, never rendered copy.** Title, message and link
-are *not* columns: they are pure functions of `type` + `data` and are rendered on
+are _not_ columns: they are pure functions of `type` + `data` and are rendered on
 read by the web presenter registry. This keeps rows tiny (no duplicated copy
 across thousands of rows) and makes the text i18n-able (rendered in the user's
 locale on read, not frozen in English at write time). `data` carries the machine
@@ -80,7 +80,8 @@ export interface NotificationDataMap {
   // names/counts for message interpolation)
 }
 export type NotificationType = keyof NotificationDataMap;
-export type NotificationData<T extends NotificationType = NotificationType> = NotificationDataMap[T];
+export type NotificationData<T extends NotificationType = NotificationType> =
+  NotificationDataMap[T];
 ```
 
 `NotifyUserJobDto` is generic over the kind, so `type` and `data` are checked as a
@@ -132,7 +133,7 @@ Match `user.repo.ts` / `workflow-run.repo.ts` style (named async fns, `db` from
 
 On `NOTIFY_USER_JOB`: parse the DTO and `createNotification({ userId, type, data })`.
 No rendering — the row stores only the event. This is the documented future
-fan-out point for email/push (those channels *would* render server-side here).
+fan-out point for email/push (those channels _would_ render server-side here).
 
 ### `apps/worker/src/processors/workflow.processor.ts` (emit point)
 

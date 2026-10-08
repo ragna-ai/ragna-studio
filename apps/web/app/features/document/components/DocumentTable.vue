@@ -52,7 +52,14 @@ const groups = computed<DocumentGroup[]>(() => {
   if (rootDocuments.length === 0 && folderGroups.length > 0) {
     return folderGroups;
   }
-  return [...folderGroups, { key: 'root', label: t('document.list.noFolder'), documents: rootDocuments }];
+  return [
+    ...folderGroups,
+    {
+      key: 'root',
+      label: t('document.list.noFolder'),
+      documents: rootDocuments,
+    },
+  ];
 });
 
 function authorName(document: Document): string {
@@ -85,7 +92,10 @@ function moveDocument(document: Document, folderId: string) {
       </TableEmpty>
       <template v-for="group in groups" :key="group.key">
         <TableRow v-if="folders.length > 0" class="hover:bg-transparent">
-          <TableCell colspan="6" class="bg-stone-50 text-xs font-semibold text-muted-foreground">
+          <TableCell
+            colspan="6"
+            class="bg-stone-50 text-xs font-semibold text-muted-foreground"
+          >
             {{ group.label }}
           </TableCell>
         </TableRow>
@@ -101,8 +111,12 @@ function moveDocument(document: Document, folderId: string) {
           <TableCell>
             <span class="text-sm font-semibold">{{ document.title }}</span>
           </TableCell>
-          <TableCell class="whitespace-nowrap text-sm">{{ authorName(document) }}</TableCell>
-          <TableCell class="whitespace-nowrap">{{ formatDateTime(document.updatedAt) }}</TableCell>
+          <TableCell class="text-sm whitespace-nowrap">{{
+            authorName(document)
+          }}</TableCell>
+          <TableCell class="whitespace-nowrap">{{
+            formatDateTime(document.updatedAt)
+          }}</TableCell>
           <TableCell class="whitespace-nowrap" @click.stop>
             <Select
               :model-value="document.folderId ?? NO_FOLDER"
@@ -112,8 +126,14 @@ function moveDocument(document: Document, folderId: string) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem :value="NO_FOLDER">{{ t('document.list.noFolder') }}</SelectItem>
-                <SelectItem v-for="folder in folders" :key="folder.id" :value="folder.id">
+                <SelectItem :value="NO_FOLDER">{{
+                  t('document.list.noFolder')
+                }}</SelectItem>
+                <SelectItem
+                  v-for="folder in folders"
+                  :key="folder.id"
+                  :value="folder.id"
+                >
                   {{ folder.name }}
                 </SelectItem>
               </SelectContent>

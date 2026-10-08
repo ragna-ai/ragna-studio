@@ -19,7 +19,8 @@ type QueryOpts = Partial<UseQueryOptions<any>>;
 
 export const taskLabelKeys = {
   all: (workspaceId: WorkspaceId) => ['taskLabels', workspaceId] as const,
-  list: (workspaceId: WorkspaceId) => ['taskLabels', workspaceId, 'list'] as const,
+  list: (workspaceId: WorkspaceId) =>
+    ['taskLabels', workspaceId, 'list'] as const,
 };
 
 function taskLabelBasePath(workspaceId: WorkspaceId): string {
@@ -52,7 +53,9 @@ export function useCreateTaskLabel() {
         body,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskLabelKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: taskLabelKeys.all(workspaceId),
+      });
       toast.success('Label created');
     },
     onError: (error) => {
@@ -72,12 +75,17 @@ export function useUpdateTaskLabel() {
   const queryClient = useQueryClient();
   return useMutation<TaskLabelResponse, unknown, UpdateTaskLabelVariables>({
     mutationFn: ({ taskLabelId, ...body }) =>
-      $api<TaskLabelResponse>(`${taskLabelBasePath(workspaceId)}/${taskLabelId}`, {
-        method: 'PATCH',
-        body,
-      }),
+      $api<TaskLabelResponse>(
+        `${taskLabelBasePath(workspaceId)}/${taskLabelId}`,
+        {
+          method: 'PATCH',
+          body,
+        },
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskLabelKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: taskLabelKeys.all(workspaceId),
+      });
       // Tasks embed their labels inline, so a rename/recolor needs to
       // refresh the board/list/detail caches too.
       queryClient.invalidateQueries({ queryKey: taskKeys.all(workspaceId) });
@@ -100,7 +108,9 @@ export function useDeleteTaskLabel() {
         method: 'DELETE',
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskLabelKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: taskLabelKeys.all(workspaceId),
+      });
       queryClient.invalidateQueries({ queryKey: taskKeys.all(workspaceId) });
       toast.success('Label deleted');
     },

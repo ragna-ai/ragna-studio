@@ -84,10 +84,7 @@ const isSingleCall = computed(() => toolMembers.value.length <= 1);
   <template v-if="isSingleCall">
     <template v-for="(member, index) in members" :key="index">
       <ToolCall v-if="isStaticToolUIPart(member)" :part="member" />
-      <Reasoning
-        v-else
-        :is-streaming="member.state === 'streaming'"
-      >
+      <Reasoning v-else :is-streaming="member.state === 'streaming'">
         <ReasoningTrigger />
         <ReasoningContent :content="member.text" />
       </Reasoning>
@@ -123,10 +120,7 @@ const isSingleCall = computed(() => toolMembers.value.length <= 1);
     <CollapsibleContent class="space-y-2 pt-2">
       <template v-for="(member, index) in members" :key="index">
         <ToolCall v-if="isStaticToolUIPart(member)" :part="member" />
-        <Reasoning
-          v-else
-          :is-streaming="member.state === 'streaming'"
-        >
+        <Reasoning v-else :is-streaming="member.state === 'streaming'">
           <ReasoningTrigger />
           <ReasoningContent :content="member.text" />
         </Reasoning>

@@ -17,17 +17,17 @@ in [specs/workspaces/workspaces.md](../workspaces/workspaces.md) (optional
 
 These are settled (discussed 2026-07-19). Do not re-open them.
 
-| Decision              | Choice                                                                                                                            |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Model**             | Google-Cloud-style container. Every workspace-scoped resource lives in exactly one workspace. `workspaceId` is required, not null. |
-| **Routes**            | Nested: `/workspace/:workspaceId/<resource>/...`. Singular resource names.                                                        |
-| **"All items" view**  | Dropped. The user is always inside exactly one workspace. No cross-workspace aggregation endpoint.                                 |
-| **"Unassigned" view** | Dropped. The concept no longer exists.                                                                                             |
-| **Default workspace** | Auto-created per user at signup ("Personal"). Existing rows are backfilled into it.                                                |
-| **Workspace delete**  | Cascades: contained resources are deleted with the workspace (FK changes from `set null` to `cascade`). Deleting the last workspace is rejected. |
-| **Migration**         | Big bang. All controllers, repos, schema, and frontend composables move in one effort. No transition period.                        |
+| Decision              | Choice                                                                                                                                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Model**             | Google-Cloud-style container. Every workspace-scoped resource lives in exactly one workspace. `workspaceId` is required, not null.                                                                   |
+| **Routes**            | Nested: `/workspace/:workspaceId/<resource>/...`. Singular resource names.                                                                                                                           |
+| **"All items" view**  | Dropped. The user is always inside exactly one workspace. No cross-workspace aggregation endpoint.                                                                                                   |
+| **"Unassigned" view** | Dropped. The concept no longer exists.                                                                                                                                                               |
+| **Default workspace** | Auto-created per user at signup ("Personal"). Existing rows are backfilled into it.                                                                                                                  |
+| **Workspace delete**  | Cascades: contained resources are deleted with the workspace (FK changes from `set null` to `cascade`). Deleting the last workspace is rejected.                                                     |
+| **Migration**         | Big bang. All controllers, repos, schema, and frontend composables move in one effort. No transition period.                                                                                         |
 | **Access model**      | Workspace ownership is the access boundary. A shared guard verifies the user owns `:workspaceId`, then queries scope by `workspaceId`. Resource `userId` columns remain as authorship metadata only. |
-| **Scope carrier**     | The URL. The active workspace is never read from the session or from server-side user state. See [Active workspace is carried by the URL](#active-workspace-is-carried-by-the-url). |
+| **Scope carrier**     | The URL. The active workspace is never read from the session or from server-side user state. See [Active workspace is carried by the URL](#active-workspace-is-carried-by-the-url).                  |
 
 ## Route structure
 
@@ -78,8 +78,8 @@ Not workspace-scoped. They stay flat:
 
 ### Method semantics
 
-| Method   | Meaning                                              |
-| -------- | ---------------------------------------------------- |
+| Method   | Meaning                                               |
+| -------- | ----------------------------------------------------- |
 | `GET`    | List (`/`) or read (`/:resourceId`). No side effects. |
 | `POST`   | Create (`/`) or custom action (`/:resourceId/verb`).  |
 | `PATCH`  | Partial update of mutable fields.                     |
@@ -346,15 +346,15 @@ Each slice: nested routes per the route table, thin controller, service
 extraction, repo queries scoped by `workspaceId`, validation schema file,
 frontend composable + query keys + affected components and pages.
 
-| WP  | Scope                                                                                                                                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| WP  | Scope                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | WP3 | **Agent**: agent CRUD (upsert split into create + `PATCH`), memory, context documents (`/agent/:agentId/documents` → `.../context-document`). Largest slice. |
-| WP4 | **Chat**: chat CRUD and message routes. WS streaming untouched.                                                                            |
-| WP5 | **Dataset**: dataset CRUD + rows.                                                                                                          |
-| WP6 | **Workflow**: workflow CRUD (upsert split), publish, runs nested under `/workflow/:workflowId/run` (run detail and cancel move under it).   |
-| WP7 | **Social post**: CRUD, media, publish; `/social-posts` → `/workspace/:workspaceId/social-post`.                                            |
-| WP8 | **Gen image**: `/image/generate` → `/workspace/:workspaceId/gen-image`; list is `GET /`, generate is `POST /`.                             |
-| WP9 | **Documents + folders + aimodel**: plural → singular route renames; `GET /aimodel/list` → `GET /aimodel`. Smallest slice.                  |
+| WP4 | **Chat**: chat CRUD and message routes. WS streaming untouched.                                                                                              |
+| WP5 | **Dataset**: dataset CRUD + rows.                                                                                                                            |
+| WP6 | **Workflow**: workflow CRUD (upsert split), publish, runs nested under `/workflow/:workflowId/run` (run detail and cancel move under it).                    |
+| WP7 | **Social post**: CRUD, media, publish; `/social-posts` → `/workspace/:workspaceId/social-post`.                                                              |
+| WP8 | **Gen image**: `/image/generate` → `/workspace/:workspaceId/gen-image`; list is `GET /`, generate is `POST /`.                                               |
+| WP9 | **Documents + folders + aimodel**: plural → singular route renames; `GET /aimodel/list` → `GET /aimodel`. Smallest slice.                                    |
 
 ### WP10 — Cleanup and docs (last)
 

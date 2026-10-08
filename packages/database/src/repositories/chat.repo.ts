@@ -624,7 +624,12 @@ export async function branchChatByWorkspaceId({
     const attachmentsToCopy = await tx
       .select()
       .from(chatAttachment)
-      .where(and(eq(chatAttachment.chatId, chatId), lte(chatAttachment.createdAt, cutoffMessage.createdAt)));
+      .where(
+        and(
+          eq(chatAttachment.chatId, chatId),
+          lte(chatAttachment.createdAt, cutoffMessage.createdAt),
+        ),
+      );
     if (attachmentsToCopy.length > 0) {
       await tx.insert(chatAttachment).values(
         attachmentsToCopy.map((a) => ({

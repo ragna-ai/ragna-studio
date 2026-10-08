@@ -515,7 +515,11 @@ export async function getTaskAttachmentsByTaskId({
   });
 }
 
-export async function getTaskAttachmentById({ id }: { id: string }): Promise<TaskAttachmentWithMedia | null> {
+export async function getTaskAttachmentById({
+  id,
+}: {
+  id: string;
+}): Promise<TaskAttachmentWithMedia | null> {
   const found = await db.query.taskAttachment.findFirst({
     where: { id },
     with: { media: true },

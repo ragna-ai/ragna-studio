@@ -1,5 +1,10 @@
 import { toEuropeanDate } from './date-format';
-import type { ExportFile, TabularExport, TabularExportColumnType, TabularExportValue } from './types';
+import type {
+  ExportFile,
+  TabularExport,
+  TabularExportColumnType,
+  TabularExportValue,
+} from './types';
 
 const CSV_CONTENT_TYPE = 'text/csv; charset=utf-8';
 
@@ -21,7 +26,10 @@ function formatCsvHeaderField(columnName: string): string {
 
 // `date` columns render European-style, `dd.mm.yyyy`;
 // every other type is unformatted.
-function formatCsvDataField(value: TabularExportValue, columnType: TabularExportColumnType): string {
+function formatCsvDataField(
+  value: TabularExportValue,
+  columnType: TabularExportColumnType,
+): string {
   if (value === null) {
     return '';
   }

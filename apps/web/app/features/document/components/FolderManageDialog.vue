@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from '@lucide/vue';
+import {
+  CheckIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 import {
@@ -78,10 +84,15 @@ async function handleDelete(folder: Folder) {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{{ t('folder.manage.title') }}</DialogTitle>
-        <DialogDescription>{{ t('folder.manage.description') }}</DialogDescription>
+        <DialogDescription>{{
+          t('folder.manage.description')
+        }}</DialogDescription>
       </DialogHeader>
 
-      <form class="flex items-start gap-2" @submit.prevent.stop="createForm.handleSubmit">
+      <form
+        class="flex items-start gap-2"
+        @submit.prevent.stop="createForm.handleSubmit"
+      >
         <createForm.Field name="name">
           <template v-slot="{ field, state }">
             <div class="flex-1">
@@ -159,7 +170,9 @@ async function handleDelete(folder: Folder) {
           </template>
         </li>
       </ul>
-      <p v-else class="text-sm text-muted-foreground">{{ t('folder.manage.empty') }}</p>
+      <p v-else class="text-sm text-muted-foreground">
+        {{ t('folder.manage.empty') }}
+      </p>
 
       <DialogFooter>
         <Button variant="secondary" @click="open = false">

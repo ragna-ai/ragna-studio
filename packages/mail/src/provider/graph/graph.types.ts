@@ -14,7 +14,13 @@ export type GraphRemovedReason = 'changed' | 'deleted';
 export type GraphDeltaMessage = Message & { '@removed'?: { reason?: GraphRemovedReason } };
 
 /** Names usable directly in a path like `/me/mailFolders/{name}`. */
-export type GraphWellKnownFolderName = 'inbox' | 'sentitems' | 'deleteditems' | 'junkemail' | 'drafts' | 'archive';
+export type GraphWellKnownFolderName =
+  | 'inbox'
+  | 'sentitems'
+  | 'deleteditems'
+  | 'junkemail'
+  | 'drafts'
+  | 'archive';
 
 /** A folder absent from this mailbox (e.g. no Archive) is left out. */
 export type GraphWellKnownFolderIds = Partial<Record<GraphWellKnownFolderName, string>>;
@@ -34,10 +40,16 @@ export interface GraphErrorBody {
 }
 
 /** $select projection used for attachment metadata, deliberately excluding `contentBytes`. */
-export type GraphAttachmentMetadata = Pick<FileAttachment, 'id' | 'name' | 'contentType' | 'size' | 'isInline' | 'contentId'>;
+export type GraphAttachmentMetadata = Pick<
+  FileAttachment,
+  'id' | 'name' | 'contentType' | 'size' | 'isInline' | 'contentId'
+>;
 
 /** POST body for `/attachments`; the package's `FileAttachment` has no `@odata.type` discriminator. */
-export type GraphFileAttachmentCreate = Pick<FileAttachment, 'name' | 'contentType' | 'contentBytes' | 'contentId' | 'isInline'> & {
+export type GraphFileAttachmentCreate = Pick<
+  FileAttachment,
+  'name' | 'contentType' | 'contentBytes' | 'contentId' | 'isInline'
+> & {
   '@odata.type': '#microsoft.graph.fileAttachment';
 };
 

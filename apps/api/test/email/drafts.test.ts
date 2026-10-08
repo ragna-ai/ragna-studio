@@ -78,7 +78,11 @@ describe('POST /email/draft/trigger', () => {
       replyToMessageId: string;
       agentId?: string;
     };
-    expect(jobData).toMatchObject({ accountId, threadId: seeded.thread.id, replyToMessageId: seeded.messageId });
+    expect(jobData).toMatchObject({
+      accountId,
+      threadId: seeded.thread.id,
+      replyToMessageId: seeded.messageId,
+    });
     expect(jobData.agentId).toBeUndefined();
   });
 
@@ -89,7 +93,11 @@ describe('POST /email/draft/trigger', () => {
     const response = await app.request('/email/draft/trigger', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ threadId: seeded.thread.id, replyToMessageId: seeded.messageId, agentId }),
+      body: JSON.stringify({
+        threadId: seeded.thread.id,
+        replyToMessageId: seeded.messageId,
+        agentId,
+      }),
     });
 
     expect(response.status).toBe(StatusCodes.ACCEPTED);
@@ -106,7 +114,11 @@ describe('POST /email/draft/trigger', () => {
     const response = await app.request('/email/draft/trigger', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ threadId: seeded.thread.id, replyToMessageId: seeded.messageId, agentId: otherAgentId }),
+      body: JSON.stringify({
+        threadId: seeded.thread.id,
+        replyToMessageId: seeded.messageId,
+        agentId: otherAgentId,
+      }),
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
@@ -142,11 +154,18 @@ describe('GET /email/draft/pending', () => {
       agentId,
       status: 'generating',
     });
-    const ready = await seedEmailDraft({ accountId, threadId: seeded.thread.id, agentId, status: 'ready' });
+    const ready = await seedEmailDraft({
+      accountId,
+      threadId: seeded.thread.id,
+      agentId,
+      status: 'ready',
+    });
     await seedEmailDraft({ accountId, threadId: seeded.thread.id, agentId, status: 'discarded' });
     await seedEmailDraft({ accountId, threadId: seeded.thread.id, agentId, status: 'sent' });
 
-    const response = await app.request('/email/draft/pending', { headers: { cookie: cookieHeader } });
+    const response = await app.request('/email/draft/pending', {
+      headers: { cookie: cookieHeader },
+    });
 
     expect(response.status).toBe(StatusCodes.OK);
     const body = z.object({ drafts: z.array(draftSchema) }).parse(await response.json());
@@ -175,7 +194,11 @@ describe('PATCH /email/draft/:draftId', () => {
     const { cookieHeader } = await connectAccountWithAgent();
     const other = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({ accountId: other.accountId });
-    const draft = await seedEmailDraft({ accountId: other.accountId, threadId: seeded.thread.id, agentId: other.agentId });
+    const draft = await seedEmailDraft({
+      accountId: other.accountId,
+      threadId: seeded.thread.id,
+      agentId: other.agentId,
+    });
 
     const response = await app.request(`/email/draft/${draft.id}`, {
       method: 'PATCH',
@@ -191,7 +214,12 @@ describe('POST /email/draft/:draftId/discard', () => {
   test('flips status to discarded', async () => {
     const { cookieHeader, accountId, agentId } = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({ accountId });
-    const draft = await seedEmailDraft({ accountId, threadId: seeded.thread.id, agentId, status: 'ready' });
+    const draft = await seedEmailDraft({
+      accountId,
+      threadId: seeded.thread.id,
+      agentId,
+      status: 'ready',
+    });
 
     const response = await app.request(`/email/draft/${draft.id}/discard`, {
       method: 'POST',
@@ -236,7 +264,9 @@ describe('POST /email/draft/:draftId/discard', () => {
       status: 'ready',
       providerDraftId: 'gmail-draft-discard-2',
     });
-    deleteDraftMock.mockImplementationOnce(() => Promise.reject(new GmailApiError('Not Found', 404)));
+    deleteDraftMock.mockImplementationOnce(() =>
+      Promise.reject(new GmailApiError('Not Found', 404)),
+    );
 
     const response = await app.request(`/email/draft/${draft.id}/discard`, {
       method: 'POST',
@@ -258,7 +288,9 @@ describe('POST /email/draft/:draftId/discard', () => {
       status: 'ready',
       providerDraftId: 'gmail-draft-discard-3',
     });
-    deleteDraftMock.mockImplementationOnce(() => Promise.reject(new GmailApiError('Server error', 500)));
+    deleteDraftMock.mockImplementationOnce(() =>
+      Promise.reject(new GmailApiError('Server error', 500)),
+    );
 
     const response = await app.request(`/email/draft/${draft.id}/discard`, {
       method: 'POST',
@@ -313,7 +345,7 @@ describe('POST /email/draft - creation per kind', () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
   });
 
-  test('kind: reply seeds `to` from the replied-to message\'s sender, and leaves `cc` empty', async () => {
+  test("kind: reply seeds `to` from the replied-to message's sender, and leaves `cc` empty", async () => {
     const { cookieHeader, accountId } = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({
       accountId,
@@ -420,7 +452,9 @@ describe('POST /email/draft - creation per kind', () => {
     expect(response.status).toBe(StatusCodes.CREATED);
     expect(fetchMessageMock).toHaveBeenCalledTimes(1);
     const body = z
-      .object({ draft: z.object({ quotedHtml: z.string().nullable(), quotedText: z.string().nullable() }) })
+      .object({
+        draft: z.object({ quotedHtml: z.string().nullable(), quotedText: z.string().nullable() }),
+      })
       .parse(await response.json());
     expect(body.draft.quotedHtml).toContain('<blockquote>');
     expect(body.draft.quotedHtml).toContain('Live-fetched body.');
@@ -439,7 +473,7 @@ describe('POST /email/draft - creation per kind', () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
   });
 
-  test('kind: forward seeds empty recipients plus the forwarded message\'s attachments', async () => {
+  test("kind: forward seeds empty recipients plus the forwarded message's attachments", async () => {
     const { cookieHeader, accountId } = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({ accountId });
 

@@ -21,7 +21,9 @@ useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
 const route = useRoute();
-const { public: { apiBaseUrl } } = useRuntimeConfig();
+const {
+  public: { apiBaseUrl },
+} = useRuntimeConfig();
 const errorMessage = ref<string | null>(null);
 const signingIn = ref<SocialProvider | null>(null);
 

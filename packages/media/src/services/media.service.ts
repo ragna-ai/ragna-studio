@@ -133,7 +133,9 @@ export async function createMediaForObject({
 // DELETION
 
 /** Returns true only when every object was confirmed deleted. Never throws. */
-async function deleteMediaObjects(objects: { bucket: string; storageKey: string }[]): Promise<boolean> {
+async function deleteMediaObjects(
+  objects: { bucket: string; storageKey: string }[],
+): Promise<boolean> {
   if (objects.length === 0) {
     return true;
   }

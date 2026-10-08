@@ -1,7 +1,11 @@
 // apps/worker/src/mail/mail-provider.ts
 
 import { auth } from '@repo/auth/server';
-import { getAccountByUserIdAndProvider, type EmailAccount, type EmailProvider } from '@repo/database';
+import {
+  getAccountByUserIdAndProvider,
+  type EmailAccount,
+  type EmailProvider,
+} from '@repo/database';
 import { createMailProvider, type MailProvider } from '@repo/mail/provider';
 
 const BETTER_AUTH_PROVIDER_ID: Record<EmailProvider, string> = {

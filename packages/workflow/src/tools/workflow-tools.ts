@@ -11,7 +11,9 @@ type WorkflowTools = {
 export const workflowTools: WorkflowTools = {
   placeholder: async (input: string, ctx: WorkflowToolContext) => {
     // Placeholder for future tools
-    console.log(`Placeholder tool called with input: ${input}, userId: ${ctx.userId}, workspaceId: ${ctx.workspaceId}`);
+    console.log(
+      `Placeholder tool called with input: ${input}, userId: ${ctx.userId}, workspaceId: ${ctx.workspaceId}`,
+    );
     return { message: 'This is a placeholder tool. No action taken.' };
-  }
+  },
 };

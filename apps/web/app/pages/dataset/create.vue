@@ -9,7 +9,12 @@ type DatasetPreset = 'empty' | 'taskTracker';
 const TASK_TRACKER_COLUMNS: DatasetColumn[] = [
   { id: 'task', name: 'Task', type: 'text' },
   { id: 'instructions', name: 'Instructions', type: 'text' },
-  { id: 'status', name: 'Status', type: 'select', options: ['todo', 'in progress', 'done'] },
+  {
+    id: 'status',
+    name: 'Status',
+    type: 'select',
+    options: ['todo', 'in progress', 'done'],
+  },
 ];
 
 const datasetCreateSchema = z.object({
@@ -57,7 +62,10 @@ const form = useForm({
   <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
-        <HeadingTitle :title="t('dataset.create.title')" :subtitle="t('dataset.create.subtitle')">
+        <HeadingTitle
+          :title="t('dataset.create.title')"
+          :subtitle="t('dataset.create.subtitle')"
+        >
           <template #title>
             <PageBreadcrumb :items="breadcrumbItems" />
           </template>
@@ -75,10 +83,16 @@ const form = useForm({
             <button
               type="button"
               class="rounded-lg border p-4 text-left transition-colors"
-              :class="preset === 'empty' ? 'border-primary bg-accent' : 'hover:bg-accent/50'"
+              :class="
+                preset === 'empty'
+                  ? 'border-primary bg-accent'
+                  : 'hover:bg-accent/50'
+              "
               @click="preset = 'empty'"
             >
-              <p class="text-sm font-semibold">{{ t('dataset.create.preset.empty.title') }}</p>
+              <p class="text-sm font-semibold">
+                {{ t('dataset.create.preset.empty.title') }}
+              </p>
               <p class="text-xs text-muted-foreground">
                 {{ t('dataset.create.preset.empty.description') }}
               </p>
@@ -86,7 +100,11 @@ const form = useForm({
             <button
               type="button"
               class="rounded-lg border p-4 text-left transition-colors"
-              :class="preset === 'taskTracker' ? 'border-primary bg-accent' : 'hover:bg-accent/50'"
+              :class="
+                preset === 'taskTracker'
+                  ? 'border-primary bg-accent'
+                  : 'hover:bg-accent/50'
+              "
               @click="preset = 'taskTracker'"
             >
               <p class="text-sm font-semibold">
@@ -138,7 +156,9 @@ const form = useForm({
 
         <div class="flex justify-end gap-4">
           <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/dataset">{{ t('common.cancel') }}</NuxtLinkLocale>
+            <NuxtLinkLocale to="/dataset">{{
+              t('common.cancel')
+            }}</NuxtLinkLocale>
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" class="mr-2" />

@@ -55,10 +55,10 @@ OAuth plus `ALLOWED_LOGIN_EMAILS`. The self-hosting docs say so.
 
 ### Config
 
-| Var | Default | Meaning |
-| --- | --- | --- |
-| `AUTH_PASSWORD_ENABLED` | `false` | Turns on email and password sign-in, plus sign-up for the first user |
-| `NUXT_PUBLIC_AUTH_PASSWORD_ENABLED` | `false` | Same value, shows the form in the web app |
+| Var                                 | Default | Meaning                                                              |
+| ----------------------------------- | ------- | -------------------------------------------------------------------- |
+| `AUTH_PASSWORD_ENABLED`             | `false` | Turns on email and password sign-in, plus sign-up for the first user |
+| `NUXT_PUBLIC_AUTH_PASSWORD_ENABLED` | `false` | Same value, shows the form in the web app                            |
 
 The pair follows the `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` pattern.
 
@@ -134,16 +134,16 @@ flag off.
 
 ## Open questions
 
-| Question | Notes |
-| --- | --- |
+| Question           | Notes                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Forgotten password | No mail on localhost, and no CLI script exists yet. Options: a new script in the backend image, or none in v1. |
 
 ## Decided
 
-| Date | Decision |
-| --- | --- |
-| 2026-10-07 | Feature behind a flag, off by default. |
-| 2026-10-07 | Single owner on localhost only. Public or shared hosting uses OAuth plus allowlist. |
+| Date       | Decision                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| 2026-10-07 | Feature behind a flag, off by default.                                                             |
+| 2026-10-07 | Single owner on localhost only. Public or shared hosting uses OAuth plus allowlist.                |
 | 2026-10-07 | Keep better-auth's account linking defaults. Linking for password users goes through `linkSocial`. |
-| 2026-10-07 | Minimum password length 8 (better-auth default). No breached-password check. |
-| 2026-10-07 | The owner gets `role = 'admin'`. Nothing reads the role yet; RBAC is planned. |
+| 2026-10-07 | Minimum password length 8 (better-auth default). No breached-password check.                       |
+| 2026-10-07 | The owner gets `role = 'admin'`. Nothing reads the role yet; RBAC is planned.                      |

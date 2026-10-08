@@ -100,7 +100,9 @@ const form = useForm({
 
         <div class="flex justify-end gap-4">
           <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/workflow">{{ t('common.cancel') }}</NuxtLinkLocale>
+            <NuxtLinkLocale to="/workflow">{{
+              t('common.cancel')
+            }}</NuxtLinkLocale>
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" class="mr-2" />

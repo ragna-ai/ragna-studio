@@ -16,8 +16,7 @@ import { asMarkedToken, flattenInline, parseMarkdownTokens } from './markdown-to
 import type { InlineSpan, Token, Tokens } from './markdown-tokens';
 import type { DocumentExport, ExportFile } from './types';
 
-const DOCX_CONTENT_TYPE =
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const DOCX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 // Twips (1/1440 inch) per nesting/quote level: 720 = 0.5in, docx's usual
 // list-indent unit.
@@ -110,9 +109,14 @@ function listItemBlocks(
   index: number,
   context: BlockContext,
 ): DocxBlock[] {
-  const marker = list.ordered ? `${(typeof list.start === 'number' ? list.start : 1) + index}.` : '•';
+  const marker = list.ordered
+    ? `${(typeof list.start === 'number' ? list.start : 1) + index}.`
+    : '•';
   const ownSpans = item.tokens
-    .filter((token): token is Tokens.Text | Tokens.Paragraph => token.type === 'text' || token.type === 'paragraph')
+    .filter(
+      (token): token is Tokens.Text | Tokens.Paragraph =>
+        token.type === 'text' || token.type === 'paragraph',
+    )
     .flatMap((token) => flattenInline(token.tokens));
   const nestedLists = item.tokens.filter((token): token is Tokens.List => token.type === 'list');
 
@@ -149,7 +153,10 @@ function tableNode(table: Tokens.Table, context: BlockContext): Table {
     (row) => new TableRow({ children: row.map((cell) => tableCellNode(cell, false, context)) }),
   );
 
-  return new Table({ rows: [headerRow, ...bodyRows], width: { size: 100, type: WidthType.PERCENTAGE } });
+  return new Table({
+    rows: [headerRow, ...bodyRows],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
 }
 
 // Walks one block-level token into docx nodes. Unsupported tokens degrade

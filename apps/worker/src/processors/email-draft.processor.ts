@@ -16,7 +16,9 @@ export function registerEmailDraftJobProcessor(): Worker<any, any, string> {
 
       switch (job.name) {
         case EMAIL_DRAFT_JOB: {
-          const { accountId, threadId, replyToMessageId, agentId } = emailDraftJobSchema.parse(job.data);
+          const { accountId, threadId, replyToMessageId, agentId } = emailDraftJobSchema.parse(
+            job.data,
+          );
           await generateEmailDraft({ accountId, threadId, replyToMessageId, agentId });
           break;
         }

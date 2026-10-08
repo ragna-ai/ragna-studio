@@ -53,7 +53,14 @@ export default defineNuxtConfig({
         // any t(`...${dynamicKey}`) call, since the key can't be statically
         // precompiled at build time. That pattern is used throughout the app
         // (workflow/task/dataset status labels, social providers, etc.).
-        'script-src': ["'self'", 'https:', "'unsafe-inline'", "'unsafe-eval'", "'strict-dynamic'", "'nonce-{{nonce}}'"],
+        'script-src': [
+          "'self'",
+          'https:',
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "'strict-dynamic'",
+          "'nonce-{{nonce}}'",
+        ],
         // fonts are self-hosted via @nuxt/fonts, no external font host needed
         'font-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],

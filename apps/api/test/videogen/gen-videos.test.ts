@@ -6,7 +6,11 @@ import {
   getMediaById,
 } from '@repo/database';
 import type { GenVideoFrameOrigin } from '@repo/database/schema';
-import { getImgGenBucketNameForUser, getVideoFrameBucketNameForUser, getVideoGenBucketNameForUser } from '@repo/storage';
+import {
+  getImgGenBucketNameForUser,
+  getVideoFrameBucketNameForUser,
+  getVideoGenBucketNameForUser,
+} from '@repo/storage';
 import {
   deleteObjectsMock,
   resetProviderMocks,
@@ -402,7 +406,7 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     expect(deletedKeys.sort()).toEqual([frameStorageKey, storageKey].sort());
   });
 
-  test("leaves a shared media object alone while a gen_images row still references it", async () => {
+  test('leaves a shared media object alone while a gen_images row still references it', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const storageKey = `${userId}/videos/generated/clip.mp4`;
     const imageStorageKey = `${userId}/images/generated/source.png`;

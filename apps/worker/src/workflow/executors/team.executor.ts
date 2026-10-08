@@ -151,7 +151,10 @@ function buildDelegateTools(
           });
           return text;
         } catch (error) {
-          if (error instanceof InsufficientCreditsError || error instanceof ModelNotChargeableError) {
+          if (
+            error instanceof InsufficientCreditsError ||
+            error instanceof ModelNotChargeableError
+          ) {
             onCreditError(error);
             abortController.abort();
           }

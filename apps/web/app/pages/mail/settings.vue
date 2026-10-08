@@ -13,7 +13,11 @@ const currentTab = ref('general');
 
 const sideBarTabs = computed(() => [
   { id: 'general', icon: MailIcon, label: t('email.settings.tabs.general') },
-  { id: 'categories', icon: TagIcon, label: t('email.settings.tabs.categories') },
+  {
+    id: 'categories',
+    icon: TagIcon,
+    label: t('email.settings.tabs.categories'),
+  },
   { id: 'senders', icon: UsersIcon, label: t('email.settings.tabs.senders') },
 ]);
 
@@ -26,7 +30,10 @@ useHead({
   <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
-        <HeadingTitle :title="t('email.settings.pageTitle')" :subtitle="t('email.settings.subtitle')" />
+        <HeadingTitle
+          :title="t('email.settings.pageTitle')"
+          :subtitle="t('email.settings.subtitle')"
+        />
       </template>
       <template #bottom> </template>
     </Heading>
@@ -43,6 +50,8 @@ useHead({
         </template>
       </TabSidebar>
     </div>
-    <p v-else class="px-5 text-sm text-muted-foreground">{{ t('email.settings.notConnected') }}</p>
+    <p v-else class="px-5 text-sm text-muted-foreground">
+      {{ t('email.settings.notConnected') }}
+    </p>
   </SectionWrapper>
 </template>

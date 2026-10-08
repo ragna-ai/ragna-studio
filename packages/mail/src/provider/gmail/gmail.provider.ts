@@ -26,7 +26,12 @@ import type {
   SendMailInput,
   SendMailResult,
 } from '../mail-provider';
-import { GmailApiError, gmailRequest, gmailRequestVoid, type GmailRequestOptions } from './gmail.client';
+import {
+  GmailApiError,
+  gmailRequest,
+  gmailRequestVoid,
+  type GmailRequestOptions,
+} from './gmail.client';
 import {
   hasChatLabel,
   toMailDraft,
@@ -121,7 +126,9 @@ export class GmailProvider implements MailProvider {
     messageId: MailProviderId,
     format: 'metadata' | 'full',
   ): Promise<MailMessageMetadata | MailMessage> {
-    const raw = await this.request<GmailMessageResource>(`users/me/messages/${messageId}?format=${format}`);
+    const raw = await this.request<GmailMessageResource>(
+      `users/me/messages/${messageId}?format=${format}`,
+    );
     return format === 'full' ? toMailMessage(raw) : toMailMessageMetadata(raw);
   }
 
@@ -179,7 +186,9 @@ export class GmailProvider implements MailProvider {
         params.set('pageToken', pageToken);
       }
 
-      const page = await this.request<GmailDraftsListResponse>(`users/me/drafts?${params.toString()}`);
+      const page = await this.request<GmailDraftsListResponse>(
+        `users/me/drafts?${params.toString()}`,
+      );
       for (const stub of page.drafts ?? []) {
         summaries.push(await this.getDraftSummary(stub.id));
       }
@@ -213,9 +222,12 @@ export class GmailProvider implements MailProvider {
 
   async setTrashed(messageId: MailProviderId, trashed: boolean): Promise<MailActionResult> {
     if (trashed) {
-      const result = await this.request<GmailMessageResource>(`users/me/messages/${messageId}/trash`, {
-        method: 'POST',
-      });
+      const result = await this.request<GmailMessageResource>(
+        `users/me/messages/${messageId}/trash`,
+        {
+          method: 'POST',
+        },
+      );
       return toMailActionResult(result);
     }
 
@@ -255,7 +267,9 @@ export class GmailProvider implements MailProvider {
       params.set('pageToken', pageToken);
     }
 
-    const response = await this.request<GmailThreadsListResponse>(`users/me/threads?${params.toString()}`);
+    const response = await this.request<GmailThreadsListResponse>(
+      `users/me/threads?${params.toString()}`,
+    );
     return {
       threadIds: (response.threads ?? []).map((thread) => thread.id),
       nextPageToken: response.nextPageToken ?? null,
@@ -275,7 +289,10 @@ export class GmailProvider implements MailProvider {
     return threadIds.slice(0, limit);
   }
 
-  async getAttachment(messageId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
+  async getAttachment(
+    messageId: MailProviderId,
+    attachmentId: string,
+  ): Promise<MailAttachmentContent> {
     const response = await this.request<GmailAttachmentResource>(
       `users/me/messages/${messageId}/attachments/${attachmentId}`,
     );
@@ -284,7 +301,10 @@ export class GmailProvider implements MailProvider {
 
   // Throws `GmailApiError` with `status: 404` if the draft no longer exists,
   // same semantics as `getDraft`.
-  async getDraftAttachment(draftId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
+  async getDraftAttachment(
+    draftId: MailProviderId,
+    attachmentId: string,
+  ): Promise<MailAttachmentContent> {
     const messageId = await this.getDraftMessageId(draftId);
     return this.getAttachment(messageId, attachmentId);
   }
@@ -301,7 +321,9 @@ export class GmailProvider implements MailProvider {
 
   /** `drafts.list` only returns draft/message ids; fetch metadata for the folder listing. */
   private async getDraftSummary(draftId: MailProviderId): Promise<MailDraftSummary> {
-    const raw = await this.request<GmailDraftResource>(`users/me/drafts/${draftId}?format=metadata`);
+    const raw = await this.request<GmailDraftResource>(
+      `users/me/drafts/${draftId}?format=metadata`,
+    );
     return toMailDraftSummary(raw);
   }
 
@@ -337,7 +359,9 @@ export class GmailProvider implements MailProvider {
     }
   }
 
-  private async resolveChanges(aggregated: Map<string, GmailAggregatedChange>): Promise<MailSyncChange[]> {
+  private async resolveChanges(
+    aggregated: Map<string, GmailAggregatedChange>,
+  ): Promise<MailSyncChange[]> {
     const changes: MailSyncChange[] = [];
 
     for (const change of aggregated.values()) {
@@ -387,10 +411,13 @@ export class GmailProvider implements MailProvider {
     addLabelIds: string[],
     removeLabelIds: string[],
   ): Promise<MailActionResult> {
-    const updated = await this.request<GmailMessageResource>(`users/me/messages/${messageId}/modify`, {
-      method: 'POST',
-      body: JSON.stringify({ addLabelIds, removeLabelIds }),
-    });
+    const updated = await this.request<GmailMessageResource>(
+      `users/me/messages/${messageId}/modify`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ addLabelIds, removeLabelIds }),
+      },
+    );
     return toMailActionResult(updated);
   }
 
@@ -422,7 +449,10 @@ export class GmailProvider implements MailProvider {
 
     if (input.thread) {
       mailOptions.inReplyTo = input.thread.inReplyToMessageId;
-      mailOptions.references = [...(input.thread.references ?? []), input.thread.inReplyToMessageId];
+      mailOptions.references = [
+        ...(input.thread.references ?? []),
+        input.thread.inReplyToMessageId,
+      ];
     }
 
     const buffer = await new MailComposer(mailOptions).compile().build();

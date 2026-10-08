@@ -12,12 +12,12 @@ This section runs RAGNA Studio on your own server, behind your own domains. For 
 
 ### Server
 
-| | Minimum | Recommended |
-| --- | --- | --- |
-| RAM | 2 GB (enough to try it out) | 8 GB (regular use, several agents browsing at once) |
-| CPU | 2 vCPU (enough to try it out) | 4 vCPU (regular use, several agents browsing at once) |
-| CPU architecture | amd64 or arm64 | |
-| OS | Linux with Docker Engine and the Docker Compose v2 plugin | |
+|                  | Minimum                                                   | Recommended                                           |
+| ---------------- | --------------------------------------------------------- | ----------------------------------------------------- |
+| RAM              | 2 GB (enough to try it out)                               | 8 GB (regular use, several agents browsing at once)   |
+| CPU              | 2 vCPU (enough to try it out)                             | 4 vCPU (regular use, several agents browsing at once) |
+| CPU architecture | amd64 or arm64                                            |                                                       |
+| OS               | Linux with Docker Engine and the Docker Compose v2 plugin |                                                       |
 
 ### Domains and services
 
@@ -30,31 +30,34 @@ Postgres 18 with pgvector and Redis ship in the compose file.
 
 ## The stack
 
-| Service | Role |
-| --- | --- |
-| `frontend` | The web app, on port 3000 |
-| `backend` | The API, on port 3010 |
-| `worker` | Background jobs and scheduled workflows |
-| `webbrowser` | Headless browser for agents that read web pages |
-| `postgres` | Database, with pgvector |
-| `redis` | Queues |
-| `migrate` | Applies the schema on start, then exits |
-| `seed` | Adds the model catalog and the default agent, then exits |
+| Service      | Role                                                     |
+| ------------ | -------------------------------------------------------- |
+| `frontend`   | The web app, on port 3000                                |
+| `backend`    | The API, on port 3010                                    |
+| `worker`     | Background jobs and scheduled workflows                  |
+| `webbrowser` | Headless browser for agents that read web pages          |
+| `postgres`   | Database, with pgvector                                  |
+| `redis`      | Queues                                                   |
+| `migrate`    | Applies the schema on start, then exits                  |
+| `seed`       | Adds the model catalog and the default agent, then exits |
 
 ## Steps
 
 <Steps>
   <Step title="Install">
-    Pick one of the [install options](/self-hosting/install-options): the one-line setup or Docker Compose by hand.
+    Pick one of the [install options](/self-hosting/install-options): the one-line setup or Docker
+    Compose by hand.
   </Step>
   <Step title="Configure">
-    Set domains, secrets and OAuth in [Configuration](/self-hosting/configuration), and buckets in [Storage](/self-hosting/storage).
+    Set domains, secrets and OAuth in [Configuration](/self-hosting/configuration), and buckets in
+    [Storage](/self-hosting/storage).
   </Step>
   <Step title="Expose">
     Put a [reverse proxy](/self-hosting/reverse-proxy) with TLS in front of the app and the API.
   </Step>
   <Step title="Extend">
-    Turn on [optional providers](/self-hosting/optional-providers) such as embeddings, image generation or email.
+    Turn on [optional providers](/self-hosting/optional-providers) such as embeddings, image
+    generation or email.
   </Step>
   <Step title="Secure">
     Go through the [security checklist](/self-hosting/security) before you share the app.

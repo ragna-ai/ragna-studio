@@ -19,18 +19,18 @@ system-initiated spend are v2.
 
 Settled 2026-07-27. Do not re-open.
 
-| Decision | Choice |
-| --- | --- |
-| **Unit** | 1 credit = $0.001 (1000 credits = $1). Ledger stores **micro-credits** as `bigint` (1 credit = 1,000,000 µC). |
-| **Prices** | `integer` nanoUSD per token, on `ai_models.pricing` (jsonb). Every real price sheet is an exact integer at this scale. |
-| **The identity** | 1 µC ≡ 1 nanoUSD. Provider cost converts to credits with no conversion factor, which is the whole point of the anchor. |
-| **Markup** | `markupBps`, a multiplier in basis points. Global default in `@repo/config`, optional per-model override in `pricing`. `10_000` = cost price, `15_000` = 1.5x. |
-| **Balance holder** | A `credit_accounts` row. V1: one per user. Later: one per organisation. Ledger and usage rows reference `creditAccountId`, never `userId`. |
+| Decision               | Choice                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**               | 1 credit = $0.001 (1000 credits = $1). Ledger stores **micro-credits** as `bigint` (1 credit = 1,000,000 µC).                                                                                                                                                                                                                                                                   |
+| **Prices**             | `integer` nanoUSD per token, on `ai_models.pricing` (jsonb). Every real price sheet is an exact integer at this scale.                                                                                                                                                                                                                                                          |
+| **The identity**       | 1 µC ≡ 1 nanoUSD. Provider cost converts to credits with no conversion factor, which is the whole point of the anchor.                                                                                                                                                                                                                                                          |
+| **Markup**             | `markupBps`, a multiplier in basis points. Global default in `@repo/config`, optional per-model override in `pricing`. `10_000` = cost price, `15_000` = 1.5x.                                                                                                                                                                                                                  |
+| **Balance holder**     | A `credit_accounts` row. V1: one per user. Later: one per organisation. Ledger and usage rows reference `creditAccountId`, never `userId`.                                                                                                                                                                                                                                      |
 | **Account resolution** | `workspaceId → workspace.ownerId → credit_accounts.userId`. The workspace is a **locator for the billing entity, not a billing scope**: accounts are never per-workspace. Resolved from the owner, never the acting user, because `workspace_users` (already anticipated at `workspace.schema.ts:9`) makes those diverge and billing the acting member would be silently wrong. |
-| **Overdraft** | Gate on `balance > 0` before a run, settle the true cost after, allow the balance to go negative. The next request is refused. |
-| **Gate placement** | One policy function (`assertCanSpend`), three entry points: `creditGuard` mounted **per spending route** (never on a whole controller, never folded into `workspaceGuard`), a direct call on the WS chat path, and a repo call in the worker. |
-| **Cached tokens** | Charged as if uncached. The discount is platform margin. Real cost is recorded separately for margin analytics. |
-| **Grants** | Manual only in v1 (admin-inserted ledger rows). No signup grant, no monthly refill. |
+| **Overdraft**          | Gate on `balance > 0` before a run, settle the true cost after, allow the balance to go negative. The next request is refused.                                                                                                                                                                                                                                                  |
+| **Gate placement**     | One policy function (`assertCanSpend`), three entry points: `creditGuard` mounted **per spending route** (never on a whole controller, never folded into `workspaceGuard`), a direct call on the WS chat path, and a repo call in the worker.                                                                                                                                   |
+| **Cached tokens**      | Charged as if uncached. The discount is platform margin. Real cost is recorded separately for margin analytics.                                                                                                                                                                                                                                                                 |
+| **Grants**             | Manual only in v1 (admin-inserted ledger rows). No signup grant, no monthly refill.                                                                                                                                                                                                                                                                                             |
 
 ## Goals (v1)
 
@@ -82,13 +82,13 @@ no place for a rounding error to hide.
 
 Every published price is an exact integer at this scale:
 
-| Model | $/Mtok in / out | nanoUSD per token in / out |
-| --- | --- | --- |
-| Haiku 4.5 | 1 / 5 | 1000 / 5000 |
-| Sonnet 4.5 | 3 / 15 | 3000 / 15000 |
-| Opus | 15 / 75 | 15000 / 75000 |
-| Gemini Flash | 0.30 / 2.50 | 300 / 2500 |
-| cheapest realistic | 0.075 / 0.30 | 75 / 300 |
+| Model              | $/Mtok in / out | nanoUSD per token in / out |
+| ------------------ | --------------- | -------------------------- |
+| Haiku 4.5          | 1 / 5           | 1000 / 5000                |
+| Sonnet 4.5         | 3 / 15          | 3000 / 15000               |
+| Opus               | 15 / 75         | 15000 / 75000              |
+| Gemini Flash       | 0.30 / 2.50     | 300 / 2500                 |
+| cheapest realistic | 0.075 / 0.30    | 75 / 300                   |
 
 A 3000-in / 800-out Sonnet turn costs 9,000,000 + 12,000,000 = 21,000,000
 nanoUSD ($0.021). At `markupBps = 15_000` the user is charged 31,500,000 µC
@@ -122,7 +122,7 @@ export type AiModelPricing =
       // Overrides config.creditMarkupBps for this model.
       markupBps?: number;
     }
-  | { kind: 'image'; nanoUsdPerImage: number }   // v2
+  | { kind: 'image'; nanoUsdPerImage: number } // v2
   | { kind: 'video'; nanoUsdPerSecond: number }; // v2
 ```
 
@@ -222,14 +222,14 @@ cacheReadTokens, cacheWriteTokens}`. OpenAI's `prompt_tokens` and Google's
 `promptTokenCount` were already cache-inclusive. All providers are now
 uniform.
 
-| Field | Meaning |
-| --- | --- |
-| `usage.inputTokens` | cache-inclusive total, **all providers** |
-| `usage.inputTokenDetails.noCacheTokens` | uncached portion |
-| `usage.inputTokenDetails.cacheReadTokens` | cache hits |
-| `usage.inputTokenDetails.cacheWriteTokens` | cache writes |
-| `usage.outputTokens` | total |
-| `usage.outputTokenDetails.reasoningTokens` | already inside `outputTokens` |
+| Field                                      | Meaning                                  |
+| ------------------------------------------ | ---------------------------------------- |
+| `usage.inputTokens`                        | cache-inclusive total, **all providers** |
+| `usage.inputTokenDetails.noCacheTokens`    | uncached portion                         |
+| `usage.inputTokenDetails.cacheReadTokens`  | cache hits                               |
+| `usage.inputTokenDetails.cacheWriteTokens` | cache writes                             |
+| `usage.outputTokens`                       | total                                    |
+| `usage.outputTokenDetails.reasoningTokens` | already inside `outputTokens`            |
 
 So `billableInputTokens = Σ step.usage.inputTokens`, with **no per-provider
 branching**. That total is by construction what the prompt would have cost
@@ -268,12 +268,12 @@ relations), not just exported from `schema/index.ts`.
 
 ### `creditAccount` (table `credit_accounts`)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | text | `primaryIdColumn` |
-| `userId` | text | FK → `user.id`, cascade, **unique** |
+| Column                | Type   | Notes                                                     |
+| --------------------- | ------ | --------------------------------------------------------- |
+| `id`                  | text   | `primaryIdColumn`                                         |
+| `userId`              | text   | FK → `user.id`, cascade, **unique**                       |
 | `balanceMicroCredits` | bigint | `mode: 'bigint'`, not null, default `0`. May go negative. |
-| timestamps | | `...timestamps` |
+| timestamps            |        | `...timestamps`                                           |
 
 The indirection is the whole point. When organisations land, add a nullable
 `organisationId` FK and a `CHECK (num_nonnulls(user_id, organisation_id) = 1)`,
@@ -289,17 +289,17 @@ of truth; a reconciliation script can rebuild the column at any time.
 
 Append-only. Rows are never updated or deleted.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | text | `primaryIdColumn` |
-| `creditAccountId` | text | FK → `credit_accounts.id`, cascade, indexed |
-| `amountMicroCredits` | bigint | signed. Negative for `usage`, positive for `grant` / `refund`. |
-| `kind` | text enum | `grant` \| `usage` \| `refund` \| `adjustment`. (`purchase` in v2.) |
-| `usageEventId` | text | nullable FK → `credit_usage_events.id`, `set null` |
-| `idempotencyKey` | text | not null, **unique** |
-| `balanceAfterMicroCredits` | bigint | balance immediately after this row was applied |
-| `description` | text | nullable, free text for manual grants and adjustments |
-| timestamps | | `...timestamps` |
+| Column                     | Type      | Notes                                                               |
+| -------------------------- | --------- | ------------------------------------------------------------------- |
+| `id`                       | text      | `primaryIdColumn`                                                   |
+| `creditAccountId`          | text      | FK → `credit_accounts.id`, cascade, indexed                         |
+| `amountMicroCredits`       | bigint    | signed. Negative for `usage`, positive for `grant` / `refund`.      |
+| `kind`                     | text enum | `grant` \| `usage` \| `refund` \| `adjustment`. (`purchase` in v2.) |
+| `usageEventId`             | text      | nullable FK → `credit_usage_events.id`, `set null`                  |
+| `idempotencyKey`           | text      | not null, **unique**                                                |
+| `balanceAfterMicroCredits` | bigint    | balance immediately after this row was applied                      |
+| `description`              | text      | nullable, free text for manual grants and adjustments               |
+| timestamps                 |           | `...timestamps`                                                     |
 
 - `balanceAfter` is stored, not derived, so the history is readable without
   a window function and a corrupted balance is easy to spot.
@@ -315,33 +315,33 @@ Append-only. Rows are never updated or deleted.
 
 The audit trail. One row per charged LLM run.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | text | `primaryIdColumn` |
-| `creditAccountId` | text | FK → `credit_accounts.id`, cascade, indexed |
-| `workspaceId` | text | FK → `workspace.id`, cascade, indexed |
-| `userId` | text | nullable FK → `user.id`, `set null`. Who ran it, for per-member breakdowns once orgs exist. |
-| `aiModelId` | text | nullable FK → `ai_models.id`, `set null` |
-| `provider` | text | denormalised, survives model deletion |
-| `model` | text | denormalised |
-| `modelDisplayName` | text | denormalised. What the user saw at the time. See [Data fetching](#data-fetching). |
-| `feature` | text enum | `chat` \| `workflow` \| `team`. (`imagegen`, `videogen`, `title`, `embedding`, `tool` in v2.) |
-| `refType` | text | nullable, e.g. `chat`, `workflowRun` |
-| `refId` | text | nullable, the id of that entity. Not an FK; deliberately loose so history survives deletion. |
-| `inputTokens` | integer | as reported |
-| `outputTokens` | integer | as reported |
-| `reasoningTokens` | integer | nullable. Already included in `outputTokens`; recorded for breakdown only, never added. |
-| `cacheReadTokens` | integer | not null, default 0 |
-| `cacheWriteTokens` | integer | not null, default 0 |
-| `billableInputTokens` | integer | after `normalizeUsage`, this is what was charged |
-| `billableOutputTokens` | integer | |
-| `unitPrices` | jsonb | snapshot of the `pricing` object in effect |
-| `markupBps` | integer | the multiplier actually applied |
-| `costNanoUsd` | bigint | pre-markup, at list price, as charged |
-| `actualCostNanoUsd` | bigint | real provider cost including cache discounts |
-| `chargedMicroCredits` | bigint | post-markup, post-ceil. Mirrors the ledger row's magnitude. |
-| `durationMs` | integer | nullable |
-| timestamps | | `...timestamps` |
+| Column                 | Type      | Notes                                                                                         |
+| ---------------------- | --------- | --------------------------------------------------------------------------------------------- |
+| `id`                   | text      | `primaryIdColumn`                                                                             |
+| `creditAccountId`      | text      | FK → `credit_accounts.id`, cascade, indexed                                                   |
+| `workspaceId`          | text      | FK → `workspace.id`, cascade, indexed                                                         |
+| `userId`               | text      | nullable FK → `user.id`, `set null`. Who ran it, for per-member breakdowns once orgs exist.   |
+| `aiModelId`            | text      | nullable FK → `ai_models.id`, `set null`                                                      |
+| `provider`             | text      | denormalised, survives model deletion                                                         |
+| `model`                | text      | denormalised                                                                                  |
+| `modelDisplayName`     | text      | denormalised. What the user saw at the time. See [Data fetching](#data-fetching).             |
+| `feature`              | text enum | `chat` \| `workflow` \| `team`. (`imagegen`, `videogen`, `title`, `embedding`, `tool` in v2.) |
+| `refType`              | text      | nullable, e.g. `chat`, `workflowRun`                                                          |
+| `refId`                | text      | nullable, the id of that entity. Not an FK; deliberately loose so history survives deletion.  |
+| `inputTokens`          | integer   | as reported                                                                                   |
+| `outputTokens`         | integer   | as reported                                                                                   |
+| `reasoningTokens`      | integer   | nullable. Already included in `outputTokens`; recorded for breakdown only, never added.       |
+| `cacheReadTokens`      | integer   | not null, default 0                                                                           |
+| `cacheWriteTokens`     | integer   | not null, default 0                                                                           |
+| `billableInputTokens`  | integer   | after `normalizeUsage`, this is what was charged                                              |
+| `billableOutputTokens` | integer   |                                                                                               |
+| `unitPrices`           | jsonb     | snapshot of the `pricing` object in effect                                                    |
+| `markupBps`            | integer   | the multiplier actually applied                                                               |
+| `costNanoUsd`          | bigint    | pre-markup, at list price, as charged                                                         |
+| `actualCostNanoUsd`    | bigint    | real provider cost including cache discounts                                                  |
+| `chargedMicroCredits`  | bigint    | post-markup, post-ceil. Mirrors the ledger row's magnitude.                                   |
+| `durationMs`           | integer   | nullable                                                                                      |
+| timestamps             |           | `...timestamps`                                                                               |
 
 **`reasoningTokens` is already part of `outputTokens`** for Anthropic and
 OpenAI. It is stored for display only. Adding it would double-charge every
@@ -468,9 +468,7 @@ export function listCreditUsageEvents(params: {
   sort: 'asc' | 'desc';
 }): Promise<CreditUsageEvent[]>;
 
-export function countCreditUsageEvents(params: {
-  creditAccountId: string;
-}): Promise<number>;
+export function countCreditUsageEvents(params: { creditAccountId: string }): Promise<number>;
 ```
 
 `SettleCreditUsageParams` carries the token counts so they flow from
@@ -540,11 +538,11 @@ The `workspaceId` parameter is a **locator**, not a scope. Every charge
 happens somewhere, and the workspace is the thing that says where. The
 resolution chain answers "who pays for work done here":
 
-| Era | Chain |
-| --- | --- |
-| v1 | `workspace.ownerId` → `credit_accounts.user_id` |
-| multi-user workspaces | unchanged; still `ownerId`, now distinct from the acting user |
-| organisations | `workspace.organisationId` → `credit_accounts.organisation_id` |
+| Era                   | Chain                                                          |
+| --------------------- | -------------------------------------------------------------- |
+| v1                    | `workspace.ownerId` → `credit_accounts.user_id`                |
+| multi-user workspaces | unchanged; still `ownerId`, now distinct from the acting user  |
+| organisations         | `workspace.organisationId` → `credit_accounts.organisation_id` |
 
 #### Why not just resolve by the acting `userId`?
 
@@ -555,7 +553,7 @@ the identical account, provably: `workspaceGuard` loads the workspace with
 `ownerId: user.id`, so `workspace.ownerId === c.get('user').id` by
 construction.
 
-It is rejected because the two are only *coincidentally* equal.
+It is rejected because the two are only _coincidentally_ equal.
 `workspace.schema.ts:9-10` already anticipates the divergence:
 
 > Named `ownerId` (not `userId`) to signal one owner now, and to leave room
@@ -751,16 +749,16 @@ plus cleanup for crashed runs, which is not worth it for a showcase app.
 
 ## Call sites
 
-| Site | File | Gate | Settle |
-| --- | --- | --- | --- |
-| Workflow run enqueue | `apps/api/src/controllers/workflow.controller.ts:154` | `creditGuard` on the route | n/a, spends nothing itself |
-| Chat turn | `apps/api/src/services/chat.service.ts` | `assertCanSpend` in `runChatStream`, after the chat is fetched and before `streamText`, alongside the existing in-flight check | in `streamText`'s `onEnd`, next to the current `logger.debug` at :519 |
-| Workflow agent node (referenced agent) | `apps/worker/src/workflow/executors/run-referenced-agent.ts` | `resolveCreditSpendState` before the run | where `result.steps` is in scope |
-| Workflow agent node (default agent) | `apps/worker/src/workflow/executors/agent.executor.ts`, the `!config.agentId` branch | same | same |
-| Team node member call | `apps/worker/src/workflow/executors/team.executor.ts`, via `runReferencedAgent` | same | same |
-| Team node lead call | `apps/worker/src/workflow/executors/team.executor.ts`, `executeTeam` | same | same |
+| Site                                   | File                                                                                 | Gate                                                                                                                           | Settle                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Workflow run enqueue                   | `apps/api/src/controllers/workflow.controller.ts:154`                                | `creditGuard` on the route                                                                                                     | n/a, spends nothing itself                                            |
+| Chat turn                              | `apps/api/src/services/chat.service.ts`                                              | `assertCanSpend` in `runChatStream`, after the chat is fetched and before `streamText`, alongside the existing in-flight check | in `streamText`'s `onEnd`, next to the current `logger.debug` at :519 |
+| Workflow agent node (referenced agent) | `apps/worker/src/workflow/executors/run-referenced-agent.ts`                         | `resolveCreditSpendState` before the run                                                                                       | where `result.steps` is in scope                                      |
+| Workflow agent node (default agent)    | `apps/worker/src/workflow/executors/agent.executor.ts`, the `!config.agentId` branch | same                                                                                                                           | same                                                                  |
+| Team node member call                  | `apps/worker/src/workflow/executors/team.executor.ts`, via `runReferencedAgent`      | same                                                                                                                           | same                                                                  |
+| Team node lead call                    | `apps/worker/src/workflow/executors/team.executor.ts`, `executeTeam`                 | same                                                                                                                           | same                                                                  |
 
-The four worker rows are four *call sites*, not four implementations. They
+The four worker rows are four _call sites_, not four implementations. They
 share one pair of helpers exported from `run-referenced-agent.ts`:
 
 - `gateCreditSpend({ workspaceId })` returns `null` when `CREDITS_ENABLED`
@@ -889,10 +887,10 @@ drift.
 
 Two additions to `packages/config`:
 
-| Var | Default | Notes |
-| --- | --- | --- |
-| `CREDIT_MARKUP_BPS` | `15000` | multiplier in basis points; `10000` = cost price |
-| `CREDITS_ENABLED` | `false` | master switch. Off means no gate and no settlement, so the system can ship dark and be turned on per environment. |
+| Var                 | Default | Notes                                                                                                             |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `CREDIT_MARKUP_BPS` | `15000` | multiplier in basis points; `10000` = cost price                                                                  |
+| `CREDITS_ENABLED`   | `false` | master switch. Off means no gate and no settlement, so the system can ship dark and be turned on per environment. |
 
 Both are non-sensitive, so they are direct properties, not `getSecret`.
 

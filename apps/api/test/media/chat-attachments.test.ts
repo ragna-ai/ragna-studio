@@ -279,7 +279,12 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments (file count)', (
       csvFile(`data-${index}.csv`),
     );
 
-    const { status, attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, files);
+    const { status, attachments } = await uploadAttachments(
+      cookieHeader,
+      workspaceId,
+      chatId,
+      files,
+    );
 
     expect(status).toBe(StatusCodes.CREATED);
     expect(attachments).toHaveLength(MAX_FILES_PER_UPLOAD_REQUEST);
@@ -294,9 +299,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
 
   test('removes the link and deletes the media when it was the last reference', async () => {
     const { workspaceId, cookieHeader, chatId } = await seedChat();
-    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
-      csvFile(),
-    ]);
+    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [csvFile()]);
     const attachment = attachments[0]!;
 
     const response = await app.request(
@@ -315,9 +318,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
     // returns 0 once the last link is gone, and a `!referenceCount` check
     // would wrongly treat that as "count unknown" and skip the delete.
     const { workspaceId, cookieHeader, chatId } = await seedChat();
-    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
-      csvFile(),
-    ]);
+    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [csvFile()]);
     const attachment = attachments[0]!;
 
     expect(await countMediaReferences({ mediaId: attachment.mediaId })).toBe(1);
@@ -335,9 +336,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
   test('keeps the media row while another attachment still references it', async () => {
     const { workspaceId, cookieHeader, agentId, chatId } = await seedChat();
     const otherChatId = await createChat(cookieHeader, workspaceId, agentId);
-    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
-      csvFile(),
-    ]);
+    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [csvFile()]);
     const attachment = attachments[0]!;
     // v1 has no natural flow to attach the same media to two chats; fabricate
     // a second reference directly to exercise deleteMediaIfUnreferenced's
@@ -374,9 +373,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId (attachment cleanup)', () 
 
   test('deletes unreferenced media when the chat is deleted', async () => {
     const { workspaceId, cookieHeader, chatId } = await seedChat();
-    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
-      csvFile(),
-    ]);
+    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [csvFile()]);
     const mediaId = attachments[0]!.mediaId;
 
     const response = await app.request(`/workspace/${workspaceId}/chat/${chatId}`, {
@@ -391,9 +388,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId (attachment cleanup)', () 
   test('keeps media still referenced by another chat after the chat is deleted', async () => {
     const { workspaceId, cookieHeader, agentId, chatId } = await seedChat();
     const otherChatId = await createChat(cookieHeader, workspaceId, agentId);
-    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [
-      csvFile(),
-    ]);
+    const { attachments } = await uploadAttachments(cookieHeader, workspaceId, chatId, [csvFile()]);
     const mediaId = attachments[0]!.mediaId;
     await createChatAttachment({ chatId: otherChatId, mediaId });
 

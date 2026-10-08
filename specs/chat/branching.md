@@ -13,14 +13,14 @@ exploring a different prompt or idea without cluttering the main thread.
 
 ## Decisions
 
-| Decision           | Choice                                                                                  |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| **Model**           | Copy-on-branch: a new, fully independent `chat` row plus copies of the `chat_messages` rows up to the cutoff. Not a shared/lazy-diverging message tree. |
-| **Entry point**     | Hover-revealed "⋯" icon button on each message in `ChatMessage.vue`, opening a shadcn-vue `dropdown-menu` (click-triggered, not `context-menu`/right-click — tried and dropped, see Status). |
-| **Menu items**      | "Branch from here" and "Copy text" (copies the message's rendered text parts to the clipboard). A single-item menu reads oddly, so branching shipped a second, unrelated-but-obviously-useful action rather than staying a one-liner. |
-| **Cutoff**          | Inclusive: the clicked message is the last message copied into the new chat.             |
-| **Title**           | Auto-generated: `"{original title} (branch)"`. Renamable afterward like any chat.        |
-| **Provenance UI**    | Shown: the sidebar/chat-list marks a branched chat with a "forked from {original title}" subtitle/badge. |
+| Decision          | Choice                                                                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Model**         | Copy-on-branch: a new, fully independent `chat` row plus copies of the `chat_messages` rows up to the cutoff. Not a shared/lazy-diverging message tree.                                                                               |
+| **Entry point**   | Hover-revealed "⋯" icon button on each message in `ChatMessage.vue`, opening a shadcn-vue `dropdown-menu` (click-triggered, not `context-menu`/right-click — tried and dropped, see Status).                                          |
+| **Menu items**    | "Branch from here" and "Copy text" (copies the message's rendered text parts to the clipboard). A single-item menu reads oddly, so branching shipped a second, unrelated-but-obviously-useful action rather than staying a one-liner. |
+| **Cutoff**        | Inclusive: the clicked message is the last message copied into the new chat.                                                                                                                                                          |
+| **Title**         | Auto-generated: `"{original title} (branch)"`. Renamable afterward like any chat.                                                                                                                                                     |
+| **Provenance UI** | Shown: the sidebar/chat-list marks a branched chat with a "forked from {original title}" subtitle/badge.                                                                                                                              |
 
 ## Why copy, not a shared message tree
 
@@ -37,7 +37,7 @@ created, so nothing done in either chat can affect the other.
 
 The existing `apps/web/app/components/ai-elements/message/MessageBranch*.vue`
 components are unrelated: a generic, unwired carousel for cycling response
-*variants* in place (ChatGPT-style regenerate arrows), not backed by any
+_variants_ in place (ChatGPT-style regenerate arrows), not backed by any
 data model. Do not reuse them for this feature; they solve a different
 problem (multiple candidate replies for one turn) and nothing currently
 renders them.
@@ -79,10 +79,10 @@ renders them.
 New nullable, self-referential columns on `chats`
 (`packages/database/src/schema/chat.schema.ts`):
 
-| Column                | Type | Notes                                                                 |
-| ---------------------- | ---- | ---------------------------------------------------------------------- |
-| `forkedFromChatId`      | text | FK → `chat.id`, `onDelete: 'set null'`. Which chat this was branched from. |
-| `forkedFromMessageId`   | text | FK → `chat_messages.id`, `onDelete: 'set null'`. The cutoff message in the *original* chat (for display only; the branch has its own copy of that message with a different id). |
+| Column                | Type | Notes                                                                                                                                                                           |
+| --------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `forkedFromChatId`    | text | FK → `chat.id`, `onDelete: 'set null'`. Which chat this was branched from.                                                                                                      |
+| `forkedFromMessageId` | text | FK → `chat_messages.id`, `onDelete: 'set null'`. The cutoff message in the _original_ chat (for display only; the branch has its own copy of that message with a different id). |
 
 Both are display/provenance metadata only — never read to reconstruct
 content. Register both self-relations in
@@ -119,7 +119,7 @@ service function in `chat.service.ts`, following the pattern of
 2. In a transaction: insert a new `chats` row (`agentId`, `workspaceId`,
    `userId` copied from the source; `title` = `"{source.title} (branch)"`;
    `forkedFromChatId` = source id; `forkedFromMessageId` = the cutoff
-   message's id in the *source* chat).
+   message's id in the _source_ chat).
 3. Bulk-insert copies of every `chat_messages` row up to and including the
    cutoff (new ids/timestamps, same `role`/`parts`/`metadata`), targeting
    the new chat id.

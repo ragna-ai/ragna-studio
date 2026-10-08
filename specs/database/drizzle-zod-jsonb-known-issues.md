@@ -14,7 +14,7 @@ The same pattern hits every typed jsonb column in the schema: `agent.tools` / `a
 
 ```ts
 // packages/database/src/schema/agent.schema.ts
-export const agentToolValues = ['think', 'webSearch', /* ... */] as const;
+export const agentToolValues = ['think', 'webSearch' /* ... */] as const;
 export type AgentTool = (typeof agentToolValues)[number];
 
 // packages/database/src/zod/index.ts

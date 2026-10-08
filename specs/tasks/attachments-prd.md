@@ -25,10 +25,10 @@ a link table shaped exactly like `chat_attachments`.
 
 Settled 2026-09-02. Do not re-open.
 
-| Decision           | Choice                                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Scope**           | Files only. No text extraction, no agent visibility into attachment contents. Attachments are for humans, downloadable, not part of task/agent context. |
-| **UI placement**    | New "Attachments" section on the task detail page (`/tasks/:taskId`), similar weight to `TaskSubtaskList`, below the description editor. |
+| Decision            | Choice                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scope**           | Files only. No text extraction, no agent visibility into attachment contents. Attachments are for humans, downloadable, not part of task/agent context.                                        |
+| **UI placement**    | New "Attachments" section on the task detail page (`/tasks/:taskId`), similar weight to `TaskSubtaskList`, below the description editor.                                                       |
 | **Subtask support** | Both top-level tasks and subtasks can have attachments. No schema difference (`task_attachments.taskId` works for either); pure UI decision to expose the section on subtask detail views too. |
 
 ## Design (mirrors chat attachments)

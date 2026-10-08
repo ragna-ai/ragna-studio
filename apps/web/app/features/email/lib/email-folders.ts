@@ -1,4 +1,10 @@
-import { ArchiveIcon, InboxIcon, SendIcon, StarIcon, Trash2Icon } from '@lucide/vue';
+import {
+  ArchiveIcon,
+  InboxIcon,
+  SendIcon,
+  StarIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import type { Component } from 'vue';
 import type { EmailFolder } from '~/features/email/types';
 

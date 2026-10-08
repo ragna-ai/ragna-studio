@@ -19,7 +19,11 @@ export class GraphApiError extends MailProviderError {
     this.name = 'GraphApiError';
   }
 
-  static async fromResponse(response: Response, label = 'Graph API error', request?: string): Promise<GraphApiError> {
+  static async fromResponse(
+    response: Response,
+    label = 'Graph API error',
+    request?: string,
+  ): Promise<GraphApiError> {
     const body = await response.text();
     const graphError = parseGraphError(body);
     const details = [request, graphError?.code, graphError?.message].filter(Boolean).join(' | ');
@@ -125,7 +129,11 @@ async function fetchGraph(
   });
 
   if (!response.ok) {
-    throw await GraphApiError.fromResponse(response, 'Graph API error', `${options.method ?? 'GET'} ${path}`);
+    throw await GraphApiError.fromResponse(
+      response,
+      'Graph API error',
+      `${options.method ?? 'GET'} ${path}`,
+    );
   }
 
   return response;
@@ -148,7 +156,10 @@ async function withGraphRetries<T>(perform: () => Promise<T>): Promise<T> {
 }
 
 function isRetryableGraphError(error: unknown): boolean {
-  return error instanceof GraphApiError && (error.status === 429 || error.status >= 500 || isMailAuthError(error));
+  return (
+    error instanceof GraphApiError &&
+    (error.status === 429 || error.status >= 500 || isMailAuthError(error))
+  );
 }
 
 function nextRetryDelayMs(error: unknown, attempt: number): number {
@@ -198,7 +209,10 @@ async function performUploadChunk(
   if (response.status === 201) {
     const attachmentId = extractAttachmentIdFromLocation(response.headers.get('Location'));
     if (!attachmentId) {
-      throw new GraphApiError('Upload session completed without an attachment id in the Location header', response.status);
+      throw new GraphApiError(
+        'Upload session completed without an attachment id in the Location header',
+        response.status,
+      );
     }
     return { status: 'completed', attachmentId };
   }

@@ -45,18 +45,10 @@ The installer runs the base compose file plus `docker/docker-compose.selfhost.ym
 The stack starts in order:
 
 <Steps>
-  <Step title="Data stores">
-    Postgres and Redis come up.
-  </Step>
-  <Step title="Migrate">
-    `migrate` applies the schema.
-  </Step>
-  <Step title="Seed">
-    `seed` adds the model catalog and the default agent.
-  </Step>
-  <Step title="Services">
-    The backend, worker, frontend and webbrowser start.
-  </Step>
+  <Step title="Data stores">Postgres and Redis come up.</Step>
+  <Step title="Migrate">`migrate` applies the schema.</Step>
+  <Step title="Seed">`seed` adds the model catalog and the default agent.</Step>
+  <Step title="Services">The backend, worker, frontend and webbrowser start.</Step>
 </Steps>
 
 `migrate` and `seed` run once per start and are idempotent.

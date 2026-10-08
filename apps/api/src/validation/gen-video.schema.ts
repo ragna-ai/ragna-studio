@@ -5,10 +5,7 @@ import { paginationSchema } from './pagination.schema';
 
 export const validGenVideoListQuery = myzValidator('query', paginationSchema);
 
-export const validGenVideoIdParam = myzValidator(
-  'param',
-  z.object({ genVideoId: z.uuidv7() }),
-);
+export const validGenVideoIdParam = myzValidator('param', z.object({ genVideoId: z.uuidv7() }));
 
 // Same ownership split as gen_videos.frameOrigin:
 // a 'genImage' frame references another workspace image the

@@ -90,7 +90,11 @@ function matchScheduleConfig(config: TriggerConfig) {
     };
   }
 
-  return { ...fallback, preset: 'custom' as Preset, customCron: cronExpression };
+  return {
+    ...fallback,
+    preset: 'custom' as Preset,
+    customCron: cronExpression,
+  };
 }
 
 // Refs
@@ -130,7 +134,8 @@ const kind = computed({
 });
 
 const timeOfDay = computed({
-  get: () => `${String(hour.value).padStart(2, '0')}:${String(minute.value).padStart(2, '0')}`,
+  get: () =>
+    `${String(hour.value).padStart(2, '0')}:${String(minute.value).padStart(2, '0')}`,
   set: (value: string) => {
     const [newHour, newMinute] = value.split(':').map(Number);
     hour.value = newHour ?? 0;
@@ -175,14 +180,20 @@ watch([cron, timezone], ([newCron, newTimezone]) => {
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.kind.label') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.trigger.kind.label')
+      }}</Label>
       <Select v-model="kind">
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="manual">{{ t('workflow.trigger.kind.manual') }}</SelectItem>
-          <SelectItem value="schedule">{{ t('workflow.trigger.kind.schedule') }}</SelectItem>
+          <SelectItem value="manual">{{
+            t('workflow.trigger.kind.manual')
+          }}</SelectItem>
+          <SelectItem value="schedule">{{
+            t('workflow.trigger.kind.schedule')
+          }}</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -193,13 +204,19 @@ watch([cron, timezone], ([newCron, newTimezone]) => {
 
     <template v-else>
       <div>
-        <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.preset.label') }}</Label>
+        <Label class="mb-2 block text-sm font-medium">{{
+          t('workflow.trigger.preset.label')
+        }}</Label>
         <Select v-model="preset">
           <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="presetOption in PRESETS" :key="presetOption" :value="presetOption">
+            <SelectItem
+              v-for="presetOption in PRESETS"
+              :key="presetOption"
+              :value="presetOption"
+            >
               {{ t(`workflow.trigger.preset.${presetOption}`) }}
             </SelectItem>
           </SelectContent>
@@ -207,12 +224,16 @@ watch([cron, timezone], ([newCron, newTimezone]) => {
       </div>
 
       <div v-if="preset === 'daily' || preset === 'weekly'">
-        <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.time') }}</Label>
+        <Label class="mb-2 block text-sm font-medium">{{
+          t('workflow.trigger.time')
+        }}</Label>
         <Input type="time" v-model="timeOfDay" />
       </div>
 
       <div v-if="preset === 'weekly'">
-        <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.weekday.label') }}</Label>
+        <Label class="mb-2 block text-sm font-medium">{{
+          t('workflow.trigger.weekday.label')
+        }}</Label>
         <Select v-model="weekday">
           <SelectTrigger class="w-full">
             <SelectValue />
@@ -226,7 +247,9 @@ watch([cron, timezone], ([newCron, newTimezone]) => {
       </div>
 
       <div v-if="preset === 'custom'">
-        <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.cron.label') }}</Label>
+        <Label class="mb-2 block text-sm font-medium">{{
+          t('workflow.trigger.cron.label')
+        }}</Label>
         <Input v-model="customCron" placeholder="*/15 * * * *" />
         <p v-if="!isCronValid" class="mt-1 text-xs text-destructive">
           {{ t('workflow.trigger.cron.invalid') }}
@@ -234,23 +257,37 @@ watch([cron, timezone], ([newCron, newTimezone]) => {
       </div>
 
       <div>
-        <Label class="mb-2 block text-sm font-medium">{{ t('workflow.trigger.timezone') }}</Label>
+        <Label class="mb-2 block text-sm font-medium">{{
+          t('workflow.trigger.timezone')
+        }}</Label>
         <Select v-model="timezone">
           <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent class="max-h-64">
-            <SelectItem v-for="timezoneOption in timezoneOptions" :key="timezoneOption" :value="timezoneOption">
+            <SelectItem
+              v-for="timezoneOption in timezoneOptions"
+              :key="timezoneOption"
+              :value="timezoneOption"
+            >
               {{ timezoneOption }}
             </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div v-if="nextOccurrences.length" class="space-y-1 rounded-md border bg-muted/40 p-3">
-        <p class="text-xs font-medium text-muted-foreground">{{ t('workflow.trigger.nextRuns') }}</p>
+      <div
+        v-if="nextOccurrences.length"
+        class="space-y-1 rounded-md border bg-muted/40 p-3"
+      >
+        <p class="text-xs font-medium text-muted-foreground">
+          {{ t('workflow.trigger.nextRuns') }}
+        </p>
         <ul class="space-y-0.5 text-xs">
-          <li v-for="occurrence in nextOccurrences" :key="occurrence.toISOString()">
+          <li
+            v-for="occurrence in nextOccurrences"
+            :key="occurrence.toISOString()"
+          >
             {{ occurrenceFormatter.format(occurrence) }}
           </li>
         </ul>

@@ -64,16 +64,16 @@ request's remaining scope:
 
 ## Decisions
 
-| Question | Decision |
-| --- | --- |
-| Does the LLM (classify, draft agent) still use markdown? | Yes, unchanged. Markdown is a good format for an LLM to read and write; HTML is not. |
-| What's canonical for storage/display/compose? | `htmlBody`. The PRD rule that it's "never rendered by the UI" is formally dropped. |
-| Is `textBody` (markdown) still persisted? | Yes, unchanged, at the same ingest-time persist point. It remains the single source of truth the LLM reads; nothing re-derives markdown on demand. |
-| Compose editor | Stays Tiptap. **Built**: `createDocumentEditor` gained a `contentType` option instead of a second factory; `@tiptap/markdown` stays a dependency, just conditionally loaded per instance. |
-| `email_drafts.content` | Flips meaning from markdown to HTML. |
-| Plain-text MIME alternative | New `email_drafts.text` column. Populated by the browser's `editor.getText()` for anything typed in Tiptap; by a new small HTML-to-text helper for the two producers that never touch a browser (AI draft push, quote seeding). |
-| AI-generated drafts | Agent still outputs markdown (prompt unchanged). Worker converts it once, at push time, via the already-built `markdownToHtml`, and stores the result as `content`. |
-| Reply/forward quoting | `buildReplyQuoteMarkdown` is replaced by an HTML quote builder: a `<p>` header plus the sanitized source HTML wrapped in `<blockquote>`. |
+| Question                                                 | Decision                                                                                                                                                                                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does the LLM (classify, draft agent) still use markdown? | Yes, unchanged. Markdown is a good format for an LLM to read and write; HTML is not.                                                                                                                                            |
+| What's canonical for storage/display/compose?            | `htmlBody`. The PRD rule that it's "never rendered by the UI" is formally dropped.                                                                                                                                              |
+| Is `textBody` (markdown) still persisted?                | Yes, unchanged, at the same ingest-time persist point. It remains the single source of truth the LLM reads; nothing re-derives markdown on demand.                                                                              |
+| Compose editor                                           | Stays Tiptap. **Built**: `createDocumentEditor` gained a `contentType` option instead of a second factory; `@tiptap/markdown` stays a dependency, just conditionally loaded per instance.                                       |
+| `email_drafts.content`                                   | Flips meaning from markdown to HTML.                                                                                                                                                                                            |
+| Plain-text MIME alternative                              | New `email_drafts.text` column. Populated by the browser's `editor.getText()` for anything typed in Tiptap; by a new small HTML-to-text helper for the two producers that never touch a browser (AI draft push, quote seeding). |
+| AI-generated drafts                                      | Agent still outputs markdown (prompt unchanged). Worker converts it once, at push time, via the already-built `markdownToHtml`, and stores the result as `content`.                                                             |
+| Reply/forward quoting                                    | `buildReplyQuoteMarkdown` is replaced by an HTML quote builder: a `<p>` header plus the sanitized source HTML wrapped in `<blockquote>`.                                                                                        |
 
 ## Scope
 
@@ -266,7 +266,7 @@ already done (see "Already built") and is not a slice.
 - **B — `@repo/database`.** `email_drafts` gains a `text` column
   (`packages/database/src/schema/email.schema.ts`), `email-draft.repo.ts`'s
   `UpdateEmailDraftFields` widens to include it. `content`'s column itself
-  is unchanged (still `text('content')`); only its *meaning* flips, which
+  is unchanged (still `text('content')`); only its _meaning_ flips, which
   is a documentation/comment change, not a schema change.
 
 **Wave 2 (parallel, after wave 1 lands)**

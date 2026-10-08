@@ -117,8 +117,14 @@ function handleMoveDocument(payload: {
     </div>
 
     <template v-if="activeWorkspaceId">
-      <DocumentCreateDialog v-model:open="isCreateDialogOpen" :folders="folders" />
-      <FolderManageDialog v-model:open="isFolderManageOpen" :folders="folders" />
+      <DocumentCreateDialog
+        v-model:open="isCreateDialogOpen"
+        :folders="folders"
+      />
+      <FolderManageDialog
+        v-model:open="isFolderManageOpen"
+        :folders="folders"
+      />
     </template>
   </SectionWrapper>
 </template>

@@ -31,12 +31,12 @@ client per call (`lib/s3-client.ts`, path-style `${S3_ENDPOINT}/${bucket}`).
 
 Functions with callers outside the package:
 
-| Function | Callers |
-| --- | --- |
-| `uploadObjectBuffer` | `@repo/media` (`storeMedia`), `@repo/ai` (imagen, videogen), `social-post.service.ts` |
+| Function               | Callers                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| `uploadObjectBuffer`   | `@repo/media` (`storeMedia`), `@repo/ai` (imagen, videogen), `social-post.service.ts`        |
 | `downloadObjectBuffer` | chat, email, media, social-post-media services, `@repo/ai`, worker's agent-context processor |
-| `deleteObjects` | `@repo/media`, `media.service.ts` |
-| `getObjectStat` | `@repo/media` |
+| `deleteObjects`        | `@repo/media`, `media.service.ts`                                                            |
+| `getObjectStat`        | `@repo/media`                                                                                |
 
 `listObjects`, `deleteAllObjects`, `uploadObject` and `downloadObject` have no callers outside the package.
 
@@ -51,9 +51,9 @@ URLs like `http://localhost:3010/media/...` don't break any AI feature.
 
 ### Config
 
-| Var | Default | Meaning |
-| --- | --- | --- |
-| `STORAGE_DRIVER` | `s3` | `s3` or `local` |
+| Var                  | Default         | Meaning                            |
+| -------------------- | --------------- | ---------------------------------- |
+| `STORAGE_DRIVER`     | `s3`            | `s3` or `local`                    |
 | `STORAGE_LOCAL_PATH` | `/data/storage` | Root folder for the `local` driver |
 
 With `local`:
@@ -159,8 +159,8 @@ New tests:
 
 ## Open questions
 
-| Question | Notes |
-| --- | --- |
-| Folder name defaults | `images` and `documents` when the `S3_*_BUCKET_NAME` vars are empty, or require them? |
-| Rename the bucket-name vars | `S3_IMAGES_BUCKET_NAME` reads oddly for a folder. A rename needs a migration path for existing `.env` files. Proposal: keep the names for now. |
-| Removing the four unused functions | Belongs here because it shrinks the driver interface. Could also be its own small PR first. |
+| Question                           | Notes                                                                                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Folder name defaults               | `images` and `documents` when the `S3_*_BUCKET_NAME` vars are empty, or require them?                                                          |
+| Rename the bucket-name vars        | `S3_IMAGES_BUCKET_NAME` reads oddly for a folder. A rename needs a migration path for existing `.env` files. Proposal: keep the names for now. |
+| Removing the four unused functions | Belongs here because it shrinks the driver interface. Could also be its own small PR first.                                                    |

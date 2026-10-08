@@ -109,17 +109,17 @@ See [all features](specs/features.md).
 
 ## Supported providers
 
-| Area | Providers |
-| --- | --- |
+| Area            | Providers                                                                |
+| --------------- | ------------------------------------------------------------------------ |
 | Chat and agents | Anthropic, OpenAI, Google (GenAI and Vertex), Mistral, LM Studio (local) |
-| Embeddings | OpenAI |
-| Images | FLUX (Black Forest Labs), OpenAI, Imagen |
-| Video | FLUX 3 video, Veo |
-| Web search | SerpAPI |
-| Email | Gmail, Outlook |
-| Sign-in | Google, Microsoft |
-| Database | PostgreSQL 18 with pgvector |
-| File storage | Any S3-compatible storage (Cloudflare R2, AWS S3, ...) |
+| Embeddings      | OpenAI                                                                   |
+| Images          | FLUX (Black Forest Labs), OpenAI, Imagen                                 |
+| Video           | FLUX 3 video, Veo                                                        |
+| Web search      | SerpAPI                                                                  |
+| Email           | Gmail, Outlook                                                           |
+| Sign-in         | Google, Microsoft                                                        |
+| Database        | PostgreSQL 18 with pgvector                                              |
+| File storage    | Any S3-compatible storage (Cloudflare R2, AWS S3, ...)                   |
 
 ## Privacy
 
@@ -128,13 +128,13 @@ It only reaches the services you configure, such as your LLM provider, storage, 
 
 ## Documentation
 
-| Document | Start here when you need |
-| --- | --- |
-| [Self-hosting](https://docs.ragna.io/self-hosting/) | Requirements, optional providers, and how the stack starts. |
-| [Features](specs/features.md) | The full list of what ships in the box. |
-| [Development](specs/development.md) | Running from source, local schema changes, and tests. |
-| [Architecture](specs/architecture.md) | The system diagram, repository layout, and stack. |
-| [Design docs](specs/README.md) | PRDs per feature area, with a generated [status index](specs/INDEX.md). |
+| Document                                            | Start here when you need                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------- |
+| [Self-hosting](https://docs.ragna.io/self-hosting/) | Requirements, optional providers, and how the stack starts.             |
+| [Features](specs/features.md)                       | The full list of what ships in the box.                                 |
+| [Development](specs/development.md)                 | Running from source, local schema changes, and tests.                   |
+| [Architecture](specs/architecture.md)               | The system diagram, repository layout, and stack.                       |
+| [Design docs](specs/README.md)                      | PRDs per feature area, with a generated [status index](specs/INDEX.md). |
 
 ## Contributing
 

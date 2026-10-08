@@ -60,10 +60,7 @@ const handleDeleteAgent = async (agentId: string) => {
       <template #bottom> </template>
     </Heading>
     <div v-if="data?.agents" class="px-5">
-      <AgentManyTable
-        :agents="data.agents"
-        @delete-agent="handleDeleteAgent"
-      />
+      <AgentManyTable :agents="data.agents" @delete-agent="handleDeleteAgent" />
       <div class="pb-10">
         <!-- Pagination Controls -->
         <PaginateControls

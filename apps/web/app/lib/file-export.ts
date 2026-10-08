@@ -22,7 +22,9 @@ export function buildExportFilename(title: string, extension: string): string {
   return `${slugify(title)}-${today}.${extension}`;
 }
 
-export function filenameFromContentDisposition(header: string | null): string | null {
+export function filenameFromContentDisposition(
+  header: string | null,
+): string | null {
   if (!header) {
     return null;
   }

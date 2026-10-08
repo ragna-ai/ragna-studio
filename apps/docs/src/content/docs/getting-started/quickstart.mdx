@@ -20,7 +20,10 @@ This method uses Docker. Docker runs RAGNA Studio in self-contained packages, so
 You don't need to know Docker to follow this guide. Just have it installed and running in the background.
 
 <Aside type="note" title="Docker requirements">
-  The install command needs the `docker compose` v2 plugin, not the older standalone `docker-compose` binary. It also checks that the Docker daemon is running. Using Podman, Colima or another Docker-compatible engine? Install the `docker` CLI with the compose plugin and point `DOCKER_HOST` at the engine's socket.
+  The install command needs the `docker compose` v2 plugin, not the older standalone
+  `docker-compose` binary. It also checks that the Docker daemon is running. Using Podman, Colima or
+  another Docker-compatible engine? Install the `docker` CLI with the compose plugin and point
+  `DOCKER_HOST` at the engine's socket.
 </Aside>
 
 The command also uses `curl` and `openssl`. Most systems already have both. Have these ready, the script asks for them:
@@ -42,34 +45,36 @@ The script:
     It checks that Docker is installed and running, and tells you what's missing if not.
   </Step>
   <Step title="Creates a folder">
-    It creates a `ragna-studio` folder in your current folder. It downloads the compose files of the latest release into it. Set `RAGNA_DIR` to use another folder.
+    It creates a `ragna-studio` folder in your current folder. It downloads the compose files of the
+    latest release into it. Set `RAGNA_DIR` to use another folder.
   </Step>
   <Step title="Writes the settings">
-    It creates `.env` with generated secrets and pins the release as `RAGNA_VERSION`. Then it asks for your domains (press Enter for localhost), OAuth client, storage (press Enter to skip) and AI keys.
+    It creates `.env` with generated secrets and pins the release as `RAGNA_VERSION`. Then it asks
+    for your domains (press Enter for localhost), OAuth client, storage (press Enter to skip) and AI
+    keys.
   </Step>
-  <Step title="Starts RAGNA Studio">
-    It pulls the images of that release and starts the stack.
-  </Step>
+  <Step title="Starts RAGNA Studio">It pulls the images of that release and starts the stack.</Step>
 </Steps>
 
 Then open [localhost:3000](http://localhost:3000). If something goes wrong, see [Troubleshooting](/self-hosting/troubleshooting).
 
 <Aside type="caution" title="The first start takes a while">
-  The script downloads several images and sets up the database. It prints the URL only once every service is ready.
+  The script downloads several images and sets up the database. It prints the URL only once every
+  service is ready.
 </Aside>
 
 If a setting is missing, the script lists it and stops. Fill it in `ragna-studio/.env` and run the command again from the same folder. Running it again is safe: it keeps your `.env` and data, and starts the stack with your current settings. The [environment variables](/reference/environment-variables) reference lists every setting.
 
 ## What's included
 
-| Service | What it does |
-| --- | --- |
-| Frontend | The web app on port 3000 |
-| Backend | The API on port 3010 |
-| Worker | Runs background jobs, for example image generation and document indexing |
-| Webbrowser | Fetches web pages for agents |
-| Postgres | Stores your data, including vector search for documents |
-| Redis | Queues the background jobs |
+| Service    | What it does                                                             |
+| ---------- | ------------------------------------------------------------------------ |
+| Frontend   | The web app on port 3000                                                 |
+| Backend    | The API on port 3010                                                     |
+| Worker     | Runs background jobs, for example image generation and document indexing |
+| Webbrowser | Fetches web pages for agents                                             |
+| Postgres   | Stores your data, including vector search for documents                  |
+| Redis      | Queues the background jobs                                               |
 
 Only the frontend and backend have ports, and they listen on `127.0.0.1` only. All other services stay inside the Docker network. To serve RAGNA Studio to others, follow [Self-hosting](/self-hosting).
 
@@ -77,12 +82,12 @@ Only the frontend and backend have ports, and they listen on `127.0.0.1` only. A
 
 Run these from the folder that contains `ragna-studio`.
 
-| Task | Command |
-| --- | --- |
-| Stop | `docker compose -p ragna_studio down` |
-| Start again | `curl -fsSL https://get.ragna.io \| sh` |
-| Show logs | `docker compose -p ragna_studio logs -f` |
-| Upgrade | `curl -fsSL https://get.ragna.io \| sh -s -- --upgrade` |
+| Task                          | Command                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| Stop                          | `docker compose -p ragna_studio down`                                           |
+| Start again                   | `curl -fsSL https://get.ragna.io \| sh`                                         |
+| Show logs                     | `docker compose -p ragna_studio logs -f`                                        |
+| Upgrade                       | `curl -fsSL https://get.ragna.io \| sh -s -- --upgrade`                         |
 | Uninstall and delete all data | `docker compose -p ragna_studio down -v`, then delete the `ragna-studio` folder |
 
 Stopping keeps your data in the Docker volumes. Uninstalling deletes it.
@@ -93,10 +98,10 @@ An upgrade moves `RAGNA_VERSION` in `.env` to the latest release. It refreshes t
 
 ## Options
 
-| Option | What it does |
-| --- | --- |
-| `--upgrade` | Moves an existing install to the latest release |
-| `--help` | Lists the options |
+| Option      | What it does                                                                 |
+| ----------- | ---------------------------------------------------------------------------- |
+| `--upgrade` | Moves an existing install to the latest release                              |
+| `--help`    | Lists the options                                                            |
 | `RAGNA_DIR` | Environment variable. Installs into this folder instead of `./ragna-studio`. |
 
 Pass options after `sh -s --`, for example `curl -fsSL https://get.ragna.io | sh -s -- --help`.

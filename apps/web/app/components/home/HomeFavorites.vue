@@ -16,7 +16,7 @@ const hasFavoriteAssistants = computed(
 <template>
   <div v-if="hasFavoriteAssistants" class="flex flex-col">
     <div class="flex items-center space-x-2 pb-4">
-      <StarIcon class="stroke-1.5 size-5" />
+      <StarIcon class="size-5 stroke-1.5" />
       <h2 class="text-2xl font-semibold">Favorites</h2>
     </div>
     <div class="flex flex-wrap gap-4 pb-4">

@@ -8,7 +8,9 @@ const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 // every other style (bold/italic/code) is
 // formatting the text writer intentionally drops.
 function spansToText(spans: InlineSpan[]): string {
-  return spans.map((span) => (span.linkHref ? `${span.text} (${span.linkHref})` : span.text)).join('');
+  return spans
+    .map((span) => (span.linkHref ? `${span.text} (${span.linkHref})` : span.text))
+    .join('');
 }
 
 // A list item's own text lives in its `text`/`paragraph` content tokens; a
@@ -16,13 +18,23 @@ function spansToText(spans: InlineSpan[]): string {
 // `item.tokens` for a loose list item).
 function listItemText(item: Tokens.ListItem): string {
   return item.tokens
-    .filter((token): token is Tokens.Text | Tokens.Paragraph => token.type === 'text' || token.type === 'paragraph')
+    .filter(
+      (token): token is Tokens.Text | Tokens.Paragraph =>
+        token.type === 'text' || token.type === 'paragraph',
+    )
     .map((token) => spansToText(flattenInline(token.tokens)))
     .join(' ');
 }
 
-function listItemLines(list: Tokens.List, item: Tokens.ListItem, index: number, depth: number): string[] {
-  const marker = list.ordered ? `${(typeof list.start === 'number' ? list.start : 1) + index}.` : '-';
+function listItemLines(
+  list: Tokens.List,
+  item: Tokens.ListItem,
+  index: number,
+  depth: number,
+): string[] {
+  const marker = list.ordered
+    ? `${(typeof list.start === 'number' ? list.start : 1) + index}.`
+    : '-';
   const indent = '  '.repeat(depth);
   const nestedLists = item.tokens.filter((token): token is Tokens.List => token.type === 'list');
 
@@ -41,7 +53,9 @@ function listLines(list: Tokens.List, depth: number): string[] {
 }
 
 function tableLines(table: Tokens.Table): string[] {
-  const headerLine = table.header.map((cell) => spansToText(flattenInline(cell.tokens))).join(' | ');
+  const headerLine = table.header
+    .map((cell) => spansToText(flattenInline(cell.tokens)))
+    .join(' | ');
   const rowLines = table.rows.map((row) =>
     row.map((cell) => spansToText(flattenInline(cell.tokens))).join(' | '),
   );

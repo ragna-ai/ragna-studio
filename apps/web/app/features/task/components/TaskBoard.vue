@@ -3,7 +3,10 @@ import type { DraggableEvent } from 'vue-draggable-plus';
 import { VueDraggable } from 'vue-draggable-plus';
 import TaskCard from '~/features/task/components/TaskCard.vue';
 import TaskQuickAddInput from '~/features/task/components/TaskQuickAddInput.vue';
-import { useCreateTask, useMoveTask } from '~/features/task/composables/useTaskApi';
+import {
+  useCreateTask,
+  useMoveTask,
+} from '~/features/task/composables/useTaskApi';
 import { STATUS_COLUMNS } from '~/features/task/lib/task-display';
 import type { TaskStatus, TaskWithBoardInfo } from '~/features/task/types';
 
@@ -25,7 +28,9 @@ type ColumnState = Record<TaskStatus, TaskWithBoardInfo[]>;
 function buildColumns(tasks: TaskWithBoardInfo[]): ColumnState {
   const columns = {} as ColumnState;
   for (const column of STATUS_COLUMNS) {
-    columns[column.value] = tasks.filter((task) => task.status === column.value);
+    columns[column.value] = tasks.filter(
+      (task) => task.status === column.value,
+    );
   }
   return columns;
 }
@@ -68,7 +73,11 @@ function handleDragEnd(event: DraggableEvent<TaskWithBoardInfo>) {
     const afterTask = columnTasks[newIndex - 1];
 
     moveTask(
-      { taskId: movedTask.id, status: toStatus, afterTaskId: afterTask?.id ?? null },
+      {
+        taskId: movedTask.id,
+        status: toStatus,
+        afterTaskId: afterTask?.id ?? null,
+      },
       {
         onError: () => {
           for (const column of STATUS_COLUMNS) {
@@ -94,7 +103,9 @@ function handleQuickAdd(status: TaskStatus, title: string) {
     >
       <div class="flex items-center justify-between px-3 py-2">
         <p class="text-sm font-semibold">{{ t(column.labelKey) }}</p>
-        <span class="text-xs text-muted-foreground">{{ columns[column.value].length }}</span>
+        <span class="text-xs text-muted-foreground">{{
+          columns[column.value].length
+        }}</span>
       </div>
 
       <VueDraggable
@@ -107,7 +118,11 @@ function handleQuickAdd(status: TaskStatus, title: string) {
         ghost-class="opacity-40"
         @end="handleDragEnd"
       >
-        <TaskCard v-for="task in columns[column.value]" :key="task.id" :task="task" />
+        <TaskCard
+          v-for="task in columns[column.value]"
+          :key="task.id"
+          :task="task"
+        />
       </VueDraggable>
 
       <div class="px-3 pb-3">

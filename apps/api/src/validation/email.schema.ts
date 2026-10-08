@@ -279,9 +279,12 @@ const repeatedStringField = z.preprocess((value) => {
 // `files` has the same single-vs-array ambiguity as the string fields
 // above, but for uploads. Unlike the old parseFiles helper, a non-File
 // entry now fails validation instead of being silently filtered out.
-const repeatedFileField = z.preprocess((value) => {
-  return value === undefined ? [] : Array.isArray(value) ? value : [value];
-}, z.array(z.instanceof(File)));
+const repeatedFileField = z.preprocess(
+  (value) => {
+    return value === undefined ? [] : Array.isArray(value) ? value : [value];
+  },
+  z.array(z.instanceof(File)),
+);
 
 // Single-value optional fields (html/text/content/threadId/...). Mirrors
 // the old parseOptionalString helper: a non-string or empty-string value

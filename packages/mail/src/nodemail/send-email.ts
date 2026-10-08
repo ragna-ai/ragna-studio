@@ -1,7 +1,7 @@
-import { render } from '@maizzle/framework'
-import { config } from '@repo/config'
-import { getTemplate } from '../templates'
-import { getTransporter } from './transporter'
+import { render } from '@maizzle/framework';
+import { config } from '@repo/config';
+import { getTemplate } from '../templates';
+import { getTransporter } from './transporter';
 
 export async function sendEmail({
   templateId,
@@ -9,22 +9,22 @@ export async function sendEmail({
   to,
   subject,
 }: {
-  templateId: string
-  variables: Record<string, unknown>
-  to: string
-  subject: string
+  templateId: string;
+  variables: Record<string, unknown>;
+  to: string;
+  subject: string;
 }) {
-  const transporter = await getTransporter()
+  const transporter = await getTransporter();
 
   if (!transporter) {
-    throw new Error('Email transporter is not configured')
+    throw new Error('Email transporter is not configured');
   }
 
-  const { path, vars } = getTemplate(templateId, variables)
+  const { path, vars } = getTemplate(templateId, variables);
   const { html, plaintext } = await render(path, {
     plaintext: true,
     ...vars,
-  })
+  });
 
   return transporter.sendMail({
     from: config.mailFrom,
@@ -32,5 +32,5 @@ export async function sendEmail({
     subject,
     text: plaintext,
     html,
-  })
+  });
 }

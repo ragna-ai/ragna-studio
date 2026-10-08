@@ -103,7 +103,9 @@ function inputValueOf(event: Event): string {
                 <PlugIcon class="size-3 stroke-1.5" />
               </Badge>
             </TooltipTrigger>
-            <TooltipContent>{{ t('dataset.grid.writtenByMcp') }}</TooltipContent>
+            <TooltipContent>{{
+              t('dataset.grid.writtenByMcp')
+            }}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

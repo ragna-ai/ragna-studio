@@ -14,7 +14,13 @@ export const TASK_STATUSES = [
 ] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export const TASK_PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'] as const;
+export const TASK_PRIORITIES = [
+  'none',
+  'urgent',
+  'high',
+  'medium',
+  'low',
+] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 export interface TaskLabel {

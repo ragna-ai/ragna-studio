@@ -1,7 +1,12 @@
 import { createNotification } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, NOTIFICATIONS_QUEUE, NOTIFY_USER_JOB, parseNotifyUserJob } from '@repo/queue';
+import {
+  createWorker,
+  NOTIFICATIONS_QUEUE,
+  NOTIFY_USER_JOB,
+  parseNotifyUserJob,
+} from '@repo/queue';
 
 export function registerNotificationJobProcessor(): Worker<any, any, string> {
   const notificationWorker = createWorker({

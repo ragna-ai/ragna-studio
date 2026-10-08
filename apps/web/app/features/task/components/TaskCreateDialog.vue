@@ -70,13 +70,21 @@ const form = useForm({
               </Label>
               <Select
                 :model-value="state.value"
-                @update:model-value="(v) => { if (isTaskStatus(v)) field.handleChange(v); }"
+                @update:model-value="
+                  (v) => {
+                    if (isTaskStatus(v)) field.handleChange(v);
+                  }
+                "
               >
                 <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="column in STATUS_COLUMNS" :key="column.value" :value="column.value">
+                  <SelectItem
+                    v-for="column in STATUS_COLUMNS"
+                    :key="column.value"
+                    :value="column.value"
+                  >
                     {{ t(column.labelKey) }}
                   </SelectItem>
                 </SelectContent>

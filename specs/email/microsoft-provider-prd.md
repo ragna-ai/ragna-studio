@@ -15,16 +15,16 @@ star, read/unread, search.
 
 ## Decisions (Sven, 2026-09-24)
 
-| # | Topic | Decision |
-|---|-------|----------|
-| 1 | Accounts per user | One mailbox per user, Gmail **or** Outlook. Provider is picked at connect time. Switching means disconnect, then connect the other one. |
-| 2 | Tenant | Keep the current `MICROSOFT_TENANT_ID` config. No auth change. Accounts outside it (e.g. personal outlook.com under `organizations`) can't connect. |
-| 3 | Synced folders | Well-known folders only: Inbox, Sent Items, Deleted Items, Junk Email, Archive. Drafts come through `listDrafts`, not delta. |
-| 4 | Search | Native passthrough. Gmail keeps Gmail syntax. Outlook gets Graph `$search` (KQL). The search hint text is provider-specific. |
-| 5 | Folder state | New provider-neutral `email_messages.folder` column. All folder filters move off Gmail label ids, for Gmail too. |
-| 6 | Outlook categories | Read-only label chips, same as Gmail user labels today. No write-back. |
-| 7 | Attachments | 25 MB total, same as Gmail. Graph upload sessions for files over 3 MB. |
-| 8 | Focused/Other | Ignored. One inbox. Our own AI categories do the sorting. |
+| #   | Topic              | Decision                                                                                                                                            |
+| --- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Accounts per user  | One mailbox per user, Gmail **or** Outlook. Provider is picked at connect time. Switching means disconnect, then connect the other one.             |
+| 2   | Tenant             | Keep the current `MICROSOFT_TENANT_ID` config. No auth change. Accounts outside it (e.g. personal outlook.com under `organizations`) can't connect. |
+| 3   | Synced folders     | Well-known folders only: Inbox, Sent Items, Deleted Items, Junk Email, Archive. Drafts come through `listDrafts`, not delta.                        |
+| 4   | Search             | Native passthrough. Gmail keeps Gmail syntax. Outlook gets Graph `$search` (KQL). The search hint text is provider-specific.                        |
+| 5   | Folder state       | New provider-neutral `email_messages.folder` column. All folder filters move off Gmail label ids, for Gmail too.                                    |
+| 6   | Outlook categories | Read-only label chips, same as Gmail user labels today. No write-back.                                                                              |
+| 7   | Attachments        | 25 MB total, same as Gmail. Graph upload sessions for files over 3 MB.                                                                              |
+| 8   | Focused/Other      | Ignored. One inbox. Our own AI categories do the sorting.                                                                                           |
 
 ## Non-goals
 
@@ -72,14 +72,14 @@ folder, Archived and Sent are disjoint.
 
 **API view filters** (`resolveFolderFilter` in `email.service.ts`):
 
-| View | `folder` (some message matches) | `excludeFolders` (no message may match) |
-|------|------|------|
-| inbox | inbox | trash, spam, draft |
-| archived | archive | inbox, trash, spam, draft |
-| trashed | trash | none |
-| sent | sent | none |
-| starred | none (`isStarred: true`) | none |
-| default (category/label/none) | none | trash, spam, draft |
+| View                          | `folder` (some message matches) | `excludeFolders` (no message may match) |
+| ----------------------------- | ------------------------------- | --------------------------------------- |
+| inbox                         | inbox                           | trash, spam, draft                      |
+| archived                      | archive                         | inbox, trash, spam, draft               |
+| trashed                       | trash                           | none                                    |
+| sent                          | sent                            | none                                    |
+| starred                       | none (`isStarred: true`)        | none                                    |
+| default (category/label/none) | none                            | trash, spam, draft                      |
 
 This is a 1:1 translation of today's label-based filters. Only the
 predicate changes, from label containment to the folder column.

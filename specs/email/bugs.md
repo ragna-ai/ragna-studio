@@ -12,7 +12,7 @@ testing of the first working build.
    grow fluently.~~ Fixed: the editor auto-grows and the surrounding
    container scrolls, instead of a fixed-height inner scroll box.
 3. ~~If email is opened (body download successful) then it shall be marked
-   as read.~~ Fixed, but *not* the way it was first built: marking read is
+   as read.~~ Fixed, but _not_ the way it was first built: marking read is
    an explicit client-side mutation on open, not a side effect of
    `GET /email/thread/:threadId`. A GET that mutates is not idempotent, so
    every refetch silently undid an explicit "mark unread". A test now
@@ -46,13 +46,13 @@ Found during Sven's first manual test of
    loop: an HTML newsletter turndown-converts into markdown containing a
    single **80,520-character line**, server-side quote seeding put it
    verbatim into the draft's `content`, and hydrating that into an
-   *editable* Tiptap instance blocks the main thread indefinitely. The
+   _editable_ Tiptap instance blocks the main thread indefinitely. The
    read-only thread view renders the same text fine, which is why the
    thread opened at all. Two fixes: `buildReplyQuoteMarkdown` now
    hard-wraps at 1,000 chars (before prefixing `> `, so the blockquote
    stays valid) and caps the quoted body at 10,000; `EmailComposer` refuses
    to mount the editable editor for content with a line over 5,000 chars or
-   over 100,000 total, rendering it read-only with autosave *and* send
+   over 100,000 total, rendering it read-only with autosave _and_ send
    disabled. The second fix is not redundant: drafts reconciled from the
    user's real Gmail account carry whatever body Gmail has, and truncating
    or re-serializing those would autosave the damage back into the user's
@@ -90,7 +90,7 @@ also records the delete, `messages.get` 404s. That error was uncaught, so
 it propagated through `syncFromCursor` → `applyIncrementalSync` →
 `syncEmailAccount`, which sets the account's `syncState` to `'error'` and
 rethrows so BullMQ retries the job. Because `syncCursor` is only persisted
-*after* a sync succeeds (`email-sync.service.ts`, `applyIncrementalSync`),
+_after_ a sync succeeds (`email-sync.service.ts`, `applyIncrementalSync`),
 every retry re-fetched the exact same history range and hit the exact same
 already-deleted message, wedging that account's sync permanently until
 someone intervened.~~ Fixed: `resolveChanges` now catches a 404 from
@@ -118,7 +118,7 @@ message.~~ Fixed: `downloadEmailAttachmentForUser`
 (`apps/api/src/services/email.service.ts`) did its own live
 `fetchMessage(id, 'full')` and matched the client-supplied `attachmentId`
 against that fresh fetch's attachment list with strict equality. The
-`attachmentId` on the client had been read from an *earlier*, separate
+`attachmentId` on the client had been read from an _earlier_, separate
 `GET /email/message/:messageId/attachments` call — a second Gmail
 `messages.get`. Gmail's `attachmentId` is not documented as stable across
 separate fetches of the same message; it's scoped to a single API response,
@@ -132,8 +132,8 @@ not found"}` exactly, ruling out a routing 404 or a "message not found"
 Fix: `MailAttachmentMeta` (`packages/mail/src/provider/mail-provider.ts`)
 now exposes two separate ids instead of one:
 
-- `partId` — the MIME part's id, documented by Google as *"The immutable ID
-  of the message part"*. Safe to hand to a client and have it come back in
+- `partId` — the MIME part's id, documented by Google as _"The immutable ID
+  of the message part"_. Safe to hand to a client and have it come back in
   a later request.
 - `attachmentId` — Gmail's opaque content-fetch token. Not safe to persist
   or round-trip; must be re-resolved from a live fetch immediately before
@@ -143,7 +143,7 @@ The download route is now keyed on `partId`
 (`/email/message/:messageId/attachment/:partId`).
 `downloadEmailAttachmentForUser` still does one live `fetchMessage` (same
 as before — no extra round trip), matches by `partId` instead of
-`attachmentId`, and then uses *that same fetch's* `meta.attachmentId` to
+`attachmentId`, and then uses _that same fetch's_ `meta.attachmentId` to
 call `provider.getAttachment`, never the id the client sent. The frontend
 (`useDownloadEmailAttachment`, `EmailMessageAttachments.vue`) now keys and
 downloads by `attachment.partId`.
@@ -152,14 +152,14 @@ Research backing the fix (see `specs/email/bugs.md` git history for the
 full source list if needed):
 
 - Gmail API `Message` resource reference documents `MessagePart.partId` as
-  *"The immutable ID of the message part."*
+  _"The immutable ID of the message part."_
   ([developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages))
 - A guide dedicated to this exact question states a Gmail `attachmentId` is
   "scoped to a single message and is not globally unique" and warns:
   "Never cache it as a permanent reference — fetch it fresh from the
   message, then download." It recommends persisting `messageId` + filename
-  + content hash instead, never the attachment id itself.
-  ([cli.nylas.com/guides/gmail-attachment-id-stability](https://cli.nylas.com/guides/gmail-attachment-id-stability))
+  - content hash instead, never the attachment id itself.
+    ([cli.nylas.com/guides/gmail-attachment-id-stability](https://cli.nylas.com/guides/gmail-attachment-id-stability))
 - `users.messages.attachments.get`'s reference gives the attachment `id`
   path parameter no stability or caching guidance at all, consistent with
   "read it out of a fresh fetch and use it immediately."

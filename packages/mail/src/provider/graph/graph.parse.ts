@@ -17,7 +17,11 @@ import type {
   SendMailInput,
 } from '../mail-provider';
 import { GraphApiError } from './graph.client';
-import type { GraphAttachmentMetadata, GraphWellKnownFolderIds, GraphWellKnownFolderName } from './graph.types';
+import type {
+  GraphAttachmentMetadata,
+  GraphWellKnownFolderIds,
+  GraphWellKnownFolderName,
+} from './graph.types';
 
 const FOLDER_NAME_TO_MAIL_FOLDER: Record<GraphWellKnownFolderName, MailFolder> = {
   inbox: 'inbox',
@@ -35,7 +39,10 @@ export function resolveMailFolder(
 ): MailFolder {
   if (!parentFolderId) return 'archive';
 
-  for (const [name, id] of Object.entries(wellKnownFolderIds) as [GraphWellKnownFolderName, string][]) {
+  for (const [name, id] of Object.entries(wellKnownFolderIds) as [
+    GraphWellKnownFolderName,
+    string,
+  ][]) {
     if (id === parentFolderId) return FOLDER_NAME_TO_MAIL_FOLDER[name];
   }
 
@@ -62,7 +69,10 @@ function toMailAddressList(recipients?: Recipient[] | null): MailAddress[] {
     .filter((address): address is MailAddress => address !== null);
 }
 
-export function toMailMessageMetadata(raw: Message, wellKnownFolderIds: GraphWellKnownFolderIds): MailMessageMetadata {
+export function toMailMessageMetadata(
+  raw: Message,
+  wellKnownFolderIds: GraphWellKnownFolderIds,
+): MailMessageMetadata {
   const dateSource = raw.receivedDateTime ?? raw.sentDateTime ?? raw.createdDateTime;
 
   return {
@@ -140,7 +150,9 @@ export function toMailDraftSummary(raw: Message): MailDraftSummary {
     bcc: toMailAddressList(raw.bccRecipients),
     subject: raw.subject ?? null,
     snippet: raw.bodyPreview ?? '',
-    date: new Date(requireField(raw.lastModifiedDateTime ?? raw.createdDateTime, 'lastModifiedDateTime')),
+    date: new Date(
+      requireField(raw.lastModifiedDateTime ?? raw.createdDateTime, 'lastModifiedDateTime'),
+    ),
   };
 }
 
@@ -150,16 +162,22 @@ export function toMailDraft(raw: Message, attachments: GraphAttachmentMetadata[]
 
 function toGraphRecipients(addresses: MailAddress[]): Recipient[] {
   return addresses.map((address) => ({
-    emailAddress: address.name ? { address: address.address, name: address.name } : { address: address.address },
+    emailAddress: address.name
+      ? { address: address.address, name: address.name }
+      : { address: address.address },
   }));
 }
 
 function toGraphBody(input: Pick<SendMailInput, 'html' | 'text'>): ItemBody {
-  return input.html ? { contentType: 'html', content: input.html } : { contentType: 'text', content: input.text ?? '' };
+  return input.html
+    ? { contentType: 'html', content: input.html }
+    : { contentType: 'text', content: input.text ?? '' };
 }
 
 /** PATCH body that writes `input`'s addressing/subject/body onto a message; attachments are reconciled separately. */
-export function toGraphMessagePatch(input: SendMailInput): Pick<Message, 'toRecipients' | 'ccRecipients' | 'bccRecipients' | 'subject' | 'body'> {
+export function toGraphMessagePatch(
+  input: SendMailInput,
+): Pick<Message, 'toRecipients' | 'ccRecipients' | 'bccRecipients' | 'subject' | 'body'> {
   return {
     toRecipients: toGraphRecipients(input.to),
     ccRecipients: toGraphRecipients(input.cc ?? []),

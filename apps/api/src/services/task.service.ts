@@ -1,8 +1,25 @@
-import type { Task, TaskPriority, TaskStatus, TaskWithBoardInfo, TaskWithDetails } from '@repo/database';
-import { createTask, deleteTask, getTaskById, listTasks, moveTask, updateTask } from '@repo/database';
+import type {
+  Task,
+  TaskPriority,
+  TaskStatus,
+  TaskWithBoardInfo,
+  TaskWithDetails,
+} from '@repo/database';
+import {
+  createTask,
+  deleteTask,
+  getTaskById,
+  listTasks,
+  moveTask,
+  updateTask,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 
 // Every function below runs after the workspace guard has verified the
 // caller owns `:workspaceId`; access is scoped
@@ -22,7 +39,9 @@ async function getTaskOrThrow({
   taskId: string;
   notFoundMessage?: string;
 }): Promise<TaskWithDetails> {
-  const { error, data: taskRecord } = await tryCatch(() => getTaskById({ id: taskId, workspaceId }));
+  const { error, data: taskRecord } = await tryCatch(() =>
+    getTaskById({ id: taskId, workspaceId }),
+  );
 
   if (error !== null) {
     logger.error('Failed to load task', error);
@@ -52,7 +71,9 @@ async function assertParentIsTopLevel({
   });
 
   if (parentTask.parentTaskId !== null) {
-    throw new BadRequestException('A subtask cannot itself be a parent (subtasks are one level deep)');
+    throw new BadRequestException(
+      'A subtask cannot itself be a parent (subtasks are one level deep)',
+    );
   }
 }
 

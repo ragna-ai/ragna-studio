@@ -14,7 +14,7 @@ Companion to [workflows.md](./workflows.md) (the design). This document fixes th
 8. **Idempotent retries.** Before executing a node, the engine checks for an existing completed step row for that run and node, and reuses its output.
 9. **The graph is stored in vue-flow shape** (`nodes[]` with `position` and `data`, `edges[]`). No mapping layer between canvas and DB.
 10. **`@repo/database` depends on `@repo/workflow`** so the JSON columns are typed with `.$type<WorkflowDefinition>()`. `@repo/workflow` itself depends only on `zod`.
-11. **Run job retries.** The run job is enqueued with `attempts: 3` (BullMQ's built-in exponential backoff handles the delay between attempts). A node failure only marks that *step* `failed` and rethrows; the *run* stays `running` so the retried job can resume it (completed/skipped steps are reused idempotently, the failed step gets re-run). Only the processor marks a run terminally `failed`, and only on the job's last attempt.
+11. **Run job retries.** The run job is enqueued with `attempts: 3` (BullMQ's built-in exponential backoff handles the delay between attempts). A node failure only marks that _step_ `failed` and rethrows; the _run_ stays `running` so the retried job can resume it (completed/skipped steps are reused idempotently, the failed step gets re-run). Only the processor marks a run terminally `failed`, and only on the job's last attempt.
 12. **Fail-fast enqueue.** Queues use `enableOfflineQueue: false`, so a Redis outage makes `queueAddJob` throw. The run-start endpoint catches that, best-effort marks the just-created run `failed`, and returns a 500, instead of leaving the run stuck `pending` with no job behind it.
 13. **Cancel is a status, not a job kill.** `POST /workflow/run/:runId/cancel` sets the run's status to `cancelled` while it's `pending`/`running`. The engine treats `cancelled` like the other terminal statuses on the stale-retry guard, and additionally re-checks the run's status before starting each node so a mid-flight cancel stops the run before its next node runs, without overwriting the `cancelled` status.
 
@@ -101,7 +101,7 @@ Engine (`src/workflow/engine.ts`):
 
 Processor (`src/processors/workflow.processor.ts`): wraps `executeWorkflowRun` in try/catch. On error, it checks whether this was the job's last attempt — `job.attemptsMade + 1 >= (job.opts.attempts ?? 1)` — and if so, best-effort marks the run `failed` with the error message and `finishedAt` (guarded so it never overwrites a run that's already `completed`/`failed`/`cancelled`). It always rethrows so BullMQ still records the attempt as failed and can retry. This also covers errors the engine throws outside `runNode` (run-not-found, the deadlock guard).
 
-`job.attemptsMade` is only incremented by BullMQ *after* the processor call returns or throws, so inside the processor it still reflects prior attempts, not the current one — mirroring BullMQ's own internal `shouldRetryJob` check (`attemptsMade + 1 < attempts` ⇒ retry). Verified against the installed `bullmq` version's source (`moveToFinished-14.lua` increments `atm` after the job settles; `Job.shouldRetryJob` in `job.js` compares against the pre-increment value).
+`job.attemptsMade` is only incremented by BullMQ _after_ the processor call returns or throws, so inside the processor it still reflects prior attempts, not the current one — mirroring BullMQ's own internal `shouldRetryJob` check (`attemptsMade + 1 < attempts` ⇒ retry). Verified against the installed `bullmq` version's source (`moveToFinished-14.lua` increments `atm` after the job settles; `Job.shouldRetryJob` in `job.js` compares against the pre-increment value).
 
 Executors (`src/workflow/executors/`), one per node type:
 
@@ -115,17 +115,17 @@ Executors (`src/workflow/executors/`), one per node type:
 
 `src/controllers/workflow.controller.ts`, base path `/workflow`, `authMiddleware`, validation middlewares in `middlewares/validationMiddlewares` (existing zValidator pattern), errors via `tryCatch` + exceptions, mounted in `app.ts`. Contract:
 
-| Route | Body | Response |
-| --- | --- | --- |
-| `GET /workflow` (pagination query) | | `{ workflows, meta: { totalCount } }` |
-| `POST /workflow` | `{ id?, name, description?, definition }` | `{ workflow }` |
-| `GET /workflow/:workflowId` | | `{ workflow }` |
-| `DELETE /workflow/:workflowId` | | `{ message }` |
-| `POST /workflow/:workflowId/publish` | | `{ workflow }` — 400 with `errors` when `validateWorkflowDefinition` fails |
-| `POST /workflow/:workflowId/run` | `{ input?: string }` | `{ run }` — 400 when not published; creates run row then `queueAddJob` (`attempts: 3`); on enqueue failure, best-effort marks the run `failed` and returns 500 |
-| `GET /workflow/:workflowId/runs` | | `{ runs }` latest first |
-| `GET /workflow/run/:runId` | | `{ run }` including `steps` — polled by the run view |
-| `POST /workflow/run/:runId/cancel` | | `{ run }` — 400 when the run isn't `pending`/`running`; sets status `cancelled` and `finishedAt` |
+| Route                                | Body                                      | Response                                                                                                                                                       |
+| ------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /workflow` (pagination query)   |                                           | `{ workflows, meta: { totalCount } }`                                                                                                                          |
+| `POST /workflow`                     | `{ id?, name, description?, definition }` | `{ workflow }`                                                                                                                                                 |
+| `GET /workflow/:workflowId`          |                                           | `{ workflow }`                                                                                                                                                 |
+| `DELETE /workflow/:workflowId`       |                                           | `{ message }`                                                                                                                                                  |
+| `POST /workflow/:workflowId/publish` |                                           | `{ workflow }` — 400 with `errors` when `validateWorkflowDefinition` fails                                                                                     |
+| `POST /workflow/:workflowId/run`     | `{ input?: string }`                      | `{ run }` — 400 when not published; creates run row then `queueAddJob` (`attempts: 3`); on enqueue failure, best-effort marks the run `failed` and returns 500 |
+| `GET /workflow/:workflowId/runs`     |                                           | `{ runs }` latest first                                                                                                                                        |
+| `GET /workflow/run/:runId`           |                                           | `{ run }` including `steps` — polled by the run view                                                                                                           |
+| `POST /workflow/run/:runId/cancel`   |                                           | `{ run }` — 400 when the run isn't `pending`/`running`; sets status `cancelled` and `finishedAt`                                                               |
 
 Save (`POST /workflow`) validates only the shape (`workflowDefinitionSchema`), so incomplete drafts can be saved. Structural validation (`validateWorkflowDefinition`) runs on publish and on run.
 
@@ -145,12 +145,12 @@ Save (`POST /workflow`) validates only the shape (`workflowDefinitionSchema`), s
 
 Four Sonnet subagents. Agent A ran first (foundations), then B, C, D in parallel against the contracts above.
 
-| Agent | Scope |
-| --- | --- |
+| Agent          | Scope                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------- |
 | A: foundations | `@repo/workflow` package, DB schema + relations + repos + migration, queue constant + DTO |
-| B: worker | Engine, executors, processor registration |
-| C: api | Workflow controller, validation middlewares, `app.ts` mount |
-| D: web | Canvas install, feature module, editor + run pages, nav |
+| B: worker      | Engine, executors, processor registration                                                 |
+| C: api         | Workflow controller, validation middlewares, `app.ts` mount                               |
+| D: web         | Canvas install, feature module, editor + run pages, nav                                   |
 
 Verification (type-check, runtime, commits) is handled manually afterwards, per repo convention.
 

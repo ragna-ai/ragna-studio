@@ -32,15 +32,8 @@ export async function listNotifications({
   });
 }
 
-export async function getUnreadNotificationCount({
-  userId,
-}: {
-  userId: string;
-}): Promise<number> {
-  return db.$count(
-    notification,
-    and(eq(notification.userId, userId), isNull(notification.readAt)),
-  );
+export async function getUnreadNotificationCount({ userId }: { userId: string }): Promise<number> {
+  return db.$count(notification, and(eq(notification.userId, userId), isNull(notification.readAt)));
 }
 
 export async function markNotificationRead({
@@ -59,11 +52,7 @@ export async function markNotificationRead({
   return updatedNotification || null;
 }
 
-export async function markAllNotificationsRead({
-  userId,
-}: {
-  userId: string;
-}): Promise<number> {
+export async function markAllNotificationsRead({ userId }: { userId: string }): Promise<number> {
   const updatedNotifications = await db
     .update(notification)
     .set({ readAt: new Date() })
@@ -73,11 +62,7 @@ export async function markAllNotificationsRead({
   return updatedNotifications.length;
 }
 
-export async function deleteReadNotificationsOlderThan({
-  date,
-}: {
-  date: Date;
-}): Promise<number> {
+export async function deleteReadNotificationsOlderThan({ date }: { date: Date }): Promise<number> {
   const deletedNotifications = await db
     .delete(notification)
     .where(and(isNotNull(notification.readAt), lt(notification.readAt, date)))
@@ -101,11 +86,7 @@ export async function deleteNotification({
   return deletedNotifications.length > 0;
 }
 
-export async function deleteAllNotifications({
-  userId,
-}: {
-  userId: string;
-}): Promise<number> {
+export async function deleteAllNotifications({ userId }: { userId: string }): Promise<number> {
   const deletedNotifications = await db
     .delete(notification)
     .where(eq(notification.userId, userId))

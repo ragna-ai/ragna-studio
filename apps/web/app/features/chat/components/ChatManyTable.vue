@@ -90,7 +90,11 @@ const { t } = useI18n();
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+              <Button
+                variant="outline"
+                size="icon"
+                :aria-label="t('common.actions')"
+              >
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>

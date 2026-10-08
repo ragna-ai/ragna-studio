@@ -167,7 +167,8 @@ export const wsController = new Hono()
                     userId: user.id,
                     message: messagePayload.message,
                   },
-                  (uiMsgChunk) => publishFrame(raw, { channel, type: 'chunk', payload: uiMsgChunk }),
+                  (uiMsgChunk) =>
+                    publishFrame(raw, { channel, type: 'chunk', payload: uiMsgChunk }),
                 );
                 publishFrame(raw, { channel, type: 'done' });
                 return;

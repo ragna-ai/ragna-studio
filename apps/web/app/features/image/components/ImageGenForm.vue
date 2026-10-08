@@ -46,9 +46,7 @@ const advancedOptionsOpen = ref(false);
 const referenceImagesEnabled = ref(false);
 const referenceMode = ref<ReferenceMode>('genImage');
 const selectedGenImageIds = ref<string[]>([]);
-const uploadedReferences = ref<{ mediaId: string; previewUrl: string }[]>(
-  [],
-);
+const uploadedReferences = ref<{ mediaId: string; previewUrl: string }[]>([]);
 
 const imageGenSchema = z.object({
   prompt: z.string().min(1, t('imagen.form.promptRequired')).max(5000),
@@ -430,7 +428,10 @@ watch(
             {{ t('imagen.form.referenceImages') }}
           </Label>
         </div>
-        <span v-if="referenceImagesEnabled" class="text-xs text-muted-foreground">
+        <span
+          v-if="referenceImagesEnabled"
+          class="text-xs text-muted-foreground"
+        >
           {{
             t('imagen.form.referenceImagesCount', {
               count: referenceCount,

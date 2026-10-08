@@ -20,7 +20,9 @@ export default defineNitroPlugin(async (nitroApp) => {
   const mediaOrigin = toOrigin(publicConfig.mediaUrl);
 
   const extraSources: Record<CspDirective, string[]> = {
-    'connect-src': apiOrigin ? [apiOrigin, toWebSocketUrl(apiOrigin).origin] : [],
+    'connect-src': apiOrigin
+      ? [apiOrigin, toWebSocketUrl(apiOrigin).origin]
+      : [],
     'img-src': mediaOrigin ? [mediaOrigin] : [],
     'media-src': mediaOrigin ? [mediaOrigin] : [],
   };
@@ -34,7 +36,9 @@ export default defineNitroPlugin(async (nitroApp) => {
     for (const directive of CSP_DIRECTIVES) {
       const current = csp[directive];
       if (typeof current === 'string' || current === false) continue;
-      const missing = extraSources[directive].filter((source) => !current?.includes(source));
+      const missing = extraSources[directive].filter(
+        (source) => !current?.includes(source),
+      );
       csp[directive] = [...(current ?? []), ...missing];
     }
   });

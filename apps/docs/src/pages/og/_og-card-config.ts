@@ -9,7 +9,7 @@
  * inside `src/pages/` to be next to its consumers, but it's not a route.
  */
 
-import type { OGImageOptions } from "astro-og-canvas";
+import type { OGImageOptions } from 'astro-og-canvas';
 
 export const ogCardConfig = {
   // RAGNA brand: navy-950 to navy-900, teal-500 accent edge.
@@ -17,24 +17,24 @@ export const ogCardConfig = {
     [8, 21, 35],
     [12, 27, 46],
   ],
-  border: { color: [25, 184, 166], width: 4, side: "inline-start" },
+  border: { color: [25, 184, 166], width: 4, side: 'inline-start' },
   padding: 96,
-  fonts: ["./public/fonts/Geist-SemiBold.ttf"],
+  fonts: ['./public/fonts/Geist-SemiBold.ttf'],
   font: {
     title: {
       color: [244, 247, 251],
       size: 64,
-      weight: "SemiBold",
-      families: ["Geist"],
+      weight: 'SemiBold',
+      families: ['Geist'],
       lineHeight: 1.1,
     },
     description: {
       color: [159, 184, 212],
       size: 32,
-      weight: "SemiBold",
-      families: ["Geist"],
+      weight: 'SemiBold',
+      families: ['Geist'],
       lineHeight: 1.3,
     },
   },
-  format: "PNG",
+  format: 'PNG',
 } satisfies Partial<OGImageOptions>;

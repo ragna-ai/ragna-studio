@@ -46,7 +46,9 @@ export interface UseTaskDescriptionEditorOptions {
  * exposes the same controller shape so it can drive the document feature's
  * EditorMenu.vue toolbar unchanged.
  */
-export function useTaskDescriptionEditor(options: UseTaskDescriptionEditorOptions) {
+export function useTaskDescriptionEditor(
+  options: UseTaskDescriptionEditorOptions,
+) {
   const editor = shallowRef<Editor>();
 
   onMounted(() => {

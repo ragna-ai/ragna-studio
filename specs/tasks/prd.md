@@ -17,13 +17,13 @@ and can be assigned to tasks.
 
 Settled 2026-07-21. Do not re-open.
 
-| Decision        | Choice                                                                                             |
-| --------------- | -------------------------------------------------------------------------------------------------- |
-| **Columns**     | Fixed Linear-style statuses: Backlog, Todo, In Progress, In Review, Done, Canceled. Enum, no columns table.    |
-| **Boards**      | One board per workspace. The workspace *is* the board. No board entity.                             |
-| **Agent role**  | CRUD tools in chat, plus tasks are assignable to agents (`assignedAgentId`). Assignment is metadata only in v1; autonomous execution is a later phase. |
-| **V1 fields**   | Due date, labels (workspace-scoped, colored, many-to-many), subtasks (one level), markdown description edited via `@repo/editor`. |
-| **Reminders**   | Due-date relative: "remind me X days before due" stored as an offset (`remindDaysBeforeDue`), delivered through the existing notification system (worker cron → `NOTIFY_USER_JOB` → bell). Fires once; moving the due date moves the reminder; recipient is the workspace owner. |
+| Decision       | Choice                                                                                                                                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Columns**    | Fixed Linear-style statuses: Backlog, Todo, In Progress, In Review, Done, Canceled. Enum, no columns table.                                                                                                                                                                      |
+| **Boards**     | One board per workspace. The workspace _is_ the board. No board entity.                                                                                                                                                                                                          |
+| **Agent role** | CRUD tools in chat, plus tasks are assignable to agents (`assignedAgentId`). Assignment is metadata only in v1; autonomous execution is a later phase.                                                                                                                           |
+| **V1 fields**  | Due date, labels (workspace-scoped, colored, many-to-many), subtasks (one level), markdown description edited via `@repo/editor`.                                                                                                                                                |
+| **Reminders**  | Due-date relative: "remind me X days before due" stored as an offset (`remindDaysBeforeDue`), delivered through the existing notification system (worker cron → `NOTIFY_USER_JOB` → bell). Fires once; moving the due date moves the reminder; recipient is the workspace owner. |
 
 ## Goals (v1)
 
@@ -52,24 +52,24 @@ Settled 2026-07-21. Do not re-open.
 
 ### `task` (table `tasks`)
 
-| Column             | Type      | Notes                                                                 |
-| ------------------ | --------- | --------------------------------------------------------------------- |
-| `id`               | text      | `primaryIdColumn`                                                     |
-| `workspaceId`      | text      | FK → `workspace.id`, cascade, indexed                                 |
-| `number`           | integer   | per-workspace sequence, displayed as `TSK-<number>`; unique `(workspaceId, number)` |
-| `title`            | text      | not null                                                              |
-| `description`      | text      | markdown, not null, default `''`                                      |
-| `status`           | text enum | `backlog` \| `todo` \| `in_progress` \| `in_review` \| `done` \| `canceled`, default `todo` |
-| `priority`         | text enum | `none` \| `urgent` \| `high` \| `medium` \| `low`, default `none`     |
-| `sortOrder`        | text      | fractional-index rank within the status column, not null              |
-| `dueDate`          | timestamp | nullable                                                              |
-| `remindDaysBeforeDue` | integer | nullable; reminder fires `dueDate - N days`, `0` = on the due date; meaningless without `dueDate` |
-| `reminderSentAt`   | timestamp | nullable; stamped by the cron so a reminder fires exactly once        |
-| `parentTaskId`     | text      | nullable self-FK → `task.id`, `set null` on delete (subtasks survive as top-level tasks) |
-| `assignedAgentId`  | text      | nullable FK → `agent.id`, `set null` on delete                        |
-| `createdByUserId`  | text      | nullable FK → `user.id`, `set null`                                   |
-| `createdByAgentId` | text      | nullable FK → `agent.id`, `set null`                                  |
-| timestamps         |           | `...timestamps`                                                       |
+| Column                | Type      | Notes                                                                                             |
+| --------------------- | --------- | ------------------------------------------------------------------------------------------------- |
+| `id`                  | text      | `primaryIdColumn`                                                                                 |
+| `workspaceId`         | text      | FK → `workspace.id`, cascade, indexed                                                             |
+| `number`              | integer   | per-workspace sequence, displayed as `TSK-<number>`; unique `(workspaceId, number)`               |
+| `title`               | text      | not null                                                                                          |
+| `description`         | text      | markdown, not null, default `''`                                                                  |
+| `status`              | text enum | `backlog` \| `todo` \| `in_progress` \| `in_review` \| `done` \| `canceled`, default `todo`       |
+| `priority`            | text enum | `none` \| `urgent` \| `high` \| `medium` \| `low`, default `none`                                 |
+| `sortOrder`           | text      | fractional-index rank within the status column, not null                                          |
+| `dueDate`             | timestamp | nullable                                                                                          |
+| `remindDaysBeforeDue` | integer   | nullable; reminder fires `dueDate - N days`, `0` = on the due date; meaningless without `dueDate` |
+| `reminderSentAt`      | timestamp | nullable; stamped by the cron so a reminder fires exactly once                                    |
+| `parentTaskId`        | text      | nullable self-FK → `task.id`, `set null` on delete (subtasks survive as top-level tasks)          |
+| `assignedAgentId`     | text      | nullable FK → `agent.id`, `set null` on delete                                                    |
+| `createdByUserId`     | text      | nullable FK → `user.id`, `set null`                                                               |
+| `createdByAgentId`    | text      | nullable FK → `agent.id`, `set null`                                                              |
+| timestamps            |           | `...timestamps`                                                                                   |
 
 - Authorship follows the document pattern: exactly one of `createdByUserId` /
   `createdByAgentId` is set.
@@ -82,20 +82,20 @@ Settled 2026-07-21. Do not re-open.
 
 ### `taskLabel` (table `task_labels`)
 
-| Column        | Type | Notes                                        |
-| ------------- | ---- | -------------------------------------------- |
-| `id`          | text | `primaryIdColumn`                            |
-| `workspaceId` | text | FK → `workspace.id`, cascade, indexed        |
-| `name`        | text | not null, unique `(workspaceId, name)`       |
-| `color`       | text | not null, hex string                         |
-| timestamps    |      | `...timestamps`                              |
+| Column        | Type | Notes                                  |
+| ------------- | ---- | -------------------------------------- |
+| `id`          | text | `primaryIdColumn`                      |
+| `workspaceId` | text | FK → `workspace.id`, cascade, indexed  |
+| `name`        | text | not null, unique `(workspaceId, name)` |
+| `color`       | text | not null, hex string                   |
+| timestamps    |      | `...timestamps`                        |
 
 ### `taskToTaskLabel` (table `tasks_to_task_labels`)
 
-| Column        | Type | Notes                                   |
-| ------------- | ---- | --------------------------------------- |
-| `taskId`      | text | FK → `task.id`, cascade                 |
-| `taskLabelId` | text | FK → `task_labels.id`, cascade          |
+| Column        | Type | Notes                          |
+| ------------- | ---- | ------------------------------ |
+| `taskId`      | text | FK → `task.id`, cascade        |
+| `taskLabelId` | text | FK → `task_labels.id`, cascade |
 
 Composite primary key `(taskId, taskLabelId)`.
 
@@ -191,13 +191,13 @@ New file `packages/ai/src/tools/task.tools.ts`, following
 - Flat `z.object` input schemas only (no top-level unions).
 - Registered as a `tasks` toolset (agent tools enum + web form toggles).
 
-| Tool         | Behavior                                                                  |
-| ------------ | ------------------------------------------------------------------------- |
-| `listTasks`  | All tasks: `TSK-<number>`, id, title, status, priority, dueDate, labels, parent, assignee. Optional status filter. |
-| `readTask`   | Full task by id, including markdown description and subtasks.             |
+| Tool         | Behavior                                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `listTasks`  | All tasks: `TSK-<number>`, id, title, status, priority, dueDate, labels, parent, assignee. Optional status filter.                   |
+| `readTask`   | Full task by id, including markdown description and subtasks.                                                                        |
 | `createTask` | Title plus optional description, status, priority, dueDate, remindDaysBeforeDue, parentTaskId, label names. Sets `createdByAgentId`. |
-| `updateTask` | Partial update of the same fields, plus assign/unassign an agent. Due-date/offset changes re-arm the reminder like PATCH. |
-| `moveTask`   | Target status plus position `top` \| `bottom`. Wraps the move service.    |
+| `updateTask` | Partial update of the same fields, plus assign/unassign an agent. Due-date/offset changes re-arm the reminder like PATCH.            |
+| `moveTask`   | Target status plus position `top` \| `bottom`. Wraps the move service.                                                               |
 
 No delete tool for agents; the Canceled status covers abandonment. Tools
 call the task service directly (same process), not the HTTP API.

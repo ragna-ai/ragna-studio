@@ -87,7 +87,8 @@ function hasWebpMagicBytes(buffer: Buffer): boolean {
 function zipFamilyMatcher(
   extensions: readonly string[],
 ): (buffer: Buffer, lowerFilename: string) => boolean {
-  return (buffer, lowerFilename) => hasZipMagicBytes(buffer) && hasExtension(lowerFilename, extensions);
+  return (buffer, lowerFilename) =>
+    hasZipMagicBytes(buffer) && hasExtension(lowerFilename, extensions);
 }
 
 // Plain-text kinds (txt/md/csv) have no magic bytes at all: any valid UTF-8

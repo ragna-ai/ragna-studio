@@ -18,14 +18,14 @@ Set via `mem_limit`/`cpus` in `docker/docker-compose.yml` (legacy Compose v2
 top-level fields, honored by plain `docker compose up`, unlike the
 swarm-only `deploy.resources.limits` block).
 
-| service    | mem_limit | cpus | reasoning                                        |
-| ---------- | --------- | ---- | ------------------------------------------------- |
-| frontend   | 512m      | 1.0  | static/SPA host, idle usage ~52MB                  |
-| backend    | 1024m     | 1.5  | AI SDK streaming, idle usage ~195MB                |
-| worker     | 2048m     | 2.0  | ffmpeg + image/video-gen jobs spike hardest        |
-| webbrowser | 1536m     | 1.5  | headless Chromium spikes per open page             |
-| postgres   | 1024m     | 1.5  | shared_buffers + query cache                       |
-| redis      | 256m      | 0.5  | small BullMQ/cache dataset, idle usage ~10MB       |
+| service    | mem_limit | cpus | reasoning                                    |
+| ---------- | --------- | ---- | -------------------------------------------- |
+| frontend   | 512m      | 1.0  | static/SPA host, idle usage ~52MB            |
+| backend    | 1024m     | 1.5  | AI SDK streaming, idle usage ~195MB          |
+| worker     | 2048m     | 2.0  | ffmpeg + image/video-gen jobs spike hardest  |
+| webbrowser | 1536m     | 1.5  | headless Chromium spikes per open page       |
+| postgres   | 1024m     | 1.5  | shared_buffers + query cache                 |
+| redis      | 256m      | 0.5  | small BullMQ/cache dataset, idle usage ~10MB |
 
 Memory limits total 6.4GB, leaving ~1.35GB headroom for the OS, Traefik,
 CrowdSec, and WireGuard. CPU limits total 8.0 against 4 physical cores;

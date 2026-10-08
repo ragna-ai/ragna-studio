@@ -1,7 +1,15 @@
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/vue-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
-import { accountSyncRefetchIntervalMs, startAccountSyncForcePoll } from '~/features/email/lib/email-account-sync-poll';
+import {
+  accountSyncRefetchIntervalMs,
+  startAccountSyncForcePoll,
+} from '~/features/email/lib/email-account-sync-poll';
 import type {
   EmailAccount,
   EmailAccountStatusResponse,
@@ -34,9 +42,16 @@ export function useGetEmailAccount(options: QueryOpts = {}) {
   const { $api } = useNuxtApp();
   return useQuery<EmailAccountStatusResponse>({
     queryKey: emailKeys.account(),
-    queryFn: ({ signal }) => $api<EmailAccountStatusResponse>('/email/account', { method: 'GET', signal }),
+    queryFn: ({ signal }) =>
+      $api<EmailAccountStatusResponse>('/email/account', {
+        method: 'GET',
+        signal,
+      }),
     refetchInterval: (query) =>
-      accountSyncRefetchIntervalMs(query.state.data?.account?.syncState, query.state.data?.account?.lastSyncedAt),
+      accountSyncRefetchIntervalMs(
+        query.state.data?.account?.syncState,
+        query.state.data?.account?.lastSyncedAt,
+      ),
     ...options,
   });
 }
@@ -44,15 +59,24 @@ export function useGetEmailAccount(options: QueryOpts = {}) {
 export function useUpdateEmailAccountSettings() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<UpdateEmailAccountSettingsResponse, unknown, UpdateEmailAccountSettingsRequest>({
+  return useMutation<
+    UpdateEmailAccountSettingsResponse,
+    unknown,
+    UpdateEmailAccountSettingsRequest
+  >({
     mutationFn: (body) =>
-      $api<UpdateEmailAccountSettingsResponse>('/email/account/settings', { method: 'PATCH', body }),
+      $api<UpdateEmailAccountSettingsResponse>('/email/account/settings', {
+        method: 'PATCH',
+        body,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.account() });
       toast.success('Email settings updated');
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to update email settings'));
+      toast.error(
+        extractErrorMessage(error, 'Failed to update email settings'),
+      );
     },
   });
 }
@@ -73,7 +97,8 @@ export function useSyncEmailAccount() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<SyncEmailAccountResponse, unknown, void>({
-    mutationFn: () => $api<SyncEmailAccountResponse>('/email/account/sync', { method: 'POST' }),
+    mutationFn: () =>
+      $api<SyncEmailAccountResponse>('/email/account/sync', { method: 'POST' }),
     onSuccess: ({ account }) => {
       // Opened *before* setQueryData below: writing the cache re-evaluates
       // useGetEmailAccount's refetchInterval synchronously (TanStack
@@ -81,10 +106,13 @@ export function useSyncEmailAccount() {
       // window has to already be active for that first re-evaluation to
       // schedule a poll.
       startAccountSyncForcePoll(account.lastSyncedAt);
-      queryClient.setQueryData<EmailAccountStatusResponse>(emailKeys.account(), (old) => ({
-        connected: old?.connected ?? true,
-        account,
-      }));
+      queryClient.setQueryData<EmailAccountStatusResponse>(
+        emailKeys.account(),
+        (old) => ({
+          connected: old?.connected ?? true,
+          account,
+        }),
+      );
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to start syncing'));
@@ -96,7 +124,8 @@ export function useDisconnectEmailAccount() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, void>({
-    mutationFn: () => $api<void>('/email/account/disconnect', { method: 'POST' }),
+    mutationFn: () =>
+      $api<void>('/email/account/disconnect', { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email'] });
       toast.success('Mailbox disconnected');

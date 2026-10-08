@@ -15,7 +15,10 @@ import {
 } from '~/components/ai-elements/message';
 import ToolGroup from '~/features/chat/components/ToolGroup.vue';
 import { useBranchChatAndNavigate } from '~/features/chat/composables/useChatApi';
-import { getFileTypeIconName, isImageMediaType } from '~/features/chat/lib/attachment-mime';
+import {
+  getFileTypeIconName,
+  isImageMediaType,
+} from '~/features/chat/lib/attachment-mime';
 
 interface Props {
   message: UIMessage;
@@ -67,8 +70,13 @@ interface ToolGroupItem {
 type RenderItem = UIMessage['parts'][number] | ToolGroupItem;
 
 // Empty, non-streaming reasoning renders nothing, so it shouldn't end a run either.
-function isVisibleReasoning(part: UIMessage['parts'][number]): part is ReasoningUIPart {
-  return isReasoningUIPart(part) && (part.state === 'streaming' || part.text.trim().length > 0);
+function isVisibleReasoning(
+  part: UIMessage['parts'][number],
+): part is ReasoningUIPart {
+  return (
+    isReasoningUIPart(part) &&
+    (part.state === 'streaming' || part.text.trim().length > 0)
+  );
 }
 
 // Folds tool calls and their narrating reasoning into one group; only text/file parts end a run.

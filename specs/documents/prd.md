@@ -51,25 +51,25 @@ No backward compatibility needed. Straight rename plus `db:push`.
 
 ### `folder` (table `folders`)
 
-| Column        | Type | Notes                                    |
-| ------------- | ---- | ---------------------------------------- |
-| `id`          | text | `primaryIdColumn`                        |
-| `workspaceId` | text | FK → `workspace.id`, cascade, indexed    |
-| `name`        | text | not null                                 |
-| timestamps    |      | `...timestamps` from `common.schema`     |
+| Column        | Type | Notes                                 |
+| ------------- | ---- | ------------------------------------- |
+| `id`          | text | `primaryIdColumn`                     |
+| `workspaceId` | text | FK → `workspace.id`, cascade, indexed |
+| `name`        | text | not null                              |
+| timestamps    |      | `...timestamps` from `common.schema`  |
 
 ### `document` (table `documents`)
 
-| Column             | Type | Notes                                              |
-| ------------------ | ---- | -------------------------------------------------- |
-| `id`               | text | `primaryIdColumn`                                  |
-| `workspaceId`      | text | FK → `workspace.id`, cascade, indexed              |
-| `folderId`         | text | nullable FK → `folder.id`, null = root level       |
-| `title`            | text | not null                                           |
-| `content`          | text | markdown, not null, default `''`                   |
-| `createdByUserId`  | text | nullable FK → `user.id`                            |
-| `createdByAgentId` | text | nullable FK → `agent.id`                           |
-| timestamps         |      | `...timestamps`                                    |
+| Column             | Type | Notes                                        |
+| ------------------ | ---- | -------------------------------------------- |
+| `id`               | text | `primaryIdColumn`                            |
+| `workspaceId`      | text | FK → `workspace.id`, cascade, indexed        |
+| `folderId`         | text | nullable FK → `folder.id`, null = root level |
+| `title`            | text | not null                                     |
+| `content`          | text | markdown, not null, default `''`             |
+| `createdByUserId`  | text | nullable FK → `user.id`                      |
+| `createdByAgentId` | text | nullable FK → `agent.id`                     |
+| timestamps         |      | `...timestamps`                              |
 
 Authorship: exactly one of `createdByUserId` / `createdByAgentId` is set.
 No separate `role` column. Which column is non-null identifies user vs agent,
@@ -91,12 +91,12 @@ patterns:
 - Flat `z.object` input schemas only (no top-level unions), as in
   `memory.tool.ts`.
 
-| Tool               | Behavior                                                              |
-| ------------------ | --------------------------------------------------------------------- |
-| `list_documents`   | Returns id, title, and folder name per document in the workspace.     |
-| `read_document`    | Returns title and markdown content by id.                             |
-| `create_document`  | Title, content, optional `folderId`. Sets `createdByAgentId`.         |
-| `edit_document`    | `append` or `replace` (str_replace with unique-match guard), like the memory tool. |
+| Tool              | Behavior                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `list_documents`  | Returns id, title, and folder name per document in the workspace.                  |
+| `read_document`   | Returns title and markdown content by id.                                          |
+| `create_document` | Title, content, optional `folderId`. Sets `createdByAgentId`.                      |
+| `edit_document`   | `append` or `replace` (str_replace with unique-match guard), like the memory tool. |
 
 No delete tool for agents.
 

@@ -8,7 +8,10 @@ import { Spinner } from '~/components/ui/spinner';
 import EmailComposerAttachments from '~/features/email/components/EmailComposerAttachments.vue';
 import EmailRecipientsField from '~/features/email/components/EmailRecipientsField.vue';
 import { useEmailComposeEditor } from '~/features/email/composables/useEmailComposeEditor';
-import { useSendEmailDraft, useUpdateEmailDraft } from '~/features/email/composables/useEmailDraftApi';
+import {
+  useSendEmailDraft,
+  useUpdateEmailDraft,
+} from '~/features/email/composables/useEmailDraftApi';
 import type {
   EmailDraft,
   EmailDraftAttachment,
@@ -47,14 +50,22 @@ const emit = defineEmits<{
 
 // Composables
 const { t } = useI18n();
-const { mutateAsync: sendEmailDraft, isPending: isSending } = useSendEmailDraft();
-const { mutateAsync: saveDraft, isPending: isSavingDraft } = useUpdateEmailDraft();
+const { mutateAsync: sendEmailDraft, isPending: isSending } =
+  useSendEmailDraft();
+const { mutateAsync: saveDraft, isPending: isSavingDraft } =
+  useUpdateEmailDraft();
 watch(isSavingDraft, (value) => emit('saving', value));
 
 // Refs
-const to = ref<string[]>(props.draft.to.map((participant) => participant.email));
-const cc = ref<string[]>(props.draft.cc.map((participant) => participant.email));
-const bcc = ref<string[]>(props.draft.bcc.map((participant) => participant.email));
+const to = ref<string[]>(
+  props.draft.to.map((participant) => participant.email),
+);
+const cc = ref<string[]>(
+  props.draft.cc.map((participant) => participant.email),
+);
+const bcc = ref<string[]>(
+  props.draft.bcc.map((participant) => participant.email),
+);
 const showCcBcc = ref(cc.value.length > 0 || bcc.value.length > 0);
 const subject = ref(props.draft.subject ?? '');
 const draftAttachments = ref<EmailDraftAttachment[]>(props.draft.attachments);
@@ -79,14 +90,16 @@ const editor = controller.editor;
 
 watch([to, cc, bcc, subject], () => emitChange());
 onBeforeUnmount(() => {
-  if (props.suppressFlush || isDraftGone.value || !emitChange.isPending.value) return;
+  if (props.suppressFlush || isDraftGone.value || !emitChange.isPending.value)
+    return;
   emitChange.cancel();
   void saveDraftNow(true);
 });
 
 // Computed
 const canSend = computed(
-  () => to.value.length > 0 && subject.value.trim().length > 0 && !isSending.value,
+  () =>
+    to.value.length > 0 && subject.value.trim().length > 0 && !isSending.value,
 );
 
 // Functions
@@ -95,7 +108,10 @@ function toParticipants(addresses: string[]): EmailParticipant[] {
 }
 
 /** The HTML/text pair every draft-writing payload below sends together, straight off the live editor (see EmailDraftEditableFields's doc comment). */
-function buildContentFields(): Pick<EmailDraftEditableFields, 'content' | 'text'> {
+function buildContentFields(): Pick<
+  EmailDraftEditableFields,
+  'content' | 'text'
+> {
   return {
     content: controller.getHtml(),
     text: controller.getText(),
@@ -118,7 +134,12 @@ function buildSnapshot(): EmailDraftEditableFields {
 // `flush` forces the provider write-back; set for the unmount flush and the pre-send save below.
 async function saveDraftNow(flush: boolean) {
   try {
-    await saveDraft({ draftId: props.draft.id, threadId: props.draft.threadId, ...buildSnapshot(), flush });
+    await saveDraft({
+      draftId: props.draft.id,
+      threadId: props.draft.threadId,
+      ...buildSnapshot(),
+      flush,
+    });
     emit('saved');
   } catch {
     // Already toasted by the mutation's onError.
@@ -180,9 +201,16 @@ async function handleSend() {
 </script>
 
 <template>
-  <form class="flex min-h-0 flex-1 flex-col overflow-y-auto" @submit.prevent="handleSend">
+  <form
+    class="flex min-h-0 flex-1 flex-col overflow-y-auto"
+    @submit.prevent="handleSend"
+  >
     <div class="shrink-0 space-y-1 px-4 pt-3">
-      <EmailRecipientsField v-model="to" :label="t('email.compose.to')" :autofocus="props.recipientsAutofocus" />
+      <EmailRecipientsField
+        v-model="to"
+        :label="t('email.compose.to')"
+        :autofocus="props.recipientsAutofocus"
+      />
       <template v-if="showCcBcc">
         <EmailRecipientsField v-model="cc" :label="t('email.compose.cc')" />
         <EmailRecipientsField v-model="bcc" :label="t('email.compose.bcc')" />
@@ -196,7 +224,9 @@ async function handleSend() {
         {{ t('email.compose.addCcBcc') }}
       </button>
       <div class="flex items-center gap-2 border-b py-1.5">
-        <span class="w-10 shrink-0 text-sm text-muted-foreground">{{ t('email.compose.subject') }}</span>
+        <span class="w-10 shrink-0 text-sm text-muted-foreground">{{
+          t('email.compose.subject')
+        }}</span>
         <Input
           v-model="subject"
           class="h-7 flex-1 border-0 px-0 shadow-none focus-visible:ring-0"

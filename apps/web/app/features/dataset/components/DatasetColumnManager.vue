@@ -1,6 +1,15 @@
 <script setup lang="ts">
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon, XIcon } from '@lucide/vue';
-import type { DatasetColumn, DatasetColumnType } from '~/features/dataset/types';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from '@lucide/vue';
+import type {
+  DatasetColumn,
+  DatasetColumnType,
+} from '~/features/dataset/types';
 
 interface Props {
   columns: DatasetColumn[];
@@ -78,16 +87,29 @@ function handleSave() {
 </script>
 
 <template>
-  <aside class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4">
+  <aside
+    class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4"
+  >
     <div class="flex items-center justify-between">
-      <p class="text-sm font-semibold">{{ t('dataset.columnManager.title') }}</p>
-      <Button variant="ghost" size="icon" :aria-label="t('common.close')" @click="emit('close')">
+      <p class="text-sm font-semibold">
+        {{ t('dataset.columnManager.title') }}
+      </p>
+      <Button
+        variant="ghost"
+        size="icon"
+        :aria-label="t('common.close')"
+        @click="emit('close')"
+      >
         <XIcon class="size-4 stroke-1.5" />
       </Button>
     </div>
 
     <div class="flex flex-col gap-4">
-      <div v-for="(column, index) in draft" :key="column.id" class="space-y-2 rounded-lg border p-3">
+      <div
+        v-for="(column, index) in draft"
+        :key="column.id"
+        class="space-y-2 rounded-lg border p-3"
+      >
         <div class="flex items-center justify-between gap-1">
           <Input
             v-model="column.name"
@@ -124,7 +146,12 @@ function handleSave() {
           </div>
         </div>
 
-        <Select :model-value="column.type" @update:model-value="(v) => setColumnType(column, v as DatasetColumnType)">
+        <Select
+          :model-value="column.type"
+          @update:model-value="
+            (v) => setColumnType(column, v as DatasetColumnType)
+          "
+        >
           <SelectTrigger class="h-8 w-full">
             <SelectValue />
           </SelectTrigger>
@@ -143,7 +170,10 @@ function handleSave() {
             :model-value="optionsText(column)"
             :placeholder="t('dataset.columnManager.optionsPlaceholder')"
             class="h-8"
-            @change="(e: Event) => setOptionsFromText(column, (e.target as HTMLInputElement).value)"
+            @change="
+              (e: Event) =>
+                setOptionsFromText(column, (e.target as HTMLInputElement).value)
+            "
           />
         </div>
       </div>

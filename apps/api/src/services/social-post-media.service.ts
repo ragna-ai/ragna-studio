@@ -61,7 +61,10 @@ async function uploadOneImageToLinkedIn({
   media: SocialPostMediaWithMedia;
   authorId: string;
 }): Promise<string> {
-  const { buffer, contentType } = await downloadObjectBuffer(media.media.bucket, media.media.storageKey);
+  const { buffer, contentType } = await downloadObjectBuffer(
+    media.media.bucket,
+    media.media.storageKey,
+  );
 
   const { uploadUrl, imageUrn } = await linkedin.initializeImageUpload({ authorId });
 

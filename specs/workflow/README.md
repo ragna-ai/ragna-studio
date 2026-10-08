@@ -2,8 +2,8 @@
 
 Entry point for the workflow feature docs. Read this first; it condenses the mechanics so the detail docs only need to be opened for specifics.
 
-| Doc                                                                         | Content                                                                                       |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Doc                                                                | Content                                                                                       |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | [workflows.md](./workflows.md)                                     | Original design: no Mastra, node catalog, schema rationale.                                   |
 | [workflows-implementation.md](./workflows-implementation.md)       | Binding v1 contracts: package exports, repos, engine behavior, API routes, web components.    |
 | [workflows-scheduling.md](./workflows-scheduling.md)               | Scheduled (cron) triggers: job schedulers, tick processor, reconciliation, stale-run sweeper. |

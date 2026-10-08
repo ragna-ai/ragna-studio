@@ -56,7 +56,10 @@ async function insertGoogleAccount({
 export function seedGmailLinkedAccount(
   params: SeedGoogleAccountParams,
 ): Promise<SeedGoogleAccountResult> {
-  return insertGoogleAccount({ ...params, scopes: [...BASE_GOOGLE_SIGNIN_SCOPES, GMAIL_MODIFY_SCOPE] });
+  return insertGoogleAccount({
+    ...params,
+    scopes: [...BASE_GOOGLE_SIGNIN_SCOPES, GMAIL_MODIFY_SCOPE],
+  });
 }
 
 /**

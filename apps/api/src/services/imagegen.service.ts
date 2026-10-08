@@ -14,7 +14,11 @@ import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
 import { toPublicMediaUrl } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import type { UploadedImageInputResponse } from './media.service';
 import { getOwnedImageMedia, storeWorkspaceImageInput } from './media.service';
 
@@ -63,9 +67,10 @@ export interface GenImageResponse {
 // need no special-casing here. The storage key comes off the reference's
 // joined media row now, not a jsonb
 // column.
-function toReferenceImageResponse(
-  reference: GenImageReferenceWithMedia,
-): { origin: GenImageReferenceOrigin; imgUrl: string } {
+function toReferenceImageResponse(reference: GenImageReferenceWithMedia): {
+  origin: GenImageReferenceOrigin;
+  imgUrl: string;
+} {
   return {
     origin: reference.origin,
     imgUrl: toPublicMediaUrl(reference.media.storageKey),
@@ -93,9 +98,7 @@ function toGenImageResponse(record: GenImageWithMedia): GenImageResponse {
     visibleWatermark: record.visibleWatermark,
     provider: record.provider,
     model: record.model,
-    referenceImages: record.references.map((reference) =>
-      toReferenceImageResponse(reference),
-    ),
+    referenceImages: record.references.map((reference) => toReferenceImageResponse(reference)),
     imgUrl: record.media ? toPublicMediaUrl(record.media.storageKey) : undefined,
   };
 }

@@ -190,11 +190,7 @@ export async function updateGenImageStatusByIds({
     return [];
   }
 
-  return db
-    .update(genImage)
-    .set({ status, error })
-    .where(inArray(genImage.id, ids))
-    .returning();
+  return db.update(genImage).set({ status, error }).where(inArray(genImage.id, ids)).returning();
 }
 
 // Reference media ids for a gen image, read BEFORE deleteGenImageByIdAndWorkspaceId

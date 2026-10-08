@@ -121,13 +121,17 @@ function handleKeydown(event: KeyboardEvent) {
         </p>
         <template v-else>
           <div v-if="selectedStep.input">
-            <Label class="mb-2 block text-sm font-medium">{{ t('common.input') }}</Label>
+            <Label class="mb-2 block text-sm font-medium">{{
+              t('common.input')
+            }}</Label>
             <pre
               class="max-h-[40vh] overflow-auto rounded-md border bg-muted p-2 text-xs whitespace-pre-wrap"
               >{{ selectedStep.input }}</pre>
           </div>
           <div v-if="selectedStep.output">
-            <Label class="mb-2 block text-sm font-medium">{{ t('common.output') }}</Label>
+            <Label class="mb-2 block text-sm font-medium">{{
+              t('common.output')
+            }}</Label>
             <div class="relative">
               <Button
                 type="button"
@@ -154,13 +158,15 @@ function handleKeydown(event: KeyboardEvent) {
             </div>
           </div>
           <div v-if="selectedStep.trace?.length">
-            <Label class="mb-2 block text-sm font-medium">{{ t('workflow.runStepDialog.agentTrace') }}</Label>
+            <Label class="mb-2 block text-sm font-medium">{{
+              t('workflow.runStepDialog.agentTrace')
+            }}</Label>
             <WorkflowTraceTimeline :trace="selectedStep.trace" />
           </div>
           <div v-if="selectedStep.error">
-            <Label class="mb-2 block text-sm font-medium text-destructive"
-              >{{ t('common.error') }}</Label
-            >
+            <Label class="mb-2 block text-sm font-medium text-destructive">{{
+              t('common.error')
+            }}</Label>
             <pre
               class="max-h-[40vh] overflow-auto rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs whitespace-pre-wrap"
               >{{ selectedStep.error }}</pre>

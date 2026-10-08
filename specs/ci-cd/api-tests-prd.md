@@ -25,12 +25,12 @@ email-allowlist commit, see [Findings](#findings)). CI never ran it.
 
 Checked on 2026-09-29.
 
-| Repo | Test database | Env handling |
-| --- | --- | --- |
-| twenty | `postgres:18` and `redis` as `services:`, health check on Postgres | Generated `.env.test`, dummy values |
-| cal.com | `postgres:18` as a service, health check | About 30 repo secrets and vars |
-| documenso | `docker compose` through `npm run dx:up` | `cp .env.example .env` |
-| Plane | No database for its migration check | Dummy job-level env |
+| Repo      | Test database                                                      | Env handling                        |
+| --------- | ------------------------------------------------------------------ | ----------------------------------- |
+| twenty    | `postgres:18` and `redis` as `services:`, health check on Postgres | Generated `.env.test`, dummy values |
+| cal.com   | `postgres:18` as a service, health check                           | About 30 repo secrets and vars      |
+| documenso | `docker compose` through `npm run dx:up`                           | `cp .env.example .env`              |
+| Plane     | No database for its migration check                                | Dummy job-level env                 |
 
 Service containers are the common choice. Dummy env beats secrets.
 

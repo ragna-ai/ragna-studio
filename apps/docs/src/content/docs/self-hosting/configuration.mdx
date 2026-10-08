@@ -11,10 +11,10 @@ All settings live in `.env`. The [environment variables](/reference/environment-
 
 Use two hosts. The single-domain layout is not supported.
 
-| Host | Service | Container port |
-| --- | --- | --- |
-| `app.example.com` | frontend | 3000 |
-| `api.example.com` | backend | 3010 |
+| Host              | Service  | Container port |
+| ----------------- | -------- | -------------- |
+| `app.example.com` | frontend | 3000           |
+| `api.example.com` | backend  | 3010           |
 
 ```bash title=".env"
 APP_URL="https://app.example.com"
@@ -40,7 +40,8 @@ The installer generates these on the first run:
 To set one by hand, use `openssl rand -hex 32`. Use hex: `DB_PASSWORD` becomes part of the database URL, so characters like `/` break the connection. Provider credentials come from the providers. That means API keys, OAuth client secrets and S3 keys. Don't generate those.
 
 <Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
-  Never change `BETTER_AUTH_SECRET` after the first start. Stored OAuth tokens become unreadable. That affects connected Gmail, Outlook and LinkedIn accounts. Every session also ends.
+  Never change `BETTER_AUTH_SECRET` after the first start. Stored OAuth tokens become unreadable.
+  That affects connected Gmail, Outlook and LinkedIn accounts. Every session also ends.
 </Aside>
 
 Set `ENCRYPTION_PASSWORD` once and keep it.

@@ -26,9 +26,8 @@ const CHAT_ATTACHMENT_IMAGE_EXTENSIONS = [
 ] as const;
 
 // Passed straight to the hidden file input's `accept` attribute.
-export const CHAT_ATTACHMENT_ACCEPT = CHAT_ATTACHMENT_ACCEPT_EXTENSIONS.join(
-  ',',
-);
+export const CHAT_ATTACHMENT_ACCEPT =
+  CHAT_ATTACHMENT_ACCEPT_EXTENSIONS.join(',');
 
 function getFileExtension(filename: string): string {
   const dotIndex = filename.lastIndexOf('.');
@@ -71,5 +70,8 @@ const FILE_TYPE_ICON_BY_EXTENSION: Record<string, string> = {
 const DEFAULT_FILE_TYPE_ICON = 'vscode-icons:default-file';
 
 export function getFileTypeIconName(filename: string): string {
-  return FILE_TYPE_ICON_BY_EXTENSION[getFileExtension(filename)] ?? DEFAULT_FILE_TYPE_ICON;
+  return (
+    FILE_TYPE_ICON_BY_EXTENSION[getFileExtension(filename)] ??
+    DEFAULT_FILE_TYPE_ICON
+  );
 }

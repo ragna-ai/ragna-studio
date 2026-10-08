@@ -8,13 +8,13 @@ Messages are stored 1:1 in the AI SDK `UIMessage` format. This is the format the
 
 Each message is one row in `chat_messages` (`packages/database/src/schema/chat.schema.ts`):
 
-| Column     | Purpose                                                          |
-| ---------- | ---------------------------------------------------------------- |
+| Column     | Purpose                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------ |
 | `id`       | The `UIMessage` id. Client-generated for user messages, server-generated for assistant messages. |
-| `chat_id`  | FK to `chats`.                                                    |
-| `role`     | `system` / `user` / `assistant` as a real column, so it stays queryable. |
-| `parts`    | The `UIMessage.parts` array as JSON, stored as-is.                |
-| `metadata` | Optional `UIMessage.metadata` as JSON.                            |
+| `chat_id`  | FK to `chats`.                                                                                   |
+| `role`     | `system` / `user` / `assistant` as a real column, so it stays queryable.                         |
+| `parts`    | The `UIMessage.parts` array as JSON, stored as-is.                                               |
+| `metadata` | Optional `UIMessage.metadata` as JSON.                                                           |
 
 One row per message, not one JSON blob per chat. This keeps appends cheap, allows upserts per message, and leaves room for per-message features like the planned `embedding` column.
 

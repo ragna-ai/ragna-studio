@@ -60,7 +60,10 @@ const showTooltip = computed(() => !props.expanded && !props.labelVisible);
     v-else
     :to="props.to"
     class="nav-link group"
-    :class="{ 'nav-link-active': isActive, 'nav-link-expanded': props.expanded }"
+    :class="{
+      'nav-link-active': isActive,
+      'nav-link-expanded': props.expanded,
+    }"
     activeClass="nav-link-active"
     exactActiveClass="nav-link-active"
   >

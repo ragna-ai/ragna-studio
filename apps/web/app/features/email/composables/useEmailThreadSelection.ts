@@ -62,5 +62,13 @@ export function useEmailThreadSelection(
 
   watch(() => toValue(filters), clear);
 
-  return { isSelected, toggle, selectAll, clear, count, isOverCap, selectedIds };
+  return {
+    isSelected,
+    toggle,
+    selectAll,
+    clear,
+    count,
+    isOverCap,
+    selectedIds,
+  };
 }

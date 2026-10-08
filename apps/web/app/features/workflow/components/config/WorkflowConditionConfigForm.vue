@@ -16,26 +16,36 @@ const { t } = useI18n();
 
 // Computed
 const needsRightOperand = computed(
-  () => props.node.data.config.operator !== 'isEmpty' && props.node.data.config.operator !== 'isNotEmpty',
+  () =>
+    props.node.data.config.operator !== 'isEmpty' &&
+    props.node.data.config.operator !== 'isNotEmpty',
 );
 </script>
 
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.leftLabel') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.conditionConfig.leftLabel')
+      }}</Label>
       <Input v-model="node.data.config.left" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
 
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.operatorLabel') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.conditionConfig.operatorLabel')
+      }}</Label>
       <Select v-model="node.data.config.operator">
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="operator in CONDITION_OPERATORS" :key="operator" :value="operator">
+          <SelectItem
+            v-for="operator in CONDITION_OPERATORS"
+            :key="operator"
+            :value="operator"
+          >
             {{ operator }}
           </SelectItem>
         </SelectContent>
@@ -43,7 +53,9 @@ const needsRightOperand = computed(
     </div>
 
     <div v-if="needsRightOperand">
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.conditionConfig.rightLabel') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.conditionConfig.rightLabel')
+      }}</Label>
       <Input v-model="node.data.config.right" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
