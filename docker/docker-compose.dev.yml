@@ -1,18 +1,20 @@
 # This is a development override file for docker-compose.
 
-# Own project and network name, so `down -v` on a self-host test install on the
-# same machine can't delete the dev volumes, and vice versa. See
+# Own project, container and network names, so dev and a self-host test install
+# can run side by side and `down -v` on one can't delete the other's volumes. See
 # docs/docker-deploy/dev-project-name.md.
 name: ragna_studio_dev
 
 services:
   postgres:
+    container_name: ragna_studio_dev_postgresql
     cpus: 1
     restart: no
     ports:
       - ${DB_PORT:-5432}:5432
 
   redis:
+    container_name: ragna_studio_dev_redis
     cpus: 1
     restart: no
     ports:

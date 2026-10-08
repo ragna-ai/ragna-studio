@@ -2,7 +2,12 @@
 
 Since 2026-10-08 the dev stack (`make up-dev`, `docker-compose.dev.yml`) runs
 as Compose project **`ragna_studio_dev`** with its own network
-`ragna_studio_dev_network`. Self-host installs and prod stay `ragna_studio`.
+`ragna_studio_dev_network` and its own container names
+(`ragna_studio_dev_postgresql`, `ragna_studio_dev_redis`). Self-host installs
+and prod stay `ragna_studio`. The dev containers and a self-host test install
+can run side by side: dev publishes `DB_PORT`/`REDIS_PORT` from `.env`,
+self-host only 3000 and 3010. Stop `pnpm dev` first, though, since it uses
+3000 and 3010 as well.
 
 ## Why
 
@@ -12,10 +17,10 @@ volume names (`ragna_studio_postgres_data`, `ragna_studio_redis_data`). A
 the dev database on the same machine, and the installer counted dev data as
 an existing install.
 
-Container names (`ragna_studio_postgresql`, ...) are still shared, because
-`container_name` is fixed in `docker/docker-compose.yml` and prod relies on
-it. Dev and a self-host test install can't run at the same time; Compose
-reports a name conflict. Stop one before starting the other.
+The container names were shared as well, so the installer failed with
+"container name already in use" while dev was running. Dev only runs
+`postgres` and `redis`, so the dev override renames just those two.
+`pnpm --filter @repo/database db:backup` defaults to the dev container.
 
 ## One-time migration of existing dev data
 
