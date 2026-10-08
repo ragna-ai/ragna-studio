@@ -150,7 +150,7 @@ export async function getChatsByWorkspaceId({
     where: { workspaceId },
     limit,
     offset,
-    // Pagination contract (specs/api-standards/prd.md): sort by createdAt.
+    // Pagination contract: sort by createdAt.
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
@@ -270,7 +270,7 @@ export async function upsertChatMessages(payload: IUpsertChatMessage[]): Promise
   return upsertedChatMessages;
 }
 
-// CHAT SEARCH (specs/chat/search-prd.md)
+// CHAT SEARCH
 //
 // pg_trgm substring search across a workspace's chats: a chat matches by
 // title (backed by chat_title_trgm_idx) or by having at least one message
@@ -476,7 +476,7 @@ const SEARCH_SNIPPET_CONTEXT_CHARS = 60;
  * `query` (case-insensitive unless `caseSensitive`, matching how the row
  * was found in SQL), marking the match with `<mark>` tags for the frontend
  * to render as highlighting. No `ts_headline`: that's a tsvector-only
- * feature, not available for this trgm approach (specs/chat/search-prd.md).
+ * feature, not available for this trgm approach.
  */
 function buildHighlightedSnippet(text: string, query: string, caseSensitive: boolean): string {
   const matchIndex = caseSensitive
@@ -554,7 +554,7 @@ export async function getChatSearchMessageSnippets({
   }));
 }
 
-// BRANCHING (specs/chat/branching.md)
+// BRANCHING
 //
 // Copy-on-branch, not a shared message tree: the new chat gets its own rows
 // (new ids/timestamps) for every message up to and including the cutoff, so

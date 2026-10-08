@@ -12,7 +12,7 @@ export const validSocialPostIdParam = myzValidator(
 
 // New drafts may start empty: the user fills in content on the upsert page.
 // Publish rejects empty content instead. workspaceId comes from the path,
-// not the body (specs/api-standards/prd.md).
+// not the body.
 export const validCreateSocialPostBody = myzValidator(
   'json',
   z.object({

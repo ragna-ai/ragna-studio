@@ -1,9 +1,9 @@
 // packages/media/src/index.ts
 //
-// @repo/media: the media domain (specs/media-library/unified-media-prd.md).
+// @repo/media: the media domain.
 // Owns the media type registry (kinds, mime types, magic-byte sniffing,
 // extractable flags), the extraction engine, storage placement, media row
-// creation, refcounted deletion, and (specs/ai-labeling/prd.md) the visible
+// creation, refcounted deletion, and the visible
 // AI-disclosure watermark and its native deps (sharp, system ffmpeg).
 // Dependency direction: database/storage -> media -> (ai, apps). Nothing in
 // @repo/media may depend on an app.

@@ -84,7 +84,7 @@ export function isTaskOverdue(task: Pick<Task, 'dueDate' | 'status'>): boolean {
   return new Date(task.dueDate).getTime() < Date.now();
 }
 
-// Reminder select presets (specs/tasks/prd.md, task detail page): each maps
+// Reminder select presets: each maps
 // directly to remindDaysBeforeDue. "off" (null) and "custom" (any other
 // non-negative integer) are handled separately by the select itself.
 export const REMINDER_PRESETS: { value: number; labelKey: string }[] = [

@@ -26,8 +26,7 @@ export interface PendingAttachment {
 
 /**
  * Owns the "attach files to the next message" flow for the chat input:
- * client-side validation, eager upload, and the pending strip's local state
- * (specs/media-library/prd.md, decision 7).
+ * client-side validation, eager upload, and the pending strip's local state.
  *
  * `ensureChat` is injected rather than called here because chat creation is
  * lazy and its state (`chatId`, the create-chat mutation) lives in the

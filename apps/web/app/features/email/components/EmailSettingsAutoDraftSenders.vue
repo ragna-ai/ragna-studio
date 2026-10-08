@@ -7,8 +7,7 @@ import {
   useRemoveAutoDraftSender,
 } from '~/features/email/composables/useEmailAutoDraftSenderApi';
 
-// Senders on this list always trigger auto-draft, independent of category
-// (specs/email/prd.md, "Auto-draft replies").
+// Senders on this list always trigger auto-draft, independent of category.
 
 // Composables
 const { t } = useI18n();

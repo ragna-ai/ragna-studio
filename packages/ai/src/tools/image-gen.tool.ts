@@ -73,7 +73,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Chat-path poll cap (specs/imagegen/worker-execution-prd.md decision 6): a
+// Chat-path poll cap: a
 // batch normally settles in a few seconds, so 1s steps keep the poll
 // responsive without hammering the DB, and 60s is far above a realistic
 // batch's ceiling before degrading to the pending-ids fallback.
@@ -86,8 +86,8 @@ function isSettled(status: string): boolean {
 
 /**
  * Polls gen_images rows by status until every row in the batch reaches a
- * terminal state or the cap is hit, reading the same rows the web grid polls
- * (specs/imagegen/worker-execution-prd.md decision 6): no QueueEvents, no
+ * terminal state or the cap is hit, reading the same rows the web grid polls:
+ * no QueueEvents, no
  * awaited job, just the pending-row model videogen already ships.
  */
 async function pollGenImagesUntilSettled(genImageIds: string[]) {
@@ -123,8 +123,8 @@ function toGeneratedAgentImages(
 // runsInWorker (already inside the worker: workflow executors) inserts the
 // batch and runs it inline, no queue hop. Otherwise (chat, running in the
 // API process) the request side enqueues the batch onto the worker and this
-// polls the rows until they settle or the cap is hit
-// (specs/imagegen/worker-execution-prd.md decision 6): the one deviation from
+// polls the rows until they settle or the cap is hit:
+// the one deviation from
 // videogen's tool, since inline images are this tool's whole point and a
 // batch only takes seconds, not minutes.
 async function generateAgentImages({

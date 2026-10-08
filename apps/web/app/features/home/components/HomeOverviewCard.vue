@@ -2,12 +2,12 @@
 import { Maximize2Icon, PlusIcon, type LucideIcon } from '@lucide/vue';
 
 // Props
-// Generic shell shared by all four overview cards (specs/home/prd.md, "Card
-// shell"): icon chip + title + total badge + "view all", a slotted
+// Generic shell shared by all four overview cards:
+// icon chip + title + total badge + "view all", a slotted
 // row/tile body, and a ghost quick-create row that doubles as the empty
 // state. `quickCreateLabel`/`quickCreateTo` are optional because the
 // Agents card builds its own dashed create tile into the body instead
-// (specs/home/prd.md, "Agents card") and skips this footer entirely.
+// and skips this footer entirely.
 const props = withDefaults(
   defineProps<{
     icon: LucideIcon;

@@ -1,6 +1,6 @@
 // apps/worker/src/mail/participants.ts
 //
-// Denormalized thread fields (specs/email/prd.md, "email_threads"): subject,
+// Denormalized thread fields: subject,
 // snippet, and participants for the list view, derived from the provider's
 // message metadata rather than stored separately.
 

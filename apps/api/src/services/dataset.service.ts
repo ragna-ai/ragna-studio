@@ -132,7 +132,7 @@ export async function getDataset({
   return loadOwnedDataset({ workspaceId, datasetId });
 }
 
-// EXPORT (specs/datasets/export-and-row-reorder.md)
+// EXPORT
 
 export type DatasetExportFormat = 'csv' | 'xlsx' | 'pdf' | 'md';
 
@@ -181,8 +181,8 @@ function toDatasetExportFilename(datasetName: string, format: DatasetExportForma
 }
 
 /**
- * Maps a dataset and its rows to the format-agnostic `TabularExport` input
- * (specs/datasets/export-and-row-reorder.md decision 1): the package knows
+ * Maps a dataset and its rows to the format-agnostic `TabularExport` input:
+ * the package knows
  * formats, not datasets. Headers are column names, cell values are resolved
  * by column id (not name, matching the row's own storage key), rows follow
  * grid order (`getDatasetRows` already orders by `sortOrder` and excludes
@@ -198,8 +198,8 @@ function toTabularExport(datasetRecord: Dataset, rows: DatasetRow[]): TabularExp
 
 /**
  * [GET] /workspace/:workspaceId/dataset/:datasetId/export
- * Generation is synchronous in the request (specs/datasets/export-and-row-reorder.md
- * decision 2): datasets are bounded by MAX_ROWS_PER_DATASET/
+ * Generation is synchronous in the request:
+ * datasets are bounded by MAX_ROWS_PER_DATASET/
  * MAX_COLUMNS_PER_DATASET, well inside a request budget. An empty dataset
  * still produces a file (open question 2): the writers handle a header-only
  * CSV/xlsx and a "no rows" note in the PDF.
@@ -428,8 +428,7 @@ function isInvalidAfterRowIdError(error: Error): boolean {
 
 /**
  * [POST] /workspace/:workspaceId/dataset/:datasetId/row/:rowId/move
- * Server computes the new sortOrder from the dataset's row order
- * (specs/datasets/export-and-row-reorder.md decision 5).
+ * Server computes the new sortOrder from the dataset's row order.
  */
 export async function moveDatasetRowForUser({
   workspaceId,

@@ -6,7 +6,7 @@
 // videogen.service.ts (@repo/ai) after generation, before upload. Never sent
 // to a provider: this only touches what we store.
 //
-// Best-effort by design (specs/ai-labeling/prd.md "Failure semantics"): a
+// Best-effort by design: a
 // failed watermark must never lose a paid generation, so this module throws
 // on failure rather than swallowing errors, and deliberately does not depend
 // on @repo/logger. The caller decides what "best-effort" means (log a
@@ -173,8 +173,8 @@ function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
 /**
  * Burns the badge into a video's bottom-right corner. Runs in the videogen
  * path (worker process, every route: standard, draft, enhance) after
- * generation, before upload. Version-proof pipeline (specs/ai-labeling/prd.md
- * "Processing"): probe the input's real dimensions first (there is no
+ * generation, before upload. Version-proof pipeline:
+ * probe the input's real dimensions first (there is no
  * ffprobe), rasterize the badge in Node at the exact pixel size the overlay
  * needs, then a single `overlay` pass with precomputed integer offsets. No
  * `scale2ref`, no in-graph scaling of any kind: that filter behaves

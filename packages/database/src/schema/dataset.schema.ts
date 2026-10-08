@@ -15,7 +15,7 @@ export interface DatasetColumn {
 }
 
 // 'user' = created via the grid, 'agent' = created by a tool call
-// (datasetCreate), 'mcp' = created by an MCP client (specs/mcp/prd.md P6).
+// (datasetCreate), 'mcp' = created by an MCP client.
 // Purely a UI badge; ownership/access is unaffected.
 export type DatasetOrigin = 'user' | 'agent' | 'mcp';
 
@@ -23,7 +23,7 @@ export type DatasetOrigin = 'user' | 'agent' | 'mcp';
 // already stored in a row.
 export type DatasetRowData = Record<string, string | number | null>;
 
-// Who last wrote a row's data (specs/mcp/prd.md P6): the grid shows a badge
+// Who last wrote a row's data: the grid shows a badge
 // on 'mcp' rows. Set on create, update and move.
 export type DatasetRowWriter = 'user' | 'agent' | 'mcp';
 

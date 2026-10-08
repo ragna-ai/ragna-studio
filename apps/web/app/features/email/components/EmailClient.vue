@@ -308,8 +308,8 @@ function loadMoreThreads() {
   if (threadsQuery.hasNextPage.value) threadsQuery.fetchNextPage();
 }
 
-// Compose creates the local draft row up front (specs/email/drafts-change-request.md,
-// "Creation timing"), then routes to its own page - EmailDraftPanel is the
+// Compose creates the local draft row up front,
+// then routes to its own page - EmailDraftPanel is the
 // only surface that ever renders it, there's no more modal to open here. A
 // `kind: 'new'` draft carries no `threadId`, so it can never hit the
 // one-active-draft-per-thread 409; the catch here only stops a failed

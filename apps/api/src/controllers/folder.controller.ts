@@ -17,7 +17,7 @@ export const folderController = new Hono()
   /**
    * [GET] /workspace/:workspaceId/folder
    * Lists every folder in the workspace. Not paginated: folders are a small,
-   * naturally bounded collection (specs/api-standards/prd.md, "Pagination").
+   * naturally bounded collection.
    */
   .get('/', async (c) => {
     const workspace = c.get('workspace');

@@ -31,8 +31,7 @@ import { optionalNonEmptyString } from './zod-helpers';
 // stay inside a flat object and let the model explicitly clear a value
 // versus omitting it, mirroring the repo's key-presence update semantics.
 //
-// No delete tool: the Canceled status covers abandonment (specs/tasks/prd.md,
-// "Agent tools").
+// No delete tool: the Canceled status covers abandonment.
 
 const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'canceled'] as const satisfies readonly TaskStatus[];
 const TASK_PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'] as const satisfies readonly TaskPriority[];
@@ -99,8 +98,8 @@ function toTaskBrief(taskRecord: Task) {
 
 type LabelResolution = { labelIds: string[] } | { error: string };
 
-// Agents attach existing labels only, never create them (specs/tasks/prd.md,
-// "Non-goals"). Unknown names come back as a tool error listing what's
+// Agents attach existing labels only, never create them.
+// Unknown names come back as a tool error listing what's
 // actually available, so the model can retry with a valid name.
 async function resolveLabelIds({
   workspaceId,
@@ -133,7 +132,7 @@ async function resolveLabelIds({
 
 type ParentValidation = { ok: true } | { error: string };
 
-// One-level subtask rule (specs/tasks/prd.md, "Goals"): a task with a
+// One-level subtask rule: a task with a
 // `parentTaskId` of its own is rejected as a parent. Shared by createTask
 // and updateTask.
 async function validateParentTask({

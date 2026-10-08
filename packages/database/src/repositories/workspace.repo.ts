@@ -75,7 +75,7 @@ export async function updateWorkspace({
 }
 
 // Resources scoped to this workspace are deleted with it: their workspaceId
-// FK is onDelete: 'cascade' (specs/api-standards/prd.md). Callers must reject
+// FK is onDelete: 'cascade'. Callers must reject
 // deleting a user's last workspace before calling this (see WP1's
 // workspace.service.ts). Returns the deleted row (or null if `id` didn't
 // belong to `ownerId`), mirroring `updateWorkspace`, so the caller can 404

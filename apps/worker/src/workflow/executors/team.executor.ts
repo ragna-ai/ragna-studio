@@ -105,8 +105,7 @@ function buildTeamBriefing(members: ResolvedMember[]): string {
 // member tool calls (kept flat, not a nested trace) are recorded by
 // toolCallId so they can be attached to the lead's own trace once the
 // lead's loop finishes; the same toolCallId also makes this call's charge
-// unique among the node's other delegate calls (specs/credits/prd.md, "Call
-// sites").
+// unique among the node's other delegate calls.
 //
 // A member's `runReferencedAgent` call can throw InsufficientCreditsError or
 // ModelNotChargeableError from its own gate. Left alone, the AI SDK turns
@@ -178,8 +177,8 @@ type LeadSetup = {
   aiModelId: string;
   provider: string;
   // The lead's model pricing, so the lead's own gate call can refuse an
-  // unpriced model before generateText runs (specs/credits/prd.md,
-  // "Pricing"), same reasoning as `aiModelId`/`provider` above.
+  // unpriced model before generateText runs,
+  // same reasoning as `aiModelId`/`provider` above.
   pricing: AiModelPricing | null;
 };
 
@@ -215,10 +214,9 @@ async function resolveReferencedLead(
       // Workflows already run inside the worker process and need the
       // video/images to exist before downstream steps run, so the video-gen
       // tool awaits the render inline instead of the chat fire-and-forget
-      // path (specs/videogen/prd.md decision 2), and the image-gen tool
+      // path, and the image-gen tool
       // calls the generation service directly instead of going through the
-      // queue-awaiting facade (specs/imagegen/worker-execution-prd.md
-      // decision 6).
+      // queue-awaiting facade.
       runsInWorker: true,
       retrievalMode,
     }),
@@ -264,9 +262,7 @@ export const executeTeam: Executor = async (node, ctx) => {
   // Gate the lead's own call once its model (and pricing) is known. Each
   // member's delegate call gets its own independent gate inside
   // runReferencedAgent; this one covers the lead's own generateText call
-  // below, which is a separate spend (specs/credits/prd.md: "Every text LLM
-  // call made on a user's behalf in chat and workflows debits their credit
-  // account").
+  // below, which is a separate spend.
   const spendState = await gateCreditSpend({ workspaceId: ctx.workspaceId, pricing });
 
   const delegateCallMetaByToolCallId = new Map<string, DelegateCallMeta>();
@@ -312,11 +308,11 @@ export const executeTeam: Executor = async (node, ctx) => {
   } catch (error) {
     // A credit error aborts the signal above, which makes generateText
     // reject; surface the original credit error rather than an AbortError so
-    // the run step's message is distinguishable (specs/credits/prd.md, "Call
-    // sites"). Any other rejection (no credit error captured) is rethrown
+    // the run step's message is distinguishable.
+    // Any other rejection (no credit error captured) is rethrown
     // as-is. Either way, settleWorkflowUsage below is never reached, so the
     // lead's aborted partial run is not settled: v1 charges nothing for
-    // aborted/failed runs (specs/credits/prd.md, "Non-goals").
+    // aborted/failed runs.
     throw creditError ?? error;
   }
 

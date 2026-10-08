@@ -4,12 +4,12 @@ import { db } from '../db';
 import type { TaskPriority, TaskStatus } from '../schema';
 import { task } from '../schema';
 
-// The only statuses the tasks card shows (specs/home/prd.md, "Task
-// statuses"): the overview is about work needing attention, so done,
+// The only statuses the tasks card shows:
+// the overview is about work needing attention, so done,
 // canceled, and the potentially large backlog stay out.
 const OVERVIEW_TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review'];
 
-// Home overview (specs/home/prd.md): small, purpose-built reads for the home
+// Home overview: small, purpose-built reads for the home
 // page's dashboard cards. Distinct from the paginated list functions in
 // task.repo.ts/chat.repo.ts/workflow.repo.ts/agent.repo.ts/document.repo.ts,
 // which carry pagination/filter machinery the overview doesn't need.
@@ -26,7 +26,7 @@ export type RecentTask = {
 
 /**
  * Latest tasks for the tasks card, newest first. Only todo, in-progress,
- * and in-review tasks are included (specs/home/prd.md, "Task statuses").
+ * and in-review tasks are included.
  */
 export async function getRecentTasksByWorkspaceId({
   workspaceId,
@@ -54,7 +54,7 @@ export async function getRecentTasksByWorkspaceId({
 /**
  * Workspace task total for the tasks card. Counts only todo, in-progress,
  * and in-review tasks, the same rule `getRecentTasksByWorkspaceId` applies
- * to its list (specs/home/prd.md, "Task statuses").
+ * to its list.
  */
 export async function getActiveTaskCountByWorkspaceId({
   workspaceId,
@@ -79,7 +79,7 @@ export type CalendarTask = {
 
 /**
  * Tasks due inside [start, end] for the calendar card, due-date ascending.
- * Same status rule as the tasks card (specs/home/prd.md, "Task statuses"):
+ * Same status rule as the tasks card:
  * only work still needing attention shows up. Includes the assigned agent
  * so the calendar can render its avatar per task.
  */

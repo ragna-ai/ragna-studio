@@ -10,8 +10,8 @@ export const validGenVideoIdParam = myzValidator(
   z.object({ genVideoId: z.uuidv7() }),
 );
 
-// Same ownership split as gen_videos.frameOrigin (specs/videogen/prd.md
-// decision 3): a 'genImage' frame references another workspace image the
+// Same ownership split as gen_videos.frameOrigin:
+// a 'genImage' frame references another workspace image the
 // caller doesn't own (resolved to a storage key in the service); an
 // 'upload' frame names a workspace media row by id, produced by the
 // frame-upload endpoint (the client never sends a storage key).
@@ -27,8 +27,8 @@ const genVideoFrameSchema = z.discriminatedUnion('origin', [
 // supportedResolutionsByAspectRatio). BFL has no such restriction: both
 // tiers are available at every one of its ratios, including 9:16
 // (videoGenCapabilities.bfl.resolutionsByAspectRatio), so this check must
-// stay provider-aware now that the schema is shared (specs/videogen/prd-v2.md
-// decision 5). No provider means the request falls back to the default
+// stay provider-aware now that the schema is shared.
+// No provider means the request falls back to the default
 // video model, which is Veo (goal: "Veo stays the default-by-modality"), so
 // the vertex rule applies to the unset case too. Reject the invalid
 // combination here instead of letting it silently downgrade deep inside the

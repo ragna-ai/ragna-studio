@@ -21,12 +21,11 @@ export interface EmailParticipant {
 export type EmailDraftStatus = 'generating' | 'ready' | 'discarded' | 'sent';
 
 // Who authored the draft: drives the sparkle badge and the review-queue
-// count only, nothing else (specs/email/drafts-change-request.md, "Decisions").
+// count only, nothing else.
 export type EmailDraftOrigin = 'ai' | 'user';
 
 // What the draft is composing. `new` rows have no thread yet, hence
-// `email_drafts.threadId` being nullable (specs/email/drafts-change-request.md,
-// "Scope > 1").
+// `email_drafts.threadId` being nullable.
 export type EmailDraftKind = 'new' | 'reply' | 'forward';
 
 // Metadata only; attachment bytes are re-fetched from the provider on demand.
@@ -42,7 +41,7 @@ export interface EmailDraftAttachment {
 }
 
 // EMAIL ACCOUNT
-// One row per user (specs/email/prd.md, "Auth and account connection"). The
+// One row per user. The
 // actual OAuth tokens live in better-auth's `account` table via
 // linkSocial(); this row only tracks the mailbox connection and sync state.
 export const emailAccount = pgTable(
@@ -75,8 +74,8 @@ export type EmailAccount = typeof emailAccount.$inferSelect;
 export type NewEmailAccount = typeof emailAccount.$inferInsert;
 
 // EMAIL CATEGORY
-// Per-account, user-configurable classification bucket (specs/email/prd.md,
-// "Auto-categorize"). `description` is fed to the classifier prompt as-is,
+// Per-account, user-configurable classification bucket.
+// `description` is fed to the classifier prompt as-is,
 // so it stays natural language rather than a machine-readable rule.
 export const emailCategory = pgTable(
   'email_categories',
@@ -102,7 +101,7 @@ export type NewEmailCategory = typeof emailCategory.$inferInsert;
 
 // EMAIL AUTO DRAFT SENDER
 // Per-account sender allowlist that always triggers auto-draft, independent
-// of category (specs/email/prd.md, "Auto-draft replies").
+// of category.
 export const emailAutoDraftSender = pgTable(
   'email_auto_draft_senders',
   {
@@ -127,7 +126,7 @@ export type NewEmailAutoDraftSender = typeof emailAutoDraftSender.$inferInsert;
 
 // EMAIL THREAD
 // Denormalized subject/snippet/participants for the thread-list view so it
-// renders without joining every message (specs/email/prd.md, "Sync model").
+// renders without joining every message.
 export const emailThread = pgTable(
   'email_threads',
   {
@@ -204,7 +203,7 @@ export type EmailMessage = typeof emailMessage.$inferSelect;
 export type NewEmailMessage = typeof emailMessage.$inferInsert;
 
 // EMAIL MESSAGE BODY
-// Lazily persisted 1:1 body for a message (specs/email/prd.md, "Sync model").
+// Lazily persisted 1:1 body for a message.
 // Keyed by messageId itself (no separate id) so the row purges automatically
 // alongside its message via the cascade FK.
 export const emailMessageBody = pgTable('email_message_bodies', {
@@ -249,20 +248,18 @@ export const emailDraft = pgTable(
     bcc: jsonb('bcc').notNull().$type<EmailParticipant[]>().default([]),
     subject: text('subject'),
     // HTML (canonical), edited by the user via the now-HTML-native Tiptap
-    // instance (specs/email/html-content-change-request.md).
+    // instance.
     content: text('content').notNull().default(''),
     // Plain-text MIME sibling of `content`, always written alongside it by
     // whichever producer wrote `content` (browser Tiptap getText(), or the
-    // worker/API's html-to-text helper); never derived at send time
-    // (specs/email/html-content-change-request.md, "Scope > 3").
+    // worker/API's html-to-text helper); never derived at send time.
     text: text('text').notNull().default(''),
     // Quoted history rendered read-only in a sandboxed iframe, kept out of
     // the editable `content`/`text` above so the compose editor never parses
     // sender-authored HTML into the app's own DOM. Null means no quote
     // (`kind: 'new'`, or a draft created before this column existed - not
     // migrated, see below); server-authored only, written once at creation
-    // or by the worker, never client-writable via PATCH
-    // (specs/email/quote-iframe-change-request.md, "Scope > 1").
+    // or by the worker, never client-writable via PATCH.
     quotedHtml: text('quoted_html'),
     // Plain-text sibling of `quotedHtml`, same null semantics.
     quotedText: text('quoted_text'),

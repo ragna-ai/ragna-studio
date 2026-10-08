@@ -22,7 +22,7 @@ const { t } = useI18n();
 // Refs
 // A local draft, edited freely and only pushed back to the server on Save.
 // Retyping a column (e.g. select -> text) leaves existing row values
-// untouched (specs/datasets.md); this panel only ever edits the schema.
+// untouched; this panel only ever edits the schema.
 const draft = ref<DatasetColumn[]>(structuredClone(toRaw(props.columns)));
 
 const columnTypes: DatasetColumnType[] = ['text', 'number', 'date', 'select'];

@@ -5,8 +5,8 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 
 // Plain CRUD + the documented business rules for
-// /workspace/:workspaceId/task (specs/testing/strategy.md, priority 3;
-// specs/tasks/prd.md). Auth/authorization are covered exhaustively in
+// /workspace/:workspaceId/task.
+// Auth/authorization are covered exhaustively in
 // test/auth/; this file only checks the task feature's own behavior.
 
 const taskSchema = z.object({

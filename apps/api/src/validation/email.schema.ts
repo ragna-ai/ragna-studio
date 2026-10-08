@@ -37,7 +37,7 @@ export const validCreateEmailCategoryBody = myzValidator(
   'json',
   z.object({
     name: z.string().min(1).max(100),
-    // Fed to the classifier prompt as-is (specs/email/prd.md), so it stays
+    // Fed to the classifier prompt as-is, so it stays
     // free text rather than a machine-readable rule.
     description: z.string().max(2_000).optional(),
     color: hexColor,
@@ -144,8 +144,8 @@ export const validTrashActionBody = myzValidator(
   }),
 );
 
-// Batch size cap of 50 (specs/email/mass-deletion-change-request.md, "Batch
-// size cap"): keeps worst-case Gmail call volume within a single synchronous
+// Batch size cap of 50:
+// keeps worst-case Gmail call volume within a single synchronous
 // request, since there's no background job for this.
 export const validBulkTrashThreadsBody = myzValidator(
   'json',
@@ -178,7 +178,7 @@ export const validEmailDraftIdParam = myzValidator(
 );
 
 // threadId absent means "every non-terminal draft on the account", the
-// Drafts folder (specs/email/drafts-change-request.md, "Wire contract").
+// Drafts folder.
 export const validEmailDraftListQuery = myzValidator(
   'query',
   z.object({
@@ -219,8 +219,8 @@ export const validCreateEmailDraftBody = myzValidator(
 );
 
 // [PATCH] /email/draft/:draftId - the full editable set. `origin`, `kind`,
-// `threadId`, `replyToMessageId` and `agentId` are creation-only
-// (specs/email/drafts-change-request.md, "Wire contract"): `strictObject`
+// `threadId`, `replyToMessageId` and `agentId` are creation-only:
+// `strictObject`
 // rejects them (and any other unknown key) with a 422 instead of silently
 // ignoring them.
 export const validUpdateEmailDraftBody = myzValidator(
@@ -231,14 +231,14 @@ export const validUpdateEmailDraftBody = myzValidator(
     bcc: z.array(emailParticipantSchema).optional(),
     subject: z.string().nullable().optional(),
     content: z.string().optional(),
-    // Plain-text MIME sibling of `content`, same optional/partial shape
-    // (specs/email/html-content-change-request.md, "Scope > 3"): the client
+    // Plain-text MIME sibling of `content`, same optional/partial shape:
+    // the client
     // sends both together on every autosave, but either can be omitted to
     // leave the stored value untouched.
     text: z.string().optional(),
     attachments: z.array(emailDraftAttachmentSchema).optional(),
     // Explicit "push to Gmail now regardless of the attachment debounce
-    // rule" signal (specs/email/drafts-change-request.md, "Wire contract").
+    // rule" signal.
     // The client sets this on panel close and before send; control-only,
     // never persisted on the row.
     flush: z.boolean().optional(),
@@ -246,7 +246,7 @@ export const validUpdateEmailDraftBody = myzValidator(
 );
 
 // Manual "Draft with AI" trigger. agentId overrides the account default for
-// this run only (specs/email/prd.md, "Auto-draft replies").
+// this run only.
 export const validTriggerEmailDraftBody = myzValidator(
   'json',
   z.object({

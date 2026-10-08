@@ -20,7 +20,7 @@ import { useImageGenSettingsStore } from '~/features/image/stores/imagegensettin
 interface Props {
   // Shared with ImageGenGrid via the /text-to-image page, so the workspace's
   // generated images are fetched once and both the grid and this form's
-  // reference picker read the same list (specs/imagegen/prd.md).
+  // reference picker read the same list.
   genImages: GeneratedImage[];
 }
 
@@ -106,7 +106,7 @@ const referenceableGenImages = computed(() =>
 );
 
 // Fail closed: an absent or falsy capability flag means the input is
-// unavailable, never a fallback default (specs/imagegen/prd.md decision 1).
+// unavailable, never a fallback default.
 const supportsNegativePrompt = computed(
   () => selectedModel.value?.capabilities.supportsNegativePrompt ?? false,
 );
@@ -202,7 +202,7 @@ function handleReferenceFileChange(event: Event) {
 // settings" button fires. Re-selects the image's model when it still exists,
 // then applies negativePrompt/seed only if the resulting model supports
 // them, so a field the model can't honour is dropped rather than queued for
-// submission (specs/imagegen/prd.md).
+// submission.
 function applyReusedSettings(settings: ReuseImageSettings) {
   const matchedModel = imageModels.value.find(
     (model) =>

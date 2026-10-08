@@ -56,7 +56,7 @@ export function useCreateTaskLabel() {
       toast.success('Label created');
     },
     onError: (error) => {
-      // Surfaces the API's duplicate-name 400 (specs/tasks/prd.md, "Labels").
+      // Surfaces the API's duplicate-name 400.
       toast.error(extractErrorMessage(error, 'Failed to create label'));
     },
   });

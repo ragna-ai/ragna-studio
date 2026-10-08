@@ -24,7 +24,7 @@ import {
   MAX_UPLOAD_FILE_MB,
 } from '../utils/upload-limits';
 
-// TASK ATTACHMENTS (specs/tasks/attachments-prd.md)
+// TASK ATTACHMENTS
 //
 // Straight port of media.service.ts's chat-attachment orchestration onto
 // tasks. Files only: no text extraction, no agent visibility into contents

@@ -332,7 +332,7 @@ describe('GET /email/thread/:threadId', () => {
   });
 });
 
-// GET must stay a pure, idempotent read (specs/email/prd.md). Marking a
+// GET must stay a pure, idempotent read. Marking a
 // thread read on open was tried and reverted: it made an incidental refetch
 // silently undo an explicit "mark unread" from the client. Marking read is
 // the client's job, through the existing POST /email/thread/:threadId/read

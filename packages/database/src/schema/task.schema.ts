@@ -18,7 +18,7 @@ export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'don
 export type TaskPriority = 'none' | 'urgent' | 'high' | 'medium' | 'low';
 
 // TASK
-// Linear-style kanban card (specs/tasks/prd.md). One board per workspace: the
+// Linear-style kanban card. One board per workspace: the
 // workspace *is* the board, so there is no separate board/column table.
 // Authorship: exactly one of createdByUserId / createdByAgentId is set, same
 // invariant as document.schema.ts. Both are set null on delete, not cascade:
@@ -41,8 +41,8 @@ export const task = pgTable(
     description: text('description').notNull().default(''),
     status: text('status').notNull().$type<TaskStatus>().default('todo'),
     priority: text('priority').notNull().$type<TaskPriority>().default('none'),
-    // Fractional-index rank within the status column (specs/tasks/prd.md,
-    // "Ordering: fractional indexing"). Recomputed server-side on every move.
+    // Fractional-index rank within the status column.
+    // Recomputed server-side on every move.
     sortOrder: text('sort_order').notNull(),
     dueDate: timestamp('due_date'),
     // Offset in days before dueDate the reminder fires, 0 = on the due date.
@@ -80,7 +80,7 @@ export type NewTask = typeof task.$inferInsert;
 // TASK LABEL
 // Workspace-scoped, colored labels attachable to tasks (many-to-many via
 // taskToTaskLabel below). Managed by humans; agents may only attach existing
-// ones (specs/tasks/prd.md).
+// ones.
 export const taskLabel = pgTable(
   'task_labels',
   {
@@ -103,7 +103,7 @@ export type NewTaskLabel = typeof taskLabel.$inferInsert;
 
 // TASK <-> TASK LABEL
 // Pure join table: deleting a label cascades its join rows only, it never
-// touches tasks (specs/tasks/prd.md, "Labels").
+// touches tasks.
 export const taskToTaskLabel = pgTable(
   'tasks_to_task_labels',
   {
@@ -122,7 +122,7 @@ export type NewTaskToTaskLabel = typeof taskToTaskLabel.$inferInsert;
 
 // TASK ATTACHMENT
 // Links a task to a media row, same shape as media.schema.ts's
-// chatAttachment (specs/tasks/attachments-prd.md). Deleting a task cascades
+// chatAttachment. Deleting a task cascades
 // its attachment rows; the media row itself is only removed once its
 // reference count across every link table drops to zero, driven explicitly
 // by media.service.ts (apps/api). mediaId has no onDelete action on

@@ -21,8 +21,7 @@ function escapeForRegExp(value: string): string {
 
 /**
  * Splits `text` into plain/matched segments around every case-insensitive
- * occurrence of `query`, for Google-style match highlighting
- * (specs/chat/search-prd.md, "Result layout").
+ * occurrence of `query`, for Google-style match highlighting.
  */
 export function splitForHighlight(
   text: string,

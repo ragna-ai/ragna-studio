@@ -15,7 +15,7 @@ import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacesco
 import type { TaskPriority, TaskStatus } from '~/features/task/types';
 
 // Refs
-// View choice persists across visits (specs/tasks/prd.md, "Tasks page");
+// View choice persists across visits;
 // filters are in-memory only and shared between both views so switching
 // never refetches differently.
 const view = useLocalStorage<TaskView>('tasks:view', 'board');

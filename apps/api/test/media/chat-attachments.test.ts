@@ -19,8 +19,8 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/utils/upload-limits';
 
-// Chat attachment upload/delete (specs/media-library/prd.md,
-// unified-media-prd.md). Auth/authorization for /workspace/:workspaceId/*
+// Chat attachment upload/delete.
+// Auth/authorization for /workspace/:workspaceId/*
 // in general are covered exhaustively in test/auth/ and
 // test/workspace/workspace-authorization.test.ts; this file checks the
 // feature's own behavior, including the media.service.ts-level "chat
@@ -341,7 +341,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
     const attachment = attachments[0]!;
     // v1 has no natural flow to attach the same media to two chats; fabricate
     // a second reference directly to exercise deleteMediaIfUnreferenced's
-    // "still referenced" branch (specs/media-library/prd.md, decision 2).
+    // "still referenced" branch.
     await createChatAttachment({ chatId: otherChatId, mediaId: attachment.mediaId });
 
     const response = await app.request(

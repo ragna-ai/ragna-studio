@@ -72,8 +72,8 @@ async function processGenImages(genImageIds: string[]): Promise<void> {
 
 // Best-effort by design: a notification failure must never mask the job's
 // real outcome (the rows and the rethrown/absent error already carry that),
-// so every failure here is logged and swallowed. One notification per batch
-// (specs/imagegen/worker-execution-prd.md decision 5), not per row.
+// so every failure here is logged and swallowed. One notification per batch,
+// not per row.
 async function notifyBestEffort({
   genImageIds,
   type,

@@ -4,8 +4,8 @@ import type { DocumentExport, ExportFile } from './types';
 
 const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 
-// Links render as "text (url)" (specs/datasets/export-and-row-reorder.md
-// "Document export" decision 2); every other style (bold/italic/code) is
+// Links render as "text (url)";
+// every other style (bold/italic/code) is
 // formatting the text writer intentionally drops.
 function spansToText(spans: InlineSpan[]): string {
   return spans.map((span) => (span.linkHref ? `${span.text} (${span.linkHref})` : span.text)).join('');
@@ -89,8 +89,8 @@ function blockLines(rawToken: Token, depth = 0): string[] {
 }
 
 /**
- * Plain-text writer for documents (specs/datasets/export-and-row-reorder.md
- * "Document export" decision 2): a token walk that strips formatting but
+ * Plain-text writer for documents:
+ * a token walk that strips formatting but
  * keeps structure (headings, list markers, verbatim code blocks, links as
  * "text (url)"). An empty document still exports a title-only file.
  */

@@ -5,8 +5,8 @@ import { document } from '../schema';
 
 export type { Document, NewDocument } from '../schema';
 
-// Author names are resolved through relations, not a denormalized column
-// (specs/documents/prd.md): whichever of createdByUser/createdByAgent is
+// Author names are resolved through relations, not a denormalized column:
+// whichever of createdByUser/createdByAgent is
 // non-null identifies the author.
 export type DocumentWithRelations = Document & {
   folder: Folder | null;

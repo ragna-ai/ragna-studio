@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD for /workspace (specs/testing/strategy.md, priority 3). This
+// Plain CRUD for /workspace. This
 // controller checks ownership itself via `ownerId` (see workspace.repo.ts),
 // not the shared workspaceGuard middleware: it manages the resource
 // workspaceGuard exists to gate, so there's no workspaceId route param to

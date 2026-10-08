@@ -3,8 +3,8 @@ import { sweepUnreferencedMedia } from '@repo/media';
 
 const UNREFERENCED_AGE_HOURS = 24;
 
-// Safety net behind media.service.ts's synchronous refcount deletion
-// (specs/media-library/prd.md, decision 2): a detach that crashes between the
+// Safety net behind media.service.ts's synchronous refcount deletion:
+// a detach that crashes between the
 // R2 delete and the DB delete, or loses the race with a fresh attachment,
 // otherwise orphans a media row forever. Only rows still unreferenced after
 // 24h are swept, so an in-flight upload never gets caught mid-attach.

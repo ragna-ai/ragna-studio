@@ -60,7 +60,7 @@ type VideoGenOutput = { video: GeneratedAgentVideo } | { error: string };
 // multi-minute render never blocks the stream, and a dropped stream can't
 // orphan a generation. Workflows (runsInWorker: true) already run inside the
 // worker process and need the finished video for downstream steps, so they
-// await runGenVideo inline instead (specs/videogen/prd.md decision 2).
+// await runGenVideo inline instead.
 const asyncDescription =
   'Use this tool to generate a video from a text prompt, optionally animating a previously ' +
   'generated image as its first frame. Generation is asynchronous and takes anywhere from ' +
@@ -98,8 +98,8 @@ export const getGeneratedVideo = (
           { retryOnFailure: false },
         );
 
-        // mediaId is null for a pending/processing/failed row
-        // (specs/imagegen/worker-execution-prd.md decision 1): a generation
+        // mediaId is null for a pending/processing/failed row:
+        // a generation
         // that hasn't produced an object yet has no frame to animate.
         if (error !== null || !genImage || !genImage.mediaId) {
           return { error: 'The referenced image was not found in this workspace.' };

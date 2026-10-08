@@ -6,8 +6,8 @@ export interface TruncateAllTablesResult {
 }
 
 /**
- * Wipes every app table between tests (specs/testing/strategy.md,
- * "Isolation: truncate between tests"). Tables are discovered from
+ * Wipes every app table between tests.
+ * Tables are discovered from
  * `pg_tables` rather than hardcoded, so a new schema table is covered
  * automatically. Drizzle's own bookkeeping tables (only present when using
  * `db:generate` + migrate, not the `db:push` flow this repo uses) are

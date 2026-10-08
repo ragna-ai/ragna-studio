@@ -17,8 +17,8 @@ import { app } from '../../src/app';
 
 const SINGLE_UPLOAD_LIMIT_BYTES = 11 * 1024 * 1024;
 
-// imagegen (specs/testing/strategy.md's "Blocked on mock infrastructure",
-// now unblocked). Auth/authorization are covered exhaustively in test/auth/
+// imagegen.
+// Auth/authorization are covered exhaustively in test/auth/
 // and test/workspace/workspace-authorization.test.ts; this file only checks
 // the imagegen feature's own behavior.
 //
@@ -26,11 +26,11 @@ const SINGLE_UPLOAD_LIMIT_BYTES = 11 * 1024 * 1024;
 // (`generateImagesForWorkspace` -> `requestGenImages`, @repo/ai) no longer
 // calls the `ai` package: it inserts a batch of pending rows and enqueues a
 // BullMQ job. Enqueueing is faked by @repo/testing's queue mock
-// (specs/testing/strategy.md's "External boundaries") rather than hitting
+// rather than hitting
 // the real docker Redis apps/worker's dev process also polls. The actual
 // provider call (`runGenImages`/`generateAndUploadBatch`) only runs from
-// apps/worker's gen-images processor, out of scope here
-// (specs/imagegen/worker-execution-prd.md), so completed/failed rows are
+// apps/worker's gen-images processor, out of scope here,
+// so completed/failed rows are
 // seeded directly via the repo (seedGenImage below) rather than waiting on a
 // real render. `generateImageMock` is still asserted un-called in the POST
 // tests, to prove generation really was deferred to the worker rather than
@@ -60,8 +60,7 @@ const genImageSchema = z.strictObject({
   visibleWatermark: z.boolean(),
   provider: z.string(),
   model: z.string(),
-  // Undefined until the row completes (specs/imagegen/worker-execution-prd.md
-  // decision 7).
+  // Undefined until the row completes.
   imgUrl: z.string().optional(),
   referenceImages: z.array(z.strictObject({ origin: z.string(), imgUrl: z.string() })),
 });
@@ -76,7 +75,7 @@ const listResponseSchema = z.strictObject({
 // here, see the top-of-file comment), so a row at any status is seeded
 // directly via the repo rather than waiting on a real generation.
 // storageKey is a convenience param: when present it mints its own media row
-// (specs/media-library/migration-prd.md) before the gen_images row is
+// before the gen_images row is
 // created, leaving mediaId null otherwise (a pending/failed row has no
 // object yet, specs/imagegen/worker-execution-prd.md decision 1).
 async function seedGenImage({
@@ -212,8 +211,8 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
       expect(image.prompt).toBe('a red bicycle');
       expect(image.imgUrl).toBeUndefined();
     }
-    // Proves generation didn't run synchronously in the API process
-    // (specs/imagegen/worker-execution-prd.md): only the worker's gen-images
+    // Proves generation didn't run synchronously in the API process:
+    // only the worker's gen-images
     // processor calls the provider.
     expect(generateImageMock).not.toHaveBeenCalled();
 
@@ -273,8 +272,8 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
       }),
     });
 
-    // mediaId is null on a pending row (specs/imagegen/worker-execution-prd.md
-    // decision 1): resolveReferenceImage (apps/api's imagegen.service.ts)
+    // mediaId is null on a pending row:
+    // resolveReferenceImage (apps/api's imagegen.service.ts)
     // treats that the same as a reference that doesn't exist at all.
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(generateImageMock).not.toHaveBeenCalled();
@@ -457,8 +456,8 @@ describe('DELETE /workspace/:workspaceId/gen-image/:genImageId', () => {
       headers: { cookie: cookieHeader },
     });
 
-    // mediaId is null on a pending row (specs/imagegen/worker-execution-
-    // prd.md decision 1): deleteGenImage's refcount cleanup must skip it
+    // mediaId is null on a pending row:
+    // deleteGenImage's refcount cleanup must skip it
     // instead of trying to refcount-delete a null media id.
     expect(response.status).toBe(StatusCodes.OK);
     expect(deleteObjectsMock).not.toHaveBeenCalled();

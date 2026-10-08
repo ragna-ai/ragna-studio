@@ -6,8 +6,8 @@ import { ScrollArea } from '~/components/ui/scroll-area';
 import { useGetWorkspaceMedia } from '~/features/email/composables/useEmailMediaApi';
 import type { MediaListItem } from '~/features/email/types';
 
-// Attach-from-media-library picker (specs/email/prd.md: "attach files ...
-// or pick from the media library"). No dedicated media-browser component
+// Attach-from-media-library picker.
+// No dedicated media-browser component
 // exists elsewhere in apps/web to reuse (checked: media has no list UI
 // anywhere, only per-feature upload flows), so this is a minimal list
 // dialog against the workspace media list endpoint, feeding the existing

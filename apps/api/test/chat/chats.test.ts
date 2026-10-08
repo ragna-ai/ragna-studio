@@ -4,8 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Metadata CRUD for /workspace/:workspaceId/chat (specs/testing/strategy.md,
-// priority 3). Streaming/WebSocket chat (runChatStream, ws.controller.ts)
+// Metadata CRUD for /workspace/:workspaceId/chat.
+// Streaming/WebSocket chat (runChatStream, ws.controller.ts)
 // is out of scope here. Auth/authorization are covered exhaustively in
 // test/auth/; this file only checks the chat feature's own behavior.
 

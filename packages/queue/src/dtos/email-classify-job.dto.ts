@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// Enqueued by email-sync for every new message (specs/email/prd.md, "Worker
-// jobs"): fetches the body, persists it, classifies with the account's
+// Enqueued by email-sync for every new message:
+// fetches the body, persists it, classifies with the account's
 // category set, and enqueues email-draft when auto-draft applies.
 export const emailClassifyJobSchema = z.object({
   accountId: z.uuidv7(),

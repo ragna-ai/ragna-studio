@@ -41,7 +41,7 @@ export const validBranchChatBody = myzValidator(
   }),
 );
 
-// [GET] /workspace/:workspaceId/chat/search (specs/chat/search-prd.md). `q`'s
+// [GET] /workspace/:workspaceId/chat/search. `q`'s
 // 3-char floor isn't just UX: pg_trgm matches on 3-character trigrams, so
 // shorter queries have too few trigrams to use the index effectively.
 export const validChatSearchQuery = myzValidator(

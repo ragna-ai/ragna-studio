@@ -1,4 +1,4 @@
-// Manual credit grant (specs/credits/prd.md, "Grants"): the only way credits
+// Manual credit grant: the only way credits
 // enter the system in v1. Resolves the user by email, creates their credit
 // account if this is their first grant, and writes the grant through the
 // same transaction as every other ledger write, so the balance cache and
@@ -11,7 +11,7 @@ import { db } from '../db';
 import { getOrCreateCreditAccountByUserId, grantCredits } from '../repositories/credit.repo';
 import { getUserByEmail } from '../repositories/user.repo';
 
-// No floating-point in the money path (specs/credits/prd.md): parsed by hand
+// No floating-point in the money path: parsed by hand
 // rather than `Number(input) * 1_000_000`, so "31.500001" can't silently
 // lose or gain a micro-credit to float rounding.
 function parseCreditsToMicroCredits(input: string): bigint {
@@ -60,7 +60,7 @@ async function main() {
     idempotencyKey: `grant:${randomUUID()}`,
   });
 
-  // grantCredits returns void (specs/credits/prd.md, "Code placement"), so
+  // grantCredits returns void, so
   // the new balance is read back separately for the confirmation message.
   const updatedAccount = await db.query.creditAccount.findFirst({ where: { id: account.id } });
   const balanceMicroCredits = updatedAccount?.balanceMicroCredits ?? account.balanceMicroCredits;

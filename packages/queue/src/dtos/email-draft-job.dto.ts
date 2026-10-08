@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Enqueued by email-classify (auto-draft) or the manual "Draft with AI"
-// endpoint (specs/email/prd.md, "Worker jobs"). `agentId` overrides the
+// endpoint. `agentId` overrides the
 // account's default agent for manual triggers; omitted for the auto path.
 export const emailDraftJobSchema = z.object({
   accountId: z.uuidv7(),

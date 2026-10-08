@@ -22,7 +22,7 @@ export type {
   DatasetRowWriter,
 } from '../schema';
 
-// Size guardrails (specs/datasets.md decision 8): keep tool responses inside
+// Size guardrails: keep tool responses inside
 // sane token budgets and the grid snappy.
 export const MAX_COLUMNS_PER_DATASET = 20;
 export const MAX_ROWS_PER_DATASET = 1000;
@@ -264,7 +264,7 @@ export async function updateDataset({
   name?: string;
   description?: string | null;
   // Retyping a column (e.g. select -> text) leaves existing row values
-  // untouched (specs/datasets.md open question 3): they stay in jsonb as-is.
+  // untouched: they stay in jsonb as-is.
   columns?: DatasetColumn[];
 }): Promise<Dataset> {
   if (columns) {
@@ -471,8 +471,8 @@ export async function createDatasetRow({
 }
 
 /**
- * Server-side rank computation for a row reorder
- * (specs/datasets/export-and-row-reorder.md decision 4): mirrors `moveTask` in
+ * Server-side rank computation for a row reorder:
+ * mirrors `moveTask` in
  * `task.repo.ts`. Locks the parent dataset row for the duration of the
  * transaction, the same lock `createDatasetRow` takes, so a move serializes
  * against concurrent appends and against other moves, and sort keys never

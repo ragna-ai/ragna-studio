@@ -51,8 +51,8 @@ export interface GeneratedImage {
   status: GenImageStatus;
   error: string | null;
   prompt: string;
-  // Undefined until the row completes (specs/imagegen/worker-execution-prd.md
-  // decision 7): a pending/processing/failed row has no object yet.
+  // Undefined until the row completes:
+  // a pending/processing/failed row has no object yet.
   imgUrl?: string;
   createdAt: string;
   // Nullable on the wire (the DB columns have no default), even though

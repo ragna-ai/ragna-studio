@@ -49,8 +49,8 @@ export async function getEmailMessageById({ id }: { id: string }): Promise<Email
   return found ?? null;
 }
 
-// Same lookup, with the lazily-persisted body joined in (specs/email/prd.md,
-// "Sync model"). Used by the classify/draft jobs, which always need to know
+// Same lookup, with the lazily-persisted body joined in.
+// Used by the classify/draft jobs, which always need to know
 // whether a body is already stored before deciding to fetch one live.
 export async function getEmailMessageWithBodyById({
   id,
@@ -66,8 +66,7 @@ export async function getEmailMessageWithBodyById({
 }
 
 // Every message on a thread, oldest first, body joined in — the draft job's
-// context builder (specs/email/prd.md, "Worker jobs": "stored bodies, live
-// fetch for gaps").
+// context builder.
 export async function listEmailMessagesByThreadId({
   threadId,
 }: {
@@ -105,7 +104,7 @@ type UpdateEmailMessageFlagsFields = Partial<
 
 // Mailbox actions (archive/trash/star/read-unread) and the sync job's
 // flag-only history.list entries both go through this, never the full
-// upsert (specs/email/prd.md, "API"): a flag change from either source must
+// upsert: a flag change from either source must
 // not require re-sending the full message payload.
 export async function updateEmailMessageFlags({
   id,
@@ -120,7 +119,7 @@ export async function updateEmailMessageFlags({
   return updated ?? null;
 }
 
-// Written by the classifier job (specs/email/prd.md, "Worker jobs"). Accepts
+// Written by the classifier job. Accepts
 // null so a message can be explicitly uncategorized.
 export async function setEmailMessageCategory({
   id,
@@ -155,7 +154,7 @@ export async function setEmailMessageNeedsReply({
 }
 
 // Combined variant of setEmailMessageCategory + setEmailMessageNeedsReply,
-// for the classifier job (specs/email/prd.md, "Worker jobs"): it always
+// for the classifier job: it always
 // decides both in the same pass, so one round trip instead of two. The two
 // single-field setters above stay for callers that only ever touch one
 // (e.g. a manual "recategorize" action never touches needsReply).
@@ -181,7 +180,7 @@ export async function updateEmailMessageClassification({
   return updated;
 }
 
-// Sync's deletion path (specs/email/prd.md, "Sync model"): purges the local
+// Sync's deletion path: purges the local
 // row, its body cascades away with it (email_message_bodies.messageId FK is
 // onDelete: 'cascade'). Returns the deleted row (or null if it was already
 // gone) so the caller can read its threadId back, e.g. to follow up with

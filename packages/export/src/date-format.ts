@@ -1,5 +1,5 @@
-// European date formatting (specs/datasets/export-and-row-reorder.md decision
-// 2, "Date formatting"): hardcoded for now, no locale plumbing yet.
+// European date formatting:
+// hardcoded for now, no locale plumbing yet.
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 

@@ -102,8 +102,8 @@ const selectedModel = computed(() =>
   videoModels.value.find((model) => model.id === modelId.value),
 );
 
-// Per-provider constraints for the selected model (specs/videogen/prd-v2.md
-// decision 5): Veo and BFL disagree on aspect ratios, duration range, seed/
+// Per-provider constraints for the selected model:
+// Veo and BFL disagree on aspect ratios, duration range, seed/
 // negative-prompt, and draft support, so the form renders and reconciles
 // against this rather than a single fixed set of controls.
 const capability = computed(() =>
@@ -216,7 +216,7 @@ watch(
   { immediate: true },
 );
 
-// 1080p only exists for 16:9 on Veo (specs/videogen/prd.md); clamp a
+// 1080p only exists for 16:9 on Veo; clamp a
 // persisted or user-picked combination that's no longer valid. Runs after
 // the watcher above, which is what may have just changed aspectRatio.
 watch(

@@ -8,7 +8,7 @@ import { workspace } from './workspace.schema';
 export type MediaOrigin = 'uploaded' | 'generated';
 
 // MEDIA
-// Central record of every file in R2 (specs/media-library/prd.md). Ownership
+// Central record of every file in R2. Ownership
 // is a set of nullable FK columns instead of a mediable_type/id pair, so
 // cascade and the relations graph keep working; the check constraint below
 // enforces exactly one owner column is set. v1 only ever writes
@@ -50,7 +50,7 @@ export type Media = typeof media.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;
 
 // CHAT ATTACHMENT
-// Links a chat to a media row (specs/media-library/prd.md). Deleting a chat
+// Links a chat to a media row. Deleting a chat
 // cascades its attachment rows; the media row itself is only removed once
 // its reference count across every link table (this is the only one in v1)
 // drops to zero, which media.service.ts (apps/api) drives explicitly. mediaId

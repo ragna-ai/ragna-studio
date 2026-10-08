@@ -197,8 +197,8 @@ export interface EmailSearchResponse {
 
 // --- Compose / send --------------------------------------------------------
 // Every compose flow (new/reply/reply-all/forward/AI) now edits a persisted
-// draft row first (specs/email/drafts-change-request.md, "One draft object
-// for all four cases"), so `POST /email/send` and its plain (non-draft)
+// draft row first,
+// so `POST /email/send` and its plain (non-draft)
 // request shape have no remaining caller - sending always goes through
 // `POST /email/draft/:draftId/send` below.
 
@@ -291,8 +291,8 @@ export interface EmailDraftResponse {
  * (recipients, subject, body HTML/text, forwarded-attachment set), so
  * EmailDraftPanel.vue can debounce them into one `PATCH /email/draft/:id`
  * call without reaching into the composer's internal editor/refs. `content`
- * and `text` are always sent together (specs/email/html-content-change-request.md,
- * "Scope > 3"): one editor snapshot, never one without the other.
+ * and `text` are always sent together:
+ * one editor snapshot, never one without the other.
  */
 export interface EmailDraftEditableFields {
   to: EmailParticipant[];
@@ -312,8 +312,8 @@ export interface CreateEmailDraftRequest {
 
 /**
  * `origin`, `kind`, `threadId`, `replyToMessageId` and `agentId` are set at
- * creation only and rejected by PATCH (specs/email/drafts-change-request.md,
- * "API changes"), so this is a distinct, narrower type from `EmailDraft`
+ * creation only and rejected by PATCH,
+ * so this is a distinct, narrower type from `EmailDraft`
  * rather than a `Partial<EmailDraft>` that would still type-check those
  * fields as assignable.
  */

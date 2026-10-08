@@ -20,8 +20,8 @@ defineProps<{
 const session = useAuthSession();
 
 // Fetched once per session (staleTime: Infinity in the composable) and
-// refetched by ChatConversation.vue after a chat turn ends
-// (specs/credits/prd.md, "Frontend"). Rounded to whole credits for display;
+// refetched by ChatConversation.vue after a chat turn ends.
+// Rounded to whole credits for display;
 // the exact fractional amount only matters on the usage table.
 const { data: creditBalance } = useGetCreditBalance();
 const displayedCredits = computed(() => {

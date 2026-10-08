@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import { app } from '../../src/app';
 
-// workspaceGuard tests (specs/testing/strategy.md, priority 2: "Authorization
-// across workspace-scoped resources"). GET /workspace/:workspaceId/folder is
+// workspaceGuard tests.
+// GET /workspace/:workspaceId/folder is
 // the vehicle: it mounts authMiddleware + workspaceGuard with no extra
 // per-route validation, so a pass/fail here isolates the guard itself.
 

@@ -169,7 +169,7 @@ interface BranchChatVariables {
   messageId: string;
 }
 
-// "Branch from here" (specs/chat/branching.md): copies chatId's messages up
+// "Branch from here": copies chatId's messages up
 // to and including messageId into a brand new chat and navigates to it,
 // mirroring useCreateChatAndNavigate.
 export function useBranchChatAndNavigate() {
@@ -249,8 +249,8 @@ function attachmentsBasePath(
   return `/workspace/${toValue(workspaceId)}/chat/${toValue(chatId)}/attachments`;
 }
 
-// One uploaded file, as returned by the attachments endpoint
-// (specs/media-library/prd.md, decision 4). `url` is a public CDN url for
+// One uploaded file, as returned by the attachments endpoint.
+// `url` is a public CDN url for
 // images and an authenticated API download path for documents.
 export interface ChatAttachment {
   id: string;

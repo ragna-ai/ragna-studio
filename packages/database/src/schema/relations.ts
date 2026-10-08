@@ -112,25 +112,24 @@ export const relations = defineRelations(schema, (r) => ({
     workspaces: r.many.workspace(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
-    // Personal-library flow (specs/media-library/prd.md); unused until v2
+    // Personal-library flow; unused until v2
     // starts writing ownerUserId.
     media: r.many.media(),
     // Optional: not every user has a credit account yet, since accounts are
-    // created only by grantCredits, never lazily (specs/credits/prd.md,
-    // "Account creation").
+    // created only by grantCredits, never lazily.
     creditAccount: r.one.creditAccount({
       from: r.user.id,
       to: r.creditAccount.userId,
       optional: true,
     }),
-    // One row per user (specs/email/prd.md, "Auth and account connection"),
+    // One row per user,
     // optional: most users never connect Gmail.
     emailAccount: r.one.emailAccount({
       from: r.user.id,
       to: r.emailAccount.userId,
       optional: true,
     }),
-    // MCP (specs/mcp/prd.md): one settings row per user, created on first
+    // MCP: one settings row per user, created on first
     // opt-in; several connections, one per connected client (P9).
     mcpSettings: r.one.mcpSettings({
       from: r.user.id,
@@ -352,7 +351,7 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     messages: r.many.chatMessage(),
     attachments: r.many.chatAttachment(),
-    // Branching provenance (specs/chat/branching.md). Aliased because both
+    // Branching provenance. Aliased because both
     // are second relations between the chat<->chat / chat<->chatMessage
     // table pairs (alongside the self-FK-less pair above and `messages`).
     forkedFromChat: r.one.chat({
@@ -403,7 +402,7 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
     // Nullable: lets a ledger row be traced to its detail when debugging,
-    // not used to power any list view (specs/credits/prd.md, "Schema").
+    // not used to power any list view.
     usageEvent: r.one.creditUsageEvent({
       from: r.creditLedger.usageEventId,
       to: r.creditUsageEvent.id,
@@ -585,9 +584,9 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.workspace.id,
       optional: false,
     }),
-    // The generated output's media row (specs/media-library/migration-prd.md).
+    // The generated output's media row.
     // Optional like genVideo.media below: null until the worker uploads the
-    // output (specs/imagegen/worker-execution-prd.md decision 1).
+    // output.
     media: r.one.media({
       from: r.genImage.mediaId,
       to: r.media.id,
@@ -632,7 +631,7 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
       alias: 'genVideoFrameMedia',
     }),
-    // Self-relation for draft/enhance (specs/videogen/prd-v2.md decision 1).
+    // Self-relation for draft/enhance.
     // Same alias pairing as task.schema.ts's parentTask/subtasks.
     parentGenVideo: r.one.genVideo({
       from: r.genVideo.parentGenVideoId,
@@ -727,7 +726,7 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.workspace.id,
       optional: false,
     }),
-    // Self-relation for the one-level subtask rule (specs/tasks/prd.md).
+    // Self-relation for the one-level subtask rule.
     // `alias` pairs this "one" side with the "many" side below so drizzle
     // can tell them apart from any other task<->task relation.
     parentTask: r.one.task({
@@ -797,13 +796,12 @@ export const relations = defineRelations(schema, (r) => ({
     datasets: r.many.dataset(),
     documents: r.many.document(),
     folders: r.many.folder(),
-    // Chat attachments write ownerWorkspaceId in v1 (specs/media-library/prd.md).
+    // Chat attachments write ownerWorkspaceId in v1.
     media: r.many.media(),
     tasks: r.many.task(),
     taskLabels: r.many.taskLabel(),
     // The account that pays for work done here is resolved through
-    // `ownerId`, not this relation; it exists for the audit trail only
-    // (specs/credits/prd.md, "Billing entity resolution").
+    // `ownerId`, not this relation; it exists for the audit trail only.
     creditUsageEvents: r.many.creditUsageEvent(),
   },
 }));

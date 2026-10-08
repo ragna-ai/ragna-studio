@@ -18,7 +18,7 @@ export const chat = pgTable(
       .notNull()
       .references(() => agent.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
-    // Branching provenance only (specs/chat/branching.md), never read to
+    // Branching provenance only, never read to
     // reconstruct content: a branch is a full copy of its source's messages.
     // Nullable self-FK, set null on delete so a branch survives its source
     // being deleted. AnyPgColumn breaks the circular type reference.
@@ -37,8 +37,8 @@ export const chat = pgTable(
     index('chat_userId_idx').on(table.userId),
     index('chat_agentId_idx').on(table.agentId),
     index('chat_workspaceId_idx').on(table.workspaceId),
-    // Trigram GIN index backing substring ILIKE search on chat titles
-    // (specs/chat/search-prd.md). Requires the pg_trgm extension.
+    // Trigram GIN index backing substring ILIKE search on chat titles.
+    // Requires the pg_trgm extension.
     index('chat_title_trgm_idx').using('gin', table.title.op('gin_trgm_ops')),
   ],
 );

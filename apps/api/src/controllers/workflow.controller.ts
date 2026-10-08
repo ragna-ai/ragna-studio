@@ -154,7 +154,7 @@ export const workflowController = new Hono()
    * Enqueues a run of the workflow's published definition. Gated by
    * creditGuard: this is the one route in this controller that spends
    * credits, so the guard is mounted here only, not with `.use()` on the
-   * whole controller (specs/credits/prd.md, "creditGuard").
+   * whole controller.
    */
   .post('/:workflowId/run', creditGuard, validWorkflowIdParam, validRunWorkflowBody, async (c) => {
     const workspace = c.get('workspace');

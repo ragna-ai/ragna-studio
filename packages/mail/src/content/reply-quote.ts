@@ -1,12 +1,11 @@
 // packages/mail/src/content/reply-quote.ts
 //
 // Builds the quoted-reply HTML block stored alongside a draft's own
-// `content` (specs/email/html-content-change-request.md, "Quoting: HTML
-// blockquote replaces buildReplyQuoteMarkdown"): "On DATE, NAME wrote:"
+// `content`:
+// "On DATE, NAME wrote:"
 // followed by the replied-to message's sanitized HTML wrapped in a
 // <blockquote>. Rendered read-only via EmailContentIframe in the compose UI,
-// not hydrated into the editable Tiptap instance
-// (specs/email/quote-iframe-change-request.md).
+// not hydrated into the editable Tiptap instance.
 //
 // Both apps/api (user reply/forward drafts, `createEmailDraftForUser`) and
 // apps/worker (AI drafts, `pushDraftToGmail`) call `buildReplyQuoteHtml`, so
@@ -31,7 +30,7 @@ export interface DraftContentWithQuote {
 }
 
 // The quote lives in its own `quotedHtml`/`quotedText` columns
-// (specs/email/quote-iframe-change-request.md) so the compose UI can render
+// so the compose UI can render
 // it read-only, separate from the user's own editable text. Both apps/api's
 // send path and apps/worker's Gmail write-back rejoin the two at the edge,
 // so this join has to be the one place that does it — same discipline as
@@ -53,7 +52,7 @@ export function joinDraftContentWithQuote({
 // from hanging on a pathologically large blob (2026-08-15 freeze bug,
 // specs/email/bugs.md). That guard is gone now that the quote renders
 // read-only through EmailContentIframe instead of being parsed into the
-// editor (specs/email/quote-iframe-change-request.md) - the same sandboxed
+// editor - the same sandboxed
 // iframe already renders full, un-truncated message HTML of any size for
 // the read pane.
 export function buildReplyQuoteHtml(message: ReplyQuoteSourceMessage): string {

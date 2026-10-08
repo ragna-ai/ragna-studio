@@ -42,7 +42,7 @@ export async function getMediaByWorkspaceId({ workspaceId }: { workspaceId: stri
 }
 
 // Number of rows still pointing at this media, across every link point in
-// the schema (specs/media-library/migration-prd.md decision 4). This and
+// the schema. This and
 // findUnreferencedMediaOlderThan below are the ONLY two places allowed to
 // know the link-point list; every future consumer extends exactly these two
 // functions, nowhere else.

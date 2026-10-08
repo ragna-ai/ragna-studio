@@ -1,7 +1,7 @@
 // packages/media/src/services/media.service.ts
 //
-// MEDIA DOMAIN (specs/media-library/prd.md,
-// specs/media-library/unified-media-prd.md decision 1). Owns storage
+// MEDIA DOMAIN.
+// Owns storage
 // placement and refcounted deletion for the media table. This package
 // throws plain Errors and returns results, never HTTP exception classes:
 // apps map failures onto their own HTTP layer.
@@ -23,7 +23,7 @@ import { MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '../types';
 
 // One owner FK is set at a time (the DB check constraint enforces it); v1
 // only ever writes workspaceId, userId is reserved for the personal-library
-// flow (specs/media-library/prd.md decision 1).
+// flow.
 export interface MediaOwner {
   userId?: string;
   workspaceId?: string;
@@ -104,7 +104,7 @@ export interface CreateMediaForObjectInput {
 
 /**
  * Mints a media row for an object that was already uploaded to R2 by an
- * earlier request (specs/media-library/migration-prd.md decision 6): the
+ * earlier request: the
  * caller hands back a bare storage key with no buffer in hand, so the byte
  * size comes from a HEAD request instead of the upload itself.
  */
@@ -130,8 +130,7 @@ export async function createMediaForObject({
   });
 }
 
-// DELETION (specs/media-library/prd.md decision 2,
-// specs/media-library/migration-prd.md decision 4)
+// DELETION
 
 /** Returns true only when every object was confirmed deleted. Never throws. */
 async function deleteMediaObjects(objects: { bucket: string; storageKey: string }[]): Promise<boolean> {
@@ -219,7 +218,7 @@ export interface SweepUnreferencedMediaResult {
 }
 
 /**
- * Safety net for the worker cron (specs/media-library/prd.md decision 2):
+ * Safety net for the worker cron:
  * finds media with zero references older than `olderThanHours` and runs the
  * same deletion path every detach point uses. Covers races and failed
  * best-effort R2 deletes.

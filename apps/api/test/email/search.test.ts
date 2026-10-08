@@ -11,7 +11,7 @@ import { buildFakeMailThread, fetchThreadMock, resetMailProviderMock, searchMock
 // search does the matching; email.service.ts's searchEmailForUser only
 // hydrates the returned provider thread ids against the local index,
 // falling back to a live fetch + persist for a thread id we haven't seen
-// before (specs/email/prd.md, "Threads/messages").
+// before.
 
 beforeEach(async () => {
   await truncateAllTables();

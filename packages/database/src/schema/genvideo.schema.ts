@@ -36,7 +36,7 @@ export const genVideo = pgTable(
       .references(() => workspace.id, { onDelete: 'cascade' }),
     status: text('status').notNull().$type<GenVideoStatus>().default('pending'),
     // The rendered output's media row. Null until the worker uploads the mp4
-    // and creates it (specs/media-library/migration-prd.md); no onDelete
+    // and creates it; no onDelete
     // action, same as chat_attachment.media_id.
     mediaId: text('media_id').references(() => media.id),
     // Set on failure, cleared on a retry.
@@ -59,7 +59,7 @@ export const genVideo = pgTable(
     // The first-frame image's media row. Set together with frameOrigin; no
     // onDelete action, same as mediaId above.
     frameMediaId: text('frame_media_id').references(() => media.id),
-    // Draft/enhance (specs/videogen/prd-v2.md decision 1). A draft is a normal
+    // Draft/enhance. A draft is a normal
     // row with isDraft: true; enhance is a separate row pointing back at it
     // via parentGenVideoId, never an in-place upgrade.
     isDraft: boolean('is_draft').notNull().default(false),

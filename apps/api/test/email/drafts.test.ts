@@ -37,8 +37,8 @@ function buildFormData(fields: Record<string, FormValue>): FormData {
   return formData;
 }
 
-// Draft lifecycle (specs/email/prd.md, "Auto-draft replies" / "Drafts: list,
-// trigger manual draft, edit, discard, send"). `send` is covered separately
+// Draft lifecycle.
+// `send` is covered separately
 // in send.test.ts alongside POST /email/send, since both share the
 // freshly-refactored multipart contract (validation/email.schema.ts).
 // Trigger only enqueues (the worker owns writing the email_drafts row), so
@@ -381,7 +381,7 @@ describe('POST /email/draft - creation per kind', () => {
       })
       .parse(await response.json());
     // `content`/`text` are the user's own reply text, which starts empty -
-    // the quote no longer lives here (specs/email/quote-iframe-change-request.md).
+    // the quote no longer lives here.
     expect(body.draft.content).toBe('');
     expect(body.draft.text).toBe('');
     expect(body.draft.quotedHtml).toContain('Ada Lovelace &lt;ada@example.test&gt; wrote:');

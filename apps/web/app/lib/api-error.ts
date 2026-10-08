@@ -27,7 +27,7 @@ function hasErrorCode(value: unknown): value is { code: number } {
   );
 }
 
-// HTTP 402, thrown by `assertCanSpend` (specs/credits/prd.md) when the
+// HTTP 402, thrown by `assertCanSpend` when the
 // account has no credits left.
 const PAYMENT_REQUIRED_CODE = 402;
 
@@ -40,7 +40,7 @@ export const OUT_OF_CREDITS_MESSAGE =
  * thrown by `WebSocketChatTransport` on a `code: 402` WS error frame, which
  * carries `code` directly on the error rather than nested under `.data`.
  * Checking both shapes here is what lets the HTTP and WS chat paths share
- * one "out of credits" message (specs/credits/prd.md, "Frontend").
+ * one "out of credits" message.
  */
 export function isOutOfCreditsError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) {

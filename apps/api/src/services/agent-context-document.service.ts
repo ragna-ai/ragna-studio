@@ -156,7 +156,7 @@ async function deleteAgentContextDocumentChunks(documentId: string): Promise<voi
  * exception if it doesn't exist there. Shared by every function below that
  * needs to resolve the agent before touching a document. Callers rely on
  * the workspace guard having already verified `workspaceId` belongs to the
- * authenticated user (specs/api-standards/prd.md). */
+ * authenticated user. */
 async function loadOwnedAgent({
   agentId,
   workspaceId,
@@ -492,8 +492,7 @@ export async function replaceAgentContextDocumentFile({
 
   // Hygiene: the ready-join already hides a pending document's old chunks
   // from search, but this drops them outright instead of leaving them for
-  // the next successful extraction's transaction to replace
-  // (specs/agent/agent-context-retrieval.md, "Pipeline changes").
+  // the next successful extraction's transaction to replace.
   await deleteAgentContextDocumentChunks(document.id);
 
   // Only delete the previous object once the row safely points at the new

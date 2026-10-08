@@ -13,8 +13,8 @@ import {
 import { resetEmailQueueMock } from './support/email-queue.mock';
 import { resetMailProviderMock, sendMock } from './support/mail-provider.mock';
 
-// Compose / send (specs/email/prd.md, "API": "Compose/send: send via Gmail
-// API..."). POST /email/send and POST /email/draft/:draftId/send were just
+// Compose / send.
+// POST /email/send and POST /email/draft/:draftId/send were just
 // refactored to zod form validation (validation/email.schema.ts);
 // re-verified against the controller + schema on disk before writing these
 // (both present, task #9 already landed). Target contract per that

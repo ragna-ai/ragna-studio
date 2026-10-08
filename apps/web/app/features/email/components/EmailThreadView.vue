@@ -71,9 +71,8 @@ const lastMessage = computed(() => messages.value.at(-1) ?? null);
 function categoryFor(message: EmailMessageDetail): EmailCategory | null {
   return message.categoryId ? (categoryById.value.get(message.categoryId) ?? null) : null;
 }
-// One active (non-terminal) draft per thread, whoever wrote it - AI or user
-// (specs/email/drafts-change-request.md, section 2: "stops filtering on
-// origin"). Never needed an origin filter here in the first place since
+// One active (non-terminal) draft per thread, whoever wrote it - AI or user.
+// Never needed an origin filter here in the first place since
 // `GET /email/draft?threadId=` now already returns both.
 const activeDraft = computed(
   () => draftsData.value?.drafts.find((draft) => draft.status === 'generating' || draft.status === 'ready') ?? null,
@@ -116,7 +115,7 @@ watch(
   { immediate: true },
 );
 
-// Opening a thread marks it read (specs/email/prd.md), fired here as an
+// Opening a thread marks it read, fired here as an
 // explicit action rather than a GET side effect (that was tried and
 // reverted: it made every refetch non-idempotent). Guarded by
 // markedReadThreadId so this runs exactly once per thread *becoming the
@@ -146,8 +145,8 @@ async function focusExistingDraft() {
 // threads a reply against (replyToMessageId), so there's only ever one
 // "reply" concept for a thread rather than one per message row.
 //
-// One active draft per thread (specs/email/drafts-change-request.md, section
-// 2): if one already exists and matches `kind`, focus it instead of opening
+// One active draft per thread:
+// if one already exists and matches `kind`, focus it instead of opening
 // a second one; if it's a different kind, confirm discarding it first.
 // `includeAllRecipients` is Reply all's only distinguishing behaviour -
 // `POST /email/draft`'s body has no field for it (just `kind`/`threadId`/

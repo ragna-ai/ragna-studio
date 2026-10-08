@@ -28,7 +28,7 @@ export interface DocumentResponse {
 }
 
 // Authorship display name is resolved here via the joined relations, not a
-// denormalized column (specs/documents/prd.md): whichever of
+// denormalized column: whichever of
 // createdByUserId/createdByAgentId is non-null identifies the author.
 function toDocumentResponse(documentRecord: DocumentWithRelations): DocumentResponse {
   return {
@@ -50,7 +50,7 @@ function toDocumentResponse(documentRecord: DocumentWithRelations): DocumentResp
 /**
  * Loads one document and converts it, throwing 404 if it isn't found.
  * Callers rely on the workspace guard having already verified `workspaceId`
- * belongs to the authenticated user (specs/api-standards/prd.md).
+ * belongs to the authenticated user.
  */
 async function loadDocumentResponse({
   workspaceId,
@@ -109,7 +109,7 @@ export async function getDocument({
   return loadDocumentResponse({ workspaceId, documentId });
 }
 
-// EXPORT (specs/datasets/export-and-row-reorder.md "Document export")
+// EXPORT
 
 export type DocumentExportFormat = 'md' | 'txt' | 'pdf' | 'docx';
 
@@ -162,8 +162,7 @@ function toDocumentExportFilename(title: string, format: DocumentExportFormat): 
  * `content` is already canonical markdown (documents/prd.md), so the
  * mapping to `DocumentExport` is a straight pass-through; every writer
  * parses it once inside `@repo/export`. An empty document still exports a
- * title-only file (specs/datasets/export-and-row-reorder.md "Document
- * export" decision 3).
+ * title-only file.
  */
 export async function exportDocument({
   workspaceId,
@@ -220,7 +219,7 @@ export async function createDocumentForUser({
 /**
  * [PATCH] /workspace/:workspaceId/document/:documentId
  * Also the autosave endpoint (debounced client-side): last writer wins, no
- * conflict detection in v1 (specs/documents/prd.md).
+ * conflict detection in v1.
  */
 export async function updateDocumentForUser({
   workspaceId,

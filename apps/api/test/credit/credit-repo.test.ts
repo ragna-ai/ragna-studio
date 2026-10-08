@@ -18,7 +18,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 
 // Pure math: computeCharge and ceilDiv (packages/database/src/repositories/
 // credit.repo.ts), module-private in production and exported only for
-// tests (specs/credits/prd.md, "Account creation").
+// tests.
 describe('ceilDiv', () => {
   test('rounds up on inexact division, always in the platform favour', () => {
     expect(ceilDiv(10n, 3n)).toBe(4n);
@@ -115,7 +115,7 @@ describe('computeCharge', () => {
       cacheWriteTokens: 100,
     });
 
-    // Charged as if nothing were cached (specs/credits/prd.md, "Cached tokens").
+    // Charged as if nothing were cached.
     expect(charge.costNanoUsd).toBe(3_000_000n); // 1000 * 3000
     expect(charge.chargedMicroCredits).toBe(3_000_000n);
 

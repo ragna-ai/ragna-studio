@@ -14,7 +14,7 @@ import { user } from './user.schema';
 
 // Tables required by the @better-auth/mcp OAuth provider (mcp(), which wraps
 // @better-auth/oauth-provider) and the jwt() plugin, hand-written from their
-// installed dist schema definitions (specs/mcp/prd.md, "OAuth"). Column names
+// installed dist schema definitions. Column names
 // follow the plugin's field names; table names follow this repo's snake_case
 // convention.
 

@@ -76,7 +76,7 @@ function isEnhanceableDraft(video: GeneratedVideo) {
   return video.isDraft && video.status === 'completed';
 }
 
-// The one-enhance-per-draft rule (specs/videogen/prd-v2.md decision 2): a
+// The one-enhance-per-draft rule: a
 // failed enhance can be retried, so only a non-failed enhance row blocks a
 // new one. This is a local, best-effort mirror of the server's check for
 // the disabled state and its tooltip; the server re-checks authoritatively

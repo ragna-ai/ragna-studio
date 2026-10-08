@@ -9,7 +9,7 @@ import type { EmailDraft, SendEmailResponse } from '~/features/email/types';
 
 // The one draft surface, used by all five entry points (new, reply,
 // reply-all, forward, AI) and rendered inline wherever a thread's active
-// draft appears (specs/email/drafts-change-request.md, section 2). Recipients,
+// draft appears. Recipients,
 // subject and body come straight off `draft` - seeding happens server-side
 // at creation, this panel only renders what it's given and hosts the
 // discard action; EmailComposer.vue owns the autosave/send mutations

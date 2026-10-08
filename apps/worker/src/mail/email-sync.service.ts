@@ -36,15 +36,15 @@ import { getMailProviderForAccount } from './mail-provider';
 import { persistMessageBody } from './message-body';
 import { fromParticipant, summarizeThread, toParticipants } from './participants';
 
-// "the most recent ~50 inbox threads" (specs/email/prd.md, "Sync model").
+// "the most recent ~50 inbox threads".
 const SEED_THREAD_COUNT = 50;
 
-// Abandoned drafts (specs/email/drafts-change-request.md, "Scope > 4"): still
+// Abandoned drafts: still
 // empty and untouched this long are swept on the account's own sync tick.
 const EMPTY_DRAFT_SWEEP_AGE_MS = 24 * 60 * 60 * 1000;
 
 // The client autosaves locally on a ~1s debounce and write-backs to the
-// provider on a ~3s one (specs/email/drafts-change-request.md, "Scope > 3"),
+// provider on a ~3s one,
 // so a sync tick landing mid-edit can observe a local row that's already
 // ahead of what the provider has. This grace window absorbs that in-flight
 // write-back plus ordinary clock skew: it's what lets reconcileDrafts tell
@@ -92,8 +92,8 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
     // Runs after either sync path (including the cursor-expiry fallback,
     // which re-enters seedInitialSync above): reconciles email_drafts
     // against Gmail's actual drafts.list(), then sweeps rows that never
-    // reached Gmail and were abandoned (specs/email/drafts-change-request.md,
-    // "Scope > 2" and "Scope > 4"). Piggybacked on this job rather than
+    // reached Gmail and were abandoned.
+    // Piggybacked on this job rather than
     // given a queue of its own; see the module comment on both functions.
     await reconcileDrafts({ account, provider });
     await sweepEmptyDrafts({ accountId: account.id });
@@ -113,7 +113,7 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
 }
 
 // Cursor first, so nothing that lands between the search below and this
-// call is missed (specs/email/prd.md, "Sync model"). Also the cursor-expiry
+// call is missed. Also the cursor-expiry
 // fallback: cursorExpired re-runs this exact path, and the upserts below
 // dedupe on (accountId, providerThreadId)/(accountId, providerMessageId),
 // so re-importing overlapping mail is idempotent.
@@ -136,8 +136,7 @@ async function seedInitialSync({
 
 // Seed import only: pulls the full thread (metadata + bodies, since
 // fetchThread returns both) and upserts everything. Never enqueues
-// classification — this is pre-connect mail, not new mail (specs/email/prd.md,
-// "Worker jobs").
+// classification — this is pre-connect mail, not new mail.
 async function importThread({
   account,
   provider,
@@ -165,8 +164,7 @@ async function importThread({
   for (const message of thread.messages) {
     // fetchThread returns every message in the thread, drafts included; a
     // reply/forward draft on an already-indexed thread is reconciled into
-    // email_drafts separately (reconcileDrafts), never imported as mail
-    // (specs/email/drafts-change-request.md, "Scope > 7").
+    // email_drafts separately (reconcileDrafts), never imported as mail.
     if (isDraftMessage(message)) {
       continue;
     }
@@ -235,8 +233,7 @@ async function applySyncChanges({
 }): Promise<void> {
   // A draft's contained message is reconciled into email_drafts separately
   // (reconcileDrafts, called once per sync after applySyncChanges), never
-  // imported as mail or classified (specs/email/drafts-change-request.md,
-  // "Scope > 7").
+  // imported as mail or classified.
   const addedChanges = changes.filter(isAdded).filter((change) => !isDraftMessage(change.message));
   const flagsChanges = changes.filter(isFlagsChanged);
   const deletedChanges = changes.filter(isDeleted);
@@ -250,8 +247,7 @@ async function applySyncChanges({
   // that message id was never imported above (isDraftMessage skips it), so
   // deleteEmailMessageByProviderMessageId below simply finds no local row
   // and no-ops. What marks a local draft row discarded is it disappearing
-  // from drafts.list(), handled by reconcileDrafts instead
-  // (specs/email/drafts-change-request.md, "Scope > 2").
+  // from drafts.list(), handled by reconcileDrafts instead.
   for (const change of deletedChanges) {
     // Returns the deleted row (or null if it was already gone) so its
     // threadId is right there for the empty-thread cleanup below;
@@ -307,8 +303,8 @@ async function applyFlagsChanges({
 }
 
 // Graph delta can't tell "created" from "updated", so an `added` change may
-// name a message we already indexed (specs/email/microsoft-provider-prd.md,
-// "Contract changes"). Every message is upserted either way; only ones not
+// name a message we already indexed.
+// Every message is upserted either way; only ones not
 // already indexed before the upsert get (re-)classified.
 async function applyAddedChanges({
   account,
@@ -345,8 +341,8 @@ function isRecentEnoughToClassify(account: EmailAccount, message: Pick<MailMessa
 // A single new (or re-emitted) message: upsert its thread (denormalized
 // fields refreshed from this message, see participants.ts) and its own row,
 // then enqueue classification only when it's genuinely new — unlike the
-// seed path, this is new mail arriving after connect (specs/email/prd.md,
-// "Worker jobs"). Sent/spam/trash mail is stored (so it still shows up in
+// seed path, this is new mail arriving after connect.
+// Sent/spam/trash mail is stored (so it still shows up in
 // its thread) but skips classification (see isNonClassifiableMessage).
 async function importAddedMessage({
   account,
@@ -487,8 +483,8 @@ async function refreshReconciledDraft({
   const content = toCanonicalText(full.body) ?? '';
 
   // origin/kind/threadId/replyToMessageId/agentId are set once at creation
-  // and rejected by the API's own PATCH (specs/email/drafts-change-request.md,
-  // "Wire contract"); reconciling an already-known draft only refreshes what
+  // and rejected by the API's own PATCH;
+  // reconciling an already-known draft only refreshes what
   // a Gmail-side edit can change.
   await updateEmailDraft({
     id: existing.id,
@@ -517,7 +513,7 @@ async function createReconciledDraft({
   // draft, and that id doesn't necessarily correspond to a real conversation
   // we've indexed. Only attach the draft to a thread we already have; a
   // draft on an unknown thread is stored thread-less rather than creating a
-  // phantom email_threads row (specs/email/drafts-change-request.md, "Scope > 2").
+  // phantom email_threads row.
   const thread = await getEmailThreadByProviderThreadId({
     accountId: account.id,
     providerThreadId: full.threadId,
@@ -579,7 +575,7 @@ async function discardVanishedDrafts({
 
 // Rows that never reached Gmail (providerDraftId still null) and were left
 // empty and untouched past the cutoff are a plain local delete, no Gmail
-// call involved (specs/email/drafts-change-request.md, "Scope > 4").
+// call involved.
 async function sweepEmptyDrafts({ accountId }: { accountId: string }): Promise<void> {
   const staleDrafts = await listEmptyStaleEmailDrafts({
     accountId,

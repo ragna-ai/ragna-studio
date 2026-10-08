@@ -95,8 +95,8 @@ import {
 } from '../exceptions';
 import { getMailProviderForConnectRequest, getMailProviderForUser } from './email-provider.service';
 
-// Attachment bytes (and metadata) are never persisted (specs/email/prd.md,
-// "Attachments stay fetch-on-demand"), so a compose request's fresh uploads
+// Attachment bytes (and metadata) are never persisted,
+// so a compose request's fresh uploads
 // go straight into the outgoing mail without ever touching R2/@repo/media.
 const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024; // the provider's own cap, same for Gmail and Outlook
 
@@ -167,7 +167,7 @@ export async function getEmailAccountStatus({
   return toAccountStatus(account);
 }
 
-// Superhuman-style default set (specs/email/prd.md seed request): natural
+// Superhuman-style default set: natural
 // language descriptions the classifier prompt can use as-is. Every seeded
 // category starts with autoDraft off; the user opts in per category.
 const DEFAULT_EMAIL_CATEGORIES: ReadonlyArray<{
@@ -336,8 +336,8 @@ export async function updateEmailAccountSettingsForUser({
   return updated;
 }
 
-// Agents are workspace resources, the email account is per-user
-// (specs/email/prd.md, "Open questions"): ownership is checked directly by
+// Agents are workspace resources, the email account is per-user:
+// ownership is checked directly by
 // userId (agent.repo.ts's getAgentById), not through a workspace guard,
 // same as workflow executors resolving a user-referenced agent outside an
 // HTTP route.
@@ -846,7 +846,7 @@ export async function getEmailThreadDetailForUser({
     }
   }
 
-  // Deliberately a pure read: GET must stay idempotent (specs/email/prd.md).
+  // Deliberately a pure read: GET must stay idempotent.
   // Marking a thread read on open was tried and reverted - it made this
   // endpoint mutate state on an incidental refetch, silently undoing an
   // explicit "mark unread". Marking read is the client's job, through the
@@ -1286,8 +1286,7 @@ export interface BulkTrashThreadResult {
  * per-thread path as `setThreadTrashedForUser`. Every id is wrapped in its
  * own `tryCatch` so one bad id (not found, provider error) doesn't reject
  * the whole batch - same tolerant, log-and-continue precedent as
- * `applyActionToMessages` (specs/email/mass-deletion-change-request.md,
- * "Execution model").
+ * `applyActionToMessages`.
  */
 export async function bulkSetThreadsTrashedForUser({
   userId,
@@ -1613,7 +1612,7 @@ async function sendViaExistingDraft({
  * Handles both new mail and replies: `input.thread` (resolved by
  * `resolveThreading`) is what tells the provider to thread the message.
  * The sent message is never hand-inserted into the local index; it lands
- * there via the next sync (specs/email/prd.md, "Sync model").
+ * there via the next sync.
  */
 export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmailResponse> {
   const {
@@ -1668,7 +1667,7 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
     // providerDraftId is only cleared when this send actually consumed one
     // (the provider deletes the draft server-side, so the id no longer resolves).
     // `text` is written alongside `content` here too - the two must never
-    // drift (specs/email/html-content-change-request.md): prefer the
+    // drift: prefer the
     // client's own `text` (its Tiptap `getText()`, sent alongside the same
     // edited `content`), falling back to the shared stripper only if a
     // caller sent `draftContent` without a paired `text`.
@@ -1695,8 +1694,8 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
 // --- Drafts -------------------------------------------------------------
 
 // Thrown by createEmailDraftForUser when the thread already has a
-// non-terminal draft (specs/email/drafts-change-request.md, "one active
-// draft per thread"). Not an HTTPException: the 409 response carries the
+// non-terminal draft.
+// Not an HTTPException: the 409 response carries the
 // existing draft itself in its JSON body (same `{ draft }` envelope a
 // successful create returns, so the client can read its `kind` and decide
 // whether to offer a replace), not just a message, so the controller
@@ -1823,13 +1822,13 @@ export interface ReplyDraftQuote {
 // amends prd.md's "the API never appends quotes server-side" - that was
 // right when a send was assembled in the browser, but a draft is now a
 // persisted server object, so the quote has to be in the row at creation.
-// Reuses the client's own helper (specs/email/html-content-change-request.md,
-// "Quoting: HTML blockquote replaces buildReplyQuoteMarkdown") so there is
+// Reuses the client's own helper
+// so there is
 // still exactly one implementation of the quote format, shared with
 // apps/worker's AI draft push. `quotedText` is derived from the same HTML via
 // `htmlToText` so the two can never drift relative to each other. The quote
 // lives in its own `quotedHtml`/`quotedText` columns, separate from the
-// user's own `content`/`text` (specs/email/quote-iframe-change-request.md).
+// user's own `content`/`text`.
 async function buildReplyDraftQuote({
   provider,
   message,
@@ -1850,15 +1849,15 @@ async function buildReplyDraftQuote({
 
 /**
  * [POST] /email/draft
- * Creates the local row for one of the four compose entry points
- * (specs/email/drafts-change-request.md, "API changes"). `new` seeds nothing;
+ * Creates the local row for one of the four compose entry points.
+ * `new` seeds nothing;
  * `reply` seeds `to` from the replied-to message's sender only, never `cc`
  * (reply-all is not a kind - the client PATCHes `cc` in separately, so the
  * two must not fight); `forward` leaves `to` empty and seeds the forwarded
  * message's attachment metadata. Both `reply` and `forward` start `content`/
  * `text` empty (the user's own reply text, typed later) and seed
  * `quotedHtml`/`quotedText` with the quoted source message via
- * `buildReplyDraftQuote` (specs/email/quote-iframe-change-request.md).
+ * `buildReplyDraftQuote`.
  * `reply`/`forward` 409 (`ActiveDraftConflictError`) when the thread already
  * has a non-terminal draft instead of opening a second one.
  */
@@ -1937,8 +1936,7 @@ export async function createEmailDraftForUser({
 /**
  * [GET] /email/draft?threadId=...
  * `threadId` present -> that thread's drafts; absent -> every non-terminal
- * draft on the account, the Drafts folder
- * (specs/email/drafts-change-request.md, "Scope > 6").
+ * draft on the account, the Drafts folder.
  */
 export async function listEmailDraftsForUser({
   userId,
@@ -1979,8 +1977,7 @@ export async function listEmailDraftsForUser({
 /**
  * [GET] /email/draft/:draftId
  * A single draft by id, e.g. for the panel to re-fetch its own draft
- * directly instead of filtering the account-wide list client-side
- * (specs/email/drafts-change-request.md, "Wire contract").
+ * directly instead of filtering the account-wide list client-side.
  */
 export async function getEmailDraftForUser({
   userId,
@@ -1994,7 +1991,7 @@ export async function getEmailDraftForUser({
 }
 
 // Both in-flight and review-ready drafts, across every thread on the
-// account: this is the account-wide "review inbox" (specs/email/prd.md), not
+// account: this is the account-wide "review inbox", not
 // just a status poll for jobs still running.
 const REVIEWABLE_DRAFT_STATUSES: EmailDraftStatus[] = ['generating', 'ready'];
 
@@ -2147,7 +2144,7 @@ async function buildDraftSendMailInput({
 
   // `content`/`text` are the user's own typed reply; `quotedHtml`/
   // `quotedText` are the read-only quoted history rendered separately in the
-  // compose UI (specs/email/quote-iframe-change-request.md). The two are
+  // compose UI. The two are
   // rejoined here, at the edge, into the single `html`/`text` MIME parts the
   // provider actually sends - `joinDraftContentWithQuote` is the one shared
   // implementation of that join, also used by apps/worker's write-back.
@@ -2457,8 +2454,8 @@ export async function triggerEmailDraftForUser({
 
 /**
  * [GET] /email/message/:messageId/attachments
- * Attachment metadata is never persisted (specs/email/prd.md, "Attachments
- * stay fetch-on-demand"), so the list itself - not just the download - is
+ * Attachment metadata is never persisted,
+ * so the list itself - not just the download - is
  * resolved live.
  */
 export async function listEmailMessageAttachmentsForUser({

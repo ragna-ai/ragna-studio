@@ -11,7 +11,7 @@ useHead({
 
 // Fetched once here and passed down to both the grid and the form's
 // reference-image picker, so they read the same list instead of each
-// running its own query (specs/imagegen/prd.md).
+// running its own query.
 // No pager yet: request a high limit so it still reads as "all of the
 // workspace's images" under the paginated endpoint.
 const { data: genImageData, isError: isGenImagesError } = useGetGenImages({

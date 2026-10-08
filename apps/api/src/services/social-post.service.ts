@@ -272,8 +272,8 @@ export async function updateSocialPostForUser({
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId
  * Deletes the row (its social_post_media links cascade with it), then
- * refcount-deletes each attached media (specs/media-library/migration-prd.md
- * decision 5): an image may still be shared by another post or the
+ * refcount-deletes each attached media:
+ * an image may still be shared by another post or the
  * gen_images row it came from, so only a zero reference count actually
  * removes the R2 object.
  */
@@ -439,8 +439,8 @@ export async function updateSocialPostMediaAltTextForUser({
 
 /**
  * [DELETE] /workspace/:workspaceId/social-post/:socialPostId/media/:mediaId
- * Removes the link, then refcount-deletes the underlying media
- * (specs/media-library/migration-prd.md decision 5): unlink first, so the
+ * Removes the link, then refcount-deletes the underlying media:
+ * unlink first, so the
  * count no longer includes the link being removed.
  */
 export async function removeSocialPostMedia({

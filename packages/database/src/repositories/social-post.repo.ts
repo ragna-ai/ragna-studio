@@ -29,8 +29,8 @@ export async function createSocialPost(values: NewSocialPost): Promise<SocialPos
   return created;
 }
 
-// Scoped by workspaceId, the access boundary (specs/api-standards/prd.md,
-// "Access control"). userId is kept on the row as authorship metadata only.
+// Scoped by workspaceId, the access boundary.
+// UserId is kept on the row as authorship metadata only.
 export async function getSocialPostById({
   id,
   workspaceId,

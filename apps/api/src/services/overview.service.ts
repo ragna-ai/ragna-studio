@@ -17,7 +17,7 @@ import { tryCatch } from '@repo/utils';
 import type { WorkflowRunStatus } from '@repo/workflow';
 import { InternalServerErrorException } from '../exceptions';
 
-// Home overview cards (specs/home/prd.md): one aggregated read per workspace,
+// Home overview cards: one aggregated read per workspace,
 // five entities in parallel. Slim, card-only DTOs, never full rows. Data
 // access lives in packages/database/src/repositories/overview.repo.ts (plus
 // the existing per-entity count functions); this file only orchestrates the
@@ -26,7 +26,7 @@ import { InternalServerErrorException } from '../exceptions';
 
 const RECENT_ITEM_LIMIT = 5;
 
-// Calendar window (specs/home/prd.md, "Calendar card"): a fixed range instead
+// Calendar window: a fixed range instead
 // of an open-ended date param, so the calendar card stays a single read
 // inside this one aggregated overview fetch. The day strip's prev/next
 // arrows page within this window on the client; they don't trigger a
@@ -115,7 +115,7 @@ export interface WorkspaceOverview {
  * One round trip for the home page's overview cards: tasks, chats,
  * workflows, agents, documents (each capped at 5 recent items plus a
  * workspace total), and the calendar's tasks due inside a fixed window
- * around today (specs/home/prd.md).
+ * around today.
  */
 export async function getWorkspaceOverview(workspaceId: string): Promise<WorkspaceOverview> {
   const { start, end } = getCalendarWindow();

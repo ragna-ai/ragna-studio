@@ -15,7 +15,7 @@ export async function createEmailAccount(values: NewEmailAccount): Promise<Email
   return created;
 }
 
-// One row per user (specs/email/prd.md, "Auth and account connection"),
+// One row per user,
 // enforced by the unique index on userId.
 export async function getEmailAccountByUserId({
   userId,
@@ -36,7 +36,7 @@ export async function getEmailAccountById({ id }: { id: string }): Promise<Email
 // Every connected account still worth polling, for the sync cron's fan-out
 // (specs/email/prd.md, "Worker jobs": one email-sync job per connected
 // account). Excludes 'reauth_required' accounts: their stored credentials
-// are known dead until the user reconnects (specs/email/gmail-reauth-change-request.md),
+// are known dead until the user reconnects,
 // so re-enqueuing them every tick would just repeat the same failing Gmail
 // call. Reconnecting flips the row back to a syncState this query includes
 // (email.service.ts's syncEmailAccountNowForUser also enqueues that first
@@ -70,8 +70,8 @@ type EmailAccountSyncFields = Partial<
   Pick<NewEmailAccount, 'syncState' | 'syncCursor' | 'lastSyncedAt'>
 >;
 
-// Written by the sync job after every poll pass (specs/email/prd.md, "Worker
-// jobs"): moves syncState, advances the opaque cursor, and stamps
+// Written by the sync job after every poll pass:
+// moves syncState, advances the opaque cursor, and stamps
 // lastSyncedAt, in whatever combination the caller has ready. A failed pass
 // still calls this with just `{ syncState: 'error' }` to surface the state
 // without touching the last-good cursor.

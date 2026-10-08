@@ -34,7 +34,7 @@ import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
 import { getVideoModel } from '../factories';
 
-// Veo on Vertex and BFL flux-3-video (specs/videogen/prd-v2.md).
+// Veo on Vertex and BFL flux-3-video.
 export const videoGenProviders = ['google-vertex', 'bfl'] as const;
 export type VideoGenProvider = (typeof videoGenProviders)[number];
 
@@ -62,7 +62,7 @@ export interface VideoGenCapability {
 }
 
 // Per-provider constraints driving both the service-level enforcement below
-// and the form (specs/videogen/prd-v2.md decision 5). Veo and BFL disagree on
+// and the form. Veo and BFL disagree on
 // nearly every axis, so this replaces v1's flat videoGenDurations constant
 // instead of trying to widen it to fit both.
 export const videoGenCapabilities: Record<VideoGenProvider, VideoGenCapability> = {
@@ -237,8 +237,7 @@ async function resolveVideoModel({
 /**
  * Inserts a pending gen_videos row. Exported standalone (not just used by
  * requestGenVideo below) for the awaited workflow path: workflow executors
- * call this, then `runGenVideo` inline, with no queue hop
- * (specs/videogen/prd.md decision 2).
+ * call this, then `runGenVideo` inline, with no queue hop.
  */
 export async function createGenVideoRecord(params: CreateGenVideoParams): Promise<GenVideo> {
   const {
@@ -321,7 +320,7 @@ export async function requestGenVideo(params: CreateGenVideoParams): Promise<Gen
 }
 
 /**
- * Enhance side (specs/videogen/prd-v2.md decisions 1, 2, 4): turns a
+ * Enhance side: turns a
  * completed BFL draft into a new pending row that re-renders it at full
  * quality. Validates the parent is a completed BFL draft with a persisted
  * bundle in the caller's workspace, applies the one-enhance-per-draft check,
@@ -372,8 +371,8 @@ export async function requestEnhanceGenVideo({
     duration: parent.duration,
     generateAudio: parent.generateAudio,
     seed: parent.seed,
-    // Critical (specs/ai-labeling/prd.md "Interaction with videogen v2
-    // draft/enhance"): the badge is burned into what we store, never sent
+    // Critical:
+    // the badge is burned into what we store, never sent
     // to BFL, so a draft's badge can't survive into the replayed enhance
     // bundle. Copying the flag here is what makes uploadGeneratedVideo
     // re-apply it to the enhanced render below.
@@ -444,7 +443,7 @@ function resolveVertexResolution(
   return resolutionDimensions[resolution];
 }
 
-// Storage keeps '720p'/'1080p' (specs/videogen/prd-v2.md decision 6); the
+// Storage keeps '720p'/'1080p'; the
 // BFL call path maps that vocabulary onto its own 'hd'/'fhd' tiers, the same
 // way resolveVertexResolution maps it onto Vertex's `{width}x{height}`.
 const bflResolutionTiers: Record<GenVideoResolution, 'hd' | 'fhd'> = {
@@ -467,8 +466,7 @@ interface UploadGeneratedVideoResult {
   size: number;
   // The actual outcome of this upload, not the request: true only when the
   // watermark attempt below both ran and succeeded. runGenVideo persists
-  // this onto gen_videos.visibleWatermark (specs/ai-labeling/prd.md "Failure
-  // semantics").
+  // this onto gen_videos.visibleWatermark.
   visibleWatermark: boolean;
 }
 
@@ -478,7 +476,7 @@ interface UploadGeneratedVideoResult {
 // the three generate* functions below (specs/ai-labeling/prd.md part 2:
 // provider-independent, applies on every route).
 //
-// Best-effort (specs/ai-labeling/prd.md "Failure semantics"): a render is
+// Best-effort: a render is
 // paid for and must never be lost to a labeling bug, so a failed watermark
 // attempt logs a warning and falls back to the raw bytes instead of failing
 // the generation. The returned visibleWatermark flag is what runGenVideo
@@ -542,8 +540,8 @@ function extractDraftCacheUrl(providerMetadata: GenerateVideoResult['providerMet
 }
 
 /**
- * Persists a completed draft's `.bin` bundle to R2 (specs/videogen/prd-v2.md
- * decision 3): the `draftCache` URL BFL returns is time-limited, so it is
+ * Persists a completed draft's `.bin` bundle to R2:
+ * the `draftCache` URL BFL returns is time-limited, so it is
  * downloaded right away rather than depending on it staying valid until the
  * user clicks Enhance.
  */
@@ -603,7 +601,7 @@ async function downloadFrameImage(
 }
 
 /**
- * BFL standard and draft renders (specs/videogen/prd-v2.md): resolution and
+ * BFL standard and draft renders: resolution and
  * aspect ratio go through providerOptions.blackForestLabs, draft: true only
  * when the row is a draft. No seed, no negative prompt: assertCapabilities
  * already rejected them for this provider at request time.
@@ -647,7 +645,7 @@ async function generateBflVideo(record: GenVideoWithMedia): Promise<GenerateAndU
 }
 
 /**
- * BFL enhance (specs/videogen/prd-v2.md decision 1): replays the parent
+ * BFL enhance: replays the parent
  * draft's bundle at full quality. Prompt, duration, resolution, audio, and
  * keyframes are all ignored by BFL in draft_enhance mode, so the call only
  * carries the model and the base64 bundle; `prompt` is still passed because
@@ -737,7 +735,7 @@ async function generateVertexVideo(
 
 /**
  * Runs the actual generation for one row and uploads the mp4, branching on
- * the row (specs/videogen/prd-v2.md decision 7): an enhance row
+ * the row: an enhance row
  * (parentGenVideoId set) always replays its parent's bundle, a BFL row goes
  * through the draft/standard path, everything else is Veo. Returns the
  * storage key, byte size, and draft cache key (null unless this row is a
@@ -766,7 +764,7 @@ async function generateAndUploadVideo(
 export type RunGenVideoResult = GenVideo & { media: Media | null };
 
 /**
- * Run side (specs/videogen/prd.md): loads the row, flips it to processing,
+ * Run side: loads the row, flips it to processing,
  * generates and uploads the video, creates its media row, then flips the
  * row to completed pointing at that media (and, for a draft, its persisted
  * draft cache key). Any failure flips it to failed with the error and
@@ -814,8 +812,8 @@ export async function runGenVideo({
     status: 'completed',
     mediaId: createdMedia.id,
     draftCacheKey: result.draftCacheKey,
-    // Actual outcome, not the request (specs/ai-labeling/prd.md "Failure
-    // semantics"): overwrites the row's requested value with what the
+    // Actual outcome, not the request:
+    // overwrites the row's requested value with what the
     // upload actually stored, flipping it to false if the watermark attempt
     // failed.
     visibleWatermark: result.visibleWatermark,

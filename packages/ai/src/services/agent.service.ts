@@ -17,8 +17,7 @@ import type { ModelMessage, SystemModelMessage } from 'ai';
 
 // Above this total of ready document chars, buildAgentInstructions stops
 // injecting full document text and switches to retrieval mode: a document
-// index in the prompt plus the searchContextDocuments tool
-// (specs/agent/agent-context-retrieval.md, "Prompt injection changes").
+// index in the prompt plus the searchContextDocuments tool.
 export const AGENT_CONTEXT_INJECTION_THRESHOLD = 30_000;
 
 type BuildInstructionsInput = {

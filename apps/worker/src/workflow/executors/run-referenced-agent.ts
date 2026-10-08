@@ -25,9 +25,7 @@ import { noopWriter } from './noop-writer';
 // Thrown when the pre-run gate refuses a run for lack of credits. A distinct
 // class (rather than a plain Error) so the step's recorded error message
 // reads as "Insufficient credits", distinguishable from a generic run
-// failure once it reaches upsertRunStep's `error` text column
-// (specs/credits/prd.md, "Call sites": "A run refused mid-execution fails the
-// run with a reason the UI can distinguish from a generic error").
+// failure once it reaches upsertRunStep's `error` text column.
 export class InsufficientCreditsError extends Error {
   constructor(workspaceId: string) {
     super(
@@ -43,7 +41,7 @@ export class InsufficientCreditsError extends Error {
 // InsufficientCreditsError because this is a platform configuration
 // problem, not something the user can fix by buying credits, so the run
 // step's error text should read as a config bug rather than "out of
-// credits" (specs/credits/prd.md, "Pricing").
+// credits".
 export class ModelNotChargeableError extends Error {
   constructor(workspaceId: string) {
     super(
@@ -190,9 +188,8 @@ export type ReferencedAgentRun = {
 
 // Pre-run gate, shared by every LLM call a workflow run makes on a user's
 // behalf: the agent node's referenced-agent path, its inline default-agent
-// path, the team node's lead call, and each team member's delegate call
-// (specs/credits/prd.md: "Every text LLM call made on a user's behalf in
-// chat and workflows debits their credit account"). Returns null both when
+// path, the team node's lead call, and each team member's delegate call.
+// Returns null both when
 // credits are off (skipped entirely, no query) and when the billing entity
 // has no account; either way the caller's later settleWorkflowUsage call
 // must also skip, so gating and settling can never happen independently.
@@ -205,7 +202,7 @@ export type ReferencedAgentRun = {
 // model yet. A model with no pricing, or a `kind` the charger doesn't
 // implement (v1 only implements 'token'), is not chargeable, so the run is
 // refused here rather than left to fail inside settlement after the model
-// call already ran (specs/credits/prd.md, "Pricing").
+// call already ran.
 export async function gateCreditSpend({
   workspaceId,
   pricing,
@@ -239,8 +236,8 @@ export async function gateCreditSpend({
 //
 // The agent's output is already final by the time this runs; a settlement
 // failure (a transient DB error, say) must not throw away a completed run
-// over a bookkeeping problem, same reasoning as the chat path
-// (specs/credits/prd.md, "Settlement transaction"). A dropped charge is a
+// over a bookkeeping problem, same reasoning as the chat path.
+// A dropped charge is a
 // reconciliation bug to fix later, not a reason to fail the node.
 export async function settleWorkflowUsage({
   spendState,
@@ -340,8 +337,7 @@ export async function runReferencedAgent({
   const agent = withAgentConfig(agentRecord);
 
   // Gated after the agent (and its model's pricing) is known, so an
-  // unpriced model is refused here rather than at the end of a run
-  // (specs/credits/prd.md, "Pricing").
+  // unpriced model is refused here rather than at the end of a run.
   const spendState = await gateCreditSpend({ workspaceId, pricing: agent.aiModel.pricing });
 
   const { instructions, retrievalMode } = await buildAgentInstructions({
@@ -359,11 +355,10 @@ export async function runReferencedAgent({
     workspaceId,
     // Workflows already run inside the worker process and need the
     // video/images to exist before downstream steps run, so the video-gen
-    // tool awaits the render inline instead of the chat fire-and-forget path
-    // (specs/videogen/prd.md decision 2), and the image-gen tool calls the
+    // tool awaits the render inline instead of the chat fire-and-forget path,
+    // and the image-gen tool calls the
     // generation service directly instead of going through the
-    // queue-awaiting facade (specs/imagegen/worker-execution-prd.md decision
-    // 6).
+    // queue-awaiting facade.
     runsInWorker: true,
     retrievalMode,
   });

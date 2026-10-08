@@ -19,8 +19,8 @@ function formatCsvHeaderField(columnName: string): string {
   return quoteCsvField(columnName);
 }
 
-// `date` columns render European-style, `dd.mm.yyyy` (specs/datasets/export-and-row-reorder.md
-// decision 2, "Date formatting"); every other type is unformatted.
+// `date` columns render European-style, `dd.mm.yyyy`;
+// every other type is unformatted.
 function formatCsvDataField(value: TabularExportValue, columnType: TabularExportColumnType): string {
   if (value === null) {
     return '';
@@ -31,8 +31,8 @@ function formatCsvDataField(value: TabularExportValue, columnType: TabularExport
 }
 
 /**
- * Hand-rolled CSV writer (specs/datasets/export-and-row-reorder.md decision
- * 2): comma-separated, RFC 4180 quoting, CRLF line endings, no dependency.
+ * Hand-rolled CSV writer:
+ * comma-separated, RFC 4180 quoting, CRLF line endings, no dependency.
  * Numbers are written unformatted, `null` becomes an empty field. A UTF-8
  * BOM is prepended so Excel opens umlauts and other non-ASCII text
  * correctly. An empty dataset still writes its header row (open question 2).

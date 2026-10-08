@@ -93,7 +93,7 @@ interface UpdateDocumentVariables extends UpdateDocumentRequest {
 }
 
 /**
- * Doubles as the autosave mutation (specs/documents/prd.md): no success toast
+ * Doubles as the autosave mutation: no success toast
  * here, since that would fire on every debounced keystroke save. Callers
  * that represent a deliberate action (move to folder, rename from the list)
  * pass their own `onSuccess` to `mutate()` to surface one.
