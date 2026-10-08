@@ -41,7 +41,7 @@ jobs:
 
           root_changed=false
           if git diff --name-only "$BASE...HEAD" |
-            grep -qxE 'package\.json|pnpm-workspace\.yaml|turbo\.json|\.npmrc|\.oxfmtrc\.json|\.env\.testing|\.github/workflows/ci\.yml'; then
+            grep -qxE 'package\.json|pnpm-workspace\.yaml|turbo\.json|\.npmrc|\.oxfmtrc\.json|\.prettierignore|\.env\.testing|\.github/workflows/ci\.yml'; then
             root_changed=true
           fi
 
@@ -77,6 +77,7 @@ jobs:
       - run: pnpm build --filter='!@repo/docs'
       - run: pnpm check-types
       - run: pnpm lint
+      - run: pnpm format --check
 
   api-tests:
     needs: changes
