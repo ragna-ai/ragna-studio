@@ -107,12 +107,23 @@ numbers are estimates; the first real CI runs replace them.
   `docker/build-push-action`.
 - **Tags** from `metadata-action`: `1.2.0`, `1.2`, and `latest`.
   `docker/docker-compose.yml` keeps pulling `:latest`, so deploy is unchanged.
-- **No layer cache.** `cache-from/cache-to: type=gha` was removed
-  (2026-09-28): GHA cache is scoped per ref, tags are one-shot and never
-  rebuilt, so every release wrote a fresh ~2.5 GB of blobs that could
-  never be read back, at one point consuming 9.6 GB of the 10 GB repo
-  cache allowance for zero benefit. Each release now does a cold
-  `docker build`.
+- **Registry layer cache** (2026-10-08). Each image and platform has one
+  cache tag in GHCR, `buildcache-<platform-slug>` (for example
+  `ragna-studio-backend:buildcache-linux-arm64`), written with `mode=max`
+  and overwritten on every release. Unlike the `gha` cache it is not
+  ref-scoped, so a release reads the previous release's cache. With
+  `turbo prune` in the Dockerfiles, an image whose packages didn't change
+  rebuilds from cache. The first release after a cache change is cold.
+  - **Why not `type=gha`:** it was removed on 2026-09-28 (PR #43). GHA cache
+    is scoped per ref, tags are one-shot, so every release wrote ~2.5 GB of
+    blobs that could never be read back (9.6 GB of the 10 GB allowance).
+  - **`pull: true`** fetches base images on every build. A new
+    `node:24-slim` or `oven/bun:debian` misses the cache instead of
+    reusing stale layers.
+  - **Cleanup:** `ghcr-cleanup.yml` excludes `buildcache-*`, so
+    `keep-n-tagged` never deletes the cache.
+  - The frontend bakes `APP_VERSION` into its bundle, so its build step
+    reruns on every release by design.
 - **Permissions:** `contents: read`, `packages: write`.
 - **GitHub Release:** after all images are built, a `github-release` job runs
   `gh release create <tag> --generate-notes` (notes from merged PR titles
@@ -201,7 +212,7 @@ Write a short follow-up spec when phase 1 and 2 are live.
 - `pnpm build` and `check-types` run without a root `.env`
   (`@repo/config` loads it via `dotenv`). If not, add a minimal CI env.
 - `RUN --mount=type=cache` in the Dockerfiles doesn't persist across
-  GitHub runners. The `gha` layer cache covers most of it; measure before
+  GitHub runners. The registry layer cache covers most of it; measure before
   adding `buildkit-cache-dance`.
 - `webbrowser` bundles Chromium. Check its image size against the 10 GB
   cache.
