@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { Folder } from '../schema';
-import { folder } from '../schema';
+import { document, folder } from '../schema';
 
 export type { Folder, NewFolder } from '../schema';
 
@@ -60,5 +60,13 @@ export async function deleteFolderById({
   folderId: string;
   workspaceId: string;
 }): Promise<void> {
-  await db.delete(folder).where(and(eq(folder.id, folderId), eq(folder.workspaceId, workspaceId)));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(document)
+      .set({ folderId: null })
+      .where(and(eq(document.folderId, folderId), eq(document.workspaceId, workspaceId)));
+    await tx
+      .delete(folder)
+      .where(and(eq(folder.id, folderId), eq(folder.workspaceId, workspaceId)));
+  });
 }

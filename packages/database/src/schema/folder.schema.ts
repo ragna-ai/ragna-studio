@@ -1,4 +1,4 @@
-import { index, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { workspace } from './workspace.schema';
 
@@ -14,7 +14,10 @@ export const folder = pgTable(
     name: text('name').notNull(),
     ...timestamps,
   },
-  (table) => [index('folder_workspaceId_idx').on(table.workspaceId)],
+  (table) => [
+    index('folder_workspaceId_idx').on(table.workspaceId),
+    unique('folders_workspace_id_unique').on(table.workspaceId, table.id),
+  ],
 );
 
 export type Folder = typeof folder.$inferSelect;

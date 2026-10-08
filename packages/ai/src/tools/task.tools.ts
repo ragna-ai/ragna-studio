@@ -6,7 +6,9 @@ import type {
   TaskWithDetails,
 } from '@repo/database';
 import {
+  FOREIGN_REFERENCE_RESOURCE_LABEL,
   createTask,
+  getForeignReferenceResource,
   getTaskById,
   listTasks,
   listTaskLabels,
@@ -61,6 +63,10 @@ function toTaskDisplayId(taskNumber: number): string {
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {
+  const foreignResource = getForeignReferenceResource(error);
+  if (foreignResource !== null) {
+    return `${FOREIGN_REFERENCE_RESOURCE_LABEL[foreignResource]} not found.`;
+  }
   return error instanceof Error ? error.message : fallback;
 }
 

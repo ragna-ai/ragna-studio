@@ -17,7 +17,11 @@ import type {
   CreditSpendState,
   CreditUsageFeature,
 } from '@repo/database';
-import { getAgentById, resolveCreditSpendState, settleCreditUsage } from '@repo/database';
+import {
+  getAgentByIdAndWorkspaceId,
+  resolveCreditSpendState,
+  settleCreditUsage,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import type { WorkflowAgentTraceStep, WorkflowTokenUsage, WorkflowToolCall } from '@repo/workflow';
 import { noopWriter } from './noop-writer';
@@ -54,7 +58,7 @@ export class ModelNotChargeableError extends Error {
 export type AiModelRef = { provider: string; model: string; pricing: AiModelPricing | null };
 type AgentSettingsRef = AgentSettings | null;
 
-// getAgentById/getDefaultAgent both load the `aiModel` relation, but their
+// getAgentByIdAndWorkspaceId/getDefaultAgent both load the `aiModel` relation, but their
 // declared return types don't carry it (see agent.repo.ts). Narrow locally
 // instead of widening the shared repo types.
 export function withAiModel<T>(record: T): T & { aiModel: AiModelRef } {
@@ -330,9 +334,9 @@ export async function runReferencedAgent({
   callId: string;
   feature: CreditUsageFeature;
 }): Promise<ReferencedAgentRun> {
-  const agentRecord = await getAgentById({ agentId, userId });
+  const agentRecord = await getAgentByIdAndWorkspaceId({ agentId, workspaceId });
   if (!agentRecord) {
-    throw new Error(`Agent "${agentId}" not found for this user`);
+    throw new Error(`Agent "${agentId}" not found in this workspace`);
   }
   const agent = withAgentConfig(agentRecord);
 
@@ -342,7 +346,7 @@ export async function runReferencedAgent({
 
   const { instructions, retrievalMode } = await buildAgentInstructions({
     agentId,
-    userId,
+    workspaceId,
     tools: agent.tools,
     systemPrompt: agent.systemPrompt,
     context: agent.context,

@@ -1,11 +1,13 @@
 import {
   type AnyPgColumn,
+  foreignKey,
   index,
   integer,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { agent } from './agent.schema';
@@ -57,9 +59,7 @@ export const task = pgTable(
     parentTaskId: text('parent_task_id').references((): AnyPgColumn => task.id, {
       onDelete: 'set null',
     }),
-    assignedAgentId: text('assigned_agent_id').references(() => agent.id, {
-      onDelete: 'set null',
-    }),
+    assignedAgentId: text('assigned_agent_id'),
     createdByUserId: text('created_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
@@ -71,6 +71,12 @@ export const task = pgTable(
   (table) => [
     index('task_workspaceId_idx').on(table.workspaceId),
     uniqueIndex('task_workspaceId_number_idx').on(table.workspaceId, table.number),
+    unique('tasks_workspace_id_unique').on(table.workspaceId, table.id),
+    foreignKey({
+      columns: [table.workspaceId, table.assignedAgentId],
+      foreignColumns: [agent.workspaceId, agent.id],
+      name: 'tasks_assigned_agent_workspace_fk',
+    }),
   ],
 );
 
@@ -95,6 +101,7 @@ export const taskLabel = pgTable(
   (table) => [
     index('taskLabel_workspaceId_idx').on(table.workspaceId),
     uniqueIndex('taskLabel_workspaceId_name_idx').on(table.workspaceId, table.name),
+    unique('task_labels_workspace_id_unique').on(table.workspaceId, table.id),
   ],
 );
 
@@ -103,18 +110,28 @@ export type NewTaskLabel = typeof taskLabel.$inferInsert;
 
 // TASK <-> TASK LABEL
 // Pure join table: deleting a label cascades its join rows only, it never
-// touches tasks.
+// touches tasks. `workspaceId` is part of both composite FKs so a task can
+// only carry labels of its own workspace.
 export const taskToTaskLabel = pgTable(
   'tasks_to_task_labels',
   {
-    taskId: text('task_id')
-      .notNull()
-      .references(() => task.id, { onDelete: 'cascade' }),
-    taskLabelId: text('task_label_id')
-      .notNull()
-      .references(() => taskLabel.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').notNull(),
+    taskId: text('task_id').notNull(),
+    taskLabelId: text('task_label_id').notNull(),
   },
-  (table) => [primaryKey({ columns: [table.taskId, table.taskLabelId] })],
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.taskLabelId] }),
+    foreignKey({
+      columns: [table.workspaceId, table.taskId],
+      foreignColumns: [task.workspaceId, task.id],
+      name: 'tasks_to_task_labels_task_workspace_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [table.workspaceId, table.taskLabelId],
+      foreignColumns: [taskLabel.workspaceId, taskLabel.id],
+      name: 'tasks_to_task_labels_label_workspace_fk',
+    }).onDelete('cascade'),
+  ],
 );
 
 export type TaskToTaskLabel = typeof taskToTaskLabel.$inferSelect;

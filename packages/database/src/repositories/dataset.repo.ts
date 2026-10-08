@@ -9,7 +9,7 @@ import type {
   DatasetRowData,
   DatasetRowWriter,
 } from '../schema';
-import { dataset, datasetRow } from '../schema';
+import { agent, dataset, datasetRow } from '../schema';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
 export type {
@@ -140,24 +140,6 @@ export async function createDataset({
   }
 
   return createdDataset;
-}
-
-// Access boundary for the agent tool family: a tool call is scoped by the acting user,
-// not a workspace. Kept for `@repo/ai`; the REST API uses
-// `getDatasetByWorkspaceId` below instead (access is workspace ownership,
-// per the container model).
-export async function getDatasetById({
-  datasetId,
-  userId,
-}: {
-  datasetId: string;
-  userId: string;
-}): Promise<Dataset | null> {
-  const datasetRecord = await db.query.dataset.findFirst({
-    where: { id: datasetId, userId },
-  });
-
-  return datasetRecord ?? null;
 }
 
 /** Access boundary for the REST API: a dataset belongs to exactly one workspace. */
@@ -337,9 +319,15 @@ export async function deleteDatasetById({
   datasetId: string;
   workspaceId: string;
 }): Promise<void> {
-  await db
-    .delete(dataset)
-    .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(agent)
+      .set({ defaultDatasetId: null })
+      .where(and(eq(agent.defaultDatasetId, datasetId), eq(agent.workspaceId, workspaceId)));
+    await tx
+      .delete(dataset)
+      .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)));
+  });
 }
 
 // DATASET ROWS
@@ -580,18 +568,18 @@ function resolveMoveSortOrder(
 export async function updateDatasetRow({
   datasetId,
   rowId,
-  userId,
+  workspaceId,
   data,
   writtenBy = 'user',
 }: {
   datasetId: string;
   rowId: string;
-  userId: string;
+  workspaceId: string;
   // Partial: only the given columns are merged into the row's existing data.
   data: DatasetRowData;
   writtenBy?: DatasetRowWriter;
 }): Promise<DatasetRow> {
-  const datasetRecord = await getDatasetById({ datasetId, userId });
+  const datasetRecord = await getDatasetByWorkspaceId({ datasetId, workspaceId });
   if (!datasetRecord) {
     throw new Error('Dataset not found');
   }
@@ -624,13 +612,13 @@ export async function updateDatasetRow({
 export async function softDeleteDatasetRow({
   datasetId,
   rowId,
-  userId,
+  workspaceId,
 }: {
   datasetId: string;
   rowId: string;
-  userId: string;
+  workspaceId: string;
 }): Promise<void> {
-  const datasetRecord = await getDatasetById({ datasetId, userId });
+  const datasetRecord = await getDatasetByWorkspaceId({ datasetId, workspaceId });
   if (!datasetRecord) {
     throw new Error('Dataset not found');
   }

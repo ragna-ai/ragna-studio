@@ -1,10 +1,39 @@
-import type { WorkflowDefinition } from '@repo/workflow';
-import { and, eq } from 'drizzle-orm';
+import { getWorkflowAgentIds, type WorkflowDefinition } from '@repo/workflow';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
+import { ForeignReferenceError } from '../errors';
 import type { Workflow } from '../schema';
-import { workflow } from '../schema';
+import { agent, workflow } from '../schema';
 
 export type { Workflow, NewWorkflow } from '../schema';
+
+async function assertAgentsInWorkspace({
+  definition,
+  workspaceId,
+}: {
+  definition: WorkflowDefinition;
+  workspaceId: string;
+}): Promise<void> {
+  const agentIds = getWorkflowAgentIds(definition);
+  if (agentIds.length === 0) {
+    return;
+  }
+
+  const foundAgents = await db
+    .select({ id: agent.id })
+    .from(agent)
+    .where(and(inArray(agent.id, agentIds), eq(agent.workspaceId, workspaceId)));
+
+  if (foundAgents.length === agentIds.length) {
+    return;
+  }
+
+  const foundIds = new Set(foundAgents.map((foundAgent) => foundAgent.id));
+  throw new ForeignReferenceError({
+    resource: 'agent',
+    ids: agentIds.filter((agentId) => !foundIds.has(agentId)),
+  });
+}
 
 export async function createWorkflow(values: {
   userId: string;
@@ -13,6 +42,11 @@ export async function createWorkflow(values: {
   description?: string;
   definition: WorkflowDefinition;
 }): Promise<Workflow> {
+  await assertAgentsInWorkspace({
+    definition: values.definition,
+    workspaceId: values.workspaceId,
+  });
+
   const [createdWorkflow] = await db.insert(workflow).values(values).returning();
 
   if (!createdWorkflow) {
@@ -35,6 +69,10 @@ export async function updateWorkflow({
   description?: string;
   definition?: WorkflowDefinition;
 }): Promise<Workflow | null> {
+  if (definition) {
+    await assertAgentsInWorkspace({ definition, workspaceId });
+  }
+
   const [updatedWorkflow] = await db
     .update(workflow)
     .set({ name, description, definition })

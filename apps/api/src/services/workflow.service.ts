@@ -31,6 +31,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { throwIfForeignReference } from '../utils/foreign-reference';
 
 /** Loads a workflow and 404s if it doesn't exist in the given workspace. */
 async function loadOwnedWorkflow({
@@ -142,6 +143,8 @@ export async function createWorkflowForUser({
     createWorkflow({ userId, workspaceId, name, description, definition }),
   );
 
+  throwIfForeignReference(error);
+
   if (error !== null || !workflowRecord) {
     logger.error('Failed to create workflow', error);
     throw new InternalServerErrorException('Failed to create workflow');
@@ -184,6 +187,8 @@ export async function updateWorkflowForWorkspace({
   const { error, data: workflowRecord } = await tryCatch(() =>
     updateWorkflow({ workflowId, workspaceId, name, description, definition }),
   );
+
+  throwIfForeignReference(error);
 
   if (error !== null) {
     logger.error('Failed to update workflow', error);

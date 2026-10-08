@@ -24,6 +24,7 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
+| [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | decided (2026-10-08) |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
 

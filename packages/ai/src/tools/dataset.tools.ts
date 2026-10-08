@@ -8,7 +8,7 @@ import type {
 import {
   createDatasetRow,
   findDatasetsForAgent,
-  getDatasetById,
+  getDatasetByWorkspaceId,
   getDatasetRowById,
   getDatasetRows,
   MAX_COLUMNS_PER_DATASET,
@@ -58,26 +58,18 @@ const columnInputSchema = z.object({
     .describe('Allowed values. Required and only meaningful when type is "select".'),
 });
 
-// Workspace hard filter: the whole family
-// only sees/touches the tool context's workspace.
-function isDatasetInScope(datasetRecord: Dataset, workspaceId: string): boolean {
-  return datasetRecord.workspaceId === workspaceId;
-}
-
 type ScopedDatasetResult = { dataset: Dataset } | { error: string };
 
 async function loadDatasetInScope({
   datasetId,
-  userId,
   workspaceId,
 }: {
   datasetId: string;
-  userId: string;
   workspaceId: string;
 }): Promise<ScopedDatasetResult> {
-  const datasetRecord = await getDatasetById({ datasetId, userId });
+  const datasetRecord = await getDatasetByWorkspaceId({ datasetId, workspaceId });
 
-  if (!datasetRecord || !isDatasetInScope(datasetRecord, workspaceId)) {
+  if (!datasetRecord) {
     return { error: 'Dataset not found.' };
   }
 
@@ -341,7 +333,6 @@ export const datasetListRowsDefinition: ToolDefinition<
   async execute(input, ctx) {
     const scoped = await loadDatasetInScope({
       datasetId: input.datasetId,
-      userId: ctx.userId,
       workspaceId: ctx.workspaceId,
     });
     if ('error' in scoped) {
@@ -418,7 +409,6 @@ export const datasetGetRowDefinition: ToolDefinition<
   async execute(input, ctx) {
     const scoped = await loadDatasetInScope({
       datasetId: input.datasetId,
-      userId: ctx.userId,
       workspaceId: ctx.workspaceId,
     });
     if ('error' in scoped) {
@@ -483,7 +473,6 @@ export const datasetAppendRowDefinition: ToolDefinition<
     return withDatasetRowLock(input.datasetId, async () => {
       const scoped = await loadDatasetInScope({
         datasetId: input.datasetId,
-        userId: ctx.userId,
         workspaceId: ctx.workspaceId,
       });
       if ('error' in scoped) {
@@ -552,7 +541,6 @@ export const datasetUpdateRowDefinition: ToolDefinition<
   async execute(input, ctx) {
     const scoped = await loadDatasetInScope({
       datasetId: input.datasetId,
-      userId: ctx.userId,
       workspaceId: ctx.workspaceId,
     });
     if ('error' in scoped) {
@@ -564,7 +552,7 @@ export const datasetUpdateRowDefinition: ToolDefinition<
         updateDatasetRow({
           datasetId: input.datasetId,
           rowId: input.rowId,
-          userId: ctx.userId,
+          workspaceId: ctx.workspaceId,
           data: input.data,
           writtenBy: ctx.origin,
         }),
@@ -625,7 +613,6 @@ export const datasetMoveRowDefinition: ToolDefinition<
     return withDatasetRowLock(input.datasetId, async () => {
       const scoped = await loadDatasetInScope({
         datasetId: input.datasetId,
-        userId: ctx.userId,
         workspaceId: ctx.workspaceId,
       });
       if ('error' in scoped) {

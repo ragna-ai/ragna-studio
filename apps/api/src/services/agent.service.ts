@@ -12,6 +12,7 @@ import {
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import { throwIfForeignReference } from '../utils/foreign-reference';
 import { deleteAgentContextDocumentsForAgent } from './agent-context-document.service';
 
 /**
@@ -117,6 +118,10 @@ export interface CreateAgentInput {
 export async function createAgentForWorkspace(input: CreateAgentInput): Promise<Agent> {
   const { error, data: createdAgent } = await tryCatch(() => createAgent(input));
 
+  if (error !== null) {
+    throwIfForeignReference(error);
+  }
+
   if (error !== null || !createdAgent) {
     logger.error('Failed to create agent', error);
     throw new InternalServerErrorException('Failed to create agent');
@@ -166,6 +171,7 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
   );
 
   if (error !== null) {
+    throwIfForeignReference(error);
     logger.error('Failed to update agent', error);
     throw new InternalServerErrorException('Failed to update agent');
   }

@@ -1,8 +1,9 @@
 // packages/testing/src/db/setup-test-db.ts
 //
-// One-time (per fresh docker volume) setup for the `studio_test` database:
-// creates it if it doesn't exist, then pushes the current drizzle schema
-// into it. `pushSchema` below runs drizzle-kit against packages/database's
+// Setup for the `studio_test` database:
+// drops and recreates it (so schema changes that rename constraints never
+// hit drizzle-kit's interactive prompts), then pushes the current drizzle
+// schema into the fresh database. `pushSchema` below runs drizzle-kit against packages/database's
 // own drizzle.config.ts, so this works the same for every consuming app.
 // Run via `pnpm --filter @repo/testing test:setup` (see scripts/
 // setup-test-db.ts, which sets NODE_ENV=test before importing this).
@@ -24,31 +25,24 @@ export async function setupTestDatabase(): Promise<void> {
     );
   }
 
-  await createDatabaseIfMissing(testDatabaseUrl, testDatabaseName);
+  await recreateDatabase(testDatabaseUrl, testDatabaseName);
   await ensureExtensions(testDatabaseUrl);
   await pushSchema(testDatabaseName);
 
   console.log('Test database ready.');
 }
 
-async function createDatabaseIfMissing(
-  testDatabaseUrl: URL,
-  testDatabaseName: string,
-): Promise<void> {
+async function recreateDatabase(testDatabaseUrl: URL, testDatabaseName: string): Promise<void> {
   // `postgres` is docker Postgres's own always-present maintenance
-  // database. It's needed because you can't connect to a database to create it.
+  // database. It's needed because you can't connect to a database to drop or
+  // create it.
   const adminDatabaseUrl = new URL(testDatabaseUrl);
   adminDatabaseUrl.pathname = '/postgres';
 
   const adminDb = new SQL(adminDatabaseUrl.toString());
   try {
-    const existing = await adminDb`select 1 from pg_database where datname = ${testDatabaseName}`;
-    if (existing.length > 0) {
-      console.log(`Database "${testDatabaseName}" already exists.`);
-      return;
-    }
-
-    console.log(`Creating database "${testDatabaseName}"...`);
+    console.log(`Recreating database "${testDatabaseName}"...`);
+    await adminDb.unsafe(`drop database if exists ${testDatabaseName} with (force)`);
     await adminDb.unsafe(`create database ${testDatabaseName}`);
   } finally {
     await adminDb.close();
@@ -57,9 +51,7 @@ async function createDatabaseIfMissing(
 
 async function ensureExtensions(testDatabaseUrl: URL): Promise<void> {
   // docker/postgres-init.sql only creates these for the default database at
-  // container init, not for studio_test, which is created later above. Runs
-  // every time (not just on fresh create) so a pre-existing studio_test from
-  // before this function existed still gets them.
+  // container init, not for studio_test, which is created later above.
   const testDb = new SQL(testDatabaseUrl.toString());
   try {
     await testDb.unsafe('create extension if not exists vector');
