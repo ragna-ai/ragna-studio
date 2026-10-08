@@ -17,6 +17,16 @@ It moves `RAGNA_VERSION` in `.env` to the latest release, downloads that release
 
 Migrations run automatically and only go forward.
 
+### Manual setup
+
+If you [installed by hand](/self-hosting/install-options/docker-compose), do the same steps yourself:
+
+1. Set `RAGNA_VERSION` in `.env` to the new release.
+2. Download that release's files, as in [step 1](/self-hosting/install-options/docker-compose#step-1-download-the-release-files).
+3. Run the `up -d --wait` command from [step 3](/self-hosting/install-options/docker-compose#step-3-start-everything). It pulls the new images and restarts.
+
+Or switch to the installer. It recognizes your folder because `.env` has `RAGNA_VERSION`.
+
 ## Backups
 
 The state you own is Postgres, Redis and both buckets. Backups are up to you.
