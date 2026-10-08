@@ -95,8 +95,8 @@ numbers are estimates; the first real CI runs replace them.
 - **Web type-check** runs again since 2026-10-08. It was excluded because
   `nuxt typecheck` took over 4 minutes: 265 s of that was one
   `useForwardPropsEmits(props, emits)` call over Vue Flow's `FlowEmits` in
-  `components/ai-elements/canvas/canvas.vue`. Without it the web check takes
-  about 13 s.
+  `components/ai-elements/canvas/Canvas.vue`. Passing the emit through
+  `unknown` skips that comparison; the web check now takes about 13 s.
 - **Permissions:** `contents: read` only.
 - **Branch protection:** require the `build-and-check` check on `main`. Set by hand in
   the GitHub settings; not part of the repo.
