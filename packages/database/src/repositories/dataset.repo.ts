@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type {
@@ -167,8 +167,7 @@ export async function getDatasetCountByWorkspaceId({
 
 /**
  * Paginated dataset list for one workspace. Each dataset's row count
- * (soft-deleted rows excluded) is attached with one extra count query per
- * row, acceptable at the list's page-size caps.
+ * (soft-deleted rows excluded) is attached with one grouped count query.
  */
 export async function getAllDatasetsByWorkspaceId({
   workspaceId,
@@ -188,13 +187,13 @@ export async function getAllDatasetsByWorkspaceId({
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
   });
 
-  const rowCounts = await Promise.all(
-    datasets.map((datasetRecord) => getDatasetRowCount({ datasetId: datasetRecord.id })),
-  );
+  const rowCounts = await getDatasetRowCounts({
+    datasetIds: datasets.map((datasetRecord) => datasetRecord.id),
+  });
 
-  return datasets.map((datasetRecord, index) => ({
+  return datasets.map((datasetRecord) => ({
     ...datasetRecord,
-    rowCount: rowCounts[index] ?? 0,
+    rowCount: rowCounts.get(datasetRecord.id) ?? 0,
   }));
 }
 
@@ -337,6 +336,25 @@ export async function getDatasetRowCount({ datasetId }: { datasetId: string }): 
     datasetRow,
     and(eq(datasetRow.datasetId, datasetId), isNull(datasetRow.deletedAt)),
   );
+}
+
+/** Live row counts keyed by dataset id; datasets without rows are absent. */
+export async function getDatasetRowCounts({
+  datasetIds,
+}: {
+  datasetIds: string[];
+}): Promise<Map<string, number>> {
+  if (datasetIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({ datasetId: datasetRow.datasetId, rowCount: count() })
+    .from(datasetRow)
+    .where(and(inArray(datasetRow.datasetId, datasetIds), isNull(datasetRow.deletedAt)))
+    .groupBy(datasetRow.datasetId);
+
+  return new Map(rows.map((row) => [row.datasetId, row.rowCount]));
 }
 
 export type DatasetRowFilter = { columnId: string; value: string | number | null };

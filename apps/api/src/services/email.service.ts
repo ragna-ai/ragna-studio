@@ -16,6 +16,7 @@ import type {
   EmailThreadWithMessages,
   Media,
   NewEmailDraft,
+  NewEmailMessageBody,
 } from '@repo/database';
 import {
   addEmailAutoDraftSender,
@@ -40,6 +41,7 @@ import {
   listEmailDraftsByAccountId,
   listEmailDraftsByThreadId,
   listEmailMessagesByThreadId,
+  listEmailMessagesByThreadIds,
   listEmailThreads,
   listPendingEmailDraftsByAccountId,
   removeEmailAutoDraftSender,
@@ -47,8 +49,9 @@ import {
   updateEmailCategory,
   updateEmailDraft,
   updateEmailMessageFlags,
+  upsertEmailMessageBodies,
   upsertEmailMessageBody,
-  upsertEmailMessageByProviderMessageId,
+  upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -758,8 +761,31 @@ export async function listEmailThreadsForUser({
 
   const hasMore = rows.length > limit;
   const pageRows = rows.slice(0, limit);
+
+  const { error: messagesError, data: pageMessages } = await tryCatch(() =>
+    listEmailMessagesByThreadIds({ threadIds: pageRows.map((thread) => thread.id) }),
+  );
+
+  if (messagesError !== null || !pageMessages) {
+    logger.error('Failed to load thread messages', messagesError);
+    throw new InternalServerErrorException('Failed to load thread');
+  }
+
+  const messagesByThreadId = new Map<string, EmailMessage[]>();
+  for (const message of pageMessages) {
+    const threadMessages = messagesByThreadId.get(message.threadId) ?? [];
+    threadMessages.push(message);
+    messagesByThreadId.set(message.threadId, threadMessages);
+  }
+
   const threads = await Promise.all(
-    pageRows.map((thread) => hydrateThreadSummary({ accountId: account.id, thread })),
+    pageRows.map((thread) =>
+      hydrateThreadSummary({
+        accountId: account.id,
+        thread,
+        messages: messagesByThreadId.get(thread.id) ?? [],
+      }),
+    ),
   );
 
   return { threads, hasMore };
@@ -829,22 +855,22 @@ export async function getEmailThreadDetailForUser({
 
     const liveByProviderId = new Map(liveThread.messages.map((message) => [message.id, message]));
 
+    const gapBodies: NewEmailMessageBody[] = [];
+
     for (const message of gapMessages) {
       const live = liveByProviderId.get(message.providerMessageId);
       if (!live) continue;
 
       const text = toCanonicalText(live.body);
 
-      await tryCatch(() =>
-        upsertEmailMessageBody({
-          messageId: message.id,
-          textBody: text,
-          htmlBody: live.body.html,
-        }),
-      );
-
+      gapBodies.push({ messageId: message.id, textBody: text, htmlBody: live.body.html });
       textByMessageId.set(message.id, text);
       htmlByMessageId.set(message.id, live.body.html);
+    }
+
+    const { error: bodiesError } = await tryCatch(() => upsertEmailMessageBodies(gapBodies));
+    if (bodiesError !== null) {
+      logger.error(`Failed to persist bodies of thread ${thread.providerThreadId}`, bodiesError);
     }
   }
 
@@ -954,11 +980,9 @@ async function persistFetchedThread({
     throw new InternalServerErrorException('Failed to load thread');
   }
 
-  const messages: EmailMessage[] = [];
-
-  for (const providerMessage of mailThread.messages) {
-    const { error: messageError, data: message } = await tryCatch(() =>
-      upsertEmailMessageByProviderMessageId({
+  const { error: messagesError, data: upsertedMessages } = await tryCatch(() =>
+    upsertEmailMessagesByProviderMessageId(
+      mailThread.messages.map((providerMessage) => ({
         accountId,
         threadId: thread.id,
         providerMessageId: providerMessage.id,
@@ -974,23 +998,36 @@ async function persistFetchedThread({
         isStarred: providerMessage.starred,
         folder: providerMessage.folder,
         labelIds: providerMessage.labelIds,
-      }),
-    );
+      })),
+    ),
+  );
 
-    if (messageError !== null || !message) {
-      logger.error(`Failed to persist message ${providerMessage.id}`, messageError);
-      continue;
-    }
+  if (messagesError !== null || !upsertedMessages) {
+    logger.error(`Failed to persist messages of thread ${mailThread.id}`, messagesError);
+    throw new InternalServerErrorException('Failed to load thread');
+  }
+
+  const messageByProviderId = new Map(
+    upsertedMessages.map((message) => [message.providerMessageId, message]),
+  );
+  const messages: EmailMessage[] = [];
+  const bodies: NewEmailMessageBody[] = [];
+
+  for (const providerMessage of mailThread.messages) {
+    const message = messageByProviderId.get(providerMessage.id);
+    if (!message) continue;
 
     messages.push(message);
+    bodies.push({
+      messageId: message.id,
+      textBody: toCanonicalText(providerMessage.body),
+      htmlBody: providerMessage.body.html,
+    });
+  }
 
-    await tryCatch(() =>
-      upsertEmailMessageBody({
-        messageId: message.id,
-        textBody: toCanonicalText(providerMessage.body),
-        htmlBody: providerMessage.body.html,
-      }),
-    );
+  const { error: bodiesError } = await tryCatch(() => upsertEmailMessageBodies(bodies));
+  if (bodiesError !== null) {
+    logger.error(`Failed to persist bodies of thread ${mailThread.id}`, bodiesError);
   }
 
   return { ...thread, messages };

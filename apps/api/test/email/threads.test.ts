@@ -1,4 +1,4 @@
-import { getEmailMessageById } from '@repo/database';
+import { getEmailMessageBody, getEmailMessageById } from '@repo/database';
 import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -234,6 +234,81 @@ describe('GET /email/thread (filters)', () => {
   });
 });
 
+describe('GET /email/thread (summary aggregates)', () => {
+  const participantSchema = z.strictObject({ name: z.string().nullable(), email: z.string() });
+  const fullSummarySchema = z.strictObject({
+    id: z.string(),
+    subject: z.string().nullable(),
+    snippet: z.string().nullable(),
+    lastMessageAt: z.string().nullable(),
+    participants: z.array(participantSchema),
+    labelIds: z.array(z.string()),
+    categoryId: z.string().nullable(),
+    isUnread: z.boolean(),
+    isStarred: z.boolean(),
+    messageCount: z.number(),
+  });
+  const fullListSchema = z.strictObject({
+    threads: z.array(fullSummarySchema),
+    hasMore: z.boolean(),
+  });
+
+  test('aggregates unread, starred, labels, category and count per thread', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const categoryResponse = await app.request('/email/category', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Invoices', color: '#00ff00' }),
+    });
+    const { category } = z
+      .object({ category: z.object({ id: z.string() }) })
+      .parse(await categoryResponse.json());
+    const base = Date.now();
+    const multi = await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: 'multi',
+      labelIds: ['INBOX', 'IMPORTANT'],
+      isUnread: false,
+      isStarred: true,
+      categoryId: category.id,
+      sentAt: new Date(base - 3000),
+    });
+    await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: 'multi',
+      labelIds: ['INBOX', 'UNREAD'],
+      isUnread: true,
+      isStarred: false,
+      sentAt: new Date(base - 2000),
+    });
+    const single = await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: 'single',
+      labelIds: ['INBOX'],
+      isUnread: false,
+      isStarred: false,
+      sentAt: new Date(base - 1000),
+    });
+
+    const response = await app.request('/email/thread', { headers: { cookie: cookieHeader } });
+    const body = fullListSchema.parse(await response.json());
+
+    const byId = new Map(body.threads.map((thread) => [thread.id, thread]));
+    const multiSummary = byId.get(multi.thread.id);
+    expect(multiSummary?.messageCount).toBe(2);
+    expect(multiSummary?.isUnread).toBe(true);
+    expect(multiSummary?.isStarred).toBe(true);
+    expect(multiSummary?.categoryId).toBe(category.id);
+    expect([...(multiSummary?.labelIds ?? [])].sort()).toEqual(['IMPORTANT', 'INBOX', 'UNREAD']);
+    const singleSummary = byId.get(single.thread.id);
+    expect(singleSummary?.messageCount).toBe(1);
+    expect(singleSummary?.isUnread).toBe(false);
+    expect(singleSummary?.isStarred).toBe(false);
+    expect(singleSummary?.categoryId).toBeNull();
+    expect(singleSummary?.labelIds).toEqual(['INBOX']);
+  });
+});
+
 describe('GET /email/thread (pagination)', () => {
   test('hasMore reflects whether another page exists', async () => {
     const { cookieHeader, accountId } = await connectAccount();
@@ -327,6 +402,49 @@ describe('GET /email/thread/:threadId', () => {
       .parse(await second.json());
     expect(secondBody.messages[0]?.body.text).toBe('Fresh content');
     // Second request found the body already persisted - no second live fetch.
+    expect(fetchThreadMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('persists every missing body of a thread from one live fetch', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const first = await seedEmailThreadWithMessage({ accountId, withBody: false });
+    const second = await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: first.providerThreadId,
+      withBody: false,
+    });
+
+    fetchThreadMock.mockImplementationOnce(() =>
+      Promise.resolve(
+        buildFakeMailThread({
+          id: first.providerThreadId,
+          messages: [
+            buildFakeMailMessage({
+              id: first.providerMessageId,
+              threadId: first.providerThreadId,
+              body: { text: 'First fresh', html: '<p>First fresh</p>', attachments: [] },
+            }),
+            buildFakeMailMessage({
+              id: second.providerMessageId,
+              threadId: first.providerThreadId,
+              body: { text: 'Second fresh', html: null, attachments: [] },
+            }),
+          ],
+        }),
+      ),
+    );
+
+    const response = await app.request(`/email/thread/${first.thread.id}`, {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const firstStored = await getEmailMessageBody({ messageId: first.messageId });
+    const secondStored = await getEmailMessageBody({ messageId: second.messageId });
+    expect(firstStored?.textBody).toBe('First fresh');
+    expect(firstStored?.htmlBody).toBe('<p>First fresh</p>');
+    expect(secondStored?.textBody).toBe('Second fresh');
+    expect(secondStored?.htmlBody).toBeNull();
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
   });
 });

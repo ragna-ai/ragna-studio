@@ -66,6 +66,49 @@ describe('GET /workspace/:workspaceId/dataset', () => {
     expect(body.meta.totalCount).toBe(0);
   });
 
+  test('reports each dataset row count, excluding soft-deleted rows', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const empty = await createDataset(cookieHeader, workspaceId, {
+      name: 'Empty',
+      columns: [nameColumn],
+    });
+    const three = await createDataset(cookieHeader, workspaceId, {
+      name: 'Three',
+      columns: [nameColumn],
+    });
+    const withDeleted = await createDataset(cookieHeader, workspaceId, {
+      name: 'WithDeleted',
+      columns: [nameColumn],
+    });
+    const createRow = async (datasetId: string) => {
+      const response = await app.request(`/workspace/${workspaceId}/dataset/${datasetId}/row`, {
+        method: 'POST',
+        headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+        body: JSON.stringify({ data: { [nameColumn.id]: 'x' } }),
+      });
+      return z.object({ row: z.object({ id: z.string() }) }).parse(await response.json()).row.id;
+    };
+    for (let i = 0; i < 3; i++) {
+      await createRow(three.dataset.id);
+    }
+    await createRow(withDeleted.dataset.id);
+    const removedRowId = await createRow(withDeleted.dataset.id);
+    await app.request(
+      `/workspace/${workspaceId}/dataset/${withDeleted.dataset.id}/row/${removedRowId}`,
+      { method: 'DELETE', headers: { cookie: cookieHeader } },
+    );
+
+    const response = await app.request(`/workspace/${workspaceId}/dataset`, {
+      headers: { cookie: cookieHeader },
+    });
+    const body = datasetListResponseSchema.parse(await response.json());
+
+    const counts = new Map(body.datasets.map((d) => [d.id, d.rowCount]));
+    expect(counts.get(empty.dataset.id)).toBe(0);
+    expect(counts.get(three.dataset.id)).toBe(3);
+    expect(counts.get(withDeleted.dataset.id)).toBe(1);
+  });
+
   test('paginates, newest first by default', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     for (const name of ['First', 'Second', 'Third']) {

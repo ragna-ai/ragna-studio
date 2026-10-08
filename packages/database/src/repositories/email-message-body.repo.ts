@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { EmailMessageBody, NewEmailMessageBody } from '../schema';
 import { emailMessageBody } from '../schema';
+import { chunkRows, dedupeKeepLast } from '../utils/batch-write';
 
 export type { EmailMessageBody, NewEmailMessageBody } from '../schema';
 
@@ -48,27 +49,29 @@ export async function upsertEmailMessageBody({
   return upserted;
 }
 
-// Batch variant for the classifier processing several new messages from one
-// sync pass in a single round trip.
-export async function bulkUpsertEmailMessageBodies(
+/** Multi-row variant of the upsert above. Repeated `messageId`s keep the last occurrence. */
+export async function upsertEmailMessageBodies(
   records: NewEmailMessageBody[],
 ): Promise<EmailMessageBody[]> {
-  if (records.length === 0) {
-    return [];
+  const upserted: EmailMessageBody[] = [];
+
+  for (const chunk of chunkRows(dedupeKeepLast(records, (record) => record.messageId))) {
+    const written = await db
+      .insert(emailMessageBody)
+      .values(chunk)
+      .onConflictDoUpdate({
+        target: emailMessageBody.messageId,
+        set: {
+          textBody: sql`excluded.text_body`,
+          htmlBody: sql`excluded.html_body`,
+          updatedAt: sql`(CURRENT_TIMESTAMP)`,
+        },
+      })
+      .returning();
+    upserted.push(...written);
   }
 
-  return db
-    .insert(emailMessageBody)
-    .values(records)
-    .onConflictDoUpdate({
-      target: emailMessageBody.messageId,
-      set: {
-        textBody: sql`excluded.text_body`,
-        htmlBody: sql`excluded.html_body`,
-        updatedAt: sql`(CURRENT_TIMESTAMP)`,
-      },
-    })
-    .returning();
+  return upserted;
 }
 
 export async function deleteEmailMessageBody({ messageId }: { messageId: string }): Promise<void> {

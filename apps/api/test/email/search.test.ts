@@ -1,3 +1,4 @@
+import { listEmailMessagesByThreadId } from '@repo/database';
 import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -6,6 +7,7 @@ import { app } from '../../src/app';
 import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
 import {
+  buildFakeMailMessage,
   buildFakeMailThread,
   fetchThreadMock,
   resetMailProviderMock,
@@ -88,6 +90,55 @@ describe('GET /email/search', () => {
     const secondBody = searchResponseSchema.parse(await secondResponse.json());
     expect(secondBody.threads.map((t) => t.id)).toEqual(body.threads.map((t) => t.id));
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('persists every message of a live-fetched thread with its body', async () => {
+    const { cookieHeader } = await connectAccount();
+    const providerThreadId = `provider-thread-${crypto.randomUUID()}`;
+    const firstMessageId = `provider-message-${crypto.randomUUID()}`;
+    const secondMessageId = `provider-message-${crypto.randomUUID()}`;
+
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({ threadIds: [providerThreadId], nextPageToken: null }),
+    );
+    fetchThreadMock.mockImplementationOnce(() =>
+      Promise.resolve(
+        buildFakeMailThread({
+          id: providerThreadId,
+          messages: [
+            buildFakeMailMessage({
+              id: firstMessageId,
+              threadId: providerThreadId,
+              subject: 'First',
+              date: new Date('2026-01-01T10:00:00Z'),
+              body: { text: 'First text', html: '<p>First</p>', attachments: [] },
+            }),
+            buildFakeMailMessage({
+              id: secondMessageId,
+              threadId: providerThreadId,
+              subject: 'Second',
+              date: new Date('2026-01-02T10:00:00Z'),
+              body: { text: 'Second text', html: null, attachments: [] },
+            }),
+          ],
+        }),
+      ),
+    );
+
+    const response = await app.request('/email/search?q=invoice', {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = searchResponseSchema.parse(await response.json());
+    const stored = await listEmailMessagesByThreadId({ threadId: body.threads[0]?.id ?? '' });
+    expect(stored.map((message) => message.providerMessageId)).toEqual([
+      firstMessageId,
+      secondMessageId,
+    ]);
+    expect(stored.map((message) => message.subject)).toEqual(['First', 'Second']);
+    expect(stored.map((message) => message.body?.textBody)).toEqual(['First text', 'Second text']);
+    expect(stored.map((message) => message.body?.htmlBody)).toEqual(['<p>First</p>', null]);
   });
 
   test('rejects a missing query', async () => {
