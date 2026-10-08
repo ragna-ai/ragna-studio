@@ -352,7 +352,7 @@ export async function updateDatasetRowForUser({
   rowId: string;
   data: DatasetRow['data'];
 }): Promise<DatasetRow> {
-  const datasetRecord = await loadOwnedDataset({ workspaceId, datasetId });
+  await loadOwnedDataset({ workspaceId, datasetId });
 
   const { error: rowError, data: existingRow } = await tryCatch(() =>
     getDatasetRowById({ datasetId, rowId }),
@@ -392,7 +392,7 @@ export async function deleteDatasetRow({
   datasetId: string;
   rowId: string;
 }): Promise<void> {
-  const datasetRecord = await loadOwnedDataset({ workspaceId, datasetId });
+  await loadOwnedDataset({ workspaceId, datasetId });
 
   const { error: rowError, data: existingRow } = await tryCatch(() =>
     getDatasetRowById({ datasetId, rowId }),

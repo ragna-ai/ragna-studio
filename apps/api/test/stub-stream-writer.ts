@@ -8,3 +8,12 @@ export const stubStreamWriter: StreamWriter = {
   merge() {},
   onError: undefined,
 };
+
+type ToolExecute = NonNullable<ReturnType<typeof getUpdateTaskTool>['execute']>;
+
+/** Minimal options for calling a tool's `execute` directly. */
+export const stubToolExecutionOptions: Parameters<ToolExecute>[1] = {
+  toolCallId: 'call-1',
+  messages: [],
+  context: undefined,
+};

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { stubStreamWriter } from '../stub-stream-writer';
+import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
 
 // A task may only reference an agent or labels of its own workspace.
 
@@ -286,7 +286,7 @@ describe('task tools', () => {
 
     const result = await updateTaskTool.execute?.(
       { id: task.id, assignedAgentId: foreignAgentId },
-      { toolCallId: 'call-1', messages: [] },
+      stubToolExecutionOptions,
     );
 
     expect(result).toEqual({ error: 'Agent not found.' });

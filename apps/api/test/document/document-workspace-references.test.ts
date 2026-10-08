@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { stubStreamWriter } from '../stub-stream-writer';
+import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
 
 // A document may only live in a folder of its own workspace.
 
@@ -160,7 +160,7 @@ describe('document tools', () => {
 
     const result = await createDocumentTool.execute?.(
       { title: 'Notes', content: 'Hello', folderId: foreignFolderId },
-      { toolCallId: 'call-1', messages: [] },
+      stubToolExecutionOptions,
     );
 
     expect(result).toEqual({ error: 'Folder not found.' });
