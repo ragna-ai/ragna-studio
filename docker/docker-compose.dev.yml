@@ -1,66 +1,11 @@
 # This is a development override file for docker-compose.
 
+# Own project and network name, so `down -v` on a self-host test install on the
+# same machine can't delete the dev volumes, and vice versa. See
+# docs/docker-deploy/dev-project-name.md.
+name: ragna_studio_dev
+
 services:
-  migrate:
-    cpus: 1
-    profiles:
-      - full
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-
-  seed:
-    cpus: 1
-    profiles:
-      - full
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-
-  frontend:
-    cpus: 1
-    restart: no
-    profiles:
-      - full
-    ports:
-      - ${APP_PORT:-3000}:3000
-
-  backend:
-    cpus: 1
-    restart: no
-    profiles:
-      - full
-    environment:
-      - LOG_LEVEL=warn
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - WEBBROWSER_BASE_URL=http://webbrowser:3011
-    ports:
-      - ${API_PORT:-3010}:3010
-
-  worker:
-    cpus: 1
-    restart: no
-    profiles:
-      - full
-    environment:
-      - LOG_LEVEL=warn
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - SMTP_HOST=host.docker.internal
-
-  webbrowser:
-    cpus: 1
-    restart: no
-    profiles:
-      - full
-    ports:
-      - ${WEBBROWSER_PORT:-3011}:3011
-
   postgres:
     cpus: 1
     restart: no
@@ -72,3 +17,7 @@ services:
     restart: no
     ports:
       - ${REDIS_PORT:-6379}:6379
+
+networks:
+  app_net:
+    name: ragna_studio_dev_network
