@@ -219,4 +219,6 @@ export function useEmailComposeEditor(options: UseEmailComposeEditorOptions) {
   };
 }
 
-export type EmailComposeEditorController = ReturnType<typeof useEmailComposeEditor>;
+export type EmailComposeEditorController = ReturnType<
+  typeof useEmailComposeEditor
+>;

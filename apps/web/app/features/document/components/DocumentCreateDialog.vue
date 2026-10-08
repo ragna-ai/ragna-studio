@@ -74,7 +74,10 @@ const form = useForm({
               <Label class="mb-2 block text-sm font-medium">
                 {{ t('common.folder') }}
               </Label>
-              <Select :model-value="state.value" @update:model-value="(v) => field.handleChange(String(v))">
+              <Select
+                :model-value="state.value"
+                @update:model-value="(v) => field.handleChange(String(v))"
+              >
                 <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -82,7 +85,11 @@ const form = useForm({
                   <SelectItem :value="NO_FOLDER">
                     {{ t('document.createDialog.folderNone') }}
                   </SelectItem>
-                  <SelectItem v-for="folder in props.folders" :key="folder.id" :value="folder.id">
+                  <SelectItem
+                    v-for="folder in props.folders"
+                    :key="folder.id"
+                    :value="folder.id"
+                  >
                     {{ folder.name }}
                   </SelectItem>
                 </SelectContent>

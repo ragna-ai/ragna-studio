@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { PlusIcon } from '@lucide/vue'
-import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import PromptInputButton from './PromptInputButton.vue'
+import type { HTMLAttributes } from 'vue';
+import { PlusIcon } from '@lucide/vue';
+import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import PromptInputButton from './PromptInputButton.vue';
 
-type DropdownMenuTriggerProps = InstanceType<typeof DropdownMenuTrigger>['$props']
+type DropdownMenuTriggerProps = InstanceType<
+  typeof DropdownMenuTrigger
+>['$props'];
 
 interface Props extends /* @vue-ignore */ DropdownMenuTriggerProps {
-  class?: HTMLAttributes['class']
+  class?: HTMLAttributes['class'];
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 </script>
 
 <template>

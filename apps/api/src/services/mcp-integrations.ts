@@ -5,10 +5,12 @@ import type * as z from 'zod';
 
 // The integration registry: datasets
 // today, more resource types register here as they become MCP integrations.
-export const mcpIntegrationDefinitions: Record<McpIntegrationId, ToolDefinition<z.ZodObject, unknown>[]> =
-  {
-    datasets: datasetToolDefinitions,
-  };
+export const mcpIntegrationDefinitions: Record<
+  McpIntegrationId,
+  ToolDefinition<z.ZodObject, unknown>[]
+> = {
+  datasets: datasetToolDefinitions,
+};
 
 /**
  * Tools a connection may use right now, per its live settings (P1): a
@@ -16,7 +18,9 @@ export const mcpIntegrationDefinitions: Record<McpIntegrationId, ToolDefinition<
  * contributes all of its tools (write implies read). `off` or missing
  * contributes none.
  */
-export function getAllowedToolDefinitions(access: McpAccess): ToolDefinition<z.ZodObject, unknown>[] {
+export function getAllowedToolDefinitions(
+  access: McpAccess,
+): ToolDefinition<z.ZodObject, unknown>[] {
   const allowed: ToolDefinition<z.ZodObject, unknown>[] = [];
 
   for (const integrationId of Object.keys(mcpIntegrationDefinitions) as McpIntegrationId[]) {

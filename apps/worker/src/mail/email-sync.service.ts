@@ -333,8 +333,14 @@ async function applyAddedChanges({
 }
 
 // Caps LLM cost when a sync surfaces old mail (initial import, reseed, provider bug, worker outage backlog).
-function isRecentEnoughToClassify(account: EmailAccount, message: Pick<MailMessageMetadata, 'date'>): boolean {
-  const cutoff = Math.max(account.createdAt.getTime(), Date.now() - config.emailAutoClassifyMaxMessageAgeMs);
+function isRecentEnoughToClassify(
+  account: EmailAccount,
+  message: Pick<MailMessageMetadata, 'date'>,
+): boolean {
+  const cutoff = Math.max(
+    account.createdAt.getTime(),
+    Date.now() - config.emailAutoClassifyMaxMessageAgeMs,
+  );
   return message.date.getTime() >= cutoff;
 }
 
@@ -379,7 +385,11 @@ async function importAddedMessage({
     labelIds: message.labelIds,
   });
 
-  if (!shouldClassify || isNonClassifiableMessage(message) || !isRecentEnoughToClassify(account, message)) {
+  if (
+    !shouldClassify ||
+    isNonClassifiableMessage(message) ||
+    !isRecentEnoughToClassify(account, message)
+  ) {
     return;
   }
 

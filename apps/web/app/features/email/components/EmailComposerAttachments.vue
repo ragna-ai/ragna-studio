@@ -3,7 +3,10 @@ import { FolderOpenIcon, PaperclipIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import EmailMediaPickerDialog from '~/features/email/components/EmailMediaPickerDialog.vue';
 import { EMAIL_MAX_TOTAL_ATTACHMENT_BYTES } from '~/features/email/lib/email-attachment-limits';
-import type { EmailDraftAttachment, MediaListItem } from '~/features/email/types';
+import type {
+  EmailDraftAttachment,
+  MediaListItem,
+} from '~/features/email/types';
 
 // Props
 // `files`/`media` are sent inline as multipart fields on submit; no eager
@@ -28,9 +31,14 @@ const totalBytes = computed(
   () =>
     files.value.reduce((sum, file) => sum + file.size, 0) +
     media.value.reduce((sum, item) => sum + item.size, 0) +
-    props.draftAttachments.reduce((sum, attachment) => sum + attachment.size, 0),
+    props.draftAttachments.reduce(
+      (sum, attachment) => sum + attachment.size,
+      0,
+    ),
 );
-const isOverLimit = computed(() => totalBytes.value > EMAIL_MAX_TOTAL_ATTACHMENT_BYTES);
+const isOverLimit = computed(
+  () => totalBytes.value > EMAIL_MAX_TOTAL_ATTACHMENT_BYTES,
+);
 const mediaIds = computed(() => media.value.map((item) => item.id));
 
 // Functions
@@ -70,7 +78,10 @@ function formatBytes(bytes: number): string {
 
 <template>
   <div class="space-y-2">
-    <ul v-if="files.length > 0 || media.length > 0 || draftAttachments.length > 0" class="flex flex-wrap gap-2">
+    <ul
+      v-if="files.length > 0 || media.length > 0 || draftAttachments.length > 0"
+      class="flex flex-wrap gap-2"
+    >
       <li
         v-for="attachment in draftAttachments"
         :key="`draft-${draftAttachmentKey(attachment)}`"
@@ -78,7 +89,9 @@ function formatBytes(bytes: number): string {
       >
         <PaperclipIcon class="size-3 shrink-0 text-muted-foreground" />
         <span class="max-w-48 truncate">{{ attachment.filename }}</span>
-        <span class="text-muted-foreground">{{ formatBytes(attachment.size) }}</span>
+        <span class="text-muted-foreground">{{
+          formatBytes(attachment.size)
+        }}</span>
         <Button
           type="button"
           variant="ghost"
@@ -128,12 +141,23 @@ function formatBytes(bytes: number): string {
       </li>
     </ul>
     <div class="flex items-center gap-2">
-      <input ref="fileInputRef" type="file" multiple class="hidden" @change="handleFileChange" />
+      <input
+        ref="fileInputRef"
+        type="file"
+        multiple
+        class="hidden"
+        @change="handleFileChange"
+      />
       <Button type="button" variant="outline" size="sm" @click="openFilePicker">
         <PaperclipIcon class="mr-2 size-3.5" />
         {{ t('email.compose.attachments.add') }}
       </Button>
-      <Button type="button" variant="outline" size="sm" @click="isMediaPickerOpen = true">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        @click="isMediaPickerOpen = true"
+      >
         <FolderOpenIcon class="mr-2 size-3.5" />
         {{ t('email.compose.attachments.fromLibrary') }}
       </Button>

@@ -28,7 +28,10 @@ function findRepoRoot(startDir: string): string {
 }
 
 function timestamp(): string {
-  return new Date().toISOString().replace(/:/g, '-').replace(/\.\d+Z$/, 'Z');
+  return new Date()
+    .toISOString()
+    .replace(/:/g, '-')
+    .replace(/\.\d+Z$/, 'Z');
 }
 
 async function main(): Promise<void> {
@@ -48,7 +51,20 @@ async function main(): Promise<void> {
   await new Promise<void>((resolvePromise, reject) => {
     const dump = spawn(
       'docker',
-      ['exec', '-e', `PGPASSWORD=${password}`, container, 'pg_dump', '-U', user, '-d', database, '--no-owner', '--clean', '--if-exists'],
+      [
+        'exec',
+        '-e',
+        `PGPASSWORD=${password}`,
+        container,
+        'pg_dump',
+        '-U',
+        user,
+        '-d',
+        database,
+        '--no-owner',
+        '--clean',
+        '--if-exists',
+      ],
       { stdio: ['ignore', 'pipe', 'inherit'] },
     );
 

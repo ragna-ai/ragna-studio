@@ -47,7 +47,10 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
   <SectionWrapper>
     <Heading bg-position="bottom">
       <template #top>
-        <HeadingTitle :title="t('task.list.title')" :subtitle="t('task.list.subtitle')">
+        <HeadingTitle
+          :title="t('task.list.title')"
+          :subtitle="t('task.list.subtitle')"
+        >
           <template #button>
             <div class="flex gap-2">
               <Button
@@ -58,7 +61,11 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
                 <TagIcon class="mr-2 size-4 stroke-1.5" />
                 {{ t('task.label.manageTitle') }}
               </Button>
-              <Button variant="secondary" :disabled="!activeWorkspaceId" @click="isCreateDialogOpen = true">
+              <Button
+                variant="secondary"
+                :disabled="!activeWorkspaceId"
+                @click="isCreateDialogOpen = true"
+              >
                 {{ t('task.list.newTask') }}
               </Button>
             </div>
@@ -69,7 +76,10 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
     </Heading>
 
     <div class="space-y-4 px-5">
-      <div v-if="!activeWorkspaceId" class="rounded-lg border p-6 text-sm text-muted-foreground">
+      <div
+        v-if="!activeWorkspaceId"
+        class="rounded-lg border p-6 text-sm text-muted-foreground"
+      >
         {{ t('task.list.loading') }}
       </div>
       <template v-else-if="tasksData">
@@ -98,7 +108,10 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
 
     <template v-if="activeWorkspaceId">
       <TaskCreateDialog v-model:open="isCreateDialogOpen" />
-      <TaskLabelManageDialog v-model:open="isLabelManageOpen" :labels="labels" />
+      <TaskLabelManageDialog
+        v-model:open="isLabelManageOpen"
+        :labels="labels"
+      />
     </template>
   </SectionWrapper>
 </template>

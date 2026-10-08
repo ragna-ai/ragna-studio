@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
-import type { EmailAutoDraftSenderListResponse, EmailAutoDraftSenderResponse } from '~/features/email/types';
+import type {
+  EmailAutoDraftSenderListResponse,
+  EmailAutoDraftSenderResponse,
+} from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
 /** [GET] /email/auto-draft-sender */
@@ -10,7 +13,10 @@ export function useGetAutoDraftSenders() {
   return useQuery<EmailAutoDraftSenderListResponse>({
     queryKey: emailKeys.autoDraftSenders(),
     queryFn: ({ signal }) =>
-      $api<EmailAutoDraftSenderListResponse>('/email/auto-draft-sender', { method: 'GET', signal }),
+      $api<EmailAutoDraftSenderListResponse>('/email/auto-draft-sender', {
+        method: 'GET',
+        signal,
+      }),
   });
 }
 
@@ -19,7 +25,10 @@ export function useAddAutoDraftSender() {
   const queryClient = useQueryClient();
   return useMutation<EmailAutoDraftSenderResponse, unknown, string>({
     mutationFn: (senderEmail) =>
-      $api<EmailAutoDraftSenderResponse>('/email/auto-draft-sender', { method: 'POST', body: { senderEmail } }),
+      $api<EmailAutoDraftSenderResponse>('/email/auto-draft-sender', {
+        method: 'POST',
+        body: { senderEmail },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.autoDraftSenders() });
       toast.success('Sender added');
@@ -34,7 +43,8 @@ export function useRemoveAutoDraftSender() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
-    mutationFn: (senderId) => $api<void>(`/email/auto-draft-sender/${senderId}`, { method: 'DELETE' }),
+    mutationFn: (senderId) =>
+      $api<void>(`/email/auto-draft-sender/${senderId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.autoDraftSenders() });
       toast.success('Sender removed');

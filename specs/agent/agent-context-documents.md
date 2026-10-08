@@ -27,19 +27,19 @@ their extracted text joins the same block.
 New table `agent_documents` in `packages/database/src/schema/`
 (**register it in `relations.ts`**, see CLAUDE.md):
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | text | `primaryIdColumn` |
-| `agentId` | text | FK → `agents.id`, `onDelete: 'cascade'`, not null, indexed |
-| `name` | text | display name, defaults to the uploaded filename, renameable |
-| `storageKey` | text | R2 object key; changes on every replace |
-| `mimeType` | text | |
-| `fileSize` | integer | bytes of the uploaded file |
-| `status` | text enum | `'pending' \| 'ready' \| 'failed'` |
-| `extractedText` | text, nullable | set by the worker on success |
-| `isTruncated` | boolean, default false | extraction hit the per-document cap |
-| `errorMessage` | text, nullable | set on `failed` |
-| timestamps | | `...timestamps` |
+| Column          | Type                   | Notes                                                       |
+| --------------- | ---------------------- | ----------------------------------------------------------- |
+| `id`            | text                   | `primaryIdColumn`                                           |
+| `agentId`       | text                   | FK → `agents.id`, `onDelete: 'cascade'`, not null, indexed  |
+| `name`          | text                   | display name, defaults to the uploaded filename, renameable |
+| `storageKey`    | text                   | R2 object key; changes on every replace                     |
+| `mimeType`      | text                   |                                                             |
+| `fileSize`      | integer                | bytes of the uploaded file                                  |
+| `status`        | text enum              | `'pending' \| 'ready' \| 'failed'`                          |
+| `extractedText` | text, nullable         | set by the worker on success                                |
+| `isTruncated`   | boolean, default false | extraction hit the per-document cap                         |
+| `errorMessage`  | text, nullable         | set on `failed`                                             |
+| timestamps      |                        | `...timestamps`                                             |
 
 No `workspaceId`: the owning agent already carries the workspace.
 No `userId`: ownership checks go through the agent
@@ -47,12 +47,12 @@ No `userId`: ownership checks go through the agent
 
 ## Limits
 
-| Limit | Value |
-| --- | --- |
-| Max file size | 10 MB |
-| Allowed types | pdf, docx, txt, md |
-| Max documents per agent | 10 |
-| Extracted text per document | 100,000 chars (hard truncate + `isTruncated`) |
+| Limit                          | Value                                         |
+| ------------------------------ | --------------------------------------------- |
+| Max file size                  | 10 MB                                         |
+| Allowed types                  | pdf, docx, txt, md                            |
+| Max documents per agent        | 10                                            |
+| Extracted text per document    | 100,000 chars (hard truncate + `isTruncated`) |
 | Extracted text total per agent | 200,000 chars (budget, checked at extraction) |
 
 ## Storage
@@ -86,6 +86,7 @@ No `userId`: ownership checks go through the agent
    Then, per file: upload to R2 via `uploadObjectBuffer`, insert a row with
    `status: 'pending'`, enqueue an extraction job. Response returns the
    created rows.
+
 2. **Extract** (worker): new queue following the standard four steps (queue
    name constant, DTO `{ documentId: string }`, processor, register in
    `processors/index.ts`). The processor:
@@ -119,6 +120,7 @@ No `userId`: ownership checks go through the agent
      native darwin-arm64) is unaffected.
    - The classification/OCR-routing capability makes the OCR non-goal
      below a realistic later feature.
+
 3. **Replace**: new file to a new key, old object deleted after success,
    `status` back to `'pending'`, `extractedText` kept but irrelevant (not
    `ready`), job re-enqueued.
@@ -133,14 +135,14 @@ New dedicated controller `agent-document.controller.ts` in
 so document management stays out of the already large agent controller. All
 routes are guarded by agent ownership (`getAgentById({ agentId, userId })`).
 
-| Route | Purpose |
-| --- | --- |
-| `GET /agent/:agentId/documents` | list (id, name, mimeType, fileSize, status, isTruncated, errorMessage, updatedAt — **not** extractedText) |
-| `POST /agent/:agentId/documents` | multipart upload, one or more files, returns the pending rows |
-| `PUT /agent/:agentId/documents/:documentId/file` | replace file |
-| `PATCH /agent/:agentId/documents/:documentId` | rename |
-| `POST /agent/:agentId/documents/:documentId/retry` | re-enqueue extraction |
-| `DELETE /agent/:agentId/documents/:documentId` | delete row + R2 object (best effort) |
+| Route                                              | Purpose                                                                                                   |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `GET /agent/:agentId/documents`                    | list (id, name, mimeType, fileSize, status, isTruncated, errorMessage, updatedAt — **not** extractedText) |
+| `POST /agent/:agentId/documents`                   | multipart upload, one or more files, returns the pending rows                                             |
+| `PUT /agent/:agentId/documents/:documentId/file`   | replace file                                                                                              |
+| `PATCH /agent/:agentId/documents/:documentId`      | rename                                                                                                    |
+| `POST /agent/:agentId/documents/:documentId/retry` | re-enqueue extraction                                                                                     |
+| `DELETE /agent/:agentId/documents/:documentId`     | delete row + R2 object (best effort)                                                                      |
 
 R2 upload/delete mechanics live in a service
 (`apps/api/src/services/agent-document.service.ts`, mirroring

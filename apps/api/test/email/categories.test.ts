@@ -129,8 +129,12 @@ describe('DELETE /email/category/:categoryId', () => {
     });
     expect(response.status).toBe(StatusCodes.OK);
 
-    const listResponse = await app.request('/email/category', { headers: { cookie: cookieHeader } });
-    const listBody = z.object({ categories: z.array(categorySchema) }).parse(await listResponse.json());
+    const listResponse = await app.request('/email/category', {
+      headers: { cookie: cookieHeader },
+    });
+    const listBody = z
+      .object({ categories: z.array(categorySchema) })
+      .parse(await listResponse.json());
     expect(listBody.categories.find((c) => c.id === category.id)).toBeUndefined();
   });
 });
@@ -194,7 +198,9 @@ describe('DELETE /email/auto-draft-sender/:senderId', () => {
     });
     expect(response.status).toBe(StatusCodes.OK);
 
-    const listResponse = await app.request('/email/auto-draft-sender', { headers: { cookie: cookieHeader } });
+    const listResponse = await app.request('/email/auto-draft-sender', {
+      headers: { cookie: cookieHeader },
+    });
     const listBody = z.object({ senders: z.array(senderSchema) }).parse(await listResponse.json());
     expect(listBody.senders).toHaveLength(0);
   });
@@ -202,10 +208,13 @@ describe('DELETE /email/auto-draft-sender/:senderId', () => {
   test('404s for a sender id that does not exist', async () => {
     const { cookieHeader } = await connectAccount();
 
-    const response = await app.request('/email/auto-draft-sender/019fb2d8-0000-7000-8000-000000000000', {
-      method: 'DELETE',
-      headers: { cookie: cookieHeader },
-    });
+    const response = await app.request(
+      '/email/auto-draft-sender/019fb2d8-0000-7000-8000-000000000000',
+      {
+        method: 'DELETE',
+        headers: { cookie: cookieHeader },
+      },
+    );
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });

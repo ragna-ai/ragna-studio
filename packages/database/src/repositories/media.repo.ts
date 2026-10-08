@@ -1,6 +1,12 @@
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { db } from '../db';
-import type { ChatAttachment, ChatAttachmentWithMedia, Media, NewChatAttachment, NewMedia } from '../schema';
+import type {
+  ChatAttachment,
+  ChatAttachmentWithMedia,
+  Media,
+  NewChatAttachment,
+  NewMedia,
+} from '../schema';
 import {
   chatAttachment,
   genImage,
@@ -11,7 +17,14 @@ import {
   taskAttachment,
 } from '../schema';
 
-export type { ChatAttachment, ChatAttachmentWithMedia, Media, MediaOrigin, NewChatAttachment, NewMedia } from '../schema';
+export type {
+  ChatAttachment,
+  ChatAttachmentWithMedia,
+  Media,
+  MediaOrigin,
+  NewChatAttachment,
+  NewMedia,
+} from '../schema';
 
 // MEDIA
 
@@ -37,7 +50,11 @@ export async function deleteMediaById({ id }: { id: string }): Promise<void> {
 
 // All media owned by a workspace, for the workspace-delete cleanup path:
 // their R2 objects must be removed before the FK cascade wipes the rows.
-export async function getMediaByWorkspaceId({ workspaceId }: { workspaceId: string }): Promise<Media[]> {
+export async function getMediaByWorkspaceId({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<Media[]> {
   return db.query.media.findMany({ where: { ownerWorkspaceId: workspaceId } });
 }
 
@@ -81,7 +98,11 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
 // best-effort R2 deletes at the detach call sites). See the comment on
 // countMediaReferences: these two functions are the only ones allowed to
 // know the link-point list.
-export async function findUnreferencedMediaOlderThan({ hours }: { hours: number }): Promise<Media[]> {
+export async function findUnreferencedMediaOlderThan({
+  hours,
+}: {
+  hours: number;
+}): Promise<Media[]> {
   const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
 
   const rows = await db
@@ -136,7 +157,11 @@ export async function getChatAttachmentsByChatId({
   });
 }
 
-export async function getChatAttachmentById({ id }: { id: string }): Promise<ChatAttachmentWithMedia | null> {
+export async function getChatAttachmentById({
+  id,
+}: {
+  id: string;
+}): Promise<ChatAttachmentWithMedia | null> {
   const found = await db.query.chatAttachment.findFirst({
     where: { id },
     with: { media: true },

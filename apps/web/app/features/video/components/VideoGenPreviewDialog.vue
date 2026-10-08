@@ -39,7 +39,8 @@ const isDownloading = ref(false);
 const { copy: copyPrompt, copied: isPromptCopied } = useClipboard();
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
-const { mutateAsync: deleteGenVideo, isPending: isDeleting } = useDeleteGenVideo();
+const { mutateAsync: deleteGenVideo, isPending: isDeleting } =
+  useDeleteGenVideo();
 const { mutate: enhanceVideo, isPending: isEnhancing } = useEnhanceGenVideo();
 
 // Computed
@@ -160,7 +161,9 @@ async function deleteVideo() {
             <dd>{{ video.resolution }}</dd>
             <dt>{{ $t('videogen.preview.duration') }}</dt>
             <dd v-if="video.duration != null">
-              {{ t('videogen.form.durationSeconds', { seconds: video.duration }) }}
+              {{
+                t('videogen.form.durationSeconds', { seconds: video.duration })
+              }}
             </dd>
             <dd v-else>—</dd>
             <dt>{{ $t('videogen.preview.model') }}</dt>

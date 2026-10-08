@@ -72,7 +72,9 @@ function applyOverlapAndFilter(chunks: string[]): string[] {
 
   for (let index = 0; index < chunks.length; index++) {
     const previous = chunks[index - 1];
-    const withOverlap = previous ? previous.slice(-CHUNK_OVERLAP_CHARS) + chunks[index] : chunks[index];
+    const withOverlap = previous
+      ? previous.slice(-CHUNK_OVERLAP_CHARS) + chunks[index]
+      : chunks[index];
 
     if (withOverlap.trim().length > 0) {
       result.push(withOverlap);

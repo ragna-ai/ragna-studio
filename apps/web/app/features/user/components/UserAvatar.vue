@@ -33,7 +33,7 @@ const initials = computed(() => {
       class="rounded-full"
     />
     <AvatarFallback
-      class="rounded-full border border-foreground/40 text-foreground text-sm"
+      class="rounded-full border border-foreground/40 text-sm text-foreground"
     >
       {{ initials }}
     </AvatarFallback>

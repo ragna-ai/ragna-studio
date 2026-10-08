@@ -197,7 +197,10 @@ export async function applyVideoWatermark({
     await writeFile(inputPath, buffer);
 
     const { height } = await probeVideoDimensions(FFMPEG_BINARY, inputPath);
-    const diameter = Math.max(VIDEO_BADGE_MIN_HEIGHT_PX, Math.round(height * VIDEO_BADGE_HEIGHT_RATIO));
+    const diameter = Math.max(
+      VIDEO_BADGE_MIN_HEIGHT_PX,
+      Math.round(height * VIDEO_BADGE_HEIGHT_RATIO),
+    );
     const margin = Math.round(height * VIDEO_BADGE_MARGIN_RATIO);
 
     const badgePng = await renderBadgePng(diameter);

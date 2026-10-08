@@ -76,9 +76,7 @@ async function createChat(
 // logic, so messages are seeded directly, one call per message so each gets
 // its own createdAt for a stable, testable ordering.
 async function seedMessage(chatId: string, role: 'user' | 'assistant', text: string) {
-  const [message] = await createChatMessages([
-    { chatId, role, parts: [{ type: 'text', text }] },
-  ]);
+  const [message] = await createChatMessages([{ chatId, role, parts: [{ type: 'text', text }] }]);
   if (!message) throw new Error('Failed to seed chat message');
   await new Promise((resolve) => setTimeout(resolve, 10));
   return message;

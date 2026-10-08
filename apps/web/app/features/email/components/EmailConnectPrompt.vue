@@ -17,13 +17,17 @@ function handleConnect(provider: EmailProviderKind) {
 </script>
 
 <template>
-  <div class="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+  <div
+    class="flex h-full flex-col items-center justify-center gap-4 px-6 text-center"
+  >
     <div class="flex size-16 items-center justify-center rounded-full bg-muted">
       <MailIcon class="size-8 text-muted-foreground" />
     </div>
     <div class="max-w-md space-y-2">
       <h1 class="text-lg font-semibold">{{ t('email.connect.title') }}</h1>
-      <p class="text-sm text-muted-foreground">{{ t('email.connect.description') }}</p>
+      <p class="text-sm text-muted-foreground">
+        {{ t('email.connect.description') }}
+      </p>
     </div>
     <div class="flex gap-2">
       <Button :disabled="isBusy" @click="handleConnect('gmail')">
@@ -31,7 +35,11 @@ function handleConnect(provider: EmailProviderKind) {
         <Icon v-else name="logos:google-icon" class="mr-2 size-4" />
         {{ t('email.connect.gmailCta') }}
       </Button>
-      <Button variant="outline" :disabled="isBusy" @click="handleConnect('microsoft')">
+      <Button
+        variant="outline"
+        :disabled="isBusy"
+        @click="handleConnect('microsoft')"
+      >
         <Spinner v-if="isBusy" class="mr-2" />
         <Icon v-else name="logos:microsoft-icon" class="mr-2 size-4" />
         {{ t('email.connect.microsoftCta') }}

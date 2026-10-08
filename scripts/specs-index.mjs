@@ -19,7 +19,14 @@ const STATUS_LINE = /^\s*(>\s*)?(\*\*)?status:/i;
 // are to see first: active work, then backlog, then shipped reference,
 // then dead/historical. A status that doesn't lead with one of these
 // (e.g. a checklist's "snapshot") falls into "Other".
-const CANONICAL_STATUSES = ['in-progress', 'decided', 'proposed', 'implemented', 'deferred', 'superseded'];
+const CANONICAL_STATUSES = [
+  'in-progress',
+  'decided',
+  'proposed',
+  'implemented',
+  'deferred',
+  'superseded',
+];
 
 function stripFrontmatter(lines) {
   if (lines[0]?.trim() !== '---') return lines;

@@ -5,7 +5,14 @@ import type {
   TaskWithBoardInfo,
   TaskWithDetails,
 } from '@repo/database';
-import { createTask, getTaskById, listTasks, listTaskLabels, moveTask, updateTask } from '@repo/database';
+import {
+  createTask,
+  getTaskById,
+  listTasks,
+  listTaskLabels,
+  moveTask,
+  updateTask,
+} from '@repo/database';
 import { tryCatch } from '@repo/utils';
 import type {
   InferToolInput,
@@ -33,8 +40,21 @@ import { optionalNonEmptyString } from './zod-helpers';
 //
 // No delete tool: the Canceled status covers abandonment.
 
-const TASK_STATUSES = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'canceled'] as const satisfies readonly TaskStatus[];
-const TASK_PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'] as const satisfies readonly TaskPriority[];
+const TASK_STATUSES = [
+  'backlog',
+  'todo',
+  'in_progress',
+  'in_review',
+  'done',
+  'canceled',
+] as const satisfies readonly TaskStatus[];
+const TASK_PRIORITIES = [
+  'none',
+  'urgent',
+  'high',
+  'medium',
+  'low',
+] as const satisfies readonly TaskPriority[];
 
 function toTaskDisplayId(taskNumber: number): string {
   return `TSK-${taskNumber}`;
@@ -178,7 +198,7 @@ export const getListTasksTool = (
 ): Tool<ListTasksInput, ListTasksOutput> =>
   tool({
     description:
-      'List the tasks on the current workspace\'s board: display id (TSK-<number>), id, title, status, priority, due date, reminder offset, labels, parent task, assigned agent, and subtask count. Optionally filter by status.',
+      "List the tasks on the current workspace's board: display id (TSK-<number>), id, title, status, priority, due date, reminder offset, labels, parent task, assigned agent, and subtask count. Optionally filter by status.",
     inputSchema: listTasksInputSchema,
     execute: async (input) => {
       writer.write({ type: 'data-task', data: { action: 'list' }, transient: true });
@@ -214,7 +234,11 @@ export const getReadTaskTool = (
       'Read a single task in full by its id, including its markdown description and its subtasks.',
     inputSchema: readTaskInputSchema,
     execute: async (input) => {
-      writer.write({ type: 'data-task', data: { action: 'read', taskId: input.id }, transient: true });
+      writer.write({
+        type: 'data-task',
+        data: { action: 'read', taskId: input.id },
+        transient: true,
+      });
 
       const { error, data: taskRecord } = await tryCatch(
         () => getTaskById({ id: input.id, workspaceId }),
@@ -255,7 +279,9 @@ const createTaskInputSchema = z.object({
   labelNames: z
     .array(z.string())
     .optional()
-    .describe('Names of existing workspace labels to attach (see listTaskLabels). Unknown names are rejected.'),
+    .describe(
+      'Names of existing workspace labels to attach (see listTaskLabels). Unknown names are rejected.',
+    ),
 });
 
 type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
@@ -268,7 +294,7 @@ export const getCreateTaskTool = (
 ): Tool<CreateTaskInput, CreateTaskOutput> =>
   tool({
     description:
-      'Create a new task on the current workspace\'s board. Tasks you create are marked as agent-created.',
+      "Create a new task on the current workspace's board. Tasks you create are marked as agent-created.",
     inputSchema: createTaskInputSchema,
     execute: async (input) => {
       writer.write({ type: 'data-task', data: { action: 'create' }, transient: true });
@@ -344,7 +370,9 @@ const updateTaskInputSchema = z.object({
     .string()
     .nullable()
     .optional()
-    .describe('ISO date string to change the due date, or null to clear it (also clears the reminder).'),
+    .describe(
+      'ISO date string to change the due date, or null to clear it (also clears the reminder).',
+    ),
   remindDaysBeforeDue: z
     .number()
     .int()
@@ -364,7 +392,9 @@ const updateTaskInputSchema = z.object({
   labelNames: z
     .array(z.string())
     .optional()
-    .describe('Replaces the task\'s labels with these existing workspace labels (see listTaskLabels).'),
+    .describe(
+      "Replaces the task's labels with these existing workspace labels (see listTaskLabels).",
+    ),
   assignedAgentId: optionalNonEmptyString().describe(
     'Agent id to assign this task to. Null or omit to leave unassigned.',
   ),
@@ -383,7 +413,11 @@ export const getUpdateTaskTool = (
       'Partially update a task: only the given fields change. Changing the due date or reminder offset re-arms the reminder. Does not change status; use moveTask for that.',
     inputSchema: updateTaskInputSchema,
     execute: async (input) => {
-      writer.write({ type: 'data-task', data: { action: 'update', taskId: input.id }, transient: true });
+      writer.write({
+        type: 'data-task',
+        data: { action: 'update', taskId: input.id },
+        transient: true,
+      });
 
       const { error: loadError, data: currentTask } = await tryCatch(
         () => getTaskById({ id: input.id, workspaceId }),
@@ -404,7 +438,8 @@ export const getUpdateTaskTool = (
       if (input.dueDate !== undefined) {
         fields.dueDate = input.dueDate === null ? null : new Date(input.dueDate);
       }
-      if (input.remindDaysBeforeDue !== undefined) fields.remindDaysBeforeDue = input.remindDaysBeforeDue;
+      if (input.remindDaysBeforeDue !== undefined)
+        fields.remindDaysBeforeDue = input.remindDaysBeforeDue;
       if (input.parentTaskId !== undefined) fields.parentTaskId = input.parentTaskId;
       if (input.unassign) {
         fields.assignedAgentId = null;
@@ -506,7 +541,11 @@ export const getMoveTaskTool = (
     description: 'Move a task to a different status column, at the top or bottom of it.',
     inputSchema: moveTaskInputSchema,
     execute: async (input) => {
-      writer.write({ type: 'data-task', data: { action: 'move', taskId: input.id }, transient: true });
+      writer.write({
+        type: 'data-task',
+        data: { action: 'move', taskId: input.id },
+        transient: true,
+      });
 
       const { error, data: movedTask } = await tryCatch(
         async () => {

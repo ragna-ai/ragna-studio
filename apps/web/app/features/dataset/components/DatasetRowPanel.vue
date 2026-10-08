@@ -10,7 +10,12 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'update-cell', rowId: string, columnId: string, value: string | number | null): void;
+  (
+    e: 'update-cell',
+    rowId: string,
+    columnId: string,
+    value: string | number | null,
+  ): void;
   (e: 'delete', rowId: string): void;
   (e: 'close'): void;
 }>();
@@ -25,15 +30,30 @@ function cellValue(column: DatasetColumn): string | number | null {
 }
 
 function commitText(column: DatasetColumn, rawValue: string) {
-  emit('update-cell', props.row.id, column.id, rawValue === '' ? null : rawValue);
+  emit(
+    'update-cell',
+    props.row.id,
+    column.id,
+    rawValue === '' ? null : rawValue,
+  );
 }
 
 function commitNumber(column: DatasetColumn, rawValue: string) {
-  emit('update-cell', props.row.id, column.id, rawValue === '' ? null : Number(rawValue));
+  emit(
+    'update-cell',
+    props.row.id,
+    column.id,
+    rawValue === '' ? null : Number(rawValue),
+  );
 }
 
 function commitSelect(column: DatasetColumn, value: unknown) {
-  emit('update-cell', props.row.id, column.id, value === undefined ? null : String(value));
+  emit(
+    'update-cell',
+    props.row.id,
+    column.id,
+    value === undefined ? null : String(value),
+  );
 }
 
 function inputValueOf(event: Event): string {
@@ -69,7 +89,11 @@ function handleOpenChange(isOpen: boolean) {
               <SelectValue :placeholder="t('dataset.grid.selectPlaceholder')" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="option in column.options ?? []" :key="option" :value="option">
+              <SelectItem
+                v-for="option in column.options ?? []"
+                :key="option"
+                :value="option"
+              >
                 {{ option }}
               </SelectItem>
             </SelectContent>
@@ -108,7 +132,11 @@ function handleOpenChange(isOpen: boolean) {
       </div>
 
       <DialogFooter>
-        <Button variant="outline" class="text-destructive" @click="emit('delete', row.id)">
+        <Button
+          variant="outline"
+          class="text-destructive"
+          @click="emit('delete', row.id)"
+        >
           <Trash2Icon class="mr-2 size-4 stroke-1.5" />
           {{ t('dataset.grid.deleteRow') }}
         </Button>

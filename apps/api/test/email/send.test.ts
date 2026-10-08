@@ -1,5 +1,10 @@
 import { createMedia } from '@repo/database';
-import { downloadObjectBufferMock, resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import {
+  downloadObjectBufferMock,
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  truncateAllTables,
+} from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -73,7 +78,9 @@ describe('POST /email/send - field normalization', () => {
     expect(response.status).toBe(StatusCodes.CREATED);
     sendResponseSchema.parse(await response.json());
     expect(sendMock).toHaveBeenCalledTimes(1);
-    expect(sendMock.mock.calls[0]?.[0]).toMatchObject({ to: [{ address: 'recipient@example.test' }] });
+    expect(sendMock.mock.calls[0]?.[0]).toMatchObject({
+      to: [{ address: 'recipient@example.test' }],
+    });
   });
 
   test('a repeated field normalizes to a multi-element array', async () => {
@@ -87,7 +94,10 @@ describe('POST /email/send - field normalization', () => {
     });
 
     expect(response.status).toBe(StatusCodes.CREATED);
-    const input = sendMock.mock.calls[0]?.[0] as { to: Array<{ address: string }>; cc?: Array<{ address: string }> };
+    const input = sendMock.mock.calls[0]?.[0] as {
+      to: Array<{ address: string }>;
+      cc?: Array<{ address: string }>;
+    };
     expect(input.to.map((a) => a.address)).toEqual(['a@example.test', 'b@example.test']);
     expect(input.cc?.map((a) => a.address)).toEqual(['c@example.test', 'd@example.test']);
   });
@@ -163,7 +173,11 @@ describe('POST /email/send - files', () => {
 
   test('a non-File value in the files field 422s (no longer silently dropped)', async () => {
     const { cookieHeader } = await connectAccount();
-    const formData = buildFormData({ to: 'recipient@example.test', subject: 'Hello', text: 'Body text' });
+    const formData = buildFormData({
+      to: 'recipient@example.test',
+      subject: 'Hello',
+      text: 'Body text',
+    });
     formData.append('files', 'not-a-file');
 
     const response = await app.request('/email/send', {
@@ -178,7 +192,7 @@ describe('POST /email/send - files', () => {
 });
 
 describe('POST /email/send - media library attachments', () => {
-  test('attaches media owned by one of the caller\'s workspaces', async () => {
+  test("attaches media owned by one of the caller's workspaces", async () => {
     const { cookieHeader, workspaceId } = await connectAccount();
     const media = await createMedia({
       ownerWorkspaceId: workspaceId,
@@ -287,7 +301,9 @@ describe('POST /email/send - draftId', () => {
       headers: { cookie: cookieHeader },
     });
     const draftsBody = z
-      .object({ drafts: z.array(z.object({ id: z.string(), status: z.string(), content: z.string() })) })
+      .object({
+        drafts: z.array(z.object({ id: z.string(), status: z.string(), content: z.string() })),
+      })
       .parse(await draftsResponse.json());
     const updated = draftsBody.drafts.find((d) => d.id === draft.id);
     expect(updated?.status).toBe('sent');
@@ -328,14 +344,16 @@ describe('POST /email/draft/:draftId/send', () => {
       headers: { cookie: cookieHeader },
     });
     const draftsBody = z
-      .object({ drafts: z.array(z.object({ id: z.string(), status: z.string(), content: z.string() })) })
+      .object({
+        drafts: z.array(z.object({ id: z.string(), status: z.string(), content: z.string() })),
+      })
       .parse(await draftsResponse.json());
     const updated = draftsBody.drafts.find((d) => d.id === draft.id);
     expect(updated?.status).toBe('sent');
     expect(updated?.content).toBe('Edited by the user before sending.');
   });
 
-  test('404s for a draft that does not belong to the caller\'s account', async () => {
+  test("404s for a draft that does not belong to the caller's account", async () => {
     const { cookieHeader } = await connectAccount();
     const other = await seedAuthenticatedUser();
     const otherConnected = await seedConnectedGmailAccount({

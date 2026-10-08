@@ -14,10 +14,9 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { default: false });
 
 // Composables
-const { data, isLoading } = useGetWorkflowRuns(
-  () => props.workflowId,
-  { enabled: () => open.value },
-);
+const { data, isLoading } = useGetWorkflowRuns(() => props.workflowId, {
+  enabled: () => open.value,
+});
 const { formatDateTime } = useDateTimeFormat();
 const { t } = useI18n();
 
@@ -30,10 +29,14 @@ const runs = computed(() => data.value?.runs ?? []);
     <DialogContent class="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>{{ t('workflow.runsList.title') }}</DialogTitle>
-        <DialogDescription>{{ t('workflow.runsList.subtitle') }}</DialogDescription>
+        <DialogDescription>{{
+          t('workflow.runsList.subtitle')
+        }}</DialogDescription>
       </DialogHeader>
 
-      <p v-if="isLoading" class="text-sm text-muted-foreground">{{ t('workflow.runsList.loading') }}</p>
+      <p v-if="isLoading" class="text-sm text-muted-foreground">
+        {{ t('workflow.runsList.loading') }}
+      </p>
       <p v-else-if="runs.length === 0" class="text-sm text-muted-foreground">
         {{ t('workflow.recentRuns.empty') }}
       </p>
@@ -44,7 +47,9 @@ const runs = computed(() => data.value?.runs ?? []);
             class="flex items-center justify-between rounded-md border px-3 py-2 text-sm hover:bg-secondary"
             @click="open = false"
           >
-            <span class="text-muted-foreground">{{ formatDateTime(run.createdAt) }}</span>
+            <span class="text-muted-foreground">{{
+              formatDateTime(run.createdAt)
+            }}</span>
             <span class="flex items-center gap-1.5">
               <WorkflowRunTriggerBadge :trigger="run.triggeredBy" />
               <WorkflowRunStatusBadge :status="run.status" />

@@ -18,7 +18,7 @@ Two symptoms Sven noticed, one root cause: reply/forward drafts seed their
 initial `content` with the replied-to message's HTML wrapped in
 `<blockquote>` (`buildReplyQuoteHtml`,
 `packages/mail/src/content/reply-quote.ts`), and that whole blob - the
-user's own new reply text *and* the quoted history - lives in one Tiptap
+user's own new reply text _and_ the quoted history - lives in one Tiptap
 document (`EmailComposer.vue`'s `useEmailComposeEditor`), rendered live in
 the app's own DOM.
 
@@ -42,7 +42,7 @@ the app's own DOM.
   `style` attributes ("email HTML commonly needs it") - reasonable for
   content headed into an iframe with its own document, but a `<style>`
   element (or anything DOMPurify's allowlist doesn't fully anticipate)
-  landing in the *main page's* DOM has no natural containment the way it
+  landing in the _main page's_ DOM has no natural containment the way it
   does inside an iframe. Whatever Tiptap's schema happens to do with a
   `<style>` element today is incidental parsing behavior, not a designed
   security boundary, and shouldn't be the thing standing between a
@@ -54,18 +54,18 @@ mainstream mail client already uses - split them.
 
 ## Decisions
 
-| Question | Decision |
-| --- | --- |
-| Where does the quote render? | A read-only block through `EmailContentIframe`, the same component/sandboxing the thread read pane already uses - not the Tiptap editor. |
-| Is the quote still editable? | No, not in v1. Matches Gmail/Outlook/Apple Mail's default (quoted history is read-only, collapsed/expanded but not inline-editable). Users who currently trim/edit history inline lose that ability; called out as a deliberate behavior change, not an oversight. |
-| Collapse/expand affordance | **Reversed 2026-08-16** (after initial build): the quote isn't rendered in the compose UI at all. `EmailComposer.vue` only ever renders inline in `EmailThreadView.vue`, directly above the full message thread, which already shows the original message in full via its own `EmailContentIframe` (`EmailMessageItem.vue`) - the only other place a draft renders, the standalone `/mail/draft/:draftId` route, only ever shows `kind: 'new'` drafts, where `quotedHtml` is always null. A collapsible quote block in the composer never surfaces anything the user can't already see just below it, so it was removed as redundant. `content`/`text`/`quotedHtml`/`quotedText` still round-trip through storage and send-time joining exactly as built (see Scope §3); only the compose-time rendering was dropped. |
-| Storage: columns vs. table | Nullable columns on `email_drafts` (`quotedHtml`/`quotedText`), not a separate table - at most one quote per draft, never queried independently, so a join buys nothing today. |
-| `EmailContentIframe` sizing in the compose panel | Inherit its existing `ResizeObserver`-driven auto-height as-is; no compose-specific cap. |
-| Where does the user type their new reply? | A Tiptap instance that starts empty (or a single empty paragraph) for `reply`/`forward`, same as `new` already effectively is. `content`/`text` narrow to mean "the user's own new text" only. |
-| Who builds the quote block? | `buildReplyQuoteHtml` (`packages/mail/src/content/reply-quote.ts`), same sanitize logic. **Reversed 2026-08-16:** the 10,000-char truncation cap (`QUOTE_MAX_LENGTH`, tag-boundary truncation, the "… (quoted message trimmed)" marker) was removed - it existed only to protect the browser-side Tiptap editor from a pathologically large quote, and the quote no longer reaches Tiptap at all (it's never rendered client-side per the row above). The read pane's `EmailContentIframe` already handles messages of any size without a cap; `buildReplyQuoteHtml` now just sanitizes, no length limit. |
-| Send-time MIME assembly | `buildDraftSendMailInput` (apps/api) and `pushDraftToGmail`'s write-back (apps/worker) concatenate `content + quotedHtml` / `text + quotedText` into the outgoing `html`/`text`, through one shared helper - not two independent assemblies that happen to agree. |
-| Existing in-flight drafts | Not migrated. A draft created before this ships keeps its old single-blob `content` (quote baked in, `quotedHtml` null) and renders through a legacy fallback - the same single editable Tiptap instance, current behavior - until sent or discarded. No backfill (same non-goal precedent as `html-content-change-request.md`). |
-| Oversized-content composer guard | Stays removed. The compose editor now only ever parses the user's own typed text, which is naturally bounded - the previously-risky part (arbitrarily large or pathological sender HTML) moves entirely onto the iframe path, the same path that already renders received messages of any size without hanging. |
+| Question                                         | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where does the quote render?                     | A read-only block through `EmailContentIframe`, the same component/sandboxing the thread read pane already uses - not the Tiptap editor.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Is the quote still editable?                     | No, not in v1. Matches Gmail/Outlook/Apple Mail's default (quoted history is read-only, collapsed/expanded but not inline-editable). Users who currently trim/edit history inline lose that ability; called out as a deliberate behavior change, not an oversight.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Collapse/expand affordance                       | **Reversed 2026-08-16** (after initial build): the quote isn't rendered in the compose UI at all. `EmailComposer.vue` only ever renders inline in `EmailThreadView.vue`, directly above the full message thread, which already shows the original message in full via its own `EmailContentIframe` (`EmailMessageItem.vue`) - the only other place a draft renders, the standalone `/mail/draft/:draftId` route, only ever shows `kind: 'new'` drafts, where `quotedHtml` is always null. A collapsible quote block in the composer never surfaces anything the user can't already see just below it, so it was removed as redundant. `content`/`text`/`quotedHtml`/`quotedText` still round-trip through storage and send-time joining exactly as built (see Scope §3); only the compose-time rendering was dropped. |
+| Storage: columns vs. table                       | Nullable columns on `email_drafts` (`quotedHtml`/`quotedText`), not a separate table - at most one quote per draft, never queried independently, so a join buys nothing today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `EmailContentIframe` sizing in the compose panel | Inherit its existing `ResizeObserver`-driven auto-height as-is; no compose-specific cap.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Where does the user type their new reply?        | A Tiptap instance that starts empty (or a single empty paragraph) for `reply`/`forward`, same as `new` already effectively is. `content`/`text` narrow to mean "the user's own new text" only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Who builds the quote block?                      | `buildReplyQuoteHtml` (`packages/mail/src/content/reply-quote.ts`), same sanitize logic. **Reversed 2026-08-16:** the 10,000-char truncation cap (`QUOTE_MAX_LENGTH`, tag-boundary truncation, the "… (quoted message trimmed)" marker) was removed - it existed only to protect the browser-side Tiptap editor from a pathologically large quote, and the quote no longer reaches Tiptap at all (it's never rendered client-side per the row above). The read pane's `EmailContentIframe` already handles messages of any size without a cap; `buildReplyQuoteHtml` now just sanitizes, no length limit.                                                                                                                                                                                                             |
+| Send-time MIME assembly                          | `buildDraftSendMailInput` (apps/api) and `pushDraftToGmail`'s write-back (apps/worker) concatenate `content + quotedHtml` / `text + quotedText` into the outgoing `html`/`text`, through one shared helper - not two independent assemblies that happen to agree.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Existing in-flight drafts                        | Not migrated. A draft created before this ships keeps its old single-blob `content` (quote baked in, `quotedHtml` null) and renders through a legacy fallback - the same single editable Tiptap instance, current behavior - until sent or discarded. No backfill (same non-goal precedent as `html-content-change-request.md`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Oversized-content composer guard                 | Stays removed. The compose editor now only ever parses the user's own typed text, which is naturally bounded - the previously-risky part (arbitrarily large or pathological sender HTML) moves entirely onto the iframe path, the same path that already renders received messages of any size without hanging.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ## Scope
 
@@ -129,12 +129,13 @@ untouched; `quotedHtml`/`quotedText` are written once, from the same
 
 `buildDraftSendMailInput` (apps/api) and `pushDraftToGmail`'s write-back
 (apps/worker): the `html`/`text` sent to the provider become `draft.content
-+ (draft.quotedHtml ?? '')` / `draft.text + (draft.quotedText ?? '')`, via
-one small join helper shared by both call sites (new export in
-`@repo/mail/content`, e.g. `joinDraftContentWithQuote`) - the same
-"one shared builder, not two independent assemblies" discipline
-`html-content-change-request.md` already established for the quote builder
-itself.
+
+- (draft.quotedHtml ?? '')`/`draft.text + (draft.quotedText ?? '')`, via
+  one small join helper shared by both call sites (new export in
+  `@repo/mail/content`, e.g. `joinDraftContentWithQuote`) - the same
+  "one shared builder, not two independent assemblies" discipline
+  `html-content-change-request.md` already established for the quote builder
+  itself.
 
 `isDraftEmpty` (apps/api) keeps checking `content.trim().length === 0` -
 now correctly means "no new text typed". Called out so it isn't mistaken
@@ -146,7 +147,7 @@ non-empty signal for those kinds.
 ## What becomes dead code
 
 `buildReplyQuoteHtml`, `sanitizeQuotedHtml`, `EmailContentIframe`, and
-`DocumentEditor.css` are all reused as-is - the *implicit* assumption that
+`DocumentEditor.css` are all reused as-is - the _implicit_ assumption that
 `content` always starts with a quote for `reply`/`forward` is what
 disappears from the code's shape.
 
@@ -172,9 +173,9 @@ nothing left to protect. `buildQuotedBodyHtml` was inlined into
   in line with it.
 - No change to `buildReplyQuoteHtml`'s sanitization (`sanitizeQuotedHtml`)
   - still needed regardless of where the result is rendered, since it's also
-  the exact string eventually sent in the outgoing MIME `html` part. (The
-  separate length cap that used to sit alongside sanitization was removed -
-  see the "Who builds the quote block?" row in Decisions.)
+    the exact string eventually sent in the outgoing MIME `html` part. (The
+    separate length cap that used to sit alongside sanitization was removed -
+    see the "Who builds the quote block?" row in Decisions.)
 
 ## Delivery slices
 

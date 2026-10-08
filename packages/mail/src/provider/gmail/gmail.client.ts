@@ -71,7 +71,8 @@ export async function gmailRequestVoid(
 
 function isRetryableGmailError(error: unknown): boolean {
   return (
-    error instanceof GmailApiError && (error.status === 429 || error.status >= 500 || isMailAuthError(error))
+    error instanceof GmailApiError &&
+    (error.status === 429 || error.status >= 500 || isMailAuthError(error))
   );
 }
 

@@ -66,5 +66,7 @@ export async function deleteTaskLabel({
   id: string;
   workspaceId: string;
 }): Promise<void> {
-  await db.delete(taskLabel).where(and(eq(taskLabel.id, id), eq(taskLabel.workspaceId, workspaceId)));
+  await db
+    .delete(taskLabel)
+    .where(and(eq(taskLabel.id, id), eq(taskLabel.workspaceId, workspaceId)));
 }

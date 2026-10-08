@@ -397,7 +397,9 @@ export function computeCharge({
 }): ChargeBreakdown {
   const nanoUsdPerInputToken = BigInt(pricing.nanoUsdPerInputToken);
   const nanoUsdPerOutputToken = BigInt(pricing.nanoUsdPerOutputToken);
-  const nanoUsdPerCacheReadToken = BigInt(pricing.nanoUsdPerCacheReadToken ?? pricing.nanoUsdPerInputToken);
+  const nanoUsdPerCacheReadToken = BigInt(
+    pricing.nanoUsdPerCacheReadToken ?? pricing.nanoUsdPerInputToken,
+  );
   const nanoUsdPerCacheWriteToken = BigInt(
     pricing.nanoUsdPerCacheWriteToken ?? pricing.nanoUsdPerInputToken,
   );

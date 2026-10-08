@@ -29,7 +29,9 @@ const dueDateLabel = computed(() =>
     class="block cursor-pointer rounded-lg border bg-card p-3 shadow-xs transition-colors hover:bg-stone-50"
   >
     <div class="flex items-center justify-between gap-2">
-      <span class="text-xs font-medium text-muted-foreground">{{ displayId }}</span>
+      <span class="text-xs font-medium text-muted-foreground">{{
+        displayId
+      }}</span>
       <component
         :is="PriorityIcon"
         v-if="task.priority !== 'none'"
@@ -51,7 +53,9 @@ const dueDateLabel = computed(() =>
       </Badge>
     </div>
 
-    <div class="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+    <div
+      class="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground"
+    >
       <span
         v-if="dueDateLabel"
         class="flex items-center gap-1"
@@ -63,11 +67,19 @@ const dueDateLabel = computed(() =>
       <span v-else />
 
       <span v-if="task.subtaskCount > 0" class="shrink-0">
-        {{ t('task.card.subtaskProgress', { done: task.subtaskDoneCount, total: task.subtaskCount }) }}
+        {{
+          t('task.card.subtaskProgress', {
+            done: task.subtaskDoneCount,
+            total: task.subtaskCount,
+          })
+        }}
       </span>
     </div>
 
-    <div v-if="task.assignedAgent" class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div
+      v-if="task.assignedAgent"
+      class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"
+    >
       <UserIcon class="size-3.5" />
       <span class="truncate">{{ task.assignedAgent.name }}</span>
     </div>

@@ -222,7 +222,9 @@ export async function connectEmailAccount({
 
   if (profileError !== null || !profile) {
     logger.error('Failed to read mailbox profile while connecting', profileError);
-    throw new BadRequestException('Failed to read your mailbox profile. Try reconnecting your account');
+    throw new BadRequestException(
+      'Failed to read your mailbox profile. Try reconnecting your account',
+    );
   }
 
   const { error, data: account } = await tryCatch(() =>
@@ -1325,11 +1327,7 @@ export function setThreadStarredForUser(params: {
 }
 
 /** [POST] /email/thread/:threadId/read - loops the thread's message ids. */
-export function setThreadReadForUser(params: {
-  userId: string;
-  threadId: string;
-  read: boolean;
-}) {
+export function setThreadReadForUser(params: { userId: string; threadId: string; read: boolean }) {
   return applyThreadAction({
     userId: params.userId,
     threadId: params.threadId,
@@ -2061,7 +2059,9 @@ function fetchDraftAttachmentContent({
 
   if (!providerDraftId) {
     return Promise.reject(
-      new Error('Draft attachment has no source message and the draft has not reached the provider'),
+      new Error(
+        'Draft attachment has no source message and the draft has not reached the provider',
+      ),
     );
   }
 

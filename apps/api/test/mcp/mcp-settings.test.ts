@@ -129,7 +129,7 @@ describe('POST /mcp-settings/connections', () => {
     expect(response.status).toBe(StatusCodes.FORBIDDEN);
   });
 
-  test('404s for a workspace that is not the user\'s', async () => {
+  test("404s for a workspace that is not the user's", async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     const other = await seedAuthenticatedUser();
     await seedOAuthClient();
@@ -144,7 +144,7 @@ describe('POST /mcp-settings/connections', () => {
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });
 
-  test('creates a connection for the user\'s own workspace', async () => {
+  test("creates a connection for the user's own workspace", async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     await seedOAuthClient();
     const settings = await getMcpSettings({ userId });
@@ -167,7 +167,11 @@ describe('DELETE /mcp-settings/connections/:connectionId', () => {
   test('revokes and removes the connection', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     await seedOAuthClient();
-    const connection = await seedMcpConnection({ userId, workspaceId, access: { datasets: 'read' } });
+    const connection = await seedMcpConnection({
+      userId,
+      workspaceId,
+      access: { datasets: 'read' },
+    });
 
     const response = await app.request(`/mcp-settings/connections/${connection.id}`, {
       method: 'DELETE',

@@ -11,7 +11,10 @@ const version = import.meta.env.VITE_APP_VERSION || 'dev';
         <HelpCircleIcon class="size-5 stroke-1 hover:stroke-1.5" />
       </button>
     </PopoverTrigger>
-    <PopoverContent class="w-[14rem] rounded-2xl overflow-hidden p-0" side="bottom">
+    <PopoverContent
+      class="w-[14rem] overflow-hidden rounded-2xl p-0"
+      side="bottom"
+    >
       <div class="p-5">
         <p class="text-xs opacity-75">App Version: {{ version }}</p>
       </div>

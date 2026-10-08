@@ -40,7 +40,8 @@ async function insertMicrosoftAccount({
   await assertConnectedToTestDatabase();
 
   const resolvedAccessToken = accessToken ?? `test-microsoft-token-${crypto.randomUUID()}`;
-  const resolvedMicrosoftAccountId = microsoftAccountId ?? `test-microsoft-account-${crypto.randomUUID()}`;
+  const resolvedMicrosoftAccountId =
+    microsoftAccountId ?? `test-microsoft-account-${crypto.randomUUID()}`;
   const now = new Date();
 
   await db.insert(account).values({

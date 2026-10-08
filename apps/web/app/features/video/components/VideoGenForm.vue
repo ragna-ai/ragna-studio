@@ -42,9 +42,7 @@ const advancedOptionsOpen = ref(false);
 const frameEnabled = ref(false);
 const frameMode = ref<FrameMode>('genImage');
 const selectedGenImageId = ref<string | null>(null);
-const uploadedFrame = ref<{ mediaId: string; previewUrl: string } | null>(
-  null,
-);
+const uploadedFrame = ref<{ mediaId: string; previewUrl: string } | null>(null);
 
 const videoGenSchema = z.object({
   prompt: z.string().min(1, t('videogen.form.promptRequired')).max(5000),
@@ -79,7 +77,9 @@ const form = useForm({
         negativePrompt: capability.value.supportsNegativePrompt
           ? value.negativePrompt.trim() || undefined
           : undefined,
-        seed: capability.value.supportsSeed ? (value.seed ?? undefined) : undefined,
+        seed: capability.value.supportsSeed
+          ? (value.seed ?? undefined)
+          : undefined,
         draft: capability.value.supportsDraft ? draft.value : undefined,
         frame: resolveFrame(),
         visibleWatermark: visibleWatermark.value,
@@ -114,13 +114,17 @@ const availableResolutions = computed(() =>
 );
 
 const showAdvancedOptions = computed(
-  () => capability.value.supportsNegativePrompt || capability.value.supportsSeed,
+  () =>
+    capability.value.supportsNegativePrompt || capability.value.supportsSeed,
 );
 
 // Only a completed row has a media object to animate: pending/processing/
 // failed rows 404 server-side (apps/api's videogen.service.ts resolveFrame).
 const genImages = computed(
-  () => genImageData.value?.genImages.filter((image) => image.status === 'completed') ?? [],
+  () =>
+    genImageData.value?.genImages.filter(
+      (image) => image.status === 'completed',
+    ) ?? [],
 );
 
 // Functions
@@ -204,7 +208,10 @@ watch(
     if (!cap.aspectRatios.includes(aspectRatio.value)) {
       aspectRatio.value = cap.aspectRatios[0] ?? '16:9';
     }
-    if (duration.value < cap.durationRange.min || duration.value > cap.durationRange.max) {
+    if (
+      duration.value < cap.durationRange.min ||
+      duration.value > cap.durationRange.max
+    ) {
       duration.value = cap.durationRange.min;
     }
     if (!cap.supportsDraft && draft.value) {
@@ -362,7 +369,10 @@ watch(
       </CollapsibleTrigger>
 
       <CollapsibleContent class="space-y-4 p-3">
-        <form.Field v-if="capability.supportsNegativePrompt" name="negativePrompt">
+        <form.Field
+          v-if="capability.supportsNegativePrompt"
+          name="negativePrompt"
+        >
           <template v-slot="{ field, state }">
             <div>
               <Label class="mb-2 block text-sm font-medium" :for="field.name">

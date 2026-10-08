@@ -246,7 +246,7 @@ export const datasetFindDefinition: ToolDefinition<
 > = {
   name: 'datasetFind',
   description:
-    'Find datasets you or the user have created, returning each one\'s id and column schema so you can then call datasetListRows/datasetAppendRow/datasetUpdateRow. If a default dataset is already pinned for you, its id and schema are in your system prompt and you usually don\'t need this tool.',
+    "Find datasets you or the user have created, returning each one's id and column schema so you can then call datasetListRows/datasetAppendRow/datasetUpdateRow. If a default dataset is already pinned for you, its id and schema are in your system prompt and you usually don't need this tool.",
   inputSchema: datasetFindInputSchema,
   access: 'read',
   annotations: { readOnlyHint: true },
@@ -314,7 +314,7 @@ const datasetListRowsInputSchema = z.object({
     .min(1)
     .optional()
     .describe(
-      'Column ids to include in each row\'s data. Omit to include all columns. Use this to skip long text columns when scanning, then read the chosen row in full with datasetGetRow.',
+      "Column ids to include in each row's data. Omit to include all columns. Use this to skip long text columns when scanning, then read the chosen row in full with datasetGetRow.",
     ),
   limit: z
     .number()
@@ -476,7 +476,7 @@ export const datasetAppendRowDefinition: ToolDefinition<
 > = {
   name: 'datasetAppendRow',
   description:
-    'Append a new row to a dataset. Values are validated against the dataset\'s column schema (unknown columns and out-of-range select values are rejected). Note: if a workflow run retries after a failure, this can duplicate a previous append; read the dataset first to check whether the row already exists.',
+    "Append a new row to a dataset. Values are validated against the dataset's column schema (unknown columns and out-of-range select values are rejected). Note: if a workflow run retries after a failure, this can duplicate a previous append; read the dataset first to check whether the row already exists.",
   inputSchema: datasetAppendRowInputSchema,
   access: 'write',
   execute(input, ctx) {

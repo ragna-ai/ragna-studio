@@ -9,7 +9,11 @@ import {
   useUpdateDataset,
   useUpdateDatasetRow,
 } from '~/features/dataset/composables/useDatasetApi';
-import type { Dataset, DatasetColumn, DatasetRow } from '~/features/dataset/types';
+import type {
+  Dataset,
+  DatasetColumn,
+  DatasetRow,
+} from '~/features/dataset/types';
 
 interface Props {
   dataset: Dataset;
@@ -21,7 +25,9 @@ const props = defineProps<Props>();
 // The "Columns" and settings toggle buttons live in the page's own header,
 // alongside the breadcrumb (which has to render before `dataset` has
 // loaded), so their open state is owned by the page and passed down here.
-const columnManagerOpen = defineModel<boolean>('columnManagerOpen', { required: true });
+const columnManagerOpen = defineModel<boolean>('columnManagerOpen', {
+  required: true,
+});
 const settingsOpen = defineModel<boolean>('settingsOpen', { required: true });
 
 // The row panel, by contrast, is only ever opened from inside the grid (the
@@ -56,7 +62,10 @@ watch(settingsOpen, (isOpen) => {
 watch(
   () => props.rows,
   (rows) => {
-    if (selectedRowId.value && !rows.some((row) => row.id === selectedRowId.value)) {
+    if (
+      selectedRowId.value &&
+      !rows.some((row) => row.id === selectedRowId.value)
+    ) {
       selectedRowId.value = null;
     }
   },
@@ -69,11 +78,14 @@ const { t } = useI18n();
 // composable in this app (see useGetWorkflow/useGetDataset). The dataset
 // already carries its own workspaceId, so there's no need for a separate prop.
 const datasetId = computed(() => props.dataset.id);
-const { mutateAsync: updateDataset, isPending: isSavingColumns } = useUpdateDataset();
-const { mutateAsync: createRow, isPending: isAddingRow } = useCreateDatasetRow(datasetId);
+const { mutateAsync: updateDataset, isPending: isSavingColumns } =
+  useUpdateDataset();
+const { mutateAsync: createRow, isPending: isAddingRow } =
+  useCreateDatasetRow(datasetId);
 const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
 const { mutateAsync: deleteRow } = useDeleteDatasetRow(datasetId);
-const { mutate: moveRow, isPending: isMovingRow } = useMoveDatasetRow(datasetId);
+const { mutate: moveRow, isPending: isMovingRow } =
+  useMoveDatasetRow(datasetId);
 const { confirm } = useConfirmDialog();
 
 // Functions
@@ -83,7 +95,10 @@ async function handleSaveColumns(columns: DatasetColumn[]) {
 }
 
 // A cleared description is persisted as null, not an empty string.
-async function handleSaveSettings(value: { name: string; description: string }) {
+async function handleSaveSettings(value: {
+  name: string;
+  description: string;
+}) {
   await updateDataset({
     datasetId: props.dataset.id,
     name: value.name,
@@ -97,7 +112,11 @@ async function handleAddRow() {
 
 // Shared by both the grid's inline cells and the row panel's fields: same
 // mutation, same partial-update semantics.
-async function handleUpdateCell(rowId: string, columnId: string, value: string | number | null) {
+async function handleUpdateCell(
+  rowId: string,
+  columnId: string,
+  value: string | number | null,
+) {
   await updateRow({ rowId, data: { [columnId]: value } });
 }
 

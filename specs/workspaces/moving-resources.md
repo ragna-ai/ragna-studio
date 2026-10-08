@@ -25,11 +25,11 @@ social post media, and agent context documents.
 
 ### Three unique indexes reject the UPDATE outright
 
-| Index | Table | Collision |
-| --- | --- | --- |
-| `task_workspaceId_number_idx` on `(workspaceId, number)` | `task.schema.ts:72` | Tasks carry a per-workspace sequence shown as `TSK-<number>`. Moving TSK-7 into a workspace that already has one throws. Renumbering to `max(number)+1` fixes it but changes the task's visible id. |
-| `taskLabel_workspaceId_name_idx` on `(workspaceId, name)` | `task.schema.ts:96` | Two workspaces both having a "bug" label is normal, so this collides often. |
-| `agent_default_per_workspace_idx` on `(userId, workspaceId) WHERE isDefault` | `agent.schema.ts:106` | Moving a default agent into a workspace that already has one throws. Moving it out leaves the source workspace with no default agent. |
+| Index                                                                        | Table                 | Collision                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `task_workspaceId_number_idx` on `(workspaceId, number)`                     | `task.schema.ts:72`   | Tasks carry a per-workspace sequence shown as `TSK-<number>`. Moving TSK-7 into a workspace that already has one throws. Renumbering to `max(number)+1` fixes it but changes the task's visible id. |
+| `taskLabel_workspaceId_name_idx` on `(workspaceId, name)`                    | `task.schema.ts:96`   | Two workspaces both having a "bug" label is normal, so this collides often.                                                                                                                         |
+| `agent_default_per_workspace_idx` on `(userId, workspaceId) WHERE isDefault` | `agent.schema.ts:106` | Moving a default agent into a workspace that already has one throws. Moving it out leaves the source workspace with no default agent.                                                               |
 
 ### One cascade turns a dangling reference into data loss
 
@@ -90,18 +90,18 @@ No error, the UI is just subtly incorrect:
 
 ## Per-resource cost, if it were built
 
-| Resource | Beyond the `workspaceId` UPDATE |
-| --- | --- |
-| `genImage`, `genVideo` | nothing |
-| `socialPost` | nothing (`socialPostMedia` follows by cascade) |
-| `document` | null `folderId` so it lands at root |
-| `folder` | move its documents too |
-| `dataset` | null `defaultDatasetId` on agents left behind |
-| `task` | renumber, drop or remap labels, null agent refs |
-| `taskLabel` | rename on collision |
-| `agent` | handle `isDefault`, decide the fate of its chats |
-| `chat` | needs an agent in the target, `agentId` cannot be nulled |
-| `workflow` | scan both jsonb columns, remap or block, prevent silent wrong execution |
+| Resource               | Beyond the `workspaceId` UPDATE                                         |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `genImage`, `genVideo` | nothing                                                                 |
+| `socialPost`           | nothing (`socialPostMedia` follows by cascade)                          |
+| `document`             | null `folderId` so it lands at root                                     |
+| `folder`               | move its documents too                                                  |
+| `dataset`              | null `defaultDatasetId` on agents left behind                           |
+| `task`                 | renumber, drop or remap labels, null agent refs                         |
+| `taskLabel`            | rename on collision                                                     |
+| `agent`                | handle `isDefault`, decide the fate of its chats                        |
+| `chat`                 | needs an agent in the target, `agentId` cannot be nulled                |
+| `workflow`             | scan both jsonb columns, remap or block, prevent silent wrong execution |
 
 Child rows carry no `workspaceId` of their own and follow their parent for
 free: `chatMessage`, `agentMemory`, `agentContextDocument`, `datasetRow`,

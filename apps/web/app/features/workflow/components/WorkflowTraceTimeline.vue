@@ -22,13 +22,19 @@ const { t } = useI18n();
       class="space-y-2 border-l-2 border-muted pl-3"
     >
       <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-muted-foreground">{{ t('workflow.trace.step', { number: index + 1 }) }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{
+          t('workflow.trace.step', { number: index + 1 })
+        }}</span>
         <Badge
           v-if="tokenUsageTotal(traceStep.usage) !== undefined"
           variant="outline"
           class="px-1.5 py-0 text-[10px] font-normal text-muted-foreground"
         >
-          {{ t('workflow.trace.tokenCount', { count: tokenUsageTotal(traceStep.usage) }) }}
+          {{
+            t('workflow.trace.tokenCount', {
+              count: tokenUsageTotal(traceStep.usage),
+            })
+          }}
         </Badge>
       </div>
 

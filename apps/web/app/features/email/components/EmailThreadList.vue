@@ -11,7 +11,12 @@ import {
   useSetThreadTrashed,
 } from '~/features/email/composables/useEmailThreadApi';
 import { useEmailThreadSelection } from '~/features/email/composables/useEmailThreadSelection';
-import type { EmailCategory, EmailDraft, EmailThreadListFilters, EmailThreadSummary } from '~/features/email/types';
+import type {
+  EmailCategory,
+  EmailDraft,
+  EmailThreadListFilters,
+  EmailThreadSummary,
+} from '~/features/email/types';
 
 // Props
 const props = defineProps<{
@@ -48,7 +53,8 @@ const { mutate: trashThread } = useSetThreadTrashed(filtersRef);
 const { mutate: starThread } = useSetThreadStarred(filtersRef);
 const { mutate: setThreadRead } = useSetThreadRead();
 const selection = useEmailThreadSelection(filtersRef);
-const { mutate: bulkTrashThreads, isPending: isBulkTrashing } = useBulkTrashThreads(filtersRef);
+const { mutate: bulkTrashThreads, isPending: isBulkTrashing } =
+  useBulkTrashThreads(filtersRef);
 
 // Archiving/trashing a row removes it from this list optimistically, but if
 // that row is also the thread currently open in the reading pane
@@ -93,7 +99,9 @@ function handleToggleSelectAll() {
 async function handleBulkTrash() {
   const threadIds = selection.selectedIds.value;
   const confirmed = await confirm({
-    title: t('email.thread.selection.confirmTitle', { count: threadIds.length }),
+    title: t('email.thread.selection.confirmTitle', {
+      count: threadIds.length,
+    }),
     message: t('email.thread.selection.confirmMessage'),
     confirmLabel: t('email.thread.selection.trash'),
     cancelLabel: t('common.cancel'),
@@ -106,13 +114,22 @@ async function handleBulkTrash() {
 }
 
 // Computed
-const categoryById = computed(() => new Map(props.categories.map((category) => [category.id, category])));
+const categoryById = computed(
+  () => new Map(props.categories.map((category) => [category.id, category])),
+);
 const draftByThreadId = computed(
-  () => new Map(props.drafts.filter((draft) => draft.threadId !== null).map((draft) => [draft.threadId as string, draft])),
+  () =>
+    new Map(
+      props.drafts
+        .filter((draft) => draft.threadId !== null)
+        .map((draft) => [draft.threadId as string, draft]),
+    ),
 );
 
 function categoryFor(thread: EmailThreadSummary): EmailCategory | null {
-  return thread.categoryId ? (categoryById.value.get(thread.categoryId) ?? null) : null;
+  return thread.categoryId
+    ? (categoryById.value.get(thread.categoryId) ?? null)
+    : null;
 }
 
 function draftFor(thread: EmailThreadSummary): EmailDraft | null {
@@ -141,8 +158,15 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
     <div v-if="props.isLoading" class="flex flex-1 items-center justify-center">
       <Spinner />
     </div>
-    <p v-else-if="props.threads.length === 0" class="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
-      {{ props.isSearching ? t('email.thread.noSearchResults') : t('email.thread.empty') }}
+    <p
+      v-else-if="props.threads.length === 0"
+      class="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground"
+    >
+      {{
+        props.isSearching
+          ? t('email.thread.noSearchResults')
+          : t('email.thread.empty')
+      }}
     </p>
     <ul v-else class="min-h-0 flex-1 overflow-y-auto">
       <!-- `read` and `isUnread` are opposites of the same flag: the toggle's
@@ -164,11 +188,18 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
         @archive="handleArchive(thread.id)"
         @trash="(trashed) => handleTrash(thread.id, trashed)"
         @star="(value) => starThread({ threadId: thread.id, starred: value })"
-        @toggle-read="setThreadRead({ threadId: thread.id, read: thread.isUnread })"
+        @toggle-read="
+          setThreadRead({ threadId: thread.id, read: thread.isUnread })
+        "
         @toggle-select="selection.toggle(thread.id)"
       />
       <div v-if="props.hasNextPage" class="flex justify-center py-4">
-        <Button variant="outline" size="sm" :disabled="props.isFetchingNextPage" @click="emit('loadMore')">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="props.isFetchingNextPage"
+          @click="emit('loadMore')"
+        >
           <Spinner v-if="props.isFetchingNextPage" class="mr-2" />
           {{ t('email.thread.loadMore') }}
         </Button>

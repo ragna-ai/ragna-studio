@@ -21,29 +21,29 @@ they turn it on.
 
 ## Decisions (Sven, 2026-09-24)
 
-| # | Topic | Decision |
-|---|-------|----------|
-| 1 | Target client | Claude Desktop custom connectors. That requires OAuth (MCP authorization spec). Personal access tokens are not built. |
-| 2 | Scope of the layer | Generic MCP layer with an integration registry. Datasets are the first integration, not the only one. |
-| 3 | Opt-in | A `/settings/mcp` page with a master toggle, off by default. Per resource type: **Off / Read / Read & write**. |
-| 4 | Workspace | Picked on the OAuth consent screen. One workspace per connection. See P9 for how many connections a client can have. |
-| 5 | Granularity | Resource type level only. "Datasets: Read" means all datasets in the connected workspace are readable. No per-dataset exceptions. |
-| 6 | v1 access | Read and write. |
-| 7 | Tool source of truth | Each tool is defined once as a transport-neutral definition in `@repo/ai`. Thin adapters turn it into an AI SDK tool (chat, workflows) or an MCP tool. |
+| #   | Topic                | Decision                                                                                                                                               |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Target client        | Claude Desktop custom connectors. That requires OAuth (MCP authorization spec). Personal access tokens are not built.                                  |
+| 2   | Scope of the layer   | Generic MCP layer with an integration registry. Datasets are the first integration, not the only one.                                                  |
+| 3   | Opt-in               | A `/settings/mcp` page with a master toggle, off by default. Per resource type: **Off / Read / Read & write**.                                         |
+| 4   | Workspace            | Picked on the OAuth consent screen. One workspace per connection. See P9 for how many connections a client can have.                                   |
+| 5   | Granularity          | Resource type level only. "Datasets: Read" means all datasets in the connected workspace are readable. No per-dataset exceptions.                      |
+| 6   | v1 access            | Read and write.                                                                                                                                        |
+| 7   | Tool source of truth | Each tool is defined once as a transport-neutral definition in `@repo/ai`. Thin adapters turn it into an AI SDK tool (chat, workflows) or an MCP tool. |
 
 ## Decisions from proposals (approved 2026-09-24)
 
-| # | Topic | Proposal |
-|---|-------|----------|
-| P1 | Where permissions live | Settings are the only permission source. Access tokens only carry user, client and connection. Every `tools/list` and `tools/call` reads the current settings, so changes apply on the next call without re-auth. |
-| P2 | Kill switch | `MCP_ENABLED` in `@repo/config`. Off: `/mcp`, the OAuth provider endpoints and the settings page are unavailable. |
-| P3 | Master toggle off | Turning MCP off in settings revokes all connections and their tokens. Turning it on again starts from zero. |
-| P4 | Client registration | Client ID metadata documents (CIMD) via `@better-auth/cimd`, restricted to an allowlist of client ID URLs in config (Claude's by default). Dynamic client registration stays off, unless Claude Desktop turns out not to support CIMD. Then DCR goes on with a redirect URI allowlist instead. |
-| P5 | Tool surface | No delete tools. The seven existing dataset tools, nothing more. |
-| P6 | Provenance | `datasets.origin` gains `'mcp'`. `dataset_rows` gains `written_by` (`user` / `agent` / `mcp`), set on every write. The grid shows a badge for MCP-written rows. |
-| P7 | Audit | Every write call is recorded in `mcp_tool_calls`. Reads only update `last_used_at` on the connection. |
-| P8 | Rate limit | None on `/mcp` in v1 (Sven, 2026-09-24). better-auth already rate-limits its own `/auth/*` OAuth endpoints (per IP, in memory, production only). An IP key is wrong for `/mcp` because Claude traffic arrives from shared Anthropic IPs; if a limit is needed later, key it per connection. |
-| P9 | Connections per client | One connection per (user, client). The access token carries the user (`sub`) and the client, not a workspace, so two Claude connections to different workspaces would be indistinguishable. Switching workspace means revoking and reconnecting. Several workspaces per client would need a custom access-token claim, see "To verify". |
+| #   | Topic                  | Proposal                                                                                                                                                                                                                                                                                                                                |
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Where permissions live | Settings are the only permission source. Access tokens only carry user, client and connection. Every `tools/list` and `tools/call` reads the current settings, so changes apply on the next call without re-auth.                                                                                                                       |
+| P2  | Kill switch            | `MCP_ENABLED` in `@repo/config`. Off: `/mcp`, the OAuth provider endpoints and the settings page are unavailable.                                                                                                                                                                                                                       |
+| P3  | Master toggle off      | Turning MCP off in settings revokes all connections and their tokens. Turning it on again starts from zero.                                                                                                                                                                                                                             |
+| P4  | Client registration    | Client ID metadata documents (CIMD) via `@better-auth/cimd`, restricted to an allowlist of client ID URLs in config (Claude's by default). Dynamic client registration stays off, unless Claude Desktop turns out not to support CIMD. Then DCR goes on with a redirect URI allowlist instead.                                          |
+| P5  | Tool surface           | No delete tools. The seven existing dataset tools, nothing more.                                                                                                                                                                                                                                                                        |
+| P6  | Provenance             | `datasets.origin` gains `'mcp'`. `dataset_rows` gains `written_by` (`user` / `agent` / `mcp`), set on every write. The grid shows a badge for MCP-written rows.                                                                                                                                                                         |
+| P7  | Audit                  | Every write call is recorded in `mcp_tool_calls`. Reads only update `last_used_at` on the connection.                                                                                                                                                                                                                                   |
+| P8  | Rate limit             | None on `/mcp` in v1 (Sven, 2026-09-24). better-auth already rate-limits its own `/auth/*` OAuth endpoints (per IP, in memory, production only). An IP key is wrong for `/mcp` because Claude traffic arrives from shared Anthropic IPs; if a limit is needed later, key it per connection.                                             |
+| P9  | Connections per client | One connection per (user, client). The access token carries the user (`sub`) and the client, not a workspace, so two Claude connections to different workspaces would be indistinguishable. Switching workspace means revoking and reconnecting. Several workspaces per client would need a custom access-token claim, see "To verify". |
 
 ## Non-goals
 
@@ -94,12 +94,12 @@ Content:
 
 Storage: one row per user in `mcp_settings`:
 
-| Column | Type | Notes |
-|---|---|---|
-| `user_id` | text PK, FK user, cascade | |
-| `enabled` | boolean, default false | Master toggle |
-| `access` | jsonb `Record<IntegrationId, 'off' \| 'read' \| 'write'>` | Missing key means `off` |
-| timestamps | | |
+| Column     | Type                                                      | Notes                   |
+| ---------- | --------------------------------------------------------- | ----------------------- |
+| `user_id`  | text PK, FK user, cascade                                 |                         |
+| `enabled`  | boolean, default false                                    | Master toggle           |
+| `access`   | jsonb `Record<IntegrationId, 'off' \| 'read' \| 'write'>` | Missing key means `off` |
+| timestamps |                                                           |                         |
 
 jsonb keeps new integrations a code change, not a migration.
 
@@ -113,7 +113,7 @@ plugins: [
   jwt(),
   mcp({ loginPage, consentPage, resource: `${apiBaseUrl}/mcp` }),
   cimd({ fetchClientMetadataResource, metadataProfile: 'mcp-2026-07-28' }),
-]
+];
 ```
 
 - `@better-auth/mcp` builds on `@better-auth/oauth-provider` and **is** the
@@ -164,14 +164,14 @@ Flow details:
 
 `mcp_connections`:
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | text PK | |
-| `user_id` | FK user, cascade | |
-| `client_id` | text | The CIMD client ID URL (the `client_id` claim) |
-| `workspace_id` | FK workspace, cascade | Deleting the workspace kills the connection |
-| `last_used_at` | timestamp, nullable | |
-| timestamps | | |
+| Column         | Type                  | Notes                                          |
+| -------------- | --------------------- | ---------------------------------------------- |
+| `id`           | text PK               |                                                |
+| `user_id`      | FK user, cascade      |                                                |
+| `client_id`    | text                  | The CIMD client ID URL (the `client_id` claim) |
+| `workspace_id` | FK workspace, cascade | Deleting the workspace kills the connection    |
+| `last_used_at` | timestamp, nullable   |                                                |
+| timestamps     |                       |                                                |
 
 Unique on (`user_id`, `client_id`) (P9). Approving consent for a client that
 already has a connection replaces its workspace. Revoke deletes the row and
@@ -266,15 +266,15 @@ export interface ToolDefinition<Input, Output> {
 
 ### 5. Datasets integration (v1)
 
-| Tool | Access | MCP annotations |
-|---|---|---|
-| `datasetFind` | read | `readOnlyHint` |
-| `datasetListRows` | read | `readOnlyHint` |
-| `datasetGetRow` | read | `readOnlyHint` |
-| `datasetCreate` | write | |
-| `datasetAppendRow` | write | |
-| `datasetUpdateRow` | write | `destructiveHint` (overwrites values) |
-| `datasetMoveRow` | write | `idempotentHint` |
+| Tool               | Access | MCP annotations                       |
+| ------------------ | ------ | ------------------------------------- |
+| `datasetFind`      | read   | `readOnlyHint`                        |
+| `datasetListRows`  | read   | `readOnlyHint`                        |
+| `datasetGetRow`    | read   | `readOnlyHint`                        |
+| `datasetCreate`    | write  |                                       |
+| `datasetAppendRow` | write  |                                       |
+| `datasetUpdateRow` | write  | `destructiveHint` (overwrites values) |
+| `datasetMoveRow`   | write  | `idempotentHint`                      |
 
 All existing guardrails apply unchanged: workspace hard filter, schema
 validation, 1,000 rows / 20 columns, list limit 100, soft deletes only.
@@ -291,31 +291,31 @@ Provenance (P6):
 
 ### 6. Security
 
-| Risk | Mitigation |
-|---|---|
-| Exposure without intent | Kill switch, master toggle off by default, every integration off by default. |
-| Cross-site use of the browser session | `/mcp` ignores cookies. Bearer only. Origin check. |
-| Token replay from other services | Audience-bound tokens, verified on every request. |
-| Stolen token | 1 hour lifetime, rotating refresh, revoke in settings, connection lookup on every call. DPoP (supported by the plugin) is possible later if Claude supports it. |
-| Rogue clients | CIMD with a client ID allowlist, no open registration (P4). Consent page shows client name and redirect host. |
-| Legacy protocol downgrade | `legacy: 'reject'`, `2026-07-28` only. |
-| Stale permissions in tokens | Permissions read live from settings (P1). |
-| Wrong-workspace writes | One workspace per connection. Existing workspace hard filter in the tools. |
-| Data loss | No delete tools. Soft deletes only in the grid. |
-| Abuse or runaway loops | Existing size caps (list limit 100, 1,000 rows per dataset). No `/mcp` rate limit in v1 (P8). |
+| Risk                                  | Mitigation                                                                                                                                                                                                                                            |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exposure without intent               | Kill switch, master toggle off by default, every integration off by default.                                                                                                                                                                          |
+| Cross-site use of the browser session | `/mcp` ignores cookies. Bearer only. Origin check.                                                                                                                                                                                                    |
+| Token replay from other services      | Audience-bound tokens, verified on every request.                                                                                                                                                                                                     |
+| Stolen token                          | 1 hour lifetime, rotating refresh, revoke in settings, connection lookup on every call. DPoP (supported by the plugin) is possible later if Claude supports it.                                                                                       |
+| Rogue clients                         | CIMD with a client ID allowlist, no open registration (P4). Consent page shows client name and redirect host.                                                                                                                                         |
+| Legacy protocol downgrade             | `legacy: 'reject'`, `2026-07-28` only.                                                                                                                                                                                                                |
+| Stale permissions in tokens           | Permissions read live from settings (P1).                                                                                                                                                                                                             |
+| Wrong-workspace writes                | One workspace per connection. Existing workspace hard filter in the tools.                                                                                                                                                                            |
+| Data loss                             | No delete tools. Soft deletes only in the grid.                                                                                                                                                                                                       |
+| Abuse or runaway loops                | Existing size caps (list limit 100, 1,000 rows per dataset). No `/mcp` rate limit in v1 (P8).                                                                                                                                                         |
 | Prompt injection into internal agents | Rows written via MCP are marked (`written_by`), visible in the grid and in tool outputs. Workflow agents following an `instructions` column can be steered by an external writer. This is visible, not prevented. Turning Datasets to Read closes it. |
-| Data leaving Ragna | Explicit opt-in per resource type. The settings page states that exposed data is sent to the connected app's AI provider. |
+| Data leaving Ragna                    | Explicit opt-in per resource type. The settings page states that exposed data is sent to the connected app's AI provider.                                                                                                                             |
 
 ## Changes by package
 
-| Area | Change |
-|---|---|
-| `@repo/config` | `MCP_ENABLED`, `MCP_ALLOWED_CLIENT_IDS` |
-| `@repo/auth` | better-auth 1.7.5 → 1.7.6, plugins `jwt()`, `mcp()` (`@better-auth/mcp`), `cimd()` (`@better-auth/cimd`): login page, consent page, resource, token lifetimes. Plugins only active when `MCP_ENABLED`. |
-| `@repo/database` | `mcp_settings`, `mcp_connections`, `mcp_tool_calls`, the plugin's OAuth tables, `DatasetOrigin` + `'mcp'`, `dataset_rows.written_by`. All registered in `relations.ts`. Migration via `db:generate`. |
-| `@repo/ai` | `ToolDefinition` / `ToolContext`, dataset tools refactored to definitions + AI SDK adapter, `writtenBy` in row outputs |
-| `apps/api` | `@modelcontextprotocol/server`, `/mcp` controller + service + integration registry, `/mcp` CORS and origin check, settings + connections REST endpoints |
-| `apps/web` | `/settings/mcp`, `/oauth/consent`, login return-to for the authorize flow, `written_by` badge in the dataset grid, i18n (`de-DE`, `en-UK`) |
+| Area             | Change                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@repo/config`   | `MCP_ENABLED`, `MCP_ALLOWED_CLIENT_IDS`                                                                                                                                                                |
+| `@repo/auth`     | better-auth 1.7.5 → 1.7.6, plugins `jwt()`, `mcp()` (`@better-auth/mcp`), `cimd()` (`@better-auth/cimd`): login page, consent page, resource, token lifetimes. Plugins only active when `MCP_ENABLED`. |
+| `@repo/database` | `mcp_settings`, `mcp_connections`, `mcp_tool_calls`, the plugin's OAuth tables, `DatasetOrigin` + `'mcp'`, `dataset_rows.written_by`. All registered in `relations.ts`. Migration via `db:generate`.   |
+| `@repo/ai`       | `ToolDefinition` / `ToolContext`, dataset tools refactored to definitions + AI SDK adapter, `writtenBy` in row outputs                                                                                 |
+| `apps/api`       | `@modelcontextprotocol/server`, `/mcp` controller + service + integration registry, `/mcp` CORS and origin check, settings + connections REST endpoints                                                |
+| `apps/web`       | `/settings/mcp`, `/oauth/consent`, login return-to for the authorize flow, `written_by` badge in the dataset grid, i18n (`de-DE`, `en-UK`)                                                             |
 
 `mcp_tool_calls`: `id`, `connection_id` (FK, cascade), `tool_name`,
 `is_error`, `created_at`. No inputs or outputs stored.

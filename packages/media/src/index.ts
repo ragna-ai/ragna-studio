@@ -15,11 +15,7 @@ export { sniffMediaKind } from './services/registry.service';
 
 export { extractText } from './services/extract.service';
 
-export {
-  toChatUploadImageUrl,
-  getChatUploadImageKey,
-  getMediaDocumentKey,
-} from './lib/media-keys';
+export { toChatUploadImageUrl, getChatUploadImageKey, getMediaDocumentKey } from './lib/media-keys';
 
 export {
   createMediaForObject,
@@ -43,7 +39,4 @@ export type {
   ApplyVideoWatermarkResult,
 } from './services/watermark.service';
 export { buildWatermarkFfmpegArgs, probeVideoDimensions } from './lib/watermark-ffmpeg.util';
-export type {
-  BuildWatermarkFfmpegArgsParams,
-  VideoDimensions,
-} from './lib/watermark-ffmpeg.util';
+export type { BuildWatermarkFfmpegArgsParams, VideoDimensions } from './lib/watermark-ffmpeg.util';

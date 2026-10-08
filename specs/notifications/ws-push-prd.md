@@ -96,6 +96,7 @@ connection config; both apps depend on it).
 
   This is the server-initiated counterpart to `publishFrame` (which needs
   a socket); `server.publish` targets the topic directly.
+
 - No `ws.controller.ts` changes. Subscribe/unsubscribe handling is
   already channel-generic; `message`/`abort` frames on a notification
   channel are already rejected or ignored.

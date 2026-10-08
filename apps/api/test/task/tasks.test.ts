@@ -56,8 +56,16 @@ describe('GET /workspace/:workspaceId/task', () => {
 
   test('filters by status and priority', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    await createTask(cookieHeader, workspaceId, { title: 'Backlog low', status: 'backlog', priority: 'low' });
-    await createTask(cookieHeader, workspaceId, { title: 'Todo urgent', status: 'todo', priority: 'urgent' });
+    await createTask(cookieHeader, workspaceId, {
+      title: 'Backlog low',
+      status: 'backlog',
+      priority: 'low',
+    });
+    await createTask(cookieHeader, workspaceId, {
+      title: 'Todo urgent',
+      status: 'todo',
+      priority: 'urgent',
+    });
 
     const response = await app.request(`/workspace/${workspaceId}/task?status=backlog`, {
       headers: { cookie: cookieHeader },
@@ -65,10 +73,9 @@ describe('GET /workspace/:workspaceId/task', () => {
     const body = taskListResponseSchema.parse(await response.json());
     expect(body.tasks.map((task) => task.title)).toEqual(['Backlog low']);
 
-    const priorityResponse = await app.request(
-      `/workspace/${workspaceId}/task?priority=urgent`,
-      { headers: { cookie: cookieHeader } },
-    );
+    const priorityResponse = await app.request(`/workspace/${workspaceId}/task?priority=urgent`, {
+      headers: { cookie: cookieHeader },
+    });
     const priorityBody = taskListResponseSchema.parse(await priorityResponse.json());
     expect(priorityBody.tasks.map((task) => task.title)).toEqual(['Todo urgent']);
   });
@@ -82,7 +89,9 @@ describe('POST /workspace/:workspaceId/task', () => {
   test('creates a task with defaulted status and priority', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
 
-    const { status, task } = await createTask(cookieHeader, workspaceId, { title: 'Ship the release' });
+    const { status, task } = await createTask(cookieHeader, workspaceId, {
+      title: 'Ship the release',
+    });
 
     expect(status).toBe(StatusCodes.CREATED);
     expect(task.title).toBe('Ship the release');
@@ -149,7 +158,10 @@ describe('PATCH /workspace/:workspaceId/task/:taskId', () => {
 
   test('applies a partial update', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const { task } = await createTask(cookieHeader, workspaceId, { title: 'Original', priority: 'low' });
+    const { task } = await createTask(cookieHeader, workspaceId, {
+      title: 'Original',
+      priority: 'low',
+    });
 
     const response = await app.request(`/workspace/${workspaceId}/task/${task.id}`, {
       method: 'PATCH',
@@ -198,7 +210,10 @@ describe('POST /workspace/:workspaceId/task/:taskId/move', () => {
 
   test('moves a task into a different status column', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const { task } = await createTask(cookieHeader, workspaceId, { title: 'Move me', status: 'todo' });
+    const { task } = await createTask(cookieHeader, workspaceId, {
+      title: 'Move me',
+      status: 'todo',
+    });
 
     const response = await app.request(`/workspace/${workspaceId}/task/${task.id}/move`, {
       method: 'POST',

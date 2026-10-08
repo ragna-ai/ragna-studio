@@ -86,7 +86,12 @@ Repository changes:
 - New generic helpers in `bullmq.service.ts`, in the `queueAddJob` style (the existing `addCronJob` registry is static and startup-only, so it does not fit dynamic per-workflow schedules):
 
   ```ts
-  upsertQueueJobScheduler({ queueName, schedulerId, repeat: { pattern, tz }, job: { name, data, opts } });
+  upsertQueueJobScheduler({
+    queueName,
+    schedulerId,
+    repeat: { pattern, tz },
+    job: { name, data, opts },
+  });
   removeQueueJobScheduler({ queueName, schedulerId });
   getQueueJobSchedulers({ queueName }); // for reconciliation
   ```
@@ -136,9 +141,9 @@ No new routes. Two routes change:
 
 Same pattern as v1: foundations first, then parallel.
 
-| Agent | Scope |
-| --- | --- |
+| Agent          | Scope                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | A: foundations | `@repo/workflow` trigger union + cron helpers, DB columns + repo functions, queue constant + DTO + scheduler helpers |
-| B: worker | Tick processor, startup reconciliation, stale-run sweeper cron |
-| C: api | Publish/delete scheduler sync |
-| D: web | Trigger config form, badges, next-run preview, i18n |
+| B: worker      | Tick processor, startup reconciliation, stale-run sweeper cron                                                       |
+| C: api         | Publish/delete scheduler sync                                                                                        |
+| D: web         | Trigger config form, badges, next-run preview, i18n                                                                  |

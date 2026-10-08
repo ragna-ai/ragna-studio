@@ -142,10 +142,12 @@ export const auth = betterAuth({
           if (config.isTest) return;
 
           try {
-            await queue.email().add(
-              WELCOME_EMAIL_JOB,
-              welcomeEmailJobSchema.parse({ email: user.email, name: user.name }),
-            );
+            await queue
+              .email()
+              .add(
+                WELCOME_EMAIL_JOB,
+                welcomeEmailJobSchema.parse({ email: user.email, name: user.name }),
+              );
           } catch (error) {
             logger.error('Failed to enqueue welcome email', { userId: user.id, error });
           }

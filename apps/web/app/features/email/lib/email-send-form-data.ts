@@ -6,13 +6,19 @@ import type { SendEmailDraftVariables } from '~/features/email/types';
 // only send path left on the client - there is no more plain, non-draft
 // /email/send caller.
 
-function appendRepeated(formData: FormData, key: string, values: string[] | undefined): void {
+function appendRepeated(
+  formData: FormData,
+  key: string,
+  values: string[] | undefined,
+): void {
   for (const value of values ?? []) {
     formData.append(key, value);
   }
 }
 
-export function buildSendDraftFormData(input: Omit<SendEmailDraftVariables, 'draftId'>): FormData {
+export function buildSendDraftFormData(
+  input: Omit<SendEmailDraftVariables, 'draftId'>,
+): FormData {
   const formData = new FormData();
   appendRepeated(formData, 'to', input.to);
   appendRepeated(formData, 'cc', input.cc);

@@ -60,13 +60,13 @@ The `ragna-ai` org is on **GitHub Free**; `ragna-studio` is **private**.
 Volume over the last 30 days: 84 commits across all branches, 8 merges to
 `main`.
 
-| Workflow | Runs/month | Minutes/run | Minutes/month |
-| --- | --- | --- | --- |
-| CI (phase 1) | ~60 to 90 | ~6 (estimate) | ~360 to 540 |
-| API tests (phase 3) | ~60 to 90 | ~5 (estimate) | ~300 to 450 |
-| Release images (phase 2) | ~2 to 4 | ~20 (5 parallel jobs, summed) | ~40 to 80 |
-| Cleanup (phase 2) | ~4 | <1 | ~4 |
-| **Total, all phases** | | | **~700 to 1,100** |
+| Workflow                 | Runs/month | Minutes/run                   | Minutes/month     |
+| ------------------------ | ---------- | ----------------------------- | ----------------- |
+| CI (phase 1)             | ~60 to 90  | ~6 (estimate)                 | ~360 to 540       |
+| API tests (phase 3)      | ~60 to 90  | ~5 (estimate)                 | ~300 to 450       |
+| Release images (phase 2) | ~2 to 4    | ~20 (5 parallel jobs, summed) | ~40 to 80         |
+| Cleanup (phase 2)        | ~4         | <1                            | ~4                |
+| **Total, all phases**    |            |                               | **~700 to 1,100** |
 
 All three phases fit into 2,000 minutes, even with a margin. The per-run
 numbers are estimates; the first real CI runs replace them.
@@ -89,7 +89,10 @@ numbers are estimates; the first real CI runs replace them.
   3. `actions/setup-node` with Node 24 and `cache: pnpm`
   4. `pnpm install --frozen-lockfile`
   5. Restore/save `.turbo` via `actions/cache`
-  6. `pnpm lint`, `pnpm check-types`, `pnpm build`
+  6. `pnpm lint`, `pnpm check-types`, `pnpm build`, `pnpm format --check`
+     (oxfmt; vendor skills and the generated `specs/INDEX.md` are excluded
+     via `.prettierignore`, since `ignorePatterns` in `.oxfmtrc.json` misses
+     nested folders like `apps/web/.agents/`)
 - **Job name:** `build-and-check` (renamed from `ci` on 2026-10-08, since it
   builds as well). The required check in the ruleset was renamed with it.
 - **Web type-check** runs again since 2026-10-08. It was excluded because

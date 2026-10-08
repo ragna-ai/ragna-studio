@@ -37,7 +37,10 @@ function hasGeneratingDraft(data: EmailDraftListResponse | undefined): boolean {
 // and useGetThreadDrafts (read from EmailThreadView, a different component)
 // can share it.
 const pendingDraftTriggerThreadIds = reactive(new Set<string>());
-const pendingDraftTriggerTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+const pendingDraftTriggerTimeouts = new Map<
+  string,
+  ReturnType<typeof setTimeout>
+>();
 // Safety net for a job that finishes without ever creating a row (e.g. no
 // agent configured on the account - generateEmailDraft returns early): stop
 // polling for it even though no draft ever showed up.
@@ -48,7 +51,10 @@ function markDraftTriggerPending(threadId: string): void {
   clearTimeout(pendingDraftTriggerTimeouts.get(threadId));
   pendingDraftTriggerTimeouts.set(
     threadId,
-    setTimeout(() => clearDraftTriggerPending(threadId), PENDING_DRAFT_TRIGGER_TIMEOUT_MS),
+    setTimeout(
+      () => clearDraftTriggerPending(threadId),
+      PENDING_DRAFT_TRIGGER_TIMEOUT_MS,
+    ),
   );
 }
 
@@ -68,7 +74,9 @@ function clearDraftTriggerPending(threadId: string): void {
  * render an immediate placeholder for the gap between the click and the
  * first poll that actually finds something, rather than showing nothing.
  */
-export function useIsDraftTriggerPending(threadId: MaybeRefOrGetter<string | null>) {
+export function useIsDraftTriggerPending(
+  threadId: MaybeRefOrGetter<string | null>,
+) {
   return computed(() => {
     const id = toValue(threadId);
     return !!id && pendingDraftTriggerThreadIds.has(id);
@@ -90,7 +98,9 @@ export function useGetThreadDrafts(threadId: MaybeRefOrGetter<string | null>) {
     refetchInterval: (query) => {
       if (hasGeneratingDraft(query.state.data)) return DRAFT_POLL_INTERVAL_MS;
       const id = toValue(threadId);
-      return id && pendingDraftTriggerThreadIds.has(id) ? DRAFT_POLL_INTERVAL_MS : false;
+      return id && pendingDraftTriggerThreadIds.has(id)
+        ? DRAFT_POLL_INTERVAL_MS
+        : false;
     },
   });
 

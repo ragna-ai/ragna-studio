@@ -163,8 +163,14 @@ const trashLabel = computed(() =>
             :aria-label="selectAllLabel"
             @click="emit('toggleSelectAll')"
           >
-            <SquareCheckIcon v-if="hasSelection" class="size-3.5 shrink-0 text-muted-foreground" />
-            <SquareIcon v-else class="size-3.5 shrink-0 text-muted-foreground" />
+            <SquareCheckIcon
+              v-if="hasSelection"
+              class="size-3.5 shrink-0 text-muted-foreground"
+            />
+            <SquareIcon
+              v-else
+              class="size-3.5 shrink-0 text-muted-foreground"
+            />
           </Button>
         </TooltipTrigger>
         <TooltipContent>

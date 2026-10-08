@@ -165,8 +165,7 @@ async function handleRevoke(connectionId: string) {
                 :model-value="data.access[integration] ?? 'off'"
                 :disabled="isSaving"
                 @update:model-value="
-                  (level) =>
-                    setAccess(integration, level as McpAccessLevel)
+                  (level) => setAccess(integration, level as McpAccessLevel)
                 "
               >
                 <SelectTrigger class="h-8 w-40">

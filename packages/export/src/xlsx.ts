@@ -1,7 +1,12 @@
 import writeXlsxFile from 'write-excel-file/node';
 import type { Row } from 'write-excel-file/node';
 import { toEuropeanDate } from './date-format';
-import type { ExportFile, TabularExport, TabularExportColumnType, TabularExportValue } from './types';
+import type {
+  ExportFile,
+  TabularExport,
+  TabularExportColumnType,
+  TabularExportValue,
+} from './types';
 
 const XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
@@ -13,7 +18,10 @@ const ILLEGAL_SHEET_NAME_CHARACTERS = /[[\]/\\:*?]/g;
 const FALLBACK_SHEET_NAME = 'Sheet1';
 
 function toSheetName(title: string): string {
-  const sanitized = title.replace(ILLEGAL_SHEET_NAME_CHARACTERS, '').trim().slice(0, MAX_SHEET_NAME_LENGTH);
+  const sanitized = title
+    .replace(ILLEGAL_SHEET_NAME_CHARACTERS, '')
+    .trim()
+    .slice(0, MAX_SHEET_NAME_LENGTH);
 
   return sanitized.length > 0 ? sanitized : FALLBACK_SHEET_NAME;
 }

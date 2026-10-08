@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { EdgeProps } from '@vue-flow/core'
-import { BaseEdge, getSimpleBezierPath } from '@vue-flow/core'
-import { computed } from 'vue'
+import type { EdgeProps } from '@vue-flow/core';
+import { BaseEdge, getSimpleBezierPath } from '@vue-flow/core';
+import { computed } from 'vue';
 
-const props = defineProps<EdgeProps>()
+const props = defineProps<EdgeProps>();
 
 const path = computed(() => {
   const [edgePath] = getSimpleBezierPath({
@@ -13,16 +13,16 @@ const path = computed(() => {
     targetX: props.targetX,
     targetY: props.targetY,
     targetPosition: props.targetPosition,
-  })
-  return edgePath
-})
+  });
+  return edgePath;
+});
 </script>
 
 <template>
   <BaseEdge
     :id="props.id"
     :path="path"
-    class="stroke-1 stroke-ring"
+    class="stroke-ring stroke-1"
     :style="{ strokeDasharray: '5, 5' }"
   />
 </template>

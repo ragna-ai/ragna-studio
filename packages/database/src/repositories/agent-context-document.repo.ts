@@ -3,7 +3,11 @@ import { db } from '../db';
 import type { AgentContextDocument, NewAgentContextDocument } from '../schema';
 import { agentContextDocument } from '../schema';
 
-export type { AgentContextDocument, AgentContextDocumentStatus, NewAgentContextDocument } from '../schema';
+export type {
+  AgentContextDocument,
+  AgentContextDocumentStatus,
+  NewAgentContextDocument,
+} from '../schema';
 
 export async function createAgentContextDocuments(
   records: NewAgentContextDocument[],
@@ -78,7 +82,10 @@ export async function updateAgentContextDocument({
   id,
   agentId,
   ...fields
-}: { id: string; agentId: string } & UpdateAgentContextDocumentFields): Promise<AgentContextDocument | null> {
+}: {
+  id: string;
+  agentId: string;
+} & UpdateAgentContextDocumentFields): Promise<AgentContextDocument | null> {
   const [updated] = await db
     .update(agentContextDocument)
     .set(fields)

@@ -174,7 +174,11 @@ export async function revokeMcpClientGrants({
   });
 }
 
-export async function touchMcpConnection({ connectionId }: { connectionId: string }): Promise<void> {
+export async function touchMcpConnection({
+  connectionId,
+}: {
+  connectionId: string;
+}): Promise<void> {
   await db
     .update(mcpConnection)
     .set({ lastUsedAt: new Date() })

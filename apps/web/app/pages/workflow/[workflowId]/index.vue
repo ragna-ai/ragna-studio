@@ -29,10 +29,7 @@ useHead({
     class="flex h-full w-full items-center justify-center"
   >
     <p class="text-sm text-stone-500">
-      {{
-        workflowError.message ||
-        t('workflow.editor.loadError')
-      }}
+      {{ workflowError.message || t('workflow.editor.loadError') }}
     </p>
   </div>
 </template>

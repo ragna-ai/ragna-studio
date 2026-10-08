@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { MoreVerticalIcon, PencilIcon, Share2Icon, Trash2Icon } from '@lucide/vue';
+import {
+  MoreVerticalIcon,
+  PencilIcon,
+  Share2Icon,
+  Trash2Icon,
+} from '@lucide/vue';
 import SocialPostStatusBadge from '~/features/social/components/SocialPostStatusBadge.vue';
 import type { SocialPost } from '~/features/social/composables/useSocialPostApi';
 
@@ -70,7 +75,11 @@ const { formatDateTime } = useDateTimeFormat();
         <TableCell class="text-right whitespace-nowrap" @click.stop>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+              <Button
+                variant="outline"
+                size="icon"
+                :aria-label="t('common.actions')"
+              >
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>

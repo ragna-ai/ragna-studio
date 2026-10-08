@@ -55,16 +55,16 @@ today's behavior unchanged.
 The per-agent totals stop being prompt budgets and become storage quotas.
 The budget-exceeded failure mode from Phase 2 stays, only the numbers grow.
 
-| Limit | Phase 2 | Phase 3 |
-| --- | --- | --- |
-| Max file size | 10 MB | 10 MB (unchanged) |
-| Allowed types | pdf, docx, txt, md | unchanged |
-| Max documents per agent | 10 | 25 |
-| Extracted text per document | 100,000 chars | 500,000 chars |
-| Extracted text total per agent | 200,000 chars | 5,000,000 chars |
-| Injection threshold (new) | n/a | 30,000 chars total ready text |
-| Chunk size (new) | n/a | target 1,500 chars, overlap 200 |
-| Search results (new) | n/a | top 8 chunks |
+| Limit                          | Phase 2            | Phase 3                         |
+| ------------------------------ | ------------------ | ------------------------------- |
+| Max file size                  | 10 MB              | 10 MB (unchanged)               |
+| Allowed types                  | pdf, docx, txt, md | unchanged                       |
+| Max documents per agent        | 10                 | 25                              |
+| Extracted text per document    | 100,000 chars      | 500,000 chars                   |
+| Extracted text total per agent | 200,000 chars      | 5,000,000 chars                 |
+| Injection threshold (new)      | n/a                | 30,000 chars total ready text   |
+| Chunk size (new)               | n/a                | target 1,500 chars, overlap 200 |
+| Search results (new)           | n/a                | top 8 chunks                    |
 
 Cost check: a full 5M-char corpus is roughly 1.25M tokens, about $0.03 on
 `text-embedding-3-small`. Negligible; no metering needed.
@@ -137,15 +137,15 @@ New table `agent_context_document_chunks` in
 `packages/database/src/schema/` (**register it in `relations.ts`**, see
 CLAUDE.md):
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | text | `primaryIdColumn` |
-| `documentId` | text | FK → `agent_context_documents.id`, `onDelete: 'cascade'`, not null |
-| `agentId` | text | FK → `agents.id`, `onDelete: 'cascade'`, not null, indexed. Denormalized from the document so search filters on one column. |
-| `chunkIndex` | integer | 0-based position within the document |
-| `content` | text | the chunk text |
-| `embedding` | `vector({ dimensions: 1536 })` | not null; dimension follows the embedding model (1536 = text-embedding-3-small) |
-| timestamps | | `...timestamps` |
+| Column       | Type                           | Notes                                                                                                                       |
+| ------------ | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | text                           | `primaryIdColumn`                                                                                                           |
+| `documentId` | text                           | FK → `agent_context_documents.id`, `onDelete: 'cascade'`, not null                                                          |
+| `agentId`    | text                           | FK → `agents.id`, `onDelete: 'cascade'`, not null, indexed. Denormalized from the document so search filters on one column. |
+| `chunkIndex` | integer                        | 0-based position within the document                                                                                        |
+| `content`    | text                           | the chunk text                                                                                                              |
+| `embedding`  | `vector({ dimensions: 1536 })` | not null; dimension follows the embedding model (1536 = text-embedding-3-small)                                             |
+| timestamps   |                                | `...timestamps`                                                                                                             |
 
 No vector index (see design decisions). Search joins chunk → document and
 filters `status = 'ready'`, so a document mid-replace (back to `pending`)

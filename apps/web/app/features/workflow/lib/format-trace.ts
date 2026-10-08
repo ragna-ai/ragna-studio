@@ -11,7 +11,9 @@ export function formatDurationMs(durationMs: number): string {
 }
 
 /** Total token count for a usage badge, or undefined when nothing was reported. */
-export function tokenUsageTotal(usage: WorkflowTokenUsage | undefined): number | undefined {
+export function tokenUsageTotal(
+  usage: WorkflowTokenUsage | undefined,
+): number | undefined {
   if (!usage) return undefined;
   return usage.totalTokens ?? sumKnownTokenCounts(usage);
 }

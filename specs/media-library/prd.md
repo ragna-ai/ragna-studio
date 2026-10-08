@@ -158,8 +158,8 @@ attachments' files, unless a file is still referenced elsewhere.
      bucket is private, so no URL would work.
    - **docx/xlsx/txt/md/csv**: replace the part with a text block,
      `<attached-file name="report.xlsx">…extracted text…</attached-file>`.
-   The persisted UIMessage keeps the original file part either way, so the
-   UI renders chips/images from history unchanged.
+     The persisted UIMessage keeps the original file part either way, so the
+     UI renders chips/images from history unchanged.
 
 6. **Sync extraction at upload.** No worker job: the user sends seconds
    after dropping, and a "still parsing" state plus the send race isn't

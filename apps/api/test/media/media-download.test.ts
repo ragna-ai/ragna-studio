@@ -39,7 +39,11 @@ async function createAgent(cookieHeader: string, workspaceId: string): Promise<s
   return body.agent.id;
 }
 
-async function createChat(cookieHeader: string, workspaceId: string, agentId: string): Promise<string> {
+async function createChat(
+  cookieHeader: string,
+  workspaceId: string,
+  agentId: string,
+): Promise<string> {
   const response = await app.request(`/workspace/${workspaceId}/chat`, {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
@@ -90,7 +94,9 @@ describe('GET /workspace/:workspaceId/media/:mediaId/download', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(response.headers.get('content-type')).toBe(mediaType);
-    expect(response.headers.get('content-disposition')).toBe(buildAttachmentContentDisposition(filename));
+    expect(response.headers.get('content-disposition')).toBe(
+      buildAttachmentContentDisposition(filename),
+    );
     const body = await response.text();
     expect(body.length).toBeGreaterThan(0);
   });

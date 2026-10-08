@@ -57,14 +57,20 @@ const { mutateAsync: createDraft, isPending: isCreatingDraft } =
 // it instead of leaving an unhandled rejection.
 onMounted(async () => {
   try {
-    const connectProvider = firstQueryValue(route.query[MAIL_CONNECT_CALLBACK_PARAM]);
-    const reconnectProvider = firstQueryValue(route.query[MAIL_RECONNECT_CALLBACK_PARAM]);
+    const connectProvider = firstQueryValue(
+      route.query[MAIL_CONNECT_CALLBACK_PARAM],
+    );
+    const reconnectProvider = firstQueryValue(
+      route.query[MAIL_RECONNECT_CALLBACK_PARAM],
+    );
     if (connectProvider && isEmailProviderKind(connectProvider)) {
-      const { [MAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+      const { [MAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } =
+        route.query;
       await router.replace({ query: rest });
       await finishConnect(connectProvider);
     } else if (reconnectProvider && isEmailProviderKind(reconnectProvider)) {
-      const { [MAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } = route.query;
+      const { [MAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } =
+        route.query;
       await router.replace({ query: rest });
       await finishReconnect(reconnectProvider);
     }
@@ -101,7 +107,10 @@ watch(
   (syncState, previousSyncState) => {
     if (previousSyncState === 'syncing' && syncState === 'error') {
       toast.error(t('email.sync.syncFailed'));
-    } else if (syncState === 'reauth_required' && previousSyncState !== 'reauth_required') {
+    } else if (
+      syncState === 'reauth_required' &&
+      previousSyncState !== 'reauth_required'
+    ) {
       toast.error(t('email.sync.reauthRequiredToast'));
     }
   },
@@ -128,7 +137,9 @@ const folderQuery = computed(() => firstQueryValue(route.query.folder));
 const categoryId = computed(() => firstQueryValue(route.query.categoryId));
 const labelId = computed(() => firstQueryValue(route.query.labelId));
 const unreadOnly = computed(() => firstQueryValue(route.query.unread) === '1');
-const starredOnly = computed(() => firstQueryValue(route.query.starred) === '1');
+const starredOnly = computed(
+  () => firstQueryValue(route.query.starred) === '1',
+);
 const dateFrom = computed(() => firstQueryValue(route.query.dateFrom));
 const dateTo = computed(() => firstQueryValue(route.query.dateTo));
 
@@ -139,7 +150,11 @@ const dateTo = computed(() => firstQueryValue(route.query.dateTo));
 // `filters.folder` - the thread-list query is skipped entirely while active
 // and the row data comes from `useGetAllDrafts` instead.
 const isDraftsView = computed(
-  () => folderQuery.value === 'drafts' && !categoryId.value && !labelId.value && !isSearching.value,
+  () =>
+    folderQuery.value === 'drafts' &&
+    !categoryId.value &&
+    !labelId.value &&
+    !isSearching.value,
 );
 
 const folder = computed<EmailFolder | null>(() => {
@@ -210,7 +225,9 @@ const availableLabels = computed(() => {
   return Array.from(labels).sort();
 });
 
-const allDrafts = computed<EmailDraft[]>(() => allDraftsQuery.data.value?.drafts ?? []);
+const allDrafts = computed<EmailDraft[]>(
+  () => allDraftsQuery.data.value?.drafts ?? [],
+);
 const pendingDraftsCount = computed(() => allDrafts.value.length);
 
 // Functions
@@ -234,8 +251,10 @@ function buildFilterQuery(
 ): Record<string, string> {
   const nextUnread = overrides.unreadOnly ?? unreadOnly.value;
   const nextStarred = overrides.starredOnly ?? starredOnly.value;
-  const nextDateFrom = overrides.dateFrom !== undefined ? overrides.dateFrom : dateFrom.value;
-  const nextDateTo = overrides.dateTo !== undefined ? overrides.dateTo : dateTo.value;
+  const nextDateFrom =
+    overrides.dateFrom !== undefined ? overrides.dateFrom : dateFrom.value;
+  const nextDateTo =
+    overrides.dateTo !== undefined ? overrides.dateTo : dateTo.value;
 
   return {
     ...selection,
@@ -274,15 +293,25 @@ function selectLabel(id: string | null) {
 }
 
 function toggleUnreadOnly() {
-  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { unreadOnly: !unreadOnly.value }));
+  pushFilterQuery(
+    buildFilterQuery(currentSelectionQuery(), {
+      unreadOnly: !unreadOnly.value,
+    }),
+  );
 }
 
 function toggleStarredOnly() {
-  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { starredOnly: !starredOnly.value }));
+  pushFilterQuery(
+    buildFilterQuery(currentSelectionQuery(), {
+      starredOnly: !starredOnly.value,
+    }),
+  );
 }
 
 function setDateFrom(value: string | null) {
-  pushFilterQuery(buildFilterQuery(currentSelectionQuery(), { dateFrom: value }));
+  pushFilterQuery(
+    buildFilterQuery(currentSelectionQuery(), { dateFrom: value }),
+  );
 }
 
 function setDateTo(value: string | null) {
@@ -299,7 +328,9 @@ function openThread(id: string) {
 
 /** A draft with a thread opens the thread view (EmailDraftPanel renders inline there, same as today); a threadless ('new') draft opens its own standalone route. */
 function openDraft(draft: EmailDraft) {
-  const path = draft.threadId ? `/mail/${draft.threadId}` : `/mail/draft/${draft.id}`;
+  const path = draft.threadId
+    ? `/mail/${draft.threadId}`
+    : `/mail/draft/${draft.id}`;
   router.push({ path, query: route.query });
 }
 

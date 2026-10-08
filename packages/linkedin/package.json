@@ -2,12 +2,12 @@
   "name": "@repo/linkedin",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "description": "LinkedIn REST API client",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"
   ],
+  "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",

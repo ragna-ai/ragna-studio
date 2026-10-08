@@ -3,7 +3,10 @@
 import { RotateCcwIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
-import { getFileTypeIconName, isImageFilename } from '~/features/chat/lib/attachment-mime';
+import {
+  getFileTypeIconName,
+  isImageFilename,
+} from '~/features/chat/lib/attachment-mime';
 import type { PendingTaskAttachment } from '~/features/task/composables/useTaskAttachments';
 
 // Props

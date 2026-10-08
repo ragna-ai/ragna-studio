@@ -32,13 +32,13 @@ and a visible burn-in (ours). See the discussion summarized here from
 
 Audit of every generation path (verified against the installed SDKs):
 
-| Provider / path | Marking | Flag exposure | Action |
-| --- | --- | --- | --- |
-| Vertex Imagen (images) | SynthID, on by default | `addWatermark` | **We currently set `addWatermark: false`** in `imagen.service.ts` (google-vertex branch). Remove it. |
-| Vertex Veo (videos) | SynthID, automatic | none | Nothing to do. |
-| BFL FLUX images | provider-side (C2PA per BFL) | none in `@ai-sdk/black-forest-labs` 2.0.22 | Nothing to do. |
-| BFL flux-3-video | provider-side | none in SDK | Nothing to do. |
-| OpenAI images | C2PA by default | none in SDK options we use | Nothing to do. |
+| Provider / path        | Marking                      | Flag exposure                              | Action                                                                                               |
+| ---------------------- | ---------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Vertex Imagen (images) | SynthID, on by default       | `addWatermark`                             | **We currently set `addWatermark: false`** in `imagen.service.ts` (google-vertex branch). Remove it. |
+| Vertex Veo (videos)    | SynthID, automatic           | none                                       | Nothing to do.                                                                                       |
+| BFL FLUX images        | provider-side (C2PA per BFL) | none in `@ai-sdk/black-forest-labs` 2.0.22 | Nothing to do.                                                                                       |
+| BFL flux-3-video       | provider-side                | none in SDK                                | Nothing to do.                                                                                       |
+| OpenAI images          | C2PA by default              | none in SDK options we use                 | Nothing to do.                                                                                       |
 
 **The seed consequence.** Imagen rejects `seed` when `addWatermark` is on;
 that conflict is why the flag was set to false. Policy: the watermark wins.

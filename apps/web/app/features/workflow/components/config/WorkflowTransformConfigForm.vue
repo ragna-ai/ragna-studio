@@ -18,7 +18,9 @@ const { t } = useI18n();
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.transformConfig.templateLabel') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.transformConfig.templateLabel')
+      }}</Label>
       <Textarea v-model="node.data.config.template" rows="6" />
       <WorkflowTemplateHint class="mt-1" />
     </div>

@@ -29,7 +29,12 @@ async function createDataset(cookieHeader: string, workspaceId: string) {
   return body.dataset.id;
 }
 
-async function createRow(cookieHeader: string, workspaceId: string, datasetId: string, name: string) {
+async function createRow(
+  cookieHeader: string,
+  workspaceId: string,
+  datasetId: string,
+  name: string,
+) {
   const response = await app.request(`/workspace/${workspaceId}/dataset/${datasetId}/row`, {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },

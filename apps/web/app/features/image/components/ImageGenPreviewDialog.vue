@@ -29,7 +29,8 @@ const isDownloading = ref(false);
 const { copy: copyPrompt, copied: isPromptCopied } = useClipboard();
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
-const { mutateAsync: deleteGenImage, isPending: isDeleting } = useDeleteGenImage();
+const { mutateAsync: deleteGenImage, isPending: isDeleting } =
+  useDeleteGenImage();
 
 // Functions
 function handleOpenChange(open: boolean) {

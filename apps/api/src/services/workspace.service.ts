@@ -8,18 +8,18 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import { deleteWorkspaceMediaObjects } from './media.service';
 
 /**
  * [GET] /workspace
  * Lists all workspaces owned by the authenticated user.
  */
-export async function listWorkspacesForUser({
-  userId,
-}: {
-  userId: string;
-}): Promise<Workspace[]> {
+export async function listWorkspacesForUser({ userId }: { userId: string }): Promise<Workspace[]> {
   const { error, data: workspaces } = await tryCatch(() =>
     getAllWorkspacesByOwnerId({ ownerId: userId }),
   );

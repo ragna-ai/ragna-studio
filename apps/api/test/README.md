@@ -216,7 +216,7 @@ exports, so everything else the package exports keeps working unmocked:
   domains' `POST /` routes only insert pending rows and enqueue a job
   (specs/imagegen/worker-execution-prd.md, specs/videogen/prd.md), the
   provider call itself runs from `apps/worker`'s processors instead. Both
-  domains' `POST /` tests assert `generateImageMock` was *not* called, to
+  domains' `POST /` tests assert `generateImageMock` was _not_ called, to
   prove generation was really deferred rather than run inline. It's kept
   registered here so `apps/worker`'s future test suite can reuse the exact
   same fake for its processor-level tests instead of duplicating it.

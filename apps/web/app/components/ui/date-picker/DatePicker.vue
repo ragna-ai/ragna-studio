@@ -71,12 +71,14 @@ function clear() {
         <Button
           type="button"
           variant="outline"
-          class="min-w-0 grow shrink justify-start font-normal"
+          class="min-w-0 shrink grow justify-start font-normal"
           :disabled="disabled"
         >
           <CalendarIcon class="mr-2 size-4 shrink-0 stroke-1.5" />
           <span v-if="displayLabel" class="truncate">{{ displayLabel }}</span>
-          <span v-else class="truncate text-muted-foreground">{{ placeholder }}</span>
+          <span v-else class="truncate text-muted-foreground">{{
+            placeholder
+          }}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent class="w-auto p-0" align="start">

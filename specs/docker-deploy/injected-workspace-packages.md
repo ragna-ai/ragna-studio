@@ -30,8 +30,8 @@ pnpm --filter @repo/<app> deploy --prod --legacy /prod/<app>
 ```
 
 In **legacy** deploy mode, pnpm doesn't materialize `@repo/*` workspace
-packages inside the deploy target — it symlinks them back to the *original
-monorepo source tree*, e.g.:
+packages inside the deploy target — it symlinks them back to the _original
+monorepo source tree_, e.g.:
 
 ```
 /prod/worker/node_modules/@repo/logger -> ../../../../app/packages/logger
@@ -66,7 +66,7 @@ three images from a completely clean Docker state.
 
 ## Fallout: code that assumed symlink-based resolution
 
-Turning on `injectWorkspacePackages` makes pnpm *materialize* (copy) a
+Turning on `injectWorkspacePackages` makes pnpm _materialize_ (copy) a
 workspace package's files into `node_modules/.pnpm/<pkg>@file+<path>/...`
 for any consumer that needs it, instead of symlinking straight to the
 package's real directory. Two places in the codebase assumed the old
@@ -97,7 +97,7 @@ repo root — both correctly find and load the real root `.env`.
 ### `packages/mail/src/templates/index.ts`
 
 Resolved the `welcome.vue` email template relative to its own compiled
-file (`../src/templates`), reaching *outside* `dist/`. But
+file (`../src/templates`), reaching _outside_ `dist/`. But
 `packages/mail/package.json` has `"files": ["dist"]`, so an injected copy
 only ever contains `dist/` — the template file wouldn't exist in a Docker
 deploy, silently breaking `sendEmail()`.
@@ -108,7 +108,7 @@ relative to `dist/templates` instead of `../src/templates`. Verified the
 file lands in the injected copy after a clean install.
 
 **General lesson**: any code that locates files relative to its own
-`import.meta.url` and reaches *outside* `dist/` (via `../src/...` or a
+`import.meta.url` and reaches _outside_ `dist/` (via `../src/...` or a
 fixed-depth `../../..` climb to the repo root) needs re-checking under
 injected packages. Grep for `fileURLToPath(import.meta.url)` when adding
 new packages.
@@ -120,7 +120,7 @@ module instances** in the same dev process — e.g. `apps/api` imports
 `@repo/config` directly (still a plain symlink, since direct "importer"
 dependencies always symlink straight to source regardless of
 `injectWorkspacePackages`), while `@repo/database`/`@repo/queue`/etc. (which
-`apps/api` also depends on) resolve *their* `@repo/config` dependency
+`apps/api` also depends on) resolve _their_ `@repo/config` dependency
 through the injected copy in `node_modules/.pnpm/`. Two different files on
 disk → two Node module instances → `packages/config/src/index.ts`'s
 top-level code (dotenv load + `new ConfigService()`) runs twice. Shows up
@@ -150,14 +150,14 @@ auto-load is also gated behind `NODE_ENV !== 'production'` and never runs
 in the deployed image at all.
 
 **Caveat on the verification above**: it was done by `rm -rf node_modules`
-at the repo root only. pnpm workspaces keep a *separate* `node_modules/`
+at the repo root only. pnpm workspaces keep a _separate_ `node_modules/`
 inside every app and package directory (`apps/api/node_modules/`,
 `packages/testing/node_modules/`, etc.) — deleting only the root one leaves
 all of those untouched, so a subsequent `pnpm install` can silently reuse
 stale, pre-`injectWorkspacePackages` per-package symlinks instead of
 re-resolving them under the new setting. The dual-instance conclusion above
 was drawn against that partially-stale state. The bug in the next section
-was found *because* a properly full clean install (every per-package
+was found _because_ a properly full clean install (every per-package
 `node_modules` removed, not just the root one) produces different, and
 worse, results — so the "harmless, dev-only" verdict above should be
 treated as unconfirmed until re-checked the same thorough way.
@@ -176,7 +176,7 @@ real network call to LinkedIn's API (401 Unauthorized) instead of using
 `packages/testing` has no `"files"` restriction in its `package.json` (it
 ships its whole `src/` tree, unlike the built packages). Once
 `injectWorkspacePackages: true` is on, pnpm doesn't just decide
-package-by-package whether to inject — it rewrites *every* `workspace:*`
+package-by-package whether to inject — it rewrites _every_ `workspace:*`
 dependency in the lockfile from a plain `link:../../packages/X` entry
 (always a live symlink, content is whatever's on disk right now) to a
 `file:packages/X(...peer-hash...)` entry (resolved like a normal
@@ -194,7 +194,7 @@ slot, materialized as a real copy — confirmed by diffing it against
 symlink back to source.
 
 That copy's own `mock.module('@repo/linkedin', ...)` call (in its own
-`linkedin-provider.mock.ts`) resolves `@repo/linkedin` through *its own*
+`linkedin-provider.mock.ts`) resolves `@repo/linkedin` through _its own_
 node_modules chain
 (`.pnpm/@repo+testing@.../node_modules/@repo/linkedin` →
 `.pnpm/@repo+linkedin@file+packages+linkedin/node_modules/@repo/linkedin`),
@@ -215,7 +215,7 @@ commit (`7122d52`), whose only relevant change was regenerating
 `pnpm-lock.yaml` with `pnpm install` (no `--frozen-lockfile`) — which is
 what actually completed the `link:` → `file:` conversion for every
 workspace dependency, `@repo/testing` included. `869f71d2`'s lockfile had
-the *setting* on but hadn't yet been regenerated to fully reflect it (most
+the _setting_ on but hadn't yet been regenerated to fully reflect it (most
 `@repo/*` entries were still `link:`), which is why it didn't reproduce
 there.
 
@@ -223,7 +223,7 @@ there.
 
 - **`dependenciesMeta: { "@repo/ai": { "injected": true }, ... }`** listing
   every direct production dependency explicitly on `apps/api`, with the
-  global `injectWorkspacePackages` setting removed: broke a *different*
+  global `injectWorkspacePackages` setting removed: broke a _different_
   package (`@repo/logger` ended up as a dangling symlink to a virtual-store
   slot that was never created). Manually scoping injection per direct
   dependency doesn't reliably cascade through the transitive graph.
@@ -271,7 +271,7 @@ For apps/api as of 2026-08-07, `config`/`database`/`linkedin`/`logger`/
 `ai`/`auth`/`media`/`storage`/`testing` went through slots — but the
 split is decided by peer-resolution divergence and shifts with lockfile
 changes, so don't memorize it. Transitive resolutions are the sneaky
-case: even a symlinked package reaches *its own* dependencies through
+case: even a symlinked package reaches _its own_ dependencies through
 slots (e.g. `@repo/database`'s view of `@repo/config`).
 
 Observed concretely, twice:
@@ -293,7 +293,7 @@ syncInjectedDepsAfterScripts:
 ```
 
 so pnpm re-syncs a package's injected copies whenever its `build` script
-runs *through pnpm* (`pnpm --filter @repo/<pkg> build`). Verified: after a
+runs _through pnpm_ (`pnpm --filter @repo/<pkg> build`). Verified: after a
 storage rebuild the slot's `dist/index.mjs` is hardlinked to the fresh
 build output, and for `@repo/testing` (which got a no-op `"build": "true"`
 script purely as a sync trigger, since it ships raw `src/`) a marker file

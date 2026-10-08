@@ -112,13 +112,13 @@ list type). Outputs keep the existing `{ error: string }` failure shape.
 Session-authenticated (`authMiddleware`). All return 404 when
 `config.mcpEnabled` is false.
 
-| Method | Path | Body | Response |
-|---|---|---|---|
-| GET | `/mcp-settings` | | `{ enabled, access, connectorUrl }` |
-| PUT | `/mcp-settings` | `{ enabled, access }` | same as GET. `enabled: false` deletes all connections and revokes their grants. |
-| GET | `/mcp-settings/connections` | | `{ connections: [{ id, clientId, clientName, workspaceId, workspaceName, createdAt, lastUsedAt }] }` |
-| POST | `/mcp-settings/connections` | `{ clientId, workspaceId }` | `{ connection }`. 403 when MCP is disabled for the user. Workspace must be the user's. |
-| DELETE | `/mcp-settings/connections/:connectionId` | | 204. Also revokes the client's grants. |
+| Method | Path                                      | Body                        | Response                                                                                             |
+| ------ | ----------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| GET    | `/mcp-settings`                           |                             | `{ enabled, access, connectorUrl }`                                                                  |
+| PUT    | `/mcp-settings`                           | `{ enabled, access }`       | same as GET. `enabled: false` deletes all connections and revokes their grants.                      |
+| GET    | `/mcp-settings/connections`               |                             | `{ connections: [{ id, clientId, clientName, workspaceId, workspaceName, createdAt, lastUsedAt }] }` |
+| POST   | `/mcp-settings/connections`               | `{ clientId, workspaceId }` | `{ connection }`. 403 when MCP is disabled for the user. Workspace must be the user's.               |
+| DELETE | `/mcp-settings/connections/:connectionId` |                             | 204. Also revokes the client's grants.                                                               |
 
 `access` is `McpAccess`. `connectorUrl` is `config.mcpResourceUrl`.
 

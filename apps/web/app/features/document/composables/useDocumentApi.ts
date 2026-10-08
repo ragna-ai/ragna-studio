@@ -177,8 +177,9 @@ export function useExportDocument(
         throw new Error('Empty export response');
       }
       const filename =
-        filenameFromContentDisposition(response.headers.get('content-disposition')) ??
-        buildExportFilename(toValue(documentTitle), format);
+        filenameFromContentDisposition(
+          response.headers.get('content-disposition'),
+        ) ?? buildExportFilename(toValue(documentTitle), format);
       downloadBlob(response._data, filename);
     },
     onError: () => {

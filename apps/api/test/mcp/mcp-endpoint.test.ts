@@ -1,4 +1,10 @@
-import { createDataset, createDatasetRow, db, deleteMcpConnection, getDatasetRowById } from '@repo/database';
+import {
+  createDataset,
+  createDatasetRow,
+  db,
+  deleteMcpConnection,
+  getDatasetRowById,
+} from '@repo/database';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { app } from '../../src/app';
@@ -125,7 +131,11 @@ describe('POST /mcp: authentication', () => {
   test('rejects a token for a revoked connection', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     await seedOAuthClient();
-    const connection = await seedMcpConnection({ userId, workspaceId, access: { datasets: 'read' } });
+    const connection = await seedMcpConnection({
+      userId,
+      workspaceId,
+      access: { datasets: 'read' },
+    });
     const token = await mintMcpAccessToken({ userId });
     await deleteMcpConnection({ connectionId: connection.id, userId });
 

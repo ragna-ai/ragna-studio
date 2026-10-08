@@ -26,19 +26,19 @@ Consequences:
 
 These are settled. Do not re-open them.
 
-| Decision                  | Choice                                                                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Model**                 | **Private, single-user.** Each workspace belongs to exactly one user. No sharing, no membership.                                                  |
-| **Owner column**          | The `workspace` table uses `ownerId` (not `userId`) to name the creating user. This is intentional prep: a future `workspace_users` pivot can add members without renaming this column. Scoped resource tables keep `userId` unchanged. |
-| **Security boundary**     | Stays `userId`. `workspaceId` is never a substitute for `userId` in any query.                                                                    |
-| **`workspaceId` nullability** | **Nullable.** `null` means "unassigned". Workspaces are purely optional buckets on top of a user's data.                                       |
-| **Default workspace**     | None auto-created. The baseline is "All items" (the unfiltered `userId` view). Workspaces are opt-in.                                             |
-| **List views**            | **Three states.** *All items* = everything (no filter, the default). *A workspace* = that workspace's items. *Unassigned* = only `workspaceId IS NULL`. All + Unassigned are distinct: "All items" is the union view (like Gmail's "All Mail"), "Unassigned" is the unfiled bucket. |
-| **Active workspace**      | **Client state.** Modeled as a discriminated union `{ kind: 'all' \| 'unassigned' \| 'workspace', workspaceId? }`. Translated to query params per the states above. Not persisted in the session.        |
-| **Moving items**          | **Out of scope for v1.** Items are stamped with the active `workspaceId` at creation time only. A "move to workspace" action may come later.      |
-| **Notifications**         | **Stay user-global.** Not workspace-scoped.                                                                                                        |
-| **Worker / DTOs**         | **Untouched.** Jobs run on `userId`; workspace is irrelevant to execution.                                                                        |
-| **Global resources**      | `aiModel` and `agentTemplate` remain global (no `userId`, no `workspaceId`).                                                                       |
+| Decision                      | Choice                                                                                                                                                                                                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Model**                     | **Private, single-user.** Each workspace belongs to exactly one user. No sharing, no membership.                                                                                                                                                                                    |
+| **Owner column**              | The `workspace` table uses `ownerId` (not `userId`) to name the creating user. This is intentional prep: a future `workspace_users` pivot can add members without renaming this column. Scoped resource tables keep `userId` unchanged.                                             |
+| **Security boundary**         | Stays `userId`. `workspaceId` is never a substitute for `userId` in any query.                                                                                                                                                                                                      |
+| **`workspaceId` nullability** | **Nullable.** `null` means "unassigned". Workspaces are purely optional buckets on top of a user's data.                                                                                                                                                                            |
+| **Default workspace**         | None auto-created. The baseline is "All items" (the unfiltered `userId` view). Workspaces are opt-in.                                                                                                                                                                               |
+| **List views**                | **Three states.** _All items_ = everything (no filter, the default). _A workspace_ = that workspace's items. _Unassigned_ = only `workspaceId IS NULL`. All + Unassigned are distinct: "All items" is the union view (like Gmail's "All Mail"), "Unassigned" is the unfiled bucket. |
+| **Active workspace**          | **Client state.** Modeled as a discriminated union `{ kind: 'all' \| 'unassigned' \| 'workspace', workspaceId? }`. Translated to query params per the states above. Not persisted in the session.                                                                                   |
+| **Moving items**              | **Out of scope for v1.** Items are stamped with the active `workspaceId` at creation time only. A "move to workspace" action may come later.                                                                                                                                        |
+| **Notifications**             | **Stay user-global.** Not workspace-scoped.                                                                                                                                                                                                                                         |
+| **Worker / DTOs**             | **Untouched.** Jobs run on `userId`; workspace is irrelevant to execution.                                                                                                                                                                                                          |
+| **Global resources**          | `aiModel` and `agentTemplate` remain global (no `userId`, no `workspaceId`).                                                                                                                                                                                                        |
 
 ## Scoped resources
 
@@ -140,7 +140,7 @@ No endpoint changes its authorization logic. `userId` still gates everything.
 
 ### Gen-image layering (related refactor)
 
-Generated images did not follow the other resources' controller → `@repo/database` path: the imagegen controller went through `@repo/ai`, which owned generation *and* persistence/listing. Adding workspace support surfaced that a pure DB read (`getGenImagesForUser`, no AI) lived in `@repo/ai`. It was re-homed:
+Generated images did not follow the other resources' controller → `@repo/database` path: the imagegen controller went through `@repo/ai`, which owned generation _and_ persistence/listing. Adding workspace support surfaced that a pure DB read (`getGenImagesForUser`, no AI) lived in `@repo/ai`. It was re-homed:
 
 - **Read/list** (`getGenImagesForUser`) moved to `apps/api/src/services/imagegen.service.ts`, calling `@repo/database` directly.
 - **R2 key/URL helpers** (`buildImageUrls`, `getImgGenBucketNameForUser`) moved to `@repo/storage` as the single source of truth, shared by the list service and the create pipeline.

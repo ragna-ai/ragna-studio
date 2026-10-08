@@ -99,7 +99,8 @@ const {
   heartbeat: {
     message: 'ping',
     responseMessage: 'pong',
-    scheduler: (cb) => useIntervalFn(cb, HEARTBEAT_INTERVAL_MS, { immediate: false }),
+    scheduler: (cb) =>
+      useIntervalFn(cb, HEARTBEAT_INTERVAL_MS, { immediate: false }),
     pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
   },
   autoReconnect: {

@@ -1,5 +1,10 @@
 import { toEuropeanDate } from './date-format';
-import type { ExportFile, TabularExport, TabularExportColumnType, TabularExportValue } from './types';
+import type {
+  ExportFile,
+  TabularExport,
+  TabularExportColumnType,
+  TabularExportValue,
+} from './types';
 
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 
@@ -11,7 +16,10 @@ function escapeMarkdownCell(text: string): string {
 
 // `date` columns render European-style, `dd.mm.yyyy`;
 // every other type is unformatted.
-function formatMarkdownDataCell(value: TabularExportValue, columnType: TabularExportColumnType): string {
+function formatMarkdownDataCell(
+  value: TabularExportValue,
+  columnType: TabularExportColumnType,
+): string {
   if (value === null) {
     return '';
   }
@@ -37,7 +45,9 @@ export async function toMarkdown({ title, columns, rows }: TabularExport): Promi
     toMarkdownRow(columns.map((column) => escapeMarkdownCell(column.name))),
     toMarkdownRow(columns.map(() => '---')),
     ...rows.map((row) =>
-      toMarkdownRow(row.map((value, index) => formatMarkdownDataCell(value, columns[index]?.type ?? 'text'))),
+      toMarkdownRow(
+        row.map((value, index) => formatMarkdownDataCell(value, columns[index]?.type ?? 'text')),
+      ),
     ),
   ];
 

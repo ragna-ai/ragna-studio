@@ -79,11 +79,9 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
   });
 
   try {
-    await queue
-      .workflow()
-      .add(WORKFLOW_RUN_JOB, workflowRunJobSchema.parse({ runId: run.id }), {
-        attempts: 3,
-      });
+    await queue.workflow().add(WORKFLOW_RUN_JOB, workflowRunJobSchema.parse({ runId: run.id }), {
+      attempts: 3,
+    });
   } catch (error) {
     logger.error(`Failed to enqueue scheduled workflow run ${run.id}:`, error);
 

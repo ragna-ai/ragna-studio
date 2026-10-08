@@ -1,4 +1,8 @@
-import type { WorkflowDefinition, WorkflowEdge, WorkflowNode } from '@repo/workflow';
+import type {
+  WorkflowDefinition,
+  WorkflowEdge,
+  WorkflowNode,
+} from '@repo/workflow';
 
 /**
  * Vue Flow's v-model:nodes/edges hand back GraphNode/GraphEdge: our
@@ -27,8 +31,14 @@ export function toWorkflowDefinition(
         }) as WorkflowNode,
     ),
     edges: edges.map((edge) => {
-      const plain: WorkflowEdge = { id: edge.id, source: edge.source, target: edge.target };
-      return edge.sourceHandle ? { ...plain, sourceHandle: edge.sourceHandle } : plain;
+      const plain: WorkflowEdge = {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+      };
+      return edge.sourceHandle
+        ? { ...plain, sourceHandle: edge.sourceHandle }
+        : plain;
     }),
   };
 }

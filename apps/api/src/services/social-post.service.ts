@@ -29,7 +29,11 @@ import { deleteMediaIfUnreferenced } from '@repo/media';
 import { toPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MB } from '../utils/upload-limits';
 import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 
@@ -342,7 +346,12 @@ export async function attachSocialPostMedia({
   const key = `social/${userId}/${randomUUID()}.${MEDIA_EXTENSION_BY_MIME_TYPE[file.type]}`;
 
   const { error: uploadError } = await tryCatch(() =>
-    uploadObjectBuffer({ bucketName: config.s3ImagesBucketName, key, buffer, contentType: file.type }),
+    uploadObjectBuffer({
+      bucketName: config.s3ImagesBucketName,
+      key,
+      buffer,
+      contentType: file.type,
+    }),
   );
 
   if (uploadError !== null) {

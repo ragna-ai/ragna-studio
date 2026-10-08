@@ -26,7 +26,14 @@ import type {
   SendMailInput,
   SendMailResult,
 } from '../mail-provider';
-import { GraphApiError, graphRequest, graphRequestVoid, isGraphDeltaExpired, putUploadSessionChunk, type GraphRequestOptions } from './graph.client';
+import {
+  GraphApiError,
+  graphRequest,
+  graphRequestVoid,
+  isGraphDeltaExpired,
+  putUploadSessionChunk,
+  type GraphRequestOptions,
+} from './graph.client';
 import {
   buildGraphSearchQuery,
   escapeODataStringLiteral,
@@ -70,7 +77,12 @@ const METADATA_SELECT_FIELDS = [
   'hasAttachments',
 ];
 
-const FULL_SELECT_FIELDS = [...METADATA_SELECT_FIELDS, 'body', 'internetMessageId', 'internetMessageHeaders'];
+const FULL_SELECT_FIELDS = [
+  ...METADATA_SELECT_FIELDS,
+  'body',
+  'internetMessageId',
+  'internetMessageHeaders',
+];
 
 const DRAFT_SUMMARY_SELECT_FIELDS = [
   'id',
@@ -86,10 +98,23 @@ const DRAFT_SUMMARY_SELECT_FIELDS = [
 
 const DRAFT_FULL_SELECT_FIELDS = [...DRAFT_SUMMARY_SELECT_FIELDS, 'body', 'hasAttachments'];
 
-const WELL_KNOWN_FOLDER_NAMES: GraphWellKnownFolderName[] = ['inbox', 'sentitems', 'deleteditems', 'junkemail', 'drafts', 'archive'];
+const WELL_KNOWN_FOLDER_NAMES: GraphWellKnownFolderName[] = [
+  'inbox',
+  'sentitems',
+  'deleteditems',
+  'junkemail',
+  'drafts',
+  'archive',
+];
 
 // Drafts aren't delta-synced; listDrafts/getDraft cover them instead.
-const SYNCED_FOLDER_NAMES: GraphSyncedFolderName[] = ['inbox', 'sentitems', 'deleteditems', 'junkemail', 'archive'];
+const SYNCED_FOLDER_NAMES: GraphSyncedFolderName[] = [
+  'inbox',
+  'sentitems',
+  'deleteditems',
+  'junkemail',
+  'archive',
+];
 
 const RECENT_INBOX_PAGE_SIZE = '50';
 const SEARCH_PAGE_SIZE = '50';
@@ -139,7 +164,8 @@ export class GraphProvider implements MailProvider {
     let nextUrl: string | undefined = startLink;
 
     while (nextUrl) {
-      const page: GraphDeltaPage<GraphDeltaMessage> = await this.request<GraphDeltaPage<GraphDeltaMessage>>(nextUrl);
+      const page: GraphDeltaPage<GraphDeltaMessage> =
+        await this.request<GraphDeltaPage<GraphDeltaMessage>>(nextUrl);
       const deltaLink = page['@odata.deltaLink'];
       if (deltaLink) return deltaLink;
       nextUrl = page['@odata.nextLink'];
@@ -176,7 +202,11 @@ export class GraphProvider implements MailProvider {
     }
 
     const nextCursor: GraphSyncCursor = { v: 1, folders: nextFolders };
-    return { status: 'ok', changes: [...changesByMessageId.values()], nextCursor: JSON.stringify(nextCursor) };
+    return {
+      status: 'ok',
+      changes: [...changesByMessageId.values()],
+      nextCursor: JSON.stringify(nextCursor),
+    };
   }
 
   async fetchThread(threadId: MailProviderId): Promise<MailThread> {
@@ -192,7 +222,9 @@ export class GraphProvider implements MailProvider {
     while (nextUrl) {
       const page: GraphODataCollection<Message> = await this.request(nextUrl);
       for (const raw of page.value) {
-        const attachments = raw.hasAttachments ? await this.fetchAttachmentsMeta(requireField(raw.id, 'id')) : [];
+        const attachments = raw.hasAttachments
+          ? await this.fetchAttachmentsMeta(requireField(raw.id, 'id'))
+          : [];
         messages.push(toMailMessage(raw, attachments, wellKnownFolderIds));
       }
       nextUrl = page['@odata.nextLink'];
@@ -204,7 +236,10 @@ export class GraphProvider implements MailProvider {
 
   fetchMessage(messageId: MailProviderId, format: 'metadata'): Promise<MailMessageMetadata>;
   fetchMessage(messageId: MailProviderId, format: 'full'): Promise<MailMessage>;
-  async fetchMessage(messageId: MailProviderId, format: 'metadata' | 'full'): Promise<MailMessageMetadata | MailMessage> {
+  async fetchMessage(
+    messageId: MailProviderId,
+    format: 'metadata' | 'full',
+  ): Promise<MailMessageMetadata | MailMessage> {
     const wellKnownFolderIds = await this.getWellKnownFolderIds();
     const fields = format === 'full' ? FULL_SELECT_FIELDS : METADATA_SELECT_FIELDS;
     const raw = await this.request<Message>(`me/messages/${messageId}?$select=${fields.join(',')}`);
@@ -226,7 +261,10 @@ export class GraphProvider implements MailProvider {
   async createDraft(input: SendMailInput): Promise<MailDraft> {
     // The contract can't tell a reply from a forward; always createReply, which keeps the same conversationId.
     const created = input.thread
-      ? await this.request<Message>(`me/messages/${input.thread.replyToProviderMessageId}/createReply`, { method: 'POST' })
+      ? await this.request<Message>(
+          `me/messages/${input.thread.replyToProviderMessageId}/createReply`,
+          { method: 'POST' },
+        )
       : await this.request<Message>('me/messages', { method: 'POST', body: JSON.stringify({}) });
 
     const messageId = requireField(created.id, 'id');
@@ -238,12 +276,18 @@ export class GraphProvider implements MailProvider {
   async updateDraft(draftId: MailProviderId, input: SendMailInput): Promise<MailDraft> {
     await this.patchMessage(draftId, toGraphMessagePatch(input));
     const existing = await this.fetchAttachmentsMeta(draftId);
-    await this.reconcileAttachments(draftId, input.attachments ?? [], existing.map((attachment) => requireField(attachment.id, 'id')));
+    await this.reconcileAttachments(
+      draftId,
+      input.attachments ?? [],
+      existing.map((attachment) => requireField(attachment.id, 'id')),
+    );
     return this.getDraft(draftId);
   }
 
   async getDraft(draftId: MailProviderId): Promise<MailDraft> {
-    const raw = await this.request<Message>(`me/messages/${draftId}?$select=${DRAFT_FULL_SELECT_FIELDS.join(',')}`);
+    const raw = await this.request<Message>(
+      `me/messages/${draftId}?$select=${DRAFT_FULL_SELECT_FIELDS.join(',')}`,
+    );
     const attachments = raw.hasAttachments ? await this.fetchAttachmentsMeta(draftId) : [];
     return toMailDraft(raw, attachments);
   }
@@ -254,7 +298,8 @@ export class GraphProvider implements MailProvider {
     const params = new URLSearchParams({ $select: DRAFT_SUMMARY_SELECT_FIELDS.join(',') });
 
     const summaries: MailDraftSummary[] = [];
-    let nextUrl: string | undefined = `me/mailFolders/${draftsFolderId}/messages?${params.toString()}`;
+    let nextUrl: string | undefined =
+      `me/mailFolders/${draftsFolderId}/messages?${params.toString()}`;
 
     while (nextUrl) {
       const page: GraphODataCollection<Message> = await this.request(nextUrl);
@@ -266,7 +311,9 @@ export class GraphProvider implements MailProvider {
   }
 
   async sendDraft(draftId: MailProviderId): Promise<SendMailResult> {
-    const draftBeforeSend = await this.request<Pick<Message, 'conversationId'>>(`me/messages/${draftId}?$select=conversationId`);
+    const draftBeforeSend = await this.request<Pick<Message, 'conversationId'>>(
+      `me/messages/${draftId}?$select=conversationId`,
+    );
     const threadId = requireField(draftBeforeSend.conversationId, 'conversationId');
     await this.requestVoid(`me/messages/${draftId}/send`, { method: 'POST' });
     // Sent Items gets a new id on send; messageId here is the pre-send draft id, returned best-effort.
@@ -286,7 +333,9 @@ export class GraphProvider implements MailProvider {
   }
 
   async setStarred(messageId: MailProviderId, starred: boolean): Promise<MailActionResult> {
-    const raw = await this.patchMessage(messageId, { flag: { flagStatus: starred ? 'flagged' : 'notFlagged' } });
+    const raw = await this.patchMessage(messageId, {
+      flag: { flagStatus: starred ? 'flagged' : 'notFlagged' },
+    });
     return this.toMailActionResult(raw);
   }
 
@@ -296,7 +345,9 @@ export class GraphProvider implements MailProvider {
   }
 
   async listLabels(): Promise<MailLabel[]> {
-    const response = await this.request<GraphODataCollection<OutlookCategory>>('me/outlook/masterCategories');
+    const response = await this.request<GraphODataCollection<OutlookCategory>>(
+      'me/outlook/masterCategories',
+    );
     return response.value.map((category) => {
       const name = requireField(category.displayName, 'displayName');
       return { id: name, name, type: 'user' as const };
@@ -305,7 +356,8 @@ export class GraphProvider implements MailProvider {
 
   async search(query: string, pageToken?: string | null): Promise<MailSearchResult> {
     const url = pageToken ?? this.searchUrl(query);
-    const page = await this.request<GraphODataCollection<Pick<Message, 'id' | 'conversationId'>>>(url);
+    const page =
+      await this.request<GraphODataCollection<Pick<Message, 'id' | 'conversationId'>>>(url);
 
     const threadIds: MailProviderId[] = [];
     const seen = new Set<string>();
@@ -332,7 +384,8 @@ export class GraphProvider implements MailProvider {
     let nextUrl: string | undefined = `me/mailFolders/${inboxId}/messages?${params.toString()}`;
 
     while (nextUrl && threadIds.length < limit) {
-      const page: GraphODataCollection<Pick<Message, 'id' | 'conversationId'>> = await this.request(nextUrl);
+      const page: GraphODataCollection<Pick<Message, 'id' | 'conversationId'>> =
+        await this.request(nextUrl);
       for (const raw of page.value) {
         if (!raw.conversationId || seen.has(raw.conversationId)) continue;
         seen.add(raw.conversationId);
@@ -345,14 +398,22 @@ export class GraphProvider implements MailProvider {
     return threadIds;
   }
 
-  async getAttachment(messageId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
-    const raw = await this.request<FileAttachment>(`me/messages/${messageId}/attachments/${attachmentId}`);
+  async getAttachment(
+    messageId: MailProviderId,
+    attachmentId: string,
+  ): Promise<MailAttachmentContent> {
+    const raw = await this.request<FileAttachment>(
+      `me/messages/${messageId}/attachments/${attachmentId}`,
+    );
     const contentBytes = requireField(raw.contentBytes, 'contentBytes');
     return { size: raw.size ?? 0, data: Buffer.from(contentBytes, 'base64') };
   }
 
   // Graph drafts are ordinary messages, so `draftId` already addresses the same resource `getAttachment` does.
-  async getDraftAttachment(draftId: MailProviderId, attachmentId: string): Promise<MailAttachmentContent> {
+  async getDraftAttachment(
+    draftId: MailProviderId,
+    attachmentId: string,
+  ): Promise<MailAttachmentContent> {
     return this.getAttachment(draftId, attachmentId);
   }
 
@@ -367,7 +428,10 @@ export class GraphProvider implements MailProvider {
   }
 
   private patchMessage(messageId: MailProviderId, patch: Partial<Message>): Promise<Message> {
-    return this.request<Message>(`me/messages/${messageId}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    return this.request<Message>(`me/messages/${messageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    });
   }
 
   private searchUrl(query: string): string {
@@ -379,7 +443,9 @@ export class GraphProvider implements MailProvider {
     return `me/messages?${params.toString()}`;
   }
 
-  private async fetchAttachmentsMeta(messageId: MailProviderId): Promise<GraphAttachmentMetadata[]> {
+  private async fetchAttachmentsMeta(
+    messageId: MailProviderId,
+  ): Promise<GraphAttachmentMetadata[]> {
     // contentId only exists on the derived fileAttachment type, so it needs the OData type-cast prefix.
     const params = new URLSearchParams({
       $select: 'id,name,contentType,size,isInline,microsoft.graph.fileAttachment/contentId',
@@ -396,14 +462,19 @@ export class GraphProvider implements MailProvider {
     existingAttachmentIds: string[],
   ): Promise<void> {
     await Promise.all(
-      existingAttachmentIds.map((id) => this.requestVoid(`me/messages/${messageId}/attachments/${id}`, { method: 'DELETE' })),
+      existingAttachmentIds.map((id) =>
+        this.requestVoid(`me/messages/${messageId}/attachments/${id}`, { method: 'DELETE' }),
+      ),
     );
     for (const attachment of attachments) {
       await this.addAttachment(messageId, attachment);
     }
   }
 
-  private async addAttachment(messageId: MailProviderId, attachment: MailAttachmentInput): Promise<void> {
+  private async addAttachment(
+    messageId: MailProviderId,
+    attachment: MailAttachmentInput,
+  ): Promise<void> {
     if (attachment.content.byteLength <= INLINE_ATTACHMENT_MAX_BYTES) {
       await this.addInlineAttachment(messageId, attachment);
       return;
@@ -411,7 +482,10 @@ export class GraphProvider implements MailProvider {
     await this.addAttachmentViaUploadSession(messageId, attachment);
   }
 
-  private async addInlineAttachment(messageId: MailProviderId, attachment: MailAttachmentInput): Promise<void> {
+  private async addInlineAttachment(
+    messageId: MailProviderId,
+    attachment: MailAttachmentInput,
+  ): Promise<void> {
     const body: GraphFileAttachmentCreate = {
       '@odata.type': '#microsoft.graph.fileAttachment',
       name: attachment.filename,
@@ -419,10 +493,16 @@ export class GraphProvider implements MailProvider {
       contentBytes: attachment.content.toString('base64'),
       ...(attachment.contentId ? { contentId: attachment.contentId, isInline: true } : {}),
     };
-    await this.request<FileAttachment>(`me/messages/${messageId}/attachments`, { method: 'POST', body: JSON.stringify(body) });
+    await this.request<FileAttachment>(`me/messages/${messageId}/attachments`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
-  private async addAttachmentViaUploadSession(messageId: MailProviderId, attachment: MailAttachmentInput): Promise<void> {
+  private async addAttachmentViaUploadSession(
+    messageId: MailProviderId,
+    attachment: MailAttachmentInput,
+  ): Promise<void> {
     const attachmentItem: AttachmentItem = {
       attachmentType: 'file',
       name: attachment.filename,
@@ -432,10 +512,13 @@ export class GraphProvider implements MailProvider {
     };
     const requestBody: GraphCreateUploadSessionRequest = { AttachmentItem: attachmentItem };
 
-    const session = await this.request<UploadSession>(`me/messages/${messageId}/attachments/createUploadSession`, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-    });
+    const session = await this.request<UploadSession>(
+      `me/messages/${messageId}/attachments/createUploadSession`,
+      {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+      },
+    );
 
     const uploadUrl = requireField(session.uploadUrl, 'uploadUrl');
     const total = attachment.content.byteLength;
@@ -450,7 +533,10 @@ export class GraphProvider implements MailProvider {
     throw new GraphApiError('Upload session finished without a completed chunk response', 502);
   }
 
-  private requireFolderId(wellKnownFolderIds: GraphWellKnownFolderIds, name: GraphWellKnownFolderName): string {
+  private requireFolderId(
+    wellKnownFolderIds: GraphWellKnownFolderIds,
+    name: GraphWellKnownFolderName,
+  ): string {
     const id = wellKnownFolderIds[name];
     if (!id) {
       throw new GraphApiError(`Mailbox has no well-known folder "${name}"`, 404);
@@ -458,11 +544,16 @@ export class GraphProvider implements MailProvider {
     return id;
   }
 
-  private async moveMessage(messageId: MailProviderId, destination: GraphWellKnownFolderName): Promise<MailActionResult> {
+  private async moveMessage(
+    messageId: MailProviderId,
+    destination: GraphWellKnownFolderName,
+  ): Promise<MailActionResult> {
     const wellKnownFolderIds = await this.getWellKnownFolderIds();
     const raw = await this.request<Message>(`me/messages/${messageId}/move`, {
       method: 'POST',
-      body: JSON.stringify({ destinationId: this.requireFolderId(wellKnownFolderIds, destination) }),
+      body: JSON.stringify({
+        destinationId: this.requireFolderId(wellKnownFolderIds, destination),
+      }),
     });
     return this.toMailActionResult(raw);
   }
@@ -490,7 +581,9 @@ export class GraphProvider implements MailProvider {
     const entries = await Promise.all(
       WELL_KNOWN_FOLDER_NAMES.map(async (name) => {
         try {
-          const folder = await this.request<GraphMailFolderResource>(`me/mailFolders/${name}?$select=id`);
+          const folder = await this.request<GraphMailFolderResource>(
+            `me/mailFolders/${name}?$select=id`,
+          );
           return [name, requireField(folder.id, 'id')] as const;
         } catch (error) {
           if (error instanceof GraphApiError && error.status === 404) return null;
@@ -499,11 +592,18 @@ export class GraphProvider implements MailProvider {
       }),
     );
 
-    return Object.fromEntries(entries.filter((entry): entry is readonly [GraphWellKnownFolderName, string] => entry !== null));
+    return Object.fromEntries(
+      entries.filter(
+        (entry): entry is readonly [GraphWellKnownFolderName, string] => entry !== null,
+      ),
+    );
   }
 
   private initialDeltaLink(folderId: string): string {
-    const params = new URLSearchParams({ $deltatoken: 'latest', $select: METADATA_SELECT_FIELDS.join(',') });
+    const params = new URLSearchParams({
+      $deltatoken: 'latest',
+      $select: METADATA_SELECT_FIELDS.join(','),
+    });
     return `me/mailFolders/${folderId}/messages/delta?${params.toString()}`;
   }
 
@@ -545,12 +645,17 @@ export class GraphProvider implements MailProvider {
 
     for (const change of aggregated.values()) {
       if (change.type === 'upserted') {
-        changes.push({ type: 'added', message: toMailMessageMetadata(change.message, wellKnownFolderIds) });
+        changes.push({
+          type: 'added',
+          message: toMailMessageMetadata(change.message, wellKnownFolderIds),
+        });
         continue;
       }
 
       try {
-        const raw = await this.request<Message>(`me/messages/${change.messageId}?$select=${METADATA_SELECT_FIELDS.join(',')}`);
+        const raw = await this.request<Message>(
+          `me/messages/${change.messageId}?$select=${METADATA_SELECT_FIELDS.join(',')}`,
+        );
         const metadata = toMailMessageMetadata(raw, wellKnownFolderIds);
         changes.push({
           type: 'flagsChanged',

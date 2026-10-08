@@ -16,12 +16,14 @@ const { locale } = useI18n();
       :to="`/document/${document.id}`"
       class="flex items-center gap-3 px-6 py-2.5 text-sm hover:bg-accent"
     >
-      <span class="grow truncate font-medium text-foreground">{{ document.title }}</span>
+      <span class="grow truncate font-medium text-foreground">{{
+        document.title
+      }}</span>
       <NuxtTime
         :datetime="document.updatedAt"
         :locale="locale"
         relative
-        class="shrink-0 whitespace-nowrap text-xs text-muted-foreground"
+        class="shrink-0 text-xs whitespace-nowrap text-muted-foreground"
       />
     </NuxtLinkLocale>
   </div>

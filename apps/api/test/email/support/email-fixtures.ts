@@ -44,7 +44,9 @@ async function connectEmailAccountRequest({
   email?: string;
 }): Promise<ConnectEmailAccountResult> {
   if (email) {
-    getProfileMock.mockImplementationOnce(() => Promise.resolve({ emailAddress: email, cursor: 'history-cursor-0' }));
+    getProfileMock.mockImplementationOnce(() =>
+      Promise.resolve({ emailAddress: email, cursor: 'history-cursor-0' }),
+    );
   }
 
   const response = await app.request('/email/account/connect', {
@@ -89,18 +91,29 @@ export async function seedConnectedMicrosoftAccount({
   email?: string;
 }): Promise<ConnectedGmailAccount> {
   await seedMicrosoftLinkedAccount({ userId });
-  const connected = await connectEmailAccountRequest({ cookieHeader, provider: 'microsoft', email });
+  const connected = await connectEmailAccountRequest({
+    cookieHeader,
+    provider: 'microsoft',
+    email,
+  });
 
   return { userId, ...connected };
 }
 
-export async function createAgentForWorkspace(cookieHeader: string, workspaceId: string): Promise<string> {
+export async function createAgentForWorkspace(
+  cookieHeader: string,
+  workspaceId: string,
+): Promise<string> {
   const { aiModelId } = await seedTokenPricedAiModel();
 
   const response = await app.request(`/workspace/${workspaceId}/agent`, {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ name: 'Draft Agent', aiModelId, systemPrompt: 'You draft email replies.' }),
+    body: JSON.stringify({
+      name: 'Draft Agent',
+      aiModelId,
+      systemPrompt: 'You draft email replies.',
+    }),
   });
 
   const body = z.object({ agent: z.object({ id: z.string() }) }).parse(await response.json());

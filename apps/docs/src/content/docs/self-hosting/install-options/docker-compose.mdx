@@ -16,7 +16,9 @@ This page is for you if you want full control over the setup, or want to see eve
 - `curl` and `openssl`.
 
 <Aside type="note" title="Windows">
-  Use WSL with Docker Desktop's WSL 2 integration. Keep the project folder in the WSL filesystem, not under `/mnt/c/...`. Folders on the Windows drive are slow to mount and cause permission problems.
+  Use WSL with Docker Desktop's WSL 2 integration. Keep the project folder in the WSL filesystem,
+  not under `/mnt/c/...`. Folders on the Windows drive are slow to mount and cause permission
+  problems.
 </Aside>
 
 ## Step 1: Download the release files
@@ -42,22 +44,23 @@ chmod 600 .env
 
 Keep `.env` out of version control. Then set these values:
 
-| Setting | Value |
-| --- | --- |
-| `RAGNA_VERSION` | The release from step 1, for example `0.5.0`. Add this line, `.env.example` doesn't have it. |
-| `BETTER_AUTH_SECRET` | Output of `openssl rand -hex 32` |
-| `ENCRYPTION_PASSWORD` | Output of `openssl rand -hex 32` |
-| `DB_PASSWORD` | Output of `openssl rand -hex 24` |
-| `REDIS_PASSWORD` | Output of `openssl rand -hex 24` |
-| OAuth client | `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, or the `MICROSOFT_*` values. See [Configuration](/self-hosting/configuration#oauth). |
-| AI key | At least one of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_GENAI_API_KEY` or `MISTRAL_API_KEY` |
+| Setting               | Value                                                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `RAGNA_VERSION`       | The release from step 1, for example `0.5.0`. Add this line, `.env.example` doesn't have it.                                        |
+| `BETTER_AUTH_SECRET`  | Output of `openssl rand -hex 32`                                                                                                    |
+| `ENCRYPTION_PASSWORD` | Output of `openssl rand -hex 32`                                                                                                    |
+| `DB_PASSWORD`         | Output of `openssl rand -hex 24`                                                                                                    |
+| `REDIS_PASSWORD`      | Output of `openssl rand -hex 24`                                                                                                    |
+| OAuth client          | `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, or the `MICROSOFT_*` values. See [Configuration](/self-hosting/configuration#oauth). |
+| AI key                | At least one of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_GENAI_API_KEY` or `MISTRAL_API_KEY`                                  |
 
 Use hex secrets. `DB_PASSWORD` becomes part of the database URL, so characters like `/` break the connection.
 
 For localhost, the URLs in `.env.example` already fit. On a server, set your domains as in [Configuration](/self-hosting/configuration#domains). Storage is optional, see [Storage](/self-hosting/storage).
 
 <Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
-  Pick the secrets once. Changing `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD` later makes stored OAuth tokens unreadable.
+  Pick the secrets once. Changing `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD` later makes stored
+  OAuth tokens unreadable.
 </Aside>
 
 ## Step 3: Start everything
@@ -77,16 +80,16 @@ The second file is the self-host override. It sets the in-network hosts for Post
 
 ### What you've just set up
 
-| Service | Role |
-| --- | --- |
-| `postgres` | Database, with pgvector. Has a health check. |
-| `redis` | Queues |
-| `migrate` | Applies the schema once Postgres is healthy, then exits |
-| `seed` | Adds the model catalog and the default agent, then exits |
-| `backend` | The API, on `127.0.0.1:3010` |
-| `worker` | Background jobs and scheduled workflows |
-| `frontend` | The web app, on `127.0.0.1:3000` |
-| `webbrowser` | Headless browser for agents. Not published. |
+| Service      | Role                                                     |
+| ------------ | -------------------------------------------------------- |
+| `postgres`   | Database, with pgvector. Has a health check.             |
+| `redis`      | Queues                                                   |
+| `migrate`    | Applies the schema once Postgres is healthy, then exits  |
+| `seed`       | Adds the model catalog and the default agent, then exits |
+| `backend`    | The API, on `127.0.0.1:3010`                             |
+| `worker`     | Background jobs and scheduled workflows                  |
+| `frontend`   | The web app, on `127.0.0.1:3000`                         |
+| `webbrowser` | Headless browser for agents. Not published.              |
 
 `migrate` and `seed` run on every start and are idempotent.
 

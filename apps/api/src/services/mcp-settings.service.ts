@@ -22,11 +22,22 @@ export interface McpConnectionListResponse {
   connections: McpConnectionSummary[];
 }
 
-function toMcpSettingsResponse(settings: { enabled: boolean; access: McpAccess }): McpSettingsResponse {
-  return { enabled: settings.enabled, access: settings.access, connectorUrl: config.mcpResourceUrl };
+function toMcpSettingsResponse(settings: {
+  enabled: boolean;
+  access: McpAccess;
+}): McpSettingsResponse {
+  return {
+    enabled: settings.enabled,
+    access: settings.access,
+    connectorUrl: config.mcpResourceUrl,
+  };
 }
 
-export async function getMcpSettingsForUser({ userId }: { userId: string }): Promise<McpSettingsResponse> {
+export async function getMcpSettingsForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<McpSettingsResponse> {
   const settings = await getMcpSettings({ userId });
   return toMcpSettingsResponse(settings);
 }
@@ -49,7 +60,9 @@ export async function updateMcpSettingsForUser({
   if (!enabled) {
     const connections = await listMcpConnections({ userId });
     await Promise.all(
-      connections.map((connection) => revokeMcpClientGrants({ userId, clientId: connection.clientId })),
+      connections.map((connection) =>
+        revokeMcpClientGrants({ userId, clientId: connection.clientId }),
+      ),
     );
     await deleteAllMcpConnections({ userId });
   }

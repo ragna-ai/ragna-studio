@@ -32,11 +32,7 @@ const emit = defineEmits<{ click: [] }>();
       <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
       {{ label }}
     </Button>
-    <Badge
-      v-if="lastUsed"
-      variant="secondary"
-      class="absolute -top-2 -right-2"
-    >
+    <Badge v-if="lastUsed" variant="secondary" class="absolute -top-2 -right-2">
       {{ $t('auth.login.lastUsed') }}
     </Badge>
   </div>

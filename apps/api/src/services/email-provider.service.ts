@@ -5,7 +5,11 @@ import { getAccountByUserIdAndProvider, getEmailAccountByUserId } from '@repo/da
 import { logger } from '@repo/logger';
 import { createMailProvider, type MailProvider, type MailProviderKind } from '@repo/mail/provider';
 import { tryCatch } from '@repo/utils';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 
 // gmail maps to better-auth's 'google' social provider id.
 const BETTER_AUTH_PROVIDER_ID: Record<MailProviderKind, string> = {
@@ -82,7 +86,13 @@ function assertProviderScope(provider: MailProviderKind, status: MailProviderSco
   }
 }
 
-function buildMailProvider({ userId, provider }: { userId: string; provider: MailProviderKind }): MailProvider {
+function buildMailProvider({
+  userId,
+  provider,
+}: {
+  userId: string;
+  provider: MailProviderKind;
+}): MailProvider {
   const betterAuthProviderId = BETTER_AUTH_PROVIDER_ID[provider];
   const name = PROVIDER_DISPLAY_NAME[provider];
 
@@ -90,7 +100,10 @@ function buildMailProvider({ userId, provider }: { userId: string; provider: Mai
     provider,
     getAccessToken: async () => {
       const { error, data: token } = await tryCatch(async () => {
-        const account = await getAccountByUserIdAndProvider({ userId, providerId: betterAuthProviderId });
+        const account = await getAccountByUserIdAndProvider({
+          userId,
+          providerId: betterAuthProviderId,
+        });
         if (!account) {
           throw new Error(`${name} account is no longer linked`);
         }
@@ -120,7 +133,11 @@ async function assertScopeAndBuildProvider({
   return buildMailProvider({ userId, provider });
 }
 
-export async function getMailProviderForUser({ userId }: { userId: string }): Promise<MailProvider> {
+export async function getMailProviderForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<MailProvider> {
   const { error, data: account } = await tryCatch(() => getEmailAccountByUserId({ userId }));
 
   if (error !== null) {

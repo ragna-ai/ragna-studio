@@ -2,7 +2,10 @@
 // Imports
 import { XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
-import { getFileTypeIconName, isImageMediaType } from '~/features/chat/lib/attachment-mime';
+import {
+  getFileTypeIconName,
+  isImageMediaType,
+} from '~/features/chat/lib/attachment-mime';
 import type { TaskAttachment } from '~/features/task/composables/useTaskApi';
 
 // Props
@@ -23,7 +26,9 @@ const apiBaseUrl = useRuntimeConfig().public.apiBaseUrl;
 
 // Computed
 const isImage = computed(() => isImageMediaType(props.attachment.mediaType));
-const fileTypeIcon = computed(() => getFileTypeIconName(props.attachment.filename));
+const fileTypeIcon = computed(() =>
+  getFileTypeIconName(props.attachment.filename),
+);
 // Document attachments carry a relative, env-independent API download path
 // (`/workspace/:id/media/:id/download`); image attachments already carry an
 // absolute CDN url. Same resolution as ChatMessage.vue's

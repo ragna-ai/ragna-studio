@@ -8,7 +8,11 @@ export function useSearchEmail(query: MaybeRefOrGetter<string>) {
   return useQuery<EmailSearchResponse>({
     queryKey: emailKeys.search(query),
     queryFn: ({ signal }) =>
-      $api<EmailSearchResponse>('/email/search', { method: 'GET', query: { q: toValue(query) }, signal }),
+      $api<EmailSearchResponse>('/email/search', {
+        method: 'GET',
+        query: { q: toValue(query) },
+        signal,
+      }),
     enabled: () => toValue(query).trim().length > 0,
   });
 }

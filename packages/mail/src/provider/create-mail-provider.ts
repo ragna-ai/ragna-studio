@@ -10,7 +10,10 @@ export interface CreateMailProviderOptions {
   getAccessToken: () => Promise<string>;
 }
 
-export function createMailProvider({ provider, getAccessToken }: CreateMailProviderOptions): MailProvider {
+export function createMailProvider({
+  provider,
+  getAccessToken,
+}: CreateMailProviderOptions): MailProvider {
   if (provider === 'gmail') {
     return createGmailProvider({ getAccessToken });
   }

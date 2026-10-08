@@ -42,10 +42,14 @@ const form = useForm({
 <template>
   <form @submit.prevent.stop="form.handleSubmit">
     <div>
-      <p class="mb-2 block text-sm font-medium">{{ $t('user.profile.avatar') }}</p>
+      <p class="mb-2 block text-sm font-medium">
+        {{ $t('user.profile.avatar') }}
+      </p>
       <div class="flex flex-row items-center justify-between">
         <UserAvatar :user-name="props.name" class="size-16" />
-        <Button type="button" variant="outline">{{ $t('user.profile.change') }}</Button>
+        <Button type="button" variant="outline">{{
+          $t('user.profile.change')
+        }}</Button>
       </div>
     </div>
 

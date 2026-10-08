@@ -5,10 +5,7 @@ import type { ValidationTargets } from 'hono';
 import * as z from 'zod';
 import { UnprocessableEntityException } from '../exceptions';
 
-export const myzValidator = <
-  T extends z.ZodType,
-  Target extends keyof ValidationTargets,
->(
+export const myzValidator = <T extends z.ZodType, Target extends keyof ValidationTargets>(
   target: Target,
   schema: T,
 ) =>

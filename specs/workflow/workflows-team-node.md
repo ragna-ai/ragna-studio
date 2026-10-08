@@ -105,13 +105,13 @@ Design:
 
 ## Changes by package
 
-| Area             | Change                                                                                                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@repo/workflow` | `team` in `NODE_TYPES`, `teamConfigSchema`, definition union entry, `calls?` on `WorkflowToolCall`                                                                       |
-| `apps/worker`    | `team.executor.ts`, registration in `executors/index.ts`, shared referenced-agent helper extracted from `agent.executor.ts`                                             |
-| `apps/web`       | Palette entry, canvas node component, config aside (lead picker, prompt, member list), run view nested tool-call rendering, i18n (`de-DE`, `en-UK`)                     |
-| `apps/api`       | None (publish validation comes from `@repo/workflow`)                                                                                                                   |
-| `@repo/database` | None (definitions and `toolCalls` are jsonb)                                                                                                                            |
+| Area             | Change                                                                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/workflow` | `team` in `NODE_TYPES`, `teamConfigSchema`, definition union entry, `calls?` on `WorkflowToolCall`                                                  |
+| `apps/worker`    | `team.executor.ts`, registration in `executors/index.ts`, shared referenced-agent helper extracted from `agent.executor.ts`                         |
+| `apps/web`       | Palette entry, canvas node component, config aside (lead picker, prompt, member list), run view nested tool-call rendering, i18n (`de-DE`, `en-UK`) |
+| `apps/api`       | None (publish validation comes from `@repo/workflow`)                                                                                               |
+| `@repo/database` | None (definitions and `toolCalls` are jsonb)                                                                                                        |
 
 ## Open questions for review
 

@@ -50,14 +50,22 @@ function removeMember(index: number) {
 <template>
   <div class="space-y-4">
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('workflow.teamConfig.leadAgentLabel') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('workflow.teamConfig.leadAgentLabel')
+      }}</Label>
       <Select v-model="selectedLeadAgentId">
         <SelectTrigger class="w-full">
           <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem :value="NO_AGENT">{{ t('workflow.teamConfig.noneUseDefaultAgent') }}</SelectItem>
-          <SelectItem v-for="agent in agentOptions" :key="agent.id" :value="agent.id">
+          <SelectItem :value="NO_AGENT">{{
+            t('workflow.teamConfig.noneUseDefaultAgent')
+          }}</SelectItem>
+          <SelectItem
+            v-for="agent in agentOptions"
+            :key="agent.id"
+            :value="agent.id"
+          >
             {{ agent.name }}
           </SelectItem>
         </SelectContent>
@@ -68,24 +76,39 @@ function removeMember(index: number) {
     </div>
 
     <div>
-      <Label class="mb-2 block text-sm font-medium">{{ t('common.prompt') }}</Label>
+      <Label class="mb-2 block text-sm font-medium">{{
+        t('common.prompt')
+      }}</Label>
       <Textarea v-model="node.data.config.prompt" rows="6" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
 
     <div>
       <div class="mb-2 flex items-center justify-between">
-        <Label class="text-sm font-medium">{{ t('workflow.teamConfig.membersLabel') }}</Label>
-        <Button variant="outline" size="sm" :disabled="!canAddMember" @click="addMember">
+        <Label class="text-sm font-medium">{{
+          t('workflow.teamConfig.membersLabel')
+        }}</Label>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!canAddMember"
+          @click="addMember"
+        >
           <PlusIcon class="size-3.5 stroke-1.5" />
           {{ t('workflow.teamConfig.addMember') }}
         </Button>
       </div>
 
       <div class="space-y-3">
-        <div v-for="(member, index) in members" :key="index" class="space-y-2 rounded-md border p-3">
+        <div
+          v-for="(member, index) in members"
+          :key="index"
+          class="space-y-2 rounded-md border p-3"
+        >
           <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-medium text-muted-foreground">{{ t('workflow.teamConfig.memberN', { index: index + 1 }) }}</span>
+            <span class="text-xs font-medium text-muted-foreground">{{
+              t('workflow.teamConfig.memberN', { index: index + 1 })
+            }}</span>
             <Button
               variant="ghost"
               size="icon"
@@ -100,16 +123,25 @@ function removeMember(index: number) {
 
           <Select v-model="member.agentId">
             <SelectTrigger class="w-full">
-              <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
+              <SelectValue
+                :placeholder="t('workflow.agentPicker.placeholder')"
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="agent in agentOptions" :key="agent.id" :value="agent.id">
+              <SelectItem
+                v-for="agent in agentOptions"
+                :key="agent.id"
+                :value="agent.id"
+              >
                 {{ agent.name }}
               </SelectItem>
             </SelectContent>
           </Select>
 
-          <Input v-model="member.role" :placeholder="t('workflow.teamConfig.rolePlaceholder')" />
+          <Input
+            v-model="member.role"
+            :placeholder="t('workflow.teamConfig.rolePlaceholder')"
+          />
         </div>
       </div>
 

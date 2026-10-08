@@ -12,7 +12,10 @@ import { z } from 'zod';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
-import { useCreateAgent, useUpdateAgent } from '~/features/agent/composables/useAgentApi';
+import {
+  useCreateAgent,
+  useUpdateAgent,
+} from '~/features/agent/composables/useAgentApi';
 import type { AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
@@ -118,7 +121,11 @@ const siderBarTabs = computed(() => [
   //   icon: CircleUserRoundIcon,
   //   label: t('agent.upsert.systemPromptTitle'),
   // },
-  { id: 'aimodel', icon: BrainIcon, label: t('agent.upsert.tabs.intelligence') },
+  {
+    id: 'aimodel',
+    icon: BrainIcon,
+    label: t('agent.upsert.tabs.intelligence'),
+  },
   {
     id: 'tools',
     icon: BriefcaseBusinessIcon,
@@ -284,7 +291,9 @@ const siderBarTabs = computed(() => [
       <!-- TAB 5: Context -->
       <template #context>
         <div class="mb-8">
-          <Label class="mb-2 block text-sm font-medium">{{ t('agent.upsert.documentsLabel') }}</Label>
+          <Label class="mb-2 block text-sm font-medium">{{
+            t('agent.upsert.documentsLabel')
+          }}</Label>
           <p class="mb-2 text-sm text-muted-foreground">
             {{ t('agent.upsert.documentsHint') }}
           </p>
@@ -339,7 +348,9 @@ const siderBarTabs = computed(() => [
                   :model-value="state.value"
                   @update:model-value="field.handleChange"
                 />
-                <Label :for="field.name">{{ t('agent.upsert.defaultAgentLabel') }}</Label>
+                <Label :for="field.name">{{
+                  t('agent.upsert.defaultAgentLabel')
+                }}</Label>
               </div>
             </template>
           </form.Field>
@@ -348,9 +359,15 @@ const siderBarTabs = computed(() => [
               <template v-slot="{ field, state }">
                 <div>
                   <div class="mb-2 flex items-center justify-between">
-                    <Label :id="`${field.name}-label`">{{ t('agent.upsert.temperatureLabel') }}</Label>
+                    <Label :id="`${field.name}-label`">{{
+                      t('agent.upsert.temperatureLabel')
+                    }}</Label>
                     <span class="text-sm text-muted-foreground">
-                      {{ state.value ? state.value : t('agent.upsert.temperatureDisabled') }}
+                      {{
+                        state.value
+                          ? state.value
+                          : t('agent.upsert.temperatureDisabled')
+                      }}
                     </span>
                   </div>
                   <Slider
@@ -402,7 +419,10 @@ const siderBarTabs = computed(() => [
             <form.Field name="settings.reasoning">
               <template v-slot="{ field, state }">
                 <div>
-                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  <Label
+                    class="mb-2 block text-sm font-medium"
+                    :for="field.name"
+                  >
                     {{ t('agent.upsert.reasoningLabel') }}
                   </Label>
                   <Select

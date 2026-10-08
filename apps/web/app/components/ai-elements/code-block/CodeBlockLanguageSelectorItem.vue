@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { SelectItem } from '@/components/ui/select'
+import { SelectItem } from '@/components/ui/select';
 
-type CodeBlockLanguageSelectorItemProps = InstanceType<typeof SelectItem>['$props']
+type CodeBlockLanguageSelectorItemProps = InstanceType<
+  typeof SelectItem
+>['$props'];
 
 interface Props extends /* @vue-ignore */ CodeBlockLanguageSelectorItemProps {}
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 </script>
 
 <template>

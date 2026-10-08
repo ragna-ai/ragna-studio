@@ -528,7 +528,10 @@ describe('POST /workspace/:workspaceId/gen-image/reference-upload (body limit)',
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
 
     const formData = new FormData();
-    formData.append('file', new File([new Uint8Array(SINGLE_UPLOAD_LIMIT_BYTES + 1)], 'big.png', { type: 'image/png' }));
+    formData.append(
+      'file',
+      new File([new Uint8Array(SINGLE_UPLOAD_LIMIT_BYTES + 1)], 'big.png', { type: 'image/png' }),
+    );
 
     const response = await app.request(`/workspace/${workspaceId}/gen-image/reference-upload`, {
       method: 'POST',

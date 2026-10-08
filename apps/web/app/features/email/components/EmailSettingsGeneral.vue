@@ -41,7 +41,9 @@ const needsReconnect = computed(
   () => props.account.syncState === 'reauth_required',
 );
 const providerIcon = computed(() =>
-  props.account.provider === 'microsoft' ? 'logos:microsoft-icon' : 'logos:google-icon',
+  props.account.provider === 'microsoft'
+    ? 'logos:microsoft-icon'
+    : 'logos:google-icon',
 );
 const providerLabel = computed(() =>
   t(`email.settings.general.provider.${props.account.provider}`),
@@ -51,7 +53,9 @@ const providerLabel = computed(() =>
 async function handleDisconnect() {
   const confirmed = await confirm({
     title: t('email.settings.general.disconnectConfirmTitle'),
-    message: t('email.settings.general.disconnectConfirmMessage', { provider: providerLabel.value }),
+    message: t('email.settings.general.disconnectConfirmMessage', {
+      provider: providerLabel.value,
+    }),
     confirmLabel: t('email.settings.general.disconnect'),
     cancelLabel: t('common.cancel'),
     variant: 'destructive',
@@ -87,7 +91,11 @@ function handleReconnect() {
             class="flex max-w-lg items-center gap-1.5 text-xs text-destructive"
           >
             <AlertTriangleIcon class="size-3.5 shrink-0" />
-            {{ t('email.settings.general.reconnectHint', { provider: providerLabel }) }}
+            {{
+              t('email.settings.general.reconnectHint', {
+                provider: providerLabel,
+              })
+            }}
           </p>
           <Button
             variant="default"
@@ -95,7 +103,9 @@ function handleReconnect() {
             @click="handleReconnect"
           >
             <Spinner v-if="isRelinking" class="mr-2" />
-            {{ t('email.settings.general.reconnect', { provider: providerLabel }) }}
+            {{
+              t('email.settings.general.reconnect', { provider: providerLabel })
+            }}
           </Button>
         </div>
       </div>

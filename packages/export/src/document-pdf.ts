@@ -20,7 +20,11 @@ function spanToTextRun(span: InlineSpan) {
     italics: span.italic || undefined,
     font: span.code ? 'Courier' : undefined,
     color: span.linkHref ? '#1a73e8' : undefined,
-    decoration: span.linkHref ? ('underline' as const) : span.strike ? ('lineThrough' as const) : undefined,
+    decoration: span.linkHref
+      ? ('underline' as const)
+      : span.strike
+        ? ('lineThrough' as const)
+        : undefined,
     link: span.linkHref,
   };
 }
@@ -68,7 +72,10 @@ function blockquoteToContent(token: Tokens.Blockquote): PdfContent {
 function listItemToContent(item: Tokens.ListItem): PdfContent {
   const nestedLists = item.tokens.filter((token): token is Tokens.List => token.type === 'list');
   const ownSpans = item.tokens
-    .filter((token): token is Tokens.Text | Tokens.Paragraph => token.type === 'text' || token.type === 'paragraph')
+    .filter(
+      (token): token is Tokens.Text | Tokens.Paragraph =>
+        token.type === 'text' || token.type === 'paragraph',
+    )
     .flatMap((token) => flattenInline(token.tokens));
 
   const ownContent = spansToContent(ownSpans);
@@ -86,13 +93,19 @@ function listToContent(list: Tokens.List): PdfContent {
   const items = list.items.map((item) => listItemToContent(item));
 
   return list.ordered
-    ? { ol: items, start: typeof list.start === 'number' ? list.start : undefined, margin: [0, 0, 0, 10] }
+    ? {
+        ol: items,
+        start: typeof list.start === 'number' ? list.start : undefined,
+        margin: [0, 0, 0, 10],
+      }
     : { ul: items, margin: [0, 0, 0, 10] };
 }
 
 function hrToContent(): PdfContent {
   return {
-    canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 1, lineColor: '#999999' }],
+    canvas: [
+      { type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 1, lineColor: '#999999' },
+    ],
     margin: [0, 10, 0, 10],
   };
 }
@@ -147,7 +160,10 @@ function toDocumentPdfDefinition({ title, markdown }: DocumentExport): PdfDocume
 
   return {
     defaultStyle: { font: 'Roboto', fontSize: 10 },
-    content: [{ text: title, fontSize: 20, bold: true, marginBottom: 12 }, ...tokens.map(blockToContent)],
+    content: [
+      { text: title, fontSize: 20, bold: true, marginBottom: 12 },
+      ...tokens.map(blockToContent),
+    ],
   };
 }
 

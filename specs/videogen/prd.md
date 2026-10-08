@@ -110,21 +110,21 @@ pending DB row, and completion is surfaced via the notification system.
 
 New `packages/database/src/schema/genvideo.schema.ts`:
 
-| column | notes |
-| --- | --- |
-| id, userId, workspaceId | as `gen_images`; both FKs cascade, both indexed |
-| status | text, `'pending' \| 'processing' \| 'completed' \| 'failed'`, not null, default `pending` |
-| storageKey | nullable until the worker uploads the mp4 |
-| error | nullable text, set on failure |
-| prompt, negativePrompt | as `gen_images` |
-| provider, model | as `gen_images` |
-| aspectRatio | `'16:9' \| '9:16'` |
-| resolution | `'720p' \| '1080p'` |
-| duration | integer seconds (4 / 6 / 8) |
-| generateAudio | boolean, default true |
-| seed | nullable integer |
-| frameOrigin | nullable, `'upload' \| 'genImage'` |
-| frameStorageKey | nullable; object key of the first-frame image |
+| column                  | notes                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| id, userId, workspaceId | as `gen_images`; both FKs cascade, both indexed                                           |
+| status                  | text, `'pending' \| 'processing' \| 'completed' \| 'failed'`, not null, default `pending` |
+| storageKey              | nullable until the worker uploads the mp4                                                 |
+| error                   | nullable text, set on failure                                                             |
+| prompt, negativePrompt  | as `gen_images`                                                                           |
+| provider, model         | as `gen_images`                                                                           |
+| aspectRatio             | `'16:9' \| '9:16'`                                                                        |
+| resolution              | `'720p' \| '1080p'`                                                                       |
+| duration                | integer seconds (4 / 6 / 8)                                                               |
+| generateAudio           | boolean, default true                                                                     |
+| seed                    | nullable integer                                                                          |
+| frameOrigin             | nullable, `'upload' \| 'genImage'`                                                        |
+| frameStorageKey         | nullable; object key of the first-frame image                                             |
 
 Query helpers mirror the image ones: `createGenVideoRecord`,
 `getGenVideosByWorkspaceId` (paged), `getGenVideoCountByWorkspaceId`,
@@ -139,8 +139,8 @@ relations), or every query throws "relation is missing".
   `NotificationDataMap` entries:
   - `video_generation_succeeded: { genVideoId: string; workspaceId: string; prompt: string }`
   - `video_generation_failed: { genVideoId: string; workspaceId: string; prompt: string }`
-  (`prompt` snapshotted so the presenter can render without a lookup; truncate
-  for display in the presenter, not at emit.)
+    (`prompt` snapshotted so the presenter can render without a lookup; truncate
+    for display in the presenter, not at emit.)
 - `dtos/gen-video-job.dto.ts`: `GenVideoJobDto { genVideoId: string }`,
   same class shape as `NotifyUserJobDto`.
 - Worker's notification registry gets builders for both new types.

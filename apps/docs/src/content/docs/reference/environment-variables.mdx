@@ -9,77 +9,77 @@ All settings go into `.env`. The [installer](/self-hosting/install-options/one-l
 
 ## App and domains
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `NODE_ENV` | `development` | `development`, `production` or `test` |
-| `RAGNA_VERSION` | `latest` | Image tag for the RAGNA Studio containers, such as `0.5.0`. Read by Docker Compose. |
-| `APP_URL` | `http://localhost:3000` | Public URL of the web app |
-| `API_BASE_URL` | | Public URL of the API |
-| `NUXT_PUBLIC_API_BASE_URL` | | Public API URL for the browser. Must be **https** in production. |
-| `TRUSTED_ORIGINS` | `http://localhost:3000` | Comma-separated list of allowed origins |
-| `COOKIE_DOMAIN` | | Parent domain, such as `.example.com`. Needed when app and API are on separate hosts. |
-| `NUXT_PUBLIC_I18N_BASE_URL` | `https://ragna.io` | Base URL for language links |
-| `LOG_LEVEL` | `info` | `trace`, `normal`, `debug`, `info`, `warn` or `error` |
-| `AI_SDK_LOG_WARNINGS` | `true` | Set to `false` to silence AI SDK warnings |
+| Variable                    | Default                 | Meaning                                                                               |
+| --------------------------- | ----------------------- | ------------------------------------------------------------------------------------- |
+| `NODE_ENV`                  | `development`           | `development`, `production` or `test`                                                 |
+| `RAGNA_VERSION`             | `latest`                | Image tag for the RAGNA Studio containers, such as `0.5.0`. Read by Docker Compose.   |
+| `APP_URL`                   | `http://localhost:3000` | Public URL of the web app                                                             |
+| `API_BASE_URL`              |                         | Public URL of the API                                                                 |
+| `NUXT_PUBLIC_API_BASE_URL`  |                         | Public API URL for the browser. Must be **https** in production.                      |
+| `TRUSTED_ORIGINS`           | `http://localhost:3000` | Comma-separated list of allowed origins                                               |
+| `COOKIE_DOMAIN`             |                         | Parent domain, such as `.example.com`. Needed when app and API are on separate hosts. |
+| `NUXT_PUBLIC_I18N_BASE_URL` | `https://ragna.io`      | Base URL for language links                                                           |
+| `LOG_LEVEL`                 | `info`                  | `trace`, `normal`, `debug`, `info`, `warn` or `error`                                 |
+| `AI_SDK_LOG_WARNINGS`       | `true`                  | Set to `false` to silence AI SDK warnings                                             |
 
 See [Configuration](/self-hosting/configuration#domains).
 
 ## Secrets
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `BETTER_AUTH_SECRET` | | Signs sessions and encrypts stored OAuth tokens. Never change it after the first start. |
-| `ENCRYPTION_PASSWORD` | | At least 16 characters. Set it once and keep it. |
+| Variable              | Default | Meaning                                                                                 |
+| --------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`  |         | Signs sessions and encrypts stored OAuth tokens. Never change it after the first start. |
+| `ENCRYPTION_PASSWORD` |         | At least 16 characters. Set it once and keep it.                                        |
 
 See [Configuration](/self-hosting/configuration#secrets).
 
 ## Database
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `DB_HOST` | `localhost` | Postgres host |
-| `DB_PORT` | `5432` | Postgres port |
-| `DB_DATABASE` | `studio` | Database name |
-| `DB_USERNAME` | `postgres` | Database user |
-| `DB_PASSWORD` | | Database password |
-| `DB_SSL` | `false` | Connect over TLS |
-| `DATABASE_URL` | | Full connection string. Overrides the `DB_*` values when set. |
-| `DATABASE_POOL_SIZE` | `10` | Connection pool size |
+| Variable             | Default     | Meaning                                                       |
+| -------------------- | ----------- | ------------------------------------------------------------- |
+| `DB_HOST`            | `localhost` | Postgres host                                                 |
+| `DB_PORT`            | `5432`      | Postgres port                                                 |
+| `DB_DATABASE`        | `studio`    | Database name                                                 |
+| `DB_USERNAME`        | `postgres`  | Database user                                                 |
+| `DB_PASSWORD`        |             | Database password                                             |
+| `DB_SSL`             | `false`     | Connect over TLS                                              |
+| `DATABASE_URL`       |             | Full connection string. Overrides the `DB_*` values when set. |
+| `DATABASE_POOL_SIZE` | `10`        | Connection pool size                                          |
 
 ## Redis
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `REDIS_HOST` | | Redis host |
-| `REDIS_PORT` | `6379` | Redis port |
-| `REDIS_PASSWORD` | | Redis password |
-| `REDIS_DB` | `0` | Logical database index, 0 to 15 |
+| Variable         | Default | Meaning                         |
+| ---------------- | ------- | ------------------------------- |
+| `REDIS_HOST`     |         | Redis host                      |
+| `REDIS_PORT`     | `6379`  | Redis port                      |
+| `REDIS_PASSWORD` |         | Redis password                  |
+| `REDIS_DB`       | `0`     | Logical database index, 0 to 15 |
 
 ## Storage
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `S3_ENDPOINT` | | Endpoint of your S3 provider |
-| `S3_REGION` | `auto` | Bucket region. R2 wants `auto`. |
-| `S3_ACCESS_KEY_ID` | | Access key |
-| `S3_SECRET_ACCESS_KEY` | | Secret key |
-| `S3_IMAGES_BUCKET_NAME` | | Public-read bucket for images and generated media |
-| `S3_DOCUMENTS_BUCKET_NAME` | | Private bucket for documents |
-| `MEDIA_URL` | | Public base URL of the images bucket |
-| `NUXT_PUBLIC_MEDIA_URL` | | Same value as `MEDIA_URL` |
+| Variable                   | Default | Meaning                                           |
+| -------------------------- | ------- | ------------------------------------------------- |
+| `S3_ENDPOINT`              |         | Endpoint of your S3 provider                      |
+| `S3_REGION`                | `auto`  | Bucket region. R2 wants `auto`.                   |
+| `S3_ACCESS_KEY_ID`         |         | Access key                                        |
+| `S3_SECRET_ACCESS_KEY`     |         | Secret key                                        |
+| `S3_IMAGES_BUCKET_NAME`    |         | Public-read bucket for images and generated media |
+| `S3_DOCUMENTS_BUCKET_NAME` |         | Private bucket for documents                      |
+| `MEDIA_URL`                |         | Public base URL of the images bucket              |
+| `NUXT_PUBLIC_MEDIA_URL`    |         | Same value as `MEDIA_URL`                         |
 
 See [Storage](/self-hosting/storage).
 
 ## Sign-in
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `GOOGLE_CLIENT_ID` | | Google OAuth client |
-| `GOOGLE_CLIENT_SECRET` | | Google OAuth secret |
-| `MICROSOFT_CLIENT_ID` | | Microsoft OAuth client |
-| `MICROSOFT_CLIENT_SECRET` | | Microsoft OAuth secret |
-| `MICROSOFT_TENANT_ID` | `organizations` | `organizations` for work accounts only, `common` to allow personal accounts, or a tenant ID to lock to one organization |
-| `ALLOWED_LOGIN_EMAILS` | | Comma-separated allowlist. Empty allows everyone. |
+| Variable                  | Default         | Meaning                                                                                                                 |
+| ------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`        |                 | Google OAuth client                                                                                                     |
+| `GOOGLE_CLIENT_SECRET`    |                 | Google OAuth secret                                                                                                     |
+| `MICROSOFT_CLIENT_ID`     |                 | Microsoft OAuth client                                                                                                  |
+| `MICROSOFT_CLIENT_SECRET` |                 | Microsoft OAuth secret                                                                                                  |
+| `MICROSOFT_TENANT_ID`     | `organizations` | `organizations` for work accounts only, `common` to allow personal accounts, or a tenant ID to lock to one organization |
+| `ALLOWED_LOGIN_EMAILS`    |                 | Comma-separated allowlist. Empty allows everyone.                                                                       |
 
 See [Configuration](/self-hosting/configuration#oauth).
 
@@ -87,68 +87,68 @@ See [Configuration](/self-hosting/configuration#oauth).
 
 Set at least one chat provider. Each `*_API_BASE_URL` is optional and overrides the provider's default endpoint.
 
-| Variable | Meaning |
-| --- | --- |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_API_BASE_URL` | Anthropic |
-| `OPENAI_API_KEY`, `OPENAI_API_BASE_URL` | OpenAI, also used for embeddings |
-| `MISTRAL_API_KEY`, `MISTRAL_API_BASE_URL` | Mistral |
-| `GOOGLE_GENAI_API_KEY`, `GOOGLE_GENAI_API_BASE_URL` | Google GenAI |
-| `GOOGLE_VERTEX_PROJECT_ID`, `GOOGLE_VERTEX_LOCATION`, `GOOGLE_VERTEX_CLIENT_EMAIL`, `GOOGLE_VERTEX_PRIVATE_KEY`, `GOOGLE_VERTEX_API_BASE_URL` | Google Vertex, for Imagen and Veo |
-| `BFL_API_KEY`, `BFL_API_BASE_URL` | Black Forest Labs, for FLUX images and video |
-| `LMSTUDIO_API_KEY`, `LMSTUDIO_API_BASE_URL` | LM Studio, for local models |
+| Variable                                                                                                                                      | Meaning                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_API_BASE_URL`                                                                                                 | Anthropic                                    |
+| `OPENAI_API_KEY`, `OPENAI_API_BASE_URL`                                                                                                       | OpenAI, also used for embeddings             |
+| `MISTRAL_API_KEY`, `MISTRAL_API_BASE_URL`                                                                                                     | Mistral                                      |
+| `GOOGLE_GENAI_API_KEY`, `GOOGLE_GENAI_API_BASE_URL`                                                                                           | Google GenAI                                 |
+| `GOOGLE_VERTEX_PROJECT_ID`, `GOOGLE_VERTEX_LOCATION`, `GOOGLE_VERTEX_CLIENT_EMAIL`, `GOOGLE_VERTEX_PRIVATE_KEY`, `GOOGLE_VERTEX_API_BASE_URL` | Google Vertex, for Imagen and Veo            |
+| `BFL_API_KEY`, `BFL_API_BASE_URL`                                                                                                             | Black Forest Labs, for FLUX images and video |
+| `LMSTUDIO_API_KEY`, `LMSTUDIO_API_BASE_URL`                                                                                                   | LM Studio, for local models                  |
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `CHAT_TITLE_MODEL_PROVIDER` | `anthropic` | Provider that names new chats |
-| `CHAT_TITLE_MODEL` | `claude-haiku-4-5` | Model that names new chats |
+| Variable                    | Default            | Meaning                       |
+| --------------------------- | ------------------ | ----------------------------- |
+| `CHAT_TITLE_MODEL_PROVIDER` | `anthropic`        | Provider that names new chats |
+| `CHAT_TITLE_MODEL`          | `claude-haiku-4-5` | Model that names new chats    |
 
 ## Web search and browser
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `SERP_API_KEY` | | SerpAPI key for web search |
-| `WEBBROWSER_PORT` | `3011` | Port of the headless browser service |
-| `WEBBROWSER_BASE_URL` | `http://localhost:3011` | URL the API uses to reach the browser service |
-| `BROWSER_NAVIGATION_TIMEOUT` | `25000` | Page navigation timeout in ms |
-| `BROWSER_BODY_LOAD_TIMEOUT` | `10000` | Page body load timeout in ms |
-| `BROWSER_MAX_CONCURRENCY` | `4` | Parallel browser pages |
+| Variable                     | Default                 | Meaning                                       |
+| ---------------------------- | ----------------------- | --------------------------------------------- |
+| `SERP_API_KEY`               |                         | SerpAPI key for web search                    |
+| `WEBBROWSER_PORT`            | `3011`                  | Port of the headless browser service          |
+| `WEBBROWSER_BASE_URL`        | `http://localhost:3011` | URL the API uses to reach the browser service |
+| `BROWSER_NAVIGATION_TIMEOUT` | `25000`                 | Page navigation timeout in ms                 |
+| `BROWSER_BODY_LOAD_TIMEOUT`  | `10000`                 | Page body load timeout in ms                  |
+| `BROWSER_MAX_CONCURRENCY`    | `4`                     | Parallel browser pages                        |
 
 ## Mail
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `MAIL_TRANSPORT` | `smtp` | `smtp` or `brevo` |
-| `MAIL_FROM` | | Sender address |
-| `SMTP_HOST` | `127.0.0.1` | SMTP host |
-| `SMTP_PORT` | `587` | SMTP port |
-| `SMTP_USER` | | SMTP user |
-| `SMTP_PASSWORD` | | SMTP password |
-| `BREVO_API_KEY` | | Brevo key, when `MAIL_TRANSPORT` is `brevo` |
-| `EMAIL_SYNC_INTERVAL` | `300000` | Mailbox poll interval in ms |
-| `EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE` | `1d` | Only newer mail is auto-classified. Units: `m`, `h`, `d`, `w`. |
+| Variable                              | Default     | Meaning                                                        |
+| ------------------------------------- | ----------- | -------------------------------------------------------------- |
+| `MAIL_TRANSPORT`                      | `smtp`      | `smtp` or `brevo`                                              |
+| `MAIL_FROM`                           |             | Sender address                                                 |
+| `SMTP_HOST`                           | `127.0.0.1` | SMTP host                                                      |
+| `SMTP_PORT`                           | `587`       | SMTP port                                                      |
+| `SMTP_USER`                           |             | SMTP user                                                      |
+| `SMTP_PASSWORD`                       |             | SMTP password                                                  |
+| `BREVO_API_KEY`                       |             | Brevo key, when `MAIL_TRANSPORT` is `brevo`                    |
+| `EMAIL_SYNC_INTERVAL`                 | `300000`    | Mailbox poll interval in ms                                    |
+| `EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE` | `1d`        | Only newer mail is auto-classified. Units: `m`, `h`, `d`, `w`. |
 
 ## LinkedIn
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `LINKEDIN_CLIENT_ID` | | LinkedIn app client, for publishing drafts |
-| `LINKEDIN_CLIENT_SECRET` | | LinkedIn app secret |
+| Variable                 | Default | Meaning                                    |
+| ------------------------ | ------- | ------------------------------------------ |
+| `LINKEDIN_CLIENT_ID`     |         | LinkedIn app client, for publishing drafts |
+| `LINKEDIN_CLIENT_SECRET` |         | LinkedIn app secret                        |
 
 ## MCP server
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `MCP_ENABLED` | `false` | Turns the MCP server on |
-| `MCP_ALLOWED_CLIENT_IDS` | | Comma-separated client ID URLs that may connect |
-| `MCP_ACCESS_TOKEN_TTL_SECONDS` | `3600` | Access token lifetime |
-| `MCP_REFRESH_TOKEN_TTL_SECONDS` | `2592000` | Refresh token lifetime (30 days) |
+| Variable                        | Default   | Meaning                                         |
+| ------------------------------- | --------- | ----------------------------------------------- |
+| `MCP_ENABLED`                   | `false`   | Turns the MCP server on                         |
+| `MCP_ALLOWED_CLIENT_IDS`        |           | Comma-separated client ID URLs that may connect |
+| `MCP_ACCESS_TOKEN_TTL_SECONDS`  | `3600`    | Access token lifetime                           |
+| `MCP_REFRESH_TOKEN_TTL_SECONDS` | `2592000` | Refresh token lifetime (30 days)                |
 
 ## Credits and billing
 
 Off by default. Self-hosted instances usually leave these unset.
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `CREDITS_ENABLED` | `false` | Turns the credit system on |
-| `CREDIT_MARKUP_BPS` | `15000` | Markup in basis points. `10000` is cost price. `NULL` disables the markup. |
-| `STRIPE_*`, `PAYMENT_*_URL` | | Stripe keys, price IDs and payment redirects |
+| Variable                    | Default | Meaning                                                                    |
+| --------------------------- | ------- | -------------------------------------------------------------------------- |
+| `CREDITS_ENABLED`           | `false` | Turns the credit system on                                                 |
+| `CREDIT_MARKUP_BPS`         | `15000` | Markup in basis points. `10000` is cost price. `NULL` disables the markup. |
+| `STRIPE_*`, `PAYMENT_*_URL` |         | Stripe keys, price IDs and payment redirects                               |

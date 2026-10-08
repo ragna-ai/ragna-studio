@@ -125,17 +125,17 @@ schema.
 
 ## Touched files
 
-| File | Change |
-| --- | --- |
-| `packages/database/src/schema/agent.schema.ts` | `context` column |
-| `packages/database/src/repositories/agent.repo.ts` | persist `context` |
-| `packages/ai/src/services/agent.service.ts` | inject `<context>` block |
-| `apps/api/src/middlewares/validationMiddlewares.ts` | validate `context` |
-| `apps/api/src/controllers/agent.controller.ts` | pass through on upsert |
-| `apps/api/src/controllers/chat.controller.ts` | pass `agent.context` to seam |
-| `apps/worker/src/workflow/executors/agent.executor.ts` | pass `agent.context` to seam |
-| `apps/web/app/features/agent/types/index.ts` | add `context` to types |
-| `apps/web/app/features/agent/components/AgentUpsertForm.vue` | Context tab field |
+| File                                                         | Change                       |
+| ------------------------------------------------------------ | ---------------------------- |
+| `packages/database/src/schema/agent.schema.ts`               | `context` column             |
+| `packages/database/src/repositories/agent.repo.ts`           | persist `context`            |
+| `packages/ai/src/services/agent.service.ts`                  | inject `<context>` block     |
+| `apps/api/src/middlewares/validationMiddlewares.ts`          | validate `context`           |
+| `apps/api/src/controllers/agent.controller.ts`               | pass through on upsert       |
+| `apps/api/src/controllers/chat.controller.ts`                | pass `agent.context` to seam |
+| `apps/worker/src/workflow/executors/agent.executor.ts`       | pass `agent.context` to seam |
+| `apps/web/app/features/agent/types/index.ts`                 | add `context` to types       |
+| `apps/web/app/features/agent/components/AgentUpsertForm.vue` | Context tab field            |
 
 ## Resolved questions
 

@@ -5,10 +5,7 @@ import { paginationSchema } from './pagination.schema';
 
 export const validGenImageListQuery = myzValidator('query', paginationSchema);
 
-export const validGenImageIdParam = myzValidator(
-  'param',
-  z.object({ genImageId: z.uuidv7() }),
-);
+export const validGenImageIdParam = myzValidator('param', z.object({ genImageId: z.uuidv7() }));
 
 // Same ownership split as gen_images.referenceImages:
 // a 'genImage' reference points at another workspace image the

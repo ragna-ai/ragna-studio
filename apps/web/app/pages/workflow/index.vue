@@ -76,10 +76,7 @@ const handleDeleteWorkflow = async (workflowId: string) => {
     </div>
     <div v-else-if="workflowsError">
       <p class="text-sm text-stone-500">
-        {{
-          workflowsError.message ||
-          t('workflow.list.loadError')
-        }}
+        {{ workflowsError.message || t('workflow.list.loadError') }}
       </p>
     </div>
   </SectionWrapper>

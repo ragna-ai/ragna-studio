@@ -12,7 +12,7 @@ Reordering dataset rows (`datasetRow.sortOrder`) or Kanban tasks (`task.sortOrde
 
 ## Root cause
 
-`sortOrder` columns store [`fractional-indexing`](https://www.npmjs.com/package/fractional-indexing) keys (alphabet `0-9A-Za-z`). The library compares keys with plain byte/ASCII order everywhere: uppercase-headed keys (e.g. `Zz`) represent values *before* the default start key `a0`, lowercase-headed keys represent values after it. `generateKeyBetween(a, b)` and every "insert this row between these two neighbors" computation in `dataset.repo.ts` / `task.repo.ts` assumes that same byte order.
+`sortOrder` columns store [`fractional-indexing`](https://www.npmjs.com/package/fractional-indexing) keys (alphabet `0-9A-Za-z`). The library compares keys with plain byte/ASCII order everywhere: uppercase-headed keys (e.g. `Zz`) represent values _before_ the default start key `a0`, lowercase-headed keys represent values after it. `generateKeyBetween(a, b)` and every "insert this row between these two neighbors" computation in `dataset.repo.ts` / `task.repo.ts` assumes that same byte order.
 
 Postgres's default locale collation (this DB was initialized with `en_US.utf8`, confirmed via `SELECT datcollate FROM pg_database`) does **not** sort that way:
 
@@ -21,7 +21,7 @@ SELECT 'Zz' < 'a0'                       AS default_collation_lt,  -- false
        'Zz' COLLATE "C" < 'a0' COLLATE "C" AS c_collation_lt;      -- true
 ```
 
-So `ORDER BY sort_order` returned rows in an order that disagreed with what the keys actually mean. Every "who's my neighbor" lookup (`moveDatasetRow`, `moveTask`, `getDatasetRows`, `listTasks`, `sortOrderAtBottomOfColumn`, ...) was therefore working off the wrong adjacency, which explains all three symptoms above — including the exact `a >= b` crash, which requires two adjacent rows in the (wrongly-ordered) query result to have the *same* key: pre-existing duplicate `sortOrder` values (from backfilled data) sort as truly adjacent under `C` collation but can end up separated or reordered under the locale collation, and vice versa.
+So `ORDER BY sort_order` returned rows in an order that disagreed with what the keys actually mean. Every "who's my neighbor" lookup (`moveDatasetRow`, `moveTask`, `getDatasetRows`, `listTasks`, `sortOrderAtBottomOfColumn`, ...) was therefore working off the wrong adjacency, which explains all three symptoms above — including the exact `a >= b` crash, which requires two adjacent rows in the (wrongly-ordered) query result to have the _same_ key: pre-existing duplicate `sortOrder` values (from backfilled data) sort as truly adjacent under `C` collation but can end up separated or reordered under the locale collation, and vice versa.
 
 Drizzle-kit's `db:push`/`db:pull` workflow (see root `CLAUDE.md`) doesn't version raw migrations, and `drizzle-orm@1.0.0-rc.4`'s pg-core column builders have no `.collate()` method (only `mysql-core` has one) — so there's no schema-level way to pin the column's collation and have it survive a push.
 
@@ -37,7 +37,7 @@ Force byte order at the query level instead of the column level: `packages/datab
 
 `COLLATE "C"` isn't only more correct here, it's also cheaper: `C`/`POSIX` comparisons are plain byte `memcmp`, while a locale collation (`en_US.utf8`) goes through a locale-aware `strcoll`/ICU call on every comparison. That's a per-comparison win regardless of indexing.
 
-The bigger win, an index that satisfies the `ORDER BY` outright (no separate sort step), needs an index whose collation matches the query's — but neither `dataset_rows` nor `tasks` currently has *any* index on `sort_order` (only `datasetId`/`workspaceId`/`userId` are indexed; see `dataset.schema.ts`/`task.schema.ts`). Every `sortOrder` query today does a sequential scan + in-memory sort regardless of collation. At current caps (`MAX_ROWS_PER_DATASET = 1000`, and `listTasks` is deliberately unpaginated on the assumption that a workspace's task count stays board-sized) that's not a real cost, so no index has been added. If row/task counts grow enough for this to matter, add a `COLLATE "C"` expression index (e.g. `(dataset_id, sort_order)` / `(workspace_id, status, sort_order)`) at that point.
+The bigger win, an index that satisfies the `ORDER BY` outright (no separate sort step), needs an index whose collation matches the query's — but neither `dataset_rows` nor `tasks` currently has _any_ index on `sort_order` (only `datasetId`/`workspaceId`/`userId` are indexed; see `dataset.schema.ts`/`task.schema.ts`). Every `sortOrder` query today does a sequential scan + in-memory sort regardless of collation. At current caps (`MAX_ROWS_PER_DATASET = 1000`, and `listTasks` is deliberately unpaginated on the assumption that a workspace's task count stays board-sized) that's not a real cost, so no index has been added. If row/task counts grow enough for this to matter, add a `COLLATE "C"` expression index (e.g. `(dataset_id, sort_order)` / `(workspace_id, status, sort_order)`) at that point.
 
 ## Other columns checked
 

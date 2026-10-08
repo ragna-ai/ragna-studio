@@ -52,7 +52,9 @@ const TILE_ASPECT_CLASS: Record<ImageAspectRatio, string> = {
 };
 
 function tileAspectClass(image: GeneratedImage) {
-  return image.aspectRatio ? TILE_ASPECT_CLASS[image.aspectRatio] : 'aspect-square';
+  return image.aspectRatio
+    ? TILE_ASPECT_CLASS[image.aspectRatio]
+    : 'aspect-square';
 }
 </script>
 

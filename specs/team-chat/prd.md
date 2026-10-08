@@ -68,22 +68,22 @@ does not need).
 JSON envelope frames on a single socket:
 
 ```jsonc
-{ "channel": "chat:<chatId>", "type": "<type>", "payload": { /* ... */ } }
+{ "channel": "chat:<chatId>", "type": "<type>", "payload": {/* ... */} }
 ```
 
 Channel names are `<resourceType>:<resourceId>`. Phase 1 ships `chat:`;
 phase 2 adds `room:`.
 
-| Direction       | Type          | Payload                                        |
-| --------------- | ------------- | ---------------------------------------------- |
-| client → server | `subscribe`   | none (channel in envelope)                     |
-| client → server | `unsubscribe` | none                                           |
+| Direction       | Type          | Payload                                                                                                                             |
+| --------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| client → server | `subscribe`   | none (channel in envelope)                                                                                                          |
+| client → server | `unsubscribe` | none                                                                                                                                |
 | client → server | `message`     | `{ message: UIMessage }` (only the newest message; the server rebuilds the rest of the conversation from its own persisted history) |
-| client → server | `abort`       | none                                           |
-| server → client | `subscribed`  | none (ack)                                     |
-| server → client | `chunk`       | one UIMessage stream chunk, format unchanged   |
-| server → client | `done`        | none (stream complete; client closes its ReadableStream) |
-| server → client | `error`       | `{ code, message }` (maps the HTTP exceptions) |
+| client → server | `abort`       | none                                                                                                                                |
+| server → client | `subscribed`  | none (ack)                                                                                                                          |
+| server → client | `chunk`       | one UIMessage stream chunk, format unchanged                                                                                        |
+| server → client | `done`        | none (stream complete; client closes its ReadableStream)                                                                            |
+| server → client | `error`       | `{ code, message }` (maps the HTTP exceptions)                                                                                      |
 
 Liveness: an app-level heartbeat, not WS-level ping/pong. Browser JS cannot
 observe WS-level ping frames, so the client cannot detect a missed one that

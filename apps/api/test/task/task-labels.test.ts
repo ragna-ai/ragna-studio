@@ -17,7 +17,12 @@ const taskLabelSchema = z.object({
 const taskLabelListResponseSchema = z.object({ taskLabels: z.array(taskLabelSchema) });
 const taskLabelResponseSchema = z.object({ taskLabel: taskLabelSchema });
 
-async function createTaskLabel(cookieHeader: string, workspaceId: string, name = 'Bug', color = '#ff0000') {
+async function createTaskLabel(
+  cookieHeader: string,
+  workspaceId: string,
+  name = 'Bug',
+  color = '#ff0000',
+) {
   const response = await app.request(`/workspace/${workspaceId}/task-label`, {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
@@ -116,10 +121,10 @@ describe('DELETE /workspace/:workspaceId/task-label/:taskLabelId', () => {
       .object({ task: z.object({ id: z.string() }) })
       .parse(await createTaskResponse.json());
 
-    const deleteResponse = await app.request(
-      `/workspace/${workspaceId}/task-label/${created.id}`,
-      { method: 'DELETE', headers: { cookie: cookieHeader } },
-    );
+    const deleteResponse = await app.request(`/workspace/${workspaceId}/task-label/${created.id}`, {
+      method: 'DELETE',
+      headers: { cookie: cookieHeader },
+    });
     expect(deleteResponse.status).toBe(StatusCodes.OK);
 
     const listResponse = await app.request(`/workspace/${workspaceId}/task-label`, {

@@ -68,7 +68,9 @@ function collectParticipants(messages: MailMessageMetadata[]): EmailParticipant[
 // lastMessageAt come from the most recent message, participants are the
 // dedup'd union across all of them.
 export function summarizeThread(messages: MailMessageMetadata[]): ThreadSummary {
-  const latest = messages.reduce((newest, message) => (message.date > newest.date ? message : newest));
+  const latest = messages.reduce((newest, message) =>
+    message.date > newest.date ? message : newest,
+  );
 
   return {
     subject: latest.subject,

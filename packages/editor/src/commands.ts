@@ -80,11 +80,7 @@ export function isInsideTable(editor: Editor): boolean {
 }
 
 export function insertTable(editor: Editor): boolean {
-  return editor
-    .chain()
-    .focus()
-    .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-    .run();
+  return editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
 }
 
 export function addRowBefore(editor: Editor): boolean {

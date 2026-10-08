@@ -10,7 +10,10 @@ import {
   seedConnectedMicrosoftAccount,
   seedEmailThreadWithMessage,
 } from './support/email-fixtures';
-import { seedGmailLinkedAccount, seedGoogleAccountWithoutGmailScope } from './support/gmail-account-fixtures';
+import {
+  seedGmailLinkedAccount,
+  seedGoogleAccountWithoutGmailScope,
+} from './support/gmail-account-fixtures';
 import { getProfileMock, resetMailProviderMock } from './support/mail-provider.mock';
 import {
   seedMicrosoftAccountWithoutMailScope,
@@ -75,7 +78,11 @@ describe('GET /email/account', () => {
 
   test('reports the connected account after connecting', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    const connected = await seedConnectedGmailAccount({ userId, cookieHeader, email: 'me@gmail.test' });
+    const connected = await seedConnectedGmailAccount({
+      userId,
+      cookieHeader,
+      email: 'me@gmail.test',
+    });
 
     const response = await app.request('/email/account', { headers: { cookie: cookieHeader } });
 
@@ -118,7 +125,9 @@ describe('POST /email/account/connect - gmail', () => {
     expect(body.account.userId).toBe(userId);
     expect(body.account.syncState).toBe('idle');
 
-    const categoriesResponse = await app.request('/email/category', { headers: { cookie: cookieHeader } });
+    const categoriesResponse = await app.request('/email/category', {
+      headers: { cookie: cookieHeader },
+    });
     const categoriesBody = z
       .object({ categories: z.array(z.object({ name: z.string(), autoDraft: z.boolean() })) })
       .parse(await categoriesResponse.json());
@@ -232,7 +241,9 @@ describe('POST /email/account/disconnect', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
 
-    const statusResponse = await app.request('/email/account', { headers: { cookie: cookieHeader } });
+    const statusResponse = await app.request('/email/account', {
+      headers: { cookie: cookieHeader },
+    });
     const statusBody = statusResponseSchema.parse(await statusResponse.json());
     expect(statusBody.connected).toBe(false);
 

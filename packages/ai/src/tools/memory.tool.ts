@@ -48,7 +48,7 @@ export const getMemoryTool = (
 ): Tool<MemoryInput, MemoryOutput> =>
   tool({
     description:
-      "Use this tool to save or update durable, long-term facts about the user or their work in your persistent memory. The whole document is shown to you again at the start of every future conversation. `append` adds a new fact; `replace` edits or removes one you saved earlier.",
+      'Use this tool to save or update durable, long-term facts about the user or their work in your persistent memory. The whole document is shown to you again at the start of every future conversation. `append` adds a new fact; `replace` edits or removes one you saved earlier.',
     inputSchema: memoryInputSchema,
     execute: async (input) => {
       // emit tool usage message

@@ -22,7 +22,10 @@ const { t } = useI18n();
 const { mutate: discardDraft } = useDiscardEmailDraft();
 
 function isActive(draft: EmailDraft): boolean {
-  return draft.id === props.activeDraftId || (draft.threadId !== null && draft.threadId === props.activeThreadId);
+  return (
+    draft.id === props.activeDraftId ||
+    (draft.threadId !== null && draft.threadId === props.activeThreadId)
+  );
 }
 </script>
 
@@ -31,7 +34,10 @@ function isActive(draft: EmailDraft): boolean {
     <div v-if="props.isLoading" class="flex flex-1 items-center justify-center">
       <Spinner />
     </div>
-    <p v-else-if="props.drafts.length === 0" class="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+    <p
+      v-else-if="props.drafts.length === 0"
+      class="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground"
+    >
       {{ t('email.draftsFolder.empty') }}
     </p>
     <ul v-else class="min-h-0 flex-1 overflow-y-auto">

@@ -170,5 +170,7 @@ export async function deleteEmailDraft({
   id: string;
   accountId: string;
 }): Promise<void> {
-  await db.delete(emailDraft).where(and(eq(emailDraft.id, id), eq(emailDraft.accountId, accountId)));
+  await db
+    .delete(emailDraft)
+    .where(and(eq(emailDraft.id, id), eq(emailDraft.accountId, accountId)));
 }

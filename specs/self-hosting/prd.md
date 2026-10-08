@@ -10,7 +10,7 @@ practice, a self-hosted instance is broken in visible ways:
 1. **Media URLs point at ragna.io.** `toPublicMediaUrl` in
    `packages/storage/src/lib/image-urls.ts` hardcodes
    `https://images.ragna.io/${key}`. A self-hoster's images and videos land
-   in *their* bucket, but every URL points at *our* CDN. Nothing renders.
+   in _their_ bucket, but every URL points at _our_ CDN. Nothing renders.
 2. **Storage is Cloudflare R2 only.** `createS3Client` builds the endpoint as
    `https://<accountId>.r2.cloudflarestorage.com`. MinIO, AWS S3, Hetzner
    and others can't be used. Even trying it on localhost needs a Cloudflare
@@ -33,10 +33,10 @@ The current `self-hosting.md` only covers `make up-dev-full` on localhost.
 
 ## Targets
 
-| Target | Who | Notes |
-| --- | --- | --- |
-| Linux VM | Anyone with a server and a domain | Docker Compose, own reverse proxy with TLS |
-| Localhost | Trying it out, including Macs | Docker Compose, any S3-compatible storage the user runs or rents |
+| Target    | Who                               | Notes                                                            |
+| --------- | --------------------------------- | ---------------------------------------------------------------- |
+| Linux VM  | Anyone with a server and a domain | Docker Compose, own reverse proxy with TLS                       |
+| Localhost | Trying it out, including Macs     | Docker Compose, any S3-compatible storage the user runs or rents |
 
 ## Goals
 
@@ -69,14 +69,14 @@ The current `self-hosting.md` only covers `make up-dev-full` on localhost.
 The storage env vars are renamed now, so self-hosters never configure a
 MinIO or AWS bucket through `CF_*` names:
 
-| Old | New | Notes |
-| --- | --- | --- |
-| `CF_ACCOUNT_ID` + `CF_REGION` | `S3_ENDPOINT` | Full endpoint URL. Required. Both old values become part of the hostname. |
-| (none) | `S3_REGION` | New. Signing region, passed to s3mini. Optional, default `auto`. |
-| `CF_ACCESS_KEY_ID` | `S3_ACCESS_KEY_ID` | |
-| `CF_SECRET_ACCESS_KEY` | `S3_SECRET_ACCESS_KEY` | Secret, read via `getSecret`. |
-| `CF_IMAGES_BUCKET_NAME` | `S3_IMAGES_BUCKET_NAME` | |
-| `CF_DOCUMENTS_BUCKET_NAME` | `S3_DOCUMENTS_BUCKET_NAME` | |
+| Old                           | New                        | Notes                                                                     |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------- |
+| `CF_ACCOUNT_ID` + `CF_REGION` | `S3_ENDPOINT`              | Full endpoint URL. Required. Both old values become part of the hostname. |
+| (none)                        | `S3_REGION`                | New. Signing region, passed to s3mini. Optional, default `auto`.          |
+| `CF_ACCESS_KEY_ID`            | `S3_ACCESS_KEY_ID`         |                                                                           |
+| `CF_SECRET_ACCESS_KEY`        | `S3_SECRET_ACCESS_KEY`     | Secret, read via `getSecret`.                                             |
+| `CF_IMAGES_BUCKET_NAME`       | `S3_IMAGES_BUCKET_NAME`    |                                                                           |
+| `CF_DOCUMENTS_BUCKET_NAME`    | `S3_DOCUMENTS_BUCKET_NAME` |                                                                           |
 
 `CF_REGION` is not renamed to `S3_REGION`. The two mean different things:
 

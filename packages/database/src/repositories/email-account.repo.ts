@@ -3,7 +3,12 @@ import { db } from '../db';
 import type { EmailAccount, NewEmailAccount } from '../schema';
 import { emailAccount } from '../schema';
 
-export type { EmailAccount, EmailAccountSyncState, EmailProvider, NewEmailAccount } from '../schema';
+export type {
+  EmailAccount,
+  EmailAccountSyncState,
+  EmailProvider,
+  NewEmailAccount,
+} from '../schema';
 
 export async function createEmailAccount(values: NewEmailAccount): Promise<EmailAccount> {
   const [created] = await db.insert(emailAccount).values(values).returning();

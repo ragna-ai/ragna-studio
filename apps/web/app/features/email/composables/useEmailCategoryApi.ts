@@ -15,15 +15,23 @@ export function useGetEmailCategories() {
   return useQuery<EmailCategoryListResponse>({
     queryKey: emailKeys.categories(),
     queryFn: ({ signal }) =>
-      $api<EmailCategoryListResponse>('/email/category', { method: 'GET', signal }),
+      $api<EmailCategoryListResponse>('/email/category', {
+        method: 'GET',
+        signal,
+      }),
   });
 }
 
 export function useCreateEmailCategory() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailCategoryResponse, unknown, CreateEmailCategoryRequest>({
-    mutationFn: (body) => $api<EmailCategoryResponse>('/email/category', { method: 'POST', body }),
+  return useMutation<
+    EmailCategoryResponse,
+    unknown,
+    CreateEmailCategoryRequest
+  >({
+    mutationFn: (body) =>
+      $api<EmailCategoryResponse>('/email/category', { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.categories() });
       toast.success('Category created');
@@ -41,9 +49,16 @@ interface UpdateEmailCategoryVariables extends UpdateEmailCategoryRequest {
 export function useUpdateEmailCategory() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
-  return useMutation<EmailCategoryResponse, unknown, UpdateEmailCategoryVariables>({
+  return useMutation<
+    EmailCategoryResponse,
+    unknown,
+    UpdateEmailCategoryVariables
+  >({
     mutationFn: ({ categoryId, ...body }) =>
-      $api<EmailCategoryResponse>(`/email/category/${categoryId}`, { method: 'PATCH', body }),
+      $api<EmailCategoryResponse>(`/email/category/${categoryId}`, {
+        method: 'PATCH',
+        body,
+      }),
     onSuccess: () => {
       // Categories drive thread badges/filters too, not just the settings
       // list, so a broad invalidation keeps both in sync.
@@ -61,7 +76,8 @@ export function useDeleteEmailCategory() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
-    mutationFn: (categoryId) => $api<void>(`/email/category/${categoryId}`, { method: 'DELETE' }),
+    mutationFn: (categoryId) =>
+      $api<void>(`/email/category/${categoryId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.categories() });
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });

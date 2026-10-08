@@ -38,5 +38,8 @@ export function splitForHighlight(
   return text
     .split(pattern)
     .filter((part) => part.length > 0)
-    .map((part) => ({ text: part, matched: part.toLowerCase() === lowerQuery }));
+    .map((part) => ({
+      text: part,
+      matched: part.toLowerCase() === lowerQuery,
+    }));
 }

@@ -16,18 +16,18 @@ Workspace-scoped per the container model
 
 Settled in discussion on 2026-07-21.
 
-| Decision          | Choice                                                                                                   |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| **Data source**   | Reuse existing tables. No new tables, no activity/feed table, no join tables. The entities already carry `workspace_id` and `updated_at`. |
-| **API shape**     | One aggregated endpoint: `GET /workspace/:workspaceId/overview`. Four parallel queries via `Promise.all`. One round trip, one loading state. |
-| **Response**      | Per-section keys, not a homogenized union: `{ tasks, chats, workflows, agents }`, each `{ items, total }`. Adding a section later is one query, one key, one card. |
-| **Item limit**    | 5 per section, sorted by `updatedAt` desc.                                                                |
-| **DTOs**          | Slim projections, only what the card renders. Never full rows.                                            |
-| **Caching**       | None in v1. `cache.service.ts` exists if it's ever measurably needed.                                     |
-| **Indexes**       | Existing `workspace_id` indexes suffice at current scale. No composite `(workspace_id, updated_at)` index in v1. |
-| **Task statuses** | The tasks card only shows `todo`, `in_progress`, and `in_review`, in both `items` and `total`. Canceled is noise, backlog can be substantial, and done needs no attention; the card is about actionable work (decided 2026-07-21, `in_review` added 2026-07-24). |
-| **Card order**    | Tasks, Chats, Workflows, Agents (most action-oriented first).                                             |
-| **Tasks grouping** | Display-only, client-side, same pattern as `TaskListView.vue`. API returns a flat recency-sorted list.   |
+| Decision           | Choice                                                                                                                                                                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Data source**    | Reuse existing tables. No new tables, no activity/feed table, no join tables. The entities already carry `workspace_id` and `updated_at`.                                                                                                                        |
+| **API shape**      | One aggregated endpoint: `GET /workspace/:workspaceId/overview`. Four parallel queries via `Promise.all`. One round trip, one loading state.                                                                                                                     |
+| **Response**       | Per-section keys, not a homogenized union: `{ tasks, chats, workflows, agents }`, each `{ items, total }`. Adding a section later is one query, one key, one card.                                                                                               |
+| **Item limit**     | 5 per section, sorted by `updatedAt` desc.                                                                                                                                                                                                                       |
+| **DTOs**           | Slim projections, only what the card renders. Never full rows.                                                                                                                                                                                                   |
+| **Caching**        | None in v1. `cache.service.ts` exists if it's ever measurably needed.                                                                                                                                                                                            |
+| **Indexes**        | Existing `workspace_id` indexes suffice at current scale. No composite `(workspace_id, updated_at)` index in v1.                                                                                                                                                 |
+| **Task statuses**  | The tasks card only shows `todo`, `in_progress`, and `in_review`, in both `items` and `total`. Canceled is noise, backlog can be substantial, and done needs no attention; the card is about actionable work (decided 2026-07-21, `in_review` added 2026-07-24). |
+| **Card order**     | Tasks, Chats, Workflows, Agents (most action-oriented first).                                                                                                                                                                                                    |
+| **Tasks grouping** | Display-only, client-side, same pattern as `TaskListView.vue`. API returns a flat recency-sorted list.                                                                                                                                                           |
 
 ## Goals (v1)
 
@@ -65,46 +65,53 @@ Response:
 {
   "tasks": {
     "items": [
-      { "id": "...", "number": 12, "title": "...", "status": "in_progress", "dueDate": null, "updatedAt": "..." }
+      {
+        "id": "...",
+        "number": 12,
+        "title": "...",
+        "status": "in_progress",
+        "dueDate": null,
+        "updatedAt": "...",
+      },
     ],
-    "total": 23
+    "total": 23,
   },
   "chats": {
-    "items": [
-      { "id": "...", "title": "...", "agentName": "Research Agent", "updatedAt": "..." }
-    ],
-    "total": 41
+    "items": [{ "id": "...", "title": "...", "agentName": "Research Agent", "updatedAt": "..." }],
+    "total": 41,
   },
   "workflows": {
-    "items": [
-      { "id": "...", "name": "...", "lastRunStatus": "completed", "updatedAt": "..." }
-    ],
-    "total": 7
+    "items": [{ "id": "...", "name": "...", "lastRunStatus": "completed", "updatedAt": "..." }],
+    "total": 7,
   },
   "agents": {
     "items": [
-      { "id": "...", "name": "...", "description": "...", "modelName": "Claude Sonnet 5", "updatedAt": "..." }
+      {
+        "id": "...",
+        "name": "...",
+        "description": "...",
+        "modelName": "Claude Sonnet 5",
+        "updatedAt": "...",
+      },
     ],
-    "total": 5
+    "total": 5,
   },
   "documents": {
-    "items": [
-      { "id": "...", "title": "...", "updatedAt": "..." }
-    ],
-    "total": 12
-  }
+    "items": [{ "id": "...", "title": "...", "updatedAt": "..." }],
+    "total": 12,
+  },
 }
 ```
 
 ### DTO notes
 
-| Section       | Fields                                                | Joins / notes                                                                 |
-| ------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Section       | Fields                                                                | Joins / notes                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Tasks**     | `id`, `number`, `title`, `status`, `priority`, `dueDate`, `updatedAt` | No labels/assignee: skips the many-to-many join. `priority` is a scalar column and the web already has display helpers for it. Rendered as `TSK-<number>`. |
-| **Chats**     | `id`, `title`, `agentName`, `updatedAt`               | Joins `agents` for the name. No message snippet (would need a `chat_messages` join per chat). |
-| **Workflows** | `id`, `name`, `lastRunStatus`, `updatedAt`            | Latest run via relational query (`runs`, limit 1, `createdAt` desc). `lastRunStatus` is `null` when never run. |
-| **Agents**    | `id`, `name`, `description`, `modelName`, `updatedAt` | Joins `ai_models` for the display name.                                        |
-| **Documents** | `id`, `title`, `updatedAt`                            | No `content`, no folder/author joins. Title and recency are enough at overview granularity. |
+| **Chats**     | `id`, `title`, `agentName`, `updatedAt`                               | Joins `agents` for the name. No message snippet (would need a `chat_messages` join per chat).                                                              |
+| **Workflows** | `id`, `name`, `lastRunStatus`, `updatedAt`                            | Latest run via relational query (`runs`, limit 1, `createdAt` desc). `lastRunStatus` is `null` when never run.                                             |
+| **Agents**    | `id`, `name`, `description`, `modelName`, `updatedAt`                 | Joins `ai_models` for the display name.                                                                                                                    |
+| **Documents** | `id`, `title`, `updatedAt`                                            | No `content`, no folder/author joins. Title and recency are enough at overview granularity.                                                                |
 
 `total` is a `count(*)` per entity per workspace, fetched in the same
 `Promise.all`. The tasks query and count both include only `todo` and

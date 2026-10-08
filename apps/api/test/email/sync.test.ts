@@ -49,9 +49,9 @@ describe('POST /email/account/sync', () => {
     const response = await triggerSync(cookieHeader);
 
     expect(response.status).toBe(StatusCodes.ACCEPTED);
-    const body = z.object({ account: z.object({ id: z.string(), syncState: z.string() }) }).parse(
-      await response.json(),
-    );
+    const body = z
+      .object({ account: z.object({ id: z.string(), syncState: z.string() }) })
+      .parse(await response.json());
     expect(body.account.id).toBe(accountId);
     expect(emailSyncAddMock).toHaveBeenCalledTimes(1);
     expect(emailSyncAddMock.mock.calls[0]?.[2]).toMatchObject({ jobId: accountId });

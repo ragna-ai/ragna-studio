@@ -1,5 +1,10 @@
 import type { Folder } from '@repo/database';
-import { createFolder, deleteFolderById, getFoldersByWorkspaceId, renameFolder } from '@repo/database';
+import {
+  createFolder,
+  deleteFolderById,
+  getFoldersByWorkspaceId,
+  renameFolder,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -7,11 +12,7 @@ import { InternalServerErrorException, NotFoundException } from '../exceptions';
 /**
  * [GET] /workspace/:workspaceId/folder
  */
-export async function listFolders({
-  workspaceId,
-}: {
-  workspaceId: string;
-}): Promise<Folder[]> {
+export async function listFolders({ workspaceId }: { workspaceId: string }): Promise<Folder[]> {
   const { error, data: folders } = await tryCatch(() => getFoldersByWorkspaceId({ workspaceId }));
 
   if (error !== null || !folders) {

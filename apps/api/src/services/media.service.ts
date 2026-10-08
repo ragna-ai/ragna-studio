@@ -393,7 +393,11 @@ export async function deleteWorkspaceMediaObjects({
     const { error: deleteError, data } = await tryCatch(() => deleteObjects(bucket, storageKeys));
 
     if (deleteError !== null) {
-      logger.error('Failed to delete media objects from R2', { error: deleteError, bucket, storageKeys });
+      logger.error('Failed to delete media objects from R2', {
+        error: deleteError,
+        bucket,
+        storageKeys,
+      });
       continue;
     }
 

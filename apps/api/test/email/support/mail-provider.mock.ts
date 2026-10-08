@@ -47,7 +47,11 @@ export function buildFakeMailMessage(overrides: Partial<MailMessage> = {}): Mail
     folder: overrides.folder ?? 'inbox',
     unread: overrides.unread ?? false,
     starred: overrides.starred ?? false,
-    body: overrides.body ?? { text: 'Hello from a fake message.', html: '<p>Hello from a fake message.</p>', attachments: [] },
+    body: overrides.body ?? {
+      text: 'Hello from a fake message.',
+      html: '<p>Hello from a fake message.</p>',
+      attachments: [],
+    },
     messageIdHeader: overrides.messageIdHeader ?? `<${id}@mail.test>`,
     inReplyTo: overrides.inReplyTo ?? null,
     references: overrides.references ?? [],
@@ -80,7 +84,10 @@ export function buildFakeMailDraft(overrides: Partial<MailDraft> = {}): MailDraf
 // --- Per-method mocks -----------------------------------------------------
 
 function defaultGetProfileImpl(): Promise<MailAccountProfile> {
-  return Promise.resolve({ emailAddress: 'mocked-gmail-user@example.test', cursor: 'history-cursor-0' });
+  return Promise.resolve({
+    emailAddress: 'mocked-gmail-user@example.test',
+    cursor: 'history-cursor-0',
+  });
 }
 
 function defaultSyncFromCursorImpl(cursor: string): Promise<MailSyncOutcome> {
@@ -96,15 +103,24 @@ function defaultFetchThreadImpl(threadId: MailProviderId): Promise<MailThread> {
 // 'metadata' caller only reads the metadata fields). TypeScript checks
 // assignability against an overloaded property using only the last
 // overload signature, which here is the 'full' one.
-function defaultFetchMessageImpl(messageId: MailProviderId, _format: 'metadata' | 'full'): Promise<MailMessage> {
+function defaultFetchMessageImpl(
+  messageId: MailProviderId,
+  _format: 'metadata' | 'full',
+): Promise<MailMessage> {
   return Promise.resolve(buildFakeMailMessage({ id: messageId }));
 }
 
 function defaultSendImpl(_input: SendMailInput): Promise<SendMailResult> {
-  return Promise.resolve({ messageId: nextFixtureId('sent-message'), threadId: nextFixtureId('sent-thread') });
+  return Promise.resolve({
+    messageId: nextFixtureId('sent-message'),
+    threadId: nextFixtureId('sent-thread'),
+  });
 }
 
-function defaultSetArchivedImpl(messageId: MailProviderId, archived: boolean): Promise<MailActionResult> {
+function defaultSetArchivedImpl(
+  messageId: MailProviderId,
+  archived: boolean,
+): Promise<MailActionResult> {
   return Promise.resolve({
     messageId,
     threadId: 'thread-default',
@@ -115,7 +131,10 @@ function defaultSetArchivedImpl(messageId: MailProviderId, archived: boolean): P
   });
 }
 
-function defaultSetTrashedImpl(messageId: MailProviderId, trashed: boolean): Promise<MailActionResult> {
+function defaultSetTrashedImpl(
+  messageId: MailProviderId,
+  trashed: boolean,
+): Promise<MailActionResult> {
   return Promise.resolve({
     messageId,
     threadId: 'thread-default',
@@ -126,7 +145,10 @@ function defaultSetTrashedImpl(messageId: MailProviderId, trashed: boolean): Pro
   });
 }
 
-function defaultSetStarredImpl(messageId: MailProviderId, starred: boolean): Promise<MailActionResult> {
+function defaultSetStarredImpl(
+  messageId: MailProviderId,
+  starred: boolean,
+): Promise<MailActionResult> {
   return Promise.resolve({
     messageId,
     threadId: 'thread-default',
@@ -178,7 +200,10 @@ function defaultCreateDraftImpl(_input: SendMailInput): Promise<MailDraft> {
   return Promise.resolve(buildFakeMailDraft());
 }
 
-function defaultUpdateDraftImpl(draftId: MailProviderId, _input: SendMailInput): Promise<MailDraft> {
+function defaultUpdateDraftImpl(
+  draftId: MailProviderId,
+  _input: SendMailInput,
+): Promise<MailDraft> {
   return Promise.resolve(buildFakeMailDraft({ id: draftId }));
 }
 
@@ -191,7 +216,10 @@ function defaultListDraftsImpl(): Promise<MailDraftSummary[]> {
 }
 
 function defaultSendDraftImpl(_draftId: MailProviderId): Promise<SendMailResult> {
-  return Promise.resolve({ messageId: nextFixtureId('sent-message'), threadId: nextFixtureId('sent-thread') });
+  return Promise.resolve({
+    messageId: nextFixtureId('sent-message'),
+    threadId: nextFixtureId('sent-thread'),
+  });
 }
 
 function defaultDeleteDraftImpl(_draftId: MailProviderId): Promise<void> {
@@ -243,7 +271,9 @@ const fakeMailProvider: MailProvider = {
 };
 
 // Ignores which provider was requested - one fake MailProvider serves both.
-export const createMailProviderMock = mock((_options: CreateMailProviderOptions) => fakeMailProvider);
+export const createMailProviderMock = mock(
+  (_options: CreateMailProviderOptions) => fakeMailProvider,
+);
 
 export function resetMailProviderMock(): void {
   getProfileMock.mockClear();

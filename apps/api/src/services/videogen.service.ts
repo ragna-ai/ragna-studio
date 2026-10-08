@@ -260,7 +260,10 @@ function isEnhanceAlreadyExistsError(error: Error): boolean {
 }
 
 function isNotEnhanceableDraftError(error: Error): boolean {
-  return error.message.includes('is not a BFL draft') || error.message.includes('is not a completed draft');
+  return (
+    error.message.includes('is not a BFL draft') ||
+    error.message.includes('is not a completed draft')
+  );
 }
 
 /**

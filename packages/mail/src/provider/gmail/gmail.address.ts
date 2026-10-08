@@ -69,15 +69,19 @@ function parseSingleAddress(entry: string): MailAddress {
 
 /** Decodes RFC 2047 encoded-words (`=?charset?B|Q?...?=`) found anywhere in `input`. */
 export function decodeMimeWords(input: string): string {
-  return input.replace(ENCODED_WORD_RE, (_match, charset: string, encoding: string, text: string) => {
-    const bytes = encoding.toUpperCase() === 'B' ? Buffer.from(text, 'base64') : decodeQuotedPrintable(text);
+  return input.replace(
+    ENCODED_WORD_RE,
+    (_match, charset: string, encoding: string, text: string) => {
+      const bytes =
+        encoding.toUpperCase() === 'B' ? Buffer.from(text, 'base64') : decodeQuotedPrintable(text);
 
-    try {
-      return new TextDecoder(charset.toLowerCase()).decode(bytes);
-    } catch {
-      return bytes.toString('utf-8');
-    }
-  });
+      try {
+        return new TextDecoder(charset.toLowerCase()).decode(bytes);
+      } catch {
+        return bytes.toString('utf-8');
+      }
+    },
+  );
 }
 
 function decodeQuotedPrintable(text: string): Buffer {

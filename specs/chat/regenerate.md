@@ -8,12 +8,12 @@ by the new one in place; nothing else in the conversation changes.
 
 ## Decisions
 
-| Decision       | Choice                                                                                                   |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Scope**       | Only the *last* assistant message is regenerable. Regenerating an earlier reply (which would also invalidate everything after it) is out of scope — see Non-goals. |
+| Decision        | Choice                                                                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Scope**       | Only the _last_ assistant message is regenerable. Regenerating an earlier reply (which would also invalidate everything after it) is out of scope — see Non-goals.                                           |
 | **History**     | The old response is deleted, not kept. No ChatGPT-style "‹ 1/2 ›" version switcher. If regeneration fails or is aborted, the old response is left untouched (nothing is deleted until the new one succeeds). |
-| **Entry point** | New "Regenerate" item in the existing hover "⋯" dropdown in `ChatMessage.vue` (same menu branching added), shown only on the last assistant message. |
-| **Cost**        | A regenerate is a real model call and is credit-gated exactly like a normal turn (`specs/credits/prd.md`) — regenerating a response the user didn't like still costs credits. |
+| **Entry point** | New "Regenerate" item in the existing hover "⋯" dropdown in `ChatMessage.vue` (same menu branching added), shown only on the last assistant message.                                                         |
+| **Cost**        | A regenerate is a real model call and is credit-gated exactly like a normal turn (`specs/credits/prd.md`) — regenerating a response the user didn't like still costs credits.                                |
 
 ## Why last-message-only, discard-not-keep
 

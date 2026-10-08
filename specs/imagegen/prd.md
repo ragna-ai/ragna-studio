@@ -93,7 +93,7 @@ a capability model.
 capabilities: jsonb('capabilities').default('{}').$type<AiModelCapabilities>(),
 ```
 
-Drizzle JSON-serialises the default, so every row stores the JSON *string*
+Drizzle JSON-serialises the default, so every row stores the JSON _string_
 `"{}"`, not an object. Verified against the dev database:
 
 ```
@@ -127,11 +127,11 @@ Reference values for the image rows currently in the database (`flux-2-max`,
 `flux-2-flex`, `flux-2-pro-preview`, `gpt-image-1`,
 `imagen-4.0-generate-001`), derived from the installed SDKs:
 
-| model | supportsNegativePrompt | supportsSeed | supportsReferenceImages | maxReferenceImages |
-| --- | --- | --- | --- | --- |
-| `flux-2-*` (bfl) | – | true | true | 4 |
-| `gpt-image-1` (openai) | – | – (SDK warns "unsupported") | true | 4 |
-| `imagen-4.0-generate-001` (google-vertex) | true | true | – | – |
+| model                                     | supportsNegativePrompt | supportsSeed                | supportsReferenceImages | maxReferenceImages |
+| ----------------------------------------- | ---------------------- | --------------------------- | ----------------------- | ------------------ |
+| `flux-2-*` (bfl)                          | –                      | true                        | true                    | 4                  |
+| `gpt-image-1` (openai)                    | –                      | – (SDK warns "unsupported") | true                    | 4                  |
+| `imagen-4.0-generate-001` (google-vertex) | true                   | true                        | –                       | –                  |
 
 Note the seed file (`packages/database/src/seed/index.ts`) lists
 `flux-2-pro`, which no longer matches any row in the database.
@@ -182,7 +182,7 @@ the body carries `aiModelId`.
 `image-urls.ts` gains a sibling to `getImgGenBucketNameForUser`:
 
 ```ts
-export function getImgRefBucketNameForUser(userId: string): { bucketName: string; prefix: string }
+export function getImgRefBucketNameForUser(userId: string): { bucketName: string; prefix: string };
 // → { bucketName: config.cfImagesBucketName, prefix: `${userId}/images/references` }
 ```
 

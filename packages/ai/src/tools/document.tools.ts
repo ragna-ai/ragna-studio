@@ -1,5 +1,10 @@
 import type { DocumentWithRelations } from '@repo/database';
-import { createDocument, getDocumentById, getDocumentsByWorkspaceId, updateDocument } from '@repo/database';
+import {
+  createDocument,
+  getDocumentById,
+  getDocumentsByWorkspaceId,
+  updateDocument,
+} from '@repo/database';
 import { tryCatch } from '@repo/utils';
 import type {
   InferToolInput,
@@ -38,7 +43,9 @@ function toErrorMessage(error: unknown, fallback: string): string {
 const listDocumentsInputSchema = z.object({});
 
 type ListDocumentsInput = z.infer<typeof listDocumentsInputSchema>;
-type ListDocumentsOutput = { documents: ReturnType<typeof toDocumentSummary>[] } | { error: string };
+type ListDocumentsOutput =
+  | { documents: ReturnType<typeof toDocumentSummary>[] }
+  | { error: string };
 
 export const getListDocumentsTool = (
   writer: UIMessageStreamWriter<UIMessage<never, any>>,

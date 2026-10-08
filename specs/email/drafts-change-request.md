@@ -50,17 +50,17 @@ Sources:
 
 ## Decisions
 
-| Question | Decision |
-| --- | --- |
-| Where drafts live | **Hybrid.** Local row is the editing/autosave target; debounced write-back to Gmail. |
-| AI vs user drafts | **One table, one component.** `email_drafts` gains `origin`, `kind`, recipients, subject. |
-| New mail placement | **Own route** `/mail/draft/:draftId`, draft panel with no thread below. |
-| Drafts menu | **All drafts**, including ones created in Gmail elsewhere. |
-| Creation timing | Local row on open; pushed to Gmail once it has recipients or body text. |
-| Concurrency | **One active draft per thread.** |
-| Forward attachments | Prefilled from the forwarded message, individually removable. |
-| Discard | Deletes the Gmail draft too. |
-| AI drafts to Gmail | Pushed as soon as status flips to `ready`. |
+| Question            | Decision                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| Where drafts live   | **Hybrid.** Local row is the editing/autosave target; debounced write-back to Gmail.      |
+| AI vs user drafts   | **One table, one component.** `email_drafts` gains `origin`, `kind`, recipients, subject. |
+| New mail placement  | **Own route** `/mail/draft/:draftId`, draft panel with no thread below.                   |
+| Drafts menu         | **All drafts**, including ones created in Gmail elsewhere.                                |
+| Creation timing     | Local row on open; pushed to Gmail once it has recipients or body text.                   |
+| Concurrency         | **One active draft per thread.**                                                          |
+| Forward attachments | Prefilled from the forwarded message, individually removable.                             |
+| Discard             | Deletes the Gmail draft too.                                                              |
+| AI drafts to Gmail  | Pushed as soon as status flips to `ready`.                                                |
 
 ## Scope
 
@@ -99,13 +99,13 @@ drafts already appear. `EmailComposer` stays the shared form underneath;
 
 Entry points and where the panel appears:
 
-| Action | Route | Below the panel |
-| --- | --- | --- |
-| Reply / Reply all | `/mail/:threadId` | the thread |
-| Forward | `/mail/:threadId` | the thread |
-| New mail | `/mail/draft/:draftId` | nothing |
-| Open from Drafts list | thread route if it has one, else `/mail/draft/:id` | thread, if any |
-| AI draft (unchanged) | `/mail/:threadId` | the thread |
+| Action                | Route                                              | Below the panel |
+| --------------------- | -------------------------------------------------- | --------------- |
+| Reply / Reply all     | `/mail/:threadId`                                  | the thread      |
+| Forward               | `/mail/:threadId`                                  | the thread      |
+| New mail              | `/mail/draft/:draftId`                             | nothing         |
+| Open from Drafts list | thread route if it has one, else `/mail/draft/:id` | thread, if any  |
+| AI draft (unchanged)  | `/mail/:threadId`                                  | the thread      |
 
 The panel header states which kind it is (Reply / Forward / New message)
 and, for `origin: 'ai'`, keeps the sparkle badge and the `generating`
@@ -258,7 +258,7 @@ interface EmailDraft {
   cc: EmailParticipant[];
   bcc: EmailParticipant[];
   subject: string | null;
-  content: string;              // markdown
+  content: string; // markdown
   attachments: EmailDraftAttachment[];
   status: 'generating' | 'ready' | 'discarded' | 'sent';
   providerDraftId: string | null;
@@ -279,15 +279,15 @@ interface EmailDraftAttachment {
 }
 ```
 
-| Endpoint | Request | Response |
-| --- | --- | --- |
-| `POST /email/draft` | `{ kind, threadId?, replyToMessageId? }` | `{ draft }` |
-| `GET /email/draft` | optional `?threadId=` — absent means every non-terminal draft on the account (the Drafts folder) | `{ drafts }` |
-| `GET /email/draft/:draftId` | — | `{ draft }`, 404 when gone |
-| `GET /email/draft/pending` | — (unchanged: AI review queue) | `{ drafts }` |
-| `PATCH /email/draft/:draftId` | any of `{ to, cc, bcc, subject, content, attachments }` | `{ draft }` |
-| `POST /email/draft/:draftId/discard` | — | `{ draft }` |
-| `POST /email/draft/:draftId/send` | unchanged multipart form | unchanged `SendEmailResponse` |
+| Endpoint                             | Request                                                                                          | Response                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `POST /email/draft`                  | `{ kind, threadId?, replyToMessageId? }`                                                         | `{ draft }`                   |
+| `GET /email/draft`                   | optional `?threadId=` — absent means every non-terminal draft on the account (the Drafts folder) | `{ drafts }`                  |
+| `GET /email/draft/:draftId`          | —                                                                                                | `{ draft }`, 404 when gone    |
+| `GET /email/draft/pending`           | — (unchanged: AI review queue)                                                                   | `{ drafts }`                  |
+| `PATCH /email/draft/:draftId`        | any of `{ to, cc, bcc, subject, content, attachments }`                                          | `{ draft }`                   |
+| `POST /email/draft/:draftId/discard` | —                                                                                                | `{ draft }`                   |
+| `POST /email/draft/:draftId/send`    | unchanged multipart form                                                                         | unchanged `SendEmailResponse` |
 
 `origin`, `kind`, `threadId`, `replyToMessageId` and `agentId` are set at
 creation only and are rejected by `PATCH`. `POST /email/draft` refuses a

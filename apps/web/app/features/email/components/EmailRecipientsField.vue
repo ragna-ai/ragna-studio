@@ -22,15 +22,23 @@ const model = defineModel<string[]>({ default: () => [] });
 
 <template>
   <div class="flex items-start gap-2 border-b py-1.5">
-    <span class="mt-1.5 w-10 shrink-0 text-sm text-muted-foreground">{{ props.label }}</span>
-    <TagsInput v-model="model" class="flex-1 border-0 px-0 shadow-none focus-within:ring-0">
+    <span class="mt-1.5 w-10 shrink-0 text-sm text-muted-foreground">{{
+      props.label
+    }}</span>
+    <TagsInput
+      v-model="model"
+      class="flex-1 border-0 px-0 shadow-none focus-within:ring-0"
+    >
       <TagsInputItem v-for="address in model" :key="address" :value="address">
         <TagsInputItemText />
         <TagsInputItemDelete>
           <XIcon class="size-3" />
         </TagsInputItemDelete>
       </TagsInputItem>
-      <TagsInputInput :placeholder="props.placeholder" :autofocus="props.autofocus" />
+      <TagsInputInput
+        :placeholder="props.placeholder"
+        :autofocus="props.autofocus"
+      />
     </TagsInput>
   </div>
 </template>

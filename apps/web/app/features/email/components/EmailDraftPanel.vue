@@ -23,7 +23,8 @@ const emit = defineEmits<{
 
 // Composables
 const { t } = useI18n();
-const { mutate: discardDraft, isPending: isDiscarding } = useDiscardEmailDraft();
+const { mutate: discardDraft, isPending: isDiscarding } =
+  useDiscardEmailDraft();
 
 // Refs
 const rootEl = useTemplateRef<HTMLDivElement>('rootEl');
@@ -55,7 +56,9 @@ const kindLabel = computed(() => {
 // Forward and new mail start with empty recipients, so focus goes there;
 // reply already has a recipient and starts the cursor in the body instead
 // (the spec covers forward/reply; `new` follows the same rule by choice).
-const bodyAutofocus = computed<'start' | 'end' | undefined>(() => (props.draft.kind === 'reply' ? 'start' : undefined));
+const bodyAutofocus = computed<'start' | 'end' | undefined>(() =>
+  props.draft.kind === 'reply' ? 'start' : undefined,
+);
 const recipientsAutofocus = computed(() => props.draft.kind !== 'reply');
 
 // Functions
@@ -65,20 +68,32 @@ function handleDiscard() {
 }
 
 defineExpose({
-  scrollIntoView: () => rootEl.value?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+  scrollIntoView: () =>
+    rootEl.value?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
 });
 </script>
 
 <template>
-  <div ref="rootEl" class="border-b" :class="props.draft.origin === 'ai' ? 'bg-amber-50/50' : 'bg-muted/30'">
-    <div v-if="props.draft.status === 'generating'" class="flex items-center gap-2 px-4 py-4 text-sm text-muted-foreground">
+  <div
+    ref="rootEl"
+    class="border-b"
+    :class="props.draft.origin === 'ai' ? 'bg-amber-50/50' : 'bg-muted/30'"
+  >
+    <div
+      v-if="props.draft.status === 'generating'"
+      class="flex items-center gap-2 px-4 py-4 text-sm text-muted-foreground"
+    >
       <Spinner class="size-4" />
       {{ t('email.draft.generating') }}
     </div>
     <div v-else-if="props.draft.status === 'ready'">
       <div
         class="flex items-center justify-between border-b px-4 py-2 text-xs font-medium"
-        :class="props.draft.origin === 'ai' ? 'border-amber-200 text-amber-700' : 'border-border text-muted-foreground'"
+        :class="
+          props.draft.origin === 'ai'
+            ? 'border-amber-200 text-amber-700'
+            : 'border-border text-muted-foreground'
+        "
       >
         <div class="flex items-center gap-2">
           <SparklesIcon v-if="props.draft.origin === 'ai'" class="size-3.5" />
@@ -97,7 +112,12 @@ defineExpose({
         @sent="emit('sent', $event)"
       >
         <template #extra-actions>
-          <Button type="button" variant="ghost" :disabled="isDiscarding" @click="handleDiscard">
+          <Button
+            type="button"
+            variant="ghost"
+            :disabled="isDiscarding"
+            @click="handleDiscard"
+          >
             <Trash2Icon class="mr-2 size-3.5" />
             {{ t('email.draft.discard') }}
           </Button>

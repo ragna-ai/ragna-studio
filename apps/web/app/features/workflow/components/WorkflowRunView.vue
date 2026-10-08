@@ -137,7 +137,9 @@ function countTraceToolCalls(
         class="grid gap-3 text-xs sm:grid-cols-3"
       >
         <div v-if="run.input" class="min-w-0">
-          <p class="font-medium text-muted-foreground">{{ t('common.input') }}</p>
+          <p class="font-medium text-muted-foreground">
+            {{ t('common.input') }}
+          </p>
           <p class="truncate">{{ run.input }}</p>
         </div>
         <div v-if="run.error" class="min-w-0">

@@ -1,6 +1,11 @@
 import { logger } from '@repo/logger';
 import type { Worker } from '@repo/queue';
-import { createWorker, EMAIL_CLASSIFY_JOB, EMAIL_CLASSIFY_QUEUE, emailClassifyJobSchema } from '@repo/queue';
+import {
+  createWorker,
+  EMAIL_CLASSIFY_JOB,
+  EMAIL_CLASSIFY_QUEUE,
+  emailClassifyJobSchema,
+} from '@repo/queue';
 import { classifyEmailMessage } from '../mail/email-classify.service';
 
 export function registerEmailClassifyJobProcessor(): Worker<any, any, string> {

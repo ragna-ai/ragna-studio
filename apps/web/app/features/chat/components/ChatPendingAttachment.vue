@@ -4,7 +4,10 @@ import { RotateCcwIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
-import { getFileTypeIconName, isImageFilename } from '~/features/chat/lib/attachment-mime';
+import {
+  getFileTypeIconName,
+  isImageFilename,
+} from '~/features/chat/lib/attachment-mime';
 
 // Props
 interface Props {

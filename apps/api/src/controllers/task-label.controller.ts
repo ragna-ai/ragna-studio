@@ -8,7 +8,11 @@ import {
   listTaskLabelsForWorkspace,
   updateTaskLabelForWorkspace,
 } from '../services/task-label.service';
-import { validCreateTaskLabelBody, validTaskLabelIdParam, validUpdateTaskLabelBody } from '../validation';
+import {
+  validCreateTaskLabelBody,
+  validTaskLabelIdParam,
+  validUpdateTaskLabelBody,
+} from '../validation';
 
 export const taskLabelController = new Hono()
   .basePath('/workspace/:workspaceId/task-label')
@@ -67,7 +71,10 @@ export const taskLabelController = new Hono()
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    await deleteTaskLabelForWorkspace({ workspaceId: workspace.id, taskLabelId: param.taskLabelId });
+    await deleteTaskLabelForWorkspace({
+      workspaceId: workspace.id,
+      taskLabelId: param.taskLabelId,
+    });
 
     return c.json({ message: 'Task label deleted successfully' });
   });

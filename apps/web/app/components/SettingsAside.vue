@@ -67,7 +67,10 @@ function commitDescription() {
 }
 
 function emitIfChanged() {
-  if (nameDraft.value === props.name && descriptionDraft.value === props.description) {
+  if (
+    nameDraft.value === props.name &&
+    descriptionDraft.value === props.description
+  ) {
     return;
   }
   emit('save', { name: nameDraft.value, description: descriptionDraft.value });
@@ -75,10 +78,17 @@ function emitIfChanged() {
 </script>
 
 <template>
-  <aside class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4">
+  <aside
+    class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4"
+  >
     <div class="flex items-center justify-between">
       <p class="text-sm font-semibold">{{ props.title }}</p>
-      <Button variant="ghost" size="icon" :aria-label="props.closeLabel" @click="emit('close')">
+      <Button
+        variant="ghost"
+        size="icon"
+        :aria-label="props.closeLabel"
+        @click="emit('close')"
+      >
         <XIcon class="size-4 stroke-1.5" />
       </Button>
     </div>

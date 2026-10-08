@@ -16,7 +16,12 @@ import type {
   MailMessageMetadata,
 } from '../mail-provider';
 import { parseAddressList } from './gmail.address';
-import type { GmailDraftResource, GmailHeader, GmailMessagePart, GmailMessageResource } from './gmail.types';
+import type {
+  GmailDraftResource,
+  GmailHeader,
+  GmailMessagePart,
+  GmailMessageResource,
+} from './gmail.types';
 
 const LABEL_UNREAD = 'UNREAD';
 const LABEL_STARRED = 'STARRED';
@@ -75,7 +80,9 @@ export function toMailMessage(raw: GmailMessageResource): MailMessage {
 
   return {
     ...metadata,
-    body: raw.payload ? parseGmailPayload(raw.payload) : { text: null, html: null, attachments: [] },
+    body: raw.payload
+      ? parseGmailPayload(raw.payload)
+      : { text: null, html: null, attachments: [] },
     messageIdHeader: getHeaderValue(headers, 'Message-ID'),
     inReplyTo: getHeaderValue(headers, 'In-Reply-To'),
     references: parseReferencesHeader(getHeaderValue(headers, 'References')),
@@ -108,7 +115,9 @@ export function toMailDraft(raw: GmailDraftResource): MailDraft {
 
   return {
     ...summary,
-    body: raw.message.payload ? parseGmailPayload(raw.message.payload) : { text: null, html: null, attachments: [] },
+    body: raw.message.payload
+      ? parseGmailPayload(raw.message.payload)
+      : { text: null, html: null, attachments: [] },
   };
 }
 

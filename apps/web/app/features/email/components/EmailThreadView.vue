@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { ArchiveIcon, CornerUpLeftIcon, ForwardIcon, MailIcon, MailOpenIcon, StarIcon, Trash2Icon, TrashIcon } from '@lucide/vue';
+import {
+  ArchiveIcon,
+  CornerUpLeftIcon,
+  ForwardIcon,
+  MailIcon,
+  MailOpenIcon,
+  StarIcon,
+  Trash2Icon,
+  TrashIcon,
+} from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Spinner } from '~/components/ui/spinner';
@@ -23,7 +32,12 @@ import {
   useSetThreadStarred,
   useSetThreadTrashed,
 } from '~/features/email/composables/useEmailThreadApi';
-import type { EmailCategory, EmailDraftKind, EmailMessageDetail, EmailThreadListFilters } from '~/features/email/types';
+import type {
+  EmailCategory,
+  EmailDraftKind,
+  EmailMessageDetail,
+  EmailThreadListFilters,
+} from '~/features/email/types';
 
 // Props
 const props = defineProps<{
@@ -56,7 +70,8 @@ const expandedIds = ref<Set<string>>(new Set());
 // already fired for, so it runs exactly once per open (see the watcher).
 const markedReadThreadId = ref<string | null>(null);
 const isStartingDraft = ref(false);
-const draftPanel = useTemplateRef<InstanceType<typeof EmailDraftPanel>>('draftPanel');
+const draftPanel =
+  useTemplateRef<InstanceType<typeof EmailDraftPanel>>('draftPanel');
 
 // Computed
 const thread = computed(() => data.value?.thread ?? null);
@@ -65,17 +80,30 @@ const thread = computed(() => data.value?.thread ?? null);
 // (newest-first, macOS Mail-style) via messagesNewestFirst.
 const messages = computed(() => data.value?.messages ?? []);
 const messagesNewestFirst = computed(() => [...messages.value].reverse());
-const categoryById = computed(() => new Map(categoriesData.value?.categories.map((category) => [category.id, category]) ?? []));
+const categoryById = computed(
+  () =>
+    new Map(
+      categoriesData.value?.categories.map((category) => [
+        category.id,
+        category,
+      ]) ?? [],
+    ),
+);
 const lastMessage = computed(() => messages.value.at(-1) ?? null);
 
 function categoryFor(message: EmailMessageDetail): EmailCategory | null {
-  return message.categoryId ? (categoryById.value.get(message.categoryId) ?? null) : null;
+  return message.categoryId
+    ? (categoryById.value.get(message.categoryId) ?? null)
+    : null;
 }
 // One active (non-terminal) draft per thread, whoever wrote it - AI or user.
 // Never needed an origin filter here in the first place since
 // `GET /email/draft?threadId=` now already returns both.
 const activeDraft = computed(
-  () => draftsData.value?.drafts.find((draft) => draft.status === 'generating' || draft.status === 'ready') ?? null,
+  () =>
+    draftsData.value?.drafts.find(
+      (draft) => draft.status === 'generating' || draft.status === 'ready',
+    ) ?? null,
 );
 const canReplyAll = computed(() => (lastMessage.value?.cc.length ?? 0) > 0);
 
@@ -156,7 +184,10 @@ async function focusExistingDraft() {
 // agent - if `kind: 'reply'` sees a different default `to`/`cc` seed than a
 // plain reply, this two-step dance is the only way the client can ask for
 // "reply all" specifically.
-async function startCompose(kind: EmailDraftKind, options: { includeAllRecipients?: boolean } = {}) {
+async function startCompose(
+  kind: EmailDraftKind,
+  options: { includeAllRecipients?: boolean } = {},
+) {
   if (!lastMessage.value || !thread.value || isStartingDraft.value) return;
 
   if (activeDraft.value) {
@@ -172,7 +203,10 @@ async function startCompose(kind: EmailDraftKind, options: { includeAllRecipient
       variant: 'destructive',
     });
     if (!confirmed) return;
-    await discardDraft({ draftId: activeDraft.value.id, threadId: activeDraft.value.threadId });
+    await discardDraft({
+      draftId: activeDraft.value.id,
+      threadId: activeDraft.value.threadId,
+    });
   }
 
   isStartingDraft.value = true;
@@ -182,8 +216,16 @@ async function startCompose(kind: EmailDraftKind, options: { includeAllRecipient
       threadId: thread.value.id,
       replyToMessageId: lastMessage.value.id,
     });
-    if (options.includeAllRecipients && draft.cc.length === 0 && lastMessage.value.cc.length > 0) {
-      await updateDraft({ draftId: draft.id, threadId: draft.threadId, cc: lastMessage.value.cc });
+    if (
+      options.includeAllRecipients &&
+      draft.cc.length === 0 &&
+      lastMessage.value.cc.length > 0
+    ) {
+      await updateDraft({
+        draftId: draft.id,
+        threadId: draft.threadId,
+        cc: lastMessage.value.cc,
+      });
     }
   } catch (error) {
     // Someone else created a draft on this thread between the check above
@@ -229,11 +271,16 @@ function handleToggleRead() {
     <div v-if="isLoading" class="flex flex-1 items-center justify-center">
       <Spinner />
     </div>
-    <p v-else-if="isError" class="flex flex-1 items-center justify-center text-sm text-destructive">
+    <p
+      v-else-if="isError"
+      class="flex flex-1 items-center justify-center text-sm text-destructive"
+    >
       {{ t('email.thread.loadError') }}
     </p>
     <template v-else-if="thread">
-      <header class="flex shrink-0 items-center justify-end gap-3 border-b px-4 py-3">
+      <header
+        class="flex shrink-0 items-center justify-end gap-3 border-b px-4 py-3"
+      >
         <div class="flex shrink-0 items-center gap-1">
           <Button
             v-if="lastMessage"
@@ -277,9 +324,14 @@ function handleToggleRead() {
             variant="ghost"
             size="icon"
             :aria-label="t('email.thread.actions.toggleStar')"
-            @click="starThread({ threadId: thread.id, starred: !thread.isStarred })"
+            @click="
+              starThread({ threadId: thread.id, starred: !thread.isStarred })
+            "
           >
-            <StarIcon class="size-4" :class="{ 'fill-amber-400 text-amber-400': thread.isStarred }" />
+            <StarIcon
+              class="size-4"
+              :class="{ 'fill-amber-400 text-amber-400': thread.isStarred }"
+            />
           </Button>
           <Button
             variant="ghost"
@@ -324,7 +376,11 @@ function handleToggleRead() {
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto">
-        <EmailDraftPanel v-if="activeDraft" ref="draftPanel" :draft="activeDraft" />
+        <EmailDraftPanel
+          v-if="activeDraft"
+          ref="draftPanel"
+          :draft="activeDraft"
+        />
         <!-- The trigger's server-side row (which EmailDraftPanel's own
              'generating' state renders off) only exists once the worker
              picks the job up - this covers the gap between the click and

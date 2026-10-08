@@ -19,11 +19,11 @@ here.
 
 These were settled by discussion on 2026-08-20. Do not re-open them.
 
-| Decision | Choice |
-| --- | --- |
-| **Backfill mechanics** | Run the backfill script + schema push in one shot. No phased/zero-downtime rollout. Delete backfill script after Sven has confirmed. |
-| **`drizzleAdapter` provider mismatch** | Fix `provider: 'sqlite'` → `'pg'` in the same change. `@repo/database` has run on `drizzle-orm/node-postgres` all along ([`packages/database/src/db.ts`](../../packages/database/src/db.ts)); the `'sqlite'` value is a leftover from an earlier `sqlite.db` setup (still visible, commented out, in `.env`). Unrelated to 1.7 itself, but 1.7 adds provider-aware atomic adapter methods (`incrementOne`/`consumeOne`), so a wrong provider tag is worth fixing while we're in this file. |
-| **Microsoft account identity mismatch** (see below) | Force re-link. Delete existing Microsoft `account` rows during the maintenance window rather than trying to migrate them. Users see Microsoft as "not connected" afterward and reconnect manually. No feature currently depends on a stored Microsoft access token (no `getAccessToken({ providerId: 'microsoft' })` call site exists today), so this has no functional impact beyond the UI state. |
+| Decision                                            | Choice                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Backfill mechanics**                              | Run the backfill script + schema push in one shot. No phased/zero-downtime rollout. Delete backfill script after Sven has confirmed.                                                                                                                                                                                                                                                                                                                                                       |
+| **`drizzleAdapter` provider mismatch**              | Fix `provider: 'sqlite'` → `'pg'` in the same change. `@repo/database` has run on `drizzle-orm/node-postgres` all along ([`packages/database/src/db.ts`](../../packages/database/src/db.ts)); the `'sqlite'` value is a leftover from an earlier `sqlite.db` setup (still visible, commented out, in `.env`). Unrelated to 1.7 itself, but 1.7 adds provider-aware atomic adapter methods (`incrementOne`/`consumeOne`), so a wrong provider tag is worth fixing while we're in this file. |
+| **Microsoft account identity mismatch** (see below) | Force re-link. Delete existing Microsoft `account` rows during the maintenance window rather than trying to migrate them. Users see Microsoft as "not connected" afterward and reconnect manually. No feature currently depends on a stored Microsoft access token (no `getAccessToken({ providerId: 'microsoft' })` call site exists today), so this has no functional impact beyond the UI state.                                                                                        |
 
 ## Why: the account identity restructuring
 
@@ -40,14 +40,14 @@ Verified directly against `@better-auth/core@1.7.1` source
 the upgrade guide's prose, because the guide summary didn't surface the
 Microsoft-specific issue below:
 
-| Provider | New `issuer` | New `accountId` (`accountSubject`) | Matches what's stored today? |
-| --- | --- | --- | --- |
-| Google | `"https://accounts.google.com"` (static, declared via `accountIssuer`) | `profile.sub` | Yes — old provider also stored `sub` as `accountId` |
-| LinkedIn | `local:oauth:linkedin` (no `accountIssuer` declared, falls back to `createOAuthAccountIssuer('linkedin')`) | `profile.sub` | Yes — old provider also stored `sub` as `accountId` |
-| Microsoft | `profile.iss` (dynamic — varies per tenant, read from the ID token's own `iss` claim) | `profile.oid` | **No** — the pre-1.7 provider stored `profile.sub`, and on Microsoft's v2.0 endpoint `oid` (directory object ID) ≠ `sub` (per-app pairwise identifier) |
+| Provider  | New `issuer`                                                                                               | New `accountId` (`accountSubject`) | Matches what's stored today?                                                                                                                           |
+| --------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Google    | `"https://accounts.google.com"` (static, declared via `accountIssuer`)                                     | `profile.sub`                      | Yes — old provider also stored `sub` as `accountId`                                                                                                    |
+| LinkedIn  | `local:oauth:linkedin` (no `accountIssuer` declared, falls back to `createOAuthAccountIssuer('linkedin')`) | `profile.sub`                      | Yes — old provider also stored `sub` as `accountId`                                                                                                    |
+| Microsoft | `profile.iss` (dynamic — varies per tenant, read from the ID token's own `iss` claim)                      | `profile.oid`                      | **No** — the pre-1.7 provider stored `profile.sub`, and on Microsoft's v2.0 endpoint `oid` (directory object ID) ≠ `sub` (per-app pairwise identifier) |
 
 Because Microsoft's identity claim changed under us, a naive backfill that
-just adds `issuer` to existing rows would produce a row that the *next*
+just adds `issuer` to existing rows would produce a row that the _next_
 sign-in can never match (`(iss, oid)` looked up, `(old_iss, sub)` stored),
 silently orphaning the old row. Per the decision above, we're not trying to
 reconcile this — we drop the rows and let affected users reconnect.

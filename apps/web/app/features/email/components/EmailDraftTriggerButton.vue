@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { SparklesIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { Spinner } from '~/components/ui/spinner';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { useTriggerEmailDraft } from '~/features/email/composables/useEmailDraftApi';
@@ -62,7 +72,9 @@ function handleGenerate() {
       <p class="text-sm font-medium">{{ t('email.draft.trigger.title') }}</p>
       <Select v-model="selectedAgentId">
         <SelectTrigger class="w-full" size="sm">
-          <SelectValue :placeholder="t('email.draft.trigger.agentPlaceholder')" />
+          <SelectValue
+            :placeholder="t('email.draft.trigger.agentPlaceholder')"
+          />
         </SelectTrigger>
         <SelectContent>
           <SelectItem v-for="agent in agents" :key="agent.id" :value="agent.id">
@@ -70,7 +82,12 @@ function handleGenerate() {
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button class="w-full" size="sm" :disabled="!selectedAgentId || isPending" @click="handleGenerate">
+      <Button
+        class="w-full"
+        size="sm"
+        :disabled="!selectedAgentId || isPending"
+        @click="handleGenerate"
+      >
         <Spinner v-if="isPending" class="mr-2" />
         {{ t('email.draft.trigger.generate') }}
       </Button>

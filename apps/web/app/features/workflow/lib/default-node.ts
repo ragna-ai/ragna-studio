@@ -16,9 +16,19 @@ export function createWorkflowNode(
   // WorkflowNode discriminated union.
   switch (type) {
     case 'trigger':
-      return { id, type, position, data: { label, config: { kind: 'manual' } } };
+      return {
+        id,
+        type,
+        position,
+        data: { label, config: { kind: 'manual' } },
+      };
     case 'agent':
-      return { id, type, position, data: { label, config: { prompt: '{{input}}' } } };
+      return {
+        id,
+        type,
+        position,
+        data: { label, config: { prompt: '{{input}}' } },
+      };
     case 'tool':
       return {
         id,
@@ -34,7 +44,12 @@ export function createWorkflowNode(
         data: { label, config: { left: '{{input}}', operator: 'isNotEmpty' } },
       };
     case 'transform':
-      return { id, type, position, data: { label, config: { template: '{{input}}' } } };
+      return {
+        id,
+        type,
+        position,
+        data: { label, config: { template: '{{input}}' } },
+      };
     case 'team':
       return {
         id,
@@ -61,7 +76,10 @@ const ORIGIN = { x: 80, y: 80 };
  * layout's wide columns, which used to land new nodes underneath the
  * right-side config panel. Falls back to the origin when the canvas is empty.
  */
-export function nextFreePosition(existingNodes: WorkflowNode[]): { x: number; y: number } {
+export function nextFreePosition(existingNodes: WorkflowNode[]): {
+  x: number;
+  y: number;
+} {
   const lastNode = existingNodes.at(-1);
   if (!lastNode) {
     return { ...ORIGIN };

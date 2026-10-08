@@ -93,7 +93,9 @@ export async function searchAgentContextDocumentChunks({
       agentContextDocument,
       eq(agentContextDocumentChunk.documentId, agentContextDocument.id),
     )
-    .where(and(eq(agentContextDocumentChunk.agentId, agentId), eq(agentContextDocument.status, 'ready')))
+    .where(
+      and(eq(agentContextDocumentChunk.agentId, agentId), eq(agentContextDocument.status, 'ready')),
+    )
     .orderBy(asc(distance))
     .limit(limit);
 

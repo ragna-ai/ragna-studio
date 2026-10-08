@@ -57,7 +57,9 @@ export const videoGenDurations = [4, 6, 8] as const;
 
 export interface VideoGenCapability {
   aspectRatios: readonly VideoGenAspectRatio[];
-  resolutionsByAspectRatio: Partial<Record<VideoGenAspectRatio, readonly VideoGenResolution[]>>;
+  resolutionsByAspectRatio: Partial<
+    Record<VideoGenAspectRatio, readonly VideoGenResolution[]>
+  >;
   durationRange: { min: number; max: number };
   supportsSeed: boolean;
   supportsNegativePrompt: boolean;
@@ -70,7 +72,10 @@ export interface VideoGenCapability {
 // instead of importing its runtime module. Drives both the form's per-model
 // UI and the reconciliation of persisted settings when the model's provider
 // changes; the server enforces the same map, so this is presentation only.
-export const videoGenCapabilities: Record<VideoGenProvider, VideoGenCapability> = {
+export const videoGenCapabilities: Record<
+  VideoGenProvider,
+  VideoGenCapability
+> = {
   'google-vertex': {
     aspectRatios: ['16:9', '9:16'],
     resolutionsByAspectRatio: {
@@ -107,7 +112,9 @@ const DEFAULT_CAPABILITY_PROVIDER: VideoGenProvider = 'google-vertex';
 // (e.g. the model list hasn't loaded yet), the same conservative default
 // videogen.service.ts's own resolveCapability would reject outright but the
 // form needs *something* to render before a model is selected.
-export function getVideoGenCapability(provider: string | undefined): VideoGenCapability {
+export function getVideoGenCapability(
+  provider: string | undefined,
+): VideoGenCapability {
   if (provider === 'google-vertex' || provider === 'bfl') {
     return videoGenCapabilities[provider];
   }
@@ -118,7 +125,9 @@ export function getSupportedResolutions(
   provider: string | undefined,
   aspectRatio: VideoGenAspectRatio,
 ): readonly VideoGenResolution[] {
-  return getVideoGenCapability(provider).resolutionsByAspectRatio[aspectRatio] ?? [];
+  return (
+    getVideoGenCapability(provider).resolutionsByAspectRatio[aspectRatio] ?? []
+  );
 }
 
 export type GenVideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -282,7 +291,9 @@ export function useEnhanceGenVideo() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, 'Failed to request enhance'));
-      queryClient.invalidateQueries({ queryKey: videoGenKeys.all(workspaceId) });
+      queryClient.invalidateQueries({
+        queryKey: videoGenKeys.all(workspaceId),
+      });
     },
   });
 }

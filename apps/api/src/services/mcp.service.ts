@@ -1,11 +1,20 @@
 import { auth, requireMcpAuth } from '@repo/auth/server';
 import type { McpAccess } from '@repo/database';
-import { findMcpConnection, getMcpSettings, recordMcpToolCall, touchMcpConnection } from '@repo/database';
+import {
+  findMcpConnection,
+  getMcpSettings,
+  recordMcpToolCall,
+  touchMcpConnection,
+} from '@repo/database';
 import type { ToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { createMcpHandler, getOAuthProtectedResourceMetadataUrl, McpServer } from '@modelcontextprotocol/server';
+import {
+  createMcpHandler,
+  getOAuthProtectedResourceMetadataUrl,
+  McpServer,
+} from '@modelcontextprotocol/server';
 import * as z from 'zod';
 import { mcpAccessSchema } from '../validation/mcp-settings.schema';
 import { getAllowedToolDefinitions } from './mcp-integrations';
@@ -146,13 +155,16 @@ const mcpHttpHandler = createMcpHandler(
 
 function unauthorizedMcpResponse(message: string): Response {
   const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(new URL(config.mcpResourceUrl));
-  return new Response(JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message }, id: null }), {
-    status: 401,
-    headers: {
-      'Content-Type': 'application/json',
-      'WWW-Authenticate': `Bearer error="invalid_token", error_description="${message}", resource_metadata="${resourceMetadataUrl}"`,
+  return new Response(
+    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message }, id: null }),
+    {
+      status: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'WWW-Authenticate': `Bearer error="invalid_token", error_description="${message}", resource_metadata="${resourceMetadataUrl}"`,
+      },
     },
-  });
+  );
 }
 
 function methodNotAllowedMcpResponse(): Response {

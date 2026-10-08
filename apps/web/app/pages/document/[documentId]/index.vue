@@ -35,7 +35,10 @@ useHead({
     :key="documentData.document.id"
     :document="documentData.document"
   />
-  <div v-else-if="!activeWorkspaceId" class="flex h-full items-center justify-center">
+  <div
+    v-else-if="!activeWorkspaceId"
+    class="flex h-full items-center justify-center"
+  >
     <p class="text-sm text-stone-500">
       {{ t('document.list.loading') }}
     </p>

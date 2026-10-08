@@ -5,7 +5,8 @@ import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import type { EmailAccount, EmailProviderKind } from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
-export const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
+export const GMAIL_MODIFY_SCOPE =
+  'https://www.googleapis.com/auth/gmail.modify';
 export const MICROSOFT_MAIL_SCOPES = [
   'https://graph.microsoft.com/Mail.ReadWrite',
   'https://graph.microsoft.com/Mail.Send',
@@ -22,8 +23,16 @@ interface ProviderAuthConfig {
 }
 
 const PROVIDER_AUTH_CONFIG: Record<EmailProviderKind, ProviderAuthConfig> = {
-  gmail: { authProviderId: 'google', scopes: [GMAIL_MODIFY_SCOPE], displayName: 'Gmail' },
-  microsoft: { authProviderId: 'microsoft', scopes: MICROSOFT_MAIL_SCOPES, displayName: 'Outlook' },
+  gmail: {
+    authProviderId: 'google',
+    scopes: [GMAIL_MODIFY_SCOPE],
+    displayName: 'Gmail',
+  },
+  microsoft: {
+    authProviderId: 'microsoft',
+    scopes: MICROSOFT_MAIL_SCOPES,
+    displayName: 'Outlook',
+  },
 };
 
 interface LinkVariables {
@@ -40,7 +49,10 @@ export function useEmailConnectFlow() {
   const authClient = useAuth();
   const queryClient = useQueryClient();
 
-  function link({ provider, returnPath }: LinkVariables, callbackParam: string) {
+  function link(
+    { provider, returnPath }: LinkVariables,
+    callbackParam: string,
+  ) {
     const config = PROVIDER_AUTH_CONFIG[provider];
     const appOrigin = window.location.origin;
     return authClient.linkSocial({
@@ -51,24 +63,40 @@ export function useEmailConnectFlow() {
   }
 
   const linkMutation = useMutation({
-    mutationFn: (variables: LinkVariables) => link(variables, MAIL_CONNECT_CALLBACK_PARAM),
+    mutationFn: (variables: LinkVariables) =>
+      link(variables, MAIL_CONNECT_CALLBACK_PARAM),
     onSuccess: ({ error }, { provider }) => {
-      if (error) toast.error(`Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`);
+      if (error)
+        toast.error(
+          `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        );
     },
     onError: (_error, { provider }) =>
-      toast.error(`Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`),
+      toast.error(
+        `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+      ),
   });
 
   const relinkMutation = useMutation({
-    mutationFn: (variables: LinkVariables) => link(variables, MAIL_RECONNECT_CALLBACK_PARAM),
+    mutationFn: (variables: LinkVariables) =>
+      link(variables, MAIL_RECONNECT_CALLBACK_PARAM),
     onSuccess: ({ error }, { provider }) => {
-      if (error) toast.error(`Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`);
+      if (error)
+        toast.error(
+          `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        );
     },
     onError: (_error, { provider }) =>
-      toast.error(`Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`),
+      toast.error(
+        `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+      ),
   });
 
-  const connectAccountMutation = useMutation<ConnectEmailAccountResponse, unknown, EmailProviderKind>({
+  const connectAccountMutation = useMutation<
+    ConnectEmailAccountResponse,
+    unknown,
+    EmailProviderKind
+  >({
     mutationFn: (provider) =>
       useNuxtApp().$api<ConnectEmailAccountResponse>('/email/account/connect', {
         method: 'POST',
@@ -82,7 +110,10 @@ export function useEmailConnectFlow() {
       // A 400 here almost always means the link is missing or lacks the required scope
       // (email-provider.service.ts's scope check); the connect prompt stays visible either way.
       toast.error(
-        extractErrorMessage(error, `Failed to connect ${PROVIDER_AUTH_CONFIG[provider].displayName}. Try reconnecting`),
+        extractErrorMessage(
+          error,
+          `Failed to connect ${PROVIDER_AUTH_CONFIG[provider].displayName}. Try reconnecting`,
+        ),
       );
     },
   });
@@ -92,14 +123,20 @@ export function useEmailConnectFlow() {
   const { mutateAsync: syncAccount } = useSyncEmailAccount();
 
   return {
-    startConnect: (provider: EmailProviderKind, returnPath: string) => linkMutation.mutate({ provider, returnPath }),
+    startConnect: (provider: EmailProviderKind, returnPath: string) =>
+      linkMutation.mutate({ provider, returnPath }),
     isLinking: linkMutation.isPending,
-    finishConnect: (provider: EmailProviderKind) => connectAccountMutation.mutateAsync(provider),
+    finishConnect: (provider: EmailProviderKind) =>
+      connectAccountMutation.mutateAsync(provider),
     isFinishingConnect: connectAccountMutation.isPending,
     startReconnect: (provider: EmailProviderKind, returnPath: string) =>
       relinkMutation.mutate({ provider, returnPath }),
     isRelinking: relinkMutation.isPending,
     finishReconnect: (provider: EmailProviderKind) =>
-      syncAccount().then(() => toast.success(`${PROVIDER_AUTH_CONFIG[provider].displayName} reconnected`)),
+      syncAccount().then(() =>
+        toast.success(
+          `${PROVIDER_AUTH_CONFIG[provider].displayName} reconnected`,
+        ),
+      ),
   };
 }

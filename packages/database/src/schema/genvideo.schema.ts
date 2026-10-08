@@ -7,15 +7,7 @@ import { workspace } from './workspace.schema';
 
 export type GenVideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
 // '16:9' / '9:16' are Veo's ratios; the rest are BFL flux-3-video's.
-export type GenVideoAspectRatio =
-  | '21:9'
-  | '2:1'
-  | '16:9'
-  | '4:3'
-  | '1:1'
-  | '3:4'
-  | '9:16'
-  | 'auto';
+export type GenVideoAspectRatio = '21:9' | '2:1' | '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | 'auto';
 export type GenVideoResolution = '720p' | '1080p';
 // 'upload' rows own their object under <userId>/videos/frames/; 'genImage'
 // rows reference a gen_images object they don't own (no copy). Same split

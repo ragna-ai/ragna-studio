@@ -185,7 +185,8 @@ export function useDeleteAgent() {
 // are rejected before a request is even sent.
 export const AGENT_CONTEXT_DOCUMENT_MAX_FILES = 25;
 export const AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.pptx,.xlsx,.csv,.txt,.md';
+export const AGENT_CONTEXT_DOCUMENT_ACCEPT =
+  '.pdf,.docx,.pptx,.xlsx,.csv,.txt,.md';
 
 // While any listed document is still 'pending', poll for its terminal
 // status. 'failed' is terminal and doesn't poll.

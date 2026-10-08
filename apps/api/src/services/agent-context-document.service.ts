@@ -11,8 +11,17 @@ import {
   updateAgentContextDocument,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import { DOCUMENT_KINDS, MIME_TYPE_BY_MEDIA_KIND, sniffMediaKind, type MediaKind } from '@repo/media';
-import { EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, extractAgentContextDocumentJobSchema, queue } from '@repo/queue';
+import {
+  DOCUMENT_KINDS,
+  MIME_TYPE_BY_MEDIA_KIND,
+  sniffMediaKind,
+  type MediaKind,
+} from '@repo/media';
+import {
+  EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB,
+  extractAgentContextDocumentJobSchema,
+  queue,
+} from '@repo/queue';
 import { deleteObjects, uploadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
@@ -145,7 +154,9 @@ export async function deleteAgentContextDocumentsForAgent({
  * never block the retry/replace action that triggered it.
  */
 async function deleteAgentContextDocumentChunks(documentId: string): Promise<void> {
-  const { error } = await tryCatch(() => deleteAgentContextDocumentChunksByDocumentId({ documentId }));
+  const { error } = await tryCatch(() =>
+    deleteAgentContextDocumentChunksByDocumentId({ documentId }),
+  );
 
   if (error !== null) {
     logger.error(`Failed to delete chunks for agent document ${documentId}`, error);
@@ -222,7 +233,10 @@ async function enqueueAgentContextDocumentExtraction({
   const { error } = await tryCatch(() =>
     queue
       .agentContextDocument()
-      .add(EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB, extractAgentContextDocumentJobSchema.parse({ documentId })),
+      .add(
+        EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB,
+        extractAgentContextDocumentJobSchema.parse({ documentId }),
+      ),
   );
 
   if (error === null) {

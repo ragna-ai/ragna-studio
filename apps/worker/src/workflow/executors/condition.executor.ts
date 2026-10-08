@@ -4,7 +4,11 @@ import type { Executor } from './types';
 
 // String-only comparator, no expression parser. The engine reads the
 // returned 'true'/'false' to pick which outgoing sourceHandle delivers.
-function applyOperator(left: string, operator: ConditionConfig['operator'], right: string): boolean {
+function applyOperator(
+  left: string,
+  operator: ConditionConfig['operator'],
+  right: string,
+): boolean {
   switch (operator) {
     case 'equals':
       return left === right;

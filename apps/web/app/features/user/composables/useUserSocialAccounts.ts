@@ -37,7 +37,9 @@ export default function useUserSocialAccounts() {
   });
 
   function invalidateAccounts() {
-    return queryClient.invalidateQueries({ queryKey: SOCIAL_ACCOUNTS_QUERY_KEY });
+    return queryClient.invalidateQueries({
+      queryKey: SOCIAL_ACCOUNTS_QUERY_KEY,
+    });
   }
 
   const connectMutation = useMutation({
@@ -45,7 +47,10 @@ export default function useUserSocialAccounts() {
       // Relative URLs resolve against the auth server (API origin), so the
       // callback must be absolute to land back on the web app.
       const appOrigin = window.location.origin;
-      return authClient.linkSocial({ provider, callbackURL: `${appOrigin}/account` });
+      return authClient.linkSocial({
+        provider,
+        callbackURL: `${appOrigin}/account`,
+      });
     },
     onSuccess: ({ error }) => {
       // On success the client redirects the browser to the provider, so
@@ -56,7 +61,8 @@ export default function useUserSocialAccounts() {
   });
 
   const disconnectMutation = useMutation({
-    mutationFn: (account: DisconnectAccountInput) => authClient.unlinkAccount(account),
+    mutationFn: (account: DisconnectAccountInput) =>
+      authClient.unlinkAccount(account),
     onSuccess: async ({ error }) => {
       if (error) {
         toast.error(t('user.social.disconnectError'));
@@ -78,7 +84,9 @@ export default function useUserSocialAccounts() {
     ),
     disconnect: disconnectMutation.mutate,
     disconnectingAccountId: computed(() =>
-      disconnectMutation.isPending.value ? disconnectMutation.variables.value?.accountId : null,
+      disconnectMutation.isPending.value
+        ? disconnectMutation.variables.value?.accountId
+        : null,
     ),
   };
 }

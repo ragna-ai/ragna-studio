@@ -37,12 +37,17 @@ export const PRIORITY_OPTIONS: {
   { value: 'low', labelKey: 'task.priority.low', icon: SignalLowIcon },
   { value: 'medium', labelKey: 'task.priority.medium', icon: SignalMediumIcon },
   { value: 'high', labelKey: 'task.priority.high', icon: SignalHighIcon },
-  { value: 'urgent', labelKey: 'task.priority.urgent', icon: TriangleAlertIcon },
+  {
+    value: 'urgent',
+    labelKey: 'task.priority.urgent',
+    icon: TriangleAlertIcon,
+  },
 ];
 
 export function priorityIcon(priority: TaskPriority): LucideIcon {
   return (
-    PRIORITY_OPTIONS.find((option) => option.value === priority)?.icon ?? MinusIcon
+    PRIORITY_OPTIONS.find((option) => option.value === priority)?.icon ??
+    MinusIcon
   );
 }
 
@@ -66,11 +71,17 @@ export function statusLabelKey(status: TaskStatus): string {
 // a typed setter. These guards are the single place that narrowing happens,
 // instead of a bare `as TaskStatus`/`as TaskPriority` cast at each call site.
 export function isTaskStatus(value: unknown): value is TaskStatus {
-  return typeof value === 'string' && (TASK_STATUSES as readonly string[]).includes(value);
+  return (
+    typeof value === 'string' &&
+    (TASK_STATUSES as readonly string[]).includes(value)
+  );
 }
 
 export function isTaskPriority(value: unknown): value is TaskPriority {
-  return typeof value === 'string' && (TASK_PRIORITIES as readonly string[]).includes(value);
+  return (
+    typeof value === 'string' &&
+    (TASK_PRIORITIES as readonly string[]).includes(value)
+  );
 }
 
 /** A due date is only "overdue" styling if the task isn't already settled. */

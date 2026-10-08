@@ -1,8 +1,8 @@
 {
   "name": "@repo/web",
   "version": "0.0.1",
-  "license": "AGPL-3.0-only",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "build": "nuxt build",
