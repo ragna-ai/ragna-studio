@@ -78,6 +78,19 @@ jobs:
       - run: pnpm check-types
       - run: pnpm lint
       - run: pnpm format --check
+      # Comments state the reason themselves instead of pointing into specs/, which
+      # drift. Allowlisted: pointers to long write-ups a comment can't summarize.
+      - name: No spec references in code
+        run: |
+          if git grep -n 'specs/' -- '*.ts' '*.vue' '*.js' '*.mjs' '*Dockerfile' \
+            ':!scripts/specs-index.mjs' \
+            ':!apps/docs' \
+            ':!apps/api/test/preload.ts' \
+            ':!packages/testing/src/mocks/linkedin-provider.mock.ts' \
+            ':!packages/database/src/utils/sort-order.ts'; then
+            echo "::error::Code references specs/. State the reason in the comment instead."
+            exit 1
+          fi
 
   api-tests:
     needs: changes
