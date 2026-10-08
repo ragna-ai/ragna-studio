@@ -20,7 +20,7 @@ import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import { chunkText } from './agent-context-chunker';
 
-// Limits from specs/agent/agent-context-retrieval.md: hard-truncate any single
+// Limits: hard-truncate any single
 // document's extracted text, and never let an agent's ready documents add up
 // to more than the total storage quota a search corpus can hold.
 const MAX_DOCUMENT_CHARS = 500_000;

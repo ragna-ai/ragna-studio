@@ -1,7 +1,7 @@
 // packages/testing/src/mocks/linkedin-provider.mock.ts
 //
-// Mocks `@repo/linkedin` at the package boundary (specs/testing/strategy.md,
-// "External boundaries"): it's a thin wrapper around LinkedIn's real REST
+// Mocks `@repo/linkedin` at the package boundary:
+// it's a thin wrapper around LinkedIn's real REST
 // API with no business logic of its own worth preserving in tests, and
 // apps/api imports it directly, so mocking the whole package (rather than
 // some npm dependency underneath it, like the `ai` mock does) is the right

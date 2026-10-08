@@ -76,7 +76,7 @@ const ConfigSchema = z.object({
     .string()
     .optional()
     .transform((val) => Number(val) || 4),
-  // Email sync poll interval in ms (specs/email/prd.md, "Config"). Default
+  // Email sync poll interval in ms. Default
   // 5 minutes.
   EMAIL_SYNC_INTERVAL: z
     .string()
@@ -200,7 +200,7 @@ const ConfigSchema = z.object({
         }),
     ),
 
-  // Credits (specs/credits/prd.md): markup in basis points, and the master
+  // Credits: markup in basis points, and the master
   // switch that gates the whole system so it can ship dark.
   //
   // An unset var (undefined) or dotenv's empty-string form of "unset" both
@@ -212,8 +212,8 @@ const ConfigSchema = z.object({
   //
   // "NULL" (any case) disables the markup. It normalizes to 10_000 bps
   // (1.0x, cost price) here at the boundary rather than flowing as null
-  // through the money path: the charge math is exactly identity at 10_000
-  // (specs/credits/prd.md, "The charge formula"), so downstream code and the
+  // through the money path: the charge math is exactly identity at 10_000,
+  // so downstream code and the
   // usage rows' `markupBps` snapshot stay unchanged and truthful. Per-model
   // `pricing.markupBps` overrides still apply on top of a disabled global.
   CREDIT_MARKUP_BPS: z.preprocess((val) => {
@@ -306,7 +306,7 @@ const ConfigSchema = z.object({
         .filter((email) => email.length > 0),
     ),
 
-  // MCP server (specs/mcp/prd.md): kill switch (P2) and the CIMD client ID
+  // MCP server: kill switch (P2) and the CIMD client ID
   // allowlist (P4).
   MCP_ENABLED: z
     .string()

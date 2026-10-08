@@ -1,7 +1,7 @@
 // Client-side mirror of the API's accepted chat attachment types and size
-// limit (specs/media-library/prd.md, decision 7), so an obviously invalid
+// limit, so an obviously invalid
 // file never has to make a round trip. The server re-validates by content
-// sniffing regardless (specs/media-library/prd.md, decision 6).
+// sniffing regardless.
 export const CHAT_ATTACHMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const CHAT_ATTACHMENT_ACCEPT_EXTENSIONS = [
@@ -55,7 +55,7 @@ export function isImageMediaType(mediaType: string): boolean {
 }
 
 // vscode-icons file-type icons, keyed by extension. Covers exactly the
-// document kinds this repo's attachments accept (specs/media-library/prd.md);
+// document kinds this repo's attachments accept;
 // images never reach this map since they render as an actual thumbnail
 // instead of a file-type icon.
 const FILE_TYPE_ICON_BY_EXTENSION: Record<string, string> = {

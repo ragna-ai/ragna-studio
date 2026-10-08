@@ -15,8 +15,8 @@ import type {
 } from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
-// Draft generation runs as an async worker job (specs/email/prd.md,
-// "Worker jobs"); polling is the only way the UI learns a `generating`
+// Draft generation runs as an async worker job;
+// polling is the only way the UI learns a `generating`
 // draft turned `ready` (or failed back to a stale `generating` row).
 const DRAFT_POLL_INTERVAL_MS = 2500;
 
@@ -199,7 +199,7 @@ function hasConflictingDraft(
 
 /**
  * Reads the existing draft off a 409 from `POST /email/draft` (one active
- * draft per thread - specs/email/drafts-change-request.md, "API changes"), so
+ * draft per thread), so
  * a caller can focus/scroll to it instead of surfacing the error as a toast.
  * Returns `null` for any other error, including a 409 whose body doesn't
  * match the assumed shape (see EmailDraftConflictResponse's doc comment).
@@ -244,7 +244,7 @@ interface UpdateEmailDraftVariables extends UpdateEmailDraftRequest {
 
 /**
  * [PATCH] /email/draft/:draftId - widened from its old content-only body to
- * the full editable set (specs/email/drafts-change-request.md, section 3):
+ * the full editable set:
  * recipients, subject, body, and the forwarded-attachment set, any subset of
  * which a caller can send. EmailDraftPanel.vue's autosave debounces calls
  * into this by ~1s and always sends the full snapshot (simpler than tracking

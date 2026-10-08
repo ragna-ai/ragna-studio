@@ -42,7 +42,7 @@ export const genVideoController = new Hono()
    * [POST] /workspace/:workspaceId/gen-video
    * Requests a video generation from a prompt, optionally animating a
    * first-frame image. Returns the pending row immediately; a worker job
-   * renders the clip (specs/videogen/prd.md).
+   * renders the clip.
    */
   .post('/', validGenerateVideoBody, async (c) => {
     const user = c.get('user');
@@ -78,8 +78,8 @@ export const genVideoController = new Hono()
   })
   /**
    * [POST] /workspace/:workspaceId/gen-video/:genVideoId/enhance
-   * Re-renders a completed BFL draft at full quality as a new pending row
-   * (specs/videogen/prd-v2.md). One enhance per draft; a failed enhance may
+   * Re-renders a completed BFL draft at full quality as a new pending row.
+   * One enhance per draft; a failed enhance may
    * be retried.
    */
   .post('/:genVideoId/enhance', validGenVideoIdParam, async (c) => {

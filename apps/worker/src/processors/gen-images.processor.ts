@@ -56,8 +56,7 @@ export function registerGenImagesJobProcessor(): Worker<any, any, string> {
 // message before it rethrows, so this only needs to notify and propagate.
 // The enqueuer (requestGenImages in @repo/ai) never sets a retry count above
 // the BullMQ default of one attempt: a failed batch must surface as a failed
-// job, not silently re-render and double the cost (specs/imagegen/
-// worker-execution-prd.md decision 4).
+// job, not silently re-render and double the cost.
 async function processGenImages(genImageIds: string[]): Promise<void> {
   const { error } = await tryCatch(() => runGenImages({ genImageIds }));
 
@@ -72,8 +71,8 @@ async function processGenImages(genImageIds: string[]): Promise<void> {
 
 // Best-effort by design: a notification failure must never mask the job's
 // real outcome (the rows and the rethrown/absent error already carry that),
-// so every failure here is logged and swallowed. One notification per batch
-// (specs/imagegen/worker-execution-prd.md decision 5), not per row.
+// so every failure here is logged and swallowed. One notification per batch,
+// not per row.
 async function notifyBestEffort({
   genImageIds,
   type,

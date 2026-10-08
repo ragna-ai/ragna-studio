@@ -3,8 +3,7 @@ import { chatKeys } from '~/features/chat/composables/useChatApi';
 import type { ChatAgent } from '~/features/chat/types';
 
 /** Minimum characters before a search fires, matching the API's own floor
- * (specs/chat/search-prd.md, "Minimum query length": pg_trgm needs 3-char
- * trigrams to use its index). */
+ * (pg_trgm needs 3-char trigrams to use its index). */
 export const CHAT_SEARCH_MIN_QUERY_LENGTH = 3;
 
 export interface ChatSearchSnippet {
@@ -43,7 +42,7 @@ interface ChatSearchParams {
   caseSensitive: MaybeRefOrGetter<boolean>;
 }
 
-/** [GET] /workspace/:workspaceId/chat/search (specs/chat/search-prd.md, "API"). */
+/** [GET] /workspace/:workspaceId/chat/search */
 export function useChatSearchApi({
   query,
   page,

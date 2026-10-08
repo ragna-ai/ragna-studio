@@ -2,7 +2,7 @@
 // `as const` tuples so `z.enum(...)` (see TaskCreateDialog.vue and friends)
 // can derive a schema whose parsed output IS `TaskStatus`/`TaskPriority`,
 // instead of widening to `string` and forcing a cast at every call site.
-// Fixed Linear-style columns (specs/tasks/prd.md, "Decisions"): no columns
+// Fixed Linear-style columns: no columns
 // table, this order drives both the board and the list view's grouping.
 export const TASK_STATUSES = [
   'backlog',
@@ -52,7 +52,7 @@ export interface Task {
   updatedAt: string;
 }
 
-/** Board/list row: what GET /task returns (specs/tasks/prd.md, "List"). */
+/** Board/list row: what GET /task returns. */
 export interface TaskWithBoardInfo extends Task {
   labels: TaskLabel[];
   assignedAgent: TaskAssignedAgent | null;
@@ -100,8 +100,7 @@ export type CreateTaskRequest = {
   labelIds?: string[];
 };
 
-// PATCH never accepts status/sortOrder: moving is the dedicated /move action
-// (specs/tasks/prd.md, "PATCH").
+// PATCH never accepts status/sortOrder: moving is the dedicated /move action.
 export type UpdateTaskRequest = {
   title?: string;
   description?: string;

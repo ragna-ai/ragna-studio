@@ -21,7 +21,7 @@ export const validTaskAttachmentParams = myzValidator(
   }),
 );
 
-// List is unpaginated (specs/tasks/prd.md, "List"): a board needs every card.
+// List is unpaginated: a board needs every card.
 // Only optional filters, no page/limit/sort.
 export const validTaskListQuery = myzValidator(
   'query',
@@ -52,7 +52,7 @@ export const validCreateTaskBody = myzValidator(
 
 // PATCH: every field optional, only the ones sent are updated. status and
 // sortOrder are intentionally absent: moving a task is the dedicated
-// POST /task/:taskId/move action (specs/tasks/prd.md, "PATCH").
+// POST /task/:taskId/move action.
 export const validUpdateTaskBody = myzValidator(
   'json',
   z.object({
@@ -71,7 +71,7 @@ export const validMoveTaskBody = myzValidator(
   'json',
   z.object({
     status: taskStatus,
-    // Omitted = top of the column (specs/tasks/prd.md, "Move").
+    // Omitted = top of the column.
     afterTaskId: primaryId.nullish(),
   }),
 );

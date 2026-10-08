@@ -3,8 +3,7 @@
 // Mocks `@repo/storage`'s network-touching surface: `uploadObjectBuffer`,
 // `downloadObjectBuffer`, and `deleteObjects` are thin wrappers around a
 // real S3-compatible client with no business logic of their own worth
-// preserving in tests, matching specs/testing/strategy.md's "External
-// boundaries" (mocked at the package boundary). Everything else the
+// preserving in tests (mocked at the package boundary). Everything else the
 // package exports (`toPublicMediaUrl`, the bucket-name
 // helpers) is a pure function with no I/O, so it stays real via the spread
 // below rather than being reimplemented here.

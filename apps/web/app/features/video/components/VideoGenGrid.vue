@@ -55,7 +55,7 @@ function stopPreview(id: string) {
 
 // Veo only produces 16:9 or 9:16; BFL adds six more ratios plus 'auto',
 // whose actual rendered shape isn't known ahead of playback
-// (specs/videogen/prd-v2.md risk: "auto aspect ratio"). aspect-video is the
+// ("auto" aspect ratio). aspect-video is the
 // fallback box for that case.
 const TILE_ASPECT_CLASS: Record<VideoGenAspectRatio, string> = {
   '21:9': 'aspect-[21/9]',
@@ -76,7 +76,7 @@ function isEnhanceableDraft(video: GeneratedVideo) {
   return video.isDraft && video.status === 'completed';
 }
 
-// The one-enhance-per-draft rule (specs/videogen/prd-v2.md decision 2): a
+// The one-enhance-per-draft rule: a
 // failed enhance can be retried, so only a non-failed enhance row blocks a
 // new one. This is a local, best-effort mirror of the server's check for
 // the disabled state and its tooltip; the server re-checks authoritatively

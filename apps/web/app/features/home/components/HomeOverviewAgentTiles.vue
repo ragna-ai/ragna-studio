@@ -12,7 +12,7 @@ const { createChatAndNavigate } = useCreateChatAndNavigate();
 </script>
 
 <template>
-  <!-- 2-up tile grid instead of rows (specs/home/prd.md, "Agents card").
+  <!-- 2-up tile grid instead of rows.
        The dashed create tile is always rendered, so an empty list still
        shows a single actionable tile instead of a bare empty message. -->
   <div class="grid grid-cols-2 gap-3">

@@ -1,7 +1,6 @@
 // packages/media/src/lib/watermark-ffmpeg.util.ts
 //
-// Version-proof ffmpeg pieces for the video watermark (specs/ai-labeling/
-// prd.md "Processing", revision 1). ffmpeg 6/7/8 disagree on `scale2ref`
+// Version-proof ffmpeg pieces for the video watermark. ffmpeg 6/7/8 disagree on `scale2ref`
 // (7.0.2 on Linux silently drops the video stream through it, 8 removed the
 // filter entirely), so the graph below does no in-graph scaling at all: the
 // badge is pre-rasterized in Node at its final pixel size, and the filter

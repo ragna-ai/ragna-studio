@@ -103,7 +103,7 @@ export async function listEmailDraftsByThreadId({
   });
 }
 
-// The Drafts folder (specs/email/drafts-change-request.md, "Scope > 6"):
+// The Drafts folder:
 // every non-terminal draft for the account, newest first, whoever wrote it
 // and whether or not it has a thread yet.
 export async function listEmailDraftsByAccountId({
@@ -136,8 +136,8 @@ export async function listPendingEmailDraftsByAccountId({
   });
 }
 
-// The sync cron's abandoned-draft sweep (specs/email/drafts-change-request.md,
-// "Scope > 4"): rows that never reached Gmail (no providerDraftId to delete
+// The sync cron's abandoned-draft sweep:
+// rows that never reached Gmail (no providerDraftId to delete
 // there) with no body and no recipients, left untouched past `olderThan`.
 // Callers pass the result straight to deleteEmailDraft, row by row, since a
 // never-pushed draft is a plain local delete.

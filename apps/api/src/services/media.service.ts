@@ -33,7 +33,7 @@ import {
   MAX_UPLOAD_FILE_MB,
 } from '../utils/upload-limits';
 
-// MEDIA CORE (specs/media-library/prd.md, unified-media-prd.md)
+// MEDIA CORE
 //
 // Chat-attachment orchestration and HTTP DTO building on top of
 // @repo/media, which owns upload validation (content sniffing, never
@@ -468,8 +468,8 @@ export interface MediaListItem {
 /**
  * [GET] /workspace/:workspaceId/media
  * Lists every media row owned by the workspace, newest first. Powers the
- * media-library picker in the email compose UI (specs/email/prd.md,
- * "Compose/send"). No pagination: a workspace's media library is modest in
+ * media-library picker in the email compose UI.
+ * No pagination: a workspace's media library is modest in
  * size, same reasoning as task.service.ts's listTasksForWorkspace.
  */
 export async function listMediaForWorkspace({

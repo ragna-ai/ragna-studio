@@ -19,8 +19,8 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/utils/upload-limits';
 
-// Chat attachment upload/delete (specs/media-library/prd.md,
-// unified-media-prd.md). Auth/authorization for /workspace/:workspaceId/*
+// Chat attachment upload/delete.
+// Auth/authorization for /workspace/:workspaceId/*
 // in general are covered exhaustively in test/auth/ and
 // test/workspace/workspace-authorization.test.ts; this file checks the
 // feature's own behavior, including the media.service.ts-level "chat
@@ -31,7 +31,7 @@ import { MAX_FILES_PER_UPLOAD_REQUEST } from '../../src/utils/upload-limits';
 // local, no network), so tier-2 text storage is exercised for real too.
 
 // Smallest possible valid 1x1 transparent PNG (67 bytes) — a real fixture
-// file rather than a mock, per specs/testing/strategy.md.
+// file rather than a mock.
 const ONE_PX_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -45,7 +45,7 @@ function csvFile(name = 'data.csv', content = 'name,age\nAda,36\nGrace,85\n'): F
 
 // A real one-slide .pptx (generated with pptxgenjs), not a hand-rolled zip:
 // anydoc's toMarkdownBytes parses the actual OOXML package, so the fixture
-// needs to be one, per specs/testing/strategy.md's "real fixture" preference.
+// needs to be one.
 const PPTX_FIXTURE_PATH = join(import.meta.dir, 'fixtures', 'sample.pptx');
 
 function pptxFile(name = 'slides.pptx'): File {
@@ -175,7 +175,7 @@ describe('POST /workspace/:workspaceId/chat/:chatId/attachments', () => {
     expect(mediaRow?.extractedText).toContain('| Grace | 85 |');
   });
 
-  test('uploads a pptx and stores its extracted text (specs/media-library/unified-media-prd.md, pptx addition)', async () => {
+  test('uploads a pptx and stores its extracted text', async () => {
     const { workspaceId, cookieHeader, chatId } = await seedChat();
     const file = pptxFile();
 
@@ -341,7 +341,7 @@ describe('DELETE /workspace/:workspaceId/chat/:chatId/attachments/:attachmentId'
     const attachment = attachments[0]!;
     // v1 has no natural flow to attach the same media to two chats; fabricate
     // a second reference directly to exercise deleteMediaIfUnreferenced's
-    // "still referenced" branch (specs/media-library/prd.md, decision 2).
+    // "still referenced" branch.
     await createChatAttachment({ chatId: otherChatId, mediaId: attachment.mediaId });
 
     const response = await app.request(

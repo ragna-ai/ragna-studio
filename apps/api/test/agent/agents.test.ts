@@ -4,8 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD + memory endpoints for /workspace/:workspaceId/agent (specs/
-// testing/strategy.md, priority 3). Auth/authorization are covered
+// Plain CRUD + memory endpoints for /workspace/:workspaceId/agent.
+// Auth/authorization are covered
 // exhaustively in test/auth/ and test/workspace/workspace-authorization.test.ts;
 // this file only checks the agent feature's own behavior.
 

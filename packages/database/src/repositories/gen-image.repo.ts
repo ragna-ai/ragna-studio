@@ -26,7 +26,7 @@ export async function createGenImageRecords(records: NewGenImage[]): Promise<Gen
 }
 
 // One row per reference image consumed by a batch of createGenImageRecords
-// calls (specs/media-library/migration-prd.md decision 1): the caller passes
+// calls: the caller passes
 // one entry per (genImageId, reference) pair, since a batch generation
 // request creates several gen_images rows that each repeat the same
 // reference set.
@@ -41,10 +41,9 @@ export async function createGenImageReferences(
 }
 
 // Workspace-scoped list, newest first by default. Access is gated by the
-// workspace guard upstream (specs/api-standards/prd.md), so this no longer
+// workspace guard upstream, so this no longer
 // filters by userId. Joins the output media row and every reference's media
-// row, so callers never need a second round trip to resolve a storage key
-// (specs/media-library/migration-prd.md decision 6).
+// row, so callers never need a second round trip to resolve a storage key.
 export async function getGenImagesByWorkspaceId({
   workspaceId,
   limit,
@@ -121,8 +120,8 @@ export async function getGenImageByIdAndWorkspaceId({
   return found ?? null;
 }
 
-// Plain lookup by id, no ownership scoping (specs/imagegen/worker-execution-
-// prd.md decision 3): the gen-images worker and the chat tool's inline
+// Plain lookup by id, no ownership scoping:
+// the gen-images worker and the chat tool's inline
 // workflow path both only ever receive ids they created or read off a
 // trusted job payload, never a caller-supplied id, the same trust model as
 // gen-video.repo.ts's getGenVideoById. Joined the same way as
@@ -146,7 +145,7 @@ export async function getGenImageRowsByIds({
   });
 }
 
-// visibleWatermark included (specs/ai-labeling/prd.md "Failure semantics"):
+// visibleWatermark included:
 // the completion update flips it from "requested" to "actually applied"
 // when the watermark attempt failed, so runGenImages (@repo/ai) needs to set
 // it alongside status/mediaId on the same call, mirroring
@@ -172,8 +171,8 @@ export async function updateGenImageStatus({
 }
 
 // Bulk variant of updateGenImageStatus, for the batch-wide transitions a
-// gen-images job goes through as a whole (specs/imagegen/worker-execution-
-// prd.md decision 2): every row moves to 'processing' together before the
+// gen-images job goes through as a whole:
+// every row moves to 'processing' together before the
 // provider call, and the provider call is all-or-nothing, so a failure marks
 // every row in the batch 'failed' with the same message in one statement.
 // Per-row completion (different mediaId/visibleWatermark per image) still
@@ -200,8 +199,7 @@ export async function updateGenImageStatusByIds({
 
 // Reference media ids for a gen image, read BEFORE deleteGenImageByIdAndWorkspaceId
 // below: the delete cascades gen_image_reference rows away, so a caller that
-// needs to refcount those media ids afterward (specs/media-library/
-// migration-prd.md decision 5) must collect them first.
+// needs to refcount those media ids afterward must collect them first.
 export async function getGenImageReferenceMediaIds({
   genImageId,
 }: {
@@ -216,8 +214,8 @@ export async function getGenImageReferenceMediaIds({
 }
 
 // Workspace-scoped delete-and-return: the service needs the deleted row's
-// mediaId afterward to refcount-delete its output media
-// (specs/media-library/migration-prd.md decision 5). Its gen_image_reference
+// mediaId afterward to refcount-delete its output media.
+// Its gen_image_reference
 // rows cascade away with it; call getGenImageReferenceMediaIds first if
 // those need refcounting too.
 export async function deleteGenImageByIdAndWorkspaceId({

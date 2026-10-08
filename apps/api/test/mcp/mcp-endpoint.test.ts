@@ -8,15 +8,15 @@ import {
 } from './support/jwks-fetch-bridge';
 import { mintMcpAccessToken, seedMcpConnection, seedOAuthClient } from './support/mcp-fixtures';
 
-// /mcp: the Streamable HTTP JSON-RPC endpoint (specs/mcp/prd.md section 3,
-// "Testing"). requireMcpAuth verifies the bearer token against the auth
+// /mcp: the Streamable HTTP JSON-RPC endpoint.
+// RequireMcpAuth verifies the bearer token against the auth
 // server's own JWKS over a real fetch to `${baseURL}/jwks`; see
 // support/jwks-fetch-bridge.ts for why that needs a bridge rather than a
 // real listening port. The OAuth dance itself (CIMD, consent, token
 // exchange) is manual-tested with Claude Desktop, not here.
 
 // Protocol revision 2026-07-28 carries its envelope per request rather than
-// once at `initialize` (specs/mcp/prd.md section 3): every request needs the
+// once at `initialize`: every request needs the
 // protocol version and client capabilities under reserved `_meta` keys.
 const MCP_PROTOCOL_VERSION = '2026-07-28';
 

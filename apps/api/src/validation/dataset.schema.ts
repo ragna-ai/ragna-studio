@@ -64,8 +64,7 @@ export const validUpdateDatasetRowBody = myzValidator(
   }),
 );
 
-// Omitted = top of the dataset (specs/datasets/export-and-row-reorder.md
-// decision 5, mirroring validMoveTaskBody).
+// Omitted = top of the dataset (mirrors validMoveTaskBody).
 export const validMoveDatasetRowBody = myzValidator(
   'json',
   z.object({

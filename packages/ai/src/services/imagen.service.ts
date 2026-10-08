@@ -40,7 +40,7 @@ export const imageGenResolutions = ['1K', '2K'] as const;
 // This is the service-level schema: it takes already-resolved storage keys.
 // The HTTP-level schema (apps/api) additionally accepts a genImageId and
 // resolves it to a storage key before calling in here, same split as
-// generateVideoSchema vs validGenerateVideoBody (specs/imagegen/prd.md).
+// generateVideoSchema vs validGenerateVideoBody.
 export const generateImagesSchema = z.object({
   prompt: z.string().min(1).max(5000),
   provider: z.enum(imageGenProviders),
@@ -50,12 +50,11 @@ export const generateImagesSchema = z.object({
   n: z.number().int().min(1).max(4).optional(),
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
-  // bfl + openai only (specs/imagegen/prd.md decision 3); enforcing that is
+  // bfl + openai only; enforcing that is
   // capability-driven and lives in apps/api, not here (see the vertex
   // branch of configProviderParams below).
   //
-  // Both mediaId and storageKey travel together (specs/media-library/
-  // migration-prd.md): storageKey downloads the bytes to condition the
+  // Both mediaId and storageKey travel together: storageKey downloads the bytes to condition the
   // generation on, mediaId is the link this call writes into
   // gen_image_reference once the output rows exist. apps/api's
   // imagegen.service.ts resolves both from the HTTP-level {origin, id}
@@ -70,7 +69,7 @@ export const generateImagesSchema = z.object({
     )
     .max(4)
     .optional(),
-  // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2).
+  // EU AI Act Art. 50(4) visible-disclosure toggle.
   // Default off; applied after generation, before upload, by
   // applyImageWatermark below.
   visibleWatermark: z.boolean().optional(),
@@ -81,8 +80,7 @@ export type GenerateImagesInput = z.infer<typeof generateImagesSchema>;
 type AspectRatio = NonNullable<GenerateImagesInput['aspectRatio']>;
 type ImageResolution = NonNullable<GenerateImagesInput['resolution']>;
 
-// workspaceId is required: gen_images.workspaceId is NOT NULL
-// (specs/api-standards/prd.md).
+// workspaceId is required: gen_images.workspaceId is NOT NULL.
 type CreateImageParams = GenerateImagesInput & { userId: string; workspaceId: string };
 
 type OpenAIImageSize = '1024x1024' | '1024x1536' | '1536x1024';
@@ -138,12 +136,11 @@ const toProviderOptions = (opts: unknown): GenerateImageProviderOptions =>
 
 type GenImageReferenceDto = { origin: GenImageReferenceOrigin; imgUrl: string };
 
-// Widened for the preview dialog (specs/imagegen/prd.md): it shows the
+// Widened for the preview dialog: it shows the
 // settings behind a generation and can load them back into the form, so the
 // dto needs to carry those settings, not just the prompt and image URLs.
 // status/error and the optional urls mirror videogen.service.ts's
-// GenVideoDto: imgUrl is undefined until the row completes
-// (specs/imagegen/worker-execution-prd.md decision 7).
+// GenVideoDto: imgUrl is undefined until the row completes.
 export type GenImageDto = {
   id: string;
   status: GenImage['status'];
@@ -190,7 +187,7 @@ function toGenImageDto(
 
 // Built once per request from the already-resolved reference input (mediaId
 // + storageKey), not re-derived from the DB: every row in a batch shares the
-// same reference set (specs/media-library/migration-prd.md decision 6), so
+// same reference set, so
 // this only needs to run once, the same way the pre-split createGenImages did.
 function buildReferenceImageDtos(
   referenceImages: GenerateImagesInput['referenceImages'],
@@ -204,7 +201,7 @@ function buildReferenceImageDtos(
 /**
  * Inserts a batch of pending gen_images rows (one per requested output) plus
  * their shared gen_image_reference rows, and reads them back joined with
- * their reference media (specs/imagegen/worker-execution-prd.md decision 2):
+ * their reference media:
  * a request creates up to 4 outputs from one prompt/settings/reference set,
  * so the batch is n rows sharing everything except their eventual mediaId.
  * Exported standalone (not just used by requestGenImages below) for the
@@ -292,8 +289,7 @@ async function enqueueGenImagesJob(
 }
 
 /**
- * Request side (API, chat tool, specs/imagegen/worker-execution-prd.md
- * decision 3): inserts the pending batch and enqueues the gen-images job,
+ * Request side (API, chat tool): inserts the pending batch and enqueues the gen-images job,
  * then returns immediately. The worker (gen-images.processor.ts) does the
  * slow part.
  */
@@ -308,15 +304,15 @@ interface GeneratedImageUpload {
   storageKey: string;
   size: number;
   // The actual outcome of this image's upload, not the request: true only
-  // when the watermark attempt below both ran and succeeded
-  // (specs/ai-labeling/prd.md "Failure semantics"). runGenImages persists
+  // when the watermark attempt below both ran and succeeded.
+  // RunGenImages persists
   // this onto that image's own gen_images.visibleWatermark.
   visibleWatermark: boolean;
 }
 
 /**
- * Runs the provider call for one batch and uploads every output
- * (specs/imagegen/worker-execution-prd.md decision 2): all rows in the batch
+ * Runs the provider call for one batch and uploads every output:
+ * all rows in the batch
  * share prompt/settings/provider/model/references (set once at request
  * time), so this reads them off the batch's first row rather than each one.
  * The provider call is all-or-nothing: a failure here fails the whole batch,
@@ -366,7 +362,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         // @ai-sdk/google-vertex 5.0.63+ dropped Imagen entirely: image
         // requests now go through Gemini's generateContent, which has no
         // addWatermark or negativePrompt option. That's fine for the EU AI
-        // Act Art. 50(2) guardrail (specs/ai-labeling/prd.md part 1):
+        // Act Art. 50(2) guardrail:
         // Gemini image models apply SynthID unconditionally, with no
         // API-level toggle to disable it.
         if (negativePrompt) {
@@ -482,8 +478,8 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
     throw new Error('Image generation failed');
   }
 
-  // Surfaces provider-side quirks like OpenAI silently ignoring `seed`
-  // (specs/imagegen/prd.md decision 6): a capability row that disagrees with
+  // Surfaces provider-side quirks like OpenAI silently ignoring `seed`:
+  // a capability row that disagrees with
   // what the SDK actually supports should be visible in the logs, not just
   // silently honoured or dropped.
   if (imageGenResult.warnings.length > 0) {
@@ -496,7 +492,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
 
   const { images: genImages } = imageGenResult;
 
-  // Best-effort, per image (specs/ai-labeling/prd.md "Failure semantics"): a
+  // Best-effort, per image: a
   // generated image is always saved, the watermark is an addon. A failed
   // attempt falls back to the raw bytes for that image only, rather than
   // failing the whole batch; the resulting `visibleWatermark` becomes that
@@ -541,7 +537,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
 }
 
 /**
- * Run side (specs/imagegen/worker-execution-prd.md decision 3): loads the
+ * Run side: loads the
  * batch's rows, flips them all to processing, runs the provider call and
  * uploads every output, creates a media row per output, then flips each row
  * to completed pointing at its own media (or, on any failure, flips every
@@ -575,8 +571,8 @@ export async function runGenImages({
     throw error ?? new Error('Image generation failed');
   }
 
-  // One media row per generated output (specs/media-library/migration-prd.md
-  // decision 6), minted before the gen_images rows are flipped to completed
+  // One media row per generated output,
+  // minted before the gen_images rows are flipped to completed
   // so each row's update can point at its own media.id.
   const mediaRows = await Promise.all(
     uploads.map((upload, index) =>
@@ -598,8 +594,8 @@ export async function runGenImages({
         id: row.id,
         status: 'completed',
         mediaId: mediaRows[index].id,
-        // Actual outcome, not the request (specs/ai-labeling/prd.md "Failure
-        // semantics"): overwrites the row's requested value with what the
+        // Actual outcome, not the request:
+        // overwrites the row's requested value with what the
         // upload actually stored, flipping it to false if the watermark
         // attempt failed for that image.
         visibleWatermark: uploads[index].visibleWatermark,
@@ -654,8 +650,8 @@ async function resolveDefaultImageModel(): Promise<ResolvedDefaultImageModel> {
 }
 
 /**
- * Creates images with the first configured image model and runs them inline
- * (specs/imagegen/worker-execution-prd.md decision 6): used by the image
+ * Creates images with the first configured image model and runs them inline:
+ * used by the image
  * generation tool when it already runs inside the worker (workflow
  * executors), so there's no queue hop, mirroring the video tool's awaited
  * path (createGenVideoRecord + runGenVideo).
@@ -663,7 +659,7 @@ async function resolveDefaultImageModel(): Promise<ResolvedDefaultImageModel> {
  * The tool's inputSchema offers seed/negativePrompt unconditionally (the
  * agent has no way to read ai_models.capabilities), so this is where they
  * get dropped for a model that doesn't support them: fail closed, an absent
- * or false flag means unsupported (specs/imagegen/prd.md decisions 1 and 7).
+ * or false flag means unsupported.
  * No reference images here, the tool never offers them.
  */
 export async function createGenImagesWithDefaultModel(
@@ -683,8 +679,8 @@ export async function createGenImagesWithDefaultModel(
 }
 
 /**
- * Same as createGenImagesWithDefaultModel, but through the request side
- * (specs/imagegen/worker-execution-prd.md decision 6): used by the chat-path
+ * Same as createGenImagesWithDefaultModel, but through the request side:
+ * used by the chat-path
  * image tool when it runs in the API process, so generation still happens on
  * the worker. The tool polls the returned ids until they settle or the poll
  * cap is reached.

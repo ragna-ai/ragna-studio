@@ -153,8 +153,7 @@ function tableNode(table: Tokens.Table, context: BlockContext): Table {
 }
 
 // Walks one block-level token into docx nodes. Unsupported tokens degrade
-// to a plain paragraph of their raw markdown (specs/datasets/export-and-row-reorder.md
-// "Document export" decision 2: "never an error").
+// to a plain paragraph of their raw markdown.
 function blockToDocx(rawToken: Token, context: BlockContext): DocxBlock[] {
   const token = asMarkedToken(rawToken);
 
@@ -184,8 +183,8 @@ function blockToDocx(rawToken: Token, context: BlockContext): DocxBlock[] {
 }
 
 /**
- * `docx` writer for documents (specs/datasets/export-and-row-reorder.md
- * "Document export" decision 2): same token walk as the text and PDF
+ * `docx` writer for documents:
+ * same token walk as the text and PDF
  * writers, mapped to `Paragraph`/`TextRun`/`HeadingLevel`/table nodes.
  * Lists render as indented paragraphs with a literal marker rather than
  * Word's native numbering (same degrade rule, kept simple on purpose). An

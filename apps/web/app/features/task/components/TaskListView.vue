@@ -17,8 +17,8 @@ const { formatDate } = useDateTimeFormat();
 
 // Computed
 // Grouped by status in the fixed column order, each group's rows already
-// arrive sorted by sortOrder from the shared list query (specs/tasks/prd.md,
-// "List view"). No drag-and-drop here, reordering happens on the board.
+// arrive sorted by sortOrder from the shared list query.
+// No drag-and-drop here, reordering happens on the board.
 const groups = computed(() =>
   STATUS_COLUMNS.map((column) => ({
     ...column,

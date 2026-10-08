@@ -12,7 +12,7 @@ const route = useRoute();
 const documentId = computed(() => route.params.documentId as string);
 
 // Composables
-// Documents are always workspace-scoped (specs/documents/prd.md): the
+// Documents are always workspace-scoped: the
 // document itself carries its workspaceId, but the API needs it in the URL
 // before the document has loaded, so this relies on the active workspace
 // the same way the /document list page does. activeWorkspaceId is only

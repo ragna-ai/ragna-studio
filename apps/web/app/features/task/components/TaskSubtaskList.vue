@@ -12,7 +12,7 @@ const { t } = useI18n();
 const { mutate: createTask, isPending } = useCreateTask();
 
 // Functions
-// One level deep only (specs/tasks/prd.md): a subtask can never itself have
+// One level deep only: a subtask can never itself have
 // subtasks, so this quick-add never needs its own nested add.
 function handleCreate(title: string) {
   createTask({ title, parentTaskId: props.parentTaskId });

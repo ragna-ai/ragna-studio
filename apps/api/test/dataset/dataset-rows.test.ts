@@ -4,9 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD + reorder for /workspace/:workspaceId/dataset/:datasetId/row
-// (specs/testing/strategy.md, priority 3; specs/datasets/export-and-row-
-// reorder.md). Auth/authorization are covered exhaustively in test/auth/;
+// Plain CRUD + reorder for /workspace/:workspaceId/dataset/:datasetId/row.
+// Auth/authorization are covered exhaustively in test/auth/;
 // this file only checks the dataset row feature's own behavior.
 
 const datasetRowSchema = z.object({

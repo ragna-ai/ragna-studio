@@ -19,16 +19,16 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// videogen (specs/testing/strategy.md's "Blocked on mock infrastructure",
-// now unblocked). Auth/authorization are covered exhaustively in test/auth/
+// videogen.
+// Auth/authorization are covered exhaustively in test/auth/
 // and test/workspace/workspace-authorization.test.ts; this file only checks
 // the videogen feature's own behavior.
 //
 // Unlike imagegen, the create route (`generateVideoForWorkspace` ->
 // `requestGenVideo`, @repo/ai) never calls the `ai` package: it only
 // inserts a pending row and enqueues a BullMQ job. Enqueueing is faked by
-// @repo/testing's queue mock (specs/testing/strategy.md's "External
-// boundaries") rather than hitting the real docker Redis apps/worker's dev
+// @repo/testing's queue mock
+// rather than hitting the real docker Redis apps/worker's dev
 // process also polls. The actual Veo call
 // (`runGenVideo`/`generateAndUploadVideo`) only runs from apps/worker's
 // gen-video processor, out of scope here, so no `ai` mock is needed for
@@ -63,7 +63,7 @@ const listResponseSchema = z.object({
 // here, see the top-of-file comment), so a "completed" row with a media/
 // frame media row is seeded directly via the repo rather than waiting on a
 // real render. storageKey/frameStorageKey are convenience params: each one
-// present mints its own media row (specs/media-library/migration-prd.md)
+// present mints its own media row
 // before the gen_videos row is created.
 async function seedCompletedVideo({
   userId,
@@ -390,8 +390,8 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    // Each media row is refcount-deleted independently
-    // (specs/media-library/migration-prd.md decision 5), so the output and
+    // Each media row is refcount-deleted independently,
+    // so the output and
     // the frame come off in two separate deleteObjects calls, not one
     // combined call.
     expect(deleteObjectsMock).toHaveBeenCalledTimes(2);
@@ -418,7 +418,7 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     });
     // A real gen_images row keeps this media referenced after the video row
     // is deleted, proving a 'genImage'-origin frame link doesn't own the
-    // object it points at (specs/media-library/migration-prd.md decision 5):
+    // object it points at:
     // deleting the video must not delete media another row still needs.
     await createGenImageRecords([
       {

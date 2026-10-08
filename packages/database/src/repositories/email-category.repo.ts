@@ -57,8 +57,7 @@ export async function updateEmailCategory({
 }
 
 // FK on email_messages.categoryId is `onDelete: 'set null'`, so deleting a
-// category just uncategorizes its messages, it never touches them
-// (specs/email/prd.md, "Database").
+// category just uncategorizes its messages, it never touches them.
 export async function deleteEmailCategory({
   id,
   accountId,

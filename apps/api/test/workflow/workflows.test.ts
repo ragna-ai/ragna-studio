@@ -4,9 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-// Plain CRUD + the run lifecycle for /workspace/:workspaceId/workflow
-// (specs/testing/strategy.md, priority 3; specs/credits/prd.md for the run
-// route's creditGuard). Auth/authorization are covered exhaustively in
+// Plain CRUD + the run lifecycle for /workspace/:workspaceId/workflow,
+// including the run route's creditGuard. Auth/authorization are covered exhaustively in
 // test/auth/ and test/workspace/workspace-authorization.test.ts; this file
 // only checks the workflow feature's own behavior. Worker execution of an
 // enqueued run is out of scope: these tests only check that enqueueing

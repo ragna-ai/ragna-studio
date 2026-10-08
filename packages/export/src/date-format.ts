@@ -1,11 +1,10 @@
-// European date formatting (specs/datasets/export-and-row-reorder.md decision
-// 2, "Date formatting"): hardcoded for now, no locale plumbing yet.
+// European date formatting:
+// hardcoded for now, no locale plumbing yet.
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /**
- * Renders a stored `date` column value (ISO `yyyy-mm-dd`, per
- * specs/datasets.md decision 1) as `dd.mm.yyyy`. A value that doesn't match
+ * Renders a stored `date` column value (ISO `yyyy-mm-dd`) as `dd.mm.yyyy`. A value that doesn't match
  * the stored format passes through unchanged rather than throwing.
  */
 export function toEuropeanDate(value: string): string {

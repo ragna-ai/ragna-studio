@@ -2,7 +2,7 @@
 import { PlusIcon } from '@lucide/vue';
 
 // A bare title-only quick-add row, shared by the board's per-column
-// composer and the subtask list's quick-add (specs/tasks/prd.md). The
+// composer and the subtask list's quick-add. The
 // caller supplies the rest of the create payload (status/parentTaskId).
 
 // Props

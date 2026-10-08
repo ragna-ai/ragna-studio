@@ -10,8 +10,8 @@ export type CreditGuardEnv = WorkspaceGuardEnv & {
 };
 
 /**
- * Gates a single spending route behind `assertCanSpend`
- * (specs/credits/prd.md, "creditGuard"). Reads the workspace from
+ * Gates a single spending route behind `assertCanSpend`.
+ * Reads the workspace from
  * `c.get('workspace')` rather than the route param, so it needs no
  * validation and no query of its own beyond the gate. It therefore **must**
  * be mounted after `workspaceGuard`.

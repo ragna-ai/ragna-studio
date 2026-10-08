@@ -27,9 +27,9 @@ export const genImage = pgTable(
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
     status: text('status').notNull().$type<GenImageStatus>().default('pending'),
-    // The generated output's media row (specs/media-library/migration-prd.md).
-    // Null until the worker uploads the output and mints it
-    // (specs/imagegen/worker-execution-prd.md decision 1). No onDelete
+    // The generated output's media row.
+    // Null until the worker uploads the output and mints it.
+    // No onDelete
     // action, same as chat_attachment.media_id: the DB refuses to delete a
     // media row while a gen image still points at it.
     mediaId: text('media_id').references(() => media.id),
@@ -42,7 +42,7 @@ export const genImage = pgTable(
     resolution: text('resolution').$type<GenImageResolution>(),
     seed: integer('seed'),
     negativePrompt: text('negative_prompt'),
-    // Art. 50(4) visible-disclosure toggle (specs/ai-labeling/prd.md part 2):
+    // EU AI Act Art. 50(4) visible-disclosure toggle:
     // whether the "AI generated" badge was burned into this output.
     visibleWatermark: boolean('visible_watermark').notNull().default(false),
     ...timestamps,
@@ -58,8 +58,8 @@ export type GenImage = typeof genImage.$inferSelect;
 export type NewGenImage = typeof genImage.$inferInsert;
 
 // GEN IMAGE REFERENCE
-// One row per input reference image used to generate a gen_images row
-// (specs/media-library/migration-prd.md decision 1). Replaces the old
+// One row per input reference image used to generate a gen_images row.
+// Replaces the old
 // reference_images jsonb column: jsonb can't hold a real FK, and refcount
 // (countMediaReferences in media.repo.ts) must be able to see these links.
 export type GenImageReferenceOrigin = 'upload' | 'genImage';
@@ -93,8 +93,7 @@ export type NewGenImageReference = typeof genImageReference.$inferInsert;
 export type GenImageReferenceWithMedia = GenImageReference & { media: Media };
 export type GenImageWithMedia = GenImage & {
   // Nullable like gen_videos' media relation: no object exists yet for a
-  // pending/processing/failed row (specs/imagegen/worker-execution-prd.md
-  // decision 1).
+  // pending/processing/failed row.
   media: Media | null;
   references: GenImageReferenceWithMedia[];
 };

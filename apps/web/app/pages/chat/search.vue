@@ -20,14 +20,14 @@ const initialQuery = parseChatSearchQuery(route.query);
 const searchInput = ref(initialQuery.q);
 const query = ref(initialQuery.q);
 const page = ref(initialQuery.page);
-// 10, not the API's documented default of 20 (specs/chat/search-prd.md,
-// "API") - `limit` is always sent explicitly below, so that default only
+// 10, not the API's documented default of 20
+// - `limit` is always sent explicitly below, so that default only
 // matters when the param is omitted, and `PaginateControls`' page-size
 // `Select` only offers 10/25/50/100. A value outside that list (e.g. 20)
 // leaves the select bound to a value with no matching `SelectItem`, which
 // Radix/shadcn renders blank instead of falling back to the first option.
 const limit = ref(initialQuery.limit);
-// Snippets-per-chat-row is a fixed v1 default (specs/chat/search-prd.md, "API"),
+// Snippets-per-chat-row is a fixed v1 default,
 // independent of the page/limit pagination above.
 const snippetsPerChat = ref(3);
 

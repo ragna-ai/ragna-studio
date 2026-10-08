@@ -9,8 +9,7 @@ defineProps<{ workflows: HomeOverviewWorkflowItem[] }>();
 const { t, locale } = useI18n();
 
 // Dot color per last run status, same palette intent as
-// WorkflowRunStatusBadge.vue; gray/never-run is unique to this card
-// (specs/home/prd.md, "Workflows card").
+// WorkflowRunStatusBadge.vue; gray/never-run is unique to this card.
 const dotClassByStatus: Record<WorkflowRunStatus, string> = {
   pending: 'bg-stone-400',
   running: 'bg-blue-500',

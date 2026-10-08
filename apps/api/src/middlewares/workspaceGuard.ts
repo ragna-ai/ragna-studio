@@ -16,8 +16,8 @@ export type WorkspaceGuardEnv = AuthEnv & {
 };
 
 /**
- * Guards every `/workspace/:workspaceId/...` route (specs/api-standards/prd.md,
- * "Access control"). Generalizes the `loadOwnedWorkspace()` helper that used
+ * Guards every `/workspace/:workspaceId/...` route.
+ * Generalizes the `loadOwnedWorkspace()` helper that used
  * to live in `document.service.ts`.
  *
  * Reads the `:workspaceId` route param, loads the workspace, and throws

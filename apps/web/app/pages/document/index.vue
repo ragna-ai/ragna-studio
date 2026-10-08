@@ -18,7 +18,7 @@ const isCreateDialogOpen = ref(false);
 const isFolderManageOpen = ref(false);
 
 // Composables
-// A workspace is always active (specs/api-standards/prd.md): activeWorkspaceId
+// A workspace is always active: activeWorkspaceId
 // is only briefly '' on first load, before the workspace list resolves it.
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
 const { confirm } = useConfirmDialog();

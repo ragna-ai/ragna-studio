@@ -1,5 +1,5 @@
 // Mirrors apps/api/src/services/email.service.ts response shapes (read-only
-// for this feature, see apps/api ownership note in specs/email/prd.md).
+// for this feature, apps/api owns them).
 // Dates cross the wire as ISO strings (JSON has no Date type), never `Date`.
 
 export type EmailAccountSyncState = 'idle' | 'syncing' | 'error' | 'reauth_required';
@@ -197,8 +197,8 @@ export interface EmailSearchResponse {
 
 // --- Compose / send --------------------------------------------------------
 // Every compose flow (new/reply/reply-all/forward/AI) now edits a persisted
-// draft row first (specs/email/drafts-change-request.md, "One draft object
-// for all four cases"), so `POST /email/send` and its plain (non-draft)
+// draft row first,
+// so `POST /email/send` and its plain (non-draft)
 // request shape have no remaining caller - sending always goes through
 // `POST /email/draft/:draftId/send` below.
 
@@ -237,8 +237,7 @@ export interface MediaListResponse {
 }
 
 // --- Drafts ---------------------------------------------------------------
-// Wire contract per specs/email/drafts-change-request.md ("Wire contract"):
-// the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
+// Wire contract: the draft DTO is the `email_drafts` row as-is, dates as ISO strings.
 
 export interface EmailDraftAttachment {
   /** Null when the attachment lives on the draft itself rather than a forwarded message. */
@@ -263,11 +262,11 @@ export interface EmailDraft {
   cc: EmailParticipant[];
   bcc: EmailParticipant[];
   subject: string | null;
-  /** HTML (specs/email/html-content-change-request.md flips this from markdown). */
+  /** HTML (was markdown before the HTML editor). */
   content: string;
   /** Plain-text MIME sibling of `content`, always written alongside it. */
   text: string;
-  /** Read-only quoted history, rendered via EmailContentIframe - never client-writable (specs/email/quote-iframe-change-request.md). Null for kind: 'new', or a draft created before this field existed. */
+  /** Read-only quoted history, rendered via EmailContentIframe - never client-writable. Null for kind: 'new', or a draft created before this field existed. */
   quotedHtml: string | null;
   /** Plain-text sibling of quotedHtml, same null semantics. */
   quotedText: string | null;
@@ -291,8 +290,8 @@ export interface EmailDraftResponse {
  * (recipients, subject, body HTML/text, forwarded-attachment set), so
  * EmailDraftPanel.vue can debounce them into one `PATCH /email/draft/:id`
  * call without reaching into the composer's internal editor/refs. `content`
- * and `text` are always sent together (specs/email/html-content-change-request.md,
- * "Scope > 3"): one editor snapshot, never one without the other.
+ * and `text` are always sent together:
+ * one editor snapshot, never one without the other.
  */
 export interface EmailDraftEditableFields {
   to: EmailParticipant[];
@@ -312,8 +311,8 @@ export interface CreateEmailDraftRequest {
 
 /**
  * `origin`, `kind`, `threadId`, `replyToMessageId` and `agentId` are set at
- * creation only and rejected by PATCH (specs/email/drafts-change-request.md,
- * "API changes"), so this is a distinct, narrower type from `EmailDraft`
+ * creation only and rejected by PATCH,
+ * so this is a distinct, narrower type from `EmailDraft`
  * rather than a `Partial<EmailDraft>` that would still type-check those
  * fields as assignable.
  */

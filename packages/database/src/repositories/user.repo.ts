@@ -28,8 +28,8 @@ export async function getUserById({ userId }: { userId: string }): Promise<User 
 }
 
 /**
- * Get user by email. Used by the credits grant script (specs/credits/prd.md,
- * "Grants") to resolve a human-provided email to a userId before granting.
+ * Get user by email. Used by the credits grant script
+ * to resolve a human-provided email to a userId before granting.
  */
 export async function getUserByEmail({ email }: { email: string }): Promise<User | null> {
   const userRecord = await db.query.user.findFirst({

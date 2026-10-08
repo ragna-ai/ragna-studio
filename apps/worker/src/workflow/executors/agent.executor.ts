@@ -23,14 +23,11 @@ export const executeAgent: Executor = async (node, ctx) => {
   // temperature, and step budget (see chat.controller.ts). Inline nodes
   // (no agentId) have no tools/settings to run with, so they stay plain,
   // but it is still an LLM call spent on the user's behalf, so it is gated
-  // and charged the same as the referenced-agent path below
-  // (specs/credits/prd.md: "Every text LLM call made on a user's behalf in
-  // chat and workflows debits their credit account").
+  // and charged the same as the referenced-agent path below.
   if (!config.agentId) {
     const defaultAgent = withAiModel(await getDefaultAgent());
     // Gated after the default agent (and its model's pricing) is known, so
-    // an unpriced model is refused here rather than at the end of a run
-    // (specs/credits/prd.md, "Pricing").
+    // an unpriced model is refused here rather than at the end of a run.
     const spendState = await gateCreditSpend({
       workspaceId: ctx.workspaceId,
       pricing: defaultAgent.aiModel.pricing,
@@ -73,7 +70,7 @@ export const executeAgent: Executor = async (node, ctx) => {
     runId: ctx.runId,
     nodeId: node.id,
     // One call per agent node, so a fixed suffix is enough to make the
-    // idempotencyKey unique per node (specs/credits/prd.md, "Call sites").
+    // idempotencyKey unique per node.
     callId: 'agent',
     feature: 'workflow',
   });

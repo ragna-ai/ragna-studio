@@ -107,7 +107,7 @@ const renderItems = computed<RenderItem[]>(() => {
           :content="item.text"
         />
 
-        <!-- User-attached files (specs/media-library/prd.md, decision 5).
+        <!-- User-attached files.
              Assistant-side file rendering is out of scope for v1. -->
         <template v-else-if="isFileUIPart(item) && message.role === 'user'">
           <img

@@ -30,12 +30,12 @@ import * as z from 'zod';
 import { createDatasetForAgent } from '../services/dataset.service';
 import type { ToolDefinition } from './tool-definition';
 
-// Seven tools, one family (specs/datasets.md decision 3/4): the agent tool
+// Seven tools, one family: the agent tool
 // picker shows a single "Datasets" toggle that expands to all of these at
 // tool-build time (see agent.tools.ts). Each is defined once, transport-
 // neutral, here; getDatasetXTool below adapts it to an AI SDK tool for chat
 // and workflows, and the MCP endpoint (apps/api) adapts the same definition
-// for Claude Desktop (specs/mcp/prd.md section 4).
+// for Claude Desktop.
 
 // Every schema here is a flat top-level z.object: Anthropic's tool
 // input_schema needs a top-level "type": "object", which a top-level union
@@ -58,7 +58,7 @@ const columnInputSchema = z.object({
     .describe('Allowed values. Required and only meaningful when type is "select".'),
 });
 
-// Workspace hard filter (specs/datasets.md decision 11): the whole family
+// Workspace hard filter: the whole family
 // only sees/touches the tool context's workspace.
 function isDatasetInScope(datasetRecord: Dataset, workspaceId: string): boolean {
   return datasetRecord.workspaceId === workspaceId;
@@ -121,7 +121,7 @@ function toDatasetOutput(datasetRecord: Dataset): DatasetOutput {
 
 // Row ids and timestamps are always included so the model can reason about
 // recency without a separate call; writtenBy lets an agent see rows that
-// came from outside it (specs/mcp/prd.md P6).
+// came from outside it.
 function toRowOutput(row: DatasetRow, projectedColumnIds?: string[]): DatasetRowOutput {
   return {
     id: row.id,
@@ -147,8 +147,7 @@ function toErrorMessage(error: unknown, fallback: string): string {
 
 // FIFO queue per dataset so concurrent appends/moves (e.g. a multi-step plan
 // in one turn) reach the database in call order; the row lock inside
-// createDatasetRow/moveDatasetRow then keeps sort keys collision-free
-// (specs/datasets/export-and-row-reorder.md decision 6).
+// createDatasetRow/moveDatasetRow then keeps sort keys collision-free.
 const datasetRowLocks = new Map<string, Promise<unknown>>();
 
 function withDatasetRowLock<T>(datasetId: string, fn: () => Promise<T>): Promise<T> {

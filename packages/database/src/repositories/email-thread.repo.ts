@@ -8,8 +8,8 @@ export type { EmailParticipant, EmailThread, NewEmailThread } from '../schema';
 export type EmailThreadWithMessages = EmailThread & { messages: EmailMessage[] };
 
 // Upserts on (accountId, providerThreadId): the sync poller writes the same
-// thread on every history.list page that touches it (specs/email/prd.md,
-// "Sync model"), so this is called far more often than a thread is created.
+// thread on every history.list page that touches it,
+// so this is called far more often than a thread is created.
 export async function upsertEmailThreadByProviderThreadId(
   values: NewEmailThread,
 ): Promise<EmailThread> {
@@ -54,7 +54,7 @@ function labelContainsCondition(labelId: string) {
   return sql`${emailMessage.labelIds} @> ${JSON.stringify([labelId])}::jsonb`;
 }
 
-// Thread-list query for the three-pane client (specs/email/prd.md, "Web").
+// Thread-list query for the three-pane client.
 // category/label/starred/unread all live on email_messages, not the thread
 // row, so a filtered list means "threads with at least one matching
 // message" — expressed as EXISTS/NOT EXISTS subqueries rather than a join,
@@ -161,7 +161,7 @@ export async function getEmailThreadById({
 }
 
 // Plain lookup by the provider's own thread id, e.g. to hydrate a Gmail
-// search result (specs/email/prd.md, "API": search proxies Gmail's q=) back
+// search result (search proxies Gmail's q=) back
 // to our local thread row.
 export async function getEmailThreadByProviderThreadId({
   accountId,
@@ -177,8 +177,8 @@ export async function getEmailThreadByProviderThreadId({
   return found ?? null;
 }
 
-// Sync's deletion path (specs/email/prd.md, "Sync model": history.list
-// applies deletions and purges the local row) removes messages first, then
+// Sync's deletion path (history.list applies deletions and purges the local
+// row) removes messages first, then
 // calls this to drop threads left with none, since a thread with no
 // messages is meaningless.
 export async function deleteEmailThreadIfEmpty({ id }: { id: string }): Promise<void> {

@@ -11,7 +11,7 @@ interface ChatErrorFramePayload {
 }
 
 // Thrown for a `code: 402` frame so call sites can distinguish "out of
-// credits" (specs/credits/prd.md) from any other stream error without parsing
+// credits" from any other stream error without parsing
 // `error.message`. `isOutOfCreditsError` (~/lib/api-error) reads `code`
 // directly off the error for this reason.
 export interface ChatStreamError extends Error {
@@ -27,7 +27,7 @@ type ReconnectToStreamOptions = Parameters<
 
 /**
  * `ChatTransport` that streams `useChat` over the shared WebSocket channel
- * `chat:<chatId>` instead of an HTTP POST (specs/team-chat/prd.md, phase 1).
+ * `chat:<chatId>` instead of an HTTP POST.
  *
  * `useChat` passes its own internal chat-instance id into `sendMessages`
  * (a `generateId()` result, since `ChatConversation.vue` never passes an
@@ -54,7 +54,7 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
 
     // The server rebuilds the rest of the conversation from its own
     // persisted history, so only the newest message needs to go over the
-    // wire (specs/team-chat/prd.md).
+    // wire.
     const message = messages.at(-1);
     if (!message) {
       throw new Error('WebSocketChatTransport: no message to send');
@@ -153,7 +153,7 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
     _options: ReconnectToStreamOptions,
   ): Promise<ReadableStream<UIMessageChunk> | null> {
     // Resumable streams are deferred until the server-side chunk buffer
-    // lands (specs/team-chat/prd.md, "Later (explicitly deferred)").
+    // lands.
     return null;
   }
 }

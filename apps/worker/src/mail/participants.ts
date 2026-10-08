@@ -1,6 +1,6 @@
 // apps/worker/src/mail/participants.ts
 //
-// Denormalized thread fields (specs/email/prd.md, "email_threads"): subject,
+// Denormalized thread fields: subject,
 // snippet, and participants for the list view, derived from the provider's
 // message metadata rather than stored separately.
 
@@ -42,9 +42,8 @@ export function toMailAddress(participant: EmailParticipant): MailAddress {
 // with a single message for an incremental sync ('added' events only see
 // the new message) and with every message in a thread for the seed import,
 // where it produces the thread's full participant list for free since
-// fetchThread already returned every message (specs/email/prd.md, "Content
-// pipeline" reasoning applies the same way here: compute once from what was
-// fetched anyway).
+// fetchThread already returned every message: compute once from what was
+// fetched anyway.
 function collectParticipants(messages: MailMessageMetadata[]): EmailParticipant[] {
   const byEmail = new Map<string, EmailParticipant>();
 

@@ -24,11 +24,10 @@ export async function createGenVideoRecord(record: NewGenVideo): Promise<GenVide
 }
 
 // Workspace-scoped list, newest first by default. Access is gated by the
-// workspace guard upstream (specs/api-standards/prd.md), so this doesn't
+// workspace guard upstream, so this doesn't
 // filter by userId. Joins the output and first-frame media rows (both
 // nullable: the pending/processing lifecycle means no object exists yet),
-// so callers never need a second round trip to resolve a storage key
-// (specs/media-library/migration-prd.md decision 6).
+// so callers never need a second round trip to resolve a storage key.
 export async function getGenVideosByWorkspaceId({
   workspaceId,
   limit,
@@ -71,7 +70,7 @@ export async function getGenVideoById({ id }: { id: string }): Promise<GenVideoW
   return found ?? null;
 }
 
-// One-enhance-per-draft check (specs/videogen/prd-v2.md decision 2): a
+// One-enhance-per-draft check: a
 // pending/processing/completed enhance already covers the draft, only a
 // failed one may be retried, so failed rows are excluded here rather than
 // left for the caller to filter.
@@ -88,8 +87,8 @@ export async function getEnhanceForGenVideo({
 }
 
 // Workspace-scoped delete-and-return: the service needs the deleted row's
-// mediaId/frameMediaId afterward to refcount-delete their media
-// (specs/media-library/migration-prd.md decision 5), so this stays unjoined.
+// mediaId/frameMediaId afterward to refcount-delete their media,
+// so this stays unjoined.
 export async function deleteGenVideoByIdAndWorkspaceId({
   id,
   workspaceId,
@@ -105,7 +104,7 @@ export async function deleteGenVideoByIdAndWorkspaceId({
   return deleted ?? null;
 }
 
-// visibleWatermark included (specs/ai-labeling/prd.md "Failure semantics"):
+// visibleWatermark included:
 // the completion update flips it from "requested" to "actually applied"
 // when the watermark attempt failed, so runGenVideo (@repo/ai) needs to set
 // it alongside status/mediaId/draftCacheKey on the same call.

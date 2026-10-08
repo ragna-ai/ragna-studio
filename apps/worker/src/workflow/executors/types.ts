@@ -9,7 +9,7 @@ export type ExecutorContext = {
   // The workflow run this node belongs to. Combined with the node's own id
   // (available to every Executor as its first argument), this is what makes
   // a credit charge's idempotencyKey stable across a BullMQ retry of the
-  // same run (specs/credits/prd.md, "Call sites").
+  // same run.
   runId: string;
 };
 

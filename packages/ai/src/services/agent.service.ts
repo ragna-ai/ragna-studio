@@ -17,8 +17,7 @@ import type { ModelMessage, SystemModelMessage } from 'ai';
 
 // Above this total of ready document chars, buildAgentInstructions stops
 // injecting full document text and switches to retrieval mode: a document
-// index in the prompt plus the searchContextDocuments tool
-// (specs/agent/agent-context-retrieval.md, "Prompt injection changes").
+// index in the prompt plus the searchContextDocuments tool.
 export const AGENT_CONTEXT_INJECTION_THRESHOLD = 30_000;
 
 type BuildInstructionsInput = {
@@ -27,7 +26,7 @@ type BuildInstructionsInput = {
   tools: string[];
   systemPrompt: string;
   context: string | null;
-  /** Soft pin (specs/datasets.md decision 10), null/undefined = no pin. */
+  /** Soft pin, null/undefined = no pin. */
   defaultDatasetId?: string | null;
 };
 
@@ -137,8 +136,7 @@ export interface AgentContextLoadResult {
 }
 
 /**
- * Loads the agent's ready-document context for prompt injection (Phase 3,
- * specs/agent/agent-context-retrieval.md, "Prompt injection changes"). Meta
+ * Loads the agent's ready-document context for prompt injection. Meta
  * (name + char count, not the text itself) is loaded first, so the mode
  * decision never pays for full document text it might not use:
  *  - at or below the injection threshold, the full documents are loaded and

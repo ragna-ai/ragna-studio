@@ -20,7 +20,7 @@ import { useImageGenSettingsStore } from '~/features/image/stores/imagegensettin
 interface Props {
   // Shared with ImageGenGrid via the /text-to-image page, so the workspace's
   // generated images are fetched once and both the grid and this form's
-  // reference picker read the same list (specs/imagegen/prd.md).
+  // reference picker read the same list.
   genImages: GeneratedImage[];
 }
 
@@ -100,13 +100,13 @@ const selectedModel = computed(() =>
 // Only a completed row has a media object to condition on: the gallery
 // picker below must exclude pending/processing/failed rows, since
 // referencing one of those 404s server-side (apps/api's imagegen.service.ts
-// resolveReferenceImage, specs/imagegen/worker-execution-prd.md decision 1).
+// resolveReferenceImage).
 const referenceableGenImages = computed(() =>
   props.genImages.filter((image) => image.status === 'completed'),
 );
 
 // Fail closed: an absent or falsy capability flag means the input is
-// unavailable, never a fallback default (specs/imagegen/prd.md decision 1).
+// unavailable, never a fallback default.
 const supportsNegativePrompt = computed(
   () => selectedModel.value?.capabilities.supportsNegativePrompt ?? false,
 );
@@ -202,7 +202,7 @@ function handleReferenceFileChange(event: Event) {
 // settings" button fires. Re-selects the image's model when it still exists,
 // then applies negativePrompt/seed only if the resulting model supports
 // them, so a field the model can't honour is dropped rather than queued for
-// submission (specs/imagegen/prd.md).
+// submission.
 function applyReusedSettings(settings: ReuseImageSettings) {
   const matchedModel = imageModels.value.find(
     (model) =>

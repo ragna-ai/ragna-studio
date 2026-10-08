@@ -113,7 +113,7 @@ export async function deleteWorkspaceForUser({
 
   // Best-effort R2 cleanup for every media row this workspace owns, before
   // the FK cascade below wipes the rows for free but leaves the objects
-  // orphaned (specs/media-library/prd.md, decision 2).
+  // orphaned.
   await deleteWorkspaceMediaObjects({ workspaceId });
 
   const { error: deleteError, data: deletedWorkspace } = await tryCatch(() =>

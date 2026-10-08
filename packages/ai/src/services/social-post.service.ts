@@ -156,7 +156,7 @@ async function reviseDraft({
   return { id: updated.id, status: updated.status };
 }
 
-// Refcounted deletion (specs/media-library/unified-media-prd.md decision 1)
+// Refcounted deletion
 // now lives in @repo/media's `deleteMediaIfUnreferenced`: reference count
 // decides deletion, not the `upload` vs. `genImage` origin split this used
 // to branch on. A package couldn't reach into apps/api's media.service.ts
@@ -209,8 +209,8 @@ async function attachImagesToDraft({
     return 'One or more selected images could not be found.';
   }
 
-  // mediaId is null for a pending/processing/failed row
-  // (specs/imagegen/worker-execution-prd.md decision 1): a generation that
+  // mediaId is null for a pending/processing/failed row:
+  // a generation that
   // hasn't produced an object yet has nothing to attach.
   if (genImages.some((image) => image.mediaId === null)) {
     return 'One or more selected images are still generating.';

@@ -7,8 +7,8 @@ import { seedConnectedGmailAccount } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
 import { resetMailProviderMock } from './support/mail-provider.mock';
 
-// Email categories + auto-draft senders (specs/email/prd.md, "Auto-categorize
-// incoming mail" / "Auto-draft replies"). Both are per-account CRUD with a
+// Email categories + auto-draft senders.
+// Both are per-account CRUD with a
 // uniqueness constraint scoped to the account (email.schema.ts's
 // emailCategory_accountId_name_idx / emailAutoDraftSender_accountId_
 // senderEmail_idx).

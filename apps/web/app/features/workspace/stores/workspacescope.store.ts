@@ -5,7 +5,7 @@ import type { Workspace } from '~/features/workspace/types';
  * The single workspace currently active in the workspace switcher.
  *
  * Every workspace-scoped resource lives in exactly one workspace (the
- * container model, see specs/api-standards/prd.md). This store only tracks
+ * container model). This store only tracks
  * *which* workspace is active in the UI: it is never a security boundary,
  * and it only ever shapes the `workspaceId` route param on scoped requests
  * and the id stamped on newly created items.

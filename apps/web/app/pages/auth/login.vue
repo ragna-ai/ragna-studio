@@ -34,7 +34,7 @@ if (typeof route.query.error === 'string') {
       : t('auth.login.genericError');
 }
 
-// A pending MCP authorize request (specs/mcp/slices.md, C3): resume it instead of the normal home page.
+// A pending MCP authorize request: resume it instead of the normal home page.
 const isOAuthAuthorizeResume = computed(
   () =>
     typeof route.query.client_id === 'string' &&

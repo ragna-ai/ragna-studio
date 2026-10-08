@@ -1,8 +1,8 @@
 import type { HomeOverviewResponse } from '~/features/home/types';
 
 /**
- * Single aggregated fetch backing all four home overview cards
- * (specs/home/prd.md, "API"): one round trip, one loading state instead of
+ * Single aggregated fetch backing all four home overview cards:
+ * one round trip, one loading state instead of
  * four separate card-level queries. Keyed by workspace id so switching
  * workspaces in the switcher refetches instead of showing stale data from
  * the previous one.

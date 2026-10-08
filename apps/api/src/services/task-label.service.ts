@@ -11,7 +11,7 @@ import { tryCatch } from '@repo/utils';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '../exceptions';
 
 // Every function below runs after the workspace guard has verified the
-// caller owns `:workspaceId` (specs/api-standards/prd.md).
+// caller owns `:workspaceId`.
 
 /**
  * [GET] /workspace/:workspaceId/task-label
@@ -100,8 +100,7 @@ export async function updateTaskLabelForWorkspace({
 
 /**
  * [DELETE] /workspace/:workspaceId/task-label/:taskLabelId
- * Cascades the join rows only, never touches tasks (specs/tasks/prd.md,
- * "Labels").
+ * Cascades the join rows only, never touches tasks.
  */
 export async function deleteTaskLabelForWorkspace({
   workspaceId,
