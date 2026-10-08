@@ -16,7 +16,8 @@ services:
     networks:
       - app_net
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   seed:
     image: ghcr.io/ragna-ai/ragna-studio-migrate:${RAGNA_VERSION:-latest}
@@ -121,6 +122,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-vector.sql:ro
+    healthcheck:
+      # TCP check: during first-boot initdb Postgres only listens on the unix socket
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
     security_opt:
       - no-new-privileges:true
     networks:

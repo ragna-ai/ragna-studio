@@ -213,7 +213,7 @@ ask_domains() {
 
 ask_oauth() {
   info "Sign-in (OAuth)"
-  echo "Create an OAuth app at Google or Microsoft first. See https://docs.ragna.io/self-hosting/configuration#oauth"
+  echo "Create an OAuth client at Google or Microsoft first. See https://docs.ragna.io/self-hosting/configuration#oauth"
   provider=$(prompt "Provider [google/microsoft] (default: google)")
   provider=${provider:-google}
   case $provider in
@@ -227,15 +227,21 @@ ask_oauth() {
       ;;
     *) fail "Unknown provider: $provider" ;;
   esac
-  echo "Redirect URI for your OAuth app: $(read_env API_BASE_URL)/auth/callback/$provider"
+  echo "Redirect URI for your OAuth client: $(read_env API_BASE_URL)/auth/callback/$provider"
   echo
 }
 
 ask_storage() {
   info "Storage (S3-compatible)"
-  echo "You need two buckets: a public-read one for images, a private one for documents."
+  echo "Storage needs two buckets: a public-read one for images, a private one for documents."
   echo "See https://docs.ragna.io/self-hosting/storage"
-  set_env_if_given S3_ENDPOINT "$(prompt "Endpoint URL")"
+  echo "Press Enter to skip. Without storage, file uploads and image/video generation won't work."
+  endpoint=$(prompt "Endpoint URL")
+  if [ -z "$endpoint" ]; then
+    echo
+    return
+  fi
+  set_env S3_ENDPOINT "$endpoint"
   set_env_if_given S3_REGION "$(prompt "Region (default: auto)")"
   set_env_if_given S3_ACCESS_KEY_ID "$(prompt "Access key ID")"
   set_env_if_given S3_SECRET_ACCESS_KEY "$(prompt_secret "Secret access key")"
@@ -261,9 +267,11 @@ missing_settings() {
   if [ -z "$(read_env GOOGLE_CLIENT_ID)" ] && [ -z "$(read_env MICROSOFT_CLIENT_ID)" ]; then
     echo "GOOGLE_CLIENT_ID or MICROSOFT_CLIENT_ID"
   fi
-  for key in S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_IMAGES_BUCKET_NAME S3_DOCUMENTS_BUCKET_NAME MEDIA_URL; do
-    [ -n "$(read_env "$key")" ] || echo "$key"
-  done
+  if [ -n "$(read_env S3_ENDPOINT)" ]; then
+    for key in S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_IMAGES_BUCKET_NAME S3_DOCUMENTS_BUCKET_NAME MEDIA_URL; do
+      [ -n "$(read_env "$key")" ] || echo "$key"
+    done
+  fi
   if [ -z "$(read_env ANTHROPIC_API_KEY)$(read_env OPENAI_API_KEY)$(read_env GOOGLE_GENAI_API_KEY)$(read_env MISTRAL_API_KEY)" ]; then
     echo "one AI key (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_GENAI_API_KEY or MISTRAL_API_KEY)"
   fi
@@ -279,7 +287,8 @@ compose() {
 start_stack() {
   info "Starting RAGNA Studio..."
   compose pull
-  compose up -d
+  compose up -d --wait --wait-timeout 300 ||
+    fail "RAGNA Studio did not start. Check the logs: docker compose -p ragna_studio logs"
 }
 
 main() {
@@ -313,6 +322,9 @@ main() {
     echo "$missing" | sed 's/^/  - /' >&2
     warn "Fill them in, then run the installer again."
     exit 1
+  fi
+  if [ -z "$(read_env S3_ENDPOINT)" ]; then
+    warn "No storage configured: file uploads and image/video generation won't work. Set the S3_* values in $INSTALL_DIR/.env to enable them."
   fi
 
   start_stack
