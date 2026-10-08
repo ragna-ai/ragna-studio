@@ -1,6 +1,6 @@
 # Resource guard: workspace-scoped references
 
-**Status: decided** (2026-10-08). Composite foreign keys enforce that a reference never
+**Status: implemented** (PR #90, 2026-10-08). Composite foreign keys enforce that a reference never
 leaves its workspace. Follow-up to the API review fixed in PR #61. Prerequisite for
 workspace members and RBAC.
 

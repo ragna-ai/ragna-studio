@@ -99,20 +99,28 @@ production goes through `db:generate` (commits SQL under `packages/database/driz
 
 `as any` types are **strictly prohibited**. never use them.
 
+### Database queries
+
+**No N+1 queries.** Never query the database once per item of a list, neither in a loop nor via
+`Promise.all(items.map(...))`. Load related rows for the whole list in one query (`inArray`, a join,
+`GROUP BY`, or a window function such as `ROW_NUMBER() OVER (PARTITION BY ...)`) and group in memory.
+A fan-out is fine only when validation caps it at a handful of items (e.g. max 5 team members).
+Reviewers treat a new per-item query on a request path as a blocking issue.
+
 ### Coding
 
 Always load the clean-code skill. For `apps/api` changes, also load the tdd skill.
 
 **Skip self-verification of changes** unless explicitly asked, means:
 
-- no type-check at all,
 - no visual confirmation,
 - no git status/diff check,
 - no git commit,
 - no browser verification
 
-The user handles verification and commits. The one exception is running tests: agents run the tests
-for what they change (see TDD below).
+The user handles verification and commits. Two exceptions: agents run the tests for what they change
+(see TDD below), and run `pnpm check-types` before reporting done (it also covers `apps/api`'s
+test files, which `bun test` doesn't type-check).
 
 ### TDD (apps/api)
 

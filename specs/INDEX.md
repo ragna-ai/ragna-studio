@@ -24,7 +24,6 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
-| [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | decided (2026-10-08) |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
 
@@ -50,6 +49,7 @@ work first, shipped reference and dead/historical docs last.
 | [Agent memory](./agent/agent-memory.md) | implemented (Phase 1, 2026-07-18) |
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
+| [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | implemented (PR #90, 2026-10-08) |
 | [Chat branching (PRD)](./chat/branching.md) | implemented (2026-08-08) |
 | [CI/CD with GitHub Actions (PRD)](./ci-cd/prd.md) | implemented (2026-09-27, phase 1 and 2) |
 | [Credit System (PRD)](./credits/prd.md) | implemented (merged via PR #13, 2026-07-29) |
