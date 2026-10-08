@@ -13,6 +13,7 @@ work first, shipped reference and dead/historical docs last.
 | Doc | Status |
 | --- | --- |
 | [API tests in CI (PRD)](./ci-cd/api-tests-prd.md) | in-progress (2026-09-29) |
+| [Batch per-item queries (N+1)](./database/n-plus-one-batching.md) | in-progress (2026-10-08) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |

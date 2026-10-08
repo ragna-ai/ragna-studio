@@ -16,7 +16,7 @@ export interface PersistedMessageBody {
   htmlBody: string | null;
 }
 
-function toPersistedBody(body: MailBody): PersistedMessageBody {
+export function toPersistedBody(body: MailBody): PersistedMessageBody {
   return { textBody: body.text, htmlBody: body.html };
 }
 

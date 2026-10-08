@@ -509,46 +509,69 @@ export interface ChatSearchMessageSnippet {
   snippet: string;
 }
 
+export interface ChatSearchChatMessageSnippet extends ChatSearchMessageSnippet {
+  chatId: string;
+}
+
 /**
- * Up to `limit` messages in `chatId` whose text content matches `query`,
- * most recent first, each collapsed to one highlighted snippet (a message
- * with several matching text parts only contributes its first match).
+ * For each chat in `chatIds`, up to `limit` messages whose text content
+ * matches `query`, most recent first, each collapsed to one highlighted
+ * snippet (a message with several matching text parts only contributes its
+ * first match). One query for all chats; chats without matches yield no rows.
  */
-export async function getChatSearchMessageSnippets({
-  chatId,
+export async function getChatSearchMessageSnippetsForChats({
+  chatIds,
   query,
   limit,
   caseSensitive,
 }: {
-  chatId: string;
+  chatIds: string[];
   query: string;
   limit: number;
   caseSensitive: boolean;
-}): Promise<ChatSearchMessageSnippet[]> {
+}): Promise<ChatSearchChatMessageSnippet[]> {
+  if (chatIds.length === 0) {
+    return [];
+  }
+
   const pattern = toSearchPattern(query);
   const operator = matchOperator(caseSensitive);
 
   const result = await db.execute<{
+    chat_id: string;
     message_id: string;
     text: string;
   }>(sql`
-    SELECT message_id, text FROM (
-      SELECT DISTINCT ON (${chatMessage.id})
-        ${chatMessage.id} AS message_id,
-        part ->> 'text' AS text,
-        ${chatMessage.createdAt} AS created_at
-      FROM ${chatMessage}
-      CROSS JOIN LATERAL jsonb_array_elements(${chatMessage.parts}) AS part
-      WHERE ${chatMessage.chatId} = ${chatId}
-        AND part ->> 'type' = 'text'
-        AND part ->> 'text' ${operator} ${pattern}
-      ORDER BY ${chatMessage.id}
-    ) AS matched_messages
-    ORDER BY created_at DESC
-    LIMIT ${limit}
+    SELECT chat_id, message_id, text FROM (
+      SELECT
+        chat_id,
+        message_id,
+        text,
+        created_at,
+        ROW_NUMBER() OVER (PARTITION BY chat_id ORDER BY created_at DESC) AS chat_rank
+      FROM (
+        SELECT DISTINCT ON (${chatMessage.id})
+          ${chatMessage.chatId} AS chat_id,
+          ${chatMessage.id} AS message_id,
+          part ->> 'text' AS text,
+          ${chatMessage.createdAt} AS created_at
+        FROM ${chatMessage}
+        CROSS JOIN LATERAL jsonb_array_elements(${chatMessage.parts}) AS part
+        WHERE ${chatMessage.chatId} IN (${sql.join(
+          chatIds.map((chatId) => sql`${chatId}`),
+          sql`, `,
+        )})
+          AND part ->> 'type' = 'text'
+          AND part ->> 'text' ${operator} ${pattern}
+        ORDER BY ${chatMessage.id}
+      ) AS matched_messages
+    ) AS ranked_messages
+    WHERE chat_rank <= ${limit}
+    ORDER BY chat_id, created_at DESC
   `);
 
   return result.rows.map((row) => ({
+    chatId: row.chat_id,
     messageId: row.message_id,
     snippet: buildHighlightedSnippet(row.text, query, caseSensitive),
   }));

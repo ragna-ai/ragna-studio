@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { EmailMessage, EmailMessageBody, NewEmailMessage } from '../schema';
 import { emailMessage } from '../schema';
+import { chunkRows, dedupeKeepLast } from '../utils/batch-write';
 
 export type { EmailMessage, EmailMessageFolder, NewEmailMessage } from '../schema';
 
@@ -43,6 +44,45 @@ export async function upsertEmailMessageByProviderMessageId(
   return upserted;
 }
 
+/**
+ * Multi-row variant of the upsert above, with the same conflict target and
+ * columns. Repeated keys keep the last occurrence. Rows come back in no
+ * guaranteed order: map them by `providerMessageId`.
+ */
+export async function upsertEmailMessagesByProviderMessageId(
+  values: NewEmailMessage[],
+): Promise<EmailMessage[]> {
+  const rows = dedupeKeepLast(values, (row) => `${row.accountId}:${row.providerMessageId}`);
+  const upserted: EmailMessage[] = [];
+
+  for (const chunk of chunkRows(rows)) {
+    const written = await db
+      .insert(emailMessage)
+      .values(chunk)
+      .onConflictDoUpdate({
+        target: [emailMessage.accountId, emailMessage.providerMessageId],
+        set: {
+          threadId: sql`excluded.thread_id`,
+          from: sql`excluded."from"`,
+          to: sql`excluded."to"`,
+          cc: sql`excluded.cc`,
+          subject: sql`excluded.subject`,
+          snippet: sql`excluded.snippet`,
+          sentAt: sql`excluded.sent_at`,
+          isUnread: sql`excluded.is_unread`,
+          isStarred: sql`excluded.is_starred`,
+          folder: sql`excluded.folder`,
+          labelIds: sql`excluded.label_ids`,
+          updatedAt: sql`(CURRENT_TIMESTAMP)`,
+        },
+      })
+      .returning();
+    upserted.push(...written);
+  }
+
+  return upserted;
+}
+
 export async function getEmailMessageById({ id }: { id: string }): Promise<EmailMessage | null> {
   const found = await db.query.emailMessage.findFirst({ where: { id } });
 
@@ -74,6 +114,23 @@ export async function listEmailMessagesByThreadId({
 }): Promise<EmailMessageWithBody[]> {
   return db.query.emailMessage.findMany({
     where: { threadId },
+    with: { body: true },
+    orderBy: (t, { asc }) => asc(t.sentAt),
+  });
+}
+
+// Messages of several threads in one query, oldest first, body joined in.
+export async function listEmailMessagesByThreadIds({
+  threadIds,
+}: {
+  threadIds: string[];
+}): Promise<EmailMessageWithBody[]> {
+  if (threadIds.length === 0) {
+    return [];
+  }
+
+  return db.query.emailMessage.findMany({
+    where: { threadId: { in: threadIds } },
     with: { body: true },
     orderBy: (t, { asc }) => asc(t.sentAt),
   });

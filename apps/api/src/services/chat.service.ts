@@ -27,7 +27,7 @@ import {
   getChatCountByWorkspaceId,
   getChatSearchMatchCount,
   getChatSearchMatchedChats,
-  getChatSearchMessageSnippets,
+  getChatSearchMessageSnippetsForChats,
   getChatsByWorkspaceId,
   getOrCreateDefaultAgentForUser,
   settleCreditUsage,
@@ -203,40 +203,43 @@ export async function searchChatsForWorkspace({
     throw new InternalServerErrorException('Failed to search chats');
   }
 
-  const results = await Promise.all(
-    matchedChats.map(async (matchedChat): Promise<ChatSearchResult> => {
-      const { error: snippetsError, data: messageSnippets } = await tryCatch(() =>
-        getChatSearchMessageSnippets({
-          chatId: matchedChat.id,
-          query: q,
-          limit: snippetsPerChat,
-          caseSensitive,
-        }),
-      );
-
-      if (snippetsError !== null || !messageSnippets) {
-        logger.error(`Error fetching search snippets for chat ${matchedChat.id}`, snippetsError);
-        throw new InternalServerErrorException('Failed to search chats');
-      }
-
-      return {
-        id: matchedChat.id,
-        title: matchedChat.title,
-        titleMatched: matchedChat.titleMatched,
-        updatedAt: matchedChat.updatedAt,
-        agent: {
-          id: matchedChat.agent.id,
-          name: matchedChat.agent.name,
-          aiModel: {
-            id: matchedChat.agent.aiModel.id,
-            provider: matchedChat.agent.aiModel.provider,
-            displayName: matchedChat.agent.aiModel.displayName,
-          },
-        },
-        messageSnippets,
-      };
+  const { error: snippetsError, data: snippetRows } = await tryCatch(() =>
+    getChatSearchMessageSnippetsForChats({
+      chatIds: matchedChats.map((matchedChat) => matchedChat.id),
+      query: q,
+      limit: snippetsPerChat,
+      caseSensitive,
     }),
   );
+
+  if (snippetsError !== null || !snippetRows) {
+    logger.error(`Error fetching search snippets for workspace ${workspaceId}`, snippetsError);
+    throw new InternalServerErrorException('Failed to search chats');
+  }
+
+  const snippetsByChatId = new Map<string, ChatSearchMessageSnippet[]>();
+  for (const { chatId, messageId, snippet } of snippetRows) {
+    const chatSnippets = snippetsByChatId.get(chatId) ?? [];
+    chatSnippets.push({ messageId, snippet });
+    snippetsByChatId.set(chatId, chatSnippets);
+  }
+
+  const results = matchedChats.map((matchedChat): ChatSearchResult => ({
+    id: matchedChat.id,
+    title: matchedChat.title,
+    titleMatched: matchedChat.titleMatched,
+    updatedAt: matchedChat.updatedAt,
+    agent: {
+      id: matchedChat.agent.id,
+      name: matchedChat.agent.name,
+      aiModel: {
+        id: matchedChat.agent.aiModel.id,
+        provider: matchedChat.agent.aiModel.provider,
+        displayName: matchedChat.agent.aiModel.displayName,
+      },
+    },
+    messageSnippets: snippetsByChatId.get(matchedChat.id) ?? [],
+  }));
 
   return { results, totalCount };
 }

@@ -1,6 +1,6 @@
 // apps/worker/src/mail/email-sync.service.ts
 import { config } from '@repo/config';
-import type { EmailAccount, EmailDraft } from '@repo/database';
+import type { EmailAccount, EmailDraft, NewEmailMessageBody } from '@repo/database';
 import {
   createEmailDraft,
   deleteEmailDraft,
@@ -15,7 +15,9 @@ import {
   updateEmailAccountSyncState,
   updateEmailDraft,
   updateEmailMessageFlags,
+  upsertEmailMessageBodies,
   upsertEmailMessageByProviderMessageId,
+  upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -33,7 +35,7 @@ import type {
 } from '@repo/mail/provider';
 import { EMAIL_CLASSIFY_JOB, emailClassifyJobSchema, queue } from '@repo/queue';
 import { getMailProviderForAccount } from './mail-provider';
-import { persistMessageBody } from './message-body';
+import { toPersistedBody } from './message-body';
 import { fromParticipant, summarizeThread, toParticipants } from './participants';
 
 // "the most recent ~50 inbox threads".
@@ -161,15 +163,13 @@ async function importThread({
     participants: summary.participants,
   });
 
-  for (const message of thread.messages) {
-    // fetchThread returns every message in the thread, drafts included; a
-    // reply/forward draft on an already-indexed thread is reconciled into
-    // email_drafts separately (reconcileDrafts), never imported as mail.
-    if (isDraftMessage(message)) {
-      continue;
-    }
+  // fetchThread returns every message in the thread, drafts included; a
+  // reply/forward draft on an already-indexed thread is reconciled into
+  // email_drafts separately (reconcileDrafts), never imported as mail.
+  const importedMessages = thread.messages.filter((message) => !isDraftMessage(message));
 
-    const messageRow = await upsertEmailMessageByProviderMessageId({
+  const messageRows = await upsertEmailMessagesByProviderMessageId(
+    importedMessages.map((message) => ({
       accountId: account.id,
       threadId: threadRow.id,
       providerMessageId: message.id,
@@ -183,10 +183,19 @@ async function importThread({
       isStarred: message.starred,
       folder: message.folder,
       labelIds: message.labelIds,
-    });
+    })),
+  );
+  const messageIdByProviderId = new Map(messageRows.map((row) => [row.providerMessageId, row.id]));
 
-    await persistMessageBody({ messageId: messageRow.id, body: message.body });
+  const bodies: NewEmailMessageBody[] = [];
+  for (const message of importedMessages) {
+    const messageId = messageIdByProviderId.get(message.id);
+    if (!messageId) continue;
+
+    bodies.push({ messageId, ...toPersistedBody(message.body) });
   }
+
+  await upsertEmailMessageBodies(bodies);
 }
 
 async function applyIncrementalSync({
