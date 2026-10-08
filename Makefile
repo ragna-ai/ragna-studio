@@ -1,7 +1,6 @@
 .PHONY: dev build build-core build-all \
         up down \
         up-dev down-dev \
-        up-dev-full down-dev-full \
         help
 
 # ── Local dev (hot-reload, no Docker) ────────────────────────────────────────
@@ -26,10 +25,7 @@ down:
 
 # ── Docker (dev compose) ─────────────────────────────────────────────────────
 up-dev:
-	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
-
-up-dev-full:
-	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml --profile "full" up -d
+	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d postgres redis
 
 down-dev:
 	docker compose --project-directory . -f docker/docker-compose.yml -f docker/docker-compose.dev.yml down
@@ -45,6 +41,5 @@ help:
 	@echo "  build-all          Build all components (Backend, Frontend, Worker, Webbrowser)"
 	@echo "  up                 Start the self-hosted application using Docker Compose"
 	@echo "  down               Stop the self-hosted application using Docker Compose"
-	@echo "  up-dev             Start the application in development mode using Docker Compose"
-	@echo "  up-dev-full        Start the application in full development mode using Docker Compose"
-	@echo "  down-dev           Stop the application in development mode using Docker Compose"
+	@echo "  up-dev             Start Postgres and Redis for local development"
+	@echo "  down-dev           Stop Postgres and Redis for local development"
