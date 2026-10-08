@@ -3,6 +3,8 @@
 > **Status: implemented** (2026-09-27, phase 1 and 2). Phase 3 deferred.
 > First release `v0.3.0` built and deployed; the cleanup dry run kept the
 > attestation children as expected, so `dry-run` was removed.
+> Registry layer cache added 2026-10-08 (PR #78); verify on the first two
+> tags after merge.
 
 The repo has no `.github/` folder. Nothing checks a PR before merge, and
 Docker images are built and pushed by hand via `scripts/build-*.sh`
@@ -168,6 +170,8 @@ until deleted.
 - **Action:** `dataaxiom/ghcr-cleanup-action`.
   - Keep `latest` and the **5 newest** tagged versions per image
     (rollback window).
+  - Never touch `buildcache-*`, the release workflow's layer cache.
+    `exclude-tags` takes priority over `keep-n-tagged`.
   - Delete untagged versions and orphans.
   - Loop over the five package names.
 - **Why not `actions/delete-package-versions`:** `build-push-action`
@@ -214,8 +218,12 @@ Write a short follow-up spec when phase 1 and 2 are live.
 - `RUN --mount=type=cache` in the Dockerfiles doesn't persist across
   GitHub runners. The registry layer cache covers most of it; measure before
   adding `buildkit-cache-dance`.
-- `webbrowser` bundles Chromium. Check its image size against the 10 GB
-  cache.
+- `webbrowser` bundles Chromium. Its layers live in the GHCR registry
+  cache, not the 10 GB GHA cache, so size only counts against GHCR storage
+  (currently free).
+- First tag after PR #78: every package gets `buildcache-linux-amd64` and
+  `buildcache-linux-arm64`. Second tag: unchanged images show `CACHED`
+  steps from `COPY --from=pruner` on.
 - GHCR packages are lowercase (`ragna-ai/ragna-studio-backend`); the cleanup
   action needs exact names.
 - The existing `:latest` images were pushed by hand. Check they're linked
