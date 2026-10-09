@@ -1,5 +1,5 @@
 import { createMedia, db, sql } from '@repo/database';
-import { user as userTable } from '@repo/database/schema';
+import { media, user as userTable } from '@repo/database/schema';
 import {
   DELETE_MEDIA_OBJECTS_JOB,
   deleteMediaObjectsJobSchema,
@@ -9,6 +9,7 @@ import {
 import { purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
+  queueAddBulkMock,
   queueAddMock,
   resetQueueMock,
   resetStorageProviderMock,
@@ -124,11 +125,12 @@ describe('platform admin remove-user', () => {
     const response = await removeUserAsPlatformAdmin(colleague.userId);
 
     expect(response.status).toBe(StatusCodes.OK);
-    const cleanupCalls = queueAddMock.mock.calls.filter(
-      ([name]) => name === DELETE_MEDIA_OBJECTS_JOB,
-    );
-    expect(cleanupCalls).toHaveLength(1);
-    expect(deleteMediaObjectsJobSchema.parse(cleanupCalls[0]?.[1])).toEqual({
+    expect(queueAddBulkMock).toHaveBeenCalledTimes(1);
+    const [jobs] = queueAddBulkMock.mock.calls[0] ?? [[]];
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.name).toBe(DELETE_MEDIA_OBJECTS_JOB);
+    expect(jobs[0]?.opts).toEqual({ attempts: 3 });
+    expect(deleteMediaObjectsJobSchema.parse(jobs[0]?.data)).toEqual({
       objects: [{ bucket: 'documents-bucket', key: storageKey }],
     });
     expect(deleteObjectsMock).not.toHaveBeenCalled();
@@ -141,7 +143,30 @@ describe('platform admin remove-user', () => {
     const response = await removeUserAsPlatformAdmin(colleague.userId);
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(queueAddBulkMock).not.toHaveBeenCalled();
+  });
+
+  test('splits more than 1000 objects into jobs of at most 1000 in one bulk call', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    await db.insert(media).values(
+      Array.from({ length: 1001 }, (_, index) => ({
+        ownerWorkspaceId: colleague.personalWorkspaceId,
+        bucket: 'documents-bucket',
+        storageKey: `user/${colleague.userId}/file-${index}.pdf`,
+        filename: `file-${index}.pdf`,
+        mimeType: 'application/pdf',
+        size: 10,
+        origin: 'uploaded' as const,
+      })),
+    );
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(queueAddBulkMock).toHaveBeenCalledTimes(1);
+    const [jobs] = queueAddBulkMock.mock.calls[0] ?? [[]];
+    const sizes = jobs.map((job) => deleteMediaObjectsJobSchema.parse(job.data).objects.length);
+    expect(sizes.toSorted()).toEqual([1, 1000]);
   });
 
   test('a failed enqueue does not block removing a non-owner member', async () => {
@@ -155,7 +180,7 @@ describe('platform admin remove-user', () => {
       size: 10,
       origin: 'uploaded',
     });
-    queueAddMock.mockImplementationOnce(() => Promise.reject(new Error('Redis down')));
+    queueAddBulkMock.mockImplementationOnce(() => Promise.reject(new Error('Redis down')));
 
     const response = await removeUserAsPlatformAdmin(colleague.userId);
 
