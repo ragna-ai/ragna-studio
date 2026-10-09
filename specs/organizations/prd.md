@@ -1,6 +1,6 @@
 # Organizations v1: the org owns workspaces
 
-**Status: decided** (2026-10-09). Not built yet. v2 (members, invites, org settings UI) follows
+**Status: implemented** (PR #94, 2026-10-09). v2 (members, invites, org settings UI) follows
 right after and gets its own PRD.
 
 ## Summary
