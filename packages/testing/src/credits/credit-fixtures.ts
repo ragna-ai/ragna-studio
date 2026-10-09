@@ -96,10 +96,7 @@ export async function seedCreditAccount(
     throw new Error(`seedCreditAccount: user ${params.userId} has no organization`);
   }
 
-  const account = await getOrCreateCreditAccountByOrganizationId({
-    organizationId,
-    ownerUserId: params.userId,
-  });
+  const account = await getOrCreateCreditAccountByOrganizationId({ organizationId });
 
   const amount = params.balanceMicroCredits ?? 0n;
   if (amount !== 0n) {

@@ -465,14 +465,8 @@ describe('organization billing', () => {
     const organizationId = await getOrganizationIdByUserId({ userId });
     if (!organizationId) throw new Error('user has no organization');
 
-    const first = await getOrCreateCreditAccountByOrganizationId({
-      organizationId,
-      ownerUserId: userId,
-    });
-    const second = await getOrCreateCreditAccountByOrganizationId({
-      organizationId,
-      ownerUserId: userId,
-    });
+    const first = await getOrCreateCreditAccountByOrganizationId({ organizationId });
+    const second = await getOrCreateCreditAccountByOrganizationId({ organizationId });
 
     expect(second.id).toBe(first.id);
     expect(first.organizationId).toBe(organizationId);

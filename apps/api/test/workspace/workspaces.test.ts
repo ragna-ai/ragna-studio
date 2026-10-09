@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 
 // Plain CRUD for /workspace. This
-// controller checks ownership itself via `ownerId` (see workspace.repo.ts),
+// controller checks organization membership itself (see workspace.repo.ts),
 // not the shared workspaceGuard middleware: it manages the resource
 // workspaceGuard exists to gate, so there's no workspaceId route param to
 // guard yet at create time. Auth (missing/invalid session) is covered
@@ -16,7 +16,7 @@ import { app } from '../../src/app';
 
 const workspaceSchema = z.object({
   id: z.string(),
-  ownerId: z.string(),
+  organizationId: z.string(),
   name: z.string(),
 });
 
@@ -61,7 +61,10 @@ describe('GET /workspace', () => {
 
     const body = workspaceListResponseSchema.parse(await response.json());
     expect(body.workspaces).toHaveLength(2);
-    expect(body.workspaces.some((workspace) => workspace.ownerId === userB.userId)).toBe(false);
+    const memberB = await db.query.member.findFirst({ where: { userId: userB.userId } });
+    expect(
+      body.workspaces.some((workspace) => workspace.organizationId === memberB?.organizationId),
+    ).toBe(false);
   });
 });
 
@@ -77,8 +80,7 @@ describe('organization scoping', () => {
     const created = await createWorkspace(cookieHeader, 'Marketing');
 
     const row = await db.query.workspace.findFirst({ where: { id: created.id } });
-    expect(row?.organizationId).toBe(membership?.organizationId ?? null);
-    expect(row?.ownerId).toBe(userId);
+    expect(row?.organizationId).toBe(membership?.organizationId);
   });
 
   test('a workspace created by one member is visible to and deletable by another', async () => {

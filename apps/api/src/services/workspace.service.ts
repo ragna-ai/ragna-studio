@@ -64,7 +64,7 @@ export async function createWorkspaceForUser({
 }): Promise<Workspace> {
   const organizationId = await requireOrganizationId({ userId });
   const { error, data: workspaceRecord } = await tryCatch(() =>
-    createWorkspace({ ownerId: userId, organizationId, name }),
+    createWorkspace({ organizationId, name }),
   );
 
   if (error !== null || !workspaceRecord) {

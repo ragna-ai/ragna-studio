@@ -280,7 +280,6 @@ describe('POST /mcp: tools/call', () => {
     const organizationId = await getOrganizationIdByUserId({ userId });
     if (!organizationId) throw new Error('Seeded user has no organization');
     const otherWorkspace = await createWorkspace({
-      ownerId: userId,
       organizationId,
       name: 'Other',
     });

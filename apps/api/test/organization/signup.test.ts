@@ -22,7 +22,6 @@ describe('sign-up', () => {
 
     const workspace = await db.query.workspace.findFirst({ where: { id: workspaceId } });
     expect(workspace?.name).toBe('Personal');
-    expect(workspace?.ownerId).toBe(userId);
     expect(workspace?.organizationId).toBe(organizationId);
   });
 

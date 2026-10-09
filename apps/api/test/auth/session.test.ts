@@ -19,7 +19,7 @@ const workspaceListResponseSchema = z.object({
   workspaces: z.array(
     z.object({
       id: z.string(),
-      ownerId: z.string(),
+      organizationId: z.string(),
       name: z.string(),
     }),
   ),

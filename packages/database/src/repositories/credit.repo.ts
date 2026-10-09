@@ -253,17 +253,14 @@ export async function settleCreditUsage(
 // Resolves an organization's credit account, creating one (zero balance) if
 // this is its first grant. The only account-creation path in the system:
 // resolveCreditSpendState (the gate) must never create one lazily on a read.
-// `ownerUserId` only fills the legacy NOT NULL `user_id` column.
 export async function getOrCreateCreditAccountByOrganizationId({
   organizationId,
-  ownerUserId,
 }: {
   organizationId: string;
-  ownerUserId: string;
 }): Promise<CreditAccount> {
   const [account] = await db
     .insert(creditAccount)
-    .values({ organizationId, userId: ownerUserId })
+    .values({ organizationId })
     .onConflictDoUpdate({
       target: creditAccount.organizationId,
       // No-op set: onConflictDoUpdate requires a `set`, and this table has

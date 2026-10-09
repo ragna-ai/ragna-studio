@@ -20,6 +20,13 @@ permission boundary, there's no separate "board" or "project" entity
 layered on top.
 → [specs/api-standards/prd.md](./api-standards/prd.md)
 
+### Organizations
+
+Every user gets a personal organization at sign-up. Organizations own
+workspaces and credit accounts. Members reach all workspaces of their
+organization. Inviting members comes in v2.
+→ [specs/organizations/prd.md](./organizations/prd.md)
+
 ### Auth
 
 better-auth with a Drizzle adapter, Google OAuth, and an admin plugin.

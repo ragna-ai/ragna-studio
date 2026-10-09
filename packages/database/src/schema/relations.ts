@@ -113,20 +113,12 @@ export const relations = defineRelations(schema, (r) => ({
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
-    workspaces: r.many.workspace(),
     memberships: r.many.member(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
     // Personal-library flow; unused until v2
     // starts writing ownerUserId.
     media: r.many.media(),
-    // Optional: not every user has a credit account yet, since accounts are
-    // created only by grantCredits, never lazily.
-    creditAccount: r.one.creditAccount({
-      from: r.user.id,
-      to: r.creditAccount.userId,
-      optional: true,
-    }),
     // One row per user,
     // optional: most users never connect Gmail.
     emailAccount: r.one.emailAccount({
@@ -426,9 +418,9 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   creditAccount: {
-    user: r.one.user({
-      from: r.creditAccount.userId,
-      to: r.user.id,
+    organization: r.one.organization({
+      from: r.creditAccount.organizationId,
+      to: r.organization.id,
       optional: false,
     }),
     ledgerEntries: r.many.creditLedger(),
@@ -821,15 +813,10 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   workspace: {
-    owner: r.one.user({
-      from: r.workspace.ownerId,
-      to: r.user.id,
-      optional: false,
-    }),
     organization: r.one.organization({
       from: r.workspace.organizationId,
       to: r.organization.id,
-      optional: true,
+      optional: false,
     }),
     agents: r.many.agent(),
     chats: r.many.chat(),

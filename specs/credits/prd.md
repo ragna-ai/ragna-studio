@@ -19,18 +19,18 @@ system-initiated spend are v2.
 
 Settled 2026-07-27. Do not re-open.
 
-| Decision               | Choice                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Unit**               | 1 credit = $0.001 (1000 credits = $1). Ledger stores **micro-credits** as `bigint` (1 credit = 1,000,000 µC).                                                                                                                                                                                                                                                                   |
-| **Prices**             | `integer` nanoUSD per token, on `ai_models.pricing` (jsonb). Every real price sheet is an exact integer at this scale.                                                                                                                                                                                                                                                          |
-| **The identity**       | 1 µC ≡ 1 nanoUSD. Provider cost converts to credits with no conversion factor, which is the whole point of the anchor.                                                                                                                                                                                                                                                          |
-| **Markup**             | `markupBps`, a multiplier in basis points. Global default in `@repo/config`, optional per-model override in `pricing`. `10_000` = cost price, `15_000` = 1.5x.                                                                                                                                                                                                                  |
-| **Balance holder**     | A `credit_accounts` row. V1: one per user. Later: one per organisation. Ledger and usage rows reference `creditAccountId`, never `userId`.                                                                                                                                                                                                                                      |
-| **Account resolution** | `workspaceId → workspace.ownerId → credit_accounts.userId`. The workspace is a **locator for the billing entity, not a billing scope**: accounts are never per-workspace. Resolved from the owner, never the acting user, because `workspace_users` (already anticipated at `workspace.schema.ts:9`) makes those diverge and billing the acting member would be silently wrong. |
-| **Overdraft**          | Gate on `balance > 0` before a run, settle the true cost after, allow the balance to go negative. The next request is refused.                                                                                                                                                                                                                                                  |
-| **Gate placement**     | One policy function (`assertCanSpend`), three entry points: `creditGuard` mounted **per spending route** (never on a whole controller, never folded into `workspaceGuard`), a direct call on the WS chat path, and a repo call in the worker.                                                                                                                                   |
-| **Cached tokens**      | Charged as if uncached. The discount is platform margin. Real cost is recorded separately for margin analytics.                                                                                                                                                                                                                                                                 |
-| **Grants**             | Manual only in v1 (admin-inserted ledger rows). No signup grant, no monthly refill.                                                                                                                                                                                                                                                                                             |
+| Decision               | Choice                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Unit**               | 1 credit = $0.001 (1000 credits = $1). Ledger stores **micro-credits** as `bigint` (1 credit = 1,000,000 µC).                                                                                                                                                                                                                                                      |
+| **Prices**             | `integer` nanoUSD per token, on `ai_models.pricing` (jsonb). Every real price sheet is an exact integer at this scale.                                                                                                                                                                                                                                             |
+| **The identity**       | 1 µC ≡ 1 nanoUSD. Provider cost converts to credits with no conversion factor, which is the whole point of the anchor.                                                                                                                                                                                                                                             |
+| **Markup**             | `markupBps`, a multiplier in basis points. Global default in `@repo/config`, optional per-model override in `pricing`. `10_000` = cost price, `15_000` = 1.5x.                                                                                                                                                                                                     |
+| **Balance holder**     | A `credit_accounts` row. One per organization. Ledger and usage rows reference `creditAccountId`, never `userId`.                                                                                                                                                                                                                                                  |
+| **Account resolution** | `workspaceId → workspace.organization_id → credit_accounts.organization_id` (implemented by the organizations PRD). The workspace is a **locator for the billing entity, not a billing scope**: accounts are never per-workspace. Resolved through the workspace's organization, never the acting user, so a member's usage bills the org that owns the workspace. |
+| **Overdraft**          | Gate on `balance > 0` before a run, settle the true cost after, allow the balance to go negative. The next request is refused.                                                                                                                                                                                                                                     |
+| **Gate placement**     | One policy function (`assertCanSpend`), three entry points: `creditGuard` mounted **per spending route** (never on a whole controller, never folded into `workspaceGuard`), a direct call on the WS chat path, and a repo call in the worker.                                                                                                                      |
+| **Cached tokens**      | Charged as if uncached. The discount is platform margin. Real cost is recorded separately for margin analytics.                                                                                                                                                                                                                                                    |
+| **Grants**             | Manual only in v1 (admin-inserted ledger rows). No signup grant, no monthly refill.                                                                                                                                                                                                                                                                                |
 
 ## Goals (v1)
 
@@ -271,14 +271,12 @@ relations), not just exported from `schema/index.ts`.
 | Column                | Type   | Notes                                                     |
 | --------------------- | ------ | --------------------------------------------------------- |
 | `id`                  | text   | `primaryIdColumn`                                         |
-| `userId`              | text   | FK → `user.id`, cascade, **unique**                       |
+| `organizationId`      | text   | FK → `organization.id`, cascade, **unique**, not null     |
 | `balanceMicroCredits` | bigint | `mode: 'bigint'`, not null, default `0`. May go negative. |
 | timestamps            |        | `...timestamps`                                           |
 
-The indirection is the whole point. When organisations land, add a nullable
-`organisationId` FK and a `CHECK (num_nonnulls(user_id, organisation_id) = 1)`,
-create org accounts, and repoint the resolution. The ledger, the usage
-history, and every call site stay untouched.
+The indirection is the whole point. Accounts moved from users to organizations without touching the
+ledger, the usage history or any call site.
 
 `balanceMicroCredits` is a denormalised cache of `sum(credit_ledger.amount)`.
 It exists so the hot path is one indexed read and one conditional update
@@ -496,7 +494,7 @@ shape as `listTasksDueForReminder` (`task.repo.ts:416`):
 ```sql
 SELECT ca.id, ca.balance_micro_credits
   FROM workspaces w
-  JOIN credit_accounts ca ON ca.user_id = w.owner_id
+  JOIN credit_accounts ca ON ca.organization_id = w.organization_id
  WHERE w.id = $1
 ```
 
@@ -531,20 +529,23 @@ debugging, not to power a list view.
 
 ### Billing entity resolution
 
-**A credit account is never per-workspace.** It is per user today and per
-organisation later. One user's three workspaces all draw from one balance.
+**A credit account is never per-workspace.** It is per
+organization. All workspaces of an organization draw from one balance.
 
 The `workspaceId` parameter is a **locator**, not a scope. Every charge
 happens somewhere, and the workspace is the thing that says where. The
 resolution chain answers "who pays for work done here":
 
-| Era                   | Chain                                                          |
-| --------------------- | -------------------------------------------------------------- |
-| v1                    | `workspace.ownerId` → `credit_accounts.user_id`                |
-| multi-user workspaces | unchanged; still `ownerId`, now distinct from the acting user  |
-| organisations         | `workspace.organisationId` → `credit_accounts.organisation_id` |
+| Era           | Chain                                                           |
+| ------------- | --------------------------------------------------------------- |
+| v1 (original) | `workspace.ownerId` → `credit_accounts.user_id` (removed)       |
+| organizations | `workspace.organization_id` → `credit_accounts.organization_id` |
 
 #### Why not just resolve by the acting `userId`?
+
+Historical (2026-07-27). The owner chain below was replaced by
+`workspace.organization_id`, see [organizations PRD](../organizations/prd.md). The argument
+against billing the acting user still holds.
 
 Every call site already has one, so it would be a single-table lookup with
 no join: `apps/api` has `c.get('user')`, `runChatStream` takes `userId`, and

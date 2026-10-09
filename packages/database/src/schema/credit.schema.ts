@@ -13,19 +13,11 @@ export const creditUsageFeatures = ['chat', 'workflow', 'team'] as const;
 export type CreditUsageFeature = (typeof creditUsageFeatures)[number];
 
 // CREDIT ACCOUNT
-// The balance holder. One per user
-// in v1: `userId` is unique, so this is a 1:1 extension of `users` today.
-// When organisations land, add a nullable `organisationId` FK alongside
-// `userId` (plus a check that exactly one is set) and repoint resolution;
-// the ledger and usage history never need to change their
-// `creditAccountId` reference.
+// The balance holder. One per organization (`organizationId` is unique).
 export const creditAccount = pgTable('credit_accounts', {
   id: primaryIdColumn,
-  userId: text('user_id')
-    .notNull()
-    .unique()
-    .references(() => user.id, { onDelete: 'cascade' }),
   organizationId: text('organization_id')
+    .notNull()
     .unique()
     .references(() => organization.id, { onDelete: 'cascade' }),
   // Denormalised cache of sum(credit_ledger.amount_micro_credits). The

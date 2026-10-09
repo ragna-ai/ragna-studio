@@ -35,7 +35,7 @@ export async function createOrganizationForUser({
     });
     const [personalWorkspace] = await tx
       .insert(workspace)
-      .values({ ownerId: userId, organizationId, name: 'Personal' })
+      .values({ organizationId, name: 'Personal' })
       .returning();
 
     if (!personalWorkspace) {

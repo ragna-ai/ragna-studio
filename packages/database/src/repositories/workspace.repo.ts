@@ -5,17 +5,15 @@ import { member, workspace, type Workspace } from '../schema';
 export type { Workspace } from '../schema';
 
 export async function createWorkspace({
-  ownerId,
   organizationId,
   name,
 }: {
-  ownerId: string;
   organizationId: string;
   name: string;
 }): Promise<Workspace> {
   const [createdWorkspace] = await db
     .insert(workspace)
-    .values({ ownerId, organizationId, name })
+    .values({ organizationId, name })
     .returning();
 
   if (!createdWorkspace) {

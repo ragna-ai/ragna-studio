@@ -60,10 +60,7 @@ async function main() {
   }
 
   const amountMicroCredits = parseCreditsToMicroCredits(creditsArg);
-  const account = await getOrCreateCreditAccountByOrganizationId({
-    organizationId,
-    ownerUserId: user.id,
-  });
+  const account = await getOrCreateCreditAccountByOrganizationId({ organizationId });
 
   await grantCredits({
     creditAccountId: account.id,

@@ -16,7 +16,7 @@ describe('user deletion', () => {
   test('removes the sole-owned organization, its workspaces and credit account', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     const organizationId = await organizationIdOf(userId);
-    await db.insert(creditAccount).values({ userId, organizationId });
+    await db.insert(creditAccount).values({ organizationId });
 
     await deleteSeededUser({ userId });
 
