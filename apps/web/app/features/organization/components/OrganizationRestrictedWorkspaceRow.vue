@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { LockIcon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
+import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVisibilityIcon.vue';
 import { useAddWorkspaceMember } from '~/features/workspace/composables/useWorkspaceMemberApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import type { RestrictedWorkspace } from '~/features/workspace/types';
@@ -46,7 +46,10 @@ async function joinAsManager() {
 <template>
   <li class="flex items-center justify-between gap-4 py-3">
     <div class="flex min-w-0 items-center gap-2">
-      <LockIcon class="size-3.5 shrink-0 text-muted-foreground" />
+      <WorkspaceVisibilityIcon
+        visibility="restricted"
+        class="size-3.5 shrink-0 text-muted-foreground"
+      />
       <div class="min-w-0">
         <p class="truncate text-sm font-medium">{{ workspace.name }}</p>
         <p class="text-xs text-muted-foreground">

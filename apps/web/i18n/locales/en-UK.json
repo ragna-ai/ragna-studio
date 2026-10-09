@@ -936,6 +936,10 @@
       "title": "You have no workspace yet",
       "description": "Create a workspace to start working with agents, chats and workflows.",
       "action": "Create a workspace"
+    },
+    "visibilityHint": {
+      "personal": "Only you can open this workspace.",
+      "restricted": "Only workspace members can open this workspace."
     }
   },
   "document": {

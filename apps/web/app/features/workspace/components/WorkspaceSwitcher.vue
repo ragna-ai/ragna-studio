@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import {
-  CheckIcon,
-  ChevronsUpDownIcon,
-  LockIcon,
-  SettingsIcon,
-} from '@lucide/vue';
+import { CheckIcon, ChevronsUpDownIcon, SettingsIcon } from '@lucide/vue';
+import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVisibilityIcon.vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
@@ -72,10 +68,10 @@ const groups = computed<WorkspaceGroup[]>(() =>
     ),
   })).filter((group) => group.workspaces.length > 0),
 );
-const activeLabel = computed(() => {
-  const active = workspaces.value.find((workspace) => isActive(workspace.id));
-  return active?.name ?? '';
-});
+const activeWorkspace = computed(() =>
+  workspaces.value.find((workspace) => isActive(workspace.id)),
+);
+const activeLabel = computed(() => activeWorkspace.value?.name ?? '');
 const initials = computed(() =>
   createInitials(activeLabel.value, { firstNameOnly: true }),
 );
@@ -103,6 +99,11 @@ watch(data, (result) => {
           )
         "
       >
+        <WorkspaceVisibilityIcon
+          v-if="activeWorkspace"
+          :visibility="activeWorkspace.visibility"
+          class="size-3 shrink-0 text-muted-foreground"
+        />
         <span :class="cn('max-w-28 truncate', sizeClass.label)">{{
           activeLabel
         }}</span>
@@ -133,8 +134,8 @@ watch(data, (result) => {
               :class="isActive(workspace.id) ? 'opacity-100' : 'opacity-0'"
             />
             <span class="flex-1 truncate">{{ workspace.name }}</span>
-            <LockIcon
-              v-if="workspace.visibility === 'restricted'"
+            <WorkspaceVisibilityIcon
+              :visibility="workspace.visibility"
               class="ml-2 size-3.5 shrink-0 text-muted-foreground"
             />
           </DropdownMenuItem>

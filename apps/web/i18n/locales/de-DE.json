@@ -942,6 +942,10 @@
       "title": "Du hast noch keinen Arbeitsbereich",
       "description": "Erstelle einen Arbeitsbereich, um mit Agenten, Chats und Workflows zu arbeiten.",
       "action": "Arbeitsbereich erstellen"
+    },
+    "visibilityHint": {
+      "personal": "Nur du kannst diesen Arbeitsbereich öffnen.",
+      "restricted": "Nur Mitglieder des Arbeitsbereichs können ihn öffnen."
     }
   },
   "document": {

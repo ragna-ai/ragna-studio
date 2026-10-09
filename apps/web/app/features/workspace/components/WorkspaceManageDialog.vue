@@ -2,7 +2,6 @@
 import {
   ArrowLeftIcon,
   CheckIcon,
-  LockIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
@@ -10,6 +9,7 @@ import {
   XIcon,
 } from '@lucide/vue';
 import WorkspaceCreateDialog from '~/features/workspace/components/WorkspaceCreateDialog.vue';
+import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVisibilityIcon.vue';
 import WorkspaceMembersPanel from '~/features/workspace/components/WorkspaceMembersPanel.vue';
 import {
   useDeleteWorkspace,
@@ -162,8 +162,8 @@ async function handleDelete(workspace: Workspace) {
               </Button>
             </template>
             <template v-else>
-              <LockIcon
-                v-if="workspace.visibility === 'restricted'"
+              <WorkspaceVisibilityIcon
+                :visibility="workspace.visibility"
                 class="size-3.5 shrink-0 text-muted-foreground"
               />
               <span class="flex-1 truncate text-sm">{{ workspace.name }}</span>
