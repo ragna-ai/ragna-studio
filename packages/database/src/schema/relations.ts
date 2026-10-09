@@ -37,6 +37,7 @@ import {
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
+import { invitation, member, organization } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -85,6 +86,9 @@ const schema = {
   taskLabel,
   taskToTaskLabel,
   workspace,
+  organization,
+  member,
+  invitation,
   jwks,
   oauthClient,
   oauthResource,
@@ -110,6 +114,7 @@ export const relations = defineRelations(schema, (r) => ({
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
     workspaces: r.many.workspace(),
+    memberships: r.many.member(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
     // Personal-library flow; unused until v2
@@ -148,6 +153,40 @@ export const relations = defineRelations(schema, (r) => ({
   session: {
     user: r.one.user({
       from: r.session.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  organization: {
+    members: r.many.member(),
+    invitations: r.many.invitation(),
+    workspaces: r.many.workspace(),
+    creditAccount: r.one.creditAccount({
+      from: r.organization.id,
+      to: r.creditAccount.organizationId,
+      optional: true,
+    }),
+  },
+  member: {
+    organization: r.one.organization({
+      from: r.member.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.member.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  invitation: {
+    organization: r.one.organization({
+      from: r.invitation.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    inviter: r.one.user({
+      from: r.invitation.inviterId,
       to: r.user.id,
       optional: false,
     }),
@@ -786,6 +825,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.workspace.ownerId,
       to: r.user.id,
       optional: false,
+    }),
+    organization: r.one.organization({
+      from: r.workspace.organizationId,
+      to: r.organization.id,
+      optional: true,
     }),
     agents: r.many.agent(),
     chats: r.many.chat(),

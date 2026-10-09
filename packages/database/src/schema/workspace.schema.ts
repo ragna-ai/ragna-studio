@@ -1,5 +1,6 @@
 import { index, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { organization } from './organization.schema';
 import { user } from './user.schema';
 
 export const workspace = pgTable(
@@ -11,10 +12,16 @@ export const workspace = pgTable(
     ownerId: text('owner_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    organizationId: text('organization_id').references(() => organization.id, {
+      onDelete: 'cascade',
+    }),
     name: text('name').notNull(),
     ...timestamps,
   },
-  (table) => [index('workspace_ownerId_idx').on(table.ownerId)],
+  (table) => [
+    index('workspace_ownerId_idx').on(table.ownerId),
+    index('workspace_organizationId_idx').on(table.organizationId),
+  ],
 );
 
 export type Workspace = typeof workspace.$inferSelect;

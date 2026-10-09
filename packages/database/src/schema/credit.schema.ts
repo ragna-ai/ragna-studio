@@ -2,6 +2,7 @@ import { bigint, index, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-cor
 import type { AiModelPricing } from './aimodel.schema';
 import { aiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { organization } from './organization.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -24,6 +25,9 @@ export const creditAccount = pgTable('credit_accounts', {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: 'cascade' }),
+  organizationId: text('organization_id')
+    .unique()
+    .references(() => organization.id, { onDelete: 'cascade' }),
   // Denormalised cache of sum(credit_ledger.amount_micro_credits). The
   // ledger is the source of truth; this column exists so the spend gate is
   // one indexed read instead of an aggregate over an ever-growing table. May

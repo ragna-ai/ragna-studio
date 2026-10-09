@@ -2,13 +2,13 @@ import { cimd } from '@better-auth/cimd';
 import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { mcp } from '@better-auth/mcp';
 import { config } from '@repo/config';
-import { createWorkspace, db } from '@repo/database';
+import { createOrganizationForUser, db, getOrganizationIdByUserId } from '@repo/database';
 import { logger } from '@repo/logger';
 import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, jwt, lastLoginMethod, testUtils } from 'better-auth/plugins';
+import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
 
 // Real permissions come from mcp_settings; offline_access
 // is only here because OAuth Provider gates refresh-token issuance on it.
@@ -42,6 +42,11 @@ export const auth = betterAuth({
   plugins: [
     admin(),
     lastLoginMethod(),
+    organization({
+      allowUserToCreateOrganization: false,
+      disableOrganizationDeletion: true,
+      invitationLimit: 0,
+    }),
     ...(config.isTest ? [testUtils()] : []),
     ...(config.mcpEnabled
       ? [
@@ -132,9 +137,9 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // Every user needs a workspace to create anything in: workspaceId is
+          // Every user owns an organization with a workspace: workspaceId is
           // a required container.
-          await createWorkspace({ ownerId: user.id, name: 'Personal' });
+          await createOrganizationForUser({ userId: user.id, userName: user.name });
 
           // Integration tests seed users through this same hook (see
           // packages/testing/src/auth/auth-seed.ts), which would otherwise
@@ -151,6 +156,14 @@ export const auth = betterAuth({
           } catch (error) {
             logger.error('Failed to enqueue welcome email', { userId: user.id, error });
           }
+        },
+      },
+    },
+    session: {
+      create: {
+        before: async (session) => {
+          const activeOrganizationId = await getOrganizationIdByUserId({ userId: session.userId });
+          return { data: { ...session, activeOrganizationId } };
         },
       },
     },

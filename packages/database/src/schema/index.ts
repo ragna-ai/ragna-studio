@@ -16,6 +16,7 @@ export * from './media.schema';
 export * from './memory.schema';
 export * from './notification.schema';
 export * from './oauth-provider.schema';
+export * from './organization.schema';
 export * from './relations';
 export * from './session.schema';
 export * from './social-post.schema';
