@@ -32,10 +32,12 @@ export const chatController = new Hono()
    * List a workspace's chats, paginated and sorted by createdAt.
    */
   .get('/', validPaginationQuery, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
     const { chats, totalCount } = await listChatsForWorkspace({
+      userId: user.id,
       workspaceId: workspace.id,
       page: query.page,
       limit: query.limit,
@@ -68,10 +70,12 @@ export const chatController = new Hono()
    * chatId param.
    */
   .get('/search', validChatSearchQuery, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
     const result = await searchChatsForWorkspace({
+      userId: user.id,
       workspaceId: workspace.id,
       q: query.q,
       page: query.page,
@@ -86,10 +90,15 @@ export const chatController = new Hono()
    * [GET] /workspace/:workspaceId/chat/:chatId
    */
   .get('/:chatId', validChatIdParam, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const chat = await getChatForWorkspace({ workspaceId: workspace.id, chatId: param.chatId });
+    const chat = await getChatForWorkspace({
+      userId: user.id,
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+    });
 
     return c.json({ chat });
   })
@@ -98,11 +107,13 @@ export const chatController = new Hono()
    * Renames a chat.
    */
   .patch('/:chatId', validChatIdParam, validUpdateChatTitleBody, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
     const chat = await renameChatForWorkspace({
+      userId: user.id,
       workspaceId: workspace.id,
       chatId: param.chatId,
       title: body.title,
@@ -116,11 +127,13 @@ export const chatController = new Hono()
    * independent chat. The source chat is untouched.
    */
   .post('/:chatId/branch', validChatIdParam, validBranchChatBody, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
     const chat = await branchChatForWorkspace({
+      userId: user.id,
       workspaceId: workspace.id,
       chatId: param.chatId,
       messageId: body.messageId,
@@ -133,10 +146,15 @@ export const chatController = new Hono()
    * Deletes a chat (and its messages via cascade).
    */
   .delete('/:chatId', validChatIdParam, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    await deleteChatForWorkspace({ workspaceId: workspace.id, chatId: param.chatId });
+    await deleteChatForWorkspace({
+      userId: user.id,
+      workspaceId: workspace.id,
+      chatId: param.chatId,
+    });
 
     return c.json({ message: 'Chat deleted successfully' });
   })
@@ -146,6 +164,7 @@ export const chatController = new Hono()
    * and attach them to the chat.
    */
   .post('/:chatId/attachments', multiUploadBodyLimit, validChatIdParam, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
@@ -155,6 +174,7 @@ export const chatController = new Hono()
     const uploadedFiles = files.filter((file): file is File => file instanceof File);
 
     const result = await uploadChatAttachments({
+      userId: user.id,
       workspaceId: workspace.id,
       chatId: param.chatId,
       files: uploadedFiles,
@@ -167,10 +187,12 @@ export const chatController = new Hono()
    * Detaches a file from the chat and deletes its media once unreferenced.
    */
   .delete('/:chatId/attachments/:attachmentId', validChatAttachmentParams, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
     await removeChatAttachment({
+      userId: user.id,
       workspaceId: workspace.id,
       chatId: param.chatId,
       attachmentId: param.attachmentId,

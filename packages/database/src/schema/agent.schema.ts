@@ -74,7 +74,7 @@ export const agent = pgTable(
   'agents',
   {
     id: primaryIdColumn,
-    userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
@@ -111,16 +111,9 @@ export const agent = pgTable(
       foreignColumns: [dataset.workspaceId, dataset.id],
       name: 'agents_default_dataset_workspace_fk',
     }),
-    // isDefault is unique per scope: a workspace-scoped agent's scope is its
-    // own workspaceId, an unassigned agent's scope is "no workspace". Two
-    // partial indexes because a single unique index would treat every NULL
-    // workspaceId as distinct, allowing unlimited unassigned defaults.
-    uniqueIndex('agent_default_per_workspace_idx')
-      .on(table.userId, table.workspaceId)
-      .where(sql`${table.isDefault} AND ${table.workspaceId} IS NOT NULL`),
-    uniqueIndex('agent_default_unassigned_idx')
-      .on(table.userId)
-      .where(sql`${table.isDefault} AND ${table.workspaceId} IS NULL`),
+    uniqueIndex('agent_default_workspace_idx')
+      .on(table.workspaceId)
+      .where(sql`${table.isDefault}`),
   ],
 );
 

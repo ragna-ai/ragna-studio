@@ -319,10 +319,12 @@ export type StartWorkflowRunResult =
  */
 export async function startWorkflowRun({
   workspaceId,
+  userId,
   workflowId,
   input,
 }: {
   workspaceId: string;
+  userId: string;
   workflowId: string;
   input?: string;
 }): Promise<StartWorkflowRunResult> {
@@ -343,6 +345,7 @@ export async function startWorkflowRun({
       workflowId,
       definition: workflowRecord.publishedDefinition!,
       input,
+      triggeredByUserId: userId,
     }),
   );
 

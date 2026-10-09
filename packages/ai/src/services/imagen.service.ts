@@ -328,6 +328,10 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
   }
 
   const { userId, prompt, provider, model, seed, negativePrompt, visibleWatermark } = first;
+  // Storage keys are prefixed by the author, who may have been deleted mid-generation.
+  if (!userId) {
+    throw new Error(`Gen image ${first.id} has no author left to store its output under`);
+  }
   // gen_images.resolution/aspectRatio are typed columns ($type<GenImageResolution
   // | GenImageAspectRatio>, genimage.schema.ts), structurally identical to
   // this package's own ImageResolution/AspectRatio aliases, so no cast is

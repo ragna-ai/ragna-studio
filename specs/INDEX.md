@@ -18,6 +18,7 @@ work first, shipped reference and dead/historical docs last.
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
+| [Organizations v2: members, invites, org settings](./organizations/v2-prd.md) | in-progress (2026-10-09) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
 
 ## Decided
@@ -26,7 +27,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
-| [Organizations v2: members, invites, org settings](./organizations/v2-prd.md) | decided (2026-10-09) |
 
 ## Proposed
 

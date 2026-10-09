@@ -246,7 +246,6 @@ export const datasetFindDefinition: ToolDefinition<
     const { error, data: datasets } = await tryCatch(
       () =>
         findDatasetsForAgent({
-          userId: ctx.userId,
           workspaceId: ctx.workspaceId,
           query: input.query,
         }),
@@ -264,7 +263,7 @@ export const datasetFindDefinition: ToolDefinition<
     // A missed query (typo, wrong wording) would otherwise cost a second,
     // broader call; dataset counts are small, so fall back to the full list.
     const { error: fallbackError, data: allDatasets } = await tryCatch(
-      () => findDatasetsForAgent({ userId: ctx.userId, workspaceId: ctx.workspaceId }),
+      () => findDatasetsForAgent({ workspaceId: ctx.workspaceId }),
       { retryOnFailure: false },
     );
 
@@ -483,7 +482,7 @@ export const datasetAppendRowDefinition: ToolDefinition<
         () =>
           createDatasetRow({
             datasetId: input.datasetId,
-            userId: ctx.userId,
+            workspaceId: ctx.workspaceId,
             data: input.data,
             writtenBy: ctx.origin,
           }),
@@ -623,7 +622,7 @@ export const datasetMoveRowDefinition: ToolDefinition<
         () =>
           moveDatasetRow({
             datasetId: input.datasetId,
-            userId: ctx.userId,
+            workspaceId: ctx.workspaceId,
             rowId: input.rowId,
             afterRowId: input.afterRowId,
             writtenBy: ctx.origin,

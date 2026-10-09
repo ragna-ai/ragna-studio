@@ -17,9 +17,7 @@ export const workflow = pgTable(
   'workflows',
   {
     id: primaryIdColumn,
-    userId: text('user_id')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
@@ -59,6 +57,10 @@ export const workflowRun = pgTable(
     status: text('status').notNull().$type<WorkflowRunStatus>().default('pending'),
     // Origin of the run: a manual run-endpoint call or a schedule tick.
     triggeredBy: text('triggered_by').notNull().$type<WorkflowRunTrigger>().default('manual'),
+    // The user whose credits, chats and notifications this run uses.
+    triggeredByUserId: text('triggered_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     // Snapshot of the published definition at enqueue time, so later edits
     // to the workflow don't change how a past run is displayed or replayed.
     definition: jsonb('definition').notNull().$type<WorkflowDefinition>(),

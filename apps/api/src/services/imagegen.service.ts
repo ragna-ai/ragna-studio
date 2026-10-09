@@ -323,13 +323,15 @@ interface ResolvedReferenceImage {
  */
 async function resolveReferenceImage({
   reference,
+  userId,
   workspaceId,
 }: {
   reference: GenImageReferenceInput;
+  userId: string;
   workspaceId: string;
 }): Promise<ResolvedReferenceImage> {
   if (reference.origin === 'upload') {
-    const mediaRow = await getOwnedImageMedia({ workspaceId, mediaId: reference.mediaId });
+    const mediaRow = await getOwnedImageMedia({ userId, workspaceId, mediaId: reference.mediaId });
     return { origin: 'upload', mediaId: mediaRow.id, storageKey: mediaRow.storageKey };
   }
 
@@ -361,9 +363,11 @@ async function resolveReferenceImage({
  */
 async function resolveReferenceImages({
   referenceImages,
+  userId,
   workspaceId,
 }: {
   referenceImages?: GenImageReferenceInput[];
+  userId: string;
   workspaceId: string;
 }): Promise<ResolvedReferenceImage[] | undefined> {
   if (!referenceImages || referenceImages.length === 0) {
@@ -371,7 +375,7 @@ async function resolveReferenceImages({
   }
 
   return Promise.all(
-    referenceImages.map((reference) => resolveReferenceImage({ reference, workspaceId })),
+    referenceImages.map((reference) => resolveReferenceImage({ reference, userId, workspaceId })),
   );
 }
 
@@ -425,7 +429,11 @@ export async function generateImagesForWorkspace({
     referenceImages,
   });
 
-  const resolvedReferenceImages = await resolveReferenceImages({ referenceImages, workspaceId });
+  const resolvedReferenceImages = await resolveReferenceImages({
+    referenceImages,
+    userId,
+    workspaceId,
+  });
   const provider = assertImageGenProvider(aiModel.provider);
 
   const { error, data: created } = await tryCatch(() =>

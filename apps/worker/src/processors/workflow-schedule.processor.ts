@@ -2,6 +2,7 @@ import {
   createWorkflowRun,
   getWorkflowForScheduledRun,
   hasActiveRun,
+  resolveScheduledRunUserId,
   updateRunStatus,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -76,6 +77,7 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
     workflowId,
     definition: workflow.publishedDefinition,
     triggeredBy: 'schedule',
+    triggeredByUserId: await resolveScheduledRunUserId({ workflowId }),
   });
 
   try {

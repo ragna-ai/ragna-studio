@@ -87,6 +87,11 @@ async function notifyBestEffort({
       return;
     }
 
+    if (!record.userId) {
+      logger.info(`Gen images ${genImageIds.join(', ')} have no author, skipping notification`);
+      return;
+    }
+
     await enqueueNotification({
       userId: record.userId,
       type,

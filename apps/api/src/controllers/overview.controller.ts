@@ -14,9 +14,10 @@ export const overviewController = new Hono()
    * total, plus the calendar's tasks due in a fixed window around today.
    */
   .get('/', async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
 
-    const overview = await getWorkspaceOverview(workspace.id);
+    const overview = await getWorkspaceOverview({ workspaceId: workspace.id, userId: user.id });
 
     return c.json(overview);
   });

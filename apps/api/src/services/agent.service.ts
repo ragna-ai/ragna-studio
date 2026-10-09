@@ -133,7 +133,6 @@ export async function createAgentForWorkspace(input: CreateAgentInput): Promise<
 export interface UpdateAgentInput {
   workspaceId: string;
   agentId: string;
-  userId: string;
   name?: string;
   description?: string;
   aiModelId?: string;
@@ -157,7 +156,6 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
     updateAgent({
       agentId,
       workspaceId,
-      userId: input.userId,
       name: input.name,
       description: input.description,
       aiModelId: input.aiModelId,

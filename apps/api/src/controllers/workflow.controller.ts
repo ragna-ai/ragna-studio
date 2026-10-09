@@ -157,12 +157,14 @@ export const workflowController = new Hono()
    * whole controller.
    */
   .post('/:workflowId/run', creditGuard, validWorkflowIdParam, validRunWorkflowBody, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
     const result = await startWorkflowRun({
       workspaceId: workspace.id,
+      userId: user.id,
       workflowId: param.workflowId,
       input: body.input,
     });

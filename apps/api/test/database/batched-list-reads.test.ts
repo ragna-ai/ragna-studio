@@ -4,7 +4,7 @@ import {
   getDatasetRowCounts,
   listEmailMessagesByThreadIds,
 } from '@repo/database';
-import { chat, chatMessage } from '@repo/database/schema';
+import { agent as agentTable, chat, chatMessage } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import * as z from 'zod';
@@ -152,6 +152,7 @@ describe('getChatSearchMessageSnippetsForChats', () => {
     await seedMessage(chatC, 'nothing here', new Date('2026-02-01T10:00:00Z'));
 
     const rows = await getChatSearchMessageSnippetsForChats({
+      userId,
       chatIds: [chatA, chatB, chatC],
       query: 'needle',
       limit: 2,
@@ -166,9 +167,32 @@ describe('getChatSearchMessageSnippetsForChats', () => {
     expect(rows.find((row) => row.messageId === b1)?.snippet).toBe('<mark>needle</mark> b1');
   });
 
+  test("returns no snippets from another user's chats", async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    const other = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    const [agent] = await db
+      .insert(agentTable)
+      .values({ userId, workspaceId, aiModelId, name: 'A', systemPrompt: 'x' })
+      .returning({ id: agentTable.id });
+    const chatId = await seedChat(workspaceId, userId, agent?.id ?? '');
+    await seedMessage(chatId, 'needle', new Date('2026-01-01T10:00:00Z'));
+
+    const rows = await getChatSearchMessageSnippetsForChats({
+      userId: other.userId,
+      chatIds: [chatId],
+      query: 'needle',
+      limit: 2,
+      caseSensitive: false,
+    });
+
+    expect(rows).toEqual([]);
+  });
+
   test('returns an empty list for no chat ids', async () => {
     expect(
       await getChatSearchMessageSnippetsForChats({
+        userId: 'nobody',
         chatIds: [],
         query: 'needle',
         limit: 2,

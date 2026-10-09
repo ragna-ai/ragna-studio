@@ -27,24 +27,18 @@ type UpdateAgentFields = Partial<
   >
 >;
 
-// Clears `isDefault` on every other agent owned by `userId` in `workspaceId`,
-// so at most one default agent can exist per user per workspace. Must run in
-// the same transaction as the write that sets the new default, otherwise a
-// race can leave two defaults.
-async function clearOtherDefaultAgentsInScope(
+// Clears `isDefault` on every other agent in `workspaceId`, so at most one
+// default agent exists per workspace. Must run in the same transaction as the
+// write that sets the new default, otherwise a race can leave two defaults.
+async function clearOtherDefaultAgentsInWorkspace(
   tx: AgentTransaction,
-  {
-    userId,
-    workspaceId,
-    exceptAgentId,
-  }: { userId: string; workspaceId: string; exceptAgentId?: string },
+  { workspaceId, exceptAgentId }: { workspaceId: string; exceptAgentId?: string },
 ): Promise<void> {
   await tx
     .update(agent)
     .set({ isDefault: false })
     .where(
       and(
-        eq(agent.userId, userId),
         eq(agent.workspaceId, workspaceId),
         exceptAgentId ? sql`${agent.id} <> ${exceptAgentId}` : undefined,
       ),
@@ -66,16 +60,9 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     defaultDatasetId,
   } = values;
 
-  // Every agent belongs to a user in practice; asserting it here (rather
-  // than trusting the wider, nullable ICreateAgent type) keeps the scoped
-  // cleanup below from ever matching rows across users.
-  if (!userId) {
-    throw new Error('userId is required to create an agent');
-  }
-
   return db.transaction(async (tx) => {
     if (isDefault) {
-      await clearOtherDefaultAgentsInScope(tx, { userId, workspaceId });
+      await clearOtherDefaultAgentsInWorkspace(tx, { workspaceId });
     }
 
     const [createdAgent] = await tx
@@ -104,35 +91,50 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
   });
 }
 
-// Get the user's personal clone of the default agent, creating it on first use
-export async function getOrCreateDefaultAgentForUser({
+// Get the workspace's shared clone of the default agent, creating it on first use.
+// `userId` is only the author of a newly created clone.
+export async function getOrCreateDefaultAgentForWorkspace({
   userId,
   workspaceId,
 }: {
   userId: string;
   workspaceId: string;
 }): Promise<Agent> {
-  const existingAgent = await db.query.agent.findFirst({
-    where: { userId, workspaceId, isDefault: true },
-  });
+  const findExisting = () => db.query.agent.findFirst({ where: { workspaceId, isDefault: true } });
 
+  const existingAgent = await findExisting();
   if (existingAgent) {
     return existingAgent;
   }
 
   const defaultAgent = await getDefaultAgent();
 
-  return createAgent({
-    userId,
-    aiModelId: defaultAgent.aiModelId,
-    workspaceId,
-    isDefault: true,
-    name: defaultAgent.name,
-    description: defaultAgent.description,
-    systemPrompt: defaultAgent.systemPrompt,
-    tools: defaultAgent.tools,
-    settings: defaultAgent.settings,
-  });
+  // Not createAgent: its default-clearing would demote a default a colleague
+  // just committed. On conflict the colleague's default wins and is re-read.
+  const [createdAgent] = await db
+    .insert(agent)
+    .values({
+      userId,
+      workspaceId,
+      aiModelId: defaultAgent.aiModelId,
+      isDefault: true,
+      name: defaultAgent.name,
+      description: defaultAgent.description,
+      systemPrompt: defaultAgent.systemPrompt,
+      tools: defaultAgent.tools,
+      settings: defaultAgent.settings,
+    })
+    .onConflictDoNothing({ target: agent.workspaceId, where: sql`${agent.isDefault}` })
+    .returning();
+  if (createdAgent) {
+    return createdAgent;
+  }
+
+  const concurrentAgent = await findExisting();
+  if (!concurrentAgent) {
+    throw new Error('Failed to create default agent');
+  }
+  return concurrentAgent;
 }
 
 export async function getAgentCountByWorkspaceId({
@@ -227,16 +229,14 @@ export async function getAgentsByWorkspaceId({
 export async function updateAgent({
   agentId,
   workspaceId,
-  userId,
   ...fields
 }: {
   agentId: string;
   workspaceId: string;
-  userId: string;
 } & UpdateAgentFields): Promise<Agent | null> {
   return db.transaction(async (tx) => {
     if (fields.isDefault) {
-      await clearOtherDefaultAgentsInScope(tx, { userId, workspaceId, exceptAgentId: agentId });
+      await clearOtherDefaultAgentsInWorkspace(tx, { workspaceId, exceptAgentId: agentId });
     }
 
     const [updatedAgent] = await tx

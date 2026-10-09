@@ -15,8 +15,9 @@ export const mediaController = new Hono()
    * email compose media-library attachment picker.
    */
   .get('/', async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
-    const media = await listMediaForWorkspace({ workspaceId: workspace.id });
+    const media = await listMediaForWorkspace({ userId: user.id, workspaceId: workspace.id });
     return c.json({ media });
   })
   /**
@@ -27,10 +28,15 @@ export const mediaController = new Hono()
    * the private documents bucket and is only reachable through this route.
    */
   .get('/:mediaId/download', validMediaIdParam, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
 
-    const file = await downloadMedia({ workspaceId: workspace.id, mediaId: param.mediaId });
+    const file = await downloadMedia({
+      userId: user.id,
+      workspaceId: workspace.id,
+      mediaId: param.mediaId,
+    });
 
     return c.body(new Uint8Array(file.bytes), 200, {
       'Content-Type': file.contentType,
