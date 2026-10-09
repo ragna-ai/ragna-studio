@@ -1,9 +1,32 @@
 import { createPrimaryId } from '@repo/utils';
-import { and, eq, exists, inArray, ne, not } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  ne,
+  not,
+  sql,
+  type AnyColumn,
+  type SQL,
+} from 'drizzle-orm';
 import { db } from '../db';
-import { member, organization, workspace, type Workspace } from '../schema';
+import { invitation, member, organization, workspace, type Workspace } from '../schema';
 
 export const ORGANIZATION_OWNER_ROLE = 'owner';
+const DEFAULT_MEMBER_ROLE = 'member';
+
+/** Roles are comma-separated (`owner,admin`), so compare per role, never the whole string. */
+export function hasOrganizationRole(role: string, wanted: string): boolean {
+  return role.split(',').some((part) => part.trim() === wanted);
+}
+
+/** SQL form of `hasOrganizationRole` for a role column. */
+export function organizationRoleMatches(roleColumn: SQL | AnyColumn, wanted: string): SQL {
+  return sql`${wanted} = ANY(string_to_array(replace(${roleColumn}, ' ', ''), ','))`;
+}
 
 export interface CreatedOrganizationWithWorkspace {
   organizationId: string;
@@ -46,6 +69,49 @@ export async function createOrganizationForUser({
   });
 }
 
+/**
+ * Joins the organization of the newest pending, unexpired invitation for `email`:
+ * creates the membership with the invited role and marks the invitation accepted.
+ * Returns false when there is none.
+ */
+export async function joinOrganizationFromPendingInvitation({
+  userId,
+  email,
+}: {
+  userId: string;
+  email: string;
+}): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const [pendingInvitation] = await tx
+      .select()
+      .from(invitation)
+      .where(
+        and(
+          eq(invitation.email, email.toLowerCase()),
+          eq(invitation.status, 'pending'),
+          gt(invitation.expiresAt, new Date()),
+        ),
+      )
+      .orderBy(desc(invitation.createdAt))
+      .limit(1);
+
+    if (!pendingInvitation) return false;
+
+    await tx.insert(member).values({
+      organizationId: pendingInvitation.organizationId,
+      userId,
+      role: pendingInvitation.role ?? DEFAULT_MEMBER_ROLE,
+      createdAt: new Date(),
+    });
+    await tx
+      .update(invitation)
+      .set({ status: 'accepted' })
+      .where(eq(invitation.id, pendingInvitation.id));
+
+    return true;
+  });
+}
+
 export async function getOrganizationIdByUserId({
   userId,
 }: {
@@ -71,7 +137,7 @@ export async function deleteOrganizationsSolelyOwnedByUser({
     .where(
       and(
         eq(member.organizationId, organization.id),
-        eq(member.role, ORGANIZATION_OWNER_ROLE),
+        organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE),
         ne(member.userId, userId),
       ),
     );
@@ -79,7 +145,9 @@ export async function deleteOrganizationsSolelyOwnedByUser({
   const ownedOrganizationIds = db
     .select({ id: member.organizationId })
     .from(member)
-    .where(and(eq(member.userId, userId), eq(member.role, ORGANIZATION_OWNER_ROLE)));
+    .where(
+      and(eq(member.userId, userId), organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE)),
+    );
 
   await db
     .delete(organization)

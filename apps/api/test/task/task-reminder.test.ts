@@ -1,4 +1,4 @@
-import { db, listTasksDueForReminder } from '@repo/database';
+import { db, listTasksDueForReminder, sql } from '@repo/database';
 import { member } from '@repo/database/schema';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
@@ -47,5 +47,18 @@ describe('listTasksDueForReminder', () => {
     const dueTasks = await listTasksDueForReminder();
 
     expect(dueTasks.map((dueTask) => dueTask.ownerUserId)).toEqual([owner.userId]);
+  });
+
+  test('resolves an owner whose role is comma-separated', async () => {
+    const owner = await seedAuthenticatedUser();
+    await db
+      .update(member)
+      .set({ role: 'owner,admin' })
+      .where(sql`${member.userId} = ${owner.userId}`);
+    const taskId = await createOverdueTask(owner.cookieHeader, owner.workspaceId);
+
+    const dueTasks = await listTasksDueForReminder();
+
+    expect(dueTasks).toEqual([expect.objectContaining({ taskId, ownerUserId: owner.userId })]);
   });
 });

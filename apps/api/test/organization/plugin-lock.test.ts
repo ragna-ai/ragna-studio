@@ -48,29 +48,13 @@ describe('organization plugin routes', () => {
     expect((await errorBody(response)).code).toBe('ORGANIZATION_DELETION_DISABLED');
   });
 
-  test('inviting a member is forbidden', async () => {
-    const { cookieHeader } = await seedAuthenticatedUser();
-    const organizationId = await activeOrganizationId(cookieHeader);
-
-    const response = await postOrganizationRoute(cookieHeader, 'invite-member', {
-      email: 'invitee@example.com',
-      role: 'member',
-      organizationId,
-    });
-
-    expect(response.status).toBe(StatusCodes.FORBIDDEN);
-  });
-
-  test('the only owner cannot leave', async () => {
+  test('leaving the organization is disabled', async () => {
     const { cookieHeader } = await seedAuthenticatedUser();
     const organizationId = await activeOrganizationId(cookieHeader);
 
     const response = await postOrganizationRoute(cookieHeader, 'leave', { organizationId });
 
-    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    expect((await errorBody(response)).code).toBe(
-      'YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER',
-    );
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });
 });
 

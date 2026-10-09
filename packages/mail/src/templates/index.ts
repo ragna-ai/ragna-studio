@@ -8,6 +8,7 @@ const emailsDir = resolve(dirname(fileURLToPath(import.meta.url)), 'templates');
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const templates: Record<string, (vars: any) => { path: string; vars: Record<string, unknown> }> = {
   welcome: (vars) => ({ path: resolve(emailsDir, 'welcome.vue'), vars }),
+  invitation: (vars) => ({ path: resolve(emailsDir, 'invitation.vue'), vars }),
 };
 
 export function getTemplate(

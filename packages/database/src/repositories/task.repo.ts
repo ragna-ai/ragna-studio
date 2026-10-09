@@ -12,7 +12,7 @@ import type {
   TaskStatus,
 } from '../schema';
 import { member, task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
-import { ORGANIZATION_OWNER_ROLE } from './organization.repo';
+import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
 export type {
@@ -479,7 +479,7 @@ export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
       member,
       and(
         eq(member.organizationId, workspace.organizationId),
-        eq(member.role, ORGANIZATION_OWNER_ROLE),
+        organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE),
       ),
     )
     .where(

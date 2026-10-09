@@ -4,6 +4,8 @@ import type { Worker } from '@repo/queue';
 import {
   createWorker,
   EMAILS_QUEUE,
+  INVITATION_EMAIL_JOB,
+  invitationEmailJobSchema,
   VERIFY_EMAIL_JOB,
   verifyEmailJobSchema,
   WELCOME_EMAIL_JOB,
@@ -41,6 +43,20 @@ export function registerSendEmailJobProcessor(): Worker<any, any, string> {
             variables: {
               name,
             },
+          });
+
+          break;
+        }
+        case INVITATION_EMAIL_JOB: {
+          const { email, inviterName, organizationName, url } = invitationEmailJobSchema.parse(
+            job.data,
+          );
+
+          await sendEmail({
+            to: email,
+            subject: `${inviterName} invited you to ${organizationName}`,
+            templateId: 'invitation',
+            variables: { inviterName, organizationName, url },
           });
 
           break;
