@@ -30,10 +30,7 @@ const signingIn = ref<SocialProvider | null>(null);
 // The OAuth callback (e.g. a rejected email allowlist check) redirects back
 // here with these query params instead of resolving signIn.social() directly.
 if (typeof route.query.error === 'string') {
-  errorMessage.value =
-    typeof route.query.error_description === 'string'
-      ? route.query.error_description
-      : t('auth.login.genericError');
+  errorMessage.value = callbackErrorMessage(route.query.error);
 }
 
 const hasInvitation = typeof route.query.invitation === 'string';
@@ -44,6 +41,20 @@ const isOAuthAuthorizeResume = computed(
     typeof route.query.client_id === 'string' &&
     typeof route.query.sig === 'string',
 );
+
+// The server's error descriptions are English only, so known codes get translated text.
+const translatedCallbackErrors: Record<string, string> = {
+  BANNED_USER: 'auth.login.bannedError',
+  email_not_allowed: 'auth.login.emailNotAllowedError',
+};
+
+function callbackErrorMessage(error: string): string {
+  const translationKey = translatedCallbackErrors[error];
+  if (translationKey) return t(translationKey);
+  if (typeof route.query.error_description === 'string')
+    return route.query.error_description;
+  return t('auth.login.genericError');
+}
 
 async function signIn(provider: SocialProvider) {
   errorMessage.value = null;
