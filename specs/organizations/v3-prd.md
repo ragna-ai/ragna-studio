@@ -263,9 +263,15 @@ Manual runs still work. To schedule it again, someone creates a new workflow.
 - `prepareUserRemoval` (platform admin `remove-user`) of a user who isn't an org owner:
   reads the `{ bucket, key }` of every media row in the personal workspace before
   better-auth deletes the user row (the rows cascade with it), and enqueues
-  `DELETE_MEDIA_OBJECTS_JOB` on the purge queue (max 1000 objects per job, 3 attempts). The
-  worker deletes them with `deleteMediaObjectsByKeys` (`@repo/media`). An enqueue failure is
-  logged and never blocks the removal. `@repo/auth` does not depend on `@repo/media`.
+  `DELETE_MEDIA_OBJECTS_JOB` jobs on the purge queue in one `addBulk` call (max 1000 objects
+  per job, 3 attempts). The worker deletes them with `deleteMediaObjectsByKeys`
+  (`@repo/media`). An enqueue failure is logged and never blocks the removal. `@repo/auth`
+  does not depend on `@repo/media`.
+- **The media sweep cron does not cover this.** `sweepUnreferencedMedia` starts from media
+  rows (`findUnreferencedMediaOlderThan`) and never lists the bucket. `media.workspace_id`
+  cascades, so once a workspace row is gone, its objects are invisible to the sweep and stay
+  in R2 for good. Every path that deletes a workspace or its user must hand over the keys
+  first.
 
 ### 8. Migrations
 
@@ -374,6 +380,14 @@ impossible for personal workspaces.
 
 **Composite FK from `workspace_members` to `members`.** Needs `organization_id` on the row and a
 `NO ACTION` FK beside the user cascade, which is trigger-order dependent.
+
+**Rely on the media sweep cron for remove-user cleanup.** Doesn't work: the sweep only sees
+existing media rows, and the user delete cascades them away (section 7).
+
+**A bucket-listing orphan sweep** (list R2 objects, delete those without a media row). Would
+catch every orphan, including leftovers of a failed workspace delete. Needs a full bucket
+listing per run (R2 request cost) and an age window for in-flight uploads. A feature of its
+own, not v3.
 
 ## Docs to update when built
 
