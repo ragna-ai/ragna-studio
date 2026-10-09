@@ -14,7 +14,7 @@ beforeEach(async () => {
 });
 
 async function organizationIdOf(userId: string): Promise<string> {
-  const membership = await db.query.member.findFirst({ where: { userId } });
+  const membership = await db.query.organizationMember.findFirst({ where: { userId } });
   return membership?.organizationId ?? '';
 }
 
@@ -33,7 +33,7 @@ describe('user deletion', () => {
       await db.query.organization.findFirst({ where: { id: organizationId } }),
     ).toBeUndefined();
     expect(await db.query.workspace.findFirst({ where: { id: workspaceId } })).toBeUndefined();
-    expect(await db.query.member.findMany({ where: { organizationId } })).toEqual([]);
+    expect(await db.query.organizationMember.findMany({ where: { organizationId } })).toEqual([]);
     expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
   });
 

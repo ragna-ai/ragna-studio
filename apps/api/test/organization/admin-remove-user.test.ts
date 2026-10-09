@@ -103,9 +103,50 @@ describe('platform admin remove-user', () => {
     expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
   });
 
+  test('a non-owner member has their personal workspace R2 objects cleaned', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    const storageKey = `user/${colleague.userId}/private.pdf`;
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
+  test('a failed R2 cleanup does not block removing a non-owner member', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
   test('already removed members do not block a sole owner', async () => {
     const { owner, colleague, organizationId } = await seedOwnerWithColleague();
-    const memberRow = await db.query.member.findFirst({ where: { userId: colleague.userId } });
+    const memberRow = await db.query.organizationMember.findFirst({
+      where: { userId: colleague.userId },
+    });
     await organizationRequest(owner.cookieHeader, 'DELETE', `/members/${memberRow?.id}`);
 
     const response = await removeUserAsPlatformAdmin(owner.userId);

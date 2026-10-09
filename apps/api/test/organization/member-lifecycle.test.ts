@@ -1,5 +1,5 @@
 import { createEmailAccount, db, listEmailAccountsDueForSync } from '@repo/database';
-import { member, oauthConsent, oauthRefreshToken } from '@repo/database/schema';
+import { oauthConsent, oauthRefreshToken, organizationMember } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -111,7 +111,7 @@ describe('removing a member', () => {
     expect(await db.query.oauthConsent.findMany({ where: { userId: target.userId } })).toHaveLength(
       0,
     );
-    expect(await db.query.member.findFirst({ where: { id: memberId } })).toBeDefined();
+    expect(await db.query.organizationMember.findFirst({ where: { id: memberId } })).toBeDefined();
     const afterwards = await organizationRequest(target.cookieHeader, 'GET', '');
     expect(afterwards.status).toBe(StatusCodes.UNAUTHORIZED);
   });
@@ -347,7 +347,7 @@ describe('one membership per user', () => {
     const otherOrganizationId = await activeOrganizationId(otherOrganization.cookieHeader);
 
     const insertSecondMembership = async () =>
-      db.insert(member).values({
+      db.insert(organizationMember).values({
         organizationId: otherOrganizationId,
         userId: owner.userId,
         role: 'member',

@@ -26,7 +26,9 @@ beforeEach(async () => {
 
 async function seedMemberWithAuthoredWork() {
   const owner = await seedAuthenticatedUser();
-  const membership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+  const membership = await db.query.organizationMember.findFirst({
+    where: { userId: owner.userId },
+  });
   const member = await seedOrganizationMember({
     organizationId: membership?.organizationId ?? '',
     role: 'member',

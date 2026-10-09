@@ -1,16 +1,25 @@
 import { auth } from '@repo/auth/server';
 import {
+  createWorkspace,
   db,
   deleteOrganizationById,
-  getAllWorkspacesByOrganizationId,
   getOrganizationIdByUserId,
 } from '@repo/database';
-import { member } from '@repo/database/schema';
+import {
+  organizationMember,
+  workspace,
+  WORKSPACE_VISIBILITY_ORGANIZATION,
+  WORKSPACE_VISIBILITY_PERSONAL,
+  type Workspace,
+} from '@repo/database/schema';
 import type { TestHelpers } from 'better-auth/plugins';
 
 export interface SeededAuthenticatedUser {
   userId: string;
+  /** An organization-visibility workspace every colleague in the organization can open. */
   workspaceId: string;
+  /** The user's own personal workspace; nobody else can open it. */
+  personalWorkspaceId: string;
   /** Ready to use as the `Cookie` header on an `app.request()` call. */
   cookieHeader: string;
 }
@@ -48,6 +57,29 @@ async function getTestHelpers(): Promise<TestHelpers> {
   return test;
 }
 
+async function findPersonalWorkspace({ userId }: { userId: string }): Promise<Workspace> {
+  const personalWorkspace = await db.query.workspace.findFirst({
+    where: { personalUserId: userId },
+  });
+  if (!personalWorkspace) {
+    throw new Error(`User ${userId} has no personal workspace.`);
+  }
+  return personalWorkspace;
+}
+
+/** First organization-visibility workspace of the organization, the one tests share between colleagues. */
+async function findSharedWorkspace({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<Workspace | null> {
+  const sharedWorkspace = await db.query.workspace.findFirst({
+    where: { organizationId, visibility: WORKSPACE_VISIBILITY_ORGANIZATION },
+    orderBy: (t, { asc }) => asc(t.createdAt),
+  });
+  return sharedWorkspace ?? null;
+}
+
 /**
  * Seeds everything an authenticated, workspace-scoped request needs: a
  * user, a session, and that user's personal workspace.
@@ -80,13 +112,11 @@ export async function seedAuthenticatedUser({
     throw new Error('Expected the user-create databaseHook to have created an organization.');
   }
 
-  const [workspace] = await getAllWorkspacesByOrganizationId({ organizationId });
-
-  if (!workspace) {
-    throw new Error(
-      'Expected the user-create databaseHook to have created a personal workspace, but none was found.',
-    );
-  }
+  const personalWorkspace = await findPersonalWorkspace({ userId: seededUser.id });
+  // An invitee lands in an organization that already has its shared workspace.
+  const sharedWorkspace =
+    (await findSharedWorkspace({ organizationId })) ??
+    (await createWorkspace({ organizationId, name: 'Shared' }));
 
   const authHeaders = await test.getAuthHeaders({ userId: seededUser.id });
   const cookieHeader = authHeaders.get('cookie');
@@ -97,7 +127,8 @@ export async function seedAuthenticatedUser({
 
   return {
     userId: seededUser.id,
-    workspaceId: workspace.id,
+    workspaceId: sharedWorkspace.id,
+    personalWorkspaceId: personalWorkspace.id,
     cookieHeader,
   };
 }
@@ -123,7 +154,8 @@ export interface SeedOrganizationMemberParams {
  * Seeds a second user who belongs to an existing organization instead of
  * their own: the auto-created organization is dropped and a membership in
  * the target one is inserted before the session is minted, so the session's
- * `activeOrganizationId` is the target. Returns the target's first workspace.
+ * `activeOrganizationId` is the target. Returns the target's first organization workspace
+ * and a new personal workspace for the member.
  */
 export async function seedOrganizationMember({
   organizationId,
@@ -138,12 +170,24 @@ export async function seedOrganizationMember({
   const ownOrganizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
   if (ownOrganizationId) await deleteOrganizationById({ organizationId: ownOrganizationId });
   await db
-    .insert(member)
+    .insert(organizationMember)
     .values({ organizationId, userId: seededUser.id, role, createdAt: new Date() });
 
-  const [workspace] = await getAllWorkspacesByOrganizationId({ organizationId });
-  if (!workspace) {
-    throw new Error(`Organization ${organizationId} has no workspace to share.`);
+  const sharedWorkspace = await findSharedWorkspace({ organizationId });
+  if (!sharedWorkspace) {
+    throw new Error(`Organization ${organizationId} has no shared workspace.`);
+  }
+  const [personalWorkspace] = await db
+    .insert(workspace)
+    .values({
+      organizationId,
+      name: 'Personal',
+      visibility: WORKSPACE_VISIBILITY_PERSONAL,
+      personalUserId: seededUser.id,
+    })
+    .returning();
+  if (!personalWorkspace) {
+    throw new Error('Failed to create the personal workspace of the seeded member.');
   }
 
   const authHeaders = await test.getAuthHeaders({ userId: seededUser.id });
@@ -152,5 +196,10 @@ export async function seedOrganizationMember({
     throw new Error('better-auth did not return a session cookie');
   }
 
-  return { userId: seededUser.id, workspaceId: workspace.id, cookieHeader };
+  return {
+    userId: seededUser.id,
+    workspaceId: sharedWorkspace.id,
+    personalWorkspaceId: personalWorkspace.id,
+    cookieHeader,
+  };
 }

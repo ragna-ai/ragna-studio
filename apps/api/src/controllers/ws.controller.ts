@@ -161,6 +161,21 @@ export const wsController = new Hono()
                   return;
                 }
 
+                const stillAuthorized = await authorizeChannel(channel, user.id);
+                if (!stillAuthorized) {
+                  raw.unsubscribe(channel);
+                  grantedChannels.delete(channel);
+                  sendFrame(raw, {
+                    channel,
+                    type: 'error',
+                    payload: {
+                      code: StatusCodes.FORBIDDEN,
+                      message: 'Not authorized for this channel',
+                    },
+                  });
+                  return;
+                }
+
                 await runChatStream(
                   {
                     chatId,

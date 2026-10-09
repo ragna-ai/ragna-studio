@@ -4,6 +4,7 @@ import {
   hasOrganizationRole,
   listCreditUsageByUser,
   listOrganizationMembers,
+  listRestrictedWorkspaces,
   MEMBER_REMOVED_BAN_REASON,
   ORGANIZATION_ADMIN_ROLE,
   ORGANIZATION_OWNER_ROLE,
@@ -62,11 +63,13 @@ export interface OrganizationUsageResponse {
 }
 
 function isOwner(membership: UserMembership): boolean {
-  return hasOrganizationRole(membership.role, ORGANIZATION_OWNER_ROLE);
+  return hasOrganizationRole(membership.organizationRole, ORGANIZATION_OWNER_ROLE);
 }
 
 function isOwnerOrAdmin(membership: UserMembership): boolean {
-  return isOwner(membership) || hasOrganizationRole(membership.role, ORGANIZATION_ADMIN_ROLE);
+  return (
+    isOwner(membership) || hasOrganizationRole(membership.organizationRole, ORGANIZATION_ADMIN_ROLE)
+  );
 }
 
 async function requireMembership({ userId }: { userId: string }): Promise<UserMembership> {
@@ -96,12 +99,12 @@ export async function requireActiveOrganizationId({ userId }: { userId: string }
 
 async function requireMemberOfOrganization({
   organizationId,
-  memberId,
+  organizationMemberId,
 }: {
   organizationId: string;
-  memberId: string;
+  organizationMemberId: string;
 }): Promise<OrganizationMemberRecord> {
-  const target = await getOrganizationMember({ organizationId, memberId });
+  const target = await getOrganizationMember({ organizationId, organizationMemberId });
   if (!target) throw new NotFoundException('Member not found');
   return target;
 }
@@ -115,7 +118,7 @@ export async function getOrganizationForUser({
   return {
     id: membership.organizationId,
     name: membership.organizationName,
-    role: membership.role,
+    role: membership.organizationRole,
     deletedAt: membership.organizationDeletedAt?.toISOString() ?? null,
   };
 }
@@ -132,7 +135,7 @@ export async function listMembersForUser({
     members: rows.map((row) => ({
       id: row.id,
       userId: row.userId,
-      role: row.role,
+      role: row.organizationRole,
       createdAt: row.createdAt.toISOString(),
       user: {
         name: row.userName,
@@ -163,17 +166,17 @@ export async function restoreOrganizationForUser({ userId }: { userId: string })
 
 export async function removeMemberForUser({
   userId,
-  memberId,
+  organizationMemberId,
 }: {
   userId: string;
-  memberId: string;
+  organizationMemberId: string;
 }): Promise<void> {
   const caller = await requireOwnerOrAdmin({ userId });
   const target = await requireMemberOfOrganization({
     organizationId: caller.organizationId,
-    memberId,
+    organizationMemberId,
   });
-  if (hasOrganizationRole(target.role, ORGANIZATION_OWNER_ROLE)) {
+  if (hasOrganizationRole(target.organizationRole, ORGANIZATION_OWNER_ROLE)) {
     throw new ForbiddenException('The owner cannot be removed.');
   }
   if (target.deletedAt) throw new BadRequestException('This member was already removed.');
@@ -183,15 +186,15 @@ export async function removeMemberForUser({
 
 export async function restoreMemberForUser({
   userId,
-  memberId,
+  organizationMemberId,
 }: {
   userId: string;
-  memberId: string;
+  organizationMemberId: string;
 }): Promise<void> {
   const caller = await requireOwnerOrAdmin({ userId });
   const target = await requireMemberOfOrganization({
     organizationId: caller.organizationId,
-    memberId,
+    organizationMemberId,
   });
   const wasRemoved = target.deletedAt !== null && target.banReason === MEMBER_REMOVED_BAN_REASON;
   if (!wasRemoved) throw new NotFoundException('Member not found');
@@ -212,26 +215,26 @@ export async function leaveOrganization({ userId }: { userId: string }): Promise
 
 export async function transferOwnershipForUser({
   userId,
-  memberId,
+  organizationMemberId,
 }: {
   userId: string;
-  memberId: string;
+  organizationMemberId: string;
 }): Promise<void> {
   const caller = await requireActiveMembership({ userId });
   if (!isOwner(caller)) throw new ForbiddenException();
 
   const target = await requireMemberOfOrganization({
     organizationId: caller.organizationId,
-    memberId,
+    organizationMemberId,
   });
-  if (target.memberId === caller.memberId) {
+  if (target.organizationMemberId === caller.organizationMemberId) {
     throw new BadRequestException('You already own this organization.');
   }
   if (target.deletedAt) throw new BadRequestException('Removed members cannot become the owner.');
 
   await transferOrganizationOwnership({
-    currentOwnerMemberId: caller.memberId,
-    newOwnerMemberId: target.memberId,
+    currentOwnerOrganizationMemberId: caller.organizationMemberId,
+    newOwnerOrganizationMemberId: target.organizationMemberId,
   });
 }
 
@@ -249,6 +252,38 @@ export async function getUsageByMemberForUser({
       name: row.userName,
       eventCount: row.eventCount,
       credits: Number(row.chargedMicroCredits) / MICRO_CREDITS_PER_CREDIT,
+    })),
+  };
+}
+
+export interface RestrictedWorkspaceResponse {
+  id: string;
+  name: string;
+  memberCount: number;
+  isWorkspaceMember: boolean;
+  createdAt: Date;
+}
+
+export interface RestrictedWorkspacesResponse {
+  workspaces: RestrictedWorkspaceResponse[];
+}
+
+/** [GET] /organization/workspaces: every restricted workspace, for org owners and org admins. */
+export async function listRestrictedWorkspacesForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<RestrictedWorkspacesResponse> {
+  const caller = await requireOwnerOrAdmin({ userId });
+  const rows = await listRestrictedWorkspaces({ organizationId: caller.organizationId, userId });
+
+  return {
+    workspaces: rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      memberCount: row.memberCount,
+      isWorkspaceMember: row.isWorkspaceMember,
+      createdAt: row.createdAt,
     })),
   };
 }

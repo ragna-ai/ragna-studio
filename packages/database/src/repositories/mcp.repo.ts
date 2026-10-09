@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import type { McpAccess, McpConnection } from '../schema';
+import { workspaceAccessCondition } from './workspace.repo';
 import {
   mcpConnection,
   mcpSettings,
@@ -95,8 +96,20 @@ export async function findMcpConnection({
   userId: string;
   clientId: string;
 }): Promise<McpConnection | null> {
-  const connection = await db.query.mcpConnection.findFirst({ where: { userId, clientId } });
-  return connection ?? null;
+  const [row] = await db
+    .select({ connection: mcpConnection })
+    .from(mcpConnection)
+    .innerJoin(workspace, eq(workspace.id, mcpConnection.workspaceId))
+    .where(
+      and(
+        eq(mcpConnection.userId, userId),
+        eq(mcpConnection.clientId, clientId),
+        workspaceAccessCondition({ userId }),
+      ),
+    )
+    .limit(1);
+
+  return row?.connection ?? null;
 }
 
 export async function listMcpConnections({

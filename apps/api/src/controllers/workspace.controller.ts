@@ -29,19 +29,24 @@ export const workspaceController = new Hono()
   })
   /**
    * [POST] /workspace
-   * Create a new workspace for the authenticated user
+   * Create an organization or restricted workspace; the caller becomes its manager
    */
   .post('/', validCreateWorkspaceBody, async (c) => {
     const user = c.get('user');
     const body = c.req.valid('json');
 
-    const workspace = await createWorkspaceForUser({ userId: user.id, name: body.name });
+    const workspace = await createWorkspaceForUser({
+      userId: user.id,
+      name: body.name,
+      visibility: body.visibility,
+      memberUserIds: body.memberUserIds,
+    });
 
     return c.json({ workspace }, StatusCodes.CREATED);
   })
   /**
    * [PATCH] /workspace/:workspaceId
-   * Rename a workspace owned by the authenticated user
+   * Rename a workspace. Workspace managers only
    */
   .patch('/:workspaceId', validWorkspaceIdParam, validRenameWorkspaceBody, async (c) => {
     const user = c.get('user');
@@ -58,9 +63,8 @@ export const workspaceController = new Hono()
   })
   /**
    * [DELETE] /workspace/:workspaceId
-   * Delete a workspace owned by the authenticated user. Contained resources
-   * (agents, chats, documents, ...) cascade-delete with it. Rejected with
-   * 400 if this is the user's only workspace.
+   * Delete a workspace. Workspace managers only. Contained resources
+   * (agents, chats, documents, ...) cascade-delete with it. Personal workspaces: 400.
    */
   .delete('/:workspaceId', validWorkspaceIdParam, async (c) => {
     const user = c.get('user');

@@ -16,6 +16,8 @@ export interface Workflow {
   // manual-triggered. See @repo/workflow's getScheduleFromDefinition.
   scheduleCron: string | null;
   scheduleTimezone: string | null;
+  // True when the schedule has a cron but its author can no longer run it.
+  schedulePaused: boolean;
   createdAt: string;
   updatedAt: string;
 }

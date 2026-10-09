@@ -18,28 +18,29 @@ import { db } from '../db';
 import {
   invitation,
   mcpConnection,
-  member,
   oauthAccessToken,
   oauthConsent,
   oauthRefreshToken,
   organization,
+  organizationMember,
   session,
   user,
   workspace,
+  WORKSPACE_VISIBILITY_PERSONAL,
   type Workspace,
 } from '../schema';
 
 export const ORGANIZATION_OWNER_ROLE = 'owner';
 export const ORGANIZATION_ADMIN_ROLE = 'admin';
-const DEFAULT_MEMBER_ROLE = 'member';
+export const ORGANIZATION_MEMBER_ROLE = 'member';
 
 /** `users.ban_reason` values that tell our bans apart from a platform-admin ban. */
 export const MEMBER_REMOVED_BAN_REASON = 'member_removed';
 export const ORGANIZATION_DELETED_BAN_REASON = 'organization_deleted';
 
 /** Roles are comma-separated (`owner,admin`), so compare per role, never the whole string. */
-export function hasOrganizationRole(role: string, wanted: string): boolean {
-  return role.split(',').some((part) => part.trim() === wanted);
+export function hasOrganizationRole(organizationRole: string, wanted: string): boolean {
+  return organizationRole.split(',').some((part) => part.trim() === wanted);
 }
 
 /** SQL form of `hasOrganizationRole` for a role column. */
@@ -47,12 +48,35 @@ export function organizationRoleMatches(roleColumn: SQL | AnyColumn, wanted: str
   return sql`${wanted} = ANY(string_to_array(replace(${roleColumn}, ' ', ''), ','))`;
 }
 
+type OrganizationTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 export interface CreatedOrganizationWithWorkspace {
   organizationId: string;
   workspace: Workspace;
 }
 
-/** Creates a user's organization, owner membership and Personal workspace in one transaction. */
+async function insertPersonalWorkspace(
+  tx: OrganizationTransaction,
+  { organizationId, userId }: { organizationId: string; userId: string },
+): Promise<Workspace> {
+  const [personalWorkspace] = await tx
+    .insert(workspace)
+    .values({
+      organizationId,
+      name: 'Personal',
+      visibility: WORKSPACE_VISIBILITY_PERSONAL,
+      personalUserId: userId,
+    })
+    .returning();
+
+  if (!personalWorkspace) {
+    throw new Error('Failed to create personal workspace');
+  }
+
+  return personalWorkspace;
+}
+
+/** Creates a user's organization, owner membership and personal workspace in one transaction. */
 export async function createOrganizationForUser({
   userId,
   userName,
@@ -69,20 +93,13 @@ export async function createOrganizationForUser({
       slug: organizationId,
       createdAt: new Date(),
     });
-    await tx.insert(member).values({
+    await tx.insert(organizationMember).values({
       organizationId,
       userId,
       role: ORGANIZATION_OWNER_ROLE,
       createdAt: new Date(),
     });
-    const [personalWorkspace] = await tx
-      .insert(workspace)
-      .values({ organizationId, name: 'Personal' })
-      .returning();
-
-    if (!personalWorkspace) {
-      throw new Error('Failed to create personal workspace');
-    }
+    const personalWorkspace = await insertPersonalWorkspace(tx, { organizationId, userId });
 
     return { organizationId, workspace: personalWorkspace };
   });
@@ -119,16 +136,20 @@ export async function joinOrganizationFromPendingInvitation({
     if (!row) return false;
     const { pendingInvitation } = row;
 
-    await tx.insert(member).values({
+    await tx.insert(organizationMember).values({
       organizationId: pendingInvitation.organizationId,
       userId,
-      role: pendingInvitation.role ?? DEFAULT_MEMBER_ROLE,
+      role: pendingInvitation.role ?? ORGANIZATION_MEMBER_ROLE,
       createdAt: new Date(),
     });
     await tx
       .update(invitation)
       .set({ status: 'accepted' })
       .where(eq(invitation.id, pendingInvitation.id));
+    await insertPersonalWorkspace(tx, {
+      organizationId: pendingInvitation.organizationId,
+      userId,
+    });
 
     return true;
   });
@@ -139,7 +160,7 @@ export async function getOrganizationIdByUserId({
 }: {
   userId: string;
 }): Promise<string | null> {
-  const membership = await db.query.member.findFirst({
+  const membership = await db.query.organizationMember.findFirst({
     where: { userId },
     orderBy: (t, { asc }) => asc(t.createdAt),
   });
@@ -159,23 +180,26 @@ export async function getOwnedOrganization({
   userId: string;
 }): Promise<OwnedOrganization | null> {
   const [owned] = await db
-    .select({ organizationId: member.organizationId })
-    .from(member)
+    .select({ organizationId: organizationMember.organizationId })
+    .from(organizationMember)
     .where(
-      and(eq(member.userId, userId), organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE)),
+      and(
+        eq(organizationMember.userId, userId),
+        organizationRoleMatches(organizationMember.role, ORGANIZATION_OWNER_ROLE),
+      ),
     )
     .limit(1);
 
   if (!owned) return null;
 
   const [otherActiveMember] = await db
-    .select({ id: member.id })
-    .from(member)
-    .innerJoin(user, eq(user.id, member.userId))
+    .select({ id: organizationMember.id })
+    .from(organizationMember)
+    .innerJoin(user, eq(user.id, organizationMember.userId))
     .where(
       and(
-        eq(member.organizationId, owned.organizationId),
-        ne(member.userId, userId),
+        eq(organizationMember.organizationId, owned.organizationId),
+        ne(organizationMember.userId, userId),
         isNull(user.deletedAt),
       ),
     )
@@ -199,11 +223,11 @@ export async function markOrganizationDeleted({
 }
 
 export interface UserMembership {
-  memberId: string;
+  organizationMemberId: string;
   organizationId: string;
   organizationName: string;
   organizationDeletedAt: Date | null;
-  role: string;
+  organizationRole: string;
 }
 
 /** The user's single membership (one per user), with the organization name. */
@@ -214,46 +238,51 @@ export async function getMembershipByUserId({
 }): Promise<UserMembership | null> {
   const [row] = await db
     .select({
-      memberId: member.id,
-      organizationId: member.organizationId,
+      organizationMemberId: organizationMember.id,
+      organizationId: organizationMember.organizationId,
       organizationName: organization.name,
       organizationDeletedAt: organization.deletedAt,
-      role: member.role,
+      organizationRole: organizationMember.role,
     })
-    .from(member)
-    .innerJoin(organization, eq(organization.id, member.organizationId))
-    .where(eq(member.userId, userId))
+    .from(organizationMember)
+    .innerJoin(organization, eq(organization.id, organizationMember.organizationId))
+    .where(eq(organizationMember.userId, userId))
     .limit(1);
 
   return row ?? null;
 }
 
 export interface OrganizationMemberRecord {
-  memberId: string;
+  organizationMemberId: string;
   userId: string;
-  role: string;
+  organizationRole: string;
   deletedAt: Date | null;
   banReason: string | null;
 }
 
 export async function getOrganizationMember({
   organizationId,
-  memberId,
+  organizationMemberId,
 }: {
   organizationId: string;
-  memberId: string;
+  organizationMemberId: string;
 }): Promise<OrganizationMemberRecord | null> {
   const [row] = await db
     .select({
-      memberId: member.id,
-      userId: member.userId,
-      role: member.role,
+      organizationMemberId: organizationMember.id,
+      userId: organizationMember.userId,
+      organizationRole: organizationMember.role,
       deletedAt: user.deletedAt,
       banReason: user.banReason,
     })
-    .from(member)
-    .innerJoin(user, eq(user.id, member.userId))
-    .where(and(eq(member.id, memberId), eq(member.organizationId, organizationId)))
+    .from(organizationMember)
+    .innerJoin(user, eq(user.id, organizationMember.userId))
+    .where(
+      and(
+        eq(organizationMember.id, organizationMemberId),
+        eq(organizationMember.organizationId, organizationId),
+      ),
+    )
     .limit(1);
 
   return row ?? null;
@@ -262,7 +291,7 @@ export async function getOrganizationMember({
 export interface OrganizationMemberListItem {
   id: string;
   userId: string;
-  role: string;
+  organizationRole: string;
   createdAt: Date;
   userName: string;
   userEmail: string;
@@ -278,22 +307,20 @@ export async function listOrganizationMembers({
 }): Promise<OrganizationMemberListItem[]> {
   return db
     .select({
-      id: member.id,
-      userId: member.userId,
-      role: member.role,
-      createdAt: member.createdAt,
+      id: organizationMember.id,
+      userId: organizationMember.userId,
+      organizationRole: organizationMember.role,
+      createdAt: organizationMember.createdAt,
       userName: user.name,
       userEmail: user.email,
       userImage: user.image,
       userDeletedAt: user.deletedAt,
     })
-    .from(member)
-    .innerJoin(user, eq(user.id, member.userId))
-    .where(eq(member.organizationId, organizationId))
-    .orderBy(member.createdAt);
+    .from(organizationMember)
+    .innerJoin(user, eq(user.id, organizationMember.userId))
+    .where(eq(organizationMember.organizationId, organizationId))
+    .orderBy(organizationMember.createdAt);
 }
-
-type OrganizationTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 async function revokeMcpAccess(tx: OrganizationTransaction, userIds: string[]): Promise<void> {
   if (userIds.length === 0) return;
@@ -328,21 +355,21 @@ export async function restoreMemberAccount({ userId }: { userId: string }): Prom
 
 /** Swaps roles in one transaction: the target becomes owner, the current owner becomes admin. */
 export async function transferOrganizationOwnership({
-  currentOwnerMemberId,
-  newOwnerMemberId,
+  currentOwnerOrganizationMemberId,
+  newOwnerOrganizationMemberId,
 }: {
-  currentOwnerMemberId: string;
-  newOwnerMemberId: string;
+  currentOwnerOrganizationMemberId: string;
+  newOwnerOrganizationMemberId: string;
 }): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
-      .update(member)
+      .update(organizationMember)
       .set({ role: ORGANIZATION_OWNER_ROLE })
-      .where(eq(member.id, newOwnerMemberId));
+      .where(eq(organizationMember.id, newOwnerOrganizationMemberId));
     await tx
-      .update(member)
+      .update(organizationMember)
       .set({ role: ORGANIZATION_ADMIN_ROLE })
-      .where(eq(member.id, currentOwnerMemberId));
+      .where(eq(organizationMember.id, currentOwnerOrganizationMemberId));
   });
 }
 
@@ -357,22 +384,22 @@ export async function softDeleteOrganization({
   organizationId: string;
 }): Promise<void> {
   await db.transaction(async (tx) => {
-    const members = await tx
+    const organizationMembers = await tx
       .select({
-        userId: member.userId,
-        role: member.role,
+        userId: organizationMember.userId,
+        organizationRole: organizationMember.role,
         deletedAt: user.deletedAt,
         banned: user.banned,
       })
-      .from(member)
-      .innerJoin(user, eq(user.id, member.userId))
-      .where(eq(member.organizationId, organizationId));
+      .from(organizationMember)
+      .innerJoin(user, eq(user.id, organizationMember.userId))
+      .where(eq(organizationMember.organizationId, organizationId));
 
     // Already-banned accounts (removed members, platform bans) keep their own reason.
-    const userIdsToBan = members
+    const userIdsToBan = organizationMembers
       .filter(
         (row) =>
-          !hasOrganizationRole(row.role, ORGANIZATION_OWNER_ROLE) &&
+          !hasOrganizationRole(row.organizationRole, ORGANIZATION_OWNER_ROLE) &&
           row.deletedAt === null &&
           !row.banned,
       )
@@ -393,7 +420,7 @@ export async function softDeleteOrganization({
 
     await revokeMcpAccess(
       tx,
-      members.map((row) => row.userId),
+      organizationMembers.map((row) => row.userId),
     );
     await tx
       .update(invitation)
@@ -422,9 +449,9 @@ export async function restoreOrganization({
           inArray(
             user.id,
             tx
-              .select({ id: member.userId })
-              .from(member)
-              .where(eq(member.organizationId, organizationId)),
+              .select({ id: organizationMember.userId })
+              .from(organizationMember)
+              .where(eq(organizationMember.organizationId, organizationId)),
           ),
         ),
       );
@@ -450,10 +477,10 @@ export async function listOrganizationIdsDeletedBefore({
 /** Soft-deleted users whose organization is not itself deleted (that purge covers them). */
 export async function listUserIdsDeletedBefore({ date }: { date: Date }): Promise<string[]> {
   const inDeletedOrganization = db
-    .select({ id: member.id })
-    .from(member)
-    .innerJoin(organization, eq(organization.id, member.organizationId))
-    .where(and(eq(member.userId, user.id), isNotNull(organization.deletedAt)));
+    .select({ id: organizationMember.id })
+    .from(organizationMember)
+    .innerJoin(organization, eq(organization.id, organizationMember.organizationId))
+    .where(and(eq(organizationMember.userId, user.id), isNotNull(organization.deletedAt)));
 
   const rows = await db
     .select({ id: user.id })
@@ -462,6 +489,21 @@ export async function listUserIdsDeletedBefore({ date }: { date: Date }): Promis
     .orderBy(user.deletedAt);
 
   return rows.map((row) => row.id);
+}
+
+/** The workspace only this user can open, or null when they have none. */
+export async function getPersonalWorkspaceIdByUserId({
+  userId,
+}: {
+  userId: string;
+}): Promise<string | null> {
+  const [row] = await db
+    .select({ id: workspace.id })
+    .from(workspace)
+    .where(eq(workspace.personalUserId, userId))
+    .limit(1);
+
+  return row?.id ?? null;
 }
 
 export interface OrganizationMemberUsers {
@@ -475,14 +517,15 @@ export async function getOrganizationMemberUsers({
   organizationId: string;
 }): Promise<OrganizationMemberUsers> {
   const rows = await db
-    .select({ userId: member.userId, role: member.role })
-    .from(member)
-    .where(eq(member.organizationId, organizationId));
+    .select({ userId: organizationMember.userId, organizationRole: organizationMember.role })
+    .from(organizationMember)
+    .where(eq(organizationMember.organizationId, organizationId));
 
-  const isOwner = (role: string) => hasOrganizationRole(role, ORGANIZATION_OWNER_ROLE);
+  const isOwner = (organizationRole: string) =>
+    hasOrganizationRole(organizationRole, ORGANIZATION_OWNER_ROLE);
   return {
-    ownerUserIds: rows.filter((row) => isOwner(row.role)).map((row) => row.userId),
-    otherUserIds: rows.filter((row) => !isOwner(row.role)).map((row) => row.userId),
+    ownerUserIds: rows.filter((row) => isOwner(row.organizationRole)).map((row) => row.userId),
+    otherUserIds: rows.filter((row) => !isOwner(row.organizationRole)).map((row) => row.userId),
   };
 }
 

@@ -67,7 +67,7 @@ describe('purgeOrganization', () => {
       await db.query.workspace.findFirst({ where: { id: owner.workspaceId } }),
     ).toBeUndefined();
     expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
-    expect(await db.query.member.findMany({ where: { organizationId } })).toEqual([]);
+    expect(await db.query.organizationMember.findMany({ where: { organizationId } })).toEqual([]);
     expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeUndefined();
     expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
   });
@@ -146,6 +146,59 @@ describe('purgeExpiredDeletions', () => {
     expect(await db.query.organization.findFirst({ where: { id: organizationId } })).toBeDefined();
     const kept = await db.query.dataset.findFirst({ where: { id: sharedDataset?.id ?? '' } });
     expect(kept).toMatchObject({ name: 'Shared', userId: null });
+  });
+
+  test('deletes the personal workspace R2 objects before the removed user row', async () => {
+    const { colleague } = await seedDeletableOrganization();
+    const personalMedia = await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    await softDeleteUserDaysAgo(colleague.userId, 31);
+    let userRowExistedAtDeleteTime = false;
+    deleteObjectsMock.mockImplementationOnce(async (_bucket, keys) => {
+      userRowExistedAtDeleteTime =
+        (await db.query.user.findFirst({ where: { id: colleague.userId } })) !== undefined;
+      return { deleted: keys, errors: [] };
+    });
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 1, failures: 0 });
+    expect(deleteObjectsMock.mock.calls[0]).toEqual([
+      'documents-bucket',
+      [personalMedia.storageKey],
+    ]);
+    expect(userRowExistedAtDeleteTime).toBe(true);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
+  test('keeps a removed user when their personal workspace R2 cleanup fails', async () => {
+    const { colleague } = await seedDeletableOrganization();
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    await softDeleteUserDaysAgo(colleague.userId, 31);
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 0, failures: 1 });
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeDefined();
+    expect(
+      await db.query.workspace.findFirst({ where: { id: colleague.personalWorkspaceId } }),
+    ).toBeDefined();
   });
 
   test('does not purge members of a restored organization', async () => {

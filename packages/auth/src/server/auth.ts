@@ -71,6 +71,7 @@ export const auth = betterAuth({
     organization({
       allowUserToCreateOrganization: false,
       disableOrganizationDeletion: true,
+      schema: { member: { modelName: 'organizationMember' } },
       sendInvitationEmail: enqueueInvitationEmail,
       organizationHooks: {
         beforeCreateInvitation: validateInvitation,

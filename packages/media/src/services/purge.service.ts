@@ -5,6 +5,7 @@ import {
   deleteUsersByIds,
   getAllWorkspacesByOrganizationId,
   getOrganizationMemberUsers,
+  getPersonalWorkspaceIdByUserId,
   listOrganizationIdsDeletedBefore,
   listUserIdsDeletedBefore,
 } from '@repo/database';
@@ -31,7 +32,7 @@ export async function purgeOrganization({
   organizationId: string;
 }): Promise<void> {
   const workspaces = await getAllWorkspacesByOrganizationId({ organizationId });
-  const memberUsers = await getOrganizationMemberUsers({ organizationId });
+  const organizationMemberUsers = await getOrganizationMemberUsers({ organizationId });
 
   for (const { id: workspaceId } of workspaces) {
     const objectsDeleted = await deleteWorkspaceMediaObjects({ workspaceId });
@@ -40,9 +41,25 @@ export async function purgeOrganization({
     }
   }
 
-  await deleteUsersByIds({ userIds: memberUsers.otherUserIds });
+  await deleteUsersByIds({ userIds: organizationMemberUsers.otherUserIds });
   await deleteOrganizationById({ organizationId });
-  await deleteUsersByIds({ userIds: memberUsers.ownerUserIds });
+  await deleteUsersByIds({ userIds: organizationMemberUsers.ownerUserIds });
+}
+
+/**
+ * Deletes a removed user for good. Their personal workspace's R2 objects go first, since the
+ * workspace rows cascade with the user. Throws when R2 cleanup is incomplete, before any row is touched.
+ */
+async function purgeUser({ userId }: { userId: string }): Promise<void> {
+  const personalWorkspaceId = await getPersonalWorkspaceIdByUserId({ userId });
+  if (personalWorkspaceId) {
+    const objectsDeleted = await deleteWorkspaceMediaObjects({ workspaceId: personalWorkspaceId });
+    if (!objectsDeleted) {
+      throw new Error(`Could not delete all media objects of workspace ${personalWorkspaceId}`);
+    }
+  }
+
+  await deleteUsersByIds({ userIds: [userId] });
 }
 
 /**
@@ -71,7 +88,7 @@ export async function purgeExpiredDeletions({
 
   for (const userId of await listUserIdsDeletedBefore({ date: cutoff })) {
     try {
-      await deleteUsersByIds({ userIds: [userId] });
+      await purgeUser({ userId });
       summary.usersPurged += 1;
     } catch (error) {
       logger.error(`Failed to purge user ${userId}`, error);

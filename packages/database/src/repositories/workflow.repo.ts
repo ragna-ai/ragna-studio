@@ -1,10 +1,10 @@
 import { getWorkflowAgentIds, type WorkflowDefinition } from '@repo/workflow';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import { db } from '../db';
 import { ForeignReferenceError } from '../errors';
 import type { Workflow } from '../schema';
-import { agent, member, organization, user, workflow, workspace } from '../schema';
-import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
+import { agent, organization, user, workflow, workspace } from '../schema';
+import { workspaceAccessCondition } from './workspace.repo';
 
 export type { Workflow, NewWorkflow } from '../schema';
 
@@ -97,6 +97,29 @@ export async function getWorkflowById({
   return workflowRecord || null;
 }
 
+export interface WorkflowWithSchedulePaused extends Workflow {
+  schedulePaused: boolean;
+}
+
+export async function getWorkflowWithSchedulePausedById({
+  workflowId,
+  workspaceId,
+}: {
+  workflowId: string;
+  workspaceId: string;
+}): Promise<WorkflowWithSchedulePaused | null> {
+  const [row] = await db
+    .select({ workflow, schedulePaused: schedulePausedSql() })
+    .from(workflow)
+    .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
+    .leftJoin(user, eq(user.id, workflow.userId))
+    .where(and(eq(workflow.id, workflowId), eq(workflow.workspaceId, workspaceId)))
+    .limit(1);
+
+  return row ? { ...row.workflow, schedulePaused: row.schedulePaused } : null;
+}
+
 export async function getWorkflowCountByWorkspaceId({
   workspaceId,
 }: {
@@ -116,24 +139,29 @@ export async function getAllWorkflowsByWorkspaceId({
   sort?: 'asc' | 'desc';
   offset?: number;
 }) {
-  const workflows = await db.query.workflow.findMany({
-    columns: {
-      id: true,
-      name: true,
-      description: true,
-      publishedDefinition: true,
-      scheduleCron: true,
-      scheduleTimezone: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    where: { workspaceId },
-    limit,
-    offset,
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
-  });
+  const query = db
+    .select({
+      id: workflow.id,
+      name: workflow.name,
+      description: workflow.description,
+      publishedDefinition: workflow.publishedDefinition,
+      scheduleCron: workflow.scheduleCron,
+      scheduleTimezone: workflow.scheduleTimezone,
+      schedulePaused: schedulePausedSql(),
+      createdAt: workflow.createdAt,
+      updatedAt: workflow.updatedAt,
+    })
+    .from(workflow)
+    .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
+    .leftJoin(user, eq(user.id, workflow.userId))
+    .where(eq(workflow.workspaceId, workspaceId))
+    .orderBy(sort === 'asc' ? asc(workflow.createdAt) : desc(workflow.createdAt))
+    .$dynamic();
 
-  return workflows;
+  if (limit !== undefined) query.limit(limit);
+  if (offset !== undefined) query.offset(offset);
+  return query;
 }
 
 export async function deleteWorkflowById({
@@ -243,8 +271,22 @@ export async function isWorkflowOrganizationDeleted({
 }
 
 /**
- * The user a schedule tick runs as: the workflow author, or the organization
- * owner once the author is gone or soft-deleted. Null only when neither exists.
+ * True when the workflow author exists, is not soft-deleted and can open the workspace.
+ * Needs `workflows`, `users` (left join on the author) and `workspaces` + `organizations`
+ * (inner joins) in the outer query, so Drizzle keeps column qualifiers.
+ */
+function authorCanRunSql(): SQL<boolean> {
+  return sql<boolean>`(${isNotNull(workflow.userId)} and ${isNull(user.deletedAt)} and ${workspaceAccessCondition({ userId: workflow.userId })})`;
+}
+
+/** True when the workflow has a schedule that its author can no longer run. */
+function schedulePausedSql(): SQL<boolean> {
+  return sql<boolean>`(${isNotNull(workflow.scheduleCron)} and not ${authorCanRunSql()})`;
+}
+
+/**
+ * The user a schedule tick runs as: the workflow author while they are active and can open the
+ * workflow's workspace. Null otherwise, and the schedule is paused.
  */
 export async function resolveScheduledRunUserId({
   workflowId,
@@ -252,25 +294,13 @@ export async function resolveScheduledRunUserId({
   workflowId: string;
 }): Promise<string | null> {
   const [row] = await db
-    .select({
-      authorId: workflow.userId,
-      authorDeletedAt: user.deletedAt,
-      ownerId: member.userId,
-    })
+    .select({ authorId: workflow.userId, authorCanRun: authorCanRunSql() })
     .from(workflow)
     .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
     .leftJoin(user, eq(user.id, workflow.userId))
-    .leftJoin(
-      member,
-      and(
-        eq(member.organizationId, workspace.organizationId),
-        organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE),
-      ),
-    )
     .where(eq(workflow.id, workflowId))
     .limit(1);
 
-  if (!row) return null;
-  const authorIsActive = row.authorId !== null && row.authorDeletedAt === null;
-  return authorIsActive ? row.authorId : row.ownerId;
+  return row?.authorCanRun ? row.authorId : null;
 }

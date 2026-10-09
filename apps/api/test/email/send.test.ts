@@ -3,8 +3,14 @@ import {
   downloadObjectBufferMock,
   resetProviderMocks,
   seedAuthenticatedUser,
+  seedOrganizationMember,
   truncateAllTables,
 } from '@repo/testing';
+import {
+  insertWorkspace,
+  insertWorkspaceMember,
+  seedOrganizationWithRoles,
+} from '../workspace/workspace-access-fixtures';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -241,6 +247,67 @@ describe('POST /email/send - media library attachments', () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /email/send - media of workspaces the caller cannot open', () => {
+  async function sendWithMediaOf(ownerWorkspaceId: string, cookieHeader: string) {
+    const media = await createMedia({
+      ownerWorkspaceId,
+      bucket: 'test-documents-bucket',
+      storageKey: 'hidden-key.pdf',
+      filename: 'hidden.pdf',
+      mimeType: 'application/pdf',
+      size: 42,
+      origin: 'uploaded',
+    });
+    return sendEmailRequest(cookieHeader, {
+      to: 'recipient@example.test',
+      subject: 'Hello',
+      text: 'Body text',
+      mediaId: media.id,
+    });
+  }
+
+  test("rejects media of a colleague's personal workspace", async () => {
+    const { organizationId, member } = await seedOrganizationWithRoles();
+    const { cookieHeader } = await seedConnectedMember(organizationId);
+
+    const response = await sendWithMediaOf(member.personalWorkspaceId, cookieHeader);
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects media of a restricted workspace without a workspace member row', async () => {
+    const { organizationId } = await seedOrganizationWithRoles();
+    const restrictedId = await insertWorkspace({ organizationId, visibility: 'restricted' });
+    const { cookieHeader } = await seedConnectedMember(organizationId);
+
+    const response = await sendWithMediaOf(restrictedId, cookieHeader);
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  test('accepts media of a restricted workspace the caller is a workspace member of', async () => {
+    const { organizationId } = await seedOrganizationWithRoles();
+    const restrictedId = await insertWorkspace({ organizationId, visibility: 'restricted' });
+    const { userId, cookieHeader } = await seedConnectedMember(organizationId);
+    await insertWorkspaceMember({ workspaceId: restrictedId, userId, role: 'editor' });
+
+    const response = await sendWithMediaOf(restrictedId, cookieHeader);
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+  });
+});
+
+async function seedConnectedMember(organizationId: string) {
+  const member = await seedOrganizationMember({ organizationId, role: 'member' });
+  const { accountId } = await seedConnectedGmailAccount({
+    userId: member.userId,
+    cookieHeader: member.cookieHeader,
+  });
+  return { userId: member.userId, cookieHeader: member.cookieHeader, accountId };
+}
 
 describe('POST /email/send - body requirement', () => {
   test('rejects when neither html nor text is provided', async () => {

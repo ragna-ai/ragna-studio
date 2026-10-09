@@ -37,11 +37,11 @@ import {
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
-import { invitation, member, organization } from './organization.schema';
+import { invitation, organization, organizationMember } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
-import { workspace } from './workspace.schema';
+import { workspace, workspaceMember } from './workspace.schema';
 
 const schema = {
   user,
@@ -86,8 +86,9 @@ const schema = {
   taskLabel,
   taskToTaskLabel,
   workspace,
+  workspaceMember,
   organization,
-  member,
+  organizationMember,
   invitation,
   jwks,
   oauthClient,
@@ -113,7 +114,8 @@ export const relations = defineRelations(schema, (r) => ({
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
-    memberships: r.many.member(),
+    organizationMemberships: r.many.organizationMember(),
+    workspaceMemberships: r.many.workspaceMember(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
     // Personal-library flow; unused until v2
@@ -150,7 +152,7 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   organization: {
-    members: r.many.member(),
+    organizationMembers: r.many.organizationMember(),
     invitations: r.many.invitation(),
     workspaces: r.many.workspace(),
     creditAccount: r.one.creditAccount({
@@ -159,14 +161,14 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
     }),
   },
-  member: {
+  organizationMember: {
     organization: r.one.organization({
-      from: r.member.organizationId,
+      from: r.organizationMember.organizationId,
       to: r.organization.id,
       optional: false,
     }),
     user: r.one.user({
-      from: r.member.userId,
+      from: r.organizationMember.userId,
       to: r.user.id,
       optional: false,
     }),
@@ -823,6 +825,12 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.organization.id,
       optional: false,
     }),
+    personalUser: r.one.user({
+      from: r.workspace.personalUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    workspaceMembers: r.many.workspaceMember(),
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
@@ -839,5 +847,17 @@ export const relations = defineRelations(schema, (r) => ({
     // The account that pays for work done here is resolved through
     // `organizationId`, not this relation; it exists for the audit trail only.
     creditUsageEvents: r.many.creditUsageEvent(),
+  },
+  workspaceMember: {
+    workspace: r.one.workspace({
+      from: r.workspaceMember.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.workspaceMember.userId,
+      to: r.user.id,
+      optional: false,
+    }),
   },
 }));

@@ -1,0 +1,60 @@
+---
+title: Workspaces
+description: How workspaces keep work apart and who can open them.
+sidebar:
+  order: 2
+---
+
+A workspace holds your agents, chats, documents, datasets, tasks, workflows and media. Every item lives in exactly one workspace. Switch workspaces in the switcher at the top of the sidebar.
+
+## Workspace types
+
+Every workspace has a type. You choose it when you create the workspace.
+
+| Type             | Who can open it                                             |
+| ---------------- | ----------------------------------------------------------- |
+| **Personal**     | Only you. Every user gets one at sign-up.                   |
+| **Organization** | Everyone in your organization.                              |
+| **Restricted**   | Its workspace members, plus organization owners and admins. |
+
+The switcher groups workspaces by type. Restricted workspaces show a lock icon.
+
+## Workspace roles
+
+Workspace members have one of two roles.
+
+- **Manager:** renames and deletes the workspace and manages its members.
+- **Editor:** works with the content of the workspace.
+
+You become manager of every workspace you create. Organization owners and admins can manage every workspace that is not personal.
+
+A personal workspace has no members and cannot be deleted. Organization workspaces list managers only, because everyone else already has access.
+
+## Create a workspace
+
+1. Open the switcher and choose **Manage workspaces**.
+2. Choose **New workspace**.
+3. Enter a name and pick the visibility. Restricted is preselected.
+4. For a restricted workspace, tick the organization members who should get access. They join as editors.
+
+If you have no workspace yet, the app shows a **Create a workspace** button instead of its pages.
+
+## Manage workspace members
+
+Open **Manage workspaces** and choose the members icon next to a workspace. Managers can:
+
+- add members and pick their role,
+- change a role between Manager and Editor,
+- remove members.
+
+Choose **Leave workspace** to remove yourself.
+
+Organization owners and admins also see all restricted workspaces under **Settings, Organization, Restricted workspaces**. To open one you are not in, join it as manager first.
+
+## Scheduled workflows
+
+A scheduled workflow runs as its author. If the author can no longer open the workspace, or their account is removed, the schedule pauses. The workflow shows a **Schedule paused** badge. The schedule resumes when the author can run it again. Manual runs still work.
+
+## Self-hosting
+
+Workspace types need no setup. They apply to every organization on your instance after you upgrade.

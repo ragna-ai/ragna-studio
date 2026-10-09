@@ -26,7 +26,7 @@ async function createWorkspace(cookieHeader: string, name = 'Marketing') {
   const response = await app.request('/workspace', {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, visibility: 'organization' }),
   });
   return workspaceResponseSchema.parse(await response.json()).workspace;
 }
@@ -37,7 +37,7 @@ describe('GET /workspace', () => {
   });
 
   test('a fresh user already has their personal workspace', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { workspaceId, personalWorkspaceId, cookieHeader } = await seedAuthenticatedUser();
 
     const response = await app.request('/workspace', {
       headers: { cookie: cookieHeader },
@@ -45,7 +45,10 @@ describe('GET /workspace', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     const body = workspaceListResponseSchema.parse(await response.json());
-    expect(body.workspaces.map((workspace) => workspace.id)).toEqual([workspaceId]);
+    expect(body.workspaces.map((workspace) => workspace.id)).toEqual([
+      personalWorkspaceId,
+      workspaceId,
+    ]);
     expect(body.workspaces[0]?.name).toBe('Personal');
   });
 
@@ -59,8 +62,10 @@ describe('GET /workspace', () => {
     });
 
     const body = workspaceListResponseSchema.parse(await response.json());
-    expect(body.workspaces).toHaveLength(2);
-    const memberB = await db.query.member.findFirst({ where: { userId: userB.userId } });
+    expect(body.workspaces).toHaveLength(3);
+    const memberB = await db.query.organizationMember.findFirst({
+      where: { userId: userB.userId },
+    });
     expect(
       body.workspaces.some((workspace) => workspace.organizationId === memberB?.organizationId),
     ).toBe(false);
@@ -74,7 +79,7 @@ describe('organization scoping', () => {
 
   test('a created workspace belongs to the creator organization', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    const membership = await db.query.member.findFirst({ where: { userId } });
+    const membership = await db.query.organizationMember.findFirst({ where: { userId } });
 
     const created = await createWorkspace(cookieHeader, 'Marketing');
 
@@ -82,9 +87,11 @@ describe('organization scoping', () => {
     expect(row?.organizationId).toBe(membership?.organizationId);
   });
 
-  test('a workspace created by one member is visible to and deletable by another', async () => {
+  test('a workspace created by one member is visible to another but not deletable by them', async () => {
     const owner = await seedAuthenticatedUser();
-    const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    const ownerMembership = await db.query.organizationMember.findFirst({
+      where: { userId: owner.userId },
+    });
     const colleague = await seedOrganizationMember({
       organizationId: ownerMembership?.organizationId ?? '',
       role: 'member',
@@ -101,7 +108,7 @@ describe('organization scoping', () => {
       method: 'DELETE',
       headers: { cookie: colleague.cookieHeader },
     });
-    expect(deleteResponse.status).toBe(StatusCodes.OK);
+    expect(deleteResponse.status).toBe(StatusCodes.FORBIDDEN);
   });
 });
 
@@ -129,7 +136,7 @@ describe('POST /workspace', () => {
     const response = await app.request('/workspace', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ name: '' }),
+      body: JSON.stringify({ name: '', visibility: 'organization' }),
     });
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
@@ -213,10 +220,10 @@ describe('DELETE /workspace/:workspaceId', () => {
     expect(body.workspaces.map((workspace) => workspace.id)).not.toContain(created.id);
   });
 
-  test('rejects deleting the only remaining workspace', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+  test('rejects deleting a personal workspace', async () => {
+    const { personalWorkspaceId, cookieHeader } = await seedAuthenticatedUser();
 
-    const response = await app.request(`/workspace/${workspaceId}`, {
+    const response = await app.request(`/workspace/${personalWorkspaceId}`, {
       method: 'DELETE',
       headers: { cookie: cookieHeader },
     });
@@ -227,12 +234,11 @@ describe('DELETE /workspace/:workspaceId', () => {
       headers: { cookie: cookieHeader },
     });
     const body = workspaceListResponseSchema.parse(await listResponse.json());
-    expect(body.workspaces.map((workspace) => workspace.id)).toEqual([workspaceId]);
+    expect(body.workspaces.map((workspace) => workspace.id)).toContain(personalWorkspaceId);
   });
 
   test("404s deleting another user's workspace, and leaves it untouched", async () => {
     const userA = await seedAuthenticatedUser();
-    await createWorkspace(userA.cookieHeader); // so userA has >1, past the "only workspace" guard
     const userB = await seedAuthenticatedUser();
 
     const response = await app.request(`/workspace/${userB.workspaceId}`, {

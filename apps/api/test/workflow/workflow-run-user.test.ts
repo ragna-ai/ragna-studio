@@ -1,5 +1,5 @@
 import { db, resolveScheduledRunUserId, sql } from '@repo/database';
-import { member as memberTable, user as userTable, workflow } from '@repo/database/schema';
+import { user as userTable, workflow, workspaceMember } from '@repo/database/schema';
 import {
   deleteSeededUser,
   seedAuthenticatedUser,
@@ -13,9 +13,10 @@ import { StatusCodes } from 'http-status-codes';
 import type { WorkflowDefinition } from '@repo/workflow';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { insertWorkspace, insertWorkspaceMember } from '../workspace/workspace-access-fixtures';
 
 // Runs carry the user they execute as: the member who clicked run, or for a
-// schedule tick the workflow author, falling back to the organization owner.
+// schedule tick the workflow author while they can still open the workspace.
 
 const MANUAL_TRIGGER_DEFINITION: WorkflowDefinition = {
   nodes: [
@@ -30,18 +31,35 @@ const MANUAL_TRIGGER_DEFINITION: WorkflowDefinition = {
 };
 
 interface Team {
+  organizationId: string;
   owner: SeededAuthenticatedUser;
   member: SeededAuthenticatedUser;
 }
 
 async function seedTeam(): Promise<Team> {
   const owner = await seedAuthenticatedUser();
-  const membership = await db.query.member.findFirst({ where: { userId: owner.userId } });
-  const member = await seedOrganizationMember({
-    organizationId: membership?.organizationId ?? '',
-    role: 'member',
+  const membership = await db.query.organizationMember.findFirst({
+    where: { userId: owner.userId },
   });
-  return { owner, member };
+  const organizationId = membership?.organizationId ?? '';
+  const member = await seedOrganizationMember({ organizationId, role: 'member' });
+  return { organizationId, owner, member };
+}
+
+async function seedRestrictedWorkspaceWithMember(
+  organizationId: string,
+  member: SeededAuthenticatedUser,
+): Promise<string> {
+  const workspaceId = await insertWorkspace({ organizationId, visibility: 'restricted' });
+  await insertWorkspaceMember({ workspaceId, userId: member.userId, role: 'editor' });
+  return workspaceId;
+}
+
+async function softDeleteUser(userId: string) {
+  await db
+    .update(userTable)
+    .set({ deletedAt: new Date() })
+    .where(sql`${userTable.id} = ${userId}`);
 }
 
 async function seedWorkflowAuthoredBy(user: SeededAuthenticatedUser, workspaceId: string) {
@@ -88,44 +106,50 @@ describe('POST /workspace/:workspaceId/workflow/:workflowId/run', () => {
 });
 
 describe('resolveScheduledRunUserId', () => {
-  test('picks the workflow author while they exist', async () => {
+  test('picks the workflow author while they can open the workspace', async () => {
     const { owner, member } = await seedTeam();
     const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
 
     expect(await resolveScheduledRunUserId({ workflowId })).toBe(member.userId);
   });
 
-  test('falls back to the organization owner once the author is gone', async () => {
+  test('is null once the author is gone', async () => {
     const { owner, member } = await seedTeam();
     const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
 
     await deleteSeededUser({ userId: member.userId });
 
-    expect(await resolveScheduledRunUserId({ workflowId })).toBe(owner.userId);
+    expect(await resolveScheduledRunUserId({ workflowId })).toBeNull();
   });
 
-  test('falls back to the organization owner once the author is soft-deleted', async () => {
+  test('is null once the author is soft-deleted', async () => {
     const { owner, member } = await seedTeam();
     const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
 
-    await db
-      .update(userTable)
-      .set({ deletedAt: new Date() })
-      .where(sql`${userTable.id} = ${member.userId}`);
+    await softDeleteUser(member.userId);
 
-    expect(await resolveScheduledRunUserId({ workflowId })).toBe(owner.userId);
+    expect(await resolveScheduledRunUserId({ workflowId })).toBeNull();
   });
 
-  test('finds an owner whose role is a comma-separated list', async () => {
-    const { owner, member } = await seedTeam();
-    const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
-    await db
-      .update(memberTable)
-      .set({ role: 'owner,admin' })
-      .where(sql`${memberTable.userId} = ${owner.userId}`);
-    await deleteSeededUser({ userId: member.userId });
+  test('is null once the author is removed from a restricted workspace', async () => {
+    const { organizationId, member } = await seedTeam();
+    const workspaceId = await seedRestrictedWorkspaceWithMember(organizationId, member);
+    const workflowId = await seedWorkflowAuthoredBy(member, workspaceId);
+    expect(await resolveScheduledRunUserId({ workflowId })).toBe(member.userId);
 
-    expect(await resolveScheduledRunUserId({ workflowId })).toBe(owner.userId);
+    await db.delete(workspaceMember).where(sql`${workspaceMember.userId} = ${member.userId}`);
+
+    expect(await resolveScheduledRunUserId({ workflowId })).toBeNull();
+  });
+
+  test('is null for the workflow of a personal workspace whose user is soft-deleted', async () => {
+    const { member } = await seedTeam();
+    const workflowId = await seedWorkflowAuthoredBy(member, member.personalWorkspaceId);
+    expect(await resolveScheduledRunUserId({ workflowId })).toBe(member.userId);
+
+    await softDeleteUser(member.userId);
+
+    expect(await resolveScheduledRunUserId({ workflowId })).toBeNull();
   });
 
   test('is null for a workflow that does not exist', async () => {

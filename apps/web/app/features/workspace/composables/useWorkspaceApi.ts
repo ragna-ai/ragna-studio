@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import type {
+  CreateWorkspaceInput,
   WorkspaceManyResponse,
   WorkspaceResponse,
 } from '~/features/workspace/types';
@@ -32,9 +33,12 @@ export function useCreateWorkspace() {
   const { $api } = useNuxtApp();
   const queryClient = useQueryClient();
   const { t } = useI18n();
-  return useMutation<WorkspaceResponse, unknown, { name: string }>({
-    mutationFn: (body) =>
-      $api<WorkspaceResponse>('/workspace', { method: 'POST', body }),
+  return useMutation<WorkspaceResponse, unknown, CreateWorkspaceInput>({
+    mutationFn: ({ name, visibility, memberUserIds }) =>
+      $api<WorkspaceResponse>('/workspace', {
+        method: 'POST',
+        body: { name, visibility, memberUserIds },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       toast.success(t('workspace.toast.createSuccess'));
@@ -82,8 +86,7 @@ export function useDeleteWorkspace() {
       toast.success(t('workspace.toast.deleteSuccess'));
     },
     onError: (error) => {
-      // The API rejects deleting a user's only workspace with a 400 and a
-      // human-readable message; surface that instead of a generic failure.
+      // The API answers with a readable message (e.g. a personal workspace can't be deleted).
       toast.error(extractErrorMessage(error, t('workspace.toast.deleteError')));
     },
   });

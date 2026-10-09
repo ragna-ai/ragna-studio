@@ -1,6 +1,6 @@
 # Organizations v3: personal and restricted workspaces
 
-**Status: decided** (2026-10-09). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
+**Status: implemented** (PR #97, 2026-10-09). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
 
 ## Summary
 

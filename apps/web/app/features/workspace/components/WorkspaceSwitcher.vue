@@ -1,9 +1,29 @@
 <script setup lang="ts">
-import { CheckIcon, ChevronsUpDownIcon, SettingsIcon } from '@lucide/vue';
+import {
+  CheckIcon,
+  ChevronsUpDownIcon,
+  LockIcon,
+  SettingsIcon,
+} from '@lucide/vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+import type {
+  Workspace,
+  WorkspaceVisibility,
+} from '~/features/workspace/types';
 import { cn, createInitials } from '~/lib/utils';
+
+interface WorkspaceGroup {
+  visibility: WorkspaceVisibility;
+  workspaces: Workspace[];
+}
+
+const GROUP_ORDER: readonly WorkspaceVisibility[] = [
+  'personal',
+  'organization',
+  'restricted',
+];
 
 interface WorkspaceSwitcherProps {
   size?: 'sm' | 'md' | 'lg';
@@ -44,6 +64,14 @@ const sizeClass = computed(() => {
   }
 });
 const workspaces = computed(() => data.value?.workspaces ?? []);
+const groups = computed<WorkspaceGroup[]>(() =>
+  GROUP_ORDER.map((visibility) => ({
+    visibility,
+    workspaces: workspaces.value.filter(
+      (workspace) => workspace.visibility === visibility,
+    ),
+  })).filter((group) => group.workspaces.length > 0),
+);
 const activeLabel = computed(() => {
   const active = workspaces.value.find((workspace) => isActive(workspace.id));
   return active?.name ?? '';
@@ -90,18 +118,27 @@ watch(data, (result) => {
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start" class="w-56">
-      <template v-if="workspaces.length > 0">
-        <DropdownMenuItem
-          v-for="workspace in workspaces"
-          :key="workspace.id"
-          @click="selectWorkspace(workspace.id)"
-        >
-          <CheckIcon
-            class="mr-2 size-4"
-            :class="isActive(workspace.id) ? 'opacity-100' : 'opacity-0'"
-          />
-          <span class="truncate">{{ workspace.name }}</span>
-        </DropdownMenuItem>
+      <template v-if="groups.length > 0">
+        <DropdownMenuGroup v-for="group in groups" :key="group.visibility">
+          <DropdownMenuLabel class="text-xs text-muted-foreground">
+            {{ t(`workspace.visibility.${group.visibility}`) }}
+          </DropdownMenuLabel>
+          <DropdownMenuItem
+            v-for="workspace in group.workspaces"
+            :key="workspace.id"
+            @click="selectWorkspace(workspace.id)"
+          >
+            <CheckIcon
+              class="mr-2 size-4"
+              :class="isActive(workspace.id) ? 'opacity-100' : 'opacity-0'"
+            />
+            <span class="flex-1 truncate">{{ workspace.name }}</span>
+            <LockIcon
+              v-if="workspace.visibility === 'restricted'"
+              class="ml-2 size-3.5 shrink-0 text-muted-foreground"
+            />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
       </template>
       <DropdownMenuItem @click="isManageDialogOpen = true">

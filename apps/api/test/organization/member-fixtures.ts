@@ -4,7 +4,7 @@ import { seedAuthenticatedUser } from '@repo/testing';
 import { app } from '../../src/app';
 
 export async function memberIdOf(userId: string): Promise<string> {
-  const row = await db.query.member.findFirst({ where: { userId } });
+  const row = await db.query.organizationMember.findFirst({ where: { userId } });
   if (!row) throw new Error(`User ${userId} has no membership`);
   return row.id;
 }

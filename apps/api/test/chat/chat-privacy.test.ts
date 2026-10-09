@@ -35,7 +35,9 @@ interface Colleagues {
 
 async function seedOwnerChatWithColleague(): Promise<Colleagues> {
   const owner = await seedAuthenticatedUser();
-  const membership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+  const membership = await db.query.organizationMember.findFirst({
+    where: { userId: owner.userId },
+  });
   const colleague = await seedOrganizationMember({
     organizationId: membership?.organizationId ?? '',
     role: 'member',

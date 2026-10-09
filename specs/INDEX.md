@@ -26,7 +26,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
-| [Organizations v3: personal and restricted workspaces](./organizations/v3-prd.md) | decided (2026-10-09) |
 
 ## Proposed
 
@@ -75,6 +74,7 @@ work first, shipped reference and dead/historical docs last.
 | [Notifications](./notifications/notifications.md) | implemented (delivery by polling) |
 | [Organizations v1: the org owns workspaces](./organizations/prd.md) | implemented (PR #94, 2026-10-09) |
 | [Organizations v2: members, invites, org settings](./organizations/v2-prd.md) | implemented (PR #95, 2026-10-09) |
+| [Organizations v3: personal and restricted workspaces](./organizations/v3-prd.md) | implemented (PR #97, 2026-10-09) |
 | [Security response headers](./security/headers.md) | implemented (2026-09-21) |
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |

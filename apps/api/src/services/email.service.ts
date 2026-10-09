@@ -26,8 +26,7 @@ import {
   deleteEmailAccountById,
   deleteEmailCategory,
   getAgentById,
-  getAllWorkspacesByOrganizationId,
-  getOrganizationIdByUserId,
+  listAccessibleWorkspaces,
   getEmailAccountByUserId,
   getEmailCategoryById,
   getEmailDraftById,
@@ -1450,11 +1449,12 @@ async function resolveAttachments({
   }
 
   if (mediaIds && mediaIds.length > 0) {
-    const { data: ownedWorkspaces } = await tryCatch(async () => {
-      const organizationId = await getOrganizationIdByUserId({ userId });
-      return organizationId ? getAllWorkspacesByOrganizationId({ organizationId }) : [];
-    });
-    const ownedWorkspaceIds = new Set((ownedWorkspaces ?? []).map((workspace) => workspace.id));
+    const { data: accessibleWorkspaces } = await tryCatch(() =>
+      listAccessibleWorkspaces({ userId }),
+    );
+    const ownedWorkspaceIds = new Set(
+      (accessibleWorkspaces ?? []).map(({ workspace }) => workspace.id),
+    );
 
     for (const mediaId of mediaIds) {
       attachments.push(await resolveMediaAttachment({ mediaId, ownedWorkspaceIds }));

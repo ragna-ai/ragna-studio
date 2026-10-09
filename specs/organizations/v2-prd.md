@@ -47,7 +47,8 @@ locked, and parts of the code still assume one user per workspace:
   can change later).
 - Shareable chats (private by default, shared per chat). Later step.
 - Per-user default agent preferences.
-- App-level RBAC on workspace resources, per-workspace access, teams.
+- App-level RBAC on workspace resources, per-workspace access, teams. Per-workspace access
+  (personal and restricted workspaces) follows in [v3](./v3-prd.md).
 - Caching the guard's membership query.
 - Task reminder recipients beyond the owner (assignee, creator).
 

@@ -1,5 +1,5 @@
 import { db, listTasksDueForReminder, sql } from '@repo/database';
-import { member } from '@repo/database/schema';
+import { organizationMember } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { app } from '../../src/app';
@@ -34,7 +34,9 @@ describe('listTasksDueForReminder', () => {
 
   test('does not notify non-owner members', async () => {
     const owner = await seedAuthenticatedUser();
-    const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    const ownerMembership = await db.query.organizationMember.findFirst({
+      where: { userId: owner.userId },
+    });
     await seedOrganizationMember({
       organizationId: ownerMembership?.organizationId ?? '',
       role: 'member',
@@ -49,9 +51,9 @@ describe('listTasksDueForReminder', () => {
   test('resolves an owner whose role is comma-separated', async () => {
     const owner = await seedAuthenticatedUser();
     await db
-      .update(member)
+      .update(organizationMember)
       .set({ role: 'owner,admin' })
-      .where(sql`${member.userId} = ${owner.userId}`);
+      .where(sql`${organizationMember.userId} = ${owner.userId}`);
     const taskId = await createOverdueTask(owner.cookieHeader, owner.workspaceId);
 
     const dueTasks = await listTasksDueForReminder();
