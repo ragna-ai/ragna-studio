@@ -97,6 +97,8 @@
       "title": "Willkommen zurück",
       "subtitle": "Melde dich an, um fortzufahren",
       "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "bannedError": "Dein Zugang wurde deaktiviert. Bitte wende dich an den Inhaber deiner Organisation.",
+      "emailNotAllowedError": "Diese E-Mail-Adresse ist für die Anmeldung nicht freigegeben.",
       "providers": {
         "google": "Mit Google fortfahren",
         "microsoft": "Mit Microsoft fortfahren",

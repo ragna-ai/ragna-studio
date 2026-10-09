@@ -59,6 +59,8 @@
       "title": "Welcome back",
       "subtitle": "Sign in to your account to continue",
       "genericError": "Sign in failed. Please try again.",
+      "bannedError": "Your access has been disabled. Please contact your organization's owner.",
+      "emailNotAllowedError": "This email address is not permitted to sign in.",
       "providers": {
         "google": "Continue with Google",
         "microsoft": "Continue with Microsoft",
