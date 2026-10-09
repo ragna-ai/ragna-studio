@@ -30,6 +30,9 @@ import {
   type Workspace,
 } from '../schema';
 
+/** Stored name of the sign-up workspace. Users may rename it. */
+export const PERSONAL_WORKSPACE_NAME = 'Private';
+
 export const ORGANIZATION_OWNER_ROLE = 'owner';
 export const ORGANIZATION_ADMIN_ROLE = 'admin';
 export const ORGANIZATION_MEMBER_ROLE = 'member';
@@ -63,7 +66,7 @@ async function insertPersonalWorkspace(
     .insert(workspace)
     .values({
       organizationId,
-      name: 'Personal',
+      name: PERSONAL_WORKSPACE_NAME,
       visibility: WORKSPACE_VISIBILITY_PERSONAL,
       personalUserId: userId,
     })

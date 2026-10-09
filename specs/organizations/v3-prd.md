@@ -188,7 +188,9 @@ don't get every restricted workspace here (decision 9).
 ### 3. Sign-up
 
 - `createOrganizationForUser` creates the org, the org owner's membership and a `personal`
-  workspace named "Personal" with `personal_user_id`, in one transaction.
+  workspace named "Private" (`PERSONAL_WORKSPACE_NAME`) with `personal_user_id`, in one
+  transaction. "Private" reads the same in EN and DE; "Personal" means staff in German. The
+  name is stored and can be renamed.
 - `joinOrganizationFromPendingInvitation` also creates the invitee's personal workspace in the
   inviting org, in the same transaction as the org membership.
 

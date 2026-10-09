@@ -14,7 +14,7 @@
 
 ## Visibility and roles (v3)
 
-- **Personal.** One per user, created at sign-up. Only that user opens it. It has no members and
+- **Personal.** One per user, created at sign-up and named "Private" (users may rename it). Only that user opens it. It has no members and
   cannot be deleted.
 - **Organization.** Open to every org member as editor. Only managers rename or delete it.
 - **Restricted.** Open to its workspace members, and to org owners and org admins. Managers add

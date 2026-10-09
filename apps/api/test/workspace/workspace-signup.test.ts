@@ -1,4 +1,4 @@
-import { db } from '@repo/database';
+import { db, PERSONAL_WORKSPACE_NAME } from '@repo/database';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { activeOrganizationId, insertInvitation } from '../organization/invitation-fixtures';
@@ -17,7 +17,7 @@ describe('sign-up personal workspace', () => {
     });
 
     expect(personal).toMatchObject({
-      name: 'Personal',
+      name: PERSONAL_WORKSPACE_NAME,
       visibility: 'personal',
       personalUserId: user.userId,
       organizationId: await activeOrganizationId(user.cookieHeader),
@@ -49,7 +49,11 @@ describe('sign-up personal workspace', () => {
     const personal = await db.query.workspace.findFirst({
       where: { personalUserId: invitee.userId },
     });
-    expect(personal).toMatchObject({ organizationId, visibility: 'personal', name: 'Personal' });
+    expect(personal).toMatchObject({
+      organizationId,
+      visibility: 'personal',
+      name: PERSONAL_WORKSPACE_NAME,
+    });
     expect(invitee.personalWorkspaceId).toBe(personal?.id ?? '');
     expect((await requestFolders(invitee.personalWorkspaceId, invitee.cookieHeader)).status).toBe(
       200,

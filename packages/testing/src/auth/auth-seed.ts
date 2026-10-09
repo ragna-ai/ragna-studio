@@ -3,6 +3,7 @@ import {
   createWorkspace,
   db,
   deleteOrganizationById,
+  PERSONAL_WORKSPACE_NAME,
   getOrganizationIdByUserId,
 } from '@repo/database';
 import {
@@ -181,7 +182,7 @@ export async function seedOrganizationMember({
     .insert(workspace)
     .values({
       organizationId,
-      name: 'Personal',
+      name: PERSONAL_WORKSPACE_NAME,
       visibility: WORKSPACE_VISIBILITY_PERSONAL,
       personalUserId: seededUser.id,
     })

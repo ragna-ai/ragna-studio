@@ -1,4 +1,4 @@
-import { db } from '@repo/database';
+import { db, PERSONAL_WORKSPACE_NAME } from '@repo/database';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
@@ -7,7 +7,7 @@ beforeEach(async () => {
 });
 
 describe('sign-up', () => {
-  test('creates the organization, an owner membership and the Personal workspace', async () => {
+  test('creates the organization, an owner membership and the private workspace', async () => {
     const { userId, personalWorkspaceId } = await seedAuthenticatedUser();
 
     const members = await db.query.organizationMember.findMany({ where: { userId } });
@@ -23,7 +23,7 @@ describe('sign-up', () => {
     const workspace = await db.query.workspace.findFirst({
       where: { id: personalWorkspaceId },
     });
-    expect(workspace?.name).toBe('Personal');
+    expect(workspace?.name).toBe(PERSONAL_WORKSPACE_NAME);
     expect(workspace?.organizationId).toBe(organizationId);
   });
 

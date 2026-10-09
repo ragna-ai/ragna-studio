@@ -1,4 +1,4 @@
-import { db } from '@repo/database';
+import { db, PERSONAL_WORKSPACE_NAME } from '@repo/database';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -49,7 +49,7 @@ describe('GET /workspace', () => {
       personalWorkspaceId,
       workspaceId,
     ]);
-    expect(body.workspaces[0]?.name).toBe('Personal');
+    expect(body.workspaces[0]?.name).toBe(PERSONAL_WORKSPACE_NAME);
   });
 
   test('only lists workspaces owned by the requesting user', async () => {
