@@ -1,7 +1,7 @@
 import { auth } from '@repo/auth/server';
 import {
   db,
-  deleteOrganizationsSolelyOwnedByUser,
+  deleteOrganizationById,
   getAllWorkspacesByOrganizationId,
   getOrganizationIdByUserId,
 } from '@repo/database';
@@ -135,7 +135,8 @@ export async function seedOrganizationMember({
     test.createUser({ email: `test-${crypto.randomUUID()}@example.com` }),
   );
 
-  await deleteOrganizationsSolelyOwnedByUser({ userId: seededUser.id });
+  const ownOrganizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
+  if (ownOrganizationId) await deleteOrganizationById({ organizationId: ownOrganizationId });
   await db
     .insert(member)
     .values({ organizationId, userId: seededUser.id, role, createdAt: new Date() });

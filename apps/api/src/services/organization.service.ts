@@ -7,12 +7,19 @@ import {
   ORGANIZATION_ADMIN_ROLE,
   ORGANIZATION_OWNER_ROLE,
   restoreMemberAccount,
+  restoreOrganization,
   softDeleteMemberAccount,
+  softDeleteOrganization,
   transferOrganizationOwnership,
   type OrganizationMemberRecord,
   type UserMembership,
 } from '@repo/database';
-import { BadRequestException, ForbiddenException, NotFoundException } from '../exceptions';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  OrganizationDeletedException,
+} from '../exceptions';
 
 const MICRO_CREDITS_PER_CREDIT = 1_000_000;
 
@@ -20,6 +27,7 @@ export interface OrganizationResponse {
   id: string;
   name: string;
   role: string;
+  deletedAt: string | null;
 }
 
 export interface MemberUsageResponse {
@@ -47,10 +55,23 @@ async function requireMembership({ userId }: { userId: string }): Promise<UserMe
   return membership;
 }
 
-async function requireOwnerOrAdmin({ userId }: { userId: string }): Promise<UserMembership> {
+/** Every organization action except reading it and restoring it needs an active organization. */
+async function requireActiveMembership({ userId }: { userId: string }): Promise<UserMembership> {
   const membership = await requireMembership({ userId });
+  if (membership.organizationDeletedAt) throw new OrganizationDeletedException();
+  return membership;
+}
+
+async function requireOwnerOrAdmin({ userId }: { userId: string }): Promise<UserMembership> {
+  const membership = await requireActiveMembership({ userId });
   if (!isOwnerOrAdmin(membership)) throw new ForbiddenException();
   return membership;
+}
+
+/** The caller's organization id for `/workspace` and `/credit`; throws while it is soft-deleted. */
+export async function requireActiveOrganizationId({ userId }: { userId: string }): Promise<string> {
+  const membership = await requireActiveMembership({ userId });
+  return membership.organizationId;
 }
 
 async function requireMemberOfOrganization({
@@ -75,7 +96,25 @@ export async function getOrganizationForUser({
     id: membership.organizationId,
     name: membership.organizationName,
     role: membership.role,
+    deletedAt: membership.organizationDeletedAt?.toISOString() ?? null,
   };
+}
+
+export async function deleteOrganizationForUser({ userId }: { userId: string }): Promise<void> {
+  const caller = await requireActiveMembership({ userId });
+  if (!isOwner(caller)) throw new ForbiddenException();
+
+  await softDeleteOrganization({ organizationId: caller.organizationId });
+}
+
+export async function restoreOrganizationForUser({ userId }: { userId: string }): Promise<void> {
+  const caller = await requireMembership({ userId });
+  if (!isOwner(caller)) throw new ForbiddenException();
+  if (!caller.organizationDeletedAt) {
+    throw new BadRequestException('This organization is not deleted.');
+  }
+
+  await restoreOrganization({ organizationId: caller.organizationId });
 }
 
 export async function removeMemberForUser({
@@ -117,7 +156,7 @@ export async function restoreMemberForUser({
 }
 
 export async function leaveOrganization({ userId }: { userId: string }): Promise<void> {
-  const membership = await requireMembership({ userId });
+  const membership = await requireActiveMembership({ userId });
   if (isOwner(membership)) {
     throw new BadRequestException(
       'The owner cannot leave. Transfer ownership or delete the organization.',
@@ -134,7 +173,7 @@ export async function transferOwnershipForUser({
   userId: string;
   memberId: string;
 }): Promise<void> {
-  const caller = await requireMembership({ userId });
+  const caller = await requireActiveMembership({ userId });
   if (!isOwner(caller)) throw new ForbiddenException();
 
   const target = await requireMemberOfOrganization({

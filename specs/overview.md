@@ -24,8 +24,10 @@ layered on top.
 
 Every user gets a personal organization at sign-up. Organizations own
 workspaces and credit accounts. Members reach all workspaces of their
-organization. Inviting members comes in v2.
-→ [specs/organizations/prd.md](./organizations/prd.md)
+organization. The owner and admins invite members by email, manage roles and
+remove members in the org settings. The owner can delete the organization,
+which is restorable for 30 days.
+→ [specs/organizations/prd.md](./organizations/prd.md), [v2](./organizations/v2-prd.md)
 
 ### Auth
 

@@ -6,7 +6,6 @@ import {
   getChatById,
   getMediaVisibleToUser,
   getMediaVisibleToUserById,
-  getMediaByWorkspaceId,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
@@ -21,7 +20,7 @@ import {
   type MediaKind,
   type SniffedMedia,
 } from '@repo/media';
-import { deleteObjects, downloadObjectBuffer } from '@repo/storage';
+import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -367,51 +366,6 @@ export async function removeChatAttachment({
   }
 
   await deleteMediaIfUnreferenced({ mediaId: attachment.mediaId });
-}
-
-/**
- * Deletes the R2 objects for every media row owned by a workspace. Called by
- * workspace.service.ts's `deleteWorkspaceForUser()` right before the
- * workspace row is deleted: the FK cascade wipes the media rows for free,
- * but never touches R2, so the objects would orphan invisibly otherwise.
- * Unconditional (no refcount check): every owning row is about to be
- * cascade-deleted along with the workspace, so @repo/media's per-row
- * `deleteMediaIfUnreferenced` doesn't fit here.
- */
-export async function deleteWorkspaceMediaObjects({
-  workspaceId,
-}: {
-  workspaceId: string;
-}): Promise<void> {
-  const { error, data: mediaRows } = await tryCatch(() => getMediaByWorkspaceId({ workspaceId }));
-
-  if (error !== null || !mediaRows) {
-    logger.error(`Failed to load media for workspace ${workspaceId}`, error);
-    return;
-  }
-
-  const storageKeysByBucket: Record<string, string[]> = {};
-  for (const { bucket, storageKey } of mediaRows) {
-    (storageKeysByBucket[bucket] ??= []).push(storageKey);
-  }
-
-  for (const bucket of Object.keys(storageKeysByBucket)) {
-    const storageKeys = storageKeysByBucket[bucket];
-    const { error: deleteError, data } = await tryCatch(() => deleteObjects(bucket, storageKeys));
-
-    if (deleteError !== null) {
-      logger.error('Failed to delete media objects from R2', {
-        error: deleteError,
-        bucket,
-        storageKeys,
-      });
-      continue;
-    }
-
-    if (data && data.errors.length > 0) {
-      logger.error('Failed to delete some media objects from R2', { bucket, keys: data.errors });
-    }
-  }
 }
 
 // IMAGE INPUT UPLOAD

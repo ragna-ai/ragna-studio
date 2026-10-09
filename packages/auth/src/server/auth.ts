@@ -5,7 +5,6 @@ import { config } from '@repo/config';
 import {
   createOrganizationForUser,
   db,
-  deleteOrganizationsSolelyOwnedByUser,
   getOrganizationIdByUserId,
   joinOrganizationFromPendingInvitation,
   MEMBER_REMOVED_BAN_REASON,
@@ -20,6 +19,7 @@ import {
   rejectOwnerRoleChange,
   validateInvitation,
 } from './organization-invitations';
+import { prepareUserRemoval } from './organization-removal';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
@@ -201,7 +201,7 @@ export const auth = betterAuth({
       },
       delete: {
         before: async (user) => {
-          await deleteOrganizationsSolelyOwnedByUser({ userId: user.id });
+          await prepareUserRemoval({ userId: user.id });
         },
       },
     },

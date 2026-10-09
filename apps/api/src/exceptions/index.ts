@@ -39,6 +39,18 @@ export class ForbiddenException extends HTTPException {
   }
 }
 
+// Forbidden (403) while the caller's organization is soft-deleted. The error body carries
+// ORGANIZATION_DELETED as `code` so clients can show the restore page.
+export const ORGANIZATION_DELETED_CODE = 'ORGANIZATION_DELETED';
+
+export class OrganizationDeletedException extends HTTPException {
+  constructor() {
+    super(StatusCodes.FORBIDDEN, {
+      message: 'This organization is scheduled for deletion.',
+    });
+  }
+}
+
 // Conflict (409) Exception
 export class ConflictException extends HTTPException {
   constructor(message?: string) {

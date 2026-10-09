@@ -12,6 +12,7 @@ import {
   deleteMediaById,
   findUnreferencedMediaOlderThan,
   getMediaById,
+  getMediaByWorkspaceId,
   type Media,
   type MediaOrigin,
 } from '@repo/database';
@@ -164,6 +165,26 @@ async function deleteMediaObjects(
   }
 
   return allDeleted;
+}
+
+/**
+ * Deletes the R2 objects of every media row a workspace owns, right before the workspace row
+ * cascades the media rows away. Unconditional: no refcount check, since the owning rows go
+ * with the workspace. Returns true only when every object was confirmed deleted.
+ */
+export async function deleteWorkspaceMediaObjects({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<boolean> {
+  const { error, data: mediaRows } = await tryCatch(() => getMediaByWorkspaceId({ workspaceId }));
+
+  if (error !== null || !mediaRows) {
+    logger.error(`Failed to load media for workspace ${workspaceId}`, error);
+    return false;
+  }
+
+  return deleteMediaObjects(mediaRows);
 }
 
 /**

@@ -161,7 +161,7 @@ See [workspaces-known-issues.md](./workspaces-known-issues.md): agent-tool-creat
 
 - Sharing workspaces / multi-user membership, roles, invitations.
 - Moving items between workspaces after creation.
-- Per-workspace default agent, settings, or theming.
+- Per-workspace settings or theming. (A default agent per workspace exists now, see the organizations v2 PRD.)
 - Workspace-scoped notifications.
 - Persisting the active workspace server-side (session/DB).
 - Backfilling existing rows into a default workspace.
@@ -173,4 +173,4 @@ See [workspaces-known-issues.md](./workspaces-known-issues.md): agent-tool-creat
 ## Future phases (not built here)
 
 - **Move items**: a "move to workspace" action (bulk and single) on scoped resources. Analysed and deferred 2026-07-30, see [moving-resources.md](./moving-resources.md).
-- **Shared workspaces**: done through organizations. Members of an organization reach all its workspaces. See [specs/organizations/prd.md](../organizations/prd.md).
+- **Shared workspaces**: done through organizations. Every active member of an organization reaches all its workspaces and shares one default agent per workspace. Chats stay private to their author. See [specs/organizations/prd.md](../organizations/prd.md) and [v2-prd.md](../organizations/v2-prd.md).

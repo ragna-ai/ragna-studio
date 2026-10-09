@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
+  deleteOrganizationForUser,
   getOrganizationForUser,
   getUsageByMemberForUser,
   leaveOrganization,
   removeMemberForUser,
   restoreMemberForUser,
+  restoreOrganizationForUser,
   transferOwnershipForUser,
 } from '../services/organization.service';
 import { validMemberIdParam, validTransferOwnershipBody } from '../validation';
@@ -16,11 +18,29 @@ export const organizationController = new Hono()
   .use(authMiddleware)
   /**
    * [GET] /organization
-   * The caller's organization and their role in it.
+   * The caller's organization, their role in it and `deletedAt` while it is soft-deleted.
    */
   .get('/', async (c) => {
     const user = c.get('user');
     return c.json(await getOrganizationForUser({ userId: user.id }));
+  })
+  /**
+   * [DELETE] /organization
+   * Soft-deletes the organization. Owner only; restorable for 30 days.
+   */
+  .delete('/', async (c) => {
+    const user = c.get('user');
+    await deleteOrganizationForUser({ userId: user.id });
+    return c.json({ success: true });
+  })
+  /**
+   * [POST] /organization/restore
+   * Restores a soft-deleted organization and the members its deletion banned. Owner only.
+   */
+  .post('/restore', async (c) => {
+    const user = c.get('user');
+    await restoreOrganizationForUser({ userId: user.id });
+    return c.json({ success: true });
   })
   /**
    * [GET] /organization/usage

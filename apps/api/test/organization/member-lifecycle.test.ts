@@ -21,6 +21,7 @@ const organizationBodySchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   role: z.string(),
+  deletedAt: z.null(),
 });
 
 const errorBodySchema = z.object({ message: z.string() });

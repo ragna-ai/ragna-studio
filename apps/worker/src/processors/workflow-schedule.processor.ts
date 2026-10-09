@@ -2,6 +2,7 @@ import {
   createWorkflowRun,
   getWorkflowForScheduledRun,
   hasActiveRun,
+  isWorkflowOrganizationDeleted,
   resolveScheduledRunUserId,
   updateRunStatus,
 } from '@repo/database';
@@ -63,6 +64,12 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
       queueName: WORKFLOW_SCHEDULES_QUEUE,
       schedulerId: workflowId,
     });
+    return;
+  }
+
+  // Keep the scheduler so a restore resumes the schedule.
+  if (await isWorkflowOrganizationDeleted({ workflowId })) {
+    logger.info(`Workflow ${workflowId} belongs to a deleted organization, skipping this tick`);
     return;
   }
 

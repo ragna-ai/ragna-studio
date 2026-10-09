@@ -12,6 +12,7 @@ export const GEN_IMAGES_QUEUE = 'gen-images-queue';
 export const EMAIL_SYNC_QUEUE = 'email-sync-queue';
 export const EMAIL_CLASSIFY_QUEUE = 'email-classify-queue';
 export const EMAIL_DRAFT_QUEUE = 'email-draft-queue';
+export const PURGE_QUEUE = 'purge-queue';
 
 // The set of notification kinds and the data payload each one carries. This is
 // the single source of truth: adding a new notification scenario is one entry

@@ -5,6 +5,7 @@ import { addCronJob } from '@repo/queue';
 import { cleanupProcessor } from './cleanup.cron';
 import { emailSyncCronProcessor } from './email-sync.cron';
 import { mediaSweepProcessor } from './media-sweep.cron';
+import { purgeProcessor } from './purge.cron';
 import { staleRunsProcessor } from './stale-runs.cron';
 import { taskReminderProcessor } from './task-reminder.cron';
 
@@ -39,6 +40,12 @@ export function registerCronJobs() {
     name: 'email-sync',
     processor: emailSyncCronProcessor,
     schedule: { every: config.emailSyncInterval }, // Default 5 minutes
+  });
+
+  addCronJob({
+    name: 'purge',
+    processor: purgeProcessor,
+    schedule: { pattern: '0 3 * * *' }, // Daily at 3 AM
   });
 
   logger.info('Cron jobs registered');

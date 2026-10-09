@@ -8,6 +8,7 @@ import {
   GEN_VIDEOS_QUEUE,
   NOTIFICATIONS_QUEUE,
   ONBOARDINGS_QUEUE,
+  PURGE_QUEUE,
   WORKFLOWS_QUEUE,
 } from '../constants';
 import type { QueueOptions } from 'bullmq';
@@ -41,4 +42,5 @@ export const queue = {
   emailSync: () => getOrCreateQueue({ name: EMAIL_SYNC_QUEUE, opts: emailQueueOpts }),
   emailClassify: () => getOrCreateQueue({ name: EMAIL_CLASSIFY_QUEUE, opts: emailQueueOpts }),
   emailDraft: () => getOrCreateQueue({ name: EMAIL_DRAFT_QUEUE, opts: emailQueueOpts }),
+  purge: () => getOrCreateQueue({ name: PURGE_QUEUE }),
 } as const;

@@ -11,7 +11,7 @@ import type {
   TaskPriority,
   TaskStatus,
 } from '../schema';
-import { member, task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
+import { member, organization, task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
 import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
@@ -475,6 +475,7 @@ export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
     })
     .from(task)
     .innerJoin(workspace, eq(task.workspaceId, workspace.id))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
     .innerJoin(
       member,
       and(
@@ -484,6 +485,7 @@ export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
     )
     .where(
       and(
+        isNull(organization.deletedAt),
         isNotNull(task.dueDate),
         isNotNull(task.remindDaysBeforeDue),
         isNull(task.reminderSentAt),

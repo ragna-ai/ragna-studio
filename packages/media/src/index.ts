@@ -20,6 +20,7 @@ export { toChatUploadImageUrl, getChatUploadImageKey, getMediaDocumentKey } from
 export {
   createMediaForObject,
   deleteMediaIfUnreferenced,
+  deleteWorkspaceMediaObjects,
   storeMedia,
   sweepUnreferencedMedia,
 } from './services/media.service';
@@ -29,6 +30,9 @@ export type {
   StoreMediaInput,
   SweepUnreferencedMediaResult,
 } from './services/media.service';
+
+export { purgeExpiredDeletions, purgeOrganization } from './services/purge.service';
+export type { PurgeExpiredDeletionsSummary } from './services/purge.service';
 
 // Visible AI-disclosure watermark (EU AI Act Art. 50(4)).
 export { applyImageWatermark, applyVideoWatermark } from './services/watermark.service';

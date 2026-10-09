@@ -10,6 +10,7 @@ export const organization = pgTable('organizations', {
   logo: text('logo'),
   metadata: text('metadata'),
   createdAt: timestamp('created_at').notNull(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const member = pgTable(
@@ -27,7 +28,6 @@ export const member = pgTable(
   },
   (table) => [
     unique('members_organization_id_user_id_unique').on(table.organizationId, table.userId),
-    index('member_userId_idx').on(table.userId),
     uniqueIndex('member_userId_unique').on(table.userId),
   ],
 );

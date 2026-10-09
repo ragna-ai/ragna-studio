@@ -8,13 +8,17 @@ import type {
 import {
   countCreditUsageEvents,
   getCreditSpendStateForOrganization,
-  getOrganizationIdByUserId,
+  getMembershipByUserId,
   listCreditUsageEvents,
   resolveCreditSpendState,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
-import { InternalServerErrorException, PaymentRequiredException } from '../exceptions';
+import {
+  InternalServerErrorException,
+  OrganizationDeletedException,
+  PaymentRequiredException,
+} from '../exceptions';
 
 // 1 credit = 1,000,000 micro-credits.
 const MICRO_CREDITS_PER_CREDIT = 1_000_000;
@@ -117,13 +121,26 @@ async function resolveOwnCreditSpendState({
 }: {
   userId: string;
 }): Promise<CreditSpendState | null> {
-  const { error, data: spendState } = await tryCatch(async () => {
-    const organizationId = await getOrganizationIdByUserId({ userId });
-    if (!organizationId) {
-      return null;
-    }
-    return getCreditSpendStateForOrganization({ organizationId });
-  });
+  const { error: membershipError, data: membership } = await tryCatch(() =>
+    getMembershipByUserId({ userId }),
+  );
+
+  if (membershipError !== null) {
+    logger.error('Failed to resolve organization for credit balance', membershipError);
+    throw new InternalServerErrorException('Failed to load credit balance');
+  }
+
+  if (!membership) {
+    return null;
+  }
+
+  if (membership.organizationDeletedAt) {
+    throw new OrganizationDeletedException();
+  }
+
+  const { error, data: spendState } = await tryCatch(() =>
+    getCreditSpendStateForOrganization({ organizationId: membership.organizationId }),
+  );
 
   if (error !== null) {
     logger.error('Failed to resolve credit spend state', error);
