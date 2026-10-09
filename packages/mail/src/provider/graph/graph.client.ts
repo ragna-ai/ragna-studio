@@ -94,7 +94,8 @@ async function performGraphRequest<T>(
   options: GraphRequestOptions,
 ): Promise<T> {
   const response = await fetchGraph(getAccessToken, path, options);
-  return (await response.json()) as T;
+  const body: T = await response.json();
+  return body;
 }
 
 async function performGraphRequestVoid(

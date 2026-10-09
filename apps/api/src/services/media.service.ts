@@ -122,7 +122,8 @@ async function extractChatAttachmentText({
     return null;
   }
 
-  return capExtractedText(await extractText({ buffer, kind }));
+  const extractedText = await extractText({ buffer, kind });
+  return capExtractedText(extractedText);
 }
 
 interface StoredChatAttachmentFile {

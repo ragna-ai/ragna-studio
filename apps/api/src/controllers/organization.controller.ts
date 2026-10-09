@@ -24,7 +24,8 @@ export const organizationController = new Hono()
    */
   .get('/', async (c) => {
     const user = c.get('user');
-    return c.json(await getOrganizationForUser({ userId: user.id }));
+    const organization = await getOrganizationForUser({ userId: user.id });
+    return c.json(organization);
   })
   /**
    * [GET] /organization/members
@@ -32,7 +33,8 @@ export const organizationController = new Hono()
    */
   .get('/members', async (c) => {
     const user = c.get('user');
-    return c.json(await listMembersForUser({ userId: user.id }));
+    const members = await listMembersForUser({ userId: user.id });
+    return c.json(members);
   })
   /**
    * [GET] /organization/workspaces
@@ -40,7 +42,8 @@ export const organizationController = new Hono()
    */
   .get('/workspaces', async (c) => {
     const user = c.get('user');
-    return c.json(await listRestrictedWorkspacesForUser({ userId: user.id }));
+    const workspaces = await listRestrictedWorkspacesForUser({ userId: user.id });
+    return c.json(workspaces);
   })
   /**
    * [DELETE] /organization
@@ -66,7 +69,8 @@ export const organizationController = new Hono()
    */
   .get('/usage', async (c) => {
     const user = c.get('user');
-    return c.json(await getUsageByMemberForUser({ userId: user.id }));
+    const usage = await getUsageByMemberForUser({ userId: user.id });
+    return c.json(usage);
   })
   /**
    * [DELETE] /organization/members/:memberId

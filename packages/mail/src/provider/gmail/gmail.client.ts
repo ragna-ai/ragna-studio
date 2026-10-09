@@ -82,7 +82,8 @@ async function performGmailRequest<T>(
   options: GmailRequestOptions,
 ): Promise<T> {
   const response = await fetchGmail(getAccessToken, path, options);
-  return (await response.json()) as T;
+  const body: T = await response.json();
+  return body;
 }
 
 async function performGmailRequestVoid(

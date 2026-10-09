@@ -1441,10 +1441,11 @@ async function resolveAttachments({
 
   for (const file of files ?? []) {
     if (file.size === 0) continue;
+    const fileBytes = await file.arrayBuffer();
     attachments.push({
       filename: file.name,
       mimeType: file.type || 'application/octet-stream',
-      content: Buffer.from(await file.arrayBuffer()),
+      content: Buffer.from(fileBytes),
     });
   }
 
@@ -1457,7 +1458,8 @@ async function resolveAttachments({
     );
 
     for (const mediaId of mediaIds) {
-      attachments.push(await resolveMediaAttachment({ mediaId, ownedWorkspaceIds }));
+      const mediaAttachment = await resolveMediaAttachment({ mediaId, ownedWorkspaceIds });
+      attachments.push(mediaAttachment);
     }
   }
 
@@ -1675,10 +1677,8 @@ export async function sendEmailForUser(input: SendEmailInput): Promise<SendEmail
   const provider = await getMailProviderForUser({ userId });
 
   const thread = await resolveThreading({ provider, account, threadId, replyToMessageId });
-  const attachments = [
-    ...(extraAttachments ?? []),
-    ...(await resolveAttachments({ userId, mediaIds, files })),
-  ];
+  const resolvedAttachments = await resolveAttachments({ userId, mediaIds, files });
+  const attachments = [...(extraAttachments ?? []), ...resolvedAttachments];
   assertAttachmentsWithinBudget(attachments);
 
   const sendInput: SendMailInput = {

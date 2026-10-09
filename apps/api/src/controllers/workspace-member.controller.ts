@@ -25,7 +25,8 @@ export const workspaceMemberController = new Hono()
   .get('/', async (c) => {
     const workspace = c.get('workspace');
 
-    return c.json(await listMembersOfWorkspace({ workspace }));
+    const members = await listMembersOfWorkspace({ workspace });
+    return c.json(members);
   })
   /**
    * [POST] /workspace/:workspaceId/members
