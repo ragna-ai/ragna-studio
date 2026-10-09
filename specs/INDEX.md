@@ -26,6 +26,7 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
+| [Organizations v3: personal and restricted workspaces](./organizations/v3-prd.md) | decided (2026-10-09) |
 
 ## Proposed
 
