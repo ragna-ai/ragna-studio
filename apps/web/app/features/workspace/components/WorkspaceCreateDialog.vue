@@ -3,12 +3,13 @@ import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 import WorkspaceMemberPicker from '~/features/workspace/components/WorkspaceMemberPicker.vue';
 import { useCreateWorkspace } from '~/features/workspace/composables/useWorkspaceApi';
+import { primaryIdSchema } from '~/lib/schema';
 import type { CreateWorkspaceInput } from '~/features/workspace/types';
 
 const createWorkspaceSchema = z.object({
   name: z.string().trim().min(1, { message: 'Name is required.' }),
   visibility: z.enum(['organization', 'restricted']),
-  memberUserIds: z.array(z.string()),
+  memberUserIds: z.array(primaryIdSchema),
 });
 
 // Refs

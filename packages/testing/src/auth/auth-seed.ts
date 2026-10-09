@@ -105,7 +105,7 @@ export async function seedAuthenticatedUser({
 }: SeedAuthenticatedUserOptions = {}): Promise<SeededAuthenticatedUser> {
   const test = await getTestHelpers();
 
-  const draftUser = test.createUser({ email });
+  const draftUser = test.createUser({ id: Bun.randomUUIDv7(), email });
   const seededUser = await test.saveUser(draftUser);
 
   const organizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
@@ -165,7 +165,7 @@ export async function seedOrganizationMember({
   const test = await getTestHelpers();
 
   const seededUser = await test.saveUser(
-    test.createUser({ email: `test-${crypto.randomUUID()}@example.com` }),
+    test.createUser({ id: Bun.randomUUIDv7(), email: `test-${crypto.randomUUID()}@example.com` }),
   );
 
   const ownOrganizationId = await getOrganizationIdByUserId({ userId: seededUser.id });

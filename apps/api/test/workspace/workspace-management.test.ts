@@ -1,4 +1,5 @@
 import { db } from '@repo/database';
+import { createPrimaryId } from '@repo/utils';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -113,13 +114,25 @@ describe('POST /workspace', () => {
     expect(await db.query.workspace.findMany()).toHaveLength(before.length);
   });
 
+  test('rejects a malformed user id', async () => {
+    const { member } = await seedOrganizationWithRoles();
+
+    const response = await jsonRequest(member.cookieHeader, 'POST', '/workspace', {
+      name: 'Secret',
+      visibility: 'restricted',
+      memberUserIds: ['not-a-uuid'],
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+
   test('rejects an unknown user id', async () => {
     const { member } = await seedOrganizationWithRoles();
 
     const response = await jsonRequest(member.cookieHeader, 'POST', '/workspace', {
       name: 'Secret',
       visibility: 'restricted',
-      memberUserIds: [crypto.randomUUID()],
+      memberUserIds: [createPrimaryId()],
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);

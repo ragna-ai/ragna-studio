@@ -213,6 +213,47 @@ describe('POST /workspace/:workspaceId/members', () => {
   });
 });
 
+describe('malformed user ids', () => {
+  test('POST rejects a malformed userId', async () => {
+    const org = await seedOrganizationWithRoles();
+    const workspaceId = await seedRestricted(org);
+
+    const response = await jsonRequest(org.member.cookieHeader, 'POST', membersPath(workspaceId), {
+      userId: 'not-a-uuid',
+      workspaceRole: 'editor',
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+
+  test('PATCH rejects a malformed :userId', async () => {
+    const org = await seedOrganizationWithRoles();
+    const workspaceId = await seedRestricted(org);
+
+    const response = await jsonRequest(
+      org.member.cookieHeader,
+      'PATCH',
+      membersPath(workspaceId, 'not-a-uuid'),
+      { workspaceRole: 'editor' },
+    );
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+
+  test('DELETE rejects a malformed :userId', async () => {
+    const org = await seedOrganizationWithRoles();
+    const workspaceId = await seedRestricted(org);
+
+    const response = await jsonRequest(
+      org.member.cookieHeader,
+      'DELETE',
+      membersPath(workspaceId, 'not-a-uuid'),
+    );
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+});
+
 describe('PATCH /workspace/:workspaceId/members/:userId', () => {
   test('a manager changes a role', async () => {
     const org = await seedOrganizationWithRoles();

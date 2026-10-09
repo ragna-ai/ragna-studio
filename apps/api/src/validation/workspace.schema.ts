@@ -8,8 +8,6 @@ import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
 const primaryId = z.uuidv7();
-// Users come from better-auth, whose ids are not uuidv7.
-const userId = z.string().min(1);
 
 const workspaceRoleSchema = z.enum([WORKSPACE_MANAGER_ROLE, WORKSPACE_EDITOR_ROLE]);
 
@@ -24,7 +22,7 @@ export const validWorkspaceMemberParam = myzValidator(
   'param',
   z.object({
     workspaceId: primaryId,
-    userId,
+    userId: primaryId,
   }),
 );
 
@@ -35,7 +33,7 @@ export const validCreateWorkspaceBody = myzValidator(
   z.object({
     name: workspaceNameSchema,
     visibility: z.enum([WORKSPACE_VISIBILITY_ORGANIZATION, WORKSPACE_VISIBILITY_RESTRICTED]),
-    memberUserIds: z.array(userId).max(200).optional(),
+    memberUserIds: z.array(primaryId).max(200).optional(),
   }),
 );
 
@@ -46,7 +44,7 @@ export const validRenameWorkspaceBody = myzValidator(
 
 export const validAddWorkspaceMemberBody = myzValidator(
   'json',
-  z.object({ userId, workspaceRole: workspaceRoleSchema }),
+  z.object({ userId: primaryId, workspaceRole: workspaceRoleSchema }),
 );
 
 export const validChangeWorkspaceMemberRoleBody = myzValidator(
