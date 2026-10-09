@@ -1,5 +1,5 @@
 import { db, resolveScheduledRunUserId, sql } from '@repo/database';
-import { member as memberTable, workflow } from '@repo/database/schema';
+import { member as memberTable, user as userTable, workflow } from '@repo/database/schema';
 import {
   deleteSeededUser,
   seedAuthenticatedUser,
@@ -100,6 +100,18 @@ describe('resolveScheduledRunUserId', () => {
     const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
 
     await deleteSeededUser({ userId: member.userId });
+
+    expect(await resolveScheduledRunUserId({ workflowId })).toBe(owner.userId);
+  });
+
+  test('falls back to the organization owner once the author is soft-deleted', async () => {
+    const { owner, member } = await seedTeam();
+    const workflowId = await seedWorkflowAuthoredBy(member, owner.workspaceId);
+
+    await db
+      .update(userTable)
+      .set({ deletedAt: new Date() })
+      .where(sql`${userTable.id} = ${member.userId}`);
 
     expect(await resolveScheduledRunUserId({ workflowId })).toBe(owner.userId);
   });

@@ -3,7 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { ForeignReferenceError } from '../errors';
 import type { Workflow } from '../schema';
-import { agent, member, workflow, workspace } from '../schema';
+import { agent, member, user, workflow, workspace } from '../schema';
 import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
 
 export type { Workflow, NewWorkflow } from '../schema';
@@ -227,7 +227,7 @@ export async function getWorkflowForScheduledRun({
 
 /**
  * The user a schedule tick runs as: the workflow author, or the organization
- * owner once the author is gone. Null only when neither exists.
+ * owner once the author is gone or soft-deleted. Null only when neither exists.
  */
 export async function resolveScheduledRunUserId({
   workflowId,
@@ -235,9 +235,14 @@ export async function resolveScheduledRunUserId({
   workflowId: string;
 }): Promise<string | null> {
   const [row] = await db
-    .select({ authorId: workflow.userId, ownerId: member.userId })
+    .select({
+      authorId: workflow.userId,
+      authorDeletedAt: user.deletedAt,
+      ownerId: member.userId,
+    })
     .from(workflow)
     .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .leftJoin(user, eq(user.id, workflow.userId))
     .leftJoin(
       member,
       and(
@@ -248,5 +253,7 @@ export async function resolveScheduledRunUserId({
     .where(eq(workflow.id, workflowId))
     .limit(1);
 
-  return row?.authorId ?? row?.ownerId ?? null;
+  if (!row) return null;
+  const authorIsActive = row.authorId !== null && row.authorDeletedAt === null;
+  return authorIsActive ? row.authorId : row.ownerId;
 }

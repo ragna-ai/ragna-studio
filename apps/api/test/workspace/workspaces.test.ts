@@ -1,6 +1,5 @@
 import { db } from '@repo/database';
-import { member } from '@repo/database/schema';
-import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -85,13 +84,10 @@ describe('organization scoping', () => {
 
   test('a workspace created by one member is visible to and deletable by another', async () => {
     const owner = await seedAuthenticatedUser();
-    const colleague = await seedAuthenticatedUser();
     const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
-    await db.insert(member).values({
+    const colleague = await seedOrganizationMember({
       organizationId: ownerMembership?.organizationId ?? '',
-      userId: colleague.userId,
       role: 'member',
-      createdAt: new Date(0),
     });
 
     const created = await createWorkspace(owner.cookieHeader, 'Shared');

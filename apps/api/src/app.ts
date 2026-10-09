@@ -19,6 +19,7 @@ import { mcpSettingsController } from './controllers/mcp-settings.controller';
 import { mcpController } from './controllers/mcp.controller';
 import { mediaController } from './controllers/media.controller';
 import { notificationController } from './controllers/notification.controller';
+import { organizationController } from './controllers/organization.controller';
 import { overviewController } from './controllers/overview.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { taskLabelController } from './controllers/task-label.controller';
@@ -55,6 +56,7 @@ export const app = new Hono()
   .route('/', userController)
   .route('/', chatController)
   .route('/', creditController)
+  .route('/', organizationController)
   .route('/', agentController)
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)

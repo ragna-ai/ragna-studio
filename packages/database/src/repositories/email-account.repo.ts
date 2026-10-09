@@ -48,7 +48,7 @@ export async function getEmailAccountById({ id }: { id: string }): Promise<Email
 // resume).
 export async function listEmailAccountsDueForSync(): Promise<EmailAccount[]> {
   return db.query.emailAccount.findMany({
-    where: { syncState: { ne: 'reauth_required' } },
+    where: { syncState: { ne: 'reauth_required' }, user: { deletedAt: { isNull: true } } },
   });
 }
 

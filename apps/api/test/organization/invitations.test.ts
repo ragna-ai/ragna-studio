@@ -1,6 +1,6 @@
 import { config } from '@repo/config';
 import { db, sql } from '@repo/database';
-import { member } from '@repo/database/schema';
+import { member, user as userTable } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -31,6 +31,16 @@ function overrideAllowedLoginEmails(emails: string[]): void {
 
 function inviteMember(cookieHeader: string, organizationId: string, email: string, role: string) {
   return postOrganizationRoute(cookieHeader, 'invite-member', { email, role, organizationId });
+}
+
+async function markSoftDeleted(userId: string) {
+  const [updated] = await db
+    .update(userTable)
+    .set({ deletedAt: new Date() })
+    .where(sql`${userTable.id} = ${userId}`)
+    .returning();
+  if (!updated) throw new Error('user not found');
+  return updated;
 }
 
 describe('creating invitations', () => {
@@ -111,6 +121,44 @@ describe('creating invitations', () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(errorBodySchema.parse(await response.json()).message).toBe(
       'This person already has an account.',
+    );
+  });
+
+  test('a removed member of the same organization gets a restore hint', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await activeOrganizationId(owner.cookieHeader);
+    const removed = await seedOrganizationMember({ organizationId, role: 'member' });
+    const removedUser = await markSoftDeleted(removed.userId);
+
+    const response = await inviteMember(
+      owner.cookieHeader,
+      organizationId,
+      removedUser.email,
+      'member',
+    );
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(errorBodySchema.parse(await response.json()).message).toBe(
+      'This person was removed. Restore them in the member list.',
+    );
+  });
+
+  test('a user scheduled for deletion elsewhere gets a scheduled-deletion message', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await activeOrganizationId(owner.cookieHeader);
+    const elsewhere = await seedAuthenticatedUser();
+    const elsewhereUser = await markSoftDeleted(elsewhere.userId);
+
+    const response = await inviteMember(
+      owner.cookieHeader,
+      organizationId,
+      elsewhereUser.email,
+      'member',
+    );
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(errorBodySchema.parse(await response.json()).message).toBe(
+      "This person's account is scheduled for deletion.",
     );
   });
 

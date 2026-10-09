@@ -11,9 +11,9 @@ import {
   settleCreditUsage,
   db,
 } from '@repo/database';
-import { member } from '@repo/database/schema';
 import {
   seedAuthenticatedUser,
+  seedOrganizationMember,
   seedCreditAccount,
   seedTokenPricedAiModel,
   truncateAllTables,
@@ -416,15 +416,9 @@ describe('organization billing', () => {
 
   test('a second org member spending in the owner workspace is billed to the org account', async () => {
     const owner = await seedAuthenticatedUser();
-    const other = await seedAuthenticatedUser();
     const organizationId = await getOrganizationIdByUserId({ userId: owner.userId });
     if (!organizationId) throw new Error('owner has no organization');
-    await db.insert(member).values({
-      organizationId,
-      userId: other.userId,
-      role: 'member',
-      createdAt: new Date(),
-    });
+    const other = await seedOrganizationMember({ organizationId, role: 'member' });
     const { creditAccountId } = await seedCreditAccount({
       userId: owner.userId,
       balanceMicroCredits: 100_000_000n,

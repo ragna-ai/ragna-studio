@@ -10,6 +10,7 @@ export * from './gen-video.schema';
 export * from './media.schema';
 export * from './mcp-settings.schema';
 export * from './notification.schema';
+export * from './organization.schema';
 export * from './pagination.schema';
 export * from './social-post.schema';
 export * from './task-label.schema';

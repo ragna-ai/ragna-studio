@@ -1,6 +1,11 @@
 import { db } from '@repo/database';
-import { creditAccount, member } from '@repo/database/schema';
-import { deleteSeededUser, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import { creditAccount } from '@repo/database/schema';
+import {
+  deleteSeededUser,
+  seedAuthenticatedUser,
+  seedOrganizationMember,
+  truncateAllTables,
+} from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 beforeEach(async () => {
@@ -30,14 +35,8 @@ describe('user deletion', () => {
 
   test('keeps an organization that still has another owner', async () => {
     const owner = await seedAuthenticatedUser();
-    const coOwner = await seedAuthenticatedUser();
     const organizationId = await organizationIdOf(owner.userId);
-    await db.insert(member).values({
-      organizationId,
-      userId: coOwner.userId,
-      role: 'owner',
-      createdAt: new Date(),
-    });
+    await seedOrganizationMember({ organizationId, role: 'owner' });
 
     await deleteSeededUser({ userId: owner.userId });
 
