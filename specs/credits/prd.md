@@ -579,6 +579,12 @@ could skip the join, since `workspaceGuard` already put the workspace in
 context, and it is not worth a second code path to save one indexed join
 there.
 
+### Per-member usage
+
+The organization's usage view groups `credit_usage_events` by `user_id` in one query, for the
+owner and admins. Events of a hard-deleted member keep their cost with `user_id` null and show as
+"Former member".
+
 ### Account creation
 
 Credit accounts are created **only by `grantCredits`**, never lazily on the

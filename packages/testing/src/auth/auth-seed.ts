@@ -1,5 +1,11 @@
 import { auth } from '@repo/auth/server';
-import { getAllWorkspacesByOrganizationId, getOrganizationIdByUserId } from '@repo/database';
+import {
+  db,
+  deleteOrganizationById,
+  getAllWorkspacesByOrganizationId,
+  getOrganizationIdByUserId,
+} from '@repo/database';
+import { member } from '@repo/database/schema';
 import type { TestHelpers } from 'better-auth/plugins';
 
 export interface SeededAuthenticatedUser {
@@ -7,6 +13,11 @@ export interface SeededAuthenticatedUser {
   workspaceId: string;
   /** Ready to use as the `Cookie` header on an `app.request()` call. */
   cookieHeader: string;
+}
+
+export interface SeedAuthenticatedUserOptions {
+  /** Defaults to a random address. Pass one to sign up as an invited email. */
+  email?: string;
 }
 
 interface AuthContextWithTestHelpers {
@@ -56,10 +67,12 @@ async function getTestHelpers(): Promise<TestHelpers> {
  * queues the welcome email, so this helper fetches the workspace the hook
  * created rather than creating a second one.
  */
-export async function seedAuthenticatedUser(): Promise<SeededAuthenticatedUser> {
+export async function seedAuthenticatedUser({
+  email = `test-${crypto.randomUUID()}@example.com`,
+}: SeedAuthenticatedUserOptions = {}): Promise<SeededAuthenticatedUser> {
   const test = await getTestHelpers();
 
-  const draftUser = test.createUser({ email: `test-${crypto.randomUUID()}@example.com` });
+  const draftUser = test.createUser({ email });
   const seededUser = await test.saveUser(draftUser);
 
   const organizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
@@ -99,4 +112,45 @@ export async function seedAuthenticatedUser(): Promise<SeededAuthenticatedUser> 
 export async function deleteSeededUser({ userId }: { userId: string }): Promise<void> {
   const test = await getTestHelpers();
   await test.deleteUser(userId);
+}
+
+export interface SeedOrganizationMemberParams {
+  organizationId: string;
+  role: string;
+}
+
+/**
+ * Seeds a second user who belongs to an existing organization instead of
+ * their own: the auto-created organization is dropped and a membership in
+ * the target one is inserted before the session is minted, so the session's
+ * `activeOrganizationId` is the target. Returns the target's first workspace.
+ */
+export async function seedOrganizationMember({
+  organizationId,
+  role,
+}: SeedOrganizationMemberParams): Promise<SeededAuthenticatedUser> {
+  const test = await getTestHelpers();
+
+  const seededUser = await test.saveUser(
+    test.createUser({ email: `test-${crypto.randomUUID()}@example.com` }),
+  );
+
+  const ownOrganizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
+  if (ownOrganizationId) await deleteOrganizationById({ organizationId: ownOrganizationId });
+  await db
+    .insert(member)
+    .values({ organizationId, userId: seededUser.id, role, createdAt: new Date() });
+
+  const [workspace] = await getAllWorkspacesByOrganizationId({ organizationId });
+  if (!workspace) {
+    throw new Error(`Organization ${organizationId} has no workspace to share.`);
+  }
+
+  const authHeaders = await test.getAuthHeaders({ userId: seededUser.id });
+  const cookieHeader = authHeaders.get('cookie');
+  if (!cookieHeader) {
+    throw new Error('better-auth did not return a session cookie');
+  }
+
+  return { userId: seededUser.id, workspaceId: workspace.id, cookieHeader };
 }

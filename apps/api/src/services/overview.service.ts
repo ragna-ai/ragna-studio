@@ -2,10 +2,10 @@ import type { TaskPriority, TaskStatus } from '@repo/database';
 import {
   getActiveTaskCountByWorkspaceId,
   getAgentCountByWorkspaceId,
-  getChatCountByWorkspaceId,
+  getChatCount,
   getDocumentCountByWorkspaceId,
   getRecentAgentsByWorkspaceId,
-  getRecentChatsByWorkspaceId,
+  getRecentChats,
   getRecentDocumentsByWorkspaceId,
   getRecentTasksByWorkspaceId,
   getRecentWorkflowsByWorkspaceId,
@@ -117,15 +117,21 @@ export interface WorkspaceOverview {
  * workspace total), and the calendar's tasks due inside a fixed window
  * around today.
  */
-export async function getWorkspaceOverview(workspaceId: string): Promise<WorkspaceOverview> {
+export async function getWorkspaceOverview({
+  workspaceId,
+  userId,
+}: {
+  workspaceId: string;
+  userId: string;
+}): Promise<WorkspaceOverview> {
   const { start, end } = getCalendarWindow();
 
   const { error, data } = await tryCatch(() =>
     Promise.all([
       getRecentTasksByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),
       getActiveTaskCountByWorkspaceId({ workspaceId }),
-      getRecentChatsByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),
-      getChatCountByWorkspaceId({ workspaceId }),
+      getRecentChats({ userId, workspaceId, limit: RECENT_ITEM_LIMIT }),
+      getChatCount({ userId, workspaceId }),
       getRecentWorkflowsByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),
       getWorkflowCountByWorkspaceId({ workspaceId }),
       getRecentAgentsByWorkspaceId({ workspaceId, limit: RECENT_ITEM_LIMIT }),

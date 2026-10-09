@@ -16,12 +16,12 @@ export function useDateTimeFormat() {
       }),
   );
 
-  function formatDateTime(isoDate: string) {
+  function formatDateTime(isoDate: string | Date) {
     return dateTimeFormatter.value.format(new Date(isoDate));
   }
 
   /** Date-only (no time), for due dates and other day-granularity fields. */
-  function formatDate(isoDate: string) {
+  function formatDate(isoDate: string | Date) {
     return dateFormatter.value.format(new Date(isoDate));
   }
 

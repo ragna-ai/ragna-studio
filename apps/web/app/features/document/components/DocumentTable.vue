@@ -63,7 +63,11 @@ const groups = computed<DocumentGroup[]>(() => {
 });
 
 function authorName(document: Document): string {
-  return document.createdByAgentName ?? document.createdByUserName ?? '—';
+  return (
+    document.createdByAgentName ??
+    document.createdByUserName ??
+    t('organization.formerMember')
+  );
 }
 
 function moveDocument(document: Document, folderId: string) {

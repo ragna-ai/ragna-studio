@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "member_userId_unique" ON "members" ("user_id");

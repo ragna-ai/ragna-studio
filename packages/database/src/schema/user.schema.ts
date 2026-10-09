@@ -13,6 +13,7 @@ export const user = pgTable(
     banned: boolean('banned').default(false),
     banReason: text('ban_reason'),
     banExpires: timestamp('ban_expires'),
+    deletedAt: timestamp('deleted_at'),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },

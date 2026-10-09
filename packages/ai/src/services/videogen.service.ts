@@ -480,10 +480,20 @@ interface UploadGeneratedVideoResult {
 // the generation. The returned visibleWatermark flag is what runGenVideo
 // writes back to the row, so a failure here also flips the row from
 // "requested" to "not applied".
+// Storage keys are prefixed by the author, who may have been deleted mid-generation.
+function requireAuthorId(record: Pick<GenVideoWithMedia, 'id' | 'userId'>): string {
+  if (!record.userId) {
+    throw new Error(`Gen video ${record.id} has no author left to store its output under`);
+  }
+
+  return record.userId;
+}
+
 async function uploadGeneratedVideo(
-  record: Pick<GenVideoWithMedia, 'userId' | 'visibleWatermark'>,
+  record: Pick<GenVideoWithMedia, 'id' | 'userId' | 'visibleWatermark'>,
   video: { uint8Array: Uint8Array; mediaType?: string },
 ): Promise<UploadGeneratedVideoResult> {
+  const userId = requireAuthorId(record);
   const rawBuffer = Buffer.from(video.uint8Array);
   // Buffer's generic must be widened explicitly: rawBuffer is
   // Buffer<ArrayBuffer>, but applyVideoWatermark's result comes back through
@@ -497,7 +507,7 @@ async function uploadGeneratedVideo(
     if (error !== null || !data) {
       logger.warn('Visible watermark failed, storing raw video instead', {
         error,
-        userId: record.userId,
+        userId,
       });
     } else {
       buffer = data.buffer;
@@ -505,7 +515,7 @@ async function uploadGeneratedVideo(
     }
   }
 
-  const { bucketName, prefix } = getVideoGenBucketNameForUser(record.userId);
+  const { bucketName, prefix } = getVideoGenBucketNameForUser(userId);
   const key = `${prefix}/${randomUUID()}.mp4`;
 
   await uploadObjectBuffer({
@@ -639,7 +649,7 @@ async function generateBflVideo(record: GenVideoWithMedia): Promise<GenerateAndU
     return { storageKey, size, draftCacheKey: null, visibleWatermark };
   }
 
-  const draftCacheKey = await persistDraftCache(record.userId, result.providerMetadata);
+  const draftCacheKey = await persistDraftCache(requireAuthorId(record), result.providerMetadata);
 
   return { storageKey, size, draftCacheKey, visibleWatermark };
 }

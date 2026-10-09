@@ -1,5 +1,5 @@
 import { config } from '@repo/config';
-import { eq, sql } from 'drizzle-orm';
+import { count, desc, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { isUniqueViolationError } from '../errors';
 import type {
@@ -9,7 +9,7 @@ import type {
   CreditUsageEvent,
   CreditUsageFeature,
 } from '../schema';
-import { creditAccount, creditLedger, creditUsageEvent, workspace } from '../schema';
+import { creditAccount, creditLedger, creditUsageEvent, user, workspace } from '../schema';
 
 export type {
   AiModelPricing,
@@ -345,6 +345,38 @@ export async function countCreditUsageEvents({
   creditAccountId: string;
 }): Promise<number> {
   return db.$count(creditUsageEvent, eq(creditUsageEvent.creditAccountId, creditAccountId));
+}
+
+export interface CreditUsageByUser {
+  /** Null once the author's account is hard-deleted (a former member). */
+  userId: string | null;
+  userName: string | null;
+  eventCount: number;
+  chargedMicroCredits: bigint;
+}
+
+/** One query for the whole organization: usage events grouped by who ran them. */
+export async function listCreditUsageByUser({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<CreditUsageByUser[]> {
+  const chargedMicroCredits =
+    sql<bigint>`sum(${creditUsageEvent.chargedMicroCredits})::bigint`.mapWith(BigInt);
+
+  return db
+    .select({
+      userId: creditUsageEvent.userId,
+      userName: user.name,
+      eventCount: count(),
+      chargedMicroCredits,
+    })
+    .from(creditUsageEvent)
+    .innerJoin(creditAccount, eq(creditAccount.id, creditUsageEvent.creditAccountId))
+    .leftJoin(user, eq(user.id, creditUsageEvent.userId))
+    .where(eq(creditAccount.organizationId, organizationId))
+    .groupBy(creditUsageEvent.userId, user.name)
+    .orderBy(desc(chargedMicroCredits));
 }
 
 interface ChargeBreakdown {

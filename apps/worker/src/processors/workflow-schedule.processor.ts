@@ -2,6 +2,8 @@ import {
   createWorkflowRun,
   getWorkflowForScheduledRun,
   hasActiveRun,
+  isWorkflowOrganizationDeleted,
+  resolveScheduledRunUserId,
   updateRunStatus,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -65,6 +67,12 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
     return;
   }
 
+  // Keep the scheduler so a restore resumes the schedule.
+  if (await isWorkflowOrganizationDeleted({ workflowId })) {
+    logger.info(`Workflow ${workflowId} belongs to a deleted organization, skipping this tick`);
+    return;
+  }
+
   // Overlap guard (decision 5): skip rather than stack. A crashed/stuck run
   // is bounded by the stale-run sweeper, not retried here.
   if (await hasActiveRun({ workflowId })) {
@@ -76,6 +84,7 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
     workflowId,
     definition: workflow.publishedDefinition,
     triggeredBy: 'schedule',
+    triggeredByUserId: await resolveScheduledRunUserId({ workflowId }),
   });
 
   try {

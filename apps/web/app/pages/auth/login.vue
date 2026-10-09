@@ -36,6 +36,8 @@ if (typeof route.query.error === 'string') {
       : t('auth.login.genericError');
 }
 
+const hasInvitation = typeof route.query.invitation === 'string';
+
 // A pending MCP authorize request: resume it instead of the normal home page.
 const isOAuthAuthorizeResume = computed(
   () =>
@@ -81,6 +83,10 @@ async function signIn(provider: SocialProvider) {
       </h1>
       <p class="mt-2 text-sm text-muted-foreground">
         {{ $t('auth.login.subtitle') }}
+      </p>
+
+      <p v-if="hasInvitation" class="mt-4 text-sm font-medium">
+        {{ $t('auth.login.invitationHint') }}
       </p>
 
       <Transition

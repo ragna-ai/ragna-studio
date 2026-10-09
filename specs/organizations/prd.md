@@ -331,7 +331,8 @@ Test-driven, per `apps/api` rules. Covered at least:
 
 ## v2 topics
 
-Recorded so v2 starts from them:
+Recorded so v2 starts from them. v2 is specified in [v2-prd.md](./v2-prd.md): members, invites,
+org settings, soft delete with a 30-day purge.
 
 - Owner adds users: email invites (`sendInvitationEmail` via the mail queue), accept page,
   `invitationLimit` raised, `ALLOWED_LOGIN_EMAILS` interplay. Accepting needs a verified email,

@@ -6,6 +6,16 @@ import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod
 
 export type { Chat, ChatMessage } from '../schema';
 
+/** Chats are private to their author, so every accessor is scoped by both. */
+export interface ChatScope {
+  userId: string;
+  workspaceId: string;
+}
+
+function chatScopeFilter({ chatId, userId, workspaceId }: ChatScope & { chatId: string }) {
+  return and(eq(chat.id, chatId), eq(chat.userId, userId), eq(chat.workspaceId, workspaceId));
+}
+
 export async function createChat(payload: ICreateChat): Promise<Chat> {
   const [createdChat] = await db
     .insert(chat)
@@ -24,9 +34,8 @@ export async function createChat(payload: ICreateChat): Promise<Chat> {
   return createdChat;
 }
 
-// Kept for the WS layer (chat.service.ts's runChatStream, channel.service.ts's
-// subscribe authorizer): those check ownership via the authenticated userId,
-// not the HTTP workspace guard. Do not repurpose for the REST controller.
+// WS layer only (runChatStream, the subscribe authorizer): the socket has no
+// workspace id, so the chat's own workspace is read back from the row.
 export async function getChatByIdForUser(payload: { chatId: string; userId: string }) {
   const chatRecord = await db.query.chat.findFirst({
     columns: {
@@ -63,10 +72,7 @@ export async function getChatByIdForUser(payload: { chatId: string; userId: stri
   return chatRecord || null;
 }
 
-// Same shape as getChatByIdForUser, scoped by workspaceId instead of userId:
-// the REST controller's `GET /:chatId`, called after the workspace guard has
-// already verified ownership of workspaceId.
-export async function getChatByIdForWorkspace(payload: { chatId: string; workspaceId: string }) {
+export async function getChatById(payload: ChatScope & { chatId: string }) {
   const chatRecord = await db.query.chat.findFirst({
     columns: {
       id: true,
@@ -75,7 +81,7 @@ export async function getChatByIdForWorkspace(payload: { chatId: string; workspa
       createdAt: true,
       updatedAt: true,
     },
-    where: { id: payload.chatId, workspaceId: payload.workspaceId },
+    where: { id: payload.chatId, userId: payload.userId, workspaceId: payload.workspaceId },
     with: {
       agent: {
         columns: {
@@ -106,17 +112,17 @@ export async function getChatByIdForWorkspace(payload: { chatId: string; workspa
   return chatRecord || null;
 }
 
-export async function getChatCountByWorkspaceId(payload: { workspaceId: string }): Promise<number> {
-  return db.$count(chat, eq(chat.workspaceId, payload.workspaceId));
+export async function getChatCount({ userId, workspaceId }: ChatScope): Promise<number> {
+  return db.$count(chat, and(eq(chat.userId, userId), eq(chat.workspaceId, workspaceId)));
 }
 
-export async function getChatsByWorkspaceId({
+export async function getChats({
+  userId,
   workspaceId,
   limit,
   sort = 'desc',
   offset,
-}: {
-  workspaceId: string;
+}: ChatScope & {
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -147,7 +153,7 @@ export async function getChatsByWorkspaceId({
         columns: { title: true },
       },
     },
-    where: { workspaceId },
+    where: { userId, workspaceId },
     limit,
     offset,
     // Pagination contract: sort by createdAt.
@@ -157,69 +163,35 @@ export async function getChatsByWorkspaceId({
   return chatRecords || [];
 }
 
-// Kept for the WS layer (chat.service.ts's runChatStream persists a
-// generated title mid-stream, scoped by userId there). The REST controller's
-// `PATCH /:chatId` uses updateChatTitleByWorkspaceId below instead.
-export async function updateChatTitleById({
+export async function updateChatTitle({
   chatId,
   userId,
+  workspaceId,
   title,
-}: {
+}: ChatScope & {
   chatId: string;
-  userId: string;
   title: string;
 }): Promise<Chat | null> {
   const [updatedChat] = await db
     .update(chat)
     .set({ title })
-    .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
+    .where(chatScopeFilter({ chatId, userId, workspaceId }))
     .returning();
 
   return updatedChat ?? null;
 }
 
-export async function updateChatTitleByWorkspaceId({
-  chatId,
-  workspaceId,
-  title,
-}: {
-  chatId: string;
-  workspaceId: string;
-  title: string;
-}): Promise<Chat | null> {
-  const [updatedChat] = await db
-    .update(chat)
-    .set({ title })
-    .where(and(eq(chat.id, chatId), eq(chat.workspaceId, workspaceId)))
-    .returning();
+/** Returns false when the chat doesn't exist or isn't the caller's. */
+export async function deleteChat(payload: ChatScope & { chatId: string }): Promise<boolean> {
+  const deletedChats = await db
+    .delete(chat)
+    .where(chatScopeFilter(payload))
+    .returning({ id: chat.id });
 
-  return updatedChat ?? null;
-}
-
-export async function deleteChatByWorkspaceId({
-  chatId,
-  workspaceId,
-}: {
-  chatId: string;
-  workspaceId: string;
-}) {
-  return db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.workspaceId, workspaceId)));
+  return deletedChats.length > 0;
 }
 
 // CHAT MESSAGES
-export async function getChatMessagesByChatId({
-  chatId,
-}: {
-  chatId: string;
-}): Promise<ChatMessage[]> {
-  const chatMessages = await db.query.chatMessage.findMany({
-    where: { chatId },
-    // orderBy: (cm) => [cm.createdAt.asc()],
-  });
-
-  return chatMessages;
-}
-
 export async function createChatMessage(payload: ICreateChatMessage): Promise<ChatMessage> {
   const { chatId, role, parts, metadata } = payload;
   const [createdChatMessage] = await db
@@ -293,23 +265,28 @@ function matchOperator(caseSensitive: boolean) {
  * and `getChatSearchMatches`: one chat_id per matching chat, with the most
  * recent match timestamp (`matched_at`, either a matching message's
  * `created_at` or the chat's own `updated_at` for title-only matches) and
- * whether the title itself matched. Scoped to `workspaceId` throughout, so
+ * whether the title itself matched. Scoped to the author's chats in `workspaceId` throughout, so
  * the message-content half only ever unpacks one workspace's `parts` jsonb,
  * not the whole table (chat_workspaceId_idx backs that join).
  */
-function chatSearchRankedMatchesCte(workspaceId: string, pattern: string, caseSensitive: boolean) {
+function chatSearchRankedMatchesCte(
+  { userId, workspaceId }: ChatScope,
+  pattern: string,
+  caseSensitive: boolean,
+) {
   const operator = matchOperator(caseSensitive);
 
   return sql`
     WITH title_matches AS (
       SELECT ${chat.id} AS chat_id, ${chat.updatedAt} AS matched_at, true AS title_matched
       FROM ${chat}
-      WHERE ${chat.workspaceId} = ${workspaceId} AND ${chat.title} ${operator} ${pattern}
+      WHERE ${chat.userId} = ${userId} AND ${chat.workspaceId} = ${workspaceId}
+        AND ${chat.title} ${operator} ${pattern}
     ), message_matches AS (
       SELECT ${chatMessage.chatId} AS chat_id, MAX(${chatMessage.createdAt}) AS matched_at, false AS title_matched
       FROM ${chatMessage}
       INNER JOIN ${chat} ON ${chat.id} = ${chatMessage.chatId}
-      WHERE ${chat.workspaceId} = ${workspaceId}
+      WHERE ${chat.userId} = ${userId} AND ${chat.workspaceId} = ${workspaceId}
         AND EXISTS (
           SELECT 1 FROM jsonb_array_elements(${chatMessage.parts}) AS part
           WHERE part ->> 'type' = 'text' AND part ->> 'text' ${operator} ${pattern}
@@ -328,18 +305,18 @@ function chatSearchRankedMatchesCte(workspaceId: string, pattern: string, caseSe
 }
 
 export async function getChatSearchMatchCount({
+  userId,
   workspaceId,
   query,
   caseSensitive,
-}: {
-  workspaceId: string;
+}: ChatScope & {
   query: string;
   caseSensitive: boolean;
 }): Promise<number> {
   const pattern = toSearchPattern(query);
 
   const result = await db.execute<{ count: string }>(sql`
-    ${chatSearchRankedMatchesCte(workspaceId, pattern, caseSensitive)}
+    ${chatSearchRankedMatchesCte({ userId, workspaceId }, pattern, caseSensitive)}
     SELECT COUNT(*) AS count FROM ranked_chat_matches
   `);
 
@@ -353,13 +330,13 @@ interface ChatSearchMatch {
 }
 
 async function getChatSearchMatches({
+  userId,
   workspaceId,
   query,
   limit,
   offset,
   caseSensitive,
-}: {
-  workspaceId: string;
+}: ChatScope & {
   query: string;
   limit: number;
   offset: number;
@@ -372,7 +349,7 @@ async function getChatSearchMatches({
     matched_at: Date;
     title_matched: boolean;
   }>(sql`
-    ${chatSearchRankedMatchesCte(workspaceId, pattern, caseSensitive)}
+    ${chatSearchRankedMatchesCte({ userId, workspaceId }, pattern, caseSensitive)}
     SELECT chat_id, matched_at, title_matched
     FROM ranked_chat_matches
     ORDER BY matched_at DESC
@@ -400,25 +377,31 @@ export interface ChatSearchMatchedChat {
 }
 
 /**
- * Paginated, distinct list of a workspace's chats matching `query` by title
+ * Paginated, distinct list of the author's chats in a workspace matching `query` by title
  * or message content, most-recently-matching first. Pairs with
- * `getChatSearchMatchCount` for the response's `totalCount`, mirroring the
- * count/list split `listChatsForWorkspace` already uses.
+ * `getChatSearchMatchCount` for the response's `totalCount`.
  */
 export async function getChatSearchMatchedChats({
+  userId,
   workspaceId,
   query,
   limit,
   offset,
   caseSensitive,
-}: {
-  workspaceId: string;
+}: ChatScope & {
   query: string;
   limit: number;
   offset: number;
   caseSensitive: boolean;
 }): Promise<ChatSearchMatchedChat[]> {
-  const matches = await getChatSearchMatches({ workspaceId, query, limit, offset, caseSensitive });
+  const matches = await getChatSearchMatches({
+    userId,
+    workspaceId,
+    query,
+    limit,
+    offset,
+    caseSensitive,
+  });
   if (matches.length === 0) {
     return [];
   }
@@ -520,11 +503,13 @@ export interface ChatSearchChatMessageSnippet extends ChatSearchMessageSnippet {
  * first match). One query for all chats; chats without matches yield no rows.
  */
 export async function getChatSearchMessageSnippetsForChats({
+  userId,
   chatIds,
   query,
   limit,
   caseSensitive,
 }: {
+  userId: string;
   chatIds: string[];
   query: string;
   limit: number;
@@ -556,11 +541,13 @@ export async function getChatSearchMessageSnippetsForChats({
           part ->> 'text' AS text,
           ${chatMessage.createdAt} AS created_at
         FROM ${chatMessage}
+        INNER JOIN ${chat} ON ${chat.id} = ${chatMessage.chatId}
         CROSS JOIN LATERAL jsonb_array_elements(${chatMessage.parts}) AS part
         WHERE ${chatMessage.chatId} IN (${sql.join(
           chatIds.map((chatId) => sql`${chatId}`),
           sql`, `,
         )})
+          AND ${chat.userId} = ${userId}
           AND part ->> 'type' = 'text'
           AND part ->> 'text' ${operator} ${pattern}
         ORDER BY ${chatMessage.id}
@@ -582,17 +569,19 @@ export async function getChatSearchMessageSnippetsForChats({
 // Copy-on-branch, not a shared message tree: the new chat gets its own rows
 // (new ids/timestamps) for every message up to and including the cutoff, so
 // it is fully independent of the source chat from the moment it's created.
-export async function branchChatByWorkspaceId({
+export async function branchChat({
   chatId,
+  userId,
   workspaceId,
   messageId,
-}: {
+}: ChatScope & {
   chatId: string;
-  workspaceId: string;
   messageId: string;
 }): Promise<Chat | null> {
   return db.transaction(async (tx) => {
-    const sourceChat = await tx.query.chat.findFirst({ where: { id: chatId, workspaceId } });
+    const sourceChat = await tx.query.chat.findFirst({
+      where: { id: chatId, userId, workspaceId },
+    });
     if (!sourceChat) {
       return null;
     }

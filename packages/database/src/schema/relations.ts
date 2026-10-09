@@ -304,7 +304,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.agent.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.agent.workspaceId,
@@ -467,7 +467,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.dataset.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.dataset.workspaceId,
@@ -608,7 +608,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.genImage.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.genImage.workspaceId,
@@ -641,7 +641,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.genVideo.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.genVideo.workspaceId,
@@ -695,7 +695,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.socialPost.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.socialPost.workspaceId,
@@ -720,7 +720,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.workflow.userId,
       to: r.user.id,
-      optional: false,
+      optional: true,
     }),
     workspace: r.one.workspace({
       from: r.workflow.workspaceId,
@@ -734,6 +734,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.workflowRun.workflowId,
       to: r.workflow.id,
       optional: false,
+    }),
+    triggeredByUser: r.one.user({
+      from: r.workflowRun.triggeredByUserId,
+      to: r.user.id,
+      optional: true,
     }),
     steps: r.many.workflowRunStep(),
   },

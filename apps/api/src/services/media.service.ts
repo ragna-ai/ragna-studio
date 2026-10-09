@@ -3,9 +3,9 @@ import {
   createChatAttachment,
   deleteChatAttachmentById,
   getChatAttachmentById,
-  getChatByIdForWorkspace,
-  getMediaById,
-  getMediaByWorkspaceId,
+  getChatById,
+  getMediaVisibleToUser,
+  getMediaVisibleToUserById,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
@@ -20,7 +20,7 @@ import {
   type MediaKind,
   type SniffedMedia,
 } from '@repo/media';
-import { deleteObjects, downloadObjectBuffer } from '@repo/storage';
+import { downloadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -209,20 +209,22 @@ function toChatAttachmentResponse({
   };
 }
 
-/** Loads a chat scoped to its workspace, throwing if it doesn't exist there.
+/** Loads a chat scoped to its author and workspace, throwing if it isn't theirs.
  * Mirrors chat.service.ts's `getChatForWorkspace` ownership check; kept
  * local since importing chat.service.ts here would create a circular
  * dependency (chat.service.ts calls into this file for attachment cleanup
  * and model-message resolution). */
 async function loadOwnedChat({
+  userId,
   workspaceId,
   chatId,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
 }): Promise<{ id: string }> {
   const { error, data: chatRecord } = await tryCatch(() =>
-    getChatByIdForWorkspace({ chatId, workspaceId }),
+    getChatById({ chatId, userId, workspaceId }),
   );
 
   if (error !== null) {
@@ -248,15 +250,17 @@ export interface UploadChatAttachmentsResponse {
  * nothing is stored (mirrors uploadAgentContextDocuments).
  */
 export async function uploadChatAttachments({
+  userId,
   workspaceId,
   chatId,
   files,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
   files: File[];
 }): Promise<UploadChatAttachmentsResponse> {
-  await loadOwnedChat({ workspaceId, chatId });
+  await loadOwnedChat({ userId, workspaceId, chatId });
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
@@ -323,15 +327,17 @@ export async function uploadChatAttachments({
  * to the workspace before touching anything.
  */
 export async function removeChatAttachment({
+  userId,
   workspaceId,
   chatId,
   attachmentId,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
   attachmentId: string;
 }): Promise<void> {
-  await loadOwnedChat({ workspaceId, chatId });
+  await loadOwnedChat({ userId, workspaceId, chatId });
 
   const { error, data: attachment } = await tryCatch(() =>
     getChatAttachmentById({ id: attachmentId }),
@@ -360,51 +366,6 @@ export async function removeChatAttachment({
   }
 
   await deleteMediaIfUnreferenced({ mediaId: attachment.mediaId });
-}
-
-/**
- * Deletes the R2 objects for every media row owned by a workspace. Called by
- * workspace.service.ts's `deleteWorkspaceForUser()` right before the
- * workspace row is deleted: the FK cascade wipes the media rows for free,
- * but never touches R2, so the objects would orphan invisibly otherwise.
- * Unconditional (no refcount check): every owning row is about to be
- * cascade-deleted along with the workspace, so @repo/media's per-row
- * `deleteMediaIfUnreferenced` doesn't fit here.
- */
-export async function deleteWorkspaceMediaObjects({
-  workspaceId,
-}: {
-  workspaceId: string;
-}): Promise<void> {
-  const { error, data: mediaRows } = await tryCatch(() => getMediaByWorkspaceId({ workspaceId }));
-
-  if (error !== null || !mediaRows) {
-    logger.error(`Failed to load media for workspace ${workspaceId}`, error);
-    return;
-  }
-
-  const storageKeysByBucket: Record<string, string[]> = {};
-  for (const { bucket, storageKey } of mediaRows) {
-    (storageKeysByBucket[bucket] ??= []).push(storageKey);
-  }
-
-  for (const bucket of Object.keys(storageKeysByBucket)) {
-    const storageKeys = storageKeysByBucket[bucket];
-    const { error: deleteError, data } = await tryCatch(() => deleteObjects(bucket, storageKeys));
-
-    if (deleteError !== null) {
-      logger.error('Failed to delete media objects from R2', {
-        error: deleteError,
-        bucket,
-        storageKeys,
-      });
-      continue;
-    }
-
-    if (data && data.errors.length > 0) {
-      logger.error('Failed to delete some media objects from R2', { bucket, keys: data.errors });
-    }
-  }
 }
 
 // IMAGE INPUT UPLOAD
@@ -477,11 +438,15 @@ export interface MediaListItem {
  * size, same reasoning as task.service.ts's listTasksForWorkspace.
  */
 export async function listMediaForWorkspace({
+  userId,
   workspaceId,
 }: {
+  userId: string;
   workspaceId: string;
 }): Promise<MediaListItem[]> {
-  const { error, data: mediaRows } = await tryCatch(() => getMediaByWorkspaceId({ workspaceId }));
+  const { error, data: mediaRows } = await tryCatch(() =>
+    getMediaVisibleToUser({ workspaceId, userId }),
+  );
 
   if (error !== null || !mediaRows) {
     logger.error(`Failed to list media for workspace ${workspaceId}`, error);
@@ -503,16 +468,21 @@ export async function listMediaForWorkspace({
 
 /**
  * Loads a media row guarded by workspace ownership, throwing 404 if it
- * doesn't exist or belongs to a different workspace.
+ * doesn't exist, belongs to a different workspace, or is only referenced by
+ * a colleague's chat attachment.
  */
 export async function getDownloadableMedia({
+  userId,
   workspaceId,
   mediaId,
 }: {
+  userId: string;
   workspaceId: string;
   mediaId: string;
 }): Promise<Media> {
-  const { error, data: mediaRow } = await tryCatch(() => getMediaById({ id: mediaId }));
+  const { error, data: mediaRow } = await tryCatch(() =>
+    getMediaVisibleToUserById({ id: mediaId, userId }),
+  );
 
   if (error !== null) {
     logger.error(`Failed to load media ${mediaId}`, error);
@@ -533,13 +503,15 @@ export async function getDownloadableMedia({
  * gen-video frames).
  */
 export async function getOwnedImageMedia({
+  userId,
   workspaceId,
   mediaId,
 }: {
+  userId: string;
   workspaceId: string;
   mediaId: string;
 }): Promise<Media> {
-  const mediaRow = await getDownloadableMedia({ workspaceId, mediaId });
+  const mediaRow = await getDownloadableMedia({ userId, workspaceId, mediaId });
   const imageMimeTypes = IMAGE_KINDS.map((kind) => MIME_TYPE_BY_MEDIA_KIND[kind]);
 
   if (!imageMimeTypes.includes(mediaRow.mimeType)) {
@@ -563,13 +535,15 @@ export interface MediaDownloadFile {
  * route, but documents (the private bucket) only have this route.
  */
 export async function downloadMedia({
+  userId,
   workspaceId,
   mediaId,
 }: {
+  userId: string;
   workspaceId: string;
   mediaId: string;
 }): Promise<MediaDownloadFile> {
-  const mediaRow = await getDownloadableMedia({ workspaceId, mediaId });
+  const mediaRow = await getDownloadableMedia({ userId, workspaceId, mediaId });
 
   const { error, data: object } = await tryCatch(() =>
     downloadObjectBuffer(mediaRow.bucket, mediaRow.storageKey),

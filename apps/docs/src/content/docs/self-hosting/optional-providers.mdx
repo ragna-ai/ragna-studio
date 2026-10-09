@@ -12,7 +12,7 @@ Each provider is enabled by its own env vars. The [environment variables](/refer
 - A SerpAPI key for web search
 - Google or Microsoft OAuth with mail scopes for the email client
 - A LinkedIn app for publishing drafts
-- SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`). Only the verify and welcome emails need it.
+- SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`). The verify, welcome and invitation emails need it. Without SMTP, invitations still work: the invite link shown in the org settings can be shared by hand.
 - An email allowlist (`ALLOWED_LOGIN_EMAILS`), see [Restricting sign-up](/self-hosting/configuration#restricting-sign-up)
 
 Stripe and credits are off by default (`CREDITS_ENABLED="false"`).

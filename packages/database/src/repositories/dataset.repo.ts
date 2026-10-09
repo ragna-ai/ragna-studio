@@ -204,20 +204,17 @@ export async function getAllDatasetsByWorkspaceId({
  * LLM-style query like "cake plan" matches "Cake Baking Plan".
  */
 export async function findDatasetsForAgent({
-  userId,
   workspaceId,
   query,
 }: {
-  userId: string;
-  workspaceId?: string | null;
+  workspaceId: string;
   query?: string;
 }): Promise<Dataset[]> {
   const searchTerms = query?.split(/\s+/).filter((term) => term.length > 0) ?? [];
 
   return db.query.dataset.findMany({
     where: {
-      userId,
-      workspaceId: workspaceId ?? undefined,
+      workspaceId,
       ...(searchTerms.length > 0
         ? {
             AND: searchTerms.map((term) => ({
@@ -419,12 +416,12 @@ export async function getDatasetRowById({
  */
 export async function createDatasetRow({
   datasetId,
-  userId,
+  workspaceId,
   data,
   writtenBy = 'user',
 }: {
   datasetId: string;
-  userId: string;
+  workspaceId: string;
   data: DatasetRowData;
   writtenBy?: DatasetRowWriter;
 }): Promise<DatasetRow> {
@@ -432,7 +429,7 @@ export async function createDatasetRow({
     const [lockedDataset] = await tx
       .select()
       .from(dataset)
-      .where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)))
+      .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
       .for('update');
 
     if (!lockedDataset) {
@@ -487,13 +484,13 @@ export async function createDatasetRow({
  */
 export async function moveDatasetRow({
   datasetId,
-  userId,
+  workspaceId,
   rowId,
   afterRowId,
   writtenBy = 'user',
 }: {
   datasetId: string;
-  userId: string;
+  workspaceId: string;
   rowId: string;
   afterRowId?: string | null;
   writtenBy?: DatasetRowWriter;
@@ -502,7 +499,7 @@ export async function moveDatasetRow({
     const [lockedDataset] = await tx
       .select()
       .from(dataset)
-      .where(and(eq(dataset.id, datasetId), eq(dataset.userId, userId)))
+      .where(and(eq(dataset.id, datasetId), eq(dataset.workspaceId, workspaceId)))
       .for('update');
 
     if (!lockedDataset) {

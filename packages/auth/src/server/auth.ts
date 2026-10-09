@@ -5,12 +5,21 @@ import { config } from '@repo/config';
 import {
   createOrganizationForUser,
   db,
-  deleteOrganizationsSolelyOwnedByUser,
   getOrganizationIdByUserId,
+  joinOrganizationFromPendingInvitation,
+  MEMBER_REMOVED_BAN_REASON,
+  ORGANIZATION_DELETED_BAN_REASON,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
+import {
+  enqueueInvitationEmail,
+  rejectInvitingRemovedMember,
+  rejectOwnerRoleChange,
+  validateInvitation,
+} from './organization-invitations';
+import { prepareUserRemoval } from './organization-removal';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
@@ -38,6 +47,18 @@ const DEFAULT_LINKEDIN_SCOPES = ['openid', 'profile', 'email', 'w_member_social'
 //     .sign(privateKey);
 // }
 
+const DEFAULT_BANNED_MESSAGE =
+  'You have been banned from this application. Please contact support if you believe this is an error.';
+
+const BANNED_MESSAGES: Record<string, string> = {
+  [MEMBER_REMOVED_BAN_REASON]: 'You were removed from your organization.',
+  [ORGANIZATION_DELETED_BAN_REASON]: 'Your organization is scheduled for deletion.',
+};
+
+function bannedUserMessageFor({ banReason }: { banReason?: string | null }): string {
+  return (banReason ? BANNED_MESSAGES[banReason] : undefined) ?? DEFAULT_BANNED_MESSAGE;
+}
+
 export const auth = betterAuth({
   // testUtils has no HTTP routes; it only adds ctx.test, the seam
   // packages/testing/src/auth/auth-seed.ts uses to mint session cookies for
@@ -45,12 +66,16 @@ export const auth = betterAuth({
   // tests can't sign up through the API). Gated on NODE_ENV so it's absent
   // in dev and production.
   plugins: [
-    admin(),
+    admin({ bannedUserMessage: bannedUserMessageFor }),
     lastLoginMethod(),
     organization({
       allowUserToCreateOrganization: false,
       disableOrganizationDeletion: true,
-      invitationLimit: 0,
+      sendInvitationEmail: enqueueInvitationEmail,
+      organizationHooks: {
+        beforeCreateInvitation: validateInvitation,
+        beforeUpdateMemberRole: rejectOwnerRoleChange,
+      },
     }),
     ...(config.isTest ? [testUtils()] : []),
     ...(config.mcpEnabled
@@ -73,6 +98,11 @@ export const auth = betterAuth({
           }),
         ]
       : []),
+  ],
+  disabledPaths: [
+    '/organization/accept-invitation',
+    '/organization/leave',
+    '/organization/remove-member',
   ],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
@@ -113,7 +143,7 @@ export const auth = betterAuth({
     // }),
   },
   // MIDDLEWARE
-  hooks: {},
+  hooks: { before: rejectInvitingRemovedMember },
   user: {
     // Runs on every sign-up, account link, and OAuth sign-in (with the fresh
     // provider email each time), so removing an email from the allowlist
@@ -142,9 +172,15 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // Every user owns an organization with a workspace: workspaceId is
-          // a required container.
-          await createOrganizationForUser({ userId: user.id, userName: user.name });
+          // Everyone belongs to exactly one organization with a workspace
+          // (workspaceId is a required container): the inviting one, or their own.
+          const joinedInvitingOrganization = await joinOrganizationFromPendingInvitation({
+            userId: user.id,
+            email: user.email,
+          });
+          if (!joinedInvitingOrganization) {
+            await createOrganizationForUser({ userId: user.id, userName: user.name });
+          }
 
           // Integration tests seed users through this same hook (see
           // packages/testing/src/auth/auth-seed.ts), which would otherwise
@@ -165,7 +201,7 @@ export const auth = betterAuth({
       },
       delete: {
         before: async (user) => {
-          await deleteOrganizationsSolelyOwnedByUser({ userId: user.id });
+          await prepareUserRemoval({ userId: user.id });
         },
       },
     },

@@ -73,6 +73,7 @@ work first, shipped reference and dead/historical docs last.
 | [Unified media service + anydoc extraction (PRD)](./media-library/unified-media-prd.md) | implemented (merged via PR #16, `feat: unified media service (@repo/media) + anydoc extraction`, 2026-08-04) |
 | [Notifications](./notifications/notifications.md) | implemented (delivery by polling) |
 | [Organizations v1: the org owns workspaces](./organizations/prd.md) | implemented (PR #94, 2026-10-09) |
+| [Organizations v2: members, invites, org settings](./organizations/v2-prd.md) | implemented (PR #95, 2026-10-09) |
 | [Security response headers](./security/headers.md) | implemented (2026-09-21) |
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |

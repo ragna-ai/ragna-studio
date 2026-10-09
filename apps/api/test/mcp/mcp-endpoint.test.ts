@@ -261,7 +261,11 @@ describe('POST /mcp: tools/call', () => {
       name: 'Not yours',
       columns: [],
     });
-    await createDatasetRow({ datasetId: foreignDataset.id, userId: other.userId, data: {} });
+    await createDatasetRow({
+      datasetId: foreignDataset.id,
+      workspaceId: other.workspaceId,
+      data: {},
+    });
 
     const response = await callTool(token, 'datasetListRows', { datasetId: foreignDataset.id });
     const body = (await response.json()) as {
@@ -291,7 +295,7 @@ describe('POST /mcp: tools/call', () => {
     });
     const siblingRow = await createDatasetRow({
       datasetId: siblingDataset.id,
-      userId,
+      workspaceId: otherWorkspace.id,
       data: { status: 'todo' },
     });
 

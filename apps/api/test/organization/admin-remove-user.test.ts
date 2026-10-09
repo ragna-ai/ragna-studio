@@ -1,0 +1,131 @@
+import { createMedia, db, sql } from '@repo/database';
+import { user as userTable } from '@repo/database/schema';
+import { PURGE_ORGANIZATION_JOB, purgeOrganizationJobSchema } from '@repo/queue';
+import { purgeOrganization } from '@repo/media';
+import {
+  deleteObjectsMock,
+  queueAddMock,
+  resetQueueMock,
+  resetStorageProviderMock,
+  seedAuthenticatedUser,
+  seedOrganizationMember,
+  truncateAllTables,
+} from '@repo/testing';
+import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
+import * as z from 'zod';
+import { app } from '../../src/app';
+import { activeOrganizationId } from './invitation-fixtures';
+import { organizationRequest } from './member-fixtures';
+
+const errorBodySchema = z.object({ message: z.string() });
+
+beforeEach(async () => {
+  await truncateAllTables();
+  resetQueueMock();
+  resetStorageProviderMock();
+});
+
+async function removeUserAsPlatformAdmin(userId: string) {
+  const platformAdmin = await seedAuthenticatedUser();
+  await db
+    .update(userTable)
+    .set({ role: 'admin' })
+    .where(sql`${userTable.id} = ${platformAdmin.userId}`);
+  return app.request('/auth/admin/remove-user', {
+    method: 'POST',
+    headers: { cookie: platformAdmin.cookieHeader, 'content-type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+}
+
+async function seedOwnerWithColleague() {
+  const owner = await seedAuthenticatedUser();
+  const organizationId = await activeOrganizationId(owner.cookieHeader);
+  const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+  return { owner, colleague, organizationId };
+}
+
+describe('platform admin remove-user', () => {
+  test('is blocked while the user owns an organization with active members', async () => {
+    const { owner, organizationId } = await seedOwnerWithColleague();
+
+    const response = await removeUserAsPlatformAdmin(owner.userId);
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(errorBodySchema.parse(await response.json()).message).toBe(
+      'Transfer ownership or delete the organization first.',
+    );
+    expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeDefined();
+    const org = await db.query.organization.findFirst({ where: { id: organizationId } });
+    expect(org?.deletedAt).toBeNull();
+    expect(queueAddMock).not.toHaveBeenCalled();
+  });
+
+  test('a sole owner marks the organization deleted and enqueues the purge job', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await activeOrganizationId(owner.cookieHeader);
+
+    const response = await removeUserAsPlatformAdmin(owner.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeUndefined();
+    const org = await db.query.organization.findFirst({ where: { id: organizationId } });
+    expect(org?.deletedAt).toBeInstanceOf(Date);
+    const purgeCalls = queueAddMock.mock.calls.filter(([name]) => name === PURGE_ORGANIZATION_JOB);
+    expect(purgeCalls).toHaveLength(1);
+    expect(purgeOrganizationJobSchema.parse(purgeCalls[0]?.[1])).toEqual({ organizationId });
+  });
+
+  test('running the enqueued job removes the organization, workspaces and R2 objects', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await activeOrganizationId(owner.cookieHeader);
+    const storageKey = `org/${organizationId}/file.pdf`;
+    await createMedia({
+      ownerWorkspaceId: owner.workspaceId,
+      bucket: 'documents-bucket',
+      storageKey,
+      filename: 'file.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    await removeUserAsPlatformAdmin(owner.userId);
+
+    await purgeOrganization({ organizationId });
+
+    expect(
+      await db.query.organization.findFirst({ where: { id: organizationId } }),
+    ).toBeUndefined();
+    expect(
+      await db.query.workspace.findFirst({ where: { id: owner.workspaceId } }),
+    ).toBeUndefined();
+    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
+  });
+
+  test('already removed members do not block a sole owner', async () => {
+    const { owner, colleague, organizationId } = await seedOwnerWithColleague();
+    const memberRow = await db.query.member.findFirst({ where: { userId: colleague.userId } });
+    await organizationRequest(owner.cookieHeader, 'DELETE', `/members/${memberRow?.id}`);
+
+    const response = await removeUserAsPlatformAdmin(owner.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const org = await db.query.organization.findFirst({ where: { id: organizationId } });
+    expect(org?.deletedAt).toBeInstanceOf(Date);
+  });
+
+  test('a plain member is removed without touching the organization', async () => {
+    const { colleague, organizationId } = await seedOwnerWithColleague();
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+    const org = await db.query.organization.findFirst({ where: { id: organizationId } });
+    expect(org?.deletedAt).toBeNull();
+    expect(
+      queueAddMock.mock.calls.filter(([name]) => name === PURGE_ORGANIZATION_JOB),
+    ).toHaveLength(0);
+  });
+});

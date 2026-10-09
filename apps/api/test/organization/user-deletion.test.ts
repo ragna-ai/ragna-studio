@@ -1,6 +1,12 @@
 import { db } from '@repo/database';
-import { creditAccount, member } from '@repo/database/schema';
-import { deleteSeededUser, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import { creditAccount } from '@repo/database/schema';
+import { purgeOrganization } from '@repo/media';
+import {
+  deleteSeededUser,
+  seedAuthenticatedUser,
+  seedOrganizationMember,
+  truncateAllTables,
+} from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 beforeEach(async () => {
@@ -13,13 +19,16 @@ async function organizationIdOf(userId: string): Promise<string> {
 }
 
 describe('user deletion', () => {
-  test('removes the sole-owned organization, its workspaces and credit account', async () => {
+  test('a sole owner leaves the organization deleted until the purge removes it', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     const organizationId = await organizationIdOf(userId);
     await db.insert(creditAccount).values({ organizationId });
 
     await deleteSeededUser({ userId });
+    const markedDeleted = await db.query.organization.findFirst({ where: { id: organizationId } });
+    await purgeOrganization({ organizationId });
 
+    expect(markedDeleted?.deletedAt).toBeInstanceOf(Date);
     expect(
       await db.query.organization.findFirst({ where: { id: organizationId } }),
     ).toBeUndefined();
@@ -28,19 +37,17 @@ describe('user deletion', () => {
     expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
   });
 
-  test('keeps an organization that still has another owner', async () => {
+  test('is blocked while the organization has other active members', async () => {
     const owner = await seedAuthenticatedUser();
-    const coOwner = await seedAuthenticatedUser();
     const organizationId = await organizationIdOf(owner.userId);
-    await db.insert(member).values({
-      organizationId,
-      userId: coOwner.userId,
-      role: 'owner',
-      createdAt: new Date(),
-    });
+    await seedOrganizationMember({ organizationId, role: 'member' });
 
-    await deleteSeededUser({ userId: owner.userId });
+    await expect(deleteSeededUser({ userId: owner.userId })).rejects.toThrow(
+      'Transfer ownership or delete the organization first.',
+    );
 
-    expect(await db.query.organization.findFirst({ where: { id: organizationId } })).toBeDefined();
+    expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeDefined();
+    const org = await db.query.organization.findFirst({ where: { id: organizationId } });
+    expect(org?.deletedAt).toBeNull();
   });
 });

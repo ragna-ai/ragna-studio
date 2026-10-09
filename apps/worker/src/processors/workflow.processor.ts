@@ -111,7 +111,12 @@ async function notifyRunFinished({ runId }: { runId: string }): Promise<void> {
       return;
     }
 
-    const { userId } = run.workflow;
+    const userId = run.triggeredByUserId;
+    if (!userId) {
+      logger.info(`Workflow run ${runId} has no user, skipping notification`);
+      return;
+    }
+
     const data = {
       workflowId: run.workflowId,
       runId: run.id,

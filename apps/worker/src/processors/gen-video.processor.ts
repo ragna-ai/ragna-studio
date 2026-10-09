@@ -84,6 +84,11 @@ async function notifyBestEffort({
       return;
     }
 
+    if (!record.userId) {
+      logger.info(`Gen video ${genVideoId} has no author, skipping notification`);
+      return;
+    }
+
     await enqueueNotification({
       userId: record.userId,
       type,

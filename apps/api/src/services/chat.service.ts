@@ -18,21 +18,20 @@ import {
 } from '@repo/ai';
 import type { Chat, ChatSearchMessageSnippet, Media } from '@repo/database';
 import {
-  branchChatByWorkspaceId,
+  branchChat,
   createChat,
-  deleteChatByWorkspaceId,
+  deleteChat,
   getChatAttachmentsByChatId,
+  getChatById,
   getChatByIdForUser,
-  getChatByIdForWorkspace,
-  getChatCountByWorkspaceId,
+  getChatCount,
+  getChats,
   getChatSearchMatchCount,
   getChatSearchMatchedChats,
   getChatSearchMessageSnippetsForChats,
-  getChatsByWorkspaceId,
-  getOrCreateDefaultAgentForUser,
+  getOrCreateDefaultAgentForWorkspace,
   settleCreditUsage,
-  updateChatTitleById,
-  updateChatTitleByWorkspaceId,
+  updateChatTitle,
   upsertChatMessages,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -51,10 +50,9 @@ import { assertCanSpend } from './credit.service';
 // CHAT CRUD
 //
 // Every function below is called after the workspace guard has already
-// verified the caller owns `:workspaceId`; access is scoped by workspaceId,
-// never by userId. `userId` is only stamped on create as authorship
-// metadata. This is distinct from the streaming pipeline further down,
-// which predates the guard and still checks ownership via userId.
+// verified the caller belongs to `:workspaceId`. Chats are private to their
+// author, so access is scoped by userId and workspaceId together. The
+// streaming pipeline further down has no workspace id and checks userId.
 
 export interface ChatSummaryResponse {
   id: string;
@@ -82,14 +80,16 @@ export interface ChatListResponse {
 
 /**
  * [GET] /workspace/:workspaceId/chat
- * Lists a workspace's chats, paginated and sorted by createdAt.
+ * Lists the caller's chats in a workspace, paginated and sorted by createdAt.
  */
 export async function listChatsForWorkspace({
+  userId,
   workspaceId,
   page,
   limit,
   sort,
 }: {
+  userId: string;
   workspaceId: string;
   page: number;
   limit: number;
@@ -98,7 +98,7 @@ export async function listChatsForWorkspace({
   const offset = (page - 1) * limit;
 
   const { error: countError, data: totalCount } = await tryCatch(() =>
-    getChatCountByWorkspaceId({ workspaceId }),
+    getChatCount({ userId, workspaceId }),
   );
 
   if (countError !== null || totalCount === null) {
@@ -107,7 +107,7 @@ export async function listChatsForWorkspace({
   }
 
   const { error, data: chats } = await tryCatch(() =>
-    getChatsByWorkspaceId({ workspaceId, limit, offset, sort }),
+    getChats({ userId, workspaceId, limit, offset, sort }),
   );
 
   if (error !== null || !chats) {
@@ -163,12 +163,13 @@ export interface ChatSearchResponse {
 
 /**
  * [GET] /workspace/:workspaceId/chat/search
- * Substring search (pg_trgm) across a workspace's chats: matches by title or
+ * Substring search (pg_trgm) across the caller's chats in a workspace: matches by title or
  * by message content. Results are one row per
  * matching chat, most-recently-matching first; each row carries up to
  * `snippetsPerChat` highlighted message excerpts, most recent first.
  */
 export async function searchChatsForWorkspace({
+  userId,
   workspaceId,
   q,
   page,
@@ -176,6 +177,7 @@ export async function searchChatsForWorkspace({
   snippetsPerChat,
   caseSensitive,
 }: {
+  userId: string;
   workspaceId: string;
   q: string;
   page: number;
@@ -186,7 +188,7 @@ export async function searchChatsForWorkspace({
   const offset = (page - 1) * limit;
 
   const { error: countError, data: totalCount } = await tryCatch(() =>
-    getChatSearchMatchCount({ workspaceId, query: q, caseSensitive }),
+    getChatSearchMatchCount({ userId, workspaceId, query: q, caseSensitive }),
   );
 
   if (countError !== null || totalCount === null) {
@@ -195,7 +197,7 @@ export async function searchChatsForWorkspace({
   }
 
   const { error, data: matchedChats } = await tryCatch(() =>
-    getChatSearchMatchedChats({ workspaceId, query: q, limit, offset, caseSensitive }),
+    getChatSearchMatchedChats({ userId, workspaceId, query: q, limit, offset, caseSensitive }),
   );
 
   if (error !== null || !matchedChats) {
@@ -205,6 +207,7 @@ export async function searchChatsForWorkspace({
 
   const { error: snippetsError, data: snippetRows } = await tryCatch(() =>
     getChatSearchMessageSnippetsForChats({
+      userId,
       chatIds: matchedChats.map((matchedChat) => matchedChat.id),
       query: q,
       limit: snippetsPerChat,
@@ -274,14 +277,16 @@ export interface ChatDetailResponse {
  * [GET] /workspace/:workspaceId/chat/:chatId
  */
 export async function getChatForWorkspace({
+  userId,
   workspaceId,
   chatId,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
 }): Promise<ChatDetailResponse> {
   const { error, data: chatRecord } = await tryCatch(() =>
-    getChatByIdForWorkspace({ chatId, workspaceId }),
+    getChatById({ chatId, userId, workspaceId }),
   );
 
   if (error !== null) {
@@ -328,11 +333,11 @@ async function resolveDefaultAgentId({
   userId: string;
 }): Promise<string> {
   const { error, data: agent } = await tryCatch(() =>
-    getOrCreateDefaultAgentForUser({ userId, workspaceId }),
+    getOrCreateDefaultAgentForWorkspace({ userId, workspaceId }),
   );
 
   if (error !== null || !agent) {
-    logger.error(`Error fetching default agent for user ${userId}`, error);
+    logger.error(`Error fetching default agent for workspace ${workspaceId}`, error);
     throw new InternalServerErrorException('Failed to fetch default agent');
   }
 
@@ -377,16 +382,18 @@ export async function createChatForWorkspace({
  * chat. The source chat is never modified.
  */
 export async function branchChatForWorkspace({
+  userId,
   workspaceId,
   chatId,
   messageId,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
   messageId: string;
 }): Promise<Chat> {
   const { error, data: branchedChat } = await tryCatch(() =>
-    branchChatByWorkspaceId({ chatId, workspaceId, messageId }),
+    branchChat({ chatId, userId, workspaceId, messageId }),
   );
 
   if (error !== null) {
@@ -405,16 +412,18 @@ export async function branchChatForWorkspace({
  * [PATCH] /workspace/:workspaceId/chat/:chatId
  */
 export async function renameChatForWorkspace({
+  userId,
   workspaceId,
   chatId,
   title,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
   title: string;
 }): Promise<Chat> {
   const { error, data: chatRecord } = await tryCatch(() =>
-    updateChatTitleByWorkspaceId({ chatId, workspaceId, title }),
+    updateChatTitle({ chatId, userId, workspaceId, title }),
   );
 
   if (error !== null) {
@@ -436,9 +445,11 @@ export async function renameChatForWorkspace({
  * afterwards.
  */
 export async function deleteChatForWorkspace({
+  userId,
   workspaceId,
   chatId,
 }: {
+  userId: string;
   workspaceId: string;
   chatId: string;
 }): Promise<void> {
@@ -450,11 +461,17 @@ export async function deleteChatForWorkspace({
     logger.error(`Failed to load attachments for chat ${chatId} before delete`, attachmentsError);
   }
 
-  const { error } = await tryCatch(() => deleteChatByWorkspaceId({ chatId, workspaceId }));
+  const { error, data: deleted } = await tryCatch(() =>
+    deleteChat({ chatId, userId, workspaceId }),
+  );
 
   if (error !== null) {
     logger.error(`Error deleting chat ${chatId}`, error);
     throw new InternalServerErrorException('Failed to delete chat');
+  }
+
+  if (!deleted) {
+    throw new NotFoundException('Chat not found');
   }
 
   const mediaIds = new Set((attachments ?? []).map((attachment) => attachment.mediaId));
@@ -780,7 +797,12 @@ export async function runChatStream(
         // Handle title generation in parallel
         if (titlePromise) {
           titlePromise.then((title) => {
-            updateChatTitleById({ chatId: userChat.id, userId, title });
+            updateChatTitle({
+              chatId: userChat.id,
+              userId,
+              workspaceId: userChat.workspaceId,
+              title,
+            });
             dataStream.write({
               type: 'data-chatTitle',
               data: { title },

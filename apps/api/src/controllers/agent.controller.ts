@@ -84,7 +84,6 @@ export const agentController = new Hono()
    * Partial update. Never moves the agent to another workspace.
    */
   .patch('/:agentId', validAgentIdParam, validUpdateAgentBody, async (c) => {
-    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
@@ -92,7 +91,6 @@ export const agentController = new Hono()
     const agent = await updateAgentForWorkspace({
       workspaceId: workspace.id,
       agentId: param.agentId,
-      userId: user.id,
       name: body.name,
       description: body.description,
       aiModelId: body.aiModelId,

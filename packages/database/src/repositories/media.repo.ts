@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt, or } from 'drizzle-orm';
+import { and, eq, exists, isNull, lt, ne, not, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   ChatAttachment,
@@ -8,6 +8,7 @@ import type {
   NewMedia,
 } from '../schema';
 import {
+  chat,
   chatAttachment,
   genImage,
   genImageReference,
@@ -56,6 +57,77 @@ export async function getMediaByWorkspaceId({
   workspaceId: string;
 }): Promise<Media[]> {
   return db.query.media.findMany({ where: { ownerWorkspaceId: workspaceId } });
+}
+
+/**
+ * Media only a chat attachment of someone else's chat references is private
+ * to that chat's author: hidden unless the user also attached it to one of
+ * their own chats or any other feature references it.
+ */
+function mediaVisibleToUser(userId: string): SQL {
+  const chatAttachmentOf = (authorFilter: SQL) =>
+    db
+      .select({ id: chatAttachment.id })
+      .from(chatAttachment)
+      .innerJoin(chat, eq(chat.id, chatAttachment.chatId))
+      .where(and(eq(chatAttachment.mediaId, media.id), authorFilter));
+  const referencedOutsideChats = [
+    db
+      .select({ id: taskAttachment.id })
+      .from(taskAttachment)
+      .where(eq(taskAttachment.mediaId, media.id)),
+    db.select({ id: genImage.id }).from(genImage).where(eq(genImage.mediaId, media.id)),
+    db
+      .select({ id: genImageReference.id })
+      .from(genImageReference)
+      .where(eq(genImageReference.mediaId, media.id)),
+    db
+      .select({ id: genVideo.id })
+      .from(genVideo)
+      .where(or(eq(genVideo.mediaId, media.id), eq(genVideo.frameMediaId, media.id))),
+    db
+      .select({ id: socialPostMedia.id })
+      .from(socialPostMedia)
+      .where(eq(socialPostMedia.mediaId, media.id)),
+  ];
+
+  const hiddenFromUser = and(
+    exists(chatAttachmentOf(ne(chat.userId, userId))),
+    not(exists(chatAttachmentOf(eq(chat.userId, userId)))),
+    ...referencedOutsideChats.map((reference) => not(exists(reference))),
+  );
+
+  return not(hiddenFromUser ?? sql`false`);
+}
+
+/** The workspace's media the user may see, in one query. */
+export async function getMediaVisibleToUser({
+  workspaceId,
+  userId,
+}: {
+  workspaceId: string;
+  userId: string;
+}): Promise<Media[]> {
+  return db
+    .select()
+    .from(media)
+    .where(and(eq(media.ownerWorkspaceId, workspaceId), mediaVisibleToUser(userId)));
+}
+
+export async function getMediaVisibleToUserById({
+  id,
+  userId,
+}: {
+  id: string;
+  userId: string;
+}): Promise<Media | null> {
+  const [found] = await db
+    .select()
+    .from(media)
+    .where(and(eq(media.id, id), mediaVisibleToUser(userId)))
+    .limit(1);
+
+  return found ?? null;
 }
 
 // Number of rows still pointing at this media, across every link point in

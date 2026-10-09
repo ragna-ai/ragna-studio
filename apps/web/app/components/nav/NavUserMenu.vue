@@ -5,6 +5,7 @@ import {
   CoinsIcon,
   LogOutIcon,
   PlugIcon,
+  UsersIcon,
   SettingsIcon,
   SparklesIcon,
   UserIcon,
@@ -144,6 +145,12 @@ async function signOut() {
           <NuxtLink to="/settings/mcp">
             <PlugIcon class="mr-2 size-4 stroke-1.5" />
             {{ $t('nav.userMenu.mcp') }}
+          </NuxtLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
+          <NuxtLink to="/settings/organization">
+            <UsersIcon class="mr-2 size-4 stroke-1.5" />
+            {{ $t('nav.userMenu.organization') }}
           </NuxtLink>
         </DropdownMenuItem>
       </DropdownMenuGroup>

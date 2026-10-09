@@ -119,9 +119,11 @@ export async function listGenVideos({
  */
 async function resolveFrame({
   frame,
+  userId,
   workspaceId,
 }: {
   frame?: GenVideoFrameInput;
+  userId: string;
   workspaceId: string;
 }): Promise<{ frameOrigin?: GenVideoFrameOrigin; frameMediaId?: string }> {
   if (!frame) {
@@ -129,7 +131,7 @@ async function resolveFrame({
   }
 
   if (frame.origin === 'upload') {
-    const mediaRow = await getOwnedImageMedia({ workspaceId, mediaId: frame.mediaId });
+    const mediaRow = await getOwnedImageMedia({ userId, workspaceId, mediaId: frame.mediaId });
     return { frameOrigin: 'upload', frameMediaId: mediaRow.id };
   }
 
@@ -198,7 +200,7 @@ export async function generateVideoForWorkspace({
     visibleWatermark,
   } = input;
 
-  const { frameOrigin, frameMediaId } = await resolveFrame({ frame, workspaceId });
+  const { frameOrigin, frameMediaId } = await resolveFrame({ frame, userId, workspaceId });
 
   const { error, data: created } = await tryCatch(() =>
     requestGenVideo({

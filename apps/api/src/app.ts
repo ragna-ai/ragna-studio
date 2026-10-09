@@ -3,6 +3,7 @@ import { logger } from '@repo/logger';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { ORGANIZATION_DELETED_CODE, OrganizationDeletedException } from './exceptions';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { agentContextDocumentController } from './controllers/agent-context-document.controller';
@@ -19,6 +20,7 @@ import { mcpSettingsController } from './controllers/mcp-settings.controller';
 import { mcpController } from './controllers/mcp.controller';
 import { mediaController } from './controllers/media.controller';
 import { notificationController } from './controllers/notification.controller';
+import { organizationController } from './controllers/organization.controller';
 import { overviewController } from './controllers/overview.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { taskLabelController } from './controllers/task-label.controller';
@@ -55,6 +57,7 @@ export const app = new Hono()
   .route('/', userController)
   .route('/', chatController)
   .route('/', creditController)
+  .route('/', organizationController)
   .route('/', agentController)
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)
@@ -80,7 +83,8 @@ export const app = new Hono()
     if (err instanceof HTTPException) {
       return c.json(
         {
-          code: err.status,
+          code:
+            err instanceof OrganizationDeletedException ? ORGANIZATION_DELETED_CODE : err.status,
           error: err.message,
         },
         err.status,

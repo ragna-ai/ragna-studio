@@ -1,7 +1,7 @@
 // file: channel.service.ts
 
 import { auth } from '@repo/auth/server';
-import { getChatByIdForUser } from '@repo/database';
+import { getChatByIdForUser, getWorkspaceForMember } from '@repo/database';
 import { StatusCodes } from 'http-status-codes';
 import type { ChatServerWebSocket } from '../ws/socket';
 import type { OutgoingWsFrame } from '../ws/protocol';
@@ -13,8 +13,21 @@ type ChannelAuthorizer = (resourceId: string, userId: string) => Promise<boolean
 // One entry per channel-type prefix (`chat:<id>`; phase 2 adds `room:<id>`).
 // Each authorizer reuses the same ownership check as the matching REST
 // route, so a WS subscribe can't become a side door with weaker rules.
+async function canAccessChat(chatId: string, userId: string): Promise<boolean> {
+  const chatRecord = await getChatByIdForUser({ chatId, userId });
+  if (!chatRecord) {
+    return false;
+  }
+
+  const workspaceRecord = await getWorkspaceForMember({
+    workspaceId: chatRecord.workspaceId,
+    userId,
+  });
+  return workspaceRecord !== null;
+}
+
 const channelAuthorizers: Record<ChannelResourceType, ChannelAuthorizer> = {
-  chat: async (chatId, userId) => Boolean(await getChatByIdForUser({ chatId, userId })),
+  chat: canAccessChat,
 };
 
 function isChannelResourceType(value: string): value is ChannelResourceType {

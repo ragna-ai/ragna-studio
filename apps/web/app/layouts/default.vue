@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Toaster } from '~/components/ui/sonner';
+import OrganizationDeletedScreen from '~/features/organization/components/OrganizationDeletedScreen.vue';
+import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 
 const head = useLocaleHead();
+const { data: organization } = useGetOrganization();
 </script>
 
 <template>
@@ -10,7 +13,13 @@ const head = useLocaleHead();
       <!-- 
       <NavTopBar />
       -->
-      <div class="flex h-screen overflow-hidden">
+      <OrganizationDeletedScreen
+        v-if="organization?.deletedAt"
+        :organization-name="organization.name"
+        :role="organization.role"
+        :deleted-at="organization.deletedAt"
+      />
+      <div v-else class="flex h-screen overflow-hidden">
         <NavSidebar />
         <SidePanelHost />
         <main

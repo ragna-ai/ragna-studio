@@ -1,6 +1,5 @@
 import { db } from '@repo/database';
-import { member } from '@repo/database/schema';
-import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import { app } from '../../src/app';
@@ -59,13 +58,10 @@ describe('workspaceGuard', () => {
 
   test('allows a non-owner member of the workspace organization', async () => {
     const owner = await seedAuthenticatedUser();
-    const colleague = await seedAuthenticatedUser();
     const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
-    await db.insert(member).values({
+    const colleague = await seedOrganizationMember({
       organizationId: ownerMembership?.organizationId ?? '',
-      userId: colleague.userId,
       role: 'member',
-      createdAt: new Date(),
     });
 
     const response = await app.request(`/workspace/${owner.workspaceId}/folder`, {

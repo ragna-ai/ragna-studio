@@ -3,7 +3,8 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { ForeignReferenceError } from '../errors';
 import type { Workflow } from '../schema';
-import { agent, workflow } from '../schema';
+import { agent, member, organization, user, workflow, workspace } from '../schema';
+import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
 
 export type { Workflow, NewWorkflow } from '../schema';
 
@@ -222,4 +223,54 @@ export async function getWorkflowForScheduledRun({
   });
 
   return workflowRecord || null;
+}
+
+/** True when the workflow's organization is soft-deleted, so its schedule ticks must not run. */
+export async function isWorkflowOrganizationDeleted({
+  workflowId,
+}: {
+  workflowId: string;
+}): Promise<boolean> {
+  const [row] = await db
+    .select({ deletedAt: organization.deletedAt })
+    .from(workflow)
+    .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
+    .where(eq(workflow.id, workflowId))
+    .limit(1);
+
+  return Boolean(row?.deletedAt);
+}
+
+/**
+ * The user a schedule tick runs as: the workflow author, or the organization
+ * owner once the author is gone or soft-deleted. Null only when neither exists.
+ */
+export async function resolveScheduledRunUserId({
+  workflowId,
+}: {
+  workflowId: string;
+}): Promise<string | null> {
+  const [row] = await db
+    .select({
+      authorId: workflow.userId,
+      authorDeletedAt: user.deletedAt,
+      ownerId: member.userId,
+    })
+    .from(workflow)
+    .innerJoin(workspace, eq(workspace.id, workflow.workspaceId))
+    .leftJoin(user, eq(user.id, workflow.userId))
+    .leftJoin(
+      member,
+      and(
+        eq(member.organizationId, workspace.organizationId),
+        organizationRoleMatches(member.role, ORGANIZATION_OWNER_ROLE),
+      ),
+    )
+    .where(eq(workflow.id, workflowId))
+    .limit(1);
+
+  if (!row) return null;
+  const authorIsActive = row.authorId !== null && row.authorDeletedAt === null;
+  return authorIsActive ? row.authorId : row.ownerId;
 }

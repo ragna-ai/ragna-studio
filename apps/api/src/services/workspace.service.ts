@@ -4,34 +4,17 @@ import {
   createWorkspace,
   deleteWorkspaceById,
   getAllWorkspacesByOrganizationId,
-  getOrganizationIdByUserId,
   updateWorkspace,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { deleteWorkspaceMediaObjects } from '@repo/media';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import { deleteWorkspaceMediaObjects } from './media.service';
-
-async function requireOrganizationId({ userId }: { userId: string }): Promise<string> {
-  const { error, data: organizationId } = await tryCatch(() =>
-    getOrganizationIdByUserId({ userId }),
-  );
-
-  if (error !== null) {
-    logger.error('Failed to resolve organization for user', error);
-    throw new InternalServerErrorException('Failed to resolve organization for user');
-  }
-
-  if (!organizationId) {
-    throw new NotFoundException('Organization not found');
-  }
-
-  return organizationId;
-}
+import { requireActiveOrganizationId as requireOrganizationId } from './organization.service';
 
 /**
  * [GET] /workspace

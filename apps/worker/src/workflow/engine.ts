@@ -24,6 +24,17 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
     return;
   }
 
+  const { triggeredByUserId } = run;
+  if (!triggeredByUserId) {
+    await updateRunStatus({
+      runId,
+      status: 'failed',
+      error: 'Workflow run has no user to run as',
+      finishedAt: new Date(),
+    });
+    return;
+  }
+
   await updateRunStatus({
     runId,
     status: 'running',
@@ -80,7 +91,16 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
         return;
       }
 
-      await runNode({ runId, run, node, nodeById, incomingEdgesByTarget, nodeState, outputs });
+      await runNode({
+        runId,
+        run,
+        userId: triggeredByUserId,
+        node,
+        nodeById,
+        incomingEdgesByTarget,
+        nodeState,
+        outputs,
+      });
       nodeState.set(node.id, 'done');
       progressed = true;
     }
@@ -107,6 +127,7 @@ export async function executeWorkflowRun({ runId }: { runId: string }): Promise<
 async function runNode({
   runId,
   run,
+  userId,
   node,
   nodeById,
   incomingEdgesByTarget,
@@ -115,6 +136,7 @@ async function runNode({
 }: {
   runId: string;
   run: NonNullable<Awaited<ReturnType<typeof getRunForExecution>>>;
+  userId: string;
   node: WorkflowNode;
   nodeById: Map<string, WorkflowNode>;
   incomingEdgesByTarget: Map<string, WorkflowEdge[]>;
@@ -123,7 +145,7 @@ async function runNode({
 }): Promise<void> {
   const ctx: ExecutorContext = {
     input: resolveNodeInput({ node, nodeById, incomingEdgesByTarget, nodeState, outputs, run }),
-    userId: run.workflow.userId,
+    userId,
     workspaceId: run.workflow.workspaceId,
     runId,
   };

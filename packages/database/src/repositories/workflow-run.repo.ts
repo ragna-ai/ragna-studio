@@ -27,11 +27,13 @@ export async function createWorkflowRun({
   definition,
   input,
   triggeredBy,
+  triggeredByUserId,
 }: {
   workflowId: string;
   definition: WorkflowDefinition;
   input?: string;
   triggeredBy?: WorkflowRunTrigger;
+  triggeredByUserId: string | null;
 }): Promise<WorkflowRun> {
   const [createdRun] = await db
     .insert(workflowRun)
@@ -40,6 +42,7 @@ export async function createWorkflowRun({
       definition,
       input,
       triggeredBy,
+      triggeredByUserId,
     })
     .returning();
 
@@ -92,7 +95,7 @@ export async function getRunsByWorkflowId({
 }
 
 // No ownership check: called by the worker, which only has the run id from
-// the queue job. It reads the workflow row to recover the owning userId.
+// the queue job. The run row carries the user it executes as.
 export async function getRunForExecution({
   runId,
 }: {

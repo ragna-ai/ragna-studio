@@ -1,6 +1,6 @@
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
-import { member, workspace, type Workspace } from '../schema';
+import { member, organization, workspace, type Workspace } from '../schema';
 
 export type { Workspace } from '../schema';
 
@@ -48,7 +48,7 @@ export async function countWorkspacesByOrganizationId({
   return result?.count ?? 0;
 }
 
-/** Returns the workspace only if the user is a member of its organization. */
+/** Returns the workspace only if the user is a member of its organization and it is not deleted. */
 export async function getWorkspaceForMember({
   workspaceId,
   userId,
@@ -63,7 +63,8 @@ export async function getWorkspaceForMember({
       member,
       and(eq(member.organizationId, workspace.organizationId), eq(member.userId, userId)),
     )
-    .where(eq(workspace.id, workspaceId))
+    .innerJoin(organization, eq(organization.id, workspace.organizationId))
+    .where(and(eq(workspace.id, workspaceId), isNull(organization.deletedAt)))
     .limit(1);
 
   return row?.workspace ?? null;

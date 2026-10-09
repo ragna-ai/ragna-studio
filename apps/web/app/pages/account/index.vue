@@ -3,9 +3,11 @@ import {
   CoinsIcon,
   LanguagesIcon,
   Link2Icon,
+  TriangleAlertIcon,
   PanelLeftIcon,
   UserIcon,
 } from '@lucide/vue';
+import AccountDeletionCard from '~/features/organization/components/AccountDeletionCard.vue';
 import UserCreditSettings from '~/features/credit/components/UserCreditSettings.vue';
 import UserLanguageSettings from '~/features/user/components/UserLanguageSettings.vue';
 import UserProfileSettings from '~/features/user/components/UserProfileSettings.vue';
@@ -33,6 +35,7 @@ const sideBarTabs = computed(() => [
   { id: 'language', icon: LanguagesIcon, label: t('user.tabs.language') },
   { id: 'sidebar', icon: PanelLeftIcon, label: t('user.tabs.sidebar') },
   { id: 'credits', icon: CoinsIcon, label: t('user.tabs.credits') },
+  { id: 'danger', icon: TriangleAlertIcon, label: t('user.tabs.danger') },
 ]);
 // Functions
 
@@ -66,6 +69,9 @@ const sideBarTabs = computed(() => [
         </template>
         <template #credits>
           <UserCreditSettings />
+        </template>
+        <template #danger>
+          <AccountDeletionCard />
         </template>
       </TabSidebar>
     </div>

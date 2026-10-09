@@ -311,9 +311,8 @@ export async function listDatasetRows({
 /**
  * [POST] /workspace/:workspaceId/dataset/:datasetId/row
  * `createDatasetRow` is shared with the agent tool family in `@repo/ai`,
- * which re-checks ownership by (datasetId, userId). Workspace membership was
- * already verified above, so the dataset's own authorship id is passed
- * through here rather than the acting request user's id.
+ * which re-checks the dataset by (datasetId, workspaceId). Any workspace
+ * member may append rows.
  */
 export async function createDatasetRowForUser({
   workspaceId,
@@ -324,10 +323,10 @@ export async function createDatasetRowForUser({
   datasetId: string;
   data: DatasetRow['data'];
 }): Promise<DatasetRow> {
-  const datasetRecord = await loadOwnedDataset({ workspaceId, datasetId });
+  await loadOwnedDataset({ workspaceId, datasetId });
 
   const { error, data: createdRow } = await tryCatch(() =>
-    createDatasetRow({ datasetId, userId: datasetRecord.userId, data }),
+    createDatasetRow({ datasetId, workspaceId, data }),
   );
 
   if (error !== null || !createdRow) {
@@ -441,10 +440,10 @@ export async function moveDatasetRowForUser({
   rowId: string;
   afterRowId?: string | null;
 }): Promise<DatasetRow> {
-  const datasetRecord = await loadOwnedDataset({ workspaceId, datasetId });
+  await loadOwnedDataset({ workspaceId, datasetId });
 
   const { error, data: movedRow } = await tryCatch(() =>
-    moveDatasetRow({ datasetId, userId: datasetRecord.userId, rowId, afterRowId }),
+    moveDatasetRow({ datasetId, workspaceId, rowId, afterRowId }),
   );
 
   if (error !== null) {

@@ -1,7 +1,7 @@
-import { db, getOrganizationIdByUserId } from '@repo/database';
-import { member } from '@repo/database/schema';
+import { getOrganizationIdByUserId } from '@repo/database';
 import {
   seedAuthenticatedUser,
+  seedOrganizationMember,
   seedCreditAccount,
   seedTokenPricedAiModel,
   settleTestUsage,
@@ -80,15 +80,9 @@ describe('GET /credit/balance', () => {
 
   test('a member of the organization reads the organization balance', async () => {
     const owner = await seedAuthenticatedUser();
-    const other = await seedAuthenticatedUser();
     const organizationId = await getOrganizationIdByUserId({ userId: owner.userId });
     if (!organizationId) throw new Error('owner has no organization');
-    await db.insert(member).values({
-      organizationId,
-      userId: other.userId,
-      role: 'member',
-      createdAt: new Date(0),
-    });
+    const other = await seedOrganizationMember({ organizationId, role: 'member' });
     await seedCreditAccount({ userId: owner.userId, balanceMicroCredits: 7_000_000n });
 
     const response = await app.request('/credit/balance', {
