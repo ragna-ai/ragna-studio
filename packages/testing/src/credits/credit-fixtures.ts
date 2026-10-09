@@ -2,7 +2,8 @@
 import type { AiModelPricing, CreditSettlement, CreditUsageFeature } from '@repo/database';
 import {
   createAiModel,
-  getOrCreateCreditAccountByUserId,
+  getOrCreateCreditAccountByOrganizationId,
+  getOrganizationIdByUserId,
   grantCredits,
   settleCreditUsage,
 } from '@repo/database';
@@ -78,7 +79,7 @@ export interface SeedCreditAccountResult {
 }
 
 /**
- * Creates (or reuses) a user's credit account and, when a positive balance
+ * Creates (or reuses) the credit account of a user's organization and, when a positive balance
  * is requested, tops it up via a real `grantCredits` call rather than
  * poking `balanceMicroCredits` directly, so the ledger row a test relies on
  * for isolation/ordering assertions actually exists. Defaults to a 0
@@ -90,7 +91,15 @@ export async function seedCreditAccount(
 ): Promise<SeedCreditAccountResult> {
   await assertConnectedToTestDatabase();
 
-  const account = await getOrCreateCreditAccountByUserId({ userId: params.userId });
+  const organizationId = await getOrganizationIdByUserId({ userId: params.userId });
+  if (!organizationId) {
+    throw new Error(`seedCreditAccount: user ${params.userId} has no organization`);
+  }
+
+  const account = await getOrCreateCreditAccountByOrganizationId({
+    organizationId,
+    ownerUserId: params.userId,
+  });
 
   const amount = params.balanceMicroCredits ?? 0n;
   if (amount !== 0n) {

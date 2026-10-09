@@ -845,7 +845,7 @@ export const relations = defineRelations(schema, (r) => ({
     tasks: r.many.task(),
     taskLabels: r.many.taskLabel(),
     // The account that pays for work done here is resolved through
-    // `ownerId`, not this relation; it exists for the audit trail only.
+    // `organizationId`, not this relation; it exists for the audit trail only.
     creditUsageEvents: r.many.creditUsageEvent(),
   },
 }));

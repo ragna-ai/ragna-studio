@@ -1,5 +1,5 @@
 // Manual credit grant: the only way credits
-// enter the system in v1. Resolves the user by email, creates their credit
+// enter the system in v1. Resolves the user by email, creates their organization's credit
 // account if this is their first grant, and writes the grant through the
 // same transaction as every other ledger write, so the balance cache and
 // the ledger cannot drift.
@@ -8,7 +8,11 @@
 
 import { randomUUID } from 'node:crypto';
 import { db } from '../db';
-import { getOrCreateCreditAccountByUserId, grantCredits } from '../repositories/credit.repo';
+import {
+  getOrCreateCreditAccountByOrganizationId,
+  grantCredits,
+} from '../repositories/credit.repo';
+import { getOrganizationIdByUserId } from '../repositories/organization.repo';
 import { getUserByEmail } from '../repositories/user.repo';
 
 // No floating-point in the money path: parsed by hand
@@ -49,8 +53,17 @@ async function main() {
     process.exit(1);
   }
 
+  const organizationId = await getOrganizationIdByUserId({ userId: user.id });
+  if (!organizationId) {
+    console.error(`User "${email}" has no organization.`);
+    process.exit(1);
+  }
+
   const amountMicroCredits = parseCreditsToMicroCredits(creditsArg);
-  const account = await getOrCreateCreditAccountByUserId({ userId: user.id });
+  const account = await getOrCreateCreditAccountByOrganizationId({
+    organizationId,
+    ownerUserId: user.id,
+  });
 
   await grantCredits({
     creditAccountId: account.id,

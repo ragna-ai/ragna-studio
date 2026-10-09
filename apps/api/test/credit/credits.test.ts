@@ -1,3 +1,5 @@
+import { db, getOrganizationIdByUserId } from '@repo/database';
+import { member } from '@repo/database/schema';
 import {
   seedAuthenticatedUser,
   seedCreditAccount,
@@ -74,6 +76,27 @@ describe('GET /credit/balance', () => {
     const body = balanceResponseSchema.parse(await response.json());
     expect(body.credit.balanceMicroCredits).toBe('31500000');
     expect(body.credit.balanceCredits).toBe(31.5);
+  });
+
+  test('a member of the organization reads the organization balance', async () => {
+    const owner = await seedAuthenticatedUser();
+    const other = await seedAuthenticatedUser();
+    const organizationId = await getOrganizationIdByUserId({ userId: owner.userId });
+    if (!organizationId) throw new Error('owner has no organization');
+    await db.insert(member).values({
+      organizationId,
+      userId: other.userId,
+      role: 'member',
+      createdAt: new Date(0),
+    });
+    await seedCreditAccount({ userId: owner.userId, balanceMicroCredits: 7_000_000n });
+
+    const response = await app.request('/credit/balance', {
+      headers: { cookie: other.cookieHeader },
+    });
+
+    const body = balanceResponseSchema.parse(await response.json());
+    expect(body.credit.balanceMicroCredits).toBe('7000000');
   });
 
   test('reflects a debit from a settled charge', async () => {
