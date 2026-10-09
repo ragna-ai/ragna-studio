@@ -14,7 +14,7 @@ export interface AgentSettings {
 
 export interface Agent {
   id: string;
-  userId: string;
+  userId: string | null;
   // Every agent lives in exactly one workspace.
   workspaceId: string;
   aiModelId: string;

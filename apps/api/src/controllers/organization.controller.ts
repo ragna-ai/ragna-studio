@@ -4,6 +4,7 @@ import {
   deleteOrganizationForUser,
   getOrganizationForUser,
   getUsageByMemberForUser,
+  listMembersForUser,
   leaveOrganization,
   removeMemberForUser,
   restoreMemberForUser,
@@ -23,6 +24,14 @@ export const organizationController = new Hono()
   .get('/', async (c) => {
     const user = c.get('user');
     return c.json(await getOrganizationForUser({ userId: user.id }));
+  })
+  /**
+   * [GET] /organization/members
+   * Every member of the caller's organization, removed ones with `user.deletedAt`.
+   */
+  .get('/members', async (c) => {
+    const user = c.get('user');
+    return c.json(await listMembersForUser({ userId: user.id }));
   })
   /**
    * [DELETE] /organization

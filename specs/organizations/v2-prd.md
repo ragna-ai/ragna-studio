@@ -1,6 +1,6 @@
 # Organizations v2: members, invites, org settings
 
-**Status: in-progress** (2026-10-09). S1 to S4 built on `feat/organizations-v2` (PR #95); S5 open. Builds on [v1](./prd.md) (PR #94).
+**Status: implemented** (PR #95, 2026-10-09). Builds on [v1](./prd.md) (PR #94).
 
 ## Summary
 

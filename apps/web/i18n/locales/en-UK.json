@@ -49,7 +49,8 @@
       "settings": "Settings",
       "mcp": "MCP",
       "signOut": "Sign out",
-      "credits": "{count} credits"
+      "credits": "{count} credits",
+      "organization": "Organization"
     }
   },
   "auth": {
@@ -68,7 +69,8 @@
       "termsLink": "Terms of Service",
       "privacyLink": "Privacy Policy",
       "testimonial": "The platform that helped us ship faster and scale with confidence.",
-      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc."
+      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc.",
+      "invitationHint": "Sign in with the email address the invitation was sent to."
     }
   },
   "home": {
@@ -660,7 +662,8 @@
       "accounts": "Connected accounts",
       "language": "Language",
       "sidebar": "Sidebar",
-      "credits": "Credits"
+      "credits": "Credits",
+      "danger": "Delete account"
     },
     "language": {
       "title": "Language",
@@ -1328,6 +1331,113 @@
         "settingsLink": "Go to MCP settings"
       },
       "testimonial": "Bring your Ragna workspace into the tools you already use."
+    }
+  },
+  "organization": {
+    "title": "Organization",
+    "subtitle": "Manage your organization, its members and invitations.",
+    "loadError": "Failed to load the organization.",
+    "formerMember": "Former member",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "name": {
+      "title": "Organization name",
+      "saved": "Name saved.",
+      "saveError": "Failed to save the name."
+    },
+    "members": {
+      "title": "Members",
+      "loadError": "Failed to load members.",
+      "remove": "Remove",
+      "removedBadge": "Removed",
+      "deletedOn": "Deleted on {date}",
+      "restore": "Restore",
+      "roleChanged": "Role updated.",
+      "roleError": "Failed to change the role.",
+      "removed": "Member removed.",
+      "removeError": "Failed to remove the member.",
+      "restored": "Member restored.",
+      "restoreError": "Failed to restore the member.",
+      "removeConfirm": {
+        "title": "Remove {name}?",
+        "message": "They are signed out and lose access right away. You can restore them for 30 days. After that, their account and personal data are deleted for good."
+      }
+    },
+    "invitations": {
+      "title": "Invitations",
+      "invite": "Invite member",
+      "inviteTitle": "Invite a member",
+      "inviteDescription": "They join your organization when they sign up with this email address. The invitation is valid for 48 hours.",
+      "email": "Email address",
+      "role": "Role",
+      "send": "Send invitation",
+      "sent": "Invitation sent.",
+      "sendError": "Failed to send the invitation.",
+      "loadError": "Failed to load invitations.",
+      "empty": "No pending invitations.",
+      "expires": "expires {date}",
+      "copyLink": "Copy link",
+      "linkCopied": "Invitation link copied.",
+      "cancel": "Cancel invitation",
+      "canceled": "Invitation canceled.",
+      "cancelError": "Failed to cancel the invitation."
+    },
+    "usage": {
+      "title": "Credit usage by member",
+      "loadError": "Failed to load usage.",
+      "empty": "No usage yet.",
+      "events": "Requests",
+      "credits": "Credits"
+    },
+    "transfer": {
+      "title": "Transfer ownership",
+      "description": "The new owner takes over the organization. You become an admin.",
+      "noCandidates": "There is no other active member to transfer ownership to.",
+      "placeholder": "Choose a member",
+      "action": "Transfer ownership",
+      "done": "Ownership transferred.",
+      "error": "Failed to transfer ownership.",
+      "confirm": {
+        "title": "Make {name} the owner?",
+        "message": "You become an admin and cannot undo this yourself.",
+        "confirm": "Transfer ownership"
+      }
+    },
+    "danger": {
+      "title": "Danger zone",
+      "description": "Deleting the organization signs out all members. You can restore it within 30 days. After that, all data is deleted for good.",
+      "action": "Delete organization",
+      "error": "Failed to delete the organization.",
+      "confirm": {
+        "title": "Delete this organization?",
+        "message": "All members lose access now. You have 30 days to restore it. Then everything is deleted for good.",
+        "typeName": "Type {name} to confirm",
+        "confirm": "Delete organization"
+      }
+    },
+    "deleted": {
+      "title": "{name} is scheduled for deletion",
+      "description": "All data is deleted for good on {date}. Until then, the owner can restore the organization.",
+      "ownerOnly": "Only the owner can restore the organization.",
+      "restore": "Restore organization",
+      "restored": "Organization restored.",
+      "restoreError": "Failed to restore the organization."
+    },
+    "account": {
+      "title": "Delete my account",
+      "description": "You are signed out and lose access right away. Your organization can restore your account for 30 days. After that, your account and personal data are deleted for good.",
+      "action": "Delete my account",
+      "error": "Failed to delete the account.",
+      "ownerHint": "You own this organization. Transfer ownership to another member or delete the organization first.",
+      "goToSettings": "Go to organization settings",
+      "confirm": {
+        "title": "Delete your account?",
+        "message": "You are signed out right away. Your organization can restore your account for 30 days.",
+        "confirm": "Delete my account"
+      }
     }
   }
 }

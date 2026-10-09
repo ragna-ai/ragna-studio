@@ -3,6 +3,7 @@ import {
   getOrganizationMember,
   hasOrganizationRole,
   listCreditUsageByUser,
+  listOrganizationMembers,
   MEMBER_REMOVED_BAN_REASON,
   ORGANIZATION_ADMIN_ROLE,
   ORGANIZATION_OWNER_ROLE,
@@ -28,6 +29,25 @@ export interface OrganizationResponse {
   name: string;
   role: string;
   deletedAt: string | null;
+}
+
+export interface OrganizationMemberUserResponse {
+  name: string;
+  email: string;
+  image: string | null;
+  deletedAt: string | null;
+}
+
+export interface OrganizationMemberResponse {
+  id: string;
+  userId: string;
+  role: string;
+  createdAt: string;
+  user: OrganizationMemberUserResponse;
+}
+
+export interface OrganizationMembersResponse {
+  members: OrganizationMemberResponse[];
 }
 
 export interface MemberUsageResponse {
@@ -97,6 +117,30 @@ export async function getOrganizationForUser({
     name: membership.organizationName,
     role: membership.role,
     deletedAt: membership.organizationDeletedAt?.toISOString() ?? null,
+  };
+}
+
+export async function listMembersForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<OrganizationMembersResponse> {
+  const caller = await requireActiveMembership({ userId });
+  const rows = await listOrganizationMembers({ organizationId: caller.organizationId });
+
+  return {
+    members: rows.map((row) => ({
+      id: row.id,
+      userId: row.userId,
+      role: row.role,
+      createdAt: row.createdAt.toISOString(),
+      user: {
+        name: row.userName,
+        email: row.userEmail,
+        image: row.userImage,
+        deletedAt: row.userDeletedAt?.toISOString() ?? null,
+      },
+    })),
   };
 }
 

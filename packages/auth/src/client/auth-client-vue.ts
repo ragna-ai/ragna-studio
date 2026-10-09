@@ -1,5 +1,5 @@
 import { oauthProviderClient } from '@better-auth/oauth-provider/client';
-import { adminClient, lastLoginMethodClient } from 'better-auth/client/plugins';
+import { adminClient, lastLoginMethodClient, organizationClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/vue';
 
 // Hand-typed like AuthClient below (oauthProviderClient()'s own type isn't
@@ -14,6 +14,50 @@ export interface OAuthConsentAcceptResult {
 export interface OAuthConsentAcceptResponse {
   data: OAuthConsentAcceptResult | null;
   error: { code?: string; message?: string; status: number; statusText: string } | null;
+}
+
+// Hand-typed like AuthClient below. Shapes verified against better-auth
+// 1.7.7 plugins/organization/routes (crud-invites, crud-members, crud-org).
+export type OrganizationAssignableRole = 'admin' | 'member';
+
+export interface AuthErrorBody {
+  code?: string;
+  message?: string;
+  status: number;
+  statusText: string;
+}
+export interface AuthResult<T> {
+  data: T | null;
+  error: AuthErrorBody | null;
+}
+
+// better-auth types dates as Date, but they arrive as ISO strings over JSON.
+export type AuthDate = Date | string;
+
+export interface OrganizationInvitationRecord {
+  id: string;
+  email: string;
+  role: string;
+  organizationId: string;
+  inviterId: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'canceled';
+  expiresAt: AuthDate;
+  createdAt: AuthDate;
+}
+export interface OrganizationActions {
+  inviteMember: (data: {
+    email: string;
+    role: OrganizationAssignableRole;
+  }) => Promise<AuthResult<OrganizationInvitationRecord>>;
+  cancelInvitation: (data: {
+    invitationId: string;
+  }) => Promise<AuthResult<OrganizationInvitationRecord>>;
+  listInvitations: () => Promise<AuthResult<OrganizationInvitationRecord[]>>;
+  update: (data: { data: { name: string } }) => Promise<AuthResult<{ id: string; name: string }>>;
+  updateMemberRole: (data: {
+    memberId: string;
+    role: OrganizationAssignableRole;
+  }) => Promise<AuthResult<{ id: string; role: string }>>;
 }
 
 // better-auth's plugin-aware client type can't be bundled into a portable
@@ -37,6 +81,7 @@ export type AuthClient = Omit<ReturnType<typeof createAuthClient>, 'hydrateSessi
   getLastUsedLoginMethod: () => string | null;
   isLastUsedLoginMethod: (method: string) => boolean;
   clearLastUsedLoginMethod: () => void;
+  organization: OrganizationActions;
   oauth2: {
     consent: (data: { accept: boolean }) => Promise<OAuthConsentAcceptResponse>;
   };
@@ -49,6 +94,6 @@ export type AuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Sess
 export function createAppAuthClient(options?: Parameters<typeof createAuthClient>[0]): AuthClient {
   return createAuthClient({
     ...options,
-    plugins: [adminClient(), lastLoginMethodClient(), oauthProviderClient()],
+    plugins: [adminClient(), lastLoginMethodClient(), oauthProviderClient(), organizationClient()],
   });
 }

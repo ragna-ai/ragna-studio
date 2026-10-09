@@ -49,7 +49,8 @@
       "settings": "Einstellungen",
       "mcp": "MCP",
       "signOut": "Abmelden",
-      "credits": "{count} Credits"
+      "credits": "{count} Credits",
+      "organization": "Organisation"
     }
   },
   "notification": {
@@ -106,7 +107,8 @@
       "termsLink": "Nutzungsbedingungen",
       "privacyLink": "Datenschutzrichtlinie",
       "testimonial": "Die Plattform, mit der wir schneller ausliefern und selbstbewusst skalieren konnten.",
-      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc."
+      "testimonialAuthor": "Sofia Davis, CTO, Acme Inc.",
+      "invitationHint": "Melde dich mit der E-Mail-Adresse an, an die die Einladung gesendet wurde."
     }
   },
   "home": {
@@ -666,7 +668,8 @@
       "accounts": "Verbundene Konten",
       "language": "Sprache",
       "sidebar": "Seitenleiste",
-      "credits": "Credits"
+      "credits": "Credits",
+      "danger": "Konto löschen"
     },
     "language": {
       "title": "Sprache",
@@ -1334,6 +1337,113 @@
         "settingsLink": "Zu den MCP-Einstellungen"
       },
       "testimonial": "Bring deinen Ragna-Arbeitsbereich in die Tools, die du bereits nutzt."
+    }
+  },
+  "organization": {
+    "title": "Organisation",
+    "subtitle": "Verwalte deine Organisation, ihre Mitglieder und Einladungen.",
+    "loadError": "Die Organisation konnte nicht geladen werden.",
+    "formerMember": "Ehemaliges Mitglied",
+    "roles": {
+      "owner": "Inhaber",
+      "admin": "Admin",
+      "member": "Mitglied"
+    },
+    "name": {
+      "title": "Name der Organisation",
+      "saved": "Name gespeichert.",
+      "saveError": "Der Name konnte nicht gespeichert werden."
+    },
+    "members": {
+      "title": "Mitglieder",
+      "loadError": "Mitglieder konnten nicht geladen werden.",
+      "remove": "Entfernen",
+      "removedBadge": "Entfernt",
+      "deletedOn": "Wird am {date} gelöscht",
+      "restore": "Wiederherstellen",
+      "roleChanged": "Rolle aktualisiert.",
+      "roleError": "Die Rolle konnte nicht geändert werden.",
+      "removed": "Mitglied entfernt.",
+      "removeError": "Das Mitglied konnte nicht entfernt werden.",
+      "restored": "Mitglied wiederhergestellt.",
+      "restoreError": "Das Mitglied konnte nicht wiederhergestellt werden.",
+      "removeConfirm": {
+        "title": "{name} entfernen?",
+        "message": "Die Person wird abgemeldet und verliert sofort den Zugriff. Du kannst sie 30 Tage lang wiederherstellen. Danach werden Konto und persönliche Daten endgültig gelöscht."
+      }
+    },
+    "invitations": {
+      "title": "Einladungen",
+      "invite": "Mitglied einladen",
+      "inviteTitle": "Mitglied einladen",
+      "inviteDescription": "Die Person tritt deiner Organisation bei, wenn sie sich mit dieser E-Mail-Adresse registriert. Die Einladung gilt 48 Stunden.",
+      "email": "E-Mail-Adresse",
+      "role": "Rolle",
+      "send": "Einladung senden",
+      "sent": "Einladung gesendet.",
+      "sendError": "Die Einladung konnte nicht gesendet werden.",
+      "loadError": "Einladungen konnten nicht geladen werden.",
+      "empty": "Keine offenen Einladungen.",
+      "expires": "läuft ab am {date}",
+      "copyLink": "Link kopieren",
+      "linkCopied": "Einladungslink kopiert.",
+      "cancel": "Einladung zurückziehen",
+      "canceled": "Einladung zurückgezogen.",
+      "cancelError": "Die Einladung konnte nicht zurückgezogen werden."
+    },
+    "usage": {
+      "title": "Credit-Nutzung pro Mitglied",
+      "loadError": "Nutzung konnte nicht geladen werden.",
+      "empty": "Noch keine Nutzung.",
+      "events": "Anfragen",
+      "credits": "Credits"
+    },
+    "transfer": {
+      "title": "Inhaberschaft übertragen",
+      "description": "Die neue Inhaberin oder der neue Inhaber übernimmt die Organisation. Du wirst Admin.",
+      "noCandidates": "Es gibt kein anderes aktives Mitglied, an das du die Inhaberschaft übertragen kannst.",
+      "placeholder": "Mitglied auswählen",
+      "action": "Inhaberschaft übertragen",
+      "done": "Inhaberschaft übertragen.",
+      "error": "Die Inhaberschaft konnte nicht übertragen werden.",
+      "confirm": {
+        "title": "{name} zum Inhaber machen?",
+        "message": "Du wirst Admin und kannst das nicht selbst rückgängig machen.",
+        "confirm": "Inhaberschaft übertragen"
+      }
+    },
+    "danger": {
+      "title": "Gefahrenzone",
+      "description": "Wenn du die Organisation löschst, werden alle Mitglieder abgemeldet. Du kannst sie 30 Tage lang wiederherstellen. Danach werden alle Daten endgültig gelöscht.",
+      "action": "Organisation löschen",
+      "error": "Die Organisation konnte nicht gelöscht werden.",
+      "confirm": {
+        "title": "Diese Organisation löschen?",
+        "message": "Alle Mitglieder verlieren sofort den Zugriff. Du hast 30 Tage, um sie wiederherzustellen. Danach wird alles endgültig gelöscht.",
+        "typeName": "Gib zur Bestätigung {name} ein",
+        "confirm": "Organisation löschen"
+      }
+    },
+    "deleted": {
+      "title": "{name} ist zur Löschung vorgemerkt",
+      "description": "Am {date} werden alle Daten endgültig gelöscht. Bis dahin kann die Inhaberin oder der Inhaber die Organisation wiederherstellen.",
+      "ownerOnly": "Nur die Inhaberin oder der Inhaber kann die Organisation wiederherstellen.",
+      "restore": "Organisation wiederherstellen",
+      "restored": "Organisation wiederhergestellt.",
+      "restoreError": "Die Organisation konnte nicht wiederhergestellt werden."
+    },
+    "account": {
+      "title": "Mein Konto löschen",
+      "description": "Du wirst abgemeldet und verlierst sofort den Zugriff. Deine Organisation kann dein Konto 30 Tage lang wiederherstellen. Danach werden Konto und persönliche Daten endgültig gelöscht.",
+      "action": "Mein Konto löschen",
+      "error": "Das Konto konnte nicht gelöscht werden.",
+      "ownerHint": "Du bist Inhaber dieser Organisation. Übertrage zuerst die Inhaberschaft an ein anderes Mitglied oder lösche die Organisation.",
+      "goToSettings": "Zu den Organisationseinstellungen",
+      "confirm": {
+        "title": "Dein Konto löschen?",
+        "message": "Du wirst sofort abgemeldet. Deine Organisation kann dein Konto 30 Tage lang wiederherstellen.",
+        "confirm": "Mein Konto löschen"
+      }
     }
   }
 }

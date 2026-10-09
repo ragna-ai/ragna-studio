@@ -18,7 +18,7 @@ export type DatasetRowData = Record<string, string | number | null>;
 
 export interface Dataset {
   id: string;
-  userId: string;
+  userId: string | null;
   workspaceId: string;
   name: string;
   description?: string | null;

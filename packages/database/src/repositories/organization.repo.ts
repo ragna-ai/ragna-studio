@@ -259,6 +259,40 @@ export async function getOrganizationMember({
   return row ?? null;
 }
 
+export interface OrganizationMemberListItem {
+  id: string;
+  userId: string;
+  role: string;
+  createdAt: Date;
+  userName: string;
+  userEmail: string;
+  userImage: string | null;
+  userDeletedAt: Date | null;
+}
+
+/** Every member of the organization, removed ones included, in one query. */
+export async function listOrganizationMembers({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<OrganizationMemberListItem[]> {
+  return db
+    .select({
+      id: member.id,
+      userId: member.userId,
+      role: member.role,
+      createdAt: member.createdAt,
+      userName: user.name,
+      userEmail: user.email,
+      userImage: user.image,
+      userDeletedAt: user.deletedAt,
+    })
+    .from(member)
+    .innerJoin(user, eq(user.id, member.userId))
+    .where(eq(member.organizationId, organizationId))
+    .orderBy(member.createdAt);
+}
+
 type OrganizationTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 async function revokeMcpAccess(tx: OrganizationTransaction, userIds: string[]): Promise<void> {
