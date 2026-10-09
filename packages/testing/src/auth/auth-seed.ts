@@ -1,5 +1,5 @@
 import { auth } from '@repo/auth/server';
-import { getAllWorkspacesByOwnerId } from '@repo/database';
+import { getAllWorkspacesByOrganizationId, getOrganizationIdByUserId } from '@repo/database';
 import type { TestHelpers } from 'better-auth/plugins';
 
 export interface SeededAuthenticatedUser {
@@ -62,7 +62,12 @@ export async function seedAuthenticatedUser(): Promise<SeededAuthenticatedUser> 
   const draftUser = test.createUser({ email: `test-${crypto.randomUUID()}@example.com` });
   const seededUser = await test.saveUser(draftUser);
 
-  const [workspace] = await getAllWorkspacesByOwnerId({ ownerId: seededUser.id });
+  const organizationId = await getOrganizationIdByUserId({ userId: seededUser.id });
+  if (!organizationId) {
+    throw new Error('Expected the user-create databaseHook to have created an organization.');
+  }
+
+  const [workspace] = await getAllWorkspacesByOrganizationId({ organizationId });
 
   if (!workspace) {
     throw new Error(

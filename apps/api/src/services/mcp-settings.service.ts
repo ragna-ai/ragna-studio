@@ -4,7 +4,7 @@ import {
   deleteAllMcpConnections,
   deleteMcpConnection,
   getMcpSettings,
-  getWorkspaceById,
+  getWorkspaceForMember,
   listMcpConnections,
   revokeMcpClientGrants,
   upsertMcpConnection,
@@ -93,7 +93,7 @@ export async function createMcpConnectionForUser({
     throw new ForbiddenException('MCP is disabled for this user');
   }
 
-  const workspace = await getWorkspaceById({ id: workspaceId, ownerId: userId });
+  const workspace = await getWorkspaceForMember({ workspaceId, userId });
   if (!workspace) {
     throw new NotFoundException('Workspace not found');
   }

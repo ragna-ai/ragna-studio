@@ -91,7 +91,7 @@ export async function resolveCreditSpendState({
       balanceMicroCredits: creditAccount.balanceMicroCredits,
     })
     .from(workspace)
-    .innerJoin(creditAccount, eq(creditAccount.userId, workspace.ownerId))
+    .innerJoin(creditAccount, eq(creditAccount.organizationId, workspace.organizationId))
     .where(eq(workspace.id, workspaceId));
 
   if (!row) {
@@ -107,20 +107,11 @@ export async function resolveCreditSpendState({
 
 // The same state as `resolveCreditSpendState`, for the user-global
 // `/credit/balance` and `/credit/usage` routes, which have no workspace in
-// scope to locate the billing entity with.
-//
-// A direct single-table read, NOT a workspace lookup followed by
-// `resolveCreditSpendState`: routing a user-global question through an
-// arbitrary owned workspace costs a second query and reads as a zero balance
-// for a user who was granted credits before creating their first workspace.
-//
-// When the billing entity becomes the organisation, this is the function
-// that gains an `organisationId` overload; `resolveCreditSpendState` keeps
-// answering the "who pays for work done here" question.
-export async function getCreditSpendStateForUser({
-  userId,
+// scope. A direct single-table read on the organization's account.
+export async function getCreditSpendStateForOrganization({
+  organizationId,
 }: {
-  userId: string;
+  organizationId: string;
 }): Promise<CreditSpendState | null> {
   const [row] = await db
     .select({
@@ -128,7 +119,7 @@ export async function getCreditSpendStateForUser({
       balanceMicroCredits: creditAccount.balanceMicroCredits,
     })
     .from(creditAccount)
-    .where(eq(creditAccount.userId, userId));
+    .where(eq(creditAccount.organizationId, organizationId));
 
   if (!row) {
     return null;
@@ -259,21 +250,19 @@ export async function settleCreditUsage(
   }
 }
 
-// Resolves a user's credit account, creating one (zero balance) if this is
-// their first grant. The only account-creation path in the system:
+// Resolves an organization's credit account, creating one (zero balance) if
+// this is its first grant. The only account-creation path in the system:
 // resolveCreditSpendState (the gate) must never create one lazily on a read.
-// The grant script uses this to
-// turn an email into a `creditAccountId` before calling grantCredits below.
-export async function getOrCreateCreditAccountByUserId({
-  userId,
+export async function getOrCreateCreditAccountByOrganizationId({
+  organizationId,
 }: {
-  userId: string;
+  organizationId: string;
 }): Promise<CreditAccount> {
   const [account] = await db
     .insert(creditAccount)
-    .values({ userId })
+    .values({ organizationId })
     .onConflictDoUpdate({
-      target: creditAccount.userId,
+      target: creditAccount.organizationId,
       // No-op set: onConflictDoUpdate requires a `set`, and this table has
       // nothing to change on an existing account.
       set: { updatedAt: new Date() },
@@ -281,7 +270,7 @@ export async function getOrCreateCreditAccountByUserId({
     .returning();
 
   if (!account) {
-    throw new Error(`Failed to resolve credit account for user ${userId}`);
+    throw new Error(`Failed to resolve credit account for organization ${organizationId}`);
   }
 
   return account;

@@ -95,7 +95,7 @@ whether it is creating or editing; the API should not guess from the body.
 - `authMiddleware` on every controller, unchanged.
 - A new shared **workspace guard** runs on every `/workspace/:workspaceId/...`
   route. It generalizes `loadOwnedWorkspace()` from `document.service.ts`:
-  load the workspace, verify `ownerId` matches the authenticated user, throw
+  load the workspace, verify the authenticated user is a member of the workspace's organization, throw
   `NotFoundException` otherwise. Implemented once (middleware or shared
   service helper), never re-implemented per controller.
 - After the guard passes, repos filter by `workspaceId`. The old pattern of
@@ -103,8 +103,7 @@ whether it is creating or editing; the API should not guess from the body.
 - Resource tables keep their `userId` columns as **authorship metadata**
   (who created it), matching the `createdByUserId` pattern on documents.
   They are stamped on create and never used for access checks.
-- When multi-user workspaces land, only the workspace guard changes
-  (ownership check becomes membership check). Nothing else moves.
+- The guard checks organization membership (see `specs/organizations/prd.md`). Nothing else moves.
 
 ### Active workspace is carried by the URL
 

@@ -14,6 +14,7 @@ export const session = pgTable(
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     impersonatedBy: text('impersonated_by'),
+    activeOrganizationId: text('active_organization_id'),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },

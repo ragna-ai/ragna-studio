@@ -3,11 +3,15 @@ import {
   ceilDiv,
   computeCharge,
   createAiModel,
-  getCreditSpendStateForUser,
+  getCreditSpendStateForOrganization,
+  getOrCreateCreditAccountByOrganizationId,
+  getOrganizationIdByUserId,
   grantCredits,
   resolveCreditSpendState,
   settleCreditUsage,
+  db,
 } from '@repo/database';
+import { member } from '@repo/database/schema';
 import {
   seedAuthenticatedUser,
   seedCreditAccount,
@@ -15,6 +19,14 @@ import {
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
+
+async function getSpendStateForUser(userId: string) {
+  const organizationId = await getOrganizationIdByUserId({ userId });
+  if (!organizationId) {
+    throw new Error(`user ${userId} has no organization`);
+  }
+  return getCreditSpendStateForOrganization({ organizationId });
+}
 
 // Pure math: computeCharge and ceilDiv (packages/database/src/repositories/
 // credit.repo.ts), module-private in production and exported only for
@@ -161,7 +173,7 @@ describe('settleCreditUsage', () => {
     expect(settlement?.chargedMicroCredits).toBe(21_000_000n);
     expect(settlement?.balanceAfterMicroCredits).toBe(100_000_000n - 21_000_000n);
 
-    const spendState = await getCreditSpendStateForUser({ userId });
+    const spendState = await getSpendStateForUser(userId);
     expect(spendState?.balanceMicroCredits).toBe(100_000_000n - 21_000_000n);
   });
 
@@ -233,7 +245,7 @@ describe('settleCreditUsage', () => {
     expect(first).not.toBeNull();
     expect(second).toBeNull();
 
-    const spendState = await getCreditSpendStateForUser({ userId });
+    const spendState = await getSpendStateForUser(userId);
     expect(spendState?.balanceMicroCredits).toBe(100_000_000n - (first?.chargedMicroCredits ?? 0n));
   });
 
@@ -269,7 +281,7 @@ describe('settleCreditUsage', () => {
 
     expect(settled).toHaveLength(1);
 
-    const spendState = await getCreditSpendStateForUser({ userId });
+    const spendState = await getSpendStateForUser(userId);
     expect(spendState?.balanceMicroCredits).toBe(
       100_000_000n - (settled[0]?.chargedMicroCredits ?? 0n),
     );
@@ -334,7 +346,7 @@ describe('grantCredits', () => {
       idempotencyKey: `grant:test-${crypto.randomUUID()}`,
     });
 
-    const spendState = await getCreditSpendStateForUser({ userId });
+    const spendState = await getSpendStateForUser(userId);
     expect(spendState?.balanceMicroCredits).toBe(10_000_000n);
   });
 
@@ -358,17 +370,17 @@ describe('grantCredits', () => {
       idempotencyKey,
     });
 
-    const spendState = await getCreditSpendStateForUser({ userId });
+    const spendState = await getSpendStateForUser(userId);
     expect(spendState?.balanceMicroCredits).toBe(10_000_000n);
   });
 });
 
-describe('resolveCreditSpendState vs getCreditSpendStateForUser', () => {
+describe('resolveCreditSpendState vs getCreditSpendStateForOrganization', () => {
   beforeEach(async () => {
     await truncateAllTables();
   });
 
-  test('resolveCreditSpendState resolves through workspace -> owner -> account', async () => {
+  test('resolveCreditSpendState resolves through workspace -> organization -> account', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     await seedCreditAccount({ userId, balanceMicroCredits: 5_000_000n });
 
@@ -386,13 +398,77 @@ describe('resolveCreditSpendState vs getCreditSpendStateForUser', () => {
     expect(state).toBeNull();
   });
 
-  test('getCreditSpendStateForUser reads a user-global balance without a workspace in scope', async () => {
+  test('getCreditSpendStateForOrganization reads an organization balance without a workspace in scope', async () => {
     const { userId } = await seedAuthenticatedUser();
     await seedCreditAccount({ userId, balanceMicroCredits: 2_000_000n });
 
-    const state = await getCreditSpendStateForUser({ userId });
+    const state = await getSpendStateForUser(userId);
 
     expect(state?.balanceMicroCredits).toBe(2_000_000n);
     expect(state?.allowed).toBe(true);
+  });
+});
+
+describe('organization billing', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  test('a second org member spending in the owner workspace is billed to the org account', async () => {
+    const owner = await seedAuthenticatedUser();
+    const other = await seedAuthenticatedUser();
+    const organizationId = await getOrganizationIdByUserId({ userId: owner.userId });
+    if (!organizationId) throw new Error('owner has no organization');
+    await db.insert(member).values({
+      organizationId,
+      userId: other.userId,
+      role: 'member',
+      createdAt: new Date(),
+    });
+    const { creditAccountId } = await seedCreditAccount({
+      userId: owner.userId,
+      balanceMicroCredits: 100_000_000n,
+    });
+    const { aiModelId } = await seedTokenPricedAiModel();
+
+    const spendState = await resolveCreditSpendState({ workspaceId: owner.workspaceId });
+    expect(spendState?.creditAccountId).toBe(creditAccountId);
+
+    await settleCreditUsage({
+      creditAccountId,
+      workspaceId: owner.workspaceId,
+      userId: other.userId,
+      aiModelId,
+      feature: 'chat',
+      refType: null,
+      refId: null,
+      durationMs: null,
+      idempotencyKey: `chat:test-${crypto.randomUUID()}`,
+      billableInputTokens: 1000,
+      billableOutputTokens: 500,
+      inputTokens: 1000,
+      outputTokens: 500,
+      reasoningTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
+
+    const events = await db.query.creditUsageEvent.findMany({ where: { creditAccountId } });
+    expect(events).toHaveLength(1);
+    expect(events[0]?.userId).toBe(other.userId);
+    const after = await getCreditSpendStateForOrganization({ organizationId });
+    expect(after?.balanceMicroCredits).toBeLessThan(100_000_000n);
+  });
+
+  test('getOrCreateCreditAccountByOrganizationId is idempotent', async () => {
+    const { userId } = await seedAuthenticatedUser();
+    const organizationId = await getOrganizationIdByUserId({ userId });
+    if (!organizationId) throw new Error('user has no organization');
+
+    const first = await getOrCreateCreditAccountByOrganizationId({ organizationId });
+    const second = await getOrCreateCreditAccountByOrganizationId({ organizationId });
+
+    expect(second.id).toBe(first.id);
+    expect(first.organizationId).toBe(organizationId);
   });
 });

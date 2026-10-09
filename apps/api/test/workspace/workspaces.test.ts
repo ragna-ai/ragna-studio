@@ -1,3 +1,5 @@
+import { db } from '@repo/database';
+import { member } from '@repo/database/schema';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -5,7 +7,7 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 
 // Plain CRUD for /workspace. This
-// controller checks ownership itself via `ownerId` (see workspace.repo.ts),
+// controller checks organization membership itself (see workspace.repo.ts),
 // not the shared workspaceGuard middleware: it manages the resource
 // workspaceGuard exists to gate, so there's no workspaceId route param to
 // guard yet at create time. Auth (missing/invalid session) is covered
@@ -14,7 +16,7 @@ import { app } from '../../src/app';
 
 const workspaceSchema = z.object({
   id: z.string(),
-  ownerId: z.string(),
+  organizationId: z.string(),
   name: z.string(),
 });
 
@@ -59,7 +61,51 @@ describe('GET /workspace', () => {
 
     const body = workspaceListResponseSchema.parse(await response.json());
     expect(body.workspaces).toHaveLength(2);
-    expect(body.workspaces.some((workspace) => workspace.ownerId === userB.userId)).toBe(false);
+    const memberB = await db.query.member.findFirst({ where: { userId: userB.userId } });
+    expect(
+      body.workspaces.some((workspace) => workspace.organizationId === memberB?.organizationId),
+    ).toBe(false);
+  });
+});
+
+describe('organization scoping', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  test('a created workspace belongs to the creator organization', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const membership = await db.query.member.findFirst({ where: { userId } });
+
+    const created = await createWorkspace(cookieHeader, 'Marketing');
+
+    const row = await db.query.workspace.findFirst({ where: { id: created.id } });
+    expect(row?.organizationId).toBe(membership?.organizationId);
+  });
+
+  test('a workspace created by one member is visible to and deletable by another', async () => {
+    const owner = await seedAuthenticatedUser();
+    const colleague = await seedAuthenticatedUser();
+    const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    await db.insert(member).values({
+      organizationId: ownerMembership?.organizationId ?? '',
+      userId: colleague.userId,
+      role: 'member',
+      createdAt: new Date(0),
+    });
+
+    const created = await createWorkspace(owner.cookieHeader, 'Shared');
+    const listResponse = await app.request('/workspace', {
+      headers: { cookie: colleague.cookieHeader },
+    });
+    const listed = workspaceListResponseSchema.parse(await listResponse.json());
+    expect(listed.workspaces.map((workspace) => workspace.id)).toContain(created.id);
+
+    const deleteResponse = await app.request(`/workspace/${created.id}`, {
+      method: 'DELETE',
+      headers: { cookie: colleague.cookieHeader },
+    });
+    expect(deleteResponse.status).toBe(StatusCodes.OK);
   });
 });
 

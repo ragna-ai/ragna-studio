@@ -7,7 +7,8 @@ import type {
 } from '@repo/database';
 import {
   countCreditUsageEvents,
-  getCreditSpendStateForUser,
+  getCreditSpendStateForOrganization,
+  getOrganizationIdByUserId,
   listCreditUsageEvents,
   resolveCreditSpendState,
 } from '@repo/database';
@@ -52,7 +53,7 @@ export interface CreditUsageListResponse {
  *
  * Returns `null` immediately, without querying, when `CREDITS_ENABLED` is
  * off, so the system can ship dark. Otherwise throws `PaymentRequiredException`
- * when the workspace's owner has no credit account, or its balance is not
+ * when the workspace's organization has no credit account, or its balance is not
  * positive (the gate is `balance > 0`).
  *
  * `pricing` is the target model's pricing, when the caller already knows
@@ -103,10 +104,10 @@ export async function assertCanSpend({
 }
 
 /**
- * Resolves the calling user's own credit account state for the user-global
+ * Resolves the credit account state of the calling user's organization for the user-global
  * `/credit/balance` and `/credit/usage` routes, which have no `:workspaceId`
  * in scope: credits belong to the account, not to a workspace.
- * A direct read on `credit_accounts.userId`, distinct from
+ * A direct read on `credit_accounts.organization_id`, distinct from
  * `resolveCreditSpendState`'s workspace-locator gate. Never creates an
  * account: "no account" comes back as `null`, the same as
  * `resolveCreditSpendState` (only `grantCredits` creates one).
@@ -116,7 +117,13 @@ async function resolveOwnCreditSpendState({
 }: {
   userId: string;
 }): Promise<CreditSpendState | null> {
-  const { error, data: spendState } = await tryCatch(() => getCreditSpendStateForUser({ userId }));
+  const { error, data: spendState } = await tryCatch(async () => {
+    const organizationId = await getOrganizationIdByUserId({ userId });
+    if (!organizationId) {
+      return null;
+    }
+    return getCreditSpendStateForOrganization({ organizationId });
+  });
 
   if (error !== null) {
     logger.error('Failed to resolve credit spend state', error);

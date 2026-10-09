@@ -2,6 +2,7 @@ import { bigint, index, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-cor
 import type { AiModelPricing } from './aimodel.schema';
 import { aiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { organization } from './organization.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -12,18 +13,13 @@ export const creditUsageFeatures = ['chat', 'workflow', 'team'] as const;
 export type CreditUsageFeature = (typeof creditUsageFeatures)[number];
 
 // CREDIT ACCOUNT
-// The balance holder. One per user
-// in v1: `userId` is unique, so this is a 1:1 extension of `users` today.
-// When organisations land, add a nullable `organisationId` FK alongside
-// `userId` (plus a check that exactly one is set) and repoint resolution;
-// the ledger and usage history never need to change their
-// `creditAccountId` reference.
+// The balance holder. One per organization (`organizationId` is unique).
 export const creditAccount = pgTable('credit_accounts', {
   id: primaryIdColumn,
-  userId: text('user_id')
+  organizationId: text('organization_id')
     .notNull()
     .unique()
-    .references(() => user.id, { onDelete: 'cascade' }),
+    .references(() => organization.id, { onDelete: 'cascade' }),
   // Denormalised cache of sum(credit_ledger.amount_micro_credits). The
   // ledger is the source of truth; this column exists so the spend gate is
   // one indexed read instead of an aggregate over an ever-growing table. May

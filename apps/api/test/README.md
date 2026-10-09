@@ -52,7 +52,7 @@ Tests are grouped by domain folder, one folder per feature area:
 - `test/workspace/` — `workspaceGuard` authorization (`workspace-
   authorization.test.ts`) and workspace CRUD (`workspaces.test.ts`). Unlike
   the other CRUD domains, ownership on the CRUD routes is checked by the
-  controller itself (`ownerId`, not `workspaceGuard`, since a workspace has
+  controller itself (organization membership, not `workspaceGuard`, since a workspace has
   to exist before it can be guarded), and delete has two extra rules:
   rejecting the user's last workspace, and 404ing a cross-user delete rather
   than silently no-oping (`deleteWorkspaceById` in

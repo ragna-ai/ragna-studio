@@ -1,20 +1,18 @@
 import { index, pgTable, text } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
-import { user } from './user.schema';
+import { organization } from './organization.schema';
 
 export const workspace = pgTable(
   'workspaces',
   {
     id: primaryIdColumn,
-    // Named `ownerId` (not `userId`) to signal one owner now, and to leave room
-    // for a future `workspace_users` pivot without renaming this column.
-    ownerId: text('owner_id')
+    organizationId: text('organization_id')
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+      .references(() => organization.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     ...timestamps,
   },
-  (table) => [index('workspace_ownerId_idx').on(table.ownerId)],
+  (table) => [index('workspace_organizationId_idx').on(table.organizationId)],
 );
 
 export type Workspace = typeof workspace.$inferSelect;

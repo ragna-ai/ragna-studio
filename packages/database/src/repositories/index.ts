@@ -22,6 +22,7 @@ export * from './mcp.repo';
 export * from './media.repo';
 export * from './memory.repo';
 export * from './notification.repo';
+export * from './organization.repo';
 export * from './overview.repo';
 export * from './session.repo';
 export * from './social-post.repo';

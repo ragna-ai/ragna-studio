@@ -1,17 +1,20 @@
 import { and, count, eq } from 'drizzle-orm';
 import { db } from '../db';
-import { workspace, type Workspace } from '../schema';
+import { member, workspace, type Workspace } from '../schema';
 
 export type { Workspace } from '../schema';
 
 export async function createWorkspace({
-  ownerId,
+  organizationId,
   name,
 }: {
-  ownerId: string;
+  organizationId: string;
   name: string;
 }): Promise<Workspace> {
-  const [createdWorkspace] = await db.insert(workspace).values({ ownerId, name }).returning();
+  const [createdWorkspace] = await db
+    .insert(workspace)
+    .values({ organizationId, name })
+    .returning();
 
   if (!createdWorkspace) {
     throw new Error('Failed to create workspace');
@@ -20,76 +23,84 @@ export async function createWorkspace({
   return createdWorkspace;
 }
 
-export async function getAllWorkspacesByOwnerId({
-  ownerId,
+export async function getAllWorkspacesByOrganizationId({
+  organizationId,
 }: {
-  ownerId: string;
+  organizationId: string;
 }): Promise<Workspace[]> {
   return db.query.workspace.findMany({
-    where: { ownerId },
+    where: { organizationId },
     orderBy: (t, { asc }) => asc(t.createdAt),
   });
 }
 
-// Used by the "cannot delete last workspace" rule (WP1): a user must always
-// keep at least one workspace.
-export async function countWorkspacesByOwnerId({ ownerId }: { ownerId: string }): Promise<number> {
+/** Backs the "cannot delete last workspace" rule: an organization always keeps one workspace. */
+export async function countWorkspacesByOrganizationId({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<number> {
   const [result] = await db
     .select({ count: count() })
     .from(workspace)
-    .where(eq(workspace.ownerId, ownerId));
+    .where(eq(workspace.organizationId, organizationId));
 
   return result?.count ?? 0;
 }
 
-export async function getWorkspaceById({
-  id,
-  ownerId,
+/** Returns the workspace only if the user is a member of its organization. */
+export async function getWorkspaceForMember({
+  workspaceId,
+  userId,
 }: {
-  id: string;
-  ownerId: string;
+  workspaceId: string;
+  userId: string;
 }): Promise<Workspace | null> {
-  const workspaceRecord = await db.query.workspace.findFirst({
-    where: { id, ownerId },
-  });
+  const [row] = await db
+    .select({ workspace })
+    .from(workspace)
+    .innerJoin(
+      member,
+      and(eq(member.organizationId, workspace.organizationId), eq(member.userId, userId)),
+    )
+    .where(eq(workspace.id, workspaceId))
+    .limit(1);
 
-  return workspaceRecord ?? null;
+  return row?.workspace ?? null;
 }
 
 export async function updateWorkspace({
   id,
-  ownerId,
+  organizationId,
   name,
 }: {
   id: string;
-  ownerId: string;
+  organizationId: string;
   name: string;
 }): Promise<Workspace | null> {
   const [updatedWorkspace] = await db
     .update(workspace)
     .set({ name })
-    .where(and(eq(workspace.id, id), eq(workspace.ownerId, ownerId)))
+    .where(and(eq(workspace.id, id), eq(workspace.organizationId, organizationId)))
     .returning();
 
   return updatedWorkspace ?? null;
 }
 
-// Resources scoped to this workspace are deleted with it: their workspaceId
-// FK is onDelete: 'cascade'. Callers must reject
-// deleting a user's last workspace before calling this (see WP1's
-// workspace.service.ts). Returns the deleted row (or null if `id` didn't
-// belong to `ownerId`), mirroring `updateWorkspace`, so the caller can 404
-// instead of a silent no-op.
+/**
+ * Resources scoped to the workspace cascade-delete with it. Callers must reject deleting an
+ * organization's last workspace first. Returns null when `id` is not in `organizationId`.
+ */
 export async function deleteWorkspaceById({
   id,
-  ownerId,
+  organizationId,
 }: {
   id: string;
-  ownerId: string;
+  organizationId: string;
 }): Promise<Workspace | null> {
   const [deletedWorkspace] = await db
     .delete(workspace)
-    .where(and(eq(workspace.id, id), eq(workspace.ownerId, ownerId)))
+    .where(and(eq(workspace.id, id), eq(workspace.organizationId, organizationId)))
     .returning();
 
   return deletedWorkspace ?? null;

@@ -37,6 +37,7 @@ import {
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
+import { invitation, member, organization } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
 import { workflow, workflowRun, workflowRunStep } from './workflow.schema';
@@ -85,6 +86,9 @@ const schema = {
   taskLabel,
   taskToTaskLabel,
   workspace,
+  organization,
+  member,
+  invitation,
   jwks,
   oauthClient,
   oauthResource,
@@ -109,19 +113,12 @@ export const relations = defineRelations(schema, (r) => ({
     socialPosts: r.many.socialPost(),
     workflows: r.many.workflow(),
     notifications: r.many.notification(),
-    workspaces: r.many.workspace(),
+    memberships: r.many.member(),
     datasets: r.many.dataset(),
     documents: r.many.document(),
     // Personal-library flow; unused until v2
     // starts writing ownerUserId.
     media: r.many.media(),
-    // Optional: not every user has a credit account yet, since accounts are
-    // created only by grantCredits, never lazily.
-    creditAccount: r.one.creditAccount({
-      from: r.user.id,
-      to: r.creditAccount.userId,
-      optional: true,
-    }),
     // One row per user,
     // optional: most users never connect Gmail.
     emailAccount: r.one.emailAccount({
@@ -148,6 +145,40 @@ export const relations = defineRelations(schema, (r) => ({
   session: {
     user: r.one.user({
       from: r.session.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  organization: {
+    members: r.many.member(),
+    invitations: r.many.invitation(),
+    workspaces: r.many.workspace(),
+    creditAccount: r.one.creditAccount({
+      from: r.organization.id,
+      to: r.creditAccount.organizationId,
+      optional: true,
+    }),
+  },
+  member: {
+    organization: r.one.organization({
+      from: r.member.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.member.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  invitation: {
+    organization: r.one.organization({
+      from: r.invitation.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    inviter: r.one.user({
+      from: r.invitation.inviterId,
       to: r.user.id,
       optional: false,
     }),
@@ -387,9 +418,9 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   creditAccount: {
-    user: r.one.user({
-      from: r.creditAccount.userId,
-      to: r.user.id,
+    organization: r.one.organization({
+      from: r.creditAccount.organizationId,
+      to: r.organization.id,
       optional: false,
     }),
     ledgerEntries: r.many.creditLedger(),
@@ -782,9 +813,9 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   workspace: {
-    owner: r.one.user({
-      from: r.workspace.ownerId,
-      to: r.user.id,
+    organization: r.one.organization({
+      from: r.workspace.organizationId,
+      to: r.organization.id,
       optional: false,
     }),
     agents: r.many.agent(),
@@ -801,7 +832,7 @@ export const relations = defineRelations(schema, (r) => ({
     tasks: r.many.task(),
     taskLabels: r.many.taskLabel(),
     // The account that pays for work done here is resolved through
-    // `ownerId`, not this relation; it exists for the audit trail only.
+    // `organizationId`, not this relation; it exists for the audit trail only.
     creditUsageEvents: r.many.creditUsageEvent(),
   },
 }));
