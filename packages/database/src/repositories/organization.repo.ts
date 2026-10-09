@@ -1,4 +1,5 @@
 import { createPrimaryId } from '@repo/utils';
+import { and, eq, exists, inArray, ne, not } from 'drizzle-orm';
 import { db } from '../db';
 import { member, organization, workspace, type Workspace } from '../schema';
 
@@ -56,4 +57,31 @@ export async function getOrganizationIdByUserId({
   });
 
   return membership?.organizationId ?? null;
+}
+
+/** Deletes the organizations where the user is an owner and no other owner exists. FKs cascade the rest. */
+export async function deleteOrganizationsSolelyOwnedByUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<void> {
+  const otherOwner = db
+    .select({ id: member.id })
+    .from(member)
+    .where(
+      and(
+        eq(member.organizationId, organization.id),
+        eq(member.role, ORGANIZATION_OWNER_ROLE),
+        ne(member.userId, userId),
+      ),
+    );
+
+  const ownedOrganizationIds = db
+    .select({ id: member.organizationId })
+    .from(member)
+    .where(and(eq(member.userId, userId), eq(member.role, ORGANIZATION_OWNER_ROLE)));
+
+  await db
+    .delete(organization)
+    .where(and(inArray(organization.id, ownedOrganizationIds), not(exists(otherOwner))));
 }

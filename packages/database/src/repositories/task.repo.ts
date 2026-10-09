@@ -11,7 +11,8 @@ import type {
   TaskPriority,
   TaskStatus,
 } from '../schema';
-import { task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
+import { member, task, taskAttachment, taskToTaskLabel, workspace } from '../schema';
+import { ORGANIZATION_OWNER_ROLE } from './organization.repo';
 import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
 
 export type {
@@ -461,7 +462,7 @@ export type TaskDueForReminder = {
  * For the reminder cron: tasks with a due
  * date and an offset, not yet reminded, not done/canceled, whose fire time
  * (`dueDate - remindDaysBeforeDue days`) has passed. Joins the workspace to
- * resolve the owner, the notification recipient in v1.
+ * resolve the organization owners, the notification recipients.
  */
 export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
   return db
@@ -470,10 +471,17 @@ export async function listTasksDueForReminder(): Promise<TaskDueForReminder[]> {
       workspaceId: task.workspaceId,
       taskNumber: task.number,
       taskTitle: task.title,
-      ownerUserId: workspace.ownerId,
+      ownerUserId: member.userId,
     })
     .from(task)
     .innerJoin(workspace, eq(task.workspaceId, workspace.id))
+    .innerJoin(
+      member,
+      and(
+        eq(member.organizationId, workspace.organizationId),
+        eq(member.role, ORGANIZATION_OWNER_ROLE),
+      ),
+    )
     .where(
       and(
         isNotNull(task.dueDate),

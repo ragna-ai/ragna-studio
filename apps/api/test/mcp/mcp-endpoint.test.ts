@@ -2,6 +2,7 @@ import {
   createDataset,
   createDatasetRow,
   createWorkspace,
+  getOrganizationIdByUserId,
   db,
   deleteMcpConnection,
   getDatasetRowById,
@@ -276,7 +277,13 @@ describe('POST /mcp: tools/call', () => {
     await seedMcpConnection({ userId, workspaceId, access: { datasets: 'write' } });
     const token = await mintMcpAccessToken({ userId });
 
-    const otherWorkspace = await createWorkspace({ ownerId: userId, name: 'Other' });
+    const organizationId = await getOrganizationIdByUserId({ userId });
+    if (!organizationId) throw new Error('Seeded user has no organization');
+    const otherWorkspace = await createWorkspace({
+      ownerId: userId,
+      organizationId,
+      name: 'Other',
+    });
     const siblingDataset = await createDataset({
       userId,
       workspaceId: otherWorkspace.id,

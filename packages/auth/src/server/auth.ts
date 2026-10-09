@@ -2,7 +2,12 @@ import { cimd } from '@better-auth/cimd';
 import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { mcp } from '@better-auth/mcp';
 import { config } from '@repo/config';
-import { createOrganizationForUser, db, getOrganizationIdByUserId } from '@repo/database';
+import {
+  createOrganizationForUser,
+  db,
+  deleteOrganizationsSolelyOwnedByUser,
+  getOrganizationIdByUserId,
+} from '@repo/database';
 import { logger } from '@repo/logger';
 import * as schema from '@repo/database/schema';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
@@ -156,6 +161,11 @@ export const auth = betterAuth({
           } catch (error) {
             logger.error('Failed to enqueue welcome email', { userId: user.id, error });
           }
+        },
+      },
+      delete: {
+        before: async (user) => {
+          await deleteOrganizationsSolelyOwnedByUser({ userId: user.id });
         },
       },
     },

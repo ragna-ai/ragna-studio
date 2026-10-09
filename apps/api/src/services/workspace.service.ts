@@ -1,9 +1,10 @@
 import type { Workspace } from '@repo/database';
 import {
-  countWorkspacesByOwnerId,
+  countWorkspacesByOrganizationId,
   createWorkspace,
   deleteWorkspaceById,
-  getAllWorkspacesByOwnerId,
+  getAllWorkspacesByOrganizationId,
+  getOrganizationIdByUserId,
   updateWorkspace,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -15,13 +16,31 @@ import {
 } from '../exceptions';
 import { deleteWorkspaceMediaObjects } from './media.service';
 
+async function requireOrganizationId({ userId }: { userId: string }): Promise<string> {
+  const { error, data: organizationId } = await tryCatch(() =>
+    getOrganizationIdByUserId({ userId }),
+  );
+
+  if (error !== null) {
+    logger.error('Failed to resolve organization for user', error);
+    throw new InternalServerErrorException('Failed to resolve organization for user');
+  }
+
+  if (!organizationId) {
+    throw new NotFoundException('Organization not found');
+  }
+
+  return organizationId;
+}
+
 /**
  * [GET] /workspace
- * Lists all workspaces owned by the authenticated user.
+ * Lists all workspaces of the authenticated user's organization.
  */
 export async function listWorkspacesForUser({ userId }: { userId: string }): Promise<Workspace[]> {
+  const organizationId = await requireOrganizationId({ userId });
   const { error, data: workspaces } = await tryCatch(() =>
-    getAllWorkspacesByOwnerId({ ownerId: userId }),
+    getAllWorkspacesByOrganizationId({ organizationId }),
   );
 
   if (error !== null || !workspaces) {
@@ -34,7 +53,7 @@ export async function listWorkspacesForUser({ userId }: { userId: string }): Pro
 
 /**
  * [POST] /workspace
- * Creates a new workspace for the authenticated user.
+ * Creates a new workspace in the authenticated user's organization.
  */
 export async function createWorkspaceForUser({
   userId,
@@ -43,8 +62,9 @@ export async function createWorkspaceForUser({
   userId: string;
   name: string;
 }): Promise<Workspace> {
+  const organizationId = await requireOrganizationId({ userId });
   const { error, data: workspaceRecord } = await tryCatch(() =>
-    createWorkspace({ ownerId: userId, name }),
+    createWorkspace({ ownerId: userId, organizationId, name }),
   );
 
   if (error !== null || !workspaceRecord) {
@@ -57,7 +77,7 @@ export async function createWorkspaceForUser({
 
 /**
  * [PATCH] /workspace/:workspaceId
- * Renames a workspace owned by the authenticated user.
+ * Renames a workspace of the authenticated user's organization.
  */
 export async function renameWorkspaceForUser({
   userId,
@@ -68,8 +88,9 @@ export async function renameWorkspaceForUser({
   workspaceId: string;
   name: string;
 }): Promise<Workspace> {
+  const organizationId = await requireOrganizationId({ userId });
   const { error, data: workspaceRecord } = await tryCatch(() =>
-    updateWorkspace({ id: workspaceId, ownerId: userId, name }),
+    updateWorkspace({ id: workspaceId, organizationId, name }),
   );
 
   if (error !== null) {
@@ -86,8 +107,8 @@ export async function renameWorkspaceForUser({
 
 /**
  * [DELETE] /workspace/:workspaceId
- * Deletes a workspace owned by the authenticated user. Rejects the delete
- * with 400 if it is the user's only workspace. Contained resources (agents,
+ * Deletes a workspace of the authenticated user's organization. Rejects the
+ * delete with 400 if it is the organization's only workspace. Contained resources (agents,
  * chats, documents, ...) cascade-delete with it: their workspaceId FKs went
  * from `set null` to `cascade` in WP0, so nothing is "unassigned" anymore.
  */
@@ -98,13 +119,14 @@ export async function deleteWorkspaceForUser({
   userId: string;
   workspaceId: string;
 }): Promise<void> {
+  const organizationId = await requireOrganizationId({ userId });
   const { error, data: workspaceCount } = await tryCatch(() =>
-    countWorkspacesByOwnerId({ ownerId: userId }),
+    countWorkspacesByOrganizationId({ organizationId }),
   );
 
   if (error !== null || workspaceCount === null) {
-    logger.error('Failed to count workspaces for user', error);
-    throw new InternalServerErrorException('Failed to count workspaces for user');
+    logger.error('Failed to count workspaces for organization', error);
+    throw new InternalServerErrorException('Failed to count workspaces for organization');
   }
 
   if (workspaceCount <= 1) {
@@ -117,7 +139,7 @@ export async function deleteWorkspaceForUser({
   await deleteWorkspaceMediaObjects({ workspaceId });
 
   const { error: deleteError, data: deletedWorkspace } = await tryCatch(() =>
-    deleteWorkspaceById({ id: workspaceId, ownerId: userId }),
+    deleteWorkspaceById({ id: workspaceId, organizationId }),
   );
 
   if (deleteError !== null) {

@@ -1,5 +1,5 @@
 import type { Workspace } from '@repo/database';
-import { getWorkspaceById } from '@repo/database';
+import { getWorkspaceForMember } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { createMiddleware } from 'hono/factory';
@@ -21,7 +21,7 @@ export type WorkspaceGuardEnv = AuthEnv & {
  * to live in `document.service.ts`.
  *
  * Reads the `:workspaceId` route param, loads the workspace, and throws
- * `NotFoundException` unless it belongs to the authenticated user. On
+ * `NotFoundException` unless the authenticated user is a member of the workspace's organization. On
  * success the workspace is stashed in context as `c.get('workspace')` for
  * every downstream handler, so services no longer need to re-fetch it.
  *
@@ -54,7 +54,7 @@ export const workspaceGuard = createMiddleware<WorkspaceGuardEnv>(async (c, next
   }
 
   const { error, data: workspaceRecord } = await tryCatch(() =>
-    getWorkspaceById({ id: validWorkspaceId, ownerId: user.id }),
+    getWorkspaceForMember({ workspaceId: validWorkspaceId, userId: user.id }),
   );
 
   if (error !== null) {

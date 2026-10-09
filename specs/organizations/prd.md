@@ -347,7 +347,13 @@ Recorded so v2 starts from them:
 - Resource `user_id` columns cascade on user delete (agents, chats, workflows, ...). With
   members, removing a user would delete their work from shared workspaces. Switch to
   `set null` authorship.
-- Task reminder recipient (owner today).
+- Task reminder recipient (owner today). With several owners, the cron gets one row per owner
+  for the same task and calls `markTaskReminderSent` per row.
+- `getOrganizationIdByUserId` returns the oldest membership. Workspace list/create and
+  `/credit/balance` use it, so a member of someone else's org sees their own org there. v2
+  decides how the org is chosen (`activeOrganizationId`, or one membership per user).
+- Owner checks compare `member.role = 'owner'`, but better-auth stores several roles
+  comma-separated (`owner,admin`). Fine while every member has one role.
 - Caching the guard's membership check, as the resource-guard PRD suggested.
 
 ## Considered
