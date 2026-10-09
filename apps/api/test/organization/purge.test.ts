@@ -1,6 +1,6 @@
 import { createMedia, db, sql } from '@repo/database';
 import { creditAccount, dataset, organization, user as userTable } from '@repo/database/schema';
-import { purgeExpiredDeletions, purgeOrganization } from '@repo/media';
+import { deleteMediaObjectsByKeys, purgeExpiredDeletions, purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
   resetStorageProviderMock,
@@ -240,5 +240,28 @@ describe('purgeExpiredDeletions', () => {
     expect(
       await db.query.organization.findFirst({ where: { id: second.organizationId } }),
     ).toBeUndefined();
+  });
+});
+
+describe('deleteMediaObjectsByKeys', () => {
+  test('deletes the objects per bucket', async () => {
+    await deleteMediaObjectsByKeys({
+      objects: [
+        { bucket: 'documents-bucket', key: 'a.pdf' },
+        { bucket: 'images-bucket', key: 'b.png' },
+        { bucket: 'documents-bucket', key: 'c.pdf' },
+      ],
+    });
+
+    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', ['a.pdf', 'c.pdf']);
+    expect(deleteObjectsMock).toHaveBeenCalledWith('images-bucket', ['b.png']);
+  });
+
+  test('throws when an object is not deleted, so the job is retried', async () => {
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    await expect(
+      deleteMediaObjectsByKeys({ objects: [{ bucket: 'documents-bucket', key: 'a.pdf' }] }),
+    ).rejects.toThrow();
   });
 });

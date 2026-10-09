@@ -261,8 +261,11 @@ Manual runs still work. To schedule it again, someone creates a new workflow.
 - `purgeOrganization`: unchanged. It already iterates all workspaces of the org, personal ones
   included.
 - `prepareUserRemoval` (platform admin `remove-user`) of a user who isn't an org owner:
-  best-effort R2 cleanup of the personal workspace before better-auth deletes the user row,
-  like workspace delete.
+  reads the `{ bucket, key }` of every media row in the personal workspace before
+  better-auth deletes the user row (the rows cascade with it), and enqueues
+  `DELETE_MEDIA_OBJECTS_JOB` on the purge queue (max 1000 objects per job, 3 attempts). The
+  worker deletes them with `deleteMediaObjectsByKeys` (`@repo/media`). An enqueue failure is
+  logged and never blocks the removal. `@repo/auth` does not depend on `@repo/media`.
 
 ### 8. Migrations
 

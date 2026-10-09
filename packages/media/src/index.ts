@@ -20,6 +20,7 @@ export { toChatUploadImageUrl, getChatUploadImageKey, getMediaDocumentKey } from
 export {
   createMediaForObject,
   deleteMediaIfUnreferenced,
+  deleteMediaObjectsByKeys,
   deleteWorkspaceMediaObjects,
   storeMedia,
   sweepUnreferencedMedia,

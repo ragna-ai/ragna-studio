@@ -1,8 +1,10 @@
 import { logger } from '@repo/logger';
-import { purgeOrganization } from '@repo/media';
+import { deleteMediaObjectsByKeys, purgeOrganization } from '@repo/media';
 import type { Worker } from '@repo/queue';
 import {
   createWorker,
+  DELETE_MEDIA_OBJECTS_JOB,
+  deleteMediaObjectsJobSchema,
   PURGE_ORGANIZATION_JOB,
   PURGE_QUEUE,
   purgeOrganizationJobSchema,
@@ -18,6 +20,11 @@ export function registerPurgeJobProcessor(): Worker<any, any, string> {
         case PURGE_ORGANIZATION_JOB: {
           const { organizationId } = purgeOrganizationJobSchema.parse(job.data);
           await purgeOrganization({ organizationId });
+          break;
+        }
+        case DELETE_MEDIA_OBJECTS_JOB: {
+          const { objects } = deleteMediaObjectsJobSchema.parse(job.data);
+          await deleteMediaObjectsByKeys({ objects });
           break;
         }
         default: {

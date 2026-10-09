@@ -1,6 +1,11 @@
 import { createMedia, db, sql } from '@repo/database';
 import { user as userTable } from '@repo/database/schema';
-import { PURGE_ORGANIZATION_JOB, purgeOrganizationJobSchema } from '@repo/queue';
+import {
+  DELETE_MEDIA_OBJECTS_JOB,
+  deleteMediaObjectsJobSchema,
+  PURGE_ORGANIZATION_JOB,
+  purgeOrganizationJobSchema,
+} from '@repo/queue';
 import { purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
@@ -103,7 +108,7 @@ describe('platform admin remove-user', () => {
     expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
   });
 
-  test('a non-owner member has their personal workspace R2 objects cleaned', async () => {
+  test('a non-owner member has their personal workspace objects queued for deletion', async () => {
     const { colleague } = await seedOwnerWithColleague();
     const storageKey = `user/${colleague.userId}/private.pdf`;
     await createMedia({
@@ -119,11 +124,27 @@ describe('platform admin remove-user', () => {
     const response = await removeUserAsPlatformAdmin(colleague.userId);
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
+    const cleanupCalls = queueAddMock.mock.calls.filter(
+      ([name]) => name === DELETE_MEDIA_OBJECTS_JOB,
+    );
+    expect(cleanupCalls).toHaveLength(1);
+    expect(deleteMediaObjectsJobSchema.parse(cleanupCalls[0]?.[1])).toEqual({
+      objects: [{ bucket: 'documents-bucket', key: storageKey }],
+    });
+    expect(deleteObjectsMock).not.toHaveBeenCalled();
     expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
   });
 
-  test('a failed R2 cleanup does not block removing a non-owner member', async () => {
+  test('enqueues nothing when the personal workspace has no media', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(queueAddMock).not.toHaveBeenCalled();
+  });
+
+  test('a failed enqueue does not block removing a non-owner member', async () => {
     const { colleague } = await seedOwnerWithColleague();
     await createMedia({
       ownerWorkspaceId: colleague.personalWorkspaceId,
@@ -134,7 +155,7 @@ describe('platform admin remove-user', () => {
       size: 10,
       origin: 'uploaded',
     });
-    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+    queueAddMock.mockImplementationOnce(() => Promise.reject(new Error('Redis down')));
 
     const response = await removeUserAsPlatformAdmin(colleague.userId);
 
