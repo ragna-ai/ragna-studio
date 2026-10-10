@@ -4,6 +4,7 @@ import type { Agent } from '../schema';
 import { agent, task } from '../schema';
 import type { ICreateAgent } from '../zod';
 import { getDefaultAgent } from './agent-template.repo';
+import { getPersonalWorkspaceIdByUserId } from './organization.repo';
 
 export type { Agent, AgentReasoningEffort, AgentSettings, AgentTool, AgentTools } from '../schema';
 
@@ -164,8 +165,8 @@ export async function getAgentByIdAndWorkspaceId({
   return agentRecord ?? null;
 }
 
-// Per-user lookup for email, which has no workspace scope by design.
-export async function getAgentById({
+/** Looks up an agent by id, only if it lives in the user's private workspace. */
+export async function getAgentInPersonalWorkspace({
   agentId,
   userId,
 }: {
@@ -173,13 +174,57 @@ export async function getAgentById({
   userId: string;
 }): Promise<Agent | null> {
   const agentRecord = await db.query.agent.findFirst({
-    where: { id: agentId, userId },
+    where: { id: agentId, workspace: { personalUserId: userId } },
     with: {
       aiModel: true,
     },
   });
 
   return agentRecord ?? null;
+}
+
+export interface ResolveEmailDraftAgentParams {
+  userId: string;
+  overrideAgentId?: string | null;
+  defaultAgentId?: string | null;
+}
+
+/**
+ * Picks the agent that drafts an email reply: the override, else the stored default,
+ * else the private workspace's default agent. Candidates outside the private workspace
+ * are skipped. Returns null only when the user has no private workspace.
+ */
+export async function resolveEmailDraftAgent({
+  userId,
+  overrideAgentId,
+  defaultAgentId,
+}: ResolveEmailDraftAgentParams): Promise<Agent | null> {
+  const candidateIds = [overrideAgentId, defaultAgentId].filter((id): id is string => !!id);
+  if (candidateIds.length > 0) {
+    const privateAgents = await db.query.agent.findMany({
+      where: { id: { in: candidateIds }, workspace: { personalUserId: userId } },
+      with: {
+        aiModel: true,
+      },
+    });
+    const preferredAgent = candidateIds
+      .map((id) => privateAgents.find((privateAgent) => privateAgent.id === id))
+      .find((privateAgent) => privateAgent !== undefined);
+    if (preferredAgent) {
+      return preferredAgent;
+    }
+  }
+
+  const personalWorkspaceId = await getPersonalWorkspaceIdByUserId({ userId });
+  if (!personalWorkspaceId) {
+    return null;
+  }
+
+  const workspaceDefaultAgent = await getOrCreateDefaultAgentForWorkspace({
+    userId,
+    workspaceId: personalWorkspaceId,
+  });
+  return getAgentInPersonalWorkspace({ agentId: workspaceDefaultAgent.id, userId });
 }
 
 export async function getAgentsByWorkspaceId({

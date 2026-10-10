@@ -25,8 +25,7 @@ import {
   createEmailDraft,
   deleteEmailAccountById,
   deleteEmailCategory,
-  getAgentById,
-  listAccessibleWorkspaces,
+  getAgentInPersonalWorkspace,
   getEmailAccountByUserId,
   getEmailCategoryById,
   getEmailDraftById,
@@ -34,7 +33,7 @@ import {
   getEmailMessageWithBodyById,
   getEmailThreadById,
   getEmailThreadByProviderThreadId,
-  getMediaById,
+  getMediaInPersonalWorkspace,
   isUniqueViolationError,
   listEmailAutoDraftSenders,
   listEmailCategoriesByAccountId,
@@ -326,7 +325,7 @@ export async function updateEmailAccountSettingsForUser({
   const account = await loadEmailAccount({ userId });
 
   if (defaultAgentId) {
-    await assertOwnedAgent({ userId, agentId: defaultAgentId });
+    await assertPrivateWorkspaceAgent({ userId, agentId: defaultAgentId });
   }
 
   const { error, data: updated } = await tryCatch(() =>
@@ -341,19 +340,17 @@ export async function updateEmailAccountSettingsForUser({
   return updated;
 }
 
-// Agents are workspace resources, the email account is per-user:
-// ownership is checked directly by
-// userId (agent.repo.ts's getAgentById), not through a workspace guard,
-// same as workflow executors resolving a user-referenced agent outside an
-// HTTP route.
-async function assertOwnedAgent({
+// Mail lives in the user's private workspace: a draft agent from anywhere else is a foreign reference.
+async function assertPrivateWorkspaceAgent({
   userId,
   agentId,
 }: {
   userId: string;
   agentId: string;
 }): Promise<Agent> {
-  const { error, data: agent } = await tryCatch(() => getAgentById({ agentId, userId }));
+  const { error, data: agent } = await tryCatch(() =>
+    getAgentInPersonalWorkspace({ agentId, userId }),
+  );
 
   if (error !== null) {
     logger.error('Failed to load agent', error);
@@ -361,7 +358,7 @@ async function assertOwnedAgent({
   }
 
   if (!agent) {
-    throw new BadRequestException('Agent not found');
+    throw new NotFoundException('Agent not found');
   }
 
   return agent;
@@ -1450,15 +1447,9 @@ async function resolveAttachments({
   }
 
   if (mediaIds && mediaIds.length > 0) {
-    const { data: accessibleWorkspaces } = await tryCatch(() =>
-      listAccessibleWorkspaces({ userId }),
-    );
-    const ownedWorkspaceIds = new Set(
-      (accessibleWorkspaces ?? []).map(({ workspace }) => workspace.id),
-    );
-
-    for (const mediaId of mediaIds) {
-      const mediaAttachment = await resolveMediaAttachment({ mediaId, ownedWorkspaceIds });
+    const privateMedia = await loadPrivateWorkspaceMedia({ userId, mediaIds });
+    for (const media of privateMedia) {
+      const mediaAttachment = await downloadMediaAttachment(media);
       attachments.push(mediaAttachment);
     }
   }
@@ -1477,38 +1468,47 @@ function assertAttachmentsWithinBudget(attachments: MailAttachmentInput[]): void
   }
 }
 
-async function resolveMediaAttachment({
-  mediaId,
-  ownedWorkspaceIds,
+// One query for all ids. Any id outside the private workspace rejects the whole request.
+async function loadPrivateWorkspaceMedia({
+  userId,
+  mediaIds,
 }: {
-  mediaId: string;
-  ownedWorkspaceIds: Set<string>;
-}): Promise<MailAttachmentInput> {
-  const { error, data: media } = await tryCatch(() => getMediaById({ id: mediaId }));
+  userId: string;
+  mediaIds: string[];
+}): Promise<Media[]> {
+  const { error, data: foundMedia } = await tryCatch(() =>
+    getMediaInPersonalWorkspace({ ids: mediaIds, userId }),
+  );
 
-  if (error !== null) {
-    logger.error(`Failed to load media ${mediaId} for email attachment`, error);
+  if (error !== null || !foundMedia) {
+    logger.error('Failed to load media for email attachments', error);
     throw new InternalServerErrorException('Failed to load attachment');
   }
 
-  if (!media || !isOwnedMedia(media, ownedWorkspaceIds)) {
-    throw new BadRequestException('One of the selected attachments was not found');
+  const mediaById = new Map(foundMedia.map((media) => [media.id, media]));
+  const orderedMedia: Media[] = [];
+  for (const mediaId of mediaIds) {
+    const media = mediaById.get(mediaId);
+    if (!media) {
+      throw new BadRequestException('One of the selected attachments was not found');
+    }
+    orderedMedia.push(media);
   }
 
-  const { error: downloadError, data: object } = await tryCatch(() =>
+  return orderedMedia;
+}
+
+async function downloadMediaAttachment(media: Media): Promise<MailAttachmentInput> {
+  const { error, data: object } = await tryCatch(() =>
     downloadObjectBuffer(media.bucket, media.storageKey),
   );
 
-  if (downloadError !== null || !object) {
-    logger.error(`Failed to download media ${mediaId} for email attachment`, downloadError);
+  if (error !== null || !object) {
+    logger.error(`Failed to download media ${media.id} for email attachment`, error);
     throw new InternalServerErrorException('Failed to load attachment');
   }
 
   return { filename: media.filename, mimeType: media.mimeType, content: object.buffer };
-}
-
-function isOwnedMedia(media: Media, ownedWorkspaceIds: Set<string>): boolean {
-  return media.ownerWorkspaceId !== null && ownedWorkspaceIds.has(media.ownerWorkspaceId);
 }
 
 // Marks every non-terminal draft on `threadId` that replies to
@@ -2465,7 +2465,7 @@ export async function triggerEmailDraftForUser({
   }
 
   if (agentId) {
-    await assertOwnedAgent({ userId, agentId });
+    await assertPrivateWorkspaceAgent({ userId, agentId });
   }
 
   const { error } = await tryCatch(() =>

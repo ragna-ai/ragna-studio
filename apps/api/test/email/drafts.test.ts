@@ -53,10 +53,10 @@ beforeEach(async () => {
 });
 
 async function connectAccountWithAgent() {
-  const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+  const { userId, workspaceId, personalWorkspaceId, cookieHeader } = await seedAuthenticatedUser();
   const { accountId } = await seedConnectedGmailAccount({ userId, cookieHeader });
-  const agentId = await createAgentForWorkspace(cookieHeader, workspaceId);
-  return { userId, workspaceId, cookieHeader, accountId, agentId };
+  const agentId = await createAgentForWorkspace(cookieHeader, personalWorkspaceId);
+  return { userId, workspaceId, personalWorkspaceId, cookieHeader, accountId, agentId };
 }
 
 describe('POST /email/draft/trigger', () => {
@@ -105,6 +105,25 @@ describe('POST /email/draft/trigger', () => {
     expect(jobData.agentId).toBe(agentId);
   });
 
+  test('rejects an agentId of a shared workspace', async () => {
+    const { cookieHeader, accountId, workspaceId } = await connectAccountWithAgent();
+    const seeded = await seedEmailThreadWithMessage({ accountId });
+    const sharedAgentId = await createAgentForWorkspace(cookieHeader, workspaceId);
+
+    const response = await app.request('/email/draft/trigger', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        threadId: seeded.thread.id,
+        replyToMessageId: seeded.messageId,
+        agentId: sharedAgentId,
+      }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(emailDraftAddMock).not.toHaveBeenCalled();
+  });
+
   test('rejects an agentId owned by another user', async () => {
     const { cookieHeader, accountId } = await connectAccountWithAgent();
     const seeded = await seedEmailThreadWithMessage({ accountId });
@@ -121,7 +140,7 @@ describe('POST /email/draft/trigger', () => {
       }),
     });
 
-    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(emailDraftAddMock).not.toHaveBeenCalled();
   });
 

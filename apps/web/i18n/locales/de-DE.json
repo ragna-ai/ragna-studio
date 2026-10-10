@@ -1161,6 +1161,11 @@
   },
   "email": {
     "pageTitle": "E-Mail",
+    "privateWorkspace": {
+      "title": "Mail liegt in deinem privaten Workspace",
+      "description": "Dein Posteingang, deine Entwürfe und Anhänge gehören zu deinem privaten Workspace. Wechsle dorthin, um Mail zu nutzen.",
+      "switch": "Zu deinem privaten Workspace wechseln"
+    },
     "connect": {
       "title": "Postfach verbinden",
       "description": "Verbinde dein Gmail- oder Outlook-Postfach, um E-Mails zu lesen, zu beantworten und Antwortentwürfe von einem Agenten erstellen zu lassen. Es wird nie etwas ohne deine Prüfung versendet.",

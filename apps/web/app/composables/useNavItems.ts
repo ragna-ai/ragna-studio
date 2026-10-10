@@ -15,6 +15,7 @@ import {
 } from '@lucide/vue';
 import type { Component } from 'vue';
 import { computed } from 'vue';
+import { usePersonalWorkspace } from '~/features/workspace/composables/usePersonalWorkspace';
 
 interface NavItemConfig {
   id: string;
@@ -211,20 +212,31 @@ function translateItems(
   }));
 }
 
+const PERSONAL_WORKSPACE_ONLY_ITEM_IDS = ['mail'];
+
 export function useNavItems() {
   const route = useRoute();
   const { t } = useI18n();
+  const { isPersonalActive } = usePersonalWorkspace();
+
+  function visibleDefaultItems(): NavItemConfig[] {
+    if (isPersonalActive.value) return defaultItems;
+    return defaultItems.filter(
+      (item) => !PERSONAL_WORKSPACE_ONLY_ITEM_IDS.includes(item.id),
+    );
+  }
 
   const dynamicNavItems = computed<NavItem[]>(() => {
     // if (route.path.startsWith('/chat')) return translateItems([homeItem, ...chatItems], t);
     // if (route.path.startsWith('/agent')) return translateItems([homeItem, ...agentItems], t);
     // if (route.path.startsWith('/workflow')) return translateItems([homeItem, ...workflowItems], t);
-    return translateItems([homeItem, ...defaultItems], t);
+    return translateItems([homeItem, ...visibleDefaultItems()], t);
   });
 
   function getAllItems(): NavItem[] {
-    return translateItems([homeItem, ...defaultItems], t).flatMap((item) =>
-      item.path ? [item] : item.children.filter((child) => child.path),
+    return translateItems([homeItem, ...visibleDefaultItems()], t).flatMap(
+      (item) =>
+        item.path ? [item] : item.children.filter((child) => child.path),
     );
   }
 

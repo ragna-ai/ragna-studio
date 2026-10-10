@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { MailIcon, TagIcon, UsersIcon } from '@lucide/vue';
+import EmailPrivateWorkspaceGate from '~/features/email/components/EmailPrivateWorkspaceGate.vue';
 import EmailSettingsAutoDraftSenders from '~/features/email/components/EmailSettingsAutoDraftSenders.vue';
 import EmailSettingsCategories from '~/features/email/components/EmailSettingsCategories.vue';
 import EmailSettingsGeneral from '~/features/email/components/EmailSettingsGeneral.vue';
@@ -27,31 +28,33 @@ useHead({
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('email.settings.pageTitle')"
-          :subtitle="t('email.settings.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div v-if="account" class="px-26 pt-10">
-      <TabSidebar v-model="currentTab" :tabs="sideBarTabs">
-        <template #general>
-          <EmailSettingsGeneral :account="account" />
+  <EmailPrivateWorkspaceGate>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('email.settings.pageTitle')"
+            :subtitle="t('email.settings.subtitle')"
+          />
         </template>
-        <template #categories>
-          <EmailSettingsCategories />
-        </template>
-        <template #senders>
-          <EmailSettingsAutoDraftSenders />
-        </template>
-      </TabSidebar>
-    </div>
-    <p v-else class="px-5 text-sm text-muted-foreground">
-      {{ t('email.settings.notConnected') }}
-    </p>
-  </SectionWrapper>
+        <template #bottom> </template>
+      </Heading>
+      <div v-if="account" class="px-26 pt-10">
+        <TabSidebar v-model="currentTab" :tabs="sideBarTabs">
+          <template #general>
+            <EmailSettingsGeneral :account="account" />
+          </template>
+          <template #categories>
+            <EmailSettingsCategories />
+          </template>
+          <template #senders>
+            <EmailSettingsAutoDraftSenders />
+          </template>
+        </TabSidebar>
+      </div>
+      <p v-else class="px-5 text-sm text-muted-foreground">
+        {{ t('email.settings.notConnected') }}
+      </p>
+    </SectionWrapper>
+  </EmailPrivateWorkspaceGate>
 </template>

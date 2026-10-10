@@ -262,9 +262,9 @@ reuse them directly.
 
 ## Open questions
 
-- Workspace interplay: the account is per-user, but agents are workspace
-  resources. The agent picker likely lists agents from workspaces the user
-  belongs to. Decide when building the settings UI.
+- ~~Workspace interplay~~ Resolved: the draft agent and attachments come from
+  the user's private workspace. See
+  [private-workspace-change-request.md](./private-workspace-change-request.md).
 - Voice matching: feeding the user's past sent mail to the draft agent via
   the existing pgvector retrieval pattern. Nice later, not v1.
 - Cursor expiry: Gmail `historyId` can expire on long-idle accounts; the

@@ -16,12 +16,11 @@ import {
 import { Spinner } from '~/components/ui/spinner';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { useTriggerEmailDraft } from '~/features/email/composables/useEmailDraftApi';
+import { usePersonalWorkspace } from '~/features/workspace/composables/usePersonalWorkspace';
 
 // "Draft with AI": agent select preselects the
-// account's default agent, overridable per use. Agents are workspace
-// resources while the email account is per-user (PRD "Open questions"), so
-// this lists agents from the user's active workspace, same source the
-// workflow agent-node picker uses.
+// account's default agent, overridable per use. Lists agents of the
+// private workspace only, where email automation runs.
 const props = defineProps<{
   threadId: string;
   replyToMessageId: string;
@@ -30,7 +29,8 @@ const props = defineProps<{
 
 // Composables
 const { t } = useI18n();
-const { data: agentsData } = useGetAllAgents();
+const { personalWorkspaceId } = usePersonalWorkspace();
+const { data: agentsData } = useGetAllAgents({}, personalWorkspaceId);
 const { mutate: triggerDraft, isPending } = useTriggerEmailDraft();
 
 // Refs

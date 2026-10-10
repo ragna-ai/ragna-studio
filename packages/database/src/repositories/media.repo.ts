@@ -45,6 +45,19 @@ export async function getMediaById({ id }: { id: string }): Promise<Media | null
   return found ?? null;
 }
 
+/** Loads the given media in one query, keeping only rows owned by the user's private workspace. */
+export async function getMediaInPersonalWorkspace({
+  ids,
+  userId,
+}: {
+  ids: string[];
+  userId: string;
+}): Promise<Media[]> {
+  return db.query.media.findMany({
+    where: { id: { in: ids }, ownerWorkspace: { personalUserId: userId } },
+  });
+}
+
 export async function deleteMediaById({ id }: { id: string }): Promise<void> {
   await db.delete(media).where(eq(media.id, id));
 }

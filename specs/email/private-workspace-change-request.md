@@ -1,6 +1,6 @@
 # Email automation in the private workspace (change request)
 
-> **Status: decided** (2026-10-10). Builds on [Organizations v3](../organizations/v3-prd.md)
+> **Status: implemented** (PR #98, 2026-10-10). Builds on [Organizations v3](../organizations/v3-prd.md)
 > and its amendment 1 (every user has a private workspace). Resolves `tbd.md` item 1 and the
 > "workspace interplay" open question in [prd.md](./prd.md).
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmailPrivateWorkspaceGate from '~/features/email/components/EmailPrivateWorkspaceGate.vue';
 import EmailClient from '~/features/email/components/EmailClient.vue';
 
 // Optional dynamic segment (Nuxt's [[param]] syntax) so /mail and
@@ -29,5 +30,7 @@ useHead({
 </script>
 
 <template>
-  <EmailClient :thread-id="threadId" />
+  <EmailPrivateWorkspaceGate>
+    <EmailClient :thread-id="threadId" />
+  </EmailPrivateWorkspaceGate>
 </template>

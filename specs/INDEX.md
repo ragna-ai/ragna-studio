@@ -26,7 +26,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
-| [Email automation in the private workspace (change request)](./email/private-workspace-change-request.md) | decided (2026-10-10) |
 
 ## Proposed
 
@@ -64,6 +63,7 @@ work first, shipped reference and dead/historical docs last.
 | [Microsoft (Outlook) mailbox provider](./email/microsoft-provider-prd.md) | implemented (merged to main via PR #22, 2026-09-24; all design questions answered; apps/api 482 pass / 0 fail; connect and first sync live-tested with Outlook, reply/forward/send and large attachments not yet) |
 | [Microsoft provider: implementation slices](./email/microsoft-provider-slices.md) | implemented (approved and built 2026-09-24, merged via PR #22) |
 | [Email Client (PRD)](./email/prd.md) | implemented (2026-08-14, branch feat/email-client) |
+| [Email automation in the private workspace (change request)](./email/private-workspace-change-request.md) | implemented (PR #98, 2026-10-10) |
 | [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
