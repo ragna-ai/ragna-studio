@@ -2,6 +2,7 @@ import { db, getRunStatus, updateRunStatus } from '@repo/database';
 import { NOTIFY_USER_JOB, WORKFLOW_RUN_JOB } from '@repo/queue';
 import {
   languageModelGenerateMock,
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -102,7 +103,7 @@ describe('processWorkflowJob', () => {
     await expect(processWorkflowJob(runJob(run.id, 3, 0))).rejects.toThrow();
 
     expect(await getRunStatus({ runId: run.id })).toBe('running');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('a cancelled run stays cancelled and sends no notification', async () => {
@@ -114,7 +115,7 @@ describe('processWorkflowJob', () => {
 
     expect(result).toEqual({ success: true });
     expect(await getRunStatus({ runId: run.id })).toBe('cancelled');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('a final-attempt failure does not overwrite a run cancelled meanwhile', async () => {
@@ -133,7 +134,7 @@ describe('processWorkflowJob', () => {
     await expect(processWorkflowJob(runJob(run.id))).rejects.toThrow('model exploded');
 
     expect(await getRunStatus({ runId: run.id })).toBe('cancelled');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('a run with no user fails without a notification', async () => {
@@ -146,7 +147,7 @@ describe('processWorkflowJob', () => {
     expect(result).toEqual({ success: true });
     expect(stored?.status).toBe('failed');
     expect(stored?.error).toBe('Workflow run has no user to run as');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('cancelling mid-flight stops the engine before the next node', async () => {
@@ -174,7 +175,7 @@ describe('processWorkflowJob', () => {
 
     expect(languageModelGenerateMock).toHaveBeenCalledTimes(1);
     expect(await getRunStatus({ runId: run.id })).toBe('cancelled');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('a notification enqueue failure does not fail the job', async () => {

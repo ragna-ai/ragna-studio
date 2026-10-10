@@ -33,7 +33,7 @@ appending.
 - [x] **agent-context-document** — upload/list/rename/retry/delete (faked
       R2 upload)
 
-External-provider mocks (`ai`-package `generateImage`, `@repo/storage`,
+External-provider mocks (AI provider factories, `@repo/storage`,
 `@repo/linkedin`, via Bun's `mock.module()`) live in
 `packages/testing/src/mocks/`, documented in full in
 `apps/api/test/README.md`'s "External-provider mocks" section.
@@ -59,8 +59,8 @@ deferred one above. Next candidates, in rough order of value:
    `mock.module()`-based unit test, since a live socket is hard to fake
    convincingly at that boundary).
 2. `apps/worker` processor tests, now that `packages/testing/src/mocks/`
-   is built to be reused there (`ai-provider.mock.ts`'s `generateImage` fake
-   plus the not-yet-built `experimental_generateVideo` one, `@repo/storage`'s
+   is built to be reused there (the provider-level AI mocks in
+   `ai-sdk-provider.mock.ts`, `@repo/storage`'s
    `extractDocumentText` path) — a natural "Phase 1.5" the strategy doc
    didn't originally scope.
 3. Phase 2: Playwright e2e for `apps/web` (see `specs/testing/strategy.md`).

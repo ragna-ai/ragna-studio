@@ -1,5 +1,6 @@
 import { EMAIL_SYNC_JOB } from '@repo/queue';
 import {
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -23,7 +24,7 @@ describe('email sync cron', () => {
 
     await emailSyncCronProcessor();
 
-    expect(queueAddMock).toHaveBeenCalledTimes(2);
+    expect(enqueuedJobs(EMAIL_SYNC_JOB)).toHaveLength(2);
     expect(queueAddMock).toHaveBeenCalledWith(
       EMAIL_SYNC_JOB,
       { accountId: firstAccount.id },
@@ -42,12 +43,12 @@ describe('email sync cron', () => {
 
     await emailSyncCronProcessor();
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_SYNC_JOB)).toHaveLength(0);
   });
 
   test('enqueues nothing when no account is connected', async () => {
     await emailSyncCronProcessor();
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_SYNC_JOB)).toHaveLength(0);
   });
 });

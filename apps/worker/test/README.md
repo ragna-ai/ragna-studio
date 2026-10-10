@@ -35,5 +35,5 @@ mocked, so no Redis is needed.
 The AI SDK stays real. Script text with `scriptModelOutput({ text, toolCalls?, inputTokens?, outputTokens? })`.
 Override `languageModelGenerateMock`, `imageModelGenerateMock`, `videoModelGenerateMock` or
 `embeddingModelEmbedMock` with `mockImplementationOnce` for failure paths. `lastCreatedModel(kind)`
-returns the model a service asked for. `generateImage` passes through to the fake image model here.
+returns the model a service asked for.
 Call `resetProviderMocks()` in `beforeEach`.

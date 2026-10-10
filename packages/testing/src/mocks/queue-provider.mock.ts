@@ -36,6 +36,11 @@ function defaultQueueAddImpl(jobName: string): Promise<FakeJob> {
 export const queueAddMock =
   mock<(jobName: string, data: unknown, opts?: any) => Promise<FakeJob>>(defaultQueueAddImpl);
 
+/** Calls to `queue.*.add` for one job name; seeding a user also enqueues a welcome email. */
+export function enqueuedJobs(jobName: string) {
+  return queueAddMock.mock.calls.filter(([name]) => name === jobName);
+}
+
 export interface FakeBulkJob {
   name: string;
   data: unknown;

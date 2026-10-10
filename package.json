@@ -15,6 +15,7 @@
     "preview": "turbo run preview",
     "test:setup": "pnpm --filter @repo/testing test:setup",
     "test:api": "turbo run test --filter=@repo/api",
+    "test:worker": "turbo run test --filter=@repo/worker",
     "pkg:update": "pnpm update -i -r -L",
     "db:push": "pnpm --filter @repo/database db:push",
     "db:backup": "pnpm --filter @repo/database db:backup",

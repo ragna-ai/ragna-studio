@@ -3,26 +3,18 @@
 Open follow-ups, so nothing gets lost between PRs. Each item links its source. Remove an item
 when it ships; move it into a PRD when it gets designed.
 
-## Now (after PR #97 and #98, merged 2026-10-10)
+## Now
 
-- [ ] Browser checklists in PR #97 (9 points) and PR #98 (6 points), on `main`.
-- [ ] Release and deploy: migrations `workspace_visibility`, `private_workspace_backfill`
-      (`--custom`) and `email_default_agent_private_only` (`--custom`). Backup before deploy.
+- [ ] Cloudflare redirect rule `docs.ragna.io/` to `/getting-started/introduction`: switch 302 to
+      301 once verified (slashless docs URLs shipped in PR #104).
 
 ## Hardening (worker tests and v2/v3 leftovers)
 
-Worker test suite: [specs/testing/worker-prd.md](./testing/worker-prd.md).
+Worker test suite shipped in PR #103 ([specs/testing/worker-prd.md](./testing/worker-prd.md)).
+Batch 1 (video author check, purge limit, dead `verify` job, email enqueue tests, `ai` fake
+removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 
 - [ ] Worker test gaps: inline agent node (`getDefaultAgent()` path), team and tool executors.
-- [ ] Move `apps/api` image tests to the provider-level AI mock, then delete `generateImageMock`
-      and `passGenerateImageThrough()` (`packages/testing/src/mocks/ai-provider.mock.ts`).
-- [ ] Gen video checks the author only after the paid render (`requireAuthorId` in
-      `videogen.service.ts`); images check before. Check up front so a purged author costs nothing.
-- [ ] Invitation email enqueue is untested (skipped under `config.isTest`).
-- [ ] Purge cron has no per-run `LIMIT` (`listUserIdsDeletedBefore`,
-      `listOrganizationIdsDeletedBefore`).
-- [ ] Dead code: `templateId: 'verify'` in `apps/worker/src/processors/email.processor.ts`;
-      `@repo/mail` registers no such template.
 - [ ] Migrations are only checked on scratch DBs by hand. Consider a CI step that runs
       `migrate.ts` on a fresh Postgres.
 
@@ -39,7 +31,8 @@ Worker test suite: [specs/testing/worker-prd.md](./testing/worker-prd.md).
       `organization-invitations.ts:96`, `auth-seed.ts:119,120`, `email.service.ts:1697`,
       web `useOrganizationApi.ts:72,135,155`.
 - [ ] N+1 leftovers: email search `resolveSearchThread` hydrates per thread; email sync flag
-      updates and deletes run per change.
+      updates and deletes run per change; media sweep cron runs `deleteMediaIfUnreferenced` (one
+      refcount query each) per candidate (`sweepUnreferencedMedia` in `media.service.ts`).
 
 ## Parked features (need a decision or PRD first)
 

@@ -754,6 +754,8 @@ async function generateVertexVideo(
 async function generateAndUploadVideo(
   record: GenVideoWithMedia,
 ): Promise<GenerateAndUploadVideoResult> {
+  requireAuthorId(record);
+
   if (record.parentGenVideoId) {
     return generateEnhanceVideo(record);
   }

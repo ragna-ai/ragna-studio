@@ -6,8 +6,6 @@ import {
   EMAILS_QUEUE,
   INVITATION_EMAIL_JOB,
   invitationEmailJobSchema,
-  VERIFY_EMAIL_JOB,
-  verifyEmailJobSchema,
   WELCOME_EMAIL_JOB,
   welcomeEmailJobSchema,
 } from '@repo/queue';
@@ -29,20 +27,6 @@ export async function processSendEmailJob(job: ProcessorJob): Promise<ProcessorS
   logger.info(`Processing email jobId: ${job.id} name: ${job.name}`);
 
   switch (job.name) {
-    case VERIFY_EMAIL_JOB: {
-      const { email, url } = verifyEmailJobSchema.parse(job.data);
-
-      await sendEmail({
-        to: email,
-        subject: 'Verify your email address',
-        templateId: 'verify',
-        variables: {
-          url,
-        },
-      });
-
-      break;
-    }
     case WELCOME_EMAIL_JOB: {
       const { email, name } = welcomeEmailJobSchema.parse(job.data);
 

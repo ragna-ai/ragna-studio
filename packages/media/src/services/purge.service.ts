@@ -13,6 +13,8 @@ import { logger } from '@repo/logger';
 import { deleteWorkspaceMediaObjects } from './media.service';
 
 const RECOVERY_WINDOW_DAYS = 30;
+/** Per kind (organizations, users) and per run; the rest follow on later runs. */
+export const PURGE_BATCH_SIZE = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface PurgeExpiredDeletionsSummary {
@@ -68,7 +70,8 @@ async function purgeUser({ userId }: { userId: string }): Promise<void> {
  */
 export async function purgeExpiredDeletions({
   now = new Date(),
-}: { now?: Date } = {}): Promise<PurgeExpiredDeletionsSummary> {
+  batchSize = PURGE_BATCH_SIZE,
+}: { now?: Date; batchSize?: number } = {}): Promise<PurgeExpiredDeletionsSummary> {
   const cutoff = new Date(now.getTime() - RECOVERY_WINDOW_DAYS * DAY_MS);
   const summary: PurgeExpiredDeletionsSummary = {
     organizationsPurged: 0,
@@ -76,7 +79,10 @@ export async function purgeExpiredDeletions({
     failures: 0,
   };
 
-  for (const organizationId of await listOrganizationIdsDeletedBefore({ date: cutoff })) {
+  for (const organizationId of await listOrganizationIdsDeletedBefore({
+    date: cutoff,
+    limit: batchSize,
+  })) {
     try {
       await purgeOrganization({ organizationId });
       summary.organizationsPurged += 1;
@@ -86,7 +92,7 @@ export async function purgeExpiredDeletions({
     }
   }
 
-  for (const userId of await listUserIdsDeletedBefore({ date: cutoff })) {
+  for (const userId of await listUserIdsDeletedBefore({ date: cutoff, limit: batchSize })) {
     try {
       await purgeUser({ userId });
       summary.usersPurged += 1;

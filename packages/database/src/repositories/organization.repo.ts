@@ -465,20 +465,29 @@ export async function restoreOrganization({
 
 export async function listOrganizationIdsDeletedBefore({
   date,
+  limit,
 }: {
   date: Date;
+  limit: number;
 }): Promise<string[]> {
   const rows = await db
     .select({ id: organization.id })
     .from(organization)
     .where(lt(organization.deletedAt, date))
-    .orderBy(organization.deletedAt);
+    .orderBy(organization.deletedAt)
+    .limit(limit);
 
   return rows.map((row) => row.id);
 }
 
 /** Soft-deleted users whose organization is not itself deleted (that purge covers them). */
-export async function listUserIdsDeletedBefore({ date }: { date: Date }): Promise<string[]> {
+export async function listUserIdsDeletedBefore({
+  date,
+  limit,
+}: {
+  date: Date;
+  limit: number;
+}): Promise<string[]> {
   const inDeletedOrganization = db
     .select({ id: organizationMember.id })
     .from(organizationMember)
@@ -489,7 +498,8 @@ export async function listUserIdsDeletedBefore({ date }: { date: Date }): Promis
     .select({ id: user.id })
     .from(user)
     .where(and(lt(user.deletedAt, date), notExists(inDeletedOrganization)))
-    .orderBy(user.deletedAt);
+    .orderBy(user.deletedAt)
+    .limit(limit);
 
   return rows.map((row) => row.id);
 }

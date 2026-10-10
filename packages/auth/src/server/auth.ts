@@ -183,11 +183,6 @@ export const auth = betterAuth({
             await createOrganizationForUser({ userId: user.id, userName: user.name });
           }
 
-          // Integration tests seed users through this same hook (see
-          // packages/testing/src/auth/auth-seed.ts), which would otherwise
-          // flood the real Redis-backed email queue on every test run.
-          if (config.isTest) return;
-
           try {
             await queue
               .email()

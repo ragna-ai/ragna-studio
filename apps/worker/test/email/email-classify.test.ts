@@ -11,6 +11,7 @@ import {
   fetchMessageMock,
   languageModelGenerateMock,
   lastCreatedModel,
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   scriptModelOutput,
@@ -85,7 +86,7 @@ describe('processEmailClassifyJob', () => {
     const message = await getEmailMessageById({ id: messageId });
     expect(message?.categoryId).toBe(invoices.id);
     expect(message?.needsReply).toBe(false);
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(0);
     expect(lastCreatedModel('language')?.modelId).toBe('claude-haiku-4-5');
   });
 
@@ -118,7 +119,7 @@ describe('processEmailClassifyJob', () => {
 
     const message = await getEmailMessageById({ id: messageId });
     expect(message?.categoryId).toBeNull();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(0);
   });
 
   test('an account without categories skips the model', async () => {
@@ -128,7 +129,7 @@ describe('processEmailClassifyJob', () => {
     await processEmailClassifyJob(classifyJob({ accountId: account.id, messageId }));
 
     expect(languageModelGenerateMock).not.toHaveBeenCalled();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(0);
   });
 
   test('an auto-draft category marks needsReply and enqueues a draft job', async () => {
@@ -146,7 +147,7 @@ describe('processEmailClassifyJob', () => {
     const message = await getEmailMessageById({ id: messageId });
     expect(message?.categoryId).toBe(support.id);
     expect(message?.needsReply).toBe(true);
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(1);
     expect(queueAddMock).toHaveBeenCalledWith(EMAIL_DRAFT_JOB, {
       accountId: account.id,
       threadId: thread.id,
@@ -169,8 +170,7 @@ describe('processEmailClassifyJob', () => {
     const message = await getEmailMessageById({ id: messageId });
     expect(message?.categoryId).toBeNull();
     expect(message?.needsReply).toBe(true);
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
-    expect(queueAddMock.mock.calls[0]?.[0]).toBe(EMAIL_DRAFT_JOB);
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(1);
   });
 
   test('a model failure leaves the message uncategorized and does not throw', async () => {
@@ -216,7 +216,7 @@ describe('processEmailClassifyJob', () => {
 
     expect(result).toEqual({ success: true });
     expect(languageModelGenerateMock).not.toHaveBeenCalled();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(EMAIL_DRAFT_JOB)).toHaveLength(0);
     const synced = await getEmailAccountById({ id: account.id });
     expect(synced?.syncState).toBe('reauth_required');
   });

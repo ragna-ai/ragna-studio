@@ -1,6 +1,7 @@
 import { db } from '@repo/database';
 import { markTaskReminderSent } from '@repo/database';
 import {
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -32,7 +33,7 @@ describe('task reminder cron', () => {
 
     await taskReminderProcessor();
 
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
     expect(queueAddMock).toHaveBeenCalledWith(NOTIFY_USER_JOB, {
       userId,
       type: 'task_reminder_due',
@@ -57,7 +58,7 @@ describe('task reminder cron', () => {
 
     await taskReminderProcessor();
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('skips tasks whose fire time has not come and finished tasks', async () => {
@@ -72,7 +73,7 @@ describe('task reminder cron', () => {
 
     await taskReminderProcessor();
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('one failing enqueue does not block the other reminders', async () => {
@@ -91,7 +92,7 @@ describe('task reminder cron', () => {
 
     await taskReminderProcessor();
 
-    expect(queueAddMock).toHaveBeenCalledTimes(2);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(2);
     const stamps = [await reminderSentAt(firstTask.id), await reminderSentAt(secondTask.id)];
     expect(stamps.filter((stamp) => stamp instanceof Date)).toHaveLength(1);
   });

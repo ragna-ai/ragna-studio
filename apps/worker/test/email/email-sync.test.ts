@@ -11,7 +11,7 @@ import {
   buildFakeMailThread,
   fetchThreadMock,
   listRecentInboxThreadIdsMock,
-  queueAddMock,
+  enqueuedJobs,
   resetProviderMocks,
   seedEmailThreadWithMessage,
   syncFromCursorMock,
@@ -27,10 +27,6 @@ const DAY_MS = 24 * HOUR_MS;
 
 function syncJob(accountId: string) {
   return buildJob({ name: EMAIL_SYNC_JOB, data: { accountId } });
-}
-
-function classifyJobCalls() {
-  return queueAddMock.mock.calls.filter(([jobName]) => jobName === EMAIL_CLASSIFY_JOB);
 }
 
 describe('processEmailSyncJob', () => {
@@ -79,7 +75,7 @@ describe('processEmailSyncJob', () => {
       const messages = await listEmailMessagesByThreadId({ threadId: thread?.id ?? '' });
       expect(messages).toHaveLength(1);
       expect(messages[0]?.providerMessageId).toBe('seed-message-1');
-      expect(queueAddMock).not.toHaveBeenCalled();
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
 
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncCursor).toBe('history-cursor-0');
@@ -130,8 +126,11 @@ describe('processEmailSyncJob', () => {
       });
       const [row] = await listEmailMessagesByThreadId({ threadId: thread?.id ?? '' });
       expect(row?.providerMessageId).toBe('new-message');
-      expect(classifyJobCalls()).toHaveLength(1);
-      expect(classifyJobCalls()[0]?.[1]).toEqual({ accountId: account.id, messageId: row?.id });
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(1);
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)[0]?.[1]).toEqual({
+        accountId: account.id,
+        messageId: row?.id,
+      });
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncCursor).toBe('cursor-2');
       expect(synced?.syncState).toBe('idle');
@@ -156,7 +155,7 @@ describe('processEmailSyncJob', () => {
 
       await processEmailSyncJob(syncJob(account.id));
 
-      expect(queueAddMock).not.toHaveBeenCalled();
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
     });
 
     test.each(['sent', 'spam', 'trash'] as const)(
@@ -182,7 +181,7 @@ describe('processEmailSyncJob', () => {
         });
         const messages = await listEmailMessagesByThreadId({ threadId: thread?.id ?? '' });
         expect(messages).toHaveLength(1);
-        expect(queueAddMock).not.toHaveBeenCalled();
+        expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
       },
     );
 
@@ -202,7 +201,7 @@ describe('processEmailSyncJob', () => {
         providerThreadId: 't-draft',
       });
       expect(thread).toBeNull();
-      expect(queueAddMock).not.toHaveBeenCalled();
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
     });
 
     test('messages older than the classify window are stored but not classified', async () => {
@@ -225,7 +224,7 @@ describe('processEmailSyncJob', () => {
         providerThreadId: 't-old',
       });
       expect(thread).not.toBeNull();
-      expect(queueAddMock).not.toHaveBeenCalled();
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
     });
 
     test('flagsChanged updates the indexed message and deleted removes it with its empty thread', async () => {
@@ -284,7 +283,7 @@ describe('processEmailSyncJob', () => {
         providerThreadId: 'reseed-thread',
       });
       expect(thread).not.toBeNull();
-      expect(queueAddMock).not.toHaveBeenCalled();
+      expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncCursor).toBe('history-cursor-0');
     });

@@ -3,7 +3,7 @@ import { createGenImageRecords, createMedia, getMediaById } from '@repo/database
 import { getImgGenBucketNameForUser } from '@repo/storage';
 import {
   deleteObjectsMock,
-  generateImageMock,
+  imageModelGenerateMock,
   resetProviderMocks,
   seedAuthenticatedUser,
   seedImageAiModel,
@@ -32,10 +32,10 @@ const SINGLE_UPLOAD_LIMIT_BYTES = 11 * 1024 * 1024;
 // apps/worker's gen-images processor, out of scope here,
 // so completed/failed rows are
 // seeded directly via the repo (seedGenImage below) rather than waiting on a
-// real render. `generateImageMock` is still asserted un-called in the POST
-// tests, to prove generation really was deferred to the worker rather than
-// running synchronously. The reference-upload route does need the storage
-// mock.
+// real render. The fake image model (`imageModelGenerateMock`) is asserted
+// un-called in the POST tests, to prove generation really was deferred to the
+// worker rather than running synchronously. The reference-upload route does
+// need the storage mock.
 
 // Smallest valid 1x1 PNG: upload validation sniffs content, not file.type.
 const ONE_PX_PNG_BASE64 =
@@ -214,7 +214,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     // Proves generation didn't run synchronously in the API process:
     // only the worker's gen-images
     // processor calls the provider.
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
 
     // Proves the DB path is real, not mocked: the rows created above are
     // readable back through the real list query.
@@ -240,7 +240,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
   });
 
   test('rejects negativePrompt when the model does not support it', async () => {
@@ -254,7 +254,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
   });
 
   test('404s when a reference image points at a not-yet-completed gen image', async () => {
@@ -276,7 +276,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     // resolveReferenceImage (apps/api's imagegen.service.ts)
     // treats that the same as a reference that doesn't exist at all.
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
   });
 
   test('404s when a reference image points at a failed gen image', async () => {
@@ -300,7 +300,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
   });
 
   test("404s when an uploaded reference is another workspace's media", async () => {
@@ -327,7 +327,7 @@ describe('POST /workspace/:workspaceId/gen-image', () => {
     });
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(generateImageMock).not.toHaveBeenCalled();
+    expect(imageModelGenerateMock).not.toHaveBeenCalled();
   });
 });
 

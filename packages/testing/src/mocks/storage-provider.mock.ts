@@ -18,8 +18,7 @@
 // processor calls `extractDocumentText` (@repo/storage), which downloads
 // through this same package.
 //
-// Unlike the `ai` mock (ai-provider.mock.ts), this package is imported
-// directly by apps/api and apps/worker (not indirectly through another
+// This package is imported directly by apps/api and apps/worker (not indirectly through another
 // bundled workspace package), so mocking `@repo/storage` itself, not some
 // npm dependency underneath it, is the right boundary here.
 import { mock } from 'bun:test';

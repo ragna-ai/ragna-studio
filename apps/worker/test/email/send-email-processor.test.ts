@@ -1,4 +1,4 @@
-import { INVITATION_EMAIL_JOB, VERIFY_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
+import { INVITATION_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
 import { resetProviderMocks, sendEmailMock } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { processSendEmailJob } from '../../src/processors/email.processor';
@@ -49,20 +49,14 @@ describe('processSendEmailJob', () => {
     });
   });
 
-  test('verify job sends the verify template with the url', async () => {
-    await processSendEmailJob(
-      buildJob({
-        name: VERIFY_EMAIL_JOB,
-        data: { email: 'ada@example.test', url: 'https://app.example.test/verify/1' },
-      }),
-    );
-
-    expect(sendEmailMock).toHaveBeenCalledWith({
-      to: 'ada@example.test',
-      subject: 'Verify your email address',
-      templateId: 'verify',
-      variables: { url: 'https://app.example.test/verify/1' },
+  test('the removed verify job name is rejected without sending', async () => {
+    const job = buildJob({
+      name: 'send-verification-email-job',
+      data: { email: 'ada@example.test', url: 'https://app.example.test/verify/1' },
     });
+
+    await expect(processSendEmailJob(job)).rejects.toThrow('Unknown email job');
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
   test('invalid payload rejects without sending', async () => {
