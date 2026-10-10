@@ -44,7 +44,7 @@
     "isomorphic-dompurify": "^4.5.0",
     "motion-v": "^2.6.0",
     "nanoid": "^6.0.2",
-    "nuxt": "^4.6.0",
+    "nuxt": "^4.6.1",
     "nuxt-security": "^2.6.0",
     "pinia": "^4.0.3",
     "prettier": "^3.9.9",
