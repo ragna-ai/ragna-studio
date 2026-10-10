@@ -1,7 +1,7 @@
 import { runGenImages } from '@repo/ai';
 import { getGenImageRowsByIds } from '@repo/database';
 import { logger } from '@repo/logger';
-import type { Worker } from '@repo/queue';
+import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
 import {
   createWorker,
   enqueueNotification,
@@ -20,23 +20,7 @@ const LOCK_DURATION_MS = 5 * 60 * 1000;
 export function registerGenImagesJobProcessor(): Worker<any, any, string> {
   const genImagesWorker = createWorker({
     name: GEN_IMAGES_QUEUE,
-    processor: async (job) => {
-      logger.info(`Processing gen-images jobId: ${job.id} name: ${job.name}`);
-
-      switch (job.name) {
-        case GEN_IMAGES_JOB: {
-          const { genImageIds } = genImagesJobSchema.parse(job.data);
-          await processGenImages(genImageIds);
-          break;
-        }
-        default: {
-          throw new Error(`Unknown gen-images job: ${job.name}`);
-        }
-      }
-
-      logger.info(`Completed gen-images jobId: ${job.id} name: ${job.name}`);
-      return { success: true };
-    },
+    processor: processGenImagesJob,
     opts: {
       // Low, like gen-video's: a handful of concurrent provider calls at
       // once is plenty for now.
@@ -50,6 +34,24 @@ export function registerGenImagesJobProcessor(): Worker<any, any, string> {
   });
 
   return genImagesWorker;
+}
+
+export async function processGenImagesJob(job: ProcessorJob): Promise<ProcessorSuccess> {
+  logger.info(`Processing gen-images jobId: ${job.id} name: ${job.name}`);
+
+  switch (job.name) {
+    case GEN_IMAGES_JOB: {
+      const { genImageIds } = genImagesJobSchema.parse(job.data);
+      await processGenImages(genImageIds);
+      break;
+    }
+    default: {
+      throw new Error(`Unknown gen-images job: ${job.name}`);
+    }
+  }
+
+  logger.info(`Completed gen-images jobId: ${job.id} name: ${job.name}`);
+  return { success: true };
 }
 
 // runGenImages already leaves every row in the batch 'failed' with an error

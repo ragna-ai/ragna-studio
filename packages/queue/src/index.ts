@@ -1,6 +1,7 @@
 // packages/queue/src/index.ts
 
 export type { Worker } from 'bullmq';
+export * from './types/processor-job';
 export * from './constants';
 export * from './dtos';
 export * from './queues';

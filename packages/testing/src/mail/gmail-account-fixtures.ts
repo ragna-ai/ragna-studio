@@ -1,7 +1,7 @@
-// apps/api/test/email/support/gmail-account-fixtures.ts
+// packages/testing/src/mail/gmail-account-fixtures.ts
 import { db } from '@repo/database';
 import { account } from '@repo/database/schema';
-import { assertConnectedToTestDatabase } from '@repo/testing';
+import { assertConnectedToTestDatabase } from '../db/db-guard';
 
 const GOOGLE_PROVIDER_ID = 'google';
 const GOOGLE_ISSUER = 'https://accounts.google.com';

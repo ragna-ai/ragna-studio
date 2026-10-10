@@ -9,7 +9,7 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
-import type { Worker } from '@repo/queue';
+import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
 import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
   createWorker,
@@ -49,26 +49,28 @@ function mediaKindForMimeType(mimeType: string): MediaKind {
   return kind;
 }
 
+export async function processAgentContextDocumentJob(job: ProcessorJob): Promise<ProcessorSuccess> {
+  logger.info(`Processing agent document jobId: ${job.id} name: ${job.name}`);
+
+  switch (job.name) {
+    case EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB: {
+      const { documentId } = extractAgentContextDocumentJobSchema.parse(job.data);
+      await extractAgentContextDocument(documentId);
+      break;
+    }
+    default: {
+      throw new Error(`Unknown agent document job: ${job.name}`);
+    }
+  }
+
+  logger.info(`Completed agent document jobId: ${job.id} name: ${job.name}`);
+  return { success: true };
+}
+
 export function registerAgentContextDocumentJobProcessor(): Worker<any, any, string> {
   const agentContextDocumentWorker = createWorker({
     name: AGENT_CONTEXT_DOCUMENTS_QUEUE,
-    processor: async (job) => {
-      logger.info(`Processing agent document jobId: ${job.id} name: ${job.name}`);
-
-      switch (job.name) {
-        case EXTRACT_AGENT_CONTEXT_DOCUMENT_JOB: {
-          const { documentId } = extractAgentContextDocumentJobSchema.parse(job.data);
-          await extractAgentContextDocument(documentId);
-          break;
-        }
-        default: {
-          throw new Error(`Unknown agent document job: ${job.name}`);
-        }
-      }
-
-      logger.info(`Completed agent document jobId: ${job.id} name: ${job.name}`);
-      return { success: true };
-    },
+    processor: processAgentContextDocumentJob,
   });
 
   agentContextDocumentWorker.on('ready', () => {

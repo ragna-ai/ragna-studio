@@ -21,9 +21,9 @@
 //
 // Constants and DTOs stay real via the spread below: they're pure, no I/O.
 //
-// apps/worker's future test suite is exactly where real queue/worker
-// mechanics (a job actually being picked up and processed) belongs, so it
-// should test against real BullMQ instead of importing this mock.
+// apps/worker's suite keeps the queue mocked too: it asserts what each
+// register call hands `createWorker` / `addCronJob`, and calls handlers
+// directly instead of running a real BullMQ worker.
 import * as queuePackage from '@repo/queue';
 import { mock } from 'bun:test';
 
@@ -54,7 +54,34 @@ export const upsertQueueJobSchedulerMock = mock(() => Promise.resolve({} as any)
 export const removeQueueJobSchedulerMock = mock(() => Promise.resolve(true));
 export const getQueueJobSchedulersMock = mock(() => Promise.resolve([] as any[]));
 
+type CreateWorkerParams = Parameters<typeof queuePackage.createWorker>[0];
+type AddCronJobParams = Parameters<typeof queuePackage.addCronJob>[0];
+
+export interface RecordedWorker {
+  name: CreateWorkerParams['name'];
+  opts: CreateWorkerParams['opts'];
+  processor: CreateWorkerParams['processor'];
+}
+
+export const recordedWorkers: RecordedWorker[] = [];
+export const recordedCronJobs: AddCronJobParams[] = [];
+
+export const createWorkerMock = mock((params: CreateWorkerParams) => {
+  recordedWorkers.push({ name: params.name, opts: params.opts, processor: params.processor });
+  return { name: params.name, on: () => undefined } as unknown as ReturnType<
+    typeof queuePackage.createWorker
+  >;
+});
+
+export const addCronJobMock = mock((params: AddCronJobParams) => {
+  recordedCronJobs.push(params);
+});
+
 export function resetQueueMock(): void {
+  recordedWorkers.length = 0;
+  recordedCronJobs.length = 0;
+  createWorkerMock.mockClear();
+  addCronJobMock.mockClear();
   queueAddMock.mockClear();
   queueAddMock.mockImplementation(defaultQueueAddImpl);
   queueAddBulkMock.mockClear();
@@ -88,6 +115,8 @@ type QueueMockOverrides = {
   upsertQueueJobScheduler: typeof upsertQueueJobSchedulerMock;
   removeQueueJobScheduler: typeof removeQueueJobSchedulerMock;
   getQueueJobSchedulers: typeof getQueueJobSchedulersMock;
+  createWorker: typeof createWorkerMock;
+  addCronJob: typeof addCronJobMock;
 };
 
 // Exported so apps/api's test preload can re-register it from the app's own
@@ -114,6 +143,8 @@ export const queueModuleMock: Omit<typeof queuePackage, keyof QueueMockOverrides
   upsertQueueJobScheduler: upsertQueueJobSchedulerMock,
   removeQueueJobScheduler: removeQueueJobSchedulerMock,
   getQueueJobSchedulers: getQueueJobSchedulersMock,
+  createWorker: createWorkerMock,
+  addCronJob: addCronJobMock,
 };
 
 mock.module('@repo/queue', () => queueModuleMock);

@@ -1,16 +1,3 @@
-import { GmailApiError } from '@repo/mail/provider';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
-import { beforeEach, describe, expect, test } from 'bun:test';
-import { StatusCodes } from 'http-status-codes';
-import * as z from 'zod';
-import { app } from '../../src/app';
-import {
-  createAgentForWorkspace,
-  seedConnectedGmailAccount,
-  seedEmailDraft,
-  seedEmailThreadWithMessage,
-} from './support/email-fixtures';
-import { emailDraftAddMock, resetEmailQueueMock } from './support/email-queue.mock';
 import {
   buildFakeMailMessage,
   createDraftMock,
@@ -18,11 +5,22 @@ import {
   fetchMessageMock,
   getAttachmentMock,
   getDraftAttachmentMock,
-  resetMailProviderMock,
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  seedEmailDraft,
+  seedEmailThreadWithMessage,
   sendDraftMock,
   sendMock,
+  truncateAllTables,
   updateDraftMock,
-} from './support/mail-provider.mock';
+} from '@repo/testing';
+import { GmailApiError } from '@repo/mail/provider';
+import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
+import * as z from 'zod';
+import { app } from '../../src/app';
+import { createAgentForWorkspace, seedConnectedGmailAccount } from './support/email-fixtures';
+import { emailDraftAddMock, resetEmailQueueMock } from './support/email-queue.mock';
 
 type FormValue = string | File | Array<string | File> | undefined;
 
@@ -48,7 +46,6 @@ function buildFormData(fields: Record<string, FormValue>): FormData {
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

@@ -1,4 +1,4 @@
-// apps/api/test/email/support/microsoft-account-fixtures.ts
+// packages/testing/src/mail/microsoft-account-fixtures.ts
 //
 // Seeds a better-auth `account` row for the 'microsoft' provider, mirroring
 // gmail-account-fixtures.ts's seedGmailLinkedAccount. email-provider.
@@ -9,7 +9,7 @@
 // short names; the check accepts both.
 import { db } from '@repo/database';
 import { account } from '@repo/database/schema';
-import { assertConnectedToTestDatabase } from '@repo/testing';
+import { assertConnectedToTestDatabase } from '../db/db-guard';
 
 const MICROSOFT_PROVIDER_ID = 'microsoft';
 

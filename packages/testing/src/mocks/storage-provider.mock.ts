@@ -64,9 +64,11 @@ export function resetStorageProviderMock(): void {
   deleteObjectsMock.mockImplementation(defaultDeleteObjectsImpl);
 }
 
-mock.module('@repo/storage', () => ({
+export const storageModuleMock = {
   ...storagePackage,
   uploadObjectBuffer: uploadObjectBufferMock,
   downloadObjectBuffer: downloadObjectBufferMock,
   deleteObjects: deleteObjectsMock,
-}));
+};
+
+mock.module('@repo/storage', () => storageModuleMock);

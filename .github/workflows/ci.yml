@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.detect.outputs.code }}
-      api: ${{ steps.detect.outputs.api }}
+      tests: ${{ steps.detect.outputs.tests }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -46,13 +46,13 @@ jobs:
           fi
 
           code=false
-          api=false
+          tests=false
           if [ "$root_changed" = true ] || [ -n "$affected" ]; then code=true; fi
-          if [ "$root_changed" = true ] || echo "$affected" | grep -qx '@repo/api'; then api=true; fi
+          if [ "$root_changed" = true ] || echo "$affected" | grep -qxE '@repo/api|@repo/worker'; then tests=true; fi
 
           echo "Affected packages: ${affected:-none}, root files changed: $root_changed"
           echo "code=$code" >> "$GITHUB_OUTPUT"
-          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "tests=$tests" >> "$GITHUB_OUTPUT"
 
   build-and-check:
     needs: changes
@@ -94,7 +94,7 @@ jobs:
 
   api-tests:
     needs: changes
-    if: needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.tests == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -136,7 +136,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Same no-turbo-cache reasoning as the build-and-check job: build through pnpm so injected copies sync.
-      - run: pnpm turbo run build --filter=@repo/api...
+      - run: pnpm turbo run build --filter=@repo/api... --filter=@repo/worker...
       - run: pnpm test:setup
       # Not `pnpm test:api`: turbo's strict env mode strips the DB_* vars from its tasks.
       - run: pnpm --filter @repo/api test
+      - run: pnpm --filter @repo/worker test

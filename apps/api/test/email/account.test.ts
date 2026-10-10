@@ -1,5 +1,16 @@
+import {
+  getProfileMock,
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  seedEmailThreadWithMessage,
+  seedGmailLinkedAccount,
+  seedGoogleAccountWithoutGmailScope,
+  seedMicrosoftAccountWithoutMailScope,
+  seedMicrosoftLinkedAccount,
+  seedMicrosoftLinkedAccountWithShortScopes,
+  truncateAllTables,
+} from '@repo/testing';
 import { getEmailThreadById } from '@repo/database';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -8,18 +19,7 @@ import {
   createAgentForWorkspace,
   seedConnectedGmailAccount,
   seedConnectedMicrosoftAccount,
-  seedEmailThreadWithMessage,
 } from './support/email-fixtures';
-import {
-  seedGmailLinkedAccount,
-  seedGoogleAccountWithoutGmailScope,
-} from './support/gmail-account-fixtures';
-import { getProfileMock, resetMailProviderMock } from './support/mail-provider.mock';
-import {
-  seedMicrosoftAccountWithoutMailScope,
-  seedMicrosoftLinkedAccount,
-  seedMicrosoftLinkedAccountWithShortScopes,
-} from './support/microsoft-account-fixtures';
 import { emailSyncAddMock, resetEmailQueueMock } from './support/email-queue.mock';
 
 // Auth/authorization for /email/* in general is covered by test/auth/route-sweep.test.ts, not here.
@@ -60,7 +60,6 @@ function connectRequest(cookieHeader: string, provider: 'gmail' | 'microsoft') {
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

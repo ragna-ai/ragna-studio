@@ -1,18 +1,20 @@
-import { listEmailMessagesByThreadId } from '@repo/database';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
-import { beforeEach, describe, expect, test } from 'bun:test';
-import { StatusCodes } from 'http-status-codes';
-import * as z from 'zod';
-import { app } from '../../src/app';
-import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
-import { resetEmailQueueMock } from './support/email-queue.mock';
 import {
   buildFakeMailMessage,
   buildFakeMailThread,
   fetchThreadMock,
-  resetMailProviderMock,
+  resetProviderMocks,
   searchMock,
-} from './support/mail-provider.mock';
+  seedAuthenticatedUser,
+  seedEmailThreadWithMessage,
+  truncateAllTables,
+} from '@repo/testing';
+import { listEmailMessagesByThreadId } from '@repo/database';
+import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
+import * as z from 'zod';
+import { app } from '../../src/app';
+import { seedConnectedGmailAccount } from './support/email-fixtures';
+import { resetEmailQueueMock } from './support/email-queue.mock';
 
 // Search proxies Gmail's q=. Gmail's own
 // search does the matching; email.service.ts's searchEmailForUser only
@@ -23,7 +25,6 @@ import {
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

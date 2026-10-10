@@ -5,7 +5,6 @@ import * as z from 'zod';
 import { app } from '../../src/app';
 import { seedConnectedGmailAccount } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
-import { resetMailProviderMock } from './support/mail-provider.mock';
 
 // Email categories + auto-draft senders.
 // Both are per-account CRUD with a
@@ -16,7 +15,6 @@ import { resetMailProviderMock } from './support/mail-provider.mock';
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

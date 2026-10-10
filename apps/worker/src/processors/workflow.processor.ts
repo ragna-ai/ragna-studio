@@ -1,6 +1,6 @@
 import { getRunForExecution, getRunStatus, updateRunStatus } from '@repo/database';
 import { logger } from '@repo/logger';
-import type { Worker } from '@repo/queue';
+import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
 import {
   createWorker,
   enqueueNotification,
@@ -30,47 +30,7 @@ export function registerWorkflowJobProcessor(): Worker<any, any, string> {
     opts: {
       lockDuration: LOCK_DURATION_MS,
     },
-    processor: async (job) => {
-      logger.info(`Processing workflow jobId: ${job.id} name: ${job.name}`);
-
-      switch (job.name) {
-        case WORKFLOW_RUN_JOB: {
-          const { runId } = workflowRunJobSchema.parse(job.data);
-
-          // The engine only records step-level failures and rethrows,
-          // leaving the run 'running' so a BullMQ retry can resume it. This
-          // processor owns terminal run failure: once the current attempt is
-          // the job's last one, mark the run 'failed' so it doesn't stay
-          // stuck. BullMQ increments `job.attemptsMade` only after this call
-          // returns/throws, so here it still reflects prior attempts only;
-          // the current attempt is final when `attemptsMade + 1 >= attempts`
-          // (mirrors BullMQ's own `shouldRetryJob` check).
-          try {
-            await executeWorkflowRun({ runId });
-            await notifyRunFinished({ runId });
-          } catch (error) {
-            const attempts = job.opts.attempts ?? 1;
-            const isFinalAttempt = job.attemptsMade + 1 >= attempts;
-
-            if (isFinalAttempt) {
-              // Mark failed first so notifyRunFinished reads status 'failed'
-              // and sends 'workflow_run_failed'.
-              await markRunFailedBestEffort({ runId, error });
-              await notifyRunFinished({ runId });
-            }
-
-            throw error;
-          }
-          break;
-        }
-        default: {
-          throw new Error(`Unknown workflow job: ${job.name}`);
-        }
-      }
-
-      logger.info(`Completed workflow jobId: ${job.id} name: ${job.name}`);
-      return { success: true };
-    },
+    processor: processWorkflowJob,
   });
 
   workflowWorker.on('ready', () => {
@@ -78,6 +38,48 @@ export function registerWorkflowJobProcessor(): Worker<any, any, string> {
   });
 
   return workflowWorker;
+}
+
+export async function processWorkflowJob(job: ProcessorJob): Promise<ProcessorSuccess> {
+  logger.info(`Processing workflow jobId: ${job.id} name: ${job.name}`);
+
+  switch (job.name) {
+    case WORKFLOW_RUN_JOB: {
+      const { runId } = workflowRunJobSchema.parse(job.data);
+
+      // The engine only records step-level failures and rethrows,
+      // leaving the run 'running' so a BullMQ retry can resume it. This
+      // processor owns terminal run failure: once the current attempt is
+      // the job's last one, mark the run 'failed' so it doesn't stay
+      // stuck. BullMQ increments `job.attemptsMade` only after this call
+      // returns/throws, so here it still reflects prior attempts only;
+      // the current attempt is final when `attemptsMade + 1 >= attempts`
+      // (mirrors BullMQ's own `shouldRetryJob` check).
+      try {
+        await executeWorkflowRun({ runId });
+        await notifyRunFinished({ runId });
+      } catch (error) {
+        const attempts = job.opts.attempts ?? 1;
+        const isFinalAttempt = job.attemptsMade + 1 >= attempts;
+
+        if (isFinalAttempt) {
+          // Mark failed first so notifyRunFinished reads status 'failed'
+          // and sends 'workflow_run_failed'.
+          await markRunFailedBestEffort({ runId, error });
+          await notifyRunFinished({ runId });
+        }
+
+        throw error;
+      }
+      break;
+    }
+    default: {
+      throw new Error(`Unknown workflow job: ${job.name}`);
+    }
+  }
+
+  logger.info(`Completed workflow jobId: ${job.id} name: ${job.name}`);
+  return { success: true };
 }
 
 // Best-effort: never let a failure here mask the original job error. Guards

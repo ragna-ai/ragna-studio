@@ -16,7 +16,9 @@
     "build": "tsdown",
     "dev": "bun --watch src/index.ts",
     "start": "bun dist/index.mjs",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit && tsc --noEmit -p test",
+    "test": "bun test",
+    "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {
     "@repo/ai": "workspace:*",
@@ -32,7 +34,9 @@
     "@repo/workflow": "workspace:*"
   },
   "devDependencies": {
+    "@repo/testing": "workspace:*",
     "@repo/ts-config": "workspace:*",
+    "@types/bun": "1.4.2",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
