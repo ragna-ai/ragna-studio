@@ -33,22 +33,22 @@ Add a service name, such as `backend` or `migrate`, to see only its logs.
 | `backend` or `migrate` can't log in to Postgres                                | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value.                       |
 | Log warning `MEDIA_URL is not set`                                             | No storage configured. Fine if you skipped storage, see [Storage](/self-hosting/storage).                                                       |
 
-## Sign-in
+## Sign-in / Auth
 
-| Symptom                                                  | Likely cause and fix                                                                                                                                                                                    |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The provider shows `redirect_uri_mismatch`               | The redirect URI in your OAuth client doesn't match. It must be `<API_BASE_URL>/auth/callback/<provider>`, for example `https://api.example.com/auth/callback/google`.                                  |
-| Sign-in succeeds, but you land on the sign-in page again | The session cookie doesn't reach the app. Check `COOKIE_DOMAIN` (the shared parent domain, for example `.example.com`) and `TRUSTED_ORIGINS`, see [Configuration](/self-hosting/configuration#domains). |
-| A user can't sign in                                     | `ALLOWED_LOGIN_EMAILS` is set and doesn't contain their address.                                                                                                                                        |
+| Symptom                                                                                | Likely cause and fix                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The provider shows `redirect_uri_mismatch`                                             | The redirect URI in your OAuth client doesn't match. It must be `<API_BASE_URL>/auth/callback/<provider>`, for example `https://api.example.com/auth/callback/google`.                                  |
+| Sign-in succeeds, but you land on the sign-in page again                               | The session cookie doesn't reach the app. Check `COOKIE_DOMAIN` (the shared parent domain, for example `.example.com`) and `TRUSTED_ORIGINS`, see [Configuration](/self-hosting/configuration#domains). |
+| A user can't sign in                                                                   | `ALLOWED_LOGIN_EMAILS` is set and doesn't contain their address.                                                                                                                                        |
+| Connecting Outlook fails, `backend` logs `Unable to link account - untrusted provider` | The Entra app registration lacks the optional claim `xms_edov`, see [Configuration](/self-hosting/configuration#microsoft-entra-id).                                                                    |
 
 ## Using the app
 
-| Symptom                                                                                | Likely cause and fix                                                                                                                 |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Uploads and image generation fail                                                      | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage).                                                  |
-| Images don't load                                                                      | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL.                          |
-| Live updates don't arrive                                                              | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy).                      |
-| Connecting Outlook fails, `backend` logs `Unable to link account - untrusted provider` | The Entra app registration lacks the optional claim `xms_edov`, see [Configuration](/self-hosting/configuration#microsoft-entra-id). |
+| Symptom                           | Likely cause and fix                                                                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Uploads and image generation fail | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage).                             |
+| Images don't load                 | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL.     |
+| Live updates don't arrive         | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy). |
 
 ## Changed `.env`?
 
