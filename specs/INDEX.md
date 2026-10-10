@@ -18,7 +18,6 @@ work first, shipped reference and dead/historical docs last.
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
-| [Organizations v3: personal and restricted workspaces](./organizations/v3-prd.md) | in-progress (PR #97; amendment 1 decided 2026-10-10, not built) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
 
 ## Decided
@@ -76,6 +75,7 @@ work first, shipped reference and dead/historical docs last.
 | [Notifications](./notifications/notifications.md) | implemented (delivery by polling) |
 | [Organizations v1: the org owns workspaces](./organizations/prd.md) | implemented (PR #94, 2026-10-09) |
 | [Organizations v2: members, invites, org settings](./organizations/v2-prd.md) | implemented (PR #95, 2026-10-09) |
+| [Organizations v3: personal and restricted workspaces](./organizations/v3-prd.md) | implemented (PR #97, 2026-10-10) |
 | [Security response headers](./security/headers.md) | implemented (2026-09-21) |
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |

@@ -1,6 +1,6 @@
 # Organizations v3: personal and restricted workspaces
 
-**Status: in-progress** (PR #97; amendment 1 decided 2026-10-10, not built). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
+**Status: implemented** (PR #97, 2026-10-10). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
 
 ## Summary
 
