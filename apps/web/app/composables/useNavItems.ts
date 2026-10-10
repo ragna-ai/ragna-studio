@@ -1,13 +1,11 @@
 import {
   BotIcon,
   FileTextIcon,
-  FolderClockIcon,
   HomeIcon,
   ImageIcon,
   ListTodoIcon,
   MailIcon,
   MessagesSquareIcon,
-  PlusCircleIcon,
   Share2Icon,
   TableIcon,
   VideoIcon,
@@ -142,64 +140,6 @@ const defaultItems: NavItemConfig[] = [
   // },
 ];
 
-const chatItems: NavItemConfig[] = [
-  {
-    id: 'chat-new',
-    path: '/chat',
-    icon: PlusCircleIcon,
-    labelKey: 'nav.new',
-    children: [],
-  },
-  {
-    id: 'chat-history',
-    path: '/chat/history',
-    icon: FolderClockIcon,
-    labelKey: 'nav.history',
-    children: [],
-  },
-  {
-    id: 'agent',
-    path: '/agent',
-    icon: BotIcon,
-    labelKey: 'nav.agents',
-    children: [],
-  },
-];
-
-const agentItems: NavItemConfig[] = [
-  {
-    id: 'agent-create',
-    path: '/agent/create',
-    icon: PlusCircleIcon,
-    labelKey: 'common.create',
-    children: [],
-  },
-  {
-    id: 'agent',
-    path: '/agent',
-    icon: BotIcon,
-    labelKey: 'nav.agents',
-    children: [],
-  },
-];
-
-const workflowItems: NavItemConfig[] = [
-  {
-    id: 'workflow-create',
-    path: '/workflow/create',
-    icon: PlusCircleIcon,
-    labelKey: 'common.create',
-    children: [],
-  },
-  {
-    id: 'workflow',
-    path: '/workflow',
-    icon: WorkflowIcon,
-    labelKey: 'nav.workflows',
-    children: [],
-  },
-];
-
 function translateItems(
   items: NavItemConfig[],
   t: (key: string) => string,
@@ -214,7 +154,6 @@ function translateItems(
 }
 
 export function useNavItems() {
-  const route = useRoute();
   const { t } = useI18n();
   const { isPersonalActive } = usePersonalWorkspace();
 
@@ -225,9 +164,6 @@ export function useNavItems() {
   }
 
   const dynamicNavItems = computed<NavItem[]>(() => {
-    // if (route.path.startsWith('/chat')) return translateItems([homeItem, ...chatItems], t);
-    // if (route.path.startsWith('/agent')) return translateItems([homeItem, ...agentItems], t);
-    // if (route.path.startsWith('/workflow')) return translateItems([homeItem, ...workflowItems], t);
     return translateItems(visibleItems(), t);
   });
 

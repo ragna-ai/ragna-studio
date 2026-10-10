@@ -643,11 +643,9 @@ export interface EmailThreadSummary {
 }
 
 async function hydrateThreadSummary({
-  accountId,
   thread,
   messages,
 }: {
-  accountId: string;
   thread: {
     id: string;
     subject: string | null;
@@ -778,7 +776,6 @@ export async function listEmailThreadsForUser({
   const threads = await Promise.all(
     pageRows.map((thread) =>
       hydrateThreadSummary({
-        accountId: account.id,
         thread,
         messages: messagesByThreadId.get(thread.id) ?? [],
       }),
@@ -876,7 +873,7 @@ export async function getEmailThreadDetailForUser({
   // endpoint mutate state on an incidental refetch, silently undoing an
   // explicit "mark unread". Marking read is the client's job, through the
   // existing POST /email/thread/:threadId/read.
-  const threadSummary = await hydrateThreadSummary({ accountId: account.id, thread, messages });
+  const threadSummary = await hydrateThreadSummary({ thread, messages });
 
   return {
     thread: threadSummary,
@@ -1095,7 +1092,7 @@ async function resolveSearchThread({
   );
 
   if (local) {
-    return hydrateThreadSummary({ accountId: account.id, thread: local });
+    return hydrateThreadSummary({ thread: local });
   }
 
   const { error, data: liveThread } = await tryCatch(() => provider.fetchThread(providerThreadId));
@@ -1107,7 +1104,6 @@ async function resolveSearchThread({
 
   const persisted = await persistFetchedThread({ accountId: account.id, mailThread: liveThread });
   return hydrateThreadSummary({
-    accountId: account.id,
     thread: persisted,
     messages: persisted.messages,
   });
