@@ -1,6 +1,6 @@
 # Organizations v3: personal and restricted workspaces
 
-**Status: implemented** (PR #97, 2026-10-09). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
+**Status: in-progress** (PR #97; amendment 1 decided 2026-10-10, not built). Builds on [v1](./prd.md) (PR #94) and [v2](./v2-prd.md) (PR #95).
 
 ## Summary
 
@@ -66,7 +66,6 @@ once workspaces have roles of their own.
 - Seats and per-member billing.
 - Per-user default agent preference, caching the guard's membership query.
 - Worker tests and v2 hardening. Separate PRD.
-- Personal workspaces for users who signed up before v3.
 - Renaming the org role values or the `members` table.
 
 ## Decisions
@@ -76,7 +75,7 @@ once workspaces have roles of their own.
 | 1   | **Own table `workspace_members`**, not better-auth teams. Teams have no role per team member (`teamMember` is `id, teamId, userId, createdAt`), so roles would need a second table anyway.                                            |
 | 2   | **`workspaces.visibility`**: `personal`, `organization` or `restricted`. Fixed at creation.                                                                                                                                           |
 | 3   | **Every new user gets a personal workspace** at sign-up, also invitees. A new org gets no other workspace.                                                                                                                            |
-| 4   | **Forward only.** Existing workspaces become `organization` through the column default. Existing users get no personal workspace. No backfill.                                                                                        |
+| 4   | **Existing workspaces become `organization`** through the column default. **Every existing user gets a personal workspace** through a backfill migration (amendment 1, replaces "forward only").                                      |
 | 5   | **Every org member may create** `organization` or `restricted` workspaces. Personal workspaces are only created at sign-up.                                                                                                           |
 | 6   | **Org owners and org admins have full access** to every `organization` and `restricted` workspace, as workspace manager. Never to personal workspaces.                                                                                |
 | 7   | **Workspace roles `manager` and `editor`.** Managers rename, delete and manage workspace members. The creator becomes manager. Org owners and org admins are managers too (decision 6). The personal workspace's user is its manager. |
@@ -87,6 +86,14 @@ once workspaces have roles of their own.
 | 12  | **A removed org member's personal workspace** stops its schedules at soft delete (decision 10) and is purged with the user after 30 days.                                                                                             |
 | 13  | **Chats stay private to their author** in every visibility (v2 decision 7). Full access in decision 6 covers workspace content, not other users' chats.                                                                               |
 | 14  | **Qualified names everywhere** (see [Glossary](#glossary)). Workspace role values differ from org role values. S0 renames the v1/v2 identifiers before any v3 slice starts.                                                           |
+
+## Amendment 1 (2026-10-10)
+
+Email automation moves into the private workspace (see
+[email private workspace change request](../email/private-workspace-change-request.md)). Every
+user therefore needs a private workspace, so decision 4 changes from "forward only" to a
+backfill for all existing users (section 8, slice S5). It ships in PR #97, so prod never has
+users without one. The empty state (decision 8) stays for edge cases.
 
 ## Design
 
@@ -235,6 +242,7 @@ workspace member. One query with `GROUP BY`.
 - Schedule ticks no longer fall back to the org owner (section 6).
 - `POST /workspace` requires `visibility`.
 - Invitees get a personal workspace, contrary to v2 section 2.
+- Every existing user gets a personal workspace named "Private" at upgrade (amendment 1).
 
 ### 6. Schedules
 
@@ -275,19 +283,31 @@ Manual runs still work. To schedule it again, someone creates a new workflow.
 
 ### 8. Migrations
 
-| Slice | Name                   | Content                                                                                                         | Kind        |
-| ----- | ---------------------- | --------------------------------------------------------------------------------------------------------------- | ----------- |
-| S1    | `workspace_visibility` | `workspaces.visibility` (default `organization`), `personal_user_id`, checks, unique index; `workspace_members` | drizzle-kit |
+| Slice | Name                         | Content                                                                                                         | Kind        |
+| ----- | ---------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------- |
+| S1    | `workspace_visibility`       | `workspaces.visibility` (default `organization`), `personal_user_id`, checks, unique index; `workspace_members` | drizzle-kit |
+| S5    | `private_workspace_backfill` | One personal workspace per existing user (amendment 1)                                                          | `--custom`  |
 
 S0 renames only TypeScript identifiers, so `drizzle-kit generate` must report no changes after
-it. Pure expand in S1: the default keeps existing rows valid, so no backfill and no contract
-step.
+it. S1 is a pure expand: the default keeps existing rows valid, no contract step.
+
+**Backfill** (S5, amendment 1). For every row in `members` whose user has no personal workspace
+yet, insert a workspace in that membership's org: `id = uuidv7()` (Postgres 18 built-in, which
+v0.6.0 already requires), name `'Private'` (same value as `PERSONAL_WORKSPACE_NAME`),
+`visibility = 'personal'`, `personal_user_id = members.user_id`, `created_at` and `updated_at`
+`now()`. `NOT EXISTS` on `personal_user_id` makes it idempotent; the unique index backs it.
+Soft-deleted users and members of soft-deleted orgs are included: a restore needs the
+workspace, and the purge removes it. End with a row-count `RAISE NOTICE`.
 
 - Run `db:generate --explain` first and stop on `missing_hints`.
 - Never edit generated SQL or snapshots.
 - Never `db:push`, `db:migrate` or `db:baseline` against the dev database.
 - On a scratch database with `main`'s migrations and seeded data: the migration applies, every
   existing workspace reads `organization`, and both check constraints hold.
+- S5 scratch check: seed users (one with a personal workspace already, one soft-deleted, one
+  in a soft-deleted org), apply up to S1, then the backfill. Every user has exactly one personal
+  workspace in their org, running the backfill twice changes nothing, and a real `migrate.ts`
+  run on a fresh scratch database passes.
 
 ### 9. Web
 
@@ -366,7 +386,11 @@ shared one.
 **Org admins see restricted workspaces only after joining** (Linear Business). Auditable, but
 more UI and a second access state. Full access chosen.
 
-**Backfill personal workspaces for existing users.** Rejected: forward only.
+**Forward only (no personal workspace for pre-v3 users).** The original decision 4. Replaced by
+amendment 1: email automation moves into the private workspace, so every user needs one.
+
+**Create the private workspace on demand** (first time mail needs it). No mass backfill, but
+every path that needs it would have to create it lazily. Rejected for the backfill.
 
 **Keep "the org keeps one workspace" or "nobody loses their last workspace".** The first no
 longer fits personal workspaces; the second needs a heavy check on every delete.
@@ -436,4 +460,10 @@ parallel; neither generates a migration.
 
 ### S4 Web
 
-- Section 9. Docs update. Flip this PRD to `implemented` once merged.
+- Section 9. Docs update.
+
+### S5 Private workspace backfill (amendment 1)
+
+- Migration `private_workspace_backfill` (section 8) with the scratch checks.
+- Upgrade notes in the PR and the docs: existing users get a private workspace.
+- Flip this PRD to `implemented`.
