@@ -27,6 +27,9 @@ const nimbusConfig = defineNimbusConfig({
 export default defineConfig({
   // nimbus:adapter
   output: 'static',
+  // Slashless URLs; wrangler.jsonc's html_handling redirects the old slashed ones.
+  trailingSlash: 'never',
+  build: { format: 'file' },
   // Tailwind v4 via its Vite plugin (the integration Astro recommends for
   // Tailwind v4 — replaces the PostCSS plugin, which doesn't build under
   // Astro 7's Vite 8 bundler).
