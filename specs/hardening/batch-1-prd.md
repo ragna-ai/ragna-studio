@@ -1,6 +1,6 @@
 # Hardening batch 1
 
-Status: in-progress (decided 2026-10-10). Source: the "Hardening" section of [backlog](../backlog.md).
+Status: implemented (PR #105, 2026-10-10). Source: the "Hardening" section of [backlog](../backlog.md).
 
 ## Summary
 

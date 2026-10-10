@@ -16,7 +16,6 @@ work first, shipped reference and dead/historical docs last.
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
-| [Hardening batch 1](./hardening/batch-1-prd.md) | in-progress (decided 2026-10-10) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
@@ -66,6 +65,7 @@ work first, shipped reference and dead/historical docs last.
 | [Email Client (PRD)](./email/prd.md) | implemented (2026-08-14, branch feat/email-client) |
 | [Email automation in the private workspace (change request)](./email/private-workspace-change-request.md) | implemented (PR #98, 2026-10-10) |
 | [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
+| [Hardening batch 1](./hardening/batch-1-prd.md) | implemented (PR #105, 2026-10-10) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |
