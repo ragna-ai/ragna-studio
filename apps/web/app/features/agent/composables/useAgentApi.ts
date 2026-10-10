@@ -58,10 +58,15 @@ export function useGetAgent(
   });
 }
 
-/** Unpaginated agent list for pickers (e.g. the workflow agent-node config). */
-export function useGetAllAgents(options: QueryOpts = {}) {
+/**
+ * Unpaginated agent list for pickers (e.g. the workflow agent-node config).
+ * Lists the active workspace unless `workspaceId` is given.
+ */
+export function useGetAllAgents(
+  options: QueryOpts = {},
+  workspaceId: WorkspaceId = useActiveWorkspaceId(),
+) {
   const { $api } = useNuxtApp();
-  const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentManyResponse>({
     queryKey: [...agentKeys.all(workspaceId), 'picker'],
     queryFn: ({ signal }) =>

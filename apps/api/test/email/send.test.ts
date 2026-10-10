@@ -43,9 +43,9 @@ beforeEach(async () => {
 });
 
 async function connectAccount() {
-  const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+  const { userId, workspaceId, personalWorkspaceId, cookieHeader } = await seedAuthenticatedUser();
   const { accountId } = await seedConnectedGmailAccount({ userId, cookieHeader });
-  return { userId, workspaceId, cookieHeader, accountId };
+  return { userId, workspaceId, personalWorkspaceId, cookieHeader, accountId };
 }
 
 type FormValue = string | File | Array<string | File> | undefined;
@@ -198,10 +198,10 @@ describe('POST /email/send - files', () => {
 });
 
 describe('POST /email/send - media library attachments', () => {
-  test("attaches media owned by one of the caller's workspaces", async () => {
-    const { cookieHeader, workspaceId } = await connectAccount();
+  test("attaches media of the caller's private workspace", async () => {
+    const { cookieHeader, personalWorkspaceId } = await connectAccount();
     const media = await createMedia({
-      ownerWorkspaceId: workspaceId,
+      ownerWorkspaceId: personalWorkspaceId,
       bucket: 'test-documents-bucket',
       storageKey: 'test-key.pdf',
       filename: 'invoice.pdf',
@@ -221,6 +221,29 @@ describe('POST /email/send - media library attachments', () => {
     expect(downloadObjectBufferMock).toHaveBeenCalledTimes(1);
     const input = sendMock.mock.calls[0]?.[0] as { attachments?: Array<{ filename: string }> };
     expect(input.attachments?.[0]?.filename).toBe('invoice.pdf');
+  });
+
+  test('rejects media of a shared workspace the caller can open', async () => {
+    const { cookieHeader, workspaceId } = await connectAccount();
+    const media = await createMedia({
+      ownerWorkspaceId: workspaceId,
+      bucket: 'test-documents-bucket',
+      storageKey: 'shared-key.pdf',
+      filename: 'shared.pdf',
+      mimeType: 'application/pdf',
+      size: 42,
+      origin: 'uploaded',
+    });
+
+    const response = await sendEmailRequest(cookieHeader, {
+      to: 'recipient@example.test',
+      subject: 'Hello',
+      text: 'Body text',
+      mediaId: media.id,
+    });
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
   test('rejects media from a workspace the caller does not own', async () => {
@@ -248,7 +271,7 @@ describe('POST /email/send - media library attachments', () => {
   });
 });
 
-describe('POST /email/send - media of workspaces the caller cannot open', () => {
+describe('POST /email/send - media outside the private workspace', () => {
   async function sendWithMediaOf(ownerWorkspaceId: string, cookieHeader: string) {
     const media = await createMedia({
       ownerWorkspaceId,
@@ -288,7 +311,7 @@ describe('POST /email/send - media of workspaces the caller cannot open', () => 
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  test('accepts media of a restricted workspace the caller is a workspace member of', async () => {
+  test('rejects media of a restricted workspace the caller is a workspace member of', async () => {
     const { organizationId } = await seedOrganizationWithRoles();
     const restrictedId = await insertWorkspace({ organizationId, visibility: 'restricted' });
     const { userId, cookieHeader } = await seedConnectedMember(organizationId);
@@ -296,7 +319,8 @@ describe('POST /email/send - media of workspaces the caller cannot open', () => 
 
     const response = await sendWithMediaOf(restrictedId, cookieHeader);
 
-    expect(response.status).toBe(StatusCodes.CREATED);
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(sendMock).not.toHaveBeenCalled();
   });
 });
 

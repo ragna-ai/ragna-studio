@@ -24,14 +24,14 @@ import {
   withCachedInstructions,
   withDefaultProviderOptions,
 } from '@repo/ai';
-import type { EmailAccount, EmailMessageWithBody, EmailParticipant } from '@repo/database';
+import type { Agent, EmailAccount, EmailMessageWithBody, EmailParticipant } from '@repo/database';
 import {
   createEmailDraft,
-  getAgentById,
   getEmailAccountById,
   getEmailMessageWithBodyById,
   getEmailThreadById,
   listEmailMessagesByThreadId,
+  resolveEmailDraftAgent,
   updateEmailDraft,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -78,13 +78,18 @@ export async function generateEmailDraft({
     return;
   }
 
-  const agentId = overrideAgentId ?? account.defaultAgentId;
-  if (!agentId) {
+  const agentRecord = await resolveEmailDraftAgent({
+    userId: account.userId,
+    overrideAgentId,
+    defaultAgentId: account.defaultAgentId,
+  });
+  if (!agentRecord) {
     logger.warn(
-      `Email account ${accountId} has no draft agent configured, skipping draft for thread ${threadId}`,
+      `User ${account.userId} has no private workspace, skipping draft for thread ${threadId}`,
     );
     return;
   }
+  const agentId = agentRecord.id;
 
   // origin/kind are set once at creation and never change afterwards.
   // Every worker-
@@ -104,7 +109,7 @@ export async function generateEmailDraft({
 
   let markdownContent: string;
   try {
-    markdownContent = await runDraftAgent({ account, provider, agentId, threadId });
+    markdownContent = await runDraftAgent({ account, provider, agentRecord, threadId });
   } catch (error) {
     // Best-effort by design: a failed
     // draft is discarded, not retried, and never fails the BullMQ job.
@@ -143,18 +148,15 @@ export async function generateEmailDraft({
 async function runDraftAgent({
   account,
   provider,
-  agentId,
+  agentRecord,
   threadId,
 }: {
   account: EmailAccount;
   provider: MailProvider;
-  agentId: string;
+  agentRecord: Agent;
   threadId: string;
 }): Promise<string> {
-  const agentRecord = await getAgentById({ agentId, userId: account.userId });
-  if (!agentRecord) {
-    throw new Error(`Agent ${agentId} not found for user ${account.userId}`);
-  }
+  const agentId = agentRecord.id;
   const agent = withAgentConfig(agentRecord);
 
   // Trusted threadId (the job's own payload, enqueued by classify or an

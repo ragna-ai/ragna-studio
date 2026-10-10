@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmailPrivateWorkspaceGate from '~/features/email/components/EmailPrivateWorkspaceGate.vue';
 import EmailClient from '~/features/email/components/EmailClient.vue';
 
 // New mail's own route:
@@ -20,5 +21,7 @@ useHead({
 </script>
 
 <template>
-  <EmailClient :draft-id="draftId" />
+  <EmailPrivateWorkspaceGate>
+    <EmailClient :draft-id="draftId" />
+  </EmailPrivateWorkspaceGate>
 </template>

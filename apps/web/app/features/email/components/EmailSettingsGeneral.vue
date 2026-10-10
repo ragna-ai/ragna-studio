@@ -18,6 +18,7 @@ import {
 } from '~/features/email/composables/useEmailAccountApi';
 import { useEmailConnectFlow } from '~/features/email/composables/useEmailConnectFlow';
 import type { EmailAccount } from '~/features/email/types';
+import { usePersonalWorkspace } from '~/features/workspace/composables/usePersonalWorkspace';
 
 // Props
 const props = defineProps<{ account: EmailAccount }>();
@@ -25,7 +26,8 @@ const props = defineProps<{ account: EmailAccount }>();
 // Composables
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
-const { data: agentsData } = useGetAllAgents();
+const { personalWorkspaceId } = usePersonalWorkspace();
+const { data: agentsData } = useGetAllAgents({}, personalWorkspaceId);
 const { mutate: updateSettings } = useUpdateEmailAccountSettings();
 const { mutate: disconnect, isPending: isDisconnecting } =
   useDisconnectEmailAccount();

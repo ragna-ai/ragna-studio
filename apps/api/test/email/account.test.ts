@@ -264,9 +264,9 @@ describe('POST /email/account/disconnect', () => {
 
 describe('PATCH /email/account/settings', () => {
   test('sets and clears the default draft agent', async () => {
-    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { userId, personalWorkspaceId, cookieHeader } = await seedAuthenticatedUser();
     await seedConnectedGmailAccount({ userId, cookieHeader });
-    const agentId = await createAgentForWorkspace(cookieHeader, workspaceId);
+    const agentId = await createAgentForWorkspace(cookieHeader, personalWorkspaceId);
 
     const setResponse = await app.request('/email/account/settings', {
       method: 'PATCH',
@@ -287,6 +287,20 @@ describe('PATCH /email/account/settings', () => {
     expect(clearBody.account.defaultAgentId).toBeNull();
   });
 
+  test('rejects an agent of a shared workspace', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    await seedConnectedGmailAccount({ userId, cookieHeader });
+    const sharedAgentId = await createAgentForWorkspace(cookieHeader, workspaceId);
+
+    const response = await app.request('/email/account/settings', {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ defaultAgentId: sharedAgentId }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
+
   test('rejects an agent id owned by another user', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     await seedConnectedGmailAccount({ userId, cookieHeader });
@@ -299,6 +313,6 @@ describe('PATCH /email/account/settings', () => {
       body: JSON.stringify({ defaultAgentId: otherAgentId }),
     });
 
-    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });
 });

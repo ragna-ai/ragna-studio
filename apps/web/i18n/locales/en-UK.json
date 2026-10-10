@@ -1155,6 +1155,11 @@
   },
   "email": {
     "pageTitle": "Mail",
+    "privateWorkspace": {
+      "title": "Mail lives in your private workspace",
+      "description": "Your inbox, drafts and attachments are tied to your private workspace. Switch to it to use mail.",
+      "switch": "Switch to your private workspace"
+    },
     "connect": {
       "title": "Connect your mailbox",
       "description": "Connect your Gmail or Outlook mailbox to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
