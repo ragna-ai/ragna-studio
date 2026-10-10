@@ -9,6 +9,7 @@
     "dev:docs": "turbo run dev --filter=@repo/docs",
     "lint": "oxlint",
     "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "check-types": "turbo run check-types",
     "gen": "turbo gen",
     "preview": "turbo run preview",

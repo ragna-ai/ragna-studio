@@ -14,6 +14,10 @@ pnpm build
 # Lint (oxlint)
 pnpm lint
 
+# Format (oxfmt) / verify formatting like CI does
+pnpm format
+pnpm format:check
+
 # Type-check
 pnpm check-types
 
@@ -32,6 +36,9 @@ pnpm test:api
 # Run a specific app or package task
 pnpm --filter @repo/web dev
 pnpm --filter @repo/worker dev
+
+# Upgrade Nuxt via its own CLI (run from apps/web), never by editing the version in package.json
+pnpm exec nuxt upgrade --dedupe --channel stable
 
 # After editing any @repo/* package (including @repo/testing, whose build is a no-op sync trigger),
 # rebuild it through pnpm — this also re-syncs the frozen .pnpm copies that injected consumers resolve

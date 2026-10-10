@@ -77,7 +77,7 @@ jobs:
       - run: pnpm build --filter='!@repo/docs'
       - run: pnpm check-types
       - run: pnpm lint
-      - run: pnpm format --check
+      - run: pnpm format:check
       # Comments state the reason themselves instead of pointing into specs/, which
       # drift. Allowlisted: pointers to long write-ups a comment can't summarize.
       - name: No spec references in code
