@@ -1,8 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/vue-query';
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
-import type { EmailAccount, EmailProviderKind } from '~/features/email/types';
+import type {
+  EmailAccount,
+  EmailAccountStatusResponse,
+  EmailProviderKind,
+} from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
 export const GMAIL_MODIFY_SCOPE =
@@ -48,6 +56,13 @@ interface ConnectEmailAccountResponse {
 export function useEmailConnectFlow() {
   const authClient = useAuth();
   const queryClient = useQueryClient();
+  // linkSocial() resolves once the redirect starts, so stay busy until the page unloads.
+  const isRedirecting = ref(false);
+
+  // A back-navigation can restore this page from the bfcache with the flag still set.
+  useEventListener(window, 'pageshow', (event) => {
+    if (event.persisted) isRedirecting.value = false;
+  });
 
   function link(
     { provider, returnPath }: LinkVariables,
@@ -66,10 +81,13 @@ export function useEmailConnectFlow() {
     mutationFn: (variables: LinkVariables) =>
       link(variables, MAIL_CONNECT_CALLBACK_PARAM),
     onSuccess: ({ error }, { provider }) => {
-      if (error)
-        toast.error(
-          `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
-        );
+      if (!error) {
+        isRedirecting.value = true;
+        return;
+      }
+      toast.error(
+        `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+      );
     },
     onError: (_error, { provider }) =>
       toast.error(
@@ -81,10 +99,13 @@ export function useEmailConnectFlow() {
     mutationFn: (variables: LinkVariables) =>
       link(variables, MAIL_RECONNECT_CALLBACK_PARAM),
     onSuccess: ({ error }, { provider }) => {
-      if (error)
-        toast.error(
-          `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
-        );
+      if (!error) {
+        isRedirecting.value = true;
+        return;
+      }
+      toast.error(
+        `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+      );
     },
     onError: (_error, { provider }) =>
       toast.error(
@@ -97,13 +118,18 @@ export function useEmailConnectFlow() {
     unknown,
     EmailProviderKind
   >({
+    mutationKey: emailKeys.connect(),
     mutationFn: (provider) =>
       useNuxtApp().$api<ConnectEmailAccountResponse>('/email/account/connect', {
         method: 'POST',
         body: { provider },
       }),
-    onSuccess: (_data, provider) => {
-      queryClient.invalidateQueries({ queryKey: emailKeys.account() });
+    onSuccess: ({ account }, provider) => {
+      // Seed the cache from the response so the inbox renders together with the toast.
+      queryClient.setQueryData<EmailAccountStatusResponse>(
+        emailKeys.account(),
+        { connected: true, account },
+      );
       toast.success(`${PROVIDER_AUTH_CONFIG[provider].displayName} connected`);
     },
     onError: (error, provider) => {
@@ -122,16 +148,25 @@ export function useEmailConnectFlow() {
   // account cache and opens the sync-poll window, instead of a second hand-rolled POST.
   const { mutateAsync: syncAccount } = useSyncEmailAccount();
 
+  // Keyed instead of local isPending: the finish runs in EmailClient, but the connect prompt shows its progress.
+  const finishingConnectCount = useIsMutating({
+    mutationKey: emailKeys.connect(),
+  });
+
   return {
     startConnect: (provider: EmailProviderKind, returnPath: string) =>
       linkMutation.mutate({ provider, returnPath }),
-    isLinking: linkMutation.isPending,
+    isLinking: computed(
+      () => linkMutation.isPending.value || isRedirecting.value,
+    ),
     finishConnect: (provider: EmailProviderKind) =>
       connectAccountMutation.mutateAsync(provider),
-    isFinishingConnect: connectAccountMutation.isPending,
+    isFinishingConnect: computed(() => finishingConnectCount.value > 0),
     startReconnect: (provider: EmailProviderKind, returnPath: string) =>
       relinkMutation.mutate({ provider, returnPath }),
-    isRelinking: relinkMutation.isPending,
+    isRelinking: computed(
+      () => relinkMutation.isPending.value || isRedirecting.value,
+    ),
     finishReconnect: (provider: EmailProviderKind) =>
       syncAccount().then(() =>
         toast.success(

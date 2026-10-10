@@ -1164,7 +1164,8 @@
       "title": "Connect your mailbox",
       "description": "Connect your Gmail or Outlook mailbox to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
       "gmailCta": "Connect Gmail",
-      "microsoftCta": "Connect Outlook"
+      "microsoftCta": "Connect Outlook",
+      "connecting": "Connecting your mailbox…"
     },
     "sidebar": {
       "compose": "Compose",

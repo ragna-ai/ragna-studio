@@ -1170,7 +1170,8 @@
       "title": "Postfach verbinden",
       "description": "Verbinde dein Gmail- oder Outlook-Postfach, um E-Mails zu lesen, zu beantworten und Antwortentwürfe von einem Agenten erstellen zu lassen. Es wird nie etwas ohne deine Prüfung versendet.",
       "gmailCta": "Gmail verbinden",
-      "microsoftCta": "Outlook verbinden"
+      "microsoftCta": "Outlook verbinden",
+      "connecting": "Postfach wird verbunden…"
     },
     "sidebar": {
       "compose": "Verfassen",

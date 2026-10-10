@@ -7,6 +7,7 @@ import type { EmailThreadListFilters } from '~/features/email/types';
  */
 export const emailKeys = {
   account: () => ['email', 'account'] as const,
+  connect: () => ['email', 'connect'] as const,
   categories: () => ['email', 'categories'] as const,
   autoDraftSenders: () => ['email', 'auto-draft-senders'] as const,
   // `filters` is a Ref: vue-query deeply unrefs queryKey elements, so
