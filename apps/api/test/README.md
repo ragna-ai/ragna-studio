@@ -64,7 +64,7 @@ Tests are grouped by domain folder, one folder per feature area:
   pending rows and enqueues a real BullMQ job, specs/imagegen/
   worker-execution-prd.md), so completed/failed rows are seeded directly via
   the repo for the tests that need one. This domain needs the storage mock
-  (for `reference-upload`) but not the AI one; `generateImageMock` is still
+  (for `reference-upload`) but not the AI one; `imageModelGenerateMock` is
   asserted un-called in the `POST /` tests, to prove generation was really
   deferred to the worker.
 - `test/videogen/` — video generation CRUD. The AI provider call happens
@@ -176,7 +176,7 @@ bun test
 
 `specs/testing/strategy.md`'s "External boundaries" (AI providers, R2
 storage, LinkedIn, Redis/BullMQ) are faked with Bun's `mock.module()`,
-registered by `packages/testing/src/mocks/` (`ai-provider.mock.ts`,
+registered by `packages/testing/src/mocks/` (`ai-sdk-provider.mock.ts`,
 `storage-provider.mock.ts`, `linkedin-provider.mock.ts`,
 `queue-provider.mock.ts`, combined by `provider-mocks.ts`). Registration
 happens in two places:
@@ -208,23 +208,13 @@ never touches a mocked route.
 Each mock spreads the real module and overrides only the network-touching
 exports, so everything else the package exports keeps working unmocked:
 
-- **`ai` (the npm package, not `@repo/ai`)** — `generateImage` is faked.
-  `@repo/ai` is bundled by tsdown with no `noExternal`, so a call from one
-  function to another inside it (e.g. `runGenImages` calling into the same
-  package's model factory) is just a local call after bundling, not a
-  re-resolved import — mocking `@repo/ai` at the package-specifier level
-  would never reach it. Real npm dependencies like `ai` stay external,
-  unbundled imports in `@repo/ai`'s dist output, so mocking `ai` itself
-  works: Bun's module registry is global, and `@repo/ai`'s dist and the
-  test process both resolve `ai` to the same real npm package. Neither
-  `test/imagegen/` nor `test/videogen/` exercises this mock today: both
-  domains' `POST /` routes only insert pending rows and enqueue a job
-  (specs/imagegen/worker-execution-prd.md, specs/videogen/prd.md), the
-  provider call itself runs from `apps/worker`'s processors instead. Both
-  domains' `POST /` tests assert `generateImageMock` was _not_ called, to
-  prove generation was really deferred rather than run inline. It's kept
-  registered here so `apps/worker`'s future test suite can reuse the exact
-  same fake for its processor-level tests instead of duplicating it.
+- **AI providers** — the provider factories `@repo/ai` calls (`createAnthropic`,
+  `createOpenAI`, `createBlackForestLabs`, `createVertex`) return the official V4 mock
+  models from `ai/test`; the AI SDK itself stays real (`ai-sdk-provider.mock.ts`).
+  Neither `test/imagegen/` nor `test/videogen/` runs a render: both domains' `POST /`
+  routes only insert pending rows and enqueue a job, the provider call runs from
+  `apps/worker`'s processors. Their `POST /` tests assert `imageModelGenerateMock`
+  was _not_ called, to prove generation was deferred rather than run inline.
 - **`@repo/storage`** — `uploadObjectBuffer`/`downloadObjectBuffer`/
   `deleteObjects` are faked; pure functions with no I/O (`buildImageUrls`,
   bucket-name helpers, ...) stay real. Unlike `@repo/ai`, apps/api imports
@@ -256,9 +246,7 @@ into the next test in the file.
 
 Lives in `@repo/testing` rather than app-local so `apps/worker`'s future
 test suite can register the same fakes: its gen-video processor calls
-`runGenVideo` (`@repo/ai`, hits the same `generateImage`/
-`experimental_generateVideo` boundary — only `generateImage` is faked so
-far, since no `apps/api` route needs the video one yet), and its
+`runGenVideo` (`@repo/ai`, hits the provider-level video model mock), and its
 agent-context-document processor calls `extractDocumentText`
 (`@repo/storage`).
 

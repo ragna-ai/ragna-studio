@@ -9,7 +9,6 @@ import {
   aiSdkProviderModuleMocks,
   mailModuleMock,
   mailProviderModuleMock,
-  passGenerateImageThrough,
   queueModuleMock,
   storageModuleMock,
 } from '@repo/testing';
@@ -22,7 +21,5 @@ for (const [specifier, moduleMock] of Object.entries(aiSdkProviderModuleMocks)) 
 }
 mock.module('@repo/mail', () => mailModuleMock);
 mock.module('@repo/mail/provider', () => mailProviderModuleMock);
-
-passGenerateImageThrough();
 
 await acquireTestSuiteLock();

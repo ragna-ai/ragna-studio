@@ -108,8 +108,6 @@ export async function enqueueInvitationEmail({
   inviter,
   organization,
 }: InvitationEmailInput): Promise<void> {
-  if (config.isTest) return;
-
   try {
     await queue.email().add(
       INVITATION_EMAIL_JOB,

@@ -1,6 +1,6 @@
 # Worker test suite
 
-Status: in-progress (decided 2026-10-10). Source: the "Hardening PRD" section of [backlog](../backlog.md).
+Status: implemented (PR #103, merged 2026-10-10). Source: the "Hardening" section of [backlog](../backlog.md).
 
 ## Summary
 
@@ -34,7 +34,6 @@ It covers every processor and cron in one go, including the backlog items:
    `generateImage`, `embedMany` and `experimental_generateVideo` all run for real, so tool loops,
    validation and usage-based credit settlement are under test. V4, not V3: since `ai@7.0.116`
    the SDK downgrades prompts for V3 models, so a V3 mock sees a different prompt than prod.
-   `apps/api` keeps its existing `generateImageMock` for now.
 5. **Shared mocks move to `@repo/testing`.** The mail-provider mock and email fixtures in
    `apps/api/test/email/support/` are needed by both apps. They move into
    `packages/testing/src/mail/`. `apps/api` imports them from there.

@@ -104,4 +104,41 @@ describe('purge cron', () => {
     expect(await userExists(failingUser.userId)).toBe(true);
     expect(await userExists(healthyUser.userId)).toBe(false);
   });
+
+  test('purges only the oldest users up to the batch size', async () => {
+    const oldest = await seedAuthenticatedUser();
+    const middle = await seedAuthenticatedUser();
+    const newest = await seedAuthenticatedUser();
+    await softDeleteUserAt({ userId: oldest.userId, deletedAt: daysAgo(50) });
+    await softDeleteUserAt({ userId: middle.userId, deletedAt: daysAgo(40) });
+    await softDeleteUserAt({ userId: newest.userId, deletedAt: daysAgo(35) });
+
+    const summary = await purgeExpiredDeletions({ batchSize: 2 });
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 2, failures: 0 });
+    expect(await userExists(oldest.userId)).toBe(false);
+    expect(await userExists(middle.userId)).toBe(false);
+    expect(await userExists(newest.userId)).toBe(true);
+  });
+
+  test('purges only the oldest organizations up to the batch size', async () => {
+    const oldestOwner = await seedAuthenticatedUser();
+    const newestOwner = await seedAuthenticatedUser();
+    const oldestOrganizationId = await requireOrganizationId(oldestOwner.userId);
+    const newestOrganizationId = await requireOrganizationId(newestOwner.userId);
+    await softDeleteOrganizationAt({
+      organizationId: oldestOrganizationId,
+      deletedAt: daysAgo(50),
+    });
+    await softDeleteOrganizationAt({
+      organizationId: newestOrganizationId,
+      deletedAt: daysAgo(40),
+    });
+
+    const summary = await purgeExpiredDeletions({ batchSize: 1 });
+
+    expect(summary.organizationsPurged).toBe(1);
+    expect(await organizationExists(oldestOrganizationId)).toBe(false);
+    expect(await organizationExists(newestOrganizationId)).toBe(true);
+  });
 });

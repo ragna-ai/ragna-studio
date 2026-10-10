@@ -1,6 +1,7 @@
 import { getGenVideoById } from '@repo/database';
 import { GEN_VIDEO_JOB, NOTIFY_USER_JOB } from '@repo/queue';
 import {
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   truncateAllTables,
@@ -28,7 +29,7 @@ describe('processGenVideoJob', () => {
     expect(result).toEqual({ success: true });
     expect(videoModelGenerateMock).toHaveBeenCalledTimes(1);
     expect(updated?.status).toBe('completed');
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
     expect(queueAddMock).toHaveBeenCalledWith(NOTIFY_USER_JOB, {
       userId,
       type: 'video_generation_succeeded',
@@ -48,8 +49,8 @@ describe('processGenVideoJob', () => {
     const updated = await getGenVideoById({ id: row.id });
     expect(updated?.status).toBe('failed');
     expect(updated?.error).toBeTruthy();
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
-    expect(queueAddMock.mock.calls[0]?.[1]).toMatchObject({
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)[0]?.[1]).toMatchObject({
       userId,
       type: 'video_generation_failed',
     });
@@ -61,7 +62,8 @@ describe('processGenVideoJob', () => {
     const run = processGenVideoJob(buildJob({ name: GEN_VIDEO_JOB, data: { genVideoId: row.id } }));
 
     await expect(run).rejects.toThrow('no author');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(videoModelGenerateMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('unknown job name throws', async () => {

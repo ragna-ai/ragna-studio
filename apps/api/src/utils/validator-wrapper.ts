@@ -9,7 +9,7 @@ export const myzValidator = <T extends z.ZodType, Target extends keyof Validatio
   target: Target,
   schema: T,
 ) =>
-  zv(target, schema, (result, c) => {
+  zv(target, schema, (result) => {
     if (!result.success) {
       const message = z.prettifyError(result.error);
       throw new UnprocessableEntityException(message);

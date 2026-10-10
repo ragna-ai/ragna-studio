@@ -19,7 +19,6 @@ work first, shipped reference and dead/historical docs last.
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
-| [Worker test suite](./testing/worker-prd.md) | in-progress (decided 2026-10-10) |
 
 ## Decided
 
@@ -66,6 +65,7 @@ work first, shipped reference and dead/historical docs last.
 | [Email Client (PRD)](./email/prd.md) | implemented (2026-08-14, branch feat/email-client) |
 | [Email automation in the private workspace (change request)](./email/private-workspace-change-request.md) | implemented (PR #98, 2026-10-10) |
 | [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
+| [Hardening batch 1](./hardening/batch-1-prd.md) | implemented (PR #105, 2026-10-10) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |
@@ -82,6 +82,7 @@ work first, shipped reference and dead/historical docs last.
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |
 | [Tasks / Kanban Board (PRD)](./tasks/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Live Team Chat over WebSocket (PRD)](./team-chat/prd.md) | implemented (phase 1 only, merged via PR #5, 2026-07-19) |
+| [Worker test suite](./testing/worker-prd.md) | implemented (PR #103, merged 2026-10-10) |
 | [Video generation v2: BFL FLUX 3 video + draft mode (PRD)](./videogen/prd-v2.md) | implemented (2026-08-05, three subagents: packages foundation, api, web; verification and commit left to the user) |
 | [Web Browser Service (PRD)](./webbrowser/prd.md) | implemented (`apps/webbrowser`, 2026-07-19) |
 | [Workflows: scheduled triggers](./workflow/workflows-scheduling.md) | implemented |

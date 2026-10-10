@@ -68,7 +68,7 @@ export function useSetMessageArchived() {
         method: 'POST',
         body: { archived },
       }),
-    onMutate: ({ threadId, messageId }) => {
+    onMutate: ({ threadId: _threadId, messageId: _messageId }) => {
       // TODO: Optimistically remove the message from the list so it disappears from
       // the UI immediately, even before the server responds. If the archive
       // fails, we'll roll back to the previous state by invalidating the queries in onSettled.
@@ -94,7 +94,7 @@ export function useSetMessageTrashed() {
         method: 'POST',
         body: { trashed },
       }),
-    onMutate: ({ threadId, messageId }) => {
+    onMutate: ({ threadId: _threadId, messageId: _messageId }) => {
       // TODO: Optimistically remove the message from the list so it disappears from
       // the UI immediately, even before the server responds. If the trash
       // fails, we'll roll back to the previous state by invalidating the queries in onSettled.

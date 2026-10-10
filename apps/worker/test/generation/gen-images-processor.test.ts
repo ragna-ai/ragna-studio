@@ -2,6 +2,7 @@ import { getGenImageRowsByIds } from '@repo/database';
 import { GEN_IMAGES_JOB, NOTIFY_USER_JOB } from '@repo/queue';
 import {
   imageModelGenerateMock,
+  enqueuedJobs,
   queueAddMock,
   resetProviderMocks,
   truncateAllTables,
@@ -28,7 +29,7 @@ describe('processGenImagesJob', () => {
     const updated = await getGenImageRowsByIds({ ids: genImageIds });
     expect(result).toEqual({ success: true });
     expect(updated.map((row) => row.status)).toEqual(['completed', 'completed']);
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
     expect(queueAddMock).toHaveBeenCalledWith(NOTIFY_USER_JOB, {
       userId,
       type: 'image_generation_succeeded',
@@ -49,8 +50,8 @@ describe('processGenImagesJob', () => {
     const updated = await getGenImageRowsByIds({ ids: genImageIds });
     expect(updated.map((row) => row.status)).toEqual(['failed', 'failed']);
     expect(updated.every((row) => row.error)).toBe(true);
-    expect(queueAddMock).toHaveBeenCalledTimes(1);
-    expect(queueAddMock.mock.calls[0]?.[1]).toMatchObject({
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
+    expect(enqueuedJobs(NOTIFY_USER_JOB)[0]?.[1]).toMatchObject({
       userId,
       type: 'image_generation_failed',
     });
@@ -63,7 +64,7 @@ describe('processGenImagesJob', () => {
     const run = processGenImagesJob(buildJob({ name: GEN_IMAGES_JOB, data: { genImageIds } }));
 
     await expect(run).rejects.toThrow('no author');
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(0);
   });
 
   test('unknown job name throws', async () => {

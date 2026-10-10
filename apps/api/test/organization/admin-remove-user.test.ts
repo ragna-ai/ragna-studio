@@ -65,7 +65,9 @@ describe('platform admin remove-user', () => {
     expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeDefined();
     const org = await db.query.organization.findFirst({ where: { id: organizationId } });
     expect(org?.deletedAt).toBeNull();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(
+      queueAddMock.mock.calls.filter(([name]) => name === PURGE_ORGANIZATION_JOB),
+    ).toHaveLength(0);
   });
 
   test('a sole owner marks the organization deleted and enqueues the purge job', async () => {

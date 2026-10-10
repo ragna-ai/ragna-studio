@@ -8,6 +8,7 @@ import {
 import {
   deleteSeededUser,
   getQueueJobSchedulersMock,
+  enqueuedJobs,
   queueAddMock,
   removeQueueJobSchedulerMock,
   resetProviderMocks,
@@ -96,7 +97,7 @@ describe('processWorkflowScheduleJob', () => {
     await tick(workflowId);
 
     expect(removeQueueJobSchedulerMock).not.toHaveBeenCalled();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(WORKFLOW_RUN_JOB)).toHaveLength(0);
     expect(await listRuns(workflowId)).toHaveLength(0);
   });
 
@@ -108,7 +109,7 @@ describe('processWorkflowScheduleJob', () => {
 
     await tick(workflowId);
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(WORKFLOW_RUN_JOB)).toHaveLength(0);
     expect(await listRuns(workflowId)).toHaveLength(1);
   });
 
@@ -127,7 +128,7 @@ describe('processWorkflowScheduleJob', () => {
     await tick(workflowId);
 
     expect(await listRuns(workflowId)).toHaveLength(0);
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(WORKFLOW_RUN_JOB)).toHaveLength(0);
     expect(removeQueueJobSchedulerMock).not.toHaveBeenCalled();
   });
 
@@ -142,7 +143,7 @@ describe('processWorkflowScheduleJob', () => {
     await tick(workflowId);
 
     expect(await listRuns(workflowId)).toHaveLength(0);
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(enqueuedJobs(WORKFLOW_RUN_JOB)).toHaveLength(0);
   });
 
   test('the happy path creates a schedule run and enqueues it', async () => {
