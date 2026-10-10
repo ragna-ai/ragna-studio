@@ -6,6 +6,7 @@ import {
 import { toast } from 'vue-sonner';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
+import { startAccountSyncForcePoll } from '~/features/email/lib/email-account-sync-poll';
 import type {
   EmailAccount,
   EmailAccountStatusResponse,
@@ -125,7 +126,9 @@ export function useEmailConnectFlow() {
         body: { provider },
       }),
     onSuccess: ({ account }, provider) => {
-      // Seed the cache from the response so the inbox renders together with the toast.
+      // The response predates the initial sync job, so poll until it settles (like "Sync now").
+      // Opened before setQueryData, which re-evaluates the account query's refetchInterval.
+      startAccountSyncForcePoll(account.lastSyncedAt);
       queryClient.setQueryData<EmailAccountStatusResponse>(
         emailKeys.account(),
         { connected: true, account },

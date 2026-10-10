@@ -86,6 +86,13 @@ const searchInput = ref('');
 const isConnected = computed(() => accountData.value?.connected === true);
 const account = computed(() => accountData.value?.account ?? null);
 const isSearching = computed(() => searchInput.value.trim().length > 0);
+// Connect queues the first sync; until it lands, an empty inbox means "not loaded yet", not "no mail".
+const isAwaitingFirstSync = computed(
+  () =>
+    account.value?.lastSyncedAt === null &&
+    (account.value.syncState === 'idle' ||
+      account.value.syncState === 'syncing'),
+);
 
 // A failed sync (manual or cron) gets its own toast - this is the single
 // place that observes the syncing -> settled transition regardless of
@@ -406,6 +413,7 @@ async function handleCompose() {
       :has-next-page="!isSearching && (threadsQuery.hasNextPage.value ?? false)"
       :filters="filters"
       :is-searching="isSearching"
+      :is-awaiting-first-sync="isAwaitingFirstSync"
       @open="openThread"
       @load-more="loadMoreThreads"
       @toggle-unread-only="toggleUnreadOnly"

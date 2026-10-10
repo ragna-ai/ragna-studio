@@ -241,7 +241,7 @@ function handleSyncNow() {
     <div class="shrink-0 space-y-2 border-t p-3">
       <div class="flex items-center justify-between gap-2">
         <EmailSyncStatusBadge
-          :sync-state="props.account.syncState"
+          :sync-state="isSyncing ? 'syncing' : props.account.syncState"
           :last-synced-at="props.account.lastSyncedAt"
         />
         <TooltipProvider>

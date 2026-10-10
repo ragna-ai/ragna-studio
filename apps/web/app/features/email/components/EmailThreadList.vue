@@ -30,6 +30,7 @@ const props = defineProps<{
   hasNextPage: boolean;
   filters: EmailThreadListFilters;
   isSearching: boolean;
+  isAwaitingFirstSync: boolean;
 }>();
 
 // Emits
@@ -157,6 +158,17 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
     />
     <div v-if="props.isLoading" class="flex flex-1 items-center justify-center">
       <Spinner />
+    </div>
+    <div
+      v-else-if="
+        props.threads.length === 0 &&
+        props.isAwaitingFirstSync &&
+        !props.isSearching
+      "
+      class="flex flex-1 items-center justify-center gap-2 px-6 text-sm text-muted-foreground"
+    >
+      <Spinner />
+      {{ t('email.thread.firstSync') }}
     </div>
     <p
       v-else-if="props.threads.length === 0"

@@ -1192,6 +1192,7 @@
       "unknownSender": "Unknown sender",
       "noSubject": "(no subject)",
       "empty": "No emails here.",
+      "firstSync": "Syncing your mailbox…",
       "noSearchResults": "No results for your search.",
       "loadMore": "Load more",
       "loadError": "Failed to load this conversation.",

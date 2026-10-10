@@ -1198,6 +1198,7 @@
       "unknownSender": "Unbekannter Absender",
       "noSubject": "(kein Betreff)",
       "empty": "Hier sind keine E-Mails.",
+      "firstSync": "Postfach wird synchronisiert…",
       "noSearchResults": "Keine Ergebnisse für deine Suche.",
       "loadMore": "Mehr laden",
       "loadError": "Diese Unterhaltung konnte nicht geladen werden.",
