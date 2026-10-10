@@ -1164,7 +1164,8 @@
       "title": "Connect your mailbox",
       "description": "Connect your Gmail or Outlook mailbox to read, reply, and let an agent draft replies for you. Nothing is ever sent without your review.",
       "gmailCta": "Connect Gmail",
-      "microsoftCta": "Connect Outlook"
+      "microsoftCta": "Connect Outlook",
+      "connecting": "Connecting your mailbox…"
     },
     "sidebar": {
       "compose": "Compose",
@@ -1191,6 +1192,7 @@
       "unknownSender": "Unknown sender",
       "noSubject": "(no subject)",
       "empty": "No emails here.",
+      "firstSync": "Syncing your mailbox…",
       "noSearchResults": "No results for your search.",
       "loadMore": "Load more",
       "loadError": "Failed to load this conversation.",

@@ -61,3 +61,6 @@ To be written as its own PRD.
 
 - [ ] Switcher group heading for personal workspaces reads "Personal" / "Persönlich" while the
       workspace is named "Private". Change the i18n label if it reads oddly.
+- [ ] Outlook connect drains the initial Graph delta inside `POST /email/account/connect`
+      (`getProfile()`). Took ~2s on a small mailbox; a large one may hit a proxy timeout. Move the
+      drain to the worker if that happens.

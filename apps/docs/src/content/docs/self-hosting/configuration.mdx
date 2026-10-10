@@ -60,6 +60,13 @@ https://api.example.com/auth/callback/<provider>
 
 Use `google`, `microsoft` or `linkedin` as `<provider>`. LinkedIn is not a sign-in option here. Use it only to publish drafts.
 
+### Microsoft (Entra ID)
+
+Connecting an Outlook mailbox needs two extra settings in the app registration:
+
+- **Optional claim `xms_edov`:** under Token configuration, add it to the ID token. Entra sends no standard `email_verified` claim. Without `xms_edov`, the platform can't confirm the email address and refuses to link the mailbox.
+- **API permissions:** add the delegated Microsoft Graph permissions `Mail.ReadWrite` and `Mail.Send`.
+
 ## Restricting sign-up
 
 By default everyone who can reach the app and has an account at your OAuth provider can sign in. Restrict it with a comma-separated list:

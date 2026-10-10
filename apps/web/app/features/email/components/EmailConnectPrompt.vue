@@ -9,8 +9,6 @@ import type { EmailProviderKind } from '~/features/email/types';
 const { t } = useI18n();
 const { startConnect, isLinking, isFinishingConnect } = useEmailConnectFlow();
 
-const isBusy = computed(() => isLinking.value || isFinishingConnect.value);
-
 function handleConnect(provider: EmailProviderKind) {
   startConnect(provider, '/mail');
 }
@@ -29,18 +27,25 @@ function handleConnect(provider: EmailProviderKind) {
         {{ t('email.connect.description') }}
       </p>
     </div>
-    <div class="flex gap-2">
-      <Button :disabled="isBusy" @click="handleConnect('gmail')">
-        <Spinner v-if="isBusy" class="mr-2" />
+    <div
+      v-if="isFinishingConnect"
+      class="flex items-center gap-2 text-sm text-muted-foreground"
+    >
+      <Spinner />
+      {{ t('email.connect.connecting') }}
+    </div>
+    <div v-else class="flex gap-2">
+      <Button :disabled="isLinking" @click="handleConnect('gmail')">
+        <Spinner v-if="isLinking" class="mr-2" />
         <Icon v-else name="logos:google-icon" class="mr-2 size-4" />
         {{ t('email.connect.gmailCta') }}
       </Button>
       <Button
         variant="outline"
-        :disabled="isBusy"
+        :disabled="isLinking"
         @click="handleConnect('microsoft')"
       >
-        <Spinner v-if="isBusy" class="mr-2" />
+        <Spinner v-if="isLinking" class="mr-2" />
         <Icon v-else name="logos:microsoft-icon" class="mr-2 size-4" />
         {{ t('email.connect.microsoftCta') }}
       </Button>
