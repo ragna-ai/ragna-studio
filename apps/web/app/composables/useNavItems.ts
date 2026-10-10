@@ -33,6 +33,14 @@ export interface NavItem {
   children: NavItem[];
 }
 
+const mailItem: NavItemConfig = {
+  id: 'mail',
+  path: '/mail',
+  icon: MailIcon,
+  labelKey: 'nav.mail',
+  children: [],
+};
+
 const homeItem: NavItemConfig = {
   id: 'home',
   path: '/',
@@ -68,13 +76,6 @@ const defaultItems: NavItemConfig[] = [
     path: '/chat',
     icon: MessagesSquareIcon,
     labelKey: 'nav.chat',
-    children: [],
-  },
-  {
-    id: 'mail',
-    path: '/mail',
-    icon: MailIcon,
-    labelKey: 'nav.mail',
     children: [],
   },
   {
@@ -212,31 +213,27 @@ function translateItems(
   }));
 }
 
-const PERSONAL_WORKSPACE_ONLY_ITEM_IDS = ['mail'];
-
 export function useNavItems() {
   const route = useRoute();
   const { t } = useI18n();
   const { isPersonalActive } = usePersonalWorkspace();
 
-  function visibleDefaultItems(): NavItemConfig[] {
-    if (isPersonalActive.value) return defaultItems;
-    return defaultItems.filter(
-      (item) => !PERSONAL_WORKSPACE_ONLY_ITEM_IDS.includes(item.id),
-    );
+  // Mail lives in the personal workspace only.
+  function visibleItems(): NavItemConfig[] {
+    if (isPersonalActive.value) return [mailItem, homeItem, ...defaultItems];
+    return [homeItem, ...defaultItems];
   }
 
   const dynamicNavItems = computed<NavItem[]>(() => {
     // if (route.path.startsWith('/chat')) return translateItems([homeItem, ...chatItems], t);
     // if (route.path.startsWith('/agent')) return translateItems([homeItem, ...agentItems], t);
     // if (route.path.startsWith('/workflow')) return translateItems([homeItem, ...workflowItems], t);
-    return translateItems([homeItem, ...visibleDefaultItems()], t);
+    return translateItems(visibleItems(), t);
   });
 
   function getAllItems(): NavItem[] {
-    return translateItems([homeItem, ...visibleDefaultItems()], t).flatMap(
-      (item) =>
-        item.path ? [item] : item.children.filter((child) => child.path),
+    return translateItems(visibleItems(), t).flatMap((item) =>
+      item.path ? [item] : item.children.filter((child) => child.path),
     );
   }
 
