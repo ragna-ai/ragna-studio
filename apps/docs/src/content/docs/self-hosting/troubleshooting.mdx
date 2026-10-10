@@ -43,11 +43,12 @@ Add a service name, such as `backend` or `migrate`, to see only its logs.
 
 ## Using the app
 
-| Symptom                           | Likely cause and fix                                                                                            |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Uploads and image generation fail | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage).                             |
-| Images don't load                 | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL.     |
-| Live updates don't arrive         | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy). |
+| Symptom                                                                                | Likely cause and fix                                                                                                                 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Uploads and image generation fail                                                      | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage).                                                  |
+| Images don't load                                                                      | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL.                          |
+| Live updates don't arrive                                                              | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy).                      |
+| Connecting Outlook fails, `backend` logs `Unable to link account - untrusted provider` | The Entra app registration lacks the optional claim `xms_edov`, see [Configuration](/self-hosting/configuration#microsoft-entra-id). |
 
 ## Changed `.env`?
 
