@@ -58,7 +58,9 @@ describe('workspaceGuard', () => {
 
   test('allows a non-owner member of the workspace organization', async () => {
     const owner = await seedAuthenticatedUser();
-    const ownerMembership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    const ownerMembership = await db.query.organizationMember.findFirst({
+      where: { userId: owner.userId },
+    });
     const colleague = await seedOrganizationMember({
       organizationId: ownerMembership?.organizationId ?? '',
       role: 'member',

@@ -1,7 +1,7 @@
 // file: channel.service.ts
 
 import { auth } from '@repo/auth/server';
-import { getChatByIdForUser, getWorkspaceForMember } from '@repo/database';
+import { getChatByIdForUser, getWorkspaceAccess } from '@repo/database';
 import { StatusCodes } from 'http-status-codes';
 import type { ChatServerWebSocket } from '../ws/socket';
 import type { OutgoingWsFrame } from '../ws/protocol';
@@ -19,11 +19,8 @@ async function canAccessChat(chatId: string, userId: string): Promise<boolean> {
     return false;
   }
 
-  const workspaceRecord = await getWorkspaceForMember({
-    workspaceId: chatRecord.workspaceId,
-    userId,
-  });
-  return workspaceRecord !== null;
+  const access = await getWorkspaceAccess({ workspaceId: chatRecord.workspaceId, userId });
+  return access !== null;
 }
 
 const channelAuthorizers: Record<ChannelResourceType, ChannelAuthorizer> = {

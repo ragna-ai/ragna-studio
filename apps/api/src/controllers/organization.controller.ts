@@ -6,6 +6,7 @@ import {
   getUsageByMemberForUser,
   listMembersForUser,
   leaveOrganization,
+  listRestrictedWorkspacesForUser,
   removeMemberForUser,
   restoreMemberForUser,
   restoreOrganizationForUser,
@@ -23,7 +24,8 @@ export const organizationController = new Hono()
    */
   .get('/', async (c) => {
     const user = c.get('user');
-    return c.json(await getOrganizationForUser({ userId: user.id }));
+    const organization = await getOrganizationForUser({ userId: user.id });
+    return c.json(organization);
   })
   /**
    * [GET] /organization/members
@@ -31,7 +33,17 @@ export const organizationController = new Hono()
    */
   .get('/members', async (c) => {
     const user = c.get('user');
-    return c.json(await listMembersForUser({ userId: user.id }));
+    const members = await listMembersForUser({ userId: user.id });
+    return c.json(members);
+  })
+  /**
+   * [GET] /organization/workspaces
+   * Every restricted workspace with its member count. Owner and admins only.
+   */
+  .get('/workspaces', async (c) => {
+    const user = c.get('user');
+    const workspaces = await listRestrictedWorkspacesForUser({ userId: user.id });
+    return c.json(workspaces);
   })
   /**
    * [DELETE] /organization
@@ -57,7 +69,8 @@ export const organizationController = new Hono()
    */
   .get('/usage', async (c) => {
     const user = c.get('user');
-    return c.json(await getUsageByMemberForUser({ userId: user.id }));
+    const usage = await getUsageByMemberForUser({ userId: user.id });
+    return c.json(usage);
   })
   /**
    * [DELETE] /organization/members/:memberId
@@ -66,7 +79,7 @@ export const organizationController = new Hono()
   .delete('/members/:memberId', validMemberIdParam, async (c) => {
     const user = c.get('user');
     const { memberId } = c.req.valid('param');
-    await removeMemberForUser({ userId: user.id, memberId });
+    await removeMemberForUser({ userId: user.id, organizationMemberId: memberId });
     return c.json({ success: true });
   })
   /**
@@ -76,7 +89,7 @@ export const organizationController = new Hono()
   .post('/members/:memberId/restore', validMemberIdParam, async (c) => {
     const user = c.get('user');
     const { memberId } = c.req.valid('param');
-    await restoreMemberForUser({ userId: user.id, memberId });
+    await restoreMemberForUser({ userId: user.id, organizationMemberId: memberId });
     return c.json({ success: true });
   })
   /**
@@ -95,6 +108,6 @@ export const organizationController = new Hono()
   .post('/transfer-ownership', validTransferOwnershipBody, async (c) => {
     const user = c.get('user');
     const { memberId } = c.req.valid('json');
-    await transferOwnershipForUser({ userId: user.id, memberId });
+    await transferOwnershipForUser({ userId: user.id, organizationMemberId: memberId });
     return c.json({ success: true });
   });

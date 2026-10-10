@@ -109,7 +109,7 @@ services:
       - app_net
 
   postgres:
-    image: pgvector/pgvector:0.8.6-pg18-trixie
+    image: pgvector/pgvector:0.8.7-pg18-trixie
     container_name: ragna_studio_postgresql
     restart: always
     mem_limit: 1024m

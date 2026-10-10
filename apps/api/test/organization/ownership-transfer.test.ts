@@ -10,7 +10,7 @@ beforeEach(async () => {
 });
 
 async function roleOf(userId: string): Promise<string | undefined> {
-  return (await db.query.member.findFirst({ where: { userId } }))?.role;
+  return (await db.query.organizationMember.findFirst({ where: { userId } }))?.role;
 }
 
 async function seedOwnerWithColleague(role: string) {

@@ -1,9 +1,15 @@
 import { createMedia, db, sql } from '@repo/database';
-import { user as userTable } from '@repo/database/schema';
-import { PURGE_ORGANIZATION_JOB, purgeOrganizationJobSchema } from '@repo/queue';
+import { media, user as userTable } from '@repo/database/schema';
+import {
+  DELETE_MEDIA_OBJECTS_JOB,
+  deleteMediaObjectsJobSchema,
+  PURGE_ORGANIZATION_JOB,
+  purgeOrganizationJobSchema,
+} from '@repo/queue';
 import { purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
+  queueAddBulkMock,
   queueAddMock,
   resetQueueMock,
   resetStorageProviderMock,
@@ -103,9 +109,90 @@ describe('platform admin remove-user', () => {
     expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
   });
 
+  test('a non-owner member has their personal workspace objects queued for deletion', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    const storageKey = `user/${colleague.userId}/private.pdf`;
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(queueAddBulkMock).toHaveBeenCalledTimes(1);
+    const [jobs] = queueAddBulkMock.mock.calls[0] ?? [[]];
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.name).toBe(DELETE_MEDIA_OBJECTS_JOB);
+    expect(jobs[0]?.opts).toEqual({ attempts: 3 });
+    expect(deleteMediaObjectsJobSchema.parse(jobs[0]?.data)).toEqual({
+      objects: [{ bucket: 'documents-bucket', key: storageKey }],
+    });
+    expect(deleteObjectsMock).not.toHaveBeenCalled();
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
+  test('enqueues nothing when the personal workspace has no media', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(queueAddBulkMock).not.toHaveBeenCalled();
+  });
+
+  test('splits more than 1000 objects into jobs of at most 1000 in one bulk call', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    await db.insert(media).values(
+      Array.from({ length: 1001 }, (_, index) => ({
+        ownerWorkspaceId: colleague.personalWorkspaceId,
+        bucket: 'documents-bucket',
+        storageKey: `user/${colleague.userId}/file-${index}.pdf`,
+        filename: `file-${index}.pdf`,
+        mimeType: 'application/pdf',
+        size: 10,
+        origin: 'uploaded' as const,
+      })),
+    );
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(queueAddBulkMock).toHaveBeenCalledTimes(1);
+    const [jobs] = queueAddBulkMock.mock.calls[0] ?? [[]];
+    const sizes = jobs.map((job) => deleteMediaObjectsJobSchema.parse(job.data).objects.length);
+    expect(sizes.toSorted()).toEqual([1, 1000]);
+  });
+
+  test('a failed enqueue does not block removing a non-owner member', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    queueAddBulkMock.mockImplementationOnce(() => Promise.reject(new Error('Redis down')));
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
   test('already removed members do not block a sole owner', async () => {
     const { owner, colleague, organizationId } = await seedOwnerWithColleague();
-    const memberRow = await db.query.member.findFirst({ where: { userId: colleague.userId } });
+    const memberRow = await db.query.organizationMember.findFirst({
+      where: { userId: colleague.userId },
+    });
     await organizationRequest(owner.cookieHeader, 'DELETE', `/members/${memberRow?.id}`);
 
     const response = await removeUserAsPlatformAdmin(owner.userId);

@@ -29,6 +29,7 @@ import { userController } from './controllers/user.controller';
 import { genVideoController } from './controllers/videogen.controller';
 import { workflowController } from './controllers/workflow.controller';
 import { workspaceController } from './controllers/workspace.controller';
+import { workspaceMemberController } from './controllers/workspace-member.controller';
 import { wsController } from './controllers/ws.controller';
 import { allowedOrigins } from './utils/allowed-origins';
 
@@ -68,6 +69,7 @@ export const app = new Hono()
   .route('/', socialPostController)
   .route('/', notificationController)
   .route('/', workspaceController)
+  .route('/', workspaceMemberController)
   .route('/', overviewController)
   .route('/', datasetController)
   .route('/', documentController)

@@ -167,6 +167,24 @@ async function deleteMediaObjects(
   return allDeleted;
 }
 
+export interface MediaObjectRef {
+  bucket: string;
+  key: string;
+}
+
+/** Deletes R2 objects by bucket and key. Throws unless every object is deleted, so a job retries. */
+export async function deleteMediaObjectsByKeys({
+  objects,
+}: {
+  objects: MediaObjectRef[];
+}): Promise<void> {
+  const mediaObjects = objects.map(({ bucket, key }) => ({ bucket, storageKey: key }));
+  const allDeleted = await deleteMediaObjects(mediaObjects);
+  if (!allDeleted) {
+    throw new Error('Could not delete all media objects');
+  }
+}
+
 /**
  * Deletes the R2 objects of every media row a workspace owns, right before the workspace row
  * cascades the media rows away. Unconditional: no refcount check, since the owning rows go

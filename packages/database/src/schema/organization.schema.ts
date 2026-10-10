@@ -13,7 +13,7 @@ export const organization = pgTable('organizations', {
   deletedAt: timestamp('deleted_at'),
 });
 
-export const member = pgTable(
+export const organizationMember = pgTable(
   'members',
   {
     id: primaryIdColumn,
@@ -52,5 +52,5 @@ export const invitation = pgTable(
 );
 
 export type Organization = typeof organization.$inferSelect;
-export type Member = typeof member.$inferSelect;
+export type OrganizationMember = typeof organizationMember.$inferSelect;
 export type Invitation = typeof invitation.$inferSelect;

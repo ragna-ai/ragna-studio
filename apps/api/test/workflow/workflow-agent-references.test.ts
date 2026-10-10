@@ -19,6 +19,7 @@ const workflowResponseSchema = z.object({
     publishedDefinition: z.unknown(),
     scheduleCron: z.string().nullable(),
     scheduleTimezone: z.string().nullable(),
+    schedulePaused: z.boolean().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
     deletedAt: z.string().nullable().optional(),
@@ -36,7 +37,7 @@ function jsonRequest(cookieHeader: string, method: string, body: Record<string, 
 async function createWorkspace(cookieHeader: string): Promise<string> {
   const response = await app.request(
     '/workspace',
-    jsonRequest(cookieHeader, 'POST', { name: 'Second' }),
+    jsonRequest(cookieHeader, 'POST', { name: 'Second', visibility: 'organization' }),
   );
   return z.object({ workspace: idSchema }).parse(await response.json()).workspace.id;
 }

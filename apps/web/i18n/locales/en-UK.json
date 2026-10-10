@@ -532,6 +532,10 @@
     "trace": {
       "step": "Step {number}",
       "tokenCount": "{count} tokens"
+    },
+    "schedulePaused": {
+      "badge": "Schedule paused",
+      "reason": "The author can no longer run this workflow."
     }
   },
   "imagen": {
@@ -867,9 +871,12 @@
       "empty": "No workspaces yet. Create one to start organizing your items.",
       "rename": "Rename workspace",
       "delete": "Delete workspace",
-      "deleteLastWorkspace": "You need at least one workspace, so this one can't be deleted.",
       "deleteTitle": "Delete workspace",
-      "deleteMessage": "Delete \"{name}\"? Items in this workspace will be deleted too."
+      "deleteMessage": "Delete \"{name}\"? Items in this workspace will be deleted too.",
+      "create": "New workspace",
+      "members": "Workspace members",
+      "membersDescription": "Who can open this workspace and what they can do.",
+      "back": "Back to workspaces"
     },
     "toast": {
       "createSuccess": "Workspace created.",
@@ -878,6 +885,61 @@
       "renameError": "Failed to rename the workspace.",
       "deleteSuccess": "Workspace deleted.",
       "deleteError": "Failed to delete the workspace."
+    },
+    "visibility": {
+      "personal": "Personal",
+      "organization": "Organization",
+      "restricted": "Restricted"
+    },
+    "roles": {
+      "manager": "Manager",
+      "editor": "Editor"
+    },
+    "create": {
+      "title": "New workspace",
+      "description": "Choose who can open the workspace.",
+      "name": "Name",
+      "visibility": "Visibility",
+      "restrictedHint": "Only the workspace members you add can open it. Organization owners and admins can always open it.",
+      "organizationHint": "Everyone in your organization can open it.",
+      "members": "Workspace members",
+      "submit": "Create workspace"
+    },
+    "members": {
+      "title": "Workspace members",
+      "managersTitle": "Managers",
+      "loadError": "Failed to load the members.",
+      "noCandidates": "No other organization members to add.",
+      "addTitle": "Add workspace members",
+      "addManagerTitle": "Add managers",
+      "add": "Add",
+      "added": "Added.",
+      "addError": "Failed to add the members.",
+      "roleChanged": "Role updated.",
+      "roleError": "Failed to change the role.",
+      "remove": "Remove",
+      "removed": "Removed.",
+      "removeError": "Failed to remove the member.",
+      "removeConfirm": {
+        "title": "Remove {name}?",
+        "message": "They can no longer open this workspace."
+      },
+      "leave": "Leave workspace",
+      "left": "You left the workspace.",
+      "leaveError": "Failed to leave the workspace.",
+      "leaveConfirm": {
+        "title": "Leave \"{name}\"?",
+        "message": "You can only open it again if a manager adds you."
+      }
+    },
+    "emptyState": {
+      "title": "You have no workspace yet",
+      "description": "Create a workspace to start working with agents, chats and workflows.",
+      "action": "Create a workspace"
+    },
+    "visibilityHint": {
+      "personal": "Only you can open this workspace.",
+      "restricted": "Only workspace members can open this workspace."
     }
   },
   "document": {
@@ -1440,6 +1502,18 @@
         "message": "You are signed out right away. Your organization can restore your account for 30 days.",
         "confirm": "Delete my account"
       }
+    },
+    "workspaces": {
+      "title": "Restricted workspaces",
+      "description": "Every restricted workspace in your organization. You can open one after you join it as manager.",
+      "loadError": "Failed to load the restricted workspaces.",
+      "empty": "No restricted workspaces yet.",
+      "memberCount": "Workspace members: {count}",
+      "youAreMember": "You are a member",
+      "open": "Open",
+      "join": "Join as manager",
+      "joined": "You joined as manager.",
+      "joinError": "Failed to join the workspace."
     }
   }
 }

@@ -10,6 +10,7 @@ import type {
   OrganizationResponse,
   OrganizationUsageResponse,
 } from '~/features/organization/types';
+import type { RestrictedWorkspacesResponse } from '~/features/workspace/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
 export const organizationKeys = {
@@ -18,6 +19,7 @@ export const organizationKeys = {
   members: ['organization', 'members'] as const,
   invitations: ['organization', 'invitations'] as const,
   usage: ['organization', 'usage'] as const,
+  restrictedWorkspaces: ['organization', 'workspaces'] as const,
 };
 
 /** Turns a better-auth `{ data, error }` result into a value or a thrown error with the server message. */
@@ -78,6 +80,19 @@ export function useGetOrganizationUsage(enabled: MaybeRefOrGetter<boolean>) {
     queryKey: organizationKeys.usage,
     queryFn: ({ signal }) =>
       $api<OrganizationUsageResponse>('/organization/usage', {
+        method: 'GET',
+        signal,
+      }),
+    enabled,
+  });
+}
+
+export function useGetRestrictedWorkspaces(enabled: MaybeRefOrGetter<boolean>) {
+  const { $api } = useNuxtApp();
+  return useQuery<RestrictedWorkspacesResponse>({
+    queryKey: organizationKeys.restrictedWorkspaces,
+    queryFn: ({ signal }) =>
+      $api<RestrictedWorkspacesResponse>('/organization/workspaces', {
         method: 'GET',
         signal,
       }),

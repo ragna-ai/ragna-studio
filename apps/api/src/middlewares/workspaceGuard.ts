@@ -1,5 +1,5 @@
-import type { Workspace } from '@repo/database';
-import { getWorkspaceForMember } from '@repo/database';
+import type { Workspace, WorkspaceRole } from '@repo/database';
+import { getWorkspaceAccess } from '@repo/database';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { createMiddleware } from 'hono/factory';
@@ -12,6 +12,7 @@ const workspaceIdSchema = z.uuidv7();
 export type WorkspaceGuardEnv = AuthEnv & {
   Variables: AuthEnv['Variables'] & {
     workspace: Workspace;
+    workspaceRole: WorkspaceRole;
   };
 };
 
@@ -21,9 +22,9 @@ export type WorkspaceGuardEnv = AuthEnv & {
  * to live in `document.service.ts`.
  *
  * Reads the `:workspaceId` route param, loads the workspace, and throws
- * `NotFoundException` unless the authenticated user is a member of the workspace's organization. On
- * success the workspace is stashed in context as `c.get('workspace')` for
- * every downstream handler, so services no longer need to re-fetch it.
+ * `NotFoundException` unless the authenticated user can open it (see `getWorkspaceAccess`). On
+ * success the workspace and the user's role in it are stashed in context as
+ * `c.get('workspace')` and `c.get('workspaceRole')`, so services no longer need to re-fetch them.
  *
  * Usage: mount after `authMiddleware` on any controller whose base path
  * contains `:workspaceId`, e.g.
@@ -53,8 +54,8 @@ export const workspaceGuard = createMiddleware<WorkspaceGuardEnv>(async (c, next
     throw new NotFoundException('Workspace not found');
   }
 
-  const { error, data: workspaceRecord } = await tryCatch(() =>
-    getWorkspaceForMember({ workspaceId: validWorkspaceId, userId: user.id }),
+  const { error, data: access } = await tryCatch(() =>
+    getWorkspaceAccess({ workspaceId: validWorkspaceId, userId: user.id }),
   );
 
   if (error !== null) {
@@ -62,10 +63,11 @@ export const workspaceGuard = createMiddleware<WorkspaceGuardEnv>(async (c, next
     throw new InternalServerErrorException('Failed to load workspace');
   }
 
-  if (!workspaceRecord) {
+  if (!access) {
     throw new NotFoundException('Workspace not found');
   }
 
-  c.set('workspace', workspaceRecord);
+  c.set('workspace', access.workspace);
+  c.set('workspaceRole', access.workspaceRole);
   await next();
 });

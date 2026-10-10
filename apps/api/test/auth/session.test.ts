@@ -81,7 +81,10 @@ describe('authMiddleware', () => {
     expect(response.status).toBe(StatusCodes.OK);
 
     const body = workspaceListResponseSchema.parse(await response.json());
-    expect(body.workspaces.map((workspace) => workspace.id)).toEqual([userA.workspaceId]);
+    expect(body.workspaces.map((workspace) => workspace.id)).toEqual([
+      userA.personalWorkspaceId,
+      userA.workspaceId,
+    ]);
     expect(body.workspaces.some((workspace) => workspace.id === userB.workspaceId)).toBe(false);
   });
 });

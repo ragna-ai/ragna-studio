@@ -224,7 +224,9 @@ describe('while the organization is deleted', () => {
 
     const invitee = await seedAuthenticatedUser({ email: 'invitee@example.com' });
 
-    const membership = await db.query.member.findFirst({ where: { userId: invitee.userId } });
+    const membership = await db.query.organizationMember.findFirst({
+      where: { userId: invitee.userId },
+    });
     expect(membership?.organizationId).not.toBe(organizationId);
   });
 

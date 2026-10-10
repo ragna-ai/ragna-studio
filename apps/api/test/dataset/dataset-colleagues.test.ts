@@ -34,7 +34,9 @@ interface Colleagues {
 
 async function seedSharedDataset(): Promise<Colleagues> {
   const author = await seedAuthenticatedUser();
-  const membership = await db.query.member.findFirst({ where: { userId: author.userId } });
+  const membership = await db.query.organizationMember.findFirst({
+    where: { userId: author.userId },
+  });
   const colleague = await seedOrganizationMember({
     organizationId: membership?.organizationId ?? '',
     role: 'member',
@@ -96,7 +98,9 @@ describe('dataset rows written by a colleague', () => {
 
   test('appends and reorders after the author was deleted', async () => {
     const { author, colleague } = await seedSharedDataset();
-    const membership = await db.query.member.findFirst({ where: { userId: author.userId } });
+    const membership = await db.query.organizationMember.findFirst({
+      where: { userId: author.userId },
+    });
     const formerMember = await seedOrganizationMember({
       organizationId: membership?.organizationId ?? '',
       role: 'member',

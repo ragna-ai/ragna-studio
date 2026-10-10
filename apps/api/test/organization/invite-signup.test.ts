@@ -29,11 +29,14 @@ describe('sign-up with a pending invitation', () => {
 
     const invitee = await seedAuthenticatedUser({ email: 'Invitee@Example.com' });
 
-    const memberships = await db.query.member.findMany({ where: { userId: invitee.userId } });
+    const memberships = await db.query.organizationMember.findMany({
+      where: { userId: invitee.userId },
+    });
     expect(memberships).toHaveLength(1);
     expect(memberships[0]).toMatchObject({ organizationId: owner.organizationId, role: 'admin' });
     expect(await db.query.organization.findMany()).toHaveLength(1);
-    expect(await db.query.workspace.findMany()).toHaveLength(1);
+    // owner personal, shared, and the invitee's personal workspace
+    expect(await db.query.workspace.findMany()).toHaveLength(3);
     const accepted = await db.query.invitation.findFirst({ where: { id: invitationId } });
     expect(accepted?.status).toBe('accepted');
   });

@@ -1,4 +1,9 @@
-import type { Workflow, WorkflowRun, WorkflowRunWithSteps } from '@repo/database';
+import type {
+  Workflow,
+  WorkflowRun,
+  WorkflowRunWithSteps,
+  WorkflowWithSchedulePaused,
+} from '@repo/database';
 import {
   createWorkflow,
   createWorkflowRun,
@@ -8,6 +13,7 @@ import {
   getRunsByWorkflowId,
   getWorkflowById,
   getWorkflowCountByWorkspaceId,
+  getWorkflowWithSchedulePausedById,
   publishWorkflow,
   updateRunStatus,
   updateWorkflow,
@@ -162,8 +168,21 @@ export async function getWorkflowForWorkspace({
 }: {
   workspaceId: string;
   workflowId: string;
-}): Promise<Workflow> {
-  return loadOwnedWorkflow({ workspaceId, workflowId });
+}): Promise<WorkflowWithSchedulePaused> {
+  const { error, data: workflowRecord } = await tryCatch(() =>
+    getWorkflowWithSchedulePausedById({ workflowId, workspaceId }),
+  );
+
+  if (error !== null) {
+    logger.error('Failed to load workflow', error);
+    throw new InternalServerErrorException('Failed to load workflow');
+  }
+
+  if (!workflowRecord) {
+    throw new NotFoundException('Workflow not found');
+  }
+
+  return workflowRecord;
 }
 
 /**

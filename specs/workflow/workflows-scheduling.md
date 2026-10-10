@@ -102,8 +102,9 @@ Repository changes:
 
 1. Load the workflow via `getWorkflowForScheduledRun`.
 2. **Orphan guard.** Workflow missing, or `schedule_cron` null: remove this job scheduler and return. This self-heals cascaded deletes and failed publishes.
-3. **Overlap guard.** `hasActiveRun` true: log and return (decision 5).
-4. Create the run row (`published_definition` snapshot, `triggered_by: 'schedule'`, `input: null`) and enqueue `WorkflowRunJobDto` with `attempts: 3`. If the enqueue throws, best-effort mark the run `failed`, mirroring the API's fail-fast enqueue handling.
+3. **Run-as user.** `resolveScheduledRunUserId` returns the workflow author only while the author is active and can open the workflow's workspace. Otherwise the tick is skipped, no run is created and the scheduler stays. The schedule is paused and resumes once the author can run it again. There is no fallback to the org owner. List and get responses carry `schedulePaused`, and the web shows a "Schedule paused" badge.
+4. **Overlap guard.** `hasActiveRun` true: log and return (decision 5).
+5. Create the run row (`published_definition` snapshot, `triggered_by: 'schedule'`, `input: null`) and enqueue `WorkflowRunJobDto` with `attempts: 3`. If the enqueue throws, best-effort mark the run `failed`, mirroring the API's fail-fast enqueue handling.
 
 **Startup reconciliation** (`src/workflow/reconcile-schedules.ts`, called from `src/index.ts` after processors are registered):
 

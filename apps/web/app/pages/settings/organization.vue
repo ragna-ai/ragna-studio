@@ -4,6 +4,7 @@ import OrganizationInvitationsCard from '~/features/organization/components/Orga
 import OrganizationMembersCard from '~/features/organization/components/OrganizationMembersCard.vue';
 import OrganizationNameCard from '~/features/organization/components/OrganizationNameCard.vue';
 import OrganizationTransferCard from '~/features/organization/components/OrganizationTransferCard.vue';
+import OrganizationWorkspacesCard from '~/features/organization/components/OrganizationWorkspacesCard.vue';
 import OrganizationUsageCard from '~/features/organization/components/OrganizationUsageCard.vue';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 import {
@@ -56,6 +57,7 @@ const isOwner = computed(() =>
         <OrganizationMembersCard :can-manage="canManage" />
         <template v-if="canManage">
           <OrganizationInvitationsCard />
+          <OrganizationWorkspacesCard />
           <OrganizationUsageCard />
         </template>
         <template v-if="isOwner">

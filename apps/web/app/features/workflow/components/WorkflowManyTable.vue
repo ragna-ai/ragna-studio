@@ -6,6 +6,7 @@ import {
   Trash2Icon,
   WorkflowIcon,
 } from '@lucide/vue';
+import WorkflowSchedulePausedBadge from '~/features/workflow/components/WorkflowSchedulePausedBadge.vue';
 import type { Workflow } from '~/features/workflow/types';
 
 // Imports
@@ -102,6 +103,7 @@ const { formatDateTime } = useDateTimeFormat();
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <WorkflowSchedulePausedBadge v-if="workflow.schedulePaused" />
           </div>
         </TableCell>
         <TableCell class="whitespace-nowrap">

@@ -1,4 +1,4 @@
-import { db } from '@repo/database';
+import { db, PERSONAL_WORKSPACE_NAME } from '@repo/database';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
@@ -7,10 +7,10 @@ beforeEach(async () => {
 });
 
 describe('sign-up', () => {
-  test('creates the organization, an owner membership and the Personal workspace', async () => {
-    const { userId, workspaceId } = await seedAuthenticatedUser();
+  test('creates the organization, an owner membership and the private workspace', async () => {
+    const { userId, personalWorkspaceId } = await seedAuthenticatedUser();
 
-    const members = await db.query.member.findMany({ where: { userId } });
+    const members = await db.query.organizationMember.findMany({ where: { userId } });
     expect(members).toHaveLength(1);
     expect(members[0]?.role).toBe('owner');
 
@@ -20,8 +20,10 @@ describe('sign-up', () => {
     expect(organization?.name).toBe(user?.name);
     expect(organization?.slug).toBe(organizationId);
 
-    const workspace = await db.query.workspace.findFirst({ where: { id: workspaceId } });
-    expect(workspace?.name).toBe('Personal');
+    const workspace = await db.query.workspace.findFirst({
+      where: { id: personalWorkspaceId },
+    });
+    expect(workspace?.name).toBe(PERSONAL_WORKSPACE_NAME);
     expect(workspace?.organizationId).toBe(organizationId);
   });
 
@@ -29,8 +31,12 @@ describe('sign-up', () => {
     const userA = await seedAuthenticatedUser();
     const userB = await seedAuthenticatedUser();
 
-    const memberA = await db.query.member.findFirst({ where: { userId: userA.userId } });
-    const memberB = await db.query.member.findFirst({ where: { userId: userB.userId } });
+    const memberA = await db.query.organizationMember.findFirst({
+      where: { userId: userA.userId },
+    });
+    const memberB = await db.query.organizationMember.findFirst({
+      where: { userId: userB.userId },
+    });
 
     expect(memberA?.organizationId).not.toBe(memberB?.organizationId);
   });
@@ -40,7 +46,7 @@ describe('session creation', () => {
   test("sets activeOrganizationId to the user's organization", async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    const member = await db.query.member.findFirst({ where: { userId } });
+    const member = await db.query.organizationMember.findFirst({ where: { userId } });
     const sessions = await db.query.session.findMany({ where: { userId } });
 
     expect(sessions.length).toBeGreaterThan(0);

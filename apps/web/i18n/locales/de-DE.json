@@ -538,6 +538,10 @@
     "trace": {
       "step": "Schritt {number}",
       "tokenCount": "{count} Tokens"
+    },
+    "schedulePaused": {
+      "badge": "Zeitplan pausiert",
+      "reason": "Die Autorin oder der Autor kann diesen Workflow nicht mehr ausführen."
     }
   },
   "imagen": {
@@ -873,9 +877,12 @@
       "empty": "Noch keine Arbeitsbereiche. Erstelle einen, um deine Elemente zu organisieren.",
       "rename": "Arbeitsbereich umbenennen",
       "delete": "Arbeitsbereich löschen",
-      "deleteLastWorkspace": "Du benötigst mindestens einen Arbeitsbereich, dieser kann daher nicht gelöscht werden.",
       "deleteTitle": "Arbeitsbereich löschen",
-      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei ebenfalls gelöscht."
+      "deleteMessage": "„{name}“ löschen? Elemente in diesem Arbeitsbereich werden dabei ebenfalls gelöscht.",
+      "create": "Neuer Arbeitsbereich",
+      "members": "Mitglieder des Arbeitsbereichs",
+      "membersDescription": "Wer diesen Arbeitsbereich öffnen kann und was die Person darf.",
+      "back": "Zurück zu den Arbeitsbereichen"
     },
     "toast": {
       "createSuccess": "Arbeitsbereich erstellt.",
@@ -884,6 +891,61 @@
       "renameError": "Arbeitsbereich konnte nicht umbenannt werden.",
       "deleteSuccess": "Arbeitsbereich gelöscht.",
       "deleteError": "Arbeitsbereich konnte nicht gelöscht werden."
+    },
+    "visibility": {
+      "personal": "Persönlich",
+      "organization": "Organisation",
+      "restricted": "Eingeschränkt"
+    },
+    "roles": {
+      "manager": "Manager",
+      "editor": "Editor"
+    },
+    "create": {
+      "title": "Neuer Arbeitsbereich",
+      "description": "Lege fest, wer den Arbeitsbereich öffnen kann.",
+      "name": "Name",
+      "visibility": "Sichtbarkeit",
+      "restrictedHint": "Nur die Mitglieder des Arbeitsbereichs, die du hinzufügst, können ihn öffnen. Inhaber und Admins der Organisation können ihn immer öffnen.",
+      "organizationHint": "Alle in deiner Organisation können ihn öffnen.",
+      "members": "Mitglieder des Arbeitsbereichs",
+      "submit": "Arbeitsbereich erstellen"
+    },
+    "members": {
+      "title": "Mitglieder des Arbeitsbereichs",
+      "managersTitle": "Manager",
+      "loadError": "Mitglieder konnten nicht geladen werden.",
+      "noCandidates": "Keine weiteren Organisationsmitglieder zum Hinzufügen.",
+      "addTitle": "Mitglieder hinzufügen",
+      "addManagerTitle": "Manager hinzufügen",
+      "add": "Hinzufügen",
+      "added": "Hinzugefügt.",
+      "addError": "Mitglieder konnten nicht hinzugefügt werden.",
+      "roleChanged": "Rolle aktualisiert.",
+      "roleError": "Rolle konnte nicht geändert werden.",
+      "remove": "Entfernen",
+      "removed": "Entfernt.",
+      "removeError": "Mitglied konnte nicht entfernt werden.",
+      "removeConfirm": {
+        "title": "{name} entfernen?",
+        "message": "Diese Person kann den Arbeitsbereich nicht mehr öffnen."
+      },
+      "leave": "Arbeitsbereich verlassen",
+      "left": "Du hast den Arbeitsbereich verlassen.",
+      "leaveError": "Arbeitsbereich konnte nicht verlassen werden.",
+      "leaveConfirm": {
+        "title": "„{name}“ verlassen?",
+        "message": "Du kannst ihn nur wieder öffnen, wenn ein Manager dich hinzufügt."
+      }
+    },
+    "emptyState": {
+      "title": "Du hast noch keinen Arbeitsbereich",
+      "description": "Erstelle einen Arbeitsbereich, um mit Agenten, Chats und Workflows zu arbeiten.",
+      "action": "Arbeitsbereich erstellen"
+    },
+    "visibilityHint": {
+      "personal": "Nur du kannst diesen Arbeitsbereich öffnen.",
+      "restricted": "Nur Mitglieder des Arbeitsbereichs können ihn öffnen."
     }
   },
   "document": {
@@ -1446,6 +1508,18 @@
         "message": "Du wirst sofort abgemeldet. Deine Organisation kann dein Konto 30 Tage lang wiederherstellen.",
         "confirm": "Mein Konto löschen"
       }
+    },
+    "workspaces": {
+      "title": "Eingeschränkte Arbeitsbereiche",
+      "description": "Alle eingeschränkten Arbeitsbereiche deiner Organisation. Du kannst einen öffnen, nachdem du ihm als Manager beigetreten bist.",
+      "loadError": "Eingeschränkte Arbeitsbereiche konnten nicht geladen werden.",
+      "empty": "Noch keine eingeschränkten Arbeitsbereiche.",
+      "memberCount": "Mitglieder des Arbeitsbereichs: {count}",
+      "youAreMember": "Du bist Mitglied",
+      "open": "Öffnen",
+      "join": "Als Manager beitreten",
+      "joined": "Du bist als Manager beigetreten.",
+      "joinError": "Beitritt zum Arbeitsbereich fehlgeschlagen."
     }
   }
 }

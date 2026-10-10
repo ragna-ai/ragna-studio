@@ -1,6 +1,6 @@
 import { config } from '@repo/config';
 import { db, sql } from '@repo/database';
-import { member, user as userTable } from '@repo/database/schema';
+import { organizationMember, user as userTable } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -192,7 +192,9 @@ describe('role updates', () => {
     const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
 
     const response = await postOrganizationRoute(owner.cookieHeader, 'update-member-role', {
-      memberId: (await db.query.member.findFirst({ where: { userId: colleague.userId } }))?.id,
+      memberId: (
+        await db.query.organizationMember.findFirst({ where: { userId: colleague.userId } })
+      )?.id,
       role: 'owner',
       organizationId,
     });
@@ -200,8 +202,8 @@ describe('role updates', () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     const after = await db
       .select()
-      .from(member)
-      .where(sql`${member.userId} = ${colleague.userId}`);
+      .from(organizationMember)
+      .where(sql`${organizationMember.userId} = ${colleague.userId}`);
     expect(after[0]?.role).toBe('member');
   });
 
@@ -211,7 +213,9 @@ describe('role updates', () => {
     const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
 
     const response = await postOrganizationRoute(owner.cookieHeader, 'update-member-role', {
-      memberId: (await db.query.member.findFirst({ where: { userId: colleague.userId } }))?.id,
+      memberId: (
+        await db.query.organizationMember.findFirst({ where: { userId: colleague.userId } })
+      )?.id,
       role: 'admin',
       organizationId,
     });

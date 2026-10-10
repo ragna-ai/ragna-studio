@@ -104,6 +104,12 @@ whether it is creating or editing; the API should not guess from the body.
   (who created it), matching the `createdByUserId` pattern on documents.
   They are stamped on create and never used for access checks.
 - The guard checks organization membership (see `specs/organizations/prd.md`). Nothing else moves.
+- Since [v3](../organizations/v3-prd.md) the guard also applies the workspace visibility:
+  - `personal`: only its owner.
+  - `organization`: every org member.
+  - `restricted`: its workspace members, plus org owners and org admins.
+  - Everyone else gets the same `NotFoundException` as for a foreign workspace.
+  - The guard also sets the caller's effective `workspaceRole` (`manager` or `editor`).
 
 ### Active workspace is carried by the URL
 

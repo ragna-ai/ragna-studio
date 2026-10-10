@@ -40,7 +40,9 @@ describe('default agent per workspace', () => {
   test('is shared by every member of the workspace', async () => {
     await seedAgentTemplate();
     const owner = await seedAuthenticatedUser();
-    const membership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    const membership = await db.query.organizationMember.findFirst({
+      where: { userId: owner.userId },
+    });
     const colleague = await seedOrganizationMember({
       organizationId: membership?.organizationId ?? '',
       role: 'member',
@@ -59,7 +61,9 @@ describe('default agent per workspace', () => {
   test('survives concurrent first use by two members', async () => {
     await seedAgentTemplate();
     const owner = await seedAuthenticatedUser();
-    const membership = await db.query.member.findFirst({ where: { userId: owner.userId } });
+    const membership = await db.query.organizationMember.findFirst({
+      where: { userId: owner.userId },
+    });
     const colleague = await seedOrganizationMember({
       organizationId: membership?.organizationId ?? '',
       role: 'member',

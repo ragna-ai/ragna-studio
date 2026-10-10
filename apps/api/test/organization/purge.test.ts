@@ -1,6 +1,6 @@
 import { createMedia, db, sql } from '@repo/database';
 import { creditAccount, dataset, organization, user as userTable } from '@repo/database/schema';
-import { purgeExpiredDeletions, purgeOrganization } from '@repo/media';
+import { deleteMediaObjectsByKeys, purgeExpiredDeletions, purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
   resetStorageProviderMock,
@@ -67,7 +67,7 @@ describe('purgeOrganization', () => {
       await db.query.workspace.findFirst({ where: { id: owner.workspaceId } }),
     ).toBeUndefined();
     expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
-    expect(await db.query.member.findMany({ where: { organizationId } })).toEqual([]);
+    expect(await db.query.organizationMember.findMany({ where: { organizationId } })).toEqual([]);
     expect(await db.query.user.findFirst({ where: { id: owner.userId } })).toBeUndefined();
     expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
   });
@@ -148,6 +148,59 @@ describe('purgeExpiredDeletions', () => {
     expect(kept).toMatchObject({ name: 'Shared', userId: null });
   });
 
+  test('deletes the personal workspace R2 objects before the removed user row', async () => {
+    const { colleague } = await seedDeletableOrganization();
+    const personalMedia = await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    await softDeleteUserDaysAgo(colleague.userId, 31);
+    let userRowExistedAtDeleteTime = false;
+    deleteObjectsMock.mockImplementationOnce(async (_bucket, keys) => {
+      userRowExistedAtDeleteTime =
+        (await db.query.user.findFirst({ where: { id: colleague.userId } })) !== undefined;
+      return { deleted: keys, errors: [] };
+    });
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 1, failures: 0 });
+    expect(deleteObjectsMock.mock.calls[0]).toEqual([
+      'documents-bucket',
+      [personalMedia.storageKey],
+    ]);
+    expect(userRowExistedAtDeleteTime).toBe(true);
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeUndefined();
+  });
+
+  test('keeps a removed user when their personal workspace R2 cleanup fails', async () => {
+    const { colleague } = await seedDeletableOrganization();
+    await createMedia({
+      ownerWorkspaceId: colleague.personalWorkspaceId,
+      bucket: 'documents-bucket',
+      storageKey: `user/${colleague.userId}/private.pdf`,
+      filename: 'private.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+    await softDeleteUserDaysAgo(colleague.userId, 31);
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 0, failures: 1 });
+    expect(await db.query.user.findFirst({ where: { id: colleague.userId } })).toBeDefined();
+    expect(
+      await db.query.workspace.findFirst({ where: { id: colleague.personalWorkspaceId } }),
+    ).toBeDefined();
+  });
+
   test('does not purge members of a restored organization', async () => {
     const { owner, colleague, organizationId } = await seedDeletableOrganization();
     await organizationRequest(owner.cookieHeader, 'DELETE', '');
@@ -187,5 +240,28 @@ describe('purgeExpiredDeletions', () => {
     expect(
       await db.query.organization.findFirst({ where: { id: second.organizationId } }),
     ).toBeUndefined();
+  });
+});
+
+describe('deleteMediaObjectsByKeys', () => {
+  test('deletes the objects per bucket', async () => {
+    await deleteMediaObjectsByKeys({
+      objects: [
+        { bucket: 'documents-bucket', key: 'a.pdf' },
+        { bucket: 'images-bucket', key: 'b.png' },
+        { bucket: 'documents-bucket', key: 'c.pdf' },
+      ],
+    });
+
+    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', ['a.pdf', 'c.pdf']);
+    expect(deleteObjectsMock).toHaveBeenCalledWith('images-bucket', ['b.png']);
+  });
+
+  test('throws when an object is not deleted, so the job is retried', async () => {
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    await expect(
+      deleteMediaObjectsByKeys({ objects: [{ bucket: 'documents-bucket', key: 'a.pdf' }] }),
+    ).rejects.toThrow();
   });
 });

@@ -36,8 +36,18 @@ function defaultQueueAddImpl(jobName: string): Promise<FakeJob> {
 export const queueAddMock =
   mock<(jobName: string, data: unknown, opts?: any) => Promise<FakeJob>>(defaultQueueAddImpl);
 
+export interface FakeBulkJob {
+  name: string;
+  data: unknown;
+  opts?: unknown;
+}
+
+export const queueAddBulkMock = mock((jobs: FakeBulkJob[]) =>
+  Promise.all(jobs.map((job) => defaultQueueAddImpl(job.name))),
+);
+
 function fakeQueue(name: string) {
-  return { name, add: queueAddMock };
+  return { name, add: queueAddMock, addBulk: queueAddBulkMock };
 }
 
 export const upsertQueueJobSchedulerMock = mock(() => Promise.resolve({} as any));
@@ -47,6 +57,7 @@ export const getQueueJobSchedulersMock = mock(() => Promise.resolve([] as any[])
 export function resetQueueMock(): void {
   queueAddMock.mockClear();
   queueAddMock.mockImplementation(defaultQueueAddImpl);
+  queueAddBulkMock.mockClear();
   upsertQueueJobSchedulerMock.mockClear();
   removeQueueJobSchedulerMock.mockClear();
   getQueueJobSchedulersMock.mockClear();

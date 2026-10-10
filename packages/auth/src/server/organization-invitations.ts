@@ -35,8 +35,8 @@ function rejectInvitation(message: string): never {
   throw new APIError('BAD_REQUEST', { message });
 }
 
-function rejectOwnerRole(role: string): void {
-  if (hasOrganizationRole(role, ORGANIZATION_OWNER_ROLE)) {
+function rejectOwnerRole(organizationRole: string): void {
+  if (hasOrganizationRole(organizationRole, ORGANIZATION_OWNER_ROLE)) {
     rejectInvitation('The owner role cannot be granted. Transfer ownership instead.');
   }
 }
@@ -87,8 +87,8 @@ export const rejectInvitingRemovedMember = createAuthMiddleware(async (ctx) => {
   const organizationId = body.organizationId ?? membership?.organizationId;
   if (!membership || membership.organizationId !== organizationId) return;
   const mayInvite =
-    hasOrganizationRole(membership.role, ORGANIZATION_OWNER_ROLE) ||
-    hasOrganizationRole(membership.role, ORGANIZATION_ADMIN_ROLE);
+    hasOrganizationRole(membership.organizationRole, ORGANIZATION_OWNER_ROLE) ||
+    hasOrganizationRole(membership.organizationRole, ORGANIZATION_ADMIN_ROLE);
   if (!mayInvite) return;
 
   const invitee = await getUserByEmail({ email: body.email.toLowerCase() });

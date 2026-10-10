@@ -7,6 +7,24 @@
 > model in [specs/api-standards/prd.md](../api-standards/prd.md). The security
 > and ownership sections remain accurate.
 
+> **Update (organizations v3):** workspaces now have a visibility (`personal`, `organization`
+> or `restricted`) and workspace members with the roles `manager` and `editor`. The Private,
+> single-user model below is history. The current rules and the glossary of role names live in
+> [specs/organizations/v3-prd.md](../organizations/v3-prd.md).
+
+## Visibility and roles (v3)
+
+- **Personal.** One per user. New users get it at sign-up, existing users got it at the upgrade to v3. It is named "Private" (users may rename it). Only that user opens it. It has no members and
+  cannot be deleted.
+- **Organization.** Open to every org member as editor. Only managers rename or delete it.
+- **Restricted.** Open to its workspace members, and to org owners and org admins. Managers add
+  and remove workspace members.
+- **Workspace roles.** `manager` runs the workspace (rename, delete, workspace members). `editor`
+  works with its content. Org owners and org admins act as managers of every non-personal
+  workspace.
+- **Creating.** Any org member creates organization or restricted workspaces. The creator becomes
+  a manager.
+
 User-specific workspaces let a single user organize their own resources (agents, chats, workflows, generated images, social posts) into named buckets. A workspace is a **private, organizational overlay** on top of a user's data, not a shared multi-tenant boundary.
 
 This PRD describes **v1**, the minimal functional core: a `workspace` table, an optional `workspaceId` on scoped resources, a workspace switcher in the UI, and optional filtering of list views. Collaboration, roles, invites, and moving items between workspaces are explicitly out of scope for v1.

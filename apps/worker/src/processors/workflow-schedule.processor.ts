@@ -80,11 +80,17 @@ async function processScheduleTick({ workflowId }: { workflowId: string }): Prom
     return;
   }
 
+  const runUserId = await resolveScheduledRunUserId({ workflowId });
+  if (!runUserId) {
+    logger.info(`Workflow ${workflowId} schedule paused: its author can no longer run it`);
+    return;
+  }
+
   const run = await createWorkflowRun({
     workflowId,
     definition: workflow.publishedDefinition,
     triggeredBy: 'schedule',
-    triggeredByUserId: await resolveScheduledRunUserId({ workflowId }),
+    triggeredByUserId: runUserId,
   });
 
   try {

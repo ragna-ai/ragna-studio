@@ -9,6 +9,7 @@ import { isExecutionEquivalent } from '@repo/workflow';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
 import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
+import WorkflowSchedulePausedBadge from '~/features/workflow/components/WorkflowSchedulePausedBadge.vue';
 import WorkflowRecentRuns from '~/features/workflow/components/WorkflowRecentRuns.vue';
 import WorkflowRunDialog from '~/features/workflow/components/WorkflowRunDialog.vue';
 import WorkflowRunsList from '~/features/workflow/components/WorkflowRunsList.vue';
@@ -158,6 +159,7 @@ async function handlePublish() {
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <WorkflowSchedulePausedBadge v-if="workflow.schedulePaused" />
         <Badge
           v-if="hasUnpublishedChanges"
           variant="outline"

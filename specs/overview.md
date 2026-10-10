@@ -18,7 +18,13 @@ Every resource (chats, documents, datasets, tasks, media, agents) belongs
 to exactly one workspace. The workspace is the container and the
 permission boundary, there's no separate "board" or "project" entity
 layered on top.
-→ [specs/api-standards/prd.md](./api-standards/prd.md)
+
+Every workspace has a visibility. A personal workspace belongs to one user
+and nobody else opens it. An organization workspace is open to every org
+member. A restricted workspace is open to its workspace members, plus org
+owners and org admins. Workspace members are managers or editors. Managers
+rename and delete the workspace and run its members.
+→ [specs/api-standards/prd.md](./api-standards/prd.md), [specs/organizations/v3-prd.md](./organizations/v3-prd.md)
 
 ### Organizations
 

@@ -52,7 +52,7 @@ export async function listEmailAccountsDueForSync(): Promise<EmailAccount[]> {
       syncState: { ne: 'reauth_required' },
       user: {
         deletedAt: { isNull: true },
-        NOT: { memberships: { organization: { deletedAt: { isNotNull: true } } } },
+        NOT: { organizationMemberships: { organization: { deletedAt: { isNotNull: true } } } },
       },
     },
   });
