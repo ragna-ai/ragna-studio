@@ -15,6 +15,12 @@ Batch 1 (video author check, purge limit, dead `verify` job, email enqueue tests
 removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 
 - [ ] Worker test gaps: inline agent node (`getDefaultAgent()` path), team and tool executors.
+- [ ] AI provider mock covers only anthropic, openai, black-forest-labs and google-vertex
+      (`ai-sdk-provider.mock.ts`). Also mock `@ai-sdk/google`, `@ai-sdk/mistral` and
+      `@ai-sdk/openai-compatible` (lm-studio), so no test can reach a real provider. Add tests
+      that run an unsupported provider (`getLanguageModel` / `getImageModel` /
+      `getEmbeddingModel` / `getVideoModel` throw `Unsupported provider`) through a workflow
+      agent node, an email draft and an image/video job, and assert the run/row fails cleanly.
 - [ ] Migrations are only checked on scratch DBs by hand. Consider a CI step that runs
       `migrate.ts` on a fresh Postgres.
 
