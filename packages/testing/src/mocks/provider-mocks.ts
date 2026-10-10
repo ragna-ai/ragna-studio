@@ -1,6 +1,6 @@
 // packages/testing/src/mocks/provider-mocks.ts
 //
-// Registers every external-provider mock (see ai-provider.mock.ts,
+// Registers the external-provider mocks (see ai-provider.mock.ts,
 // storage-provider.mock.ts, linkedin-provider.mock.ts) and exposes one
 // combined reset for a consuming app's test `beforeEach`, alongside
 // `truncateAllTables()`. Resetting matters because a test may install a
@@ -17,12 +17,17 @@
 // any test body, so registration applies process-wide once any file
 // triggers it. See apps/api/test/README.md, "External-provider mocks".
 import { resetAiProviderMock } from './ai-provider.mock';
+import { resetAiSdkProviderMock } from './ai-sdk-provider.mock';
+import { resetMailProviderMock } from '../mail/mail-provider.mock';
 import { resetLinkedinProviderMock } from './linkedin-provider.mock';
+import { resetMailSenderMock } from './mail-sender.mock';
 import { resetQueueMock } from './queue-provider.mock';
 import { resetStorageProviderMock } from './storage-provider.mock';
 
 export * from './ai-provider.mock';
+export * from './ai-sdk-provider.mock';
 export * from './linkedin-provider.mock';
+export * from './mail-sender.mock';
 export * from './queue-provider.mock';
 export * from './storage-provider.mock';
 
@@ -31,4 +36,7 @@ export function resetProviderMocks(): void {
   resetStorageProviderMock();
   resetLinkedinProviderMock();
   resetQueueMock();
+  resetAiSdkProviderMock();
+  resetMailSenderMock();
+  resetMailProviderMock();
 }

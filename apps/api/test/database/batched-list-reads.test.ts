@@ -1,25 +1,27 @@
 import {
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  seedEmailThreadWithMessage,
+  seedTokenPricedAiModel,
+  truncateAllTables,
+} from '@repo/testing';
+import {
   db,
   getChatSearchMessageSnippetsForChats,
   getDatasetRowCounts,
   listEmailMessagesByThreadIds,
 } from '@repo/database';
 import { agent as agentTable, chat, chatMessage } from '@repo/database/schema';
-import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import {
-  seedConnectedGmailAccount,
-  seedEmailThreadWithMessage,
-} from '../email/support/email-fixtures';
+import { seedConnectedGmailAccount } from '../email/support/email-fixtures';
 import { resetEmailQueueMock } from '../email/support/email-queue.mock';
-import { resetMailProviderMock } from '../email/support/mail-provider.mock';
 
 beforeEach(async () => {
   await truncateAllTables();
-  resetMailProviderMock();
   resetEmailQueueMock();
+  resetProviderMocks();
 });
 
 describe('listEmailMessagesByThreadIds', () => {

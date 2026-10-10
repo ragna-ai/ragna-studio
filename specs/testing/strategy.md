@@ -137,7 +137,8 @@ reuses in Phase 2.
    effort-to-value ratio right now.
 
 Worker processors (`apps/worker`) are out of scope for Phase 1, but queue
-assertion helpers are written so worker tests can reuse them later.
+assertion helpers are written so worker tests can reuse them later. The
+worker suite is specified in [worker-prd.md](./worker-prd.md).
 
 ## Phase 2: e2e (later)
 

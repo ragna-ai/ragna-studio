@@ -1,17 +1,19 @@
-import { getEmailMessageById } from '@repo/database';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
-import { beforeEach, describe, expect, test } from 'bun:test';
-import { StatusCodes } from 'http-status-codes';
-import { app } from '../../src/app';
-import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
-import { resetEmailQueueMock } from './support/email-queue.mock';
 import {
-  resetMailProviderMock,
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  seedEmailThreadWithMessage,
   setArchivedMock,
   setReadMock,
   setStarredMock,
   setTrashedMock,
-} from './support/mail-provider.mock';
+  truncateAllTables,
+} from '@repo/testing';
+import { getEmailMessageById } from '@repo/database';
+import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
+import { app } from '../../src/app';
+import { seedConnectedGmailAccount } from './support/email-fixtures';
+import { resetEmailQueueMock } from './support/email-queue.mock';
 
 // Mailbox actions: archive, trash, star, read/unread (Gmail write + local
 // update). Every assertion below checks
@@ -23,7 +25,6 @@ import {
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

@@ -1,5 +1,5 @@
-import { EMAIL_SYNC_QUEUE } from '@repo/queue';
 import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import { EMAIL_SYNC_QUEUE } from '@repo/queue';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -11,7 +11,6 @@ import {
   getPendingEmailJobCount,
   resetEmailQueueMock,
 } from './support/email-queue.mock';
-import { resetMailProviderMock } from './support/mail-provider.mock';
 
 // Manual "Sync now".
 // email.service.ts's syncEmailAccountNowForUser always calls
@@ -23,7 +22,6 @@ import { resetMailProviderMock } from './support/mail-provider.mock';
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

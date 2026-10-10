@@ -10,3 +10,7 @@ export * from './db/suite-lock';
 export * from './db/truncate';
 export * from './mocks/provider-mocks';
 export * from './social/social-account-fixtures';
+export * from './mail/email-seed-fixtures';
+export * from './mail/gmail-account-fixtures';
+export * from './mail/mail-provider.mock';
+export * from './mail/microsoft-account-fixtures';

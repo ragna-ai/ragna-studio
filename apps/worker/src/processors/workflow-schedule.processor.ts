@@ -7,7 +7,7 @@ import {
   updateRunStatus,
 } from '@repo/database';
 import { logger } from '@repo/logger';
-import type { Worker } from '@repo/queue';
+import type { ProcessorJob, Worker } from '@repo/queue';
 import {
   createWorker,
   queue,
@@ -22,22 +22,7 @@ import {
 export function registerWorkflowScheduleJobProcessor(): Worker<any, any, string> {
   const scheduleWorker = createWorker({
     name: WORKFLOW_SCHEDULES_QUEUE,
-    processor: async (job) => {
-      logger.info(`Processing workflow schedule jobId: ${job.id} name: ${job.name}`);
-
-      switch (job.name) {
-        case WORKFLOW_SCHEDULE_TICK_JOB: {
-          const { workflowId } = workflowScheduleTickJobSchema.parse(job.data);
-          await processScheduleTick({ workflowId });
-          break;
-        }
-        default: {
-          throw new Error(`Unknown workflow schedule job: ${job.name}`);
-        }
-      }
-
-      logger.info(`Completed workflow schedule jobId: ${job.id} name: ${job.name}`);
-    },
+    processor: processWorkflowScheduleJob,
   });
 
   scheduleWorker.on('ready', () => {
@@ -45,6 +30,23 @@ export function registerWorkflowScheduleJobProcessor(): Worker<any, any, string>
   });
 
   return scheduleWorker;
+}
+
+export async function processWorkflowScheduleJob(job: ProcessorJob): Promise<void> {
+  logger.info(`Processing workflow schedule jobId: ${job.id} name: ${job.name}`);
+
+  switch (job.name) {
+    case WORKFLOW_SCHEDULE_TICK_JOB: {
+      const { workflowId } = workflowScheduleTickJobSchema.parse(job.data);
+      await processScheduleTick({ workflowId });
+      break;
+    }
+    default: {
+      throw new Error(`Unknown workflow schedule job: ${job.name}`);
+    }
+  }
+
+  logger.info(`Completed workflow schedule jobId: ${job.id} name: ${job.name}`);
 }
 
 // Mirrors the manual run endpoint (POST /workflow/:workflowId/run): creates a

@@ -1,11 +1,14 @@
-import { createMedia } from '@repo/database';
 import {
   downloadObjectBufferMock,
   resetProviderMocks,
   seedAuthenticatedUser,
+  seedEmailDraft,
+  seedEmailThreadWithMessage,
   seedOrganizationMember,
+  sendMock,
   truncateAllTables,
 } from '@repo/testing';
+import { createMedia } from '@repo/database';
 import {
   insertWorkspace,
   insertWorkspaceMember,
@@ -15,14 +18,8 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import {
-  createAgentForWorkspace,
-  seedConnectedGmailAccount,
-  seedEmailDraft,
-  seedEmailThreadWithMessage,
-} from './support/email-fixtures';
+import { createAgentForWorkspace, seedConnectedGmailAccount } from './support/email-fixtures';
 import { resetEmailQueueMock } from './support/email-queue.mock';
-import { resetMailProviderMock, sendMock } from './support/mail-provider.mock';
 
 // Compose / send.
 // POST /email/send and POST /email/draft/:draftId/send were just
@@ -38,7 +35,6 @@ import { resetMailProviderMock, sendMock } from './support/mail-provider.mock';
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

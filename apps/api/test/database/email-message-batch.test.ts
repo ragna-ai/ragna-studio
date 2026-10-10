@@ -1,3 +1,4 @@
+import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import type { NewEmailMessage } from '@repo/database';
 import {
   getEmailMessageBody,
@@ -6,16 +7,13 @@ import {
   upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { seedConnectedGmailAccount } from '../email/support/email-fixtures';
 import { resetEmailQueueMock } from '../email/support/email-queue.mock';
-import { resetMailProviderMock } from '../email/support/mail-provider.mock';
 
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 

@@ -45,11 +45,24 @@ function defaultGenerateImageImpl(params: GenerateImageParams): Promise<Generate
   } as unknown as GenerateImageResult);
 }
 
+const realGenerateImage: GenerateImageFn = aiPackage.generateImage;
+let generatesImagesForReal = false;
+
+function currentGenerateImageImpl(): GenerateImageFn {
+  return generatesImagesForReal ? realGenerateImage : defaultGenerateImageImpl;
+}
+
 export const generateImageMock = mock<GenerateImageFn>(defaultGenerateImageImpl);
+
+/** Lets `generateImage` run for real, so a faked provider image model is what answers. */
+export function passGenerateImageThrough(): void {
+  generatesImagesForReal = true;
+  generateImageMock.mockImplementation(currentGenerateImageImpl());
+}
 
 export function resetAiProviderMock(): void {
   generateImageMock.mockClear();
-  generateImageMock.mockImplementation(defaultGenerateImageImpl);
+  generateImageMock.mockImplementation(currentGenerateImageImpl());
 }
 
 mock.module('ai', () => ({

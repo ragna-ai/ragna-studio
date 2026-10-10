@@ -1,4 +1,4 @@
-// apps/api/test/email/support/mail-provider.mock.ts
+// packages/testing/src/mail/mail-provider.mock.ts
 import { mock } from 'bun:test';
 import * as mailProviderPackage from '@repo/mail/provider';
 import type {
@@ -52,8 +52,9 @@ export function buildFakeMailMessage(overrides: Partial<MailMessage> = {}): Mail
       html: '<p>Hello from a fake message.</p>',
       attachments: [],
     },
-    messageIdHeader: overrides.messageIdHeader ?? `<${id}@mail.test>`,
-    inReplyTo: overrides.inReplyTo ?? null,
+    messageIdHeader:
+      'messageIdHeader' in overrides ? (overrides.messageIdHeader ?? null) : `<${id}@mail.test>`,
+    inReplyTo: 'inReplyTo' in overrides ? (overrides.inReplyTo ?? null) : null,
     references: overrides.references ?? [],
   };
 }

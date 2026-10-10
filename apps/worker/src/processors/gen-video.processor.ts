@@ -1,7 +1,7 @@
 import { runGenVideo } from '@repo/ai';
 import { getGenVideoById } from '@repo/database';
 import { logger } from '@repo/logger';
-import type { Worker } from '@repo/queue';
+import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
 import {
   createWorker,
   enqueueNotification,
@@ -19,23 +19,7 @@ const LOCK_DURATION_MS = 10 * 60 * 1000;
 export function registerGenVideoJobProcessor(): Worker<any, any, string> {
   const genVideoWorker = createWorker({
     name: GEN_VIDEOS_QUEUE,
-    processor: async (job) => {
-      logger.info(`Processing gen-video jobId: ${job.id} name: ${job.name}`);
-
-      switch (job.name) {
-        case GEN_VIDEO_JOB: {
-          const { genVideoId } = genVideoJobSchema.parse(job.data);
-          await processGenVideo(genVideoId);
-          break;
-        }
-        default: {
-          throw new Error(`Unknown gen-video job: ${job.name}`);
-        }
-      }
-
-      logger.info(`Completed gen-video jobId: ${job.id} name: ${job.name}`);
-      return { success: true };
-    },
+    processor: processGenVideoJob,
     opts: {
       // Low on purpose: Veo renders are slow and expensive, so only a
       // couple can run at once.
@@ -49,6 +33,24 @@ export function registerGenVideoJobProcessor(): Worker<any, any, string> {
   });
 
   return genVideoWorker;
+}
+
+export async function processGenVideoJob(job: ProcessorJob): Promise<ProcessorSuccess> {
+  logger.info(`Processing gen-video jobId: ${job.id} name: ${job.name}`);
+
+  switch (job.name) {
+    case GEN_VIDEO_JOB: {
+      const { genVideoId } = genVideoJobSchema.parse(job.data);
+      await processGenVideo(genVideoId);
+      break;
+    }
+    default: {
+      throw new Error(`Unknown gen-video job: ${job.name}`);
+    }
+  }
+
+  logger.info(`Completed gen-video jobId: ${job.id} name: ${job.name}`);
+  return { success: true };
 }
 
 // runGenVideo already leaves the row 'failed' with an error message before

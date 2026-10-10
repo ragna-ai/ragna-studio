@@ -9,16 +9,15 @@ when it ships; move it into a PRD when it gets designed.
 - [ ] Release and deploy: migrations `workspace_visibility`, `private_workspace_backfill`
       (`--custom`) and `email_default_agent_private_only` (`--custom`). Backup before deploy.
 
-## Hardening PRD (worker tests and v2/v3 leftovers)
+## Hardening (worker tests and v2/v3 leftovers)
 
-To be written as its own PRD.
+Worker test suite: [specs/testing/worker-prd.md](./testing/worker-prd.md).
 
-- [ ] Worker test harness. Untested today:
-  - purge cron and its job wrappers, BullMQ wiring
-  - null-user handling in workflow runs and notifications
-  - schedule tick skip when the author can't run it (v3, `workflow-schedule.processor.ts`)
-  - `DELETE_MEDIA_OBJECTS_JOB` case (v3, `purge.processor.ts`)
-  - email draft agent resolution in the worker (#98, `email-draft.service.ts`)
+- [ ] Worker test gaps: inline agent node (`getDefaultAgent()` path), team and tool executors.
+- [ ] Move `apps/api` image tests to the provider-level AI mock, then delete `generateImageMock`
+      and `passGenerateImageThrough()` (`packages/testing/src/mocks/ai-provider.mock.ts`).
+- [ ] Gen video checks the author only after the paid render (`requireAuthorId` in
+      `videogen.service.ts`); images check before. Check up front so a purged author costs nothing.
 - [ ] Invitation email enqueue is untested (skipped under `config.isTest`).
 - [ ] Purge cron has no per-run `LIMIT` (`listUserIdsDeletedBefore`,
       `listOrganizationIdsDeletedBefore`).

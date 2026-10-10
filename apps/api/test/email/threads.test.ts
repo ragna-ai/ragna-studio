@@ -1,18 +1,20 @@
-import { getEmailMessageBody, getEmailMessageById } from '@repo/database';
-import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
-import { beforeEach, describe, expect, test } from 'bun:test';
-import { StatusCodes } from 'http-status-codes';
-import * as z from 'zod';
-import { app } from '../../src/app';
-import { seedConnectedGmailAccount, seedEmailThreadWithMessage } from './support/email-fixtures';
-import { resetEmailQueueMock } from './support/email-queue.mock';
 import {
   buildFakeMailMessage,
   buildFakeMailThread,
   fetchThreadMock,
-  resetMailProviderMock,
+  resetProviderMocks,
+  seedAuthenticatedUser,
+  seedEmailThreadWithMessage,
   setReadMock,
-} from './support/mail-provider.mock';
+  truncateAllTables,
+} from '@repo/testing';
+import { getEmailMessageBody, getEmailMessageById } from '@repo/database';
+import { beforeEach, describe, expect, test } from 'bun:test';
+import { StatusCodes } from 'http-status-codes';
+import * as z from 'zod';
+import { app } from '../../src/app';
+import { seedConnectedGmailAccount } from './support/email-fixtures';
+import { resetEmailQueueMock } from './support/email-queue.mock';
 
 // Thread listing/detail: lists come from the local index, detail serves
 // stored bodies and fetches + persists missing ones live. Folder derivation, category/label filters, and pagination
@@ -25,7 +27,6 @@ import {
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  resetMailProviderMock();
   resetEmailQueueMock();
 });
 
