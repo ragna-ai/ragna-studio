@@ -136,6 +136,15 @@ test files, which `bun test` doesn't type-check).
 
 All changes to `apps/api` (and packages reached through it) are test-driven. Load the tdd skill before changing them.
 
+### Branding
+
+In user-facing text and docs, write the brand as `RAGNA` (all caps) and the product as `RAGNA Studio`. Never `Ragna`, `ragna studio` or `RAGNA STUDIO`. Code identifiers, package names and domains stay lowercase (`ragna-studio`, `ragna.io`).
+
+### Design docs
+
+This repo is public. `specs/` holds only technical docs for features that are decided or being built.
+Business strategy, pricing, product lineup and undecided drafts live outside this repo; never write them into `specs/`.
+
 # Browser use
 
 Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate because you don't have credentials. Ask the user to share images or details if required.
