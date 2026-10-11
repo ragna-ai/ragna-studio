@@ -9,6 +9,7 @@ import {
 } from '@repo/database';
 import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import * as z from 'zod';
 import { app } from '../../src/app';
 import {
   installMcpJwksFetchBridge,
@@ -27,6 +28,12 @@ import { mintMcpAccessToken, seedMcpConnection, seedOAuthClient } from './suppor
 // once at `initialize`: every request needs the
 // protocol version and client capabilities under reserved `_meta` keys.
 const MCP_PROTOCOL_VERSION = '2026-07-28';
+
+const mcpErrorResponseSchema = z.strictObject({
+  jsonrpc: z.literal('2.0'),
+  error: z.strictObject({ code: z.number(), message: z.string() }),
+  id: z.null(),
+});
 
 function jsonRpcRequest(method: string, params?: Record<string, unknown>) {
   return {
@@ -144,6 +151,10 @@ describe('POST /mcp: authentication', () => {
     const response = await listTools(token);
 
     expect(response.status).toBe(401);
+    const body = mcpErrorResponseSchema.parse(await response.json());
+    expect(body.error.message).toBe(
+      'MCP is disabled or this connection was revoked. Reconnect in RAGNA Studio under Settings > MCP.',
+    );
   });
 });
 

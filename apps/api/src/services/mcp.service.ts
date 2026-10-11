@@ -190,7 +190,7 @@ const mcpAuthGate = requireMcpAuth(
     const scope = await resolveMcpConnectionScope({ userId, clientId });
     if (!scope) {
       return unauthorizedMcpResponse(
-        'MCP is disabled or this connection was revoked. Reconnect in Ragna under Settings > MCP.',
+        'MCP is disabled or this connection was revoked. Reconnect in RAGNA Studio under Settings > MCP.',
       );
     }
 
