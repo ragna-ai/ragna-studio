@@ -146,3 +146,5 @@ Report security issues privately. See [SECURITY.md](SECURITY.md).
 Copyright (C) 2025-2026 Sven Stadhouders.
 
 Licensed under the [AGPL v3.0](LICENSE).
+
+Need to use RAGNA Studio without the AGPL obligations, for example in a closed-source product or a hosted service? Commercial licenses are available. Contact [license@ragna.io](mailto:license@ragna.io).
