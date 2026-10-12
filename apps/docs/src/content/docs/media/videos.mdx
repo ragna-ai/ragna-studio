@@ -1,0 +1,68 @@
+---
+title: Videos
+description: Generate videos from a text prompt, preview them as drafts and enhance them.
+sidebar:
+  order: 1
+---
+
+Describe a video and RAGNA Studio renders it. Open **Videos** in the sidebar to get the **Text to Video** page. The form sits at the top and your videos fill the gallery below it.
+
+<Aside type="note">
+  Self-hosted installs need a key for a video provider. See [Optional
+  providers](/self-hosting/optional-providers).
+</Aside>
+
+## Generate a video
+
+1. Describe the video in the prompt field (up to 5,000 characters).
+2. Pick a model.
+3. Set the **Aspect ratio**, **Resolution** and **Duration**.
+4. Optionally turn on **Generate audio**.
+5. Choose **Generate video**.
+
+Rendering takes minutes. The page stays usable. New videos show as pending tiles, and a notification tells you when they are done: **Video ready** or **Video generation failed**.
+
+## Providers
+
+The options in the form follow the provider of the selected model.
+
+| Setting         | Google Vertex (Veo)         | Black Forest Labs (FLUX video)                             |
+| --------------- | --------------------------- | ---------------------------------------------------------- |
+| Aspect ratios   | `16:9`, `9:16`              | `21:9`, `2:1`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `auto` |
+| Resolution      | 720p, plus 1080p for `16:9` | 720p or 1080p                                              |
+| Duration        | 4, 6 or 8 seconds           | 5 to 20 seconds (slider)                                   |
+| Seed            | Yes                         | No                                                         |
+| Negative prompt | Yes                         | No                                                         |
+| Draft mode      | No                          | Yes                                                        |
+
+Fields a provider does not support are hidden. The form adjusts your values when you switch models.
+
+## Animate an image
+
+Turn on **Animate an image** to use a picture as the first frame. Choose **From gallery** to pick a generated image, or **Upload** to add your own.
+
+## Draft mode and enhance
+
+Draft mode is available for Black Forest Labs models. Turn on **Draft (fast preview)** to get a quick, low-quality render. Use it to check your idea before you wait for a full render.
+
+1. Generate with **Draft (fast preview)** on. The result carries a **Draft** badge.
+2. Watch the draft. If you like it, choose **Enhance** on the tile.
+3. RAGNA Studio renders the same video at full quality as a new tile. The draft stays.
+
+Each draft can be enhanced once. While an enhance is running, the button is disabled. The enhanced video keeps the draft's prompt and settings, including the AI label.
+
+## Advanced options
+
+For models that support them, **Advanced options** hold the **Negative prompt** and the **Seed**.
+
+## Label as AI generated
+
+Turn on **Label as AI generated** to burn a small badge into the video. See [AI labeling](/media/ai-labeling).
+
+## Work with a result
+
+Click a video to open **Generated video**. You can **Copy prompt**, **Download** and **Delete** it. Delete cannot be undone. A file still used elsewhere stays. See [Media library](/media/library).
+
+## Videos in chat
+
+Turn on the **Video Generation** tool in an agent to let it create videos in chat. It can animate a generated image. See [Agent tools](/agents/tools). The chat tool renders at full quality and has no draft mode or AI label.

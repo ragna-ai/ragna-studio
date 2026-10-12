@@ -1,0 +1,78 @@
+---
+title: Build a workflow
+description: Chain agents, conditions and transforms on a visual canvas and run them.
+sidebar:
+  order: 0
+  label: Build a workflow
+---
+
+A workflow is a chain of steps that RAGNA Studio runs for you. Each step is a node on a canvas. You connect the nodes, and the output of one node becomes the input of the next. Use workflows to automate multi-step tasks with [agents](/agents), branching and text templates.
+
+## Create a workflow
+
+1. Open **Workflows** in the sidebar.
+2. Click **New workflow**.
+3. Enter a name and create it. You land on the canvas.
+
+The list shows each workflow as **Draft** or **Published**. A workflow with a schedule also shows when it runs (see [Triggers and schedules](/workflows/triggers)).
+
+## Add nodes
+
+Use **Add node** to put a node on the canvas. Click a node to open its settings in a side panel. There you set a **Label** and the node's configuration.
+
+| Node          | What it does                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Trigger**   | Starts the workflow. Every workflow has exactly one. Manual or scheduled.                                    |
+| **Agent**     | Runs an [agent](/agents) with a prompt. Pick a saved agent, or leave it empty and write a **System prompt**. |
+| **Team**      | A lead agent delegates work to specialist agents. See [Team node](/workflows/team-node).                     |
+| **Condition** | Compares two values and sends the flow down a `true` or a `false` branch.                                    |
+| **Transform** | Builds new text from a **Template**.                                                                         |
+
+A saved agent runs like it does in chat: with its own model, tools and settings. Without one, the node uses the default agent and your system prompt, with no tools.
+
+## Connect nodes
+
+Drag from the handle of one node to the handle of another to connect them. Connections run in one direction. A workflow cannot contain loops.
+
+Several nodes can follow one node. A node with several incoming connections waits until all of them are resolved.
+
+## Pass data between nodes
+
+Each node gets an input. This is the output of the previous node. The first node after the trigger gets the run input (see below). If several connections arrive, their outputs are joined with a blank line.
+
+Write `{{input}}` in a prompt, template or condition field to insert that input. An unknown placeholder becomes empty text.
+
+- **Agent**: the **Prompt** can use `{{input}}`.
+- **Transform**: the **Template** can use `{{input}}`, for example `Summary:\n{{input}}`.
+- **Condition**: **Left** and **Right** can use `{{input}}`.
+
+The output of the last node is the output of the run. If the flow ends in several nodes, the output lists each one.
+
+## Branch with a condition
+
+A condition node compares **Left** with **Right** using one operator:
+
+- equals
+- notEquals
+- contains
+- isEmpty
+- isNotEmpty
+
+Two connections leave the node, labeled `true` and `false`. Connect each to the branch that should run. The other branch is skipped. A condition does not pass its own `true` or `false` on. The next node receives the content that came into the condition.
+
+## Save, publish and run
+
+Your edits are a draft. Click **Save** to keep them. The editor shows **Unpublished changes** when the draft differs from the published version.
+
+Runs always use the published version. Click **Publish** to make your draft the live version.
+
+1. Click **Run** in the editor.
+2. Optionally enter an **Input**. It becomes the input of the first node.
+3. Click **Run published version**. If you never published, click **Publish & run**.
+
+The dialog warns you when a run uses an older published version than your latest edits. The run opens in a new view. See [Runs and traces](/workflows/runs).
+
+<Aside type="note">
+  Workflows that call agents use your configured AI models. On a self-hosted install the model
+  providers need API keys. See [Optional providers](/self-hosting/optional-providers).
+</Aside>

@@ -7,6 +7,28 @@ when it ships; move it into a PRD when it gets designed.
 
 - [ ] Cloudflare redirect rule `docs.ragna.io/` to `/getting-started/introduction`: switch 302 to
       301 once verified (slashless docs URLs shipped in PR #104).
+- [ ] Follow-ups from the user docs rework (apps/docs feature guides):
+  - Docs: remove credits from `reference/environment-variables.mdx` and
+    `self-hosting/optional-providers.mdx`, or keep them until credits ship.
+  - Docs: env var "Default" column shows code defaults, the installer writes `.env.example`
+    values (`SMTP_PORT`, `LOG_LEVEL`, `DB_PORT`, `REDIS_PORT`, ...). Rename the column and add a
+    note. Also add `APP_PORT`, `API_PORT`, `DB_TYPE`, and the rule that `S3_ENDPOINT` needs all
+    other `S3_*` values plus `MEDIA_URL`.
+  - Docs: example version is `0.5.0` in `install-options/docker-compose.mdx` and the env var
+    reference. Pick `0.6.1` or `X.Y.Z`.
+  - Docs: `integrations/mcp.mdx` can't name Claude's client ID URL for `MCP_ALLOWED_CLIENT_IDS`,
+    so self-hosters can't connect Claude Desktop. Publish it or keep the page generic.
+  - Web: UI strings "Connect this app to Ragna" and "Allow external AI apps to access Ragna
+    (MCP)" break the brand rule. Fix in the locales, then update `mcp.mdx`.
+  - Web: `chat.create.label` is missing in `en-UK.json`; agent form strings (memory panel,
+    document panel, Chat button, Default badge) are hard-coded English.
+  - Workflows: the Tool node is in the palette, but `WORKFLOW_TOOLS` is only `placeholder`.
+    Hide it or wire up real tools.
+  - Team chat phase 1 has no UI in apps/web. Decide whether to expose or drop it.
+  - Specs: set status to implemented for `chat/search-prd.md`, `mcp/prd.md`, `mcp/slices.md`
+    and the email drafts, bulk trash and HTML content change requests, then `pnpm specs:index`.
+  - Repo: add a rule to AGENTS.md and the PRD template that a user-visible change updates its
+    `apps/docs` page in the same PR.
 
 ## Hardening (worker tests and v2/v3 leftovers)
 

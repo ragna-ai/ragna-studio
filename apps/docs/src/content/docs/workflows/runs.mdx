@@ -1,0 +1,63 @@
+---
+title: Runs and traces
+description: Follow a workflow run, inspect every step and understand failures.
+sidebar:
+  order: 3
+---
+
+Every run is recorded. You can watch a run live, see what each node received and produced, and trace what an agent did along the way.
+
+## Run history
+
+Select the workflow to see **Recent runs**. Click **Show all** to open the full list of **Runs**. Each run shows its status and whether it was **Manual** or **Scheduled**.
+
+| Status        | Meaning                                  |
+| ------------- | ---------------------------------------- |
+| **Pending**   | Queued, not started yet.                 |
+| **Running**   | In progress.                             |
+| **Completed** | Finished. The output is shown.           |
+| **Failed**    | Stopped by an error. The error is shown. |
+| **Cancelled** | You stopped it.                          |
+
+You also get a notification when a run finishes: **Workflow completed** or **Workflow failed**.
+
+## The run view
+
+Click a run to open it. The canvas shows the published version the run used, even if you edited the workflow since. Each node is colored by its status. Skipped nodes are shown as **Skipped**. They sit on a condition branch that did not run.
+
+The view also shows the run's **Input** and its output. If the run failed, it shows the **Error**.
+
+Click a node to see:
+
+- **Input**: what the node received.
+- **Output**: what it produced. Use **Copy output** to copy it.
+- **Error**: why it failed.
+- **This node has not run yet.** appears while a node is waiting.
+
+Use the previous and next arrows to move between nodes.
+
+## Cancel a run
+
+While a run is pending or running, **Cancel run** stops it. The node that is already running finishes, but no further node starts.
+
+## Agent trace
+
+Agent and team nodes show an **Agent trace** in the node view. It lists the steps the agent took:
+
+- **Step 1, Step 2, ...** with the token count for each step.
+- The tool calls made in the step, with their **Input**, **Output** and any **Error**.
+- For a team node: every delegation to a member, how long it took and the tokens used. Under it, **Member tool calls** lists what the member did.
+
+Use the trace to find out why an agent gave an answer or which tool failed.
+
+## When a run fails
+
+If a node fails, RAGNA Studio tries the run again. It makes up to three attempts in total. Nodes that already completed are not run again. The run resumes at the node that failed.
+
+If the last attempt fails too, the run is marked **Failed**. The failed node shows the error. The run keeps the version of the workflow it started with.
+
+There is no button to retry a failed run by hand. Fix the cause, then click **Run** again. This starts a new run from the beginning.
+
+## Stuck runs
+
+If a background service stops during a run, the run could stay open forever. RAGNA Studio checks every 15 minutes. It marks a run as **Failed** when it has been pending for more than one hour or running for more than two hours. This also frees a schedule that a stuck run was blocking. See [Triggers and schedules](/workflows/triggers).
