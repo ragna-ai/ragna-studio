@@ -1,0 +1,87 @@
+---
+title: Tasks
+description: Plan work on a kanban board with labels, subtasks, due dates and reminders.
+sidebar:
+  order: 2
+---
+
+Tasks give each workspace one kanban board. You and your agents create tasks, move them between columns and attach files. The board belongs to the workspace, so everyone with access to the workspace sees the same tasks.
+
+Open **Tasks** in the sidebar. Each task gets an ID like `TSK-12`, numbered per workspace.
+
+## Board and list
+
+Switch between **Board** and **List** in the toolbar. The app remembers your choice.
+
+- **Board** shows one column per status. Drag a card to another column or to a new position. You can also add a task straight into a column with the **New task title...** field.
+- **List** shows a table grouped by status. It lists ID, priority, **Labels**, **Due date** and **Assignee**. Click a row to open the task.
+
+Use the filters **Status**, **Priority** and **Label** to narrow down what you see. Both views share the filters.
+
+Choose **New task** to create a task. Cards show the ID, title, priority, labels, due date (overdue dates are highlighted), assignee and subtask progress such as `2/5`.
+
+## Status columns
+
+The columns are fixed. You cannot add or rename them.
+
+| Status          | Use it for                   |
+| --------------- | ---------------------------- |
+| **Backlog**     | Ideas and later work.        |
+| **Todo**        | Work that is ready to start. |
+| **In Progress** | Work that is underway.       |
+| **In Review**   | Work that waits for a check. |
+| **Done**        | Finished work.               |
+| **Canceled**    | Work you dropped.            |
+
+## Task details
+
+Click a card to open the task page. The title and description are editable in place. The description uses the same editor as [Documents](/content/documents) and saves on its own. The side panel holds the properties:
+
+- **Priority:** **No priority**, **Low**, **Medium**, **High** or **Urgent**.
+- **Due date:** pick a date or choose **Clear due date**.
+- **Assignee:** assign the task to one of your agents. Assignment is a label only. The agent does not start working on its own.
+- **Labels:** tick one or more labels.
+- **Remind me:** see below.
+
+Use **Delete task** to remove a task. Its subtasks stay and become top-level tasks.
+
+## Labels
+
+Labels belong to the workspace. Choose **Labels** on the tasks page to create, rename, recolor and delete them. Deleting a label removes it from every task. It does not delete any task. Agents can attach existing labels but cannot create new ones.
+
+## Subtasks
+
+Add subtasks under **Subtasks** on the task page. Enter a title and confirm. Subtasks go one level deep: a subtask cannot have subtasks of its own. Open a subtask and use **Back to parent task** to return. The parent card shows how many subtasks are done.
+
+## Reminders
+
+Set a due date, then choose a value under **Remind me**:
+
+- **On due date**
+- **1 day before**
+- **2 days before**
+- **1 week before**
+- **Custom** (a number of days)
+- **Off**
+
+Without a due date the option is disabled. RAGNA Studio sends one in-app notification, titled **Task reminder**, to the bell. The reminder moves with the due date. If you change the due date, it is armed again. A task in **Done** or **Canceled** sends no reminder.
+
+The notification goes to the organization owners. See [Organizations](/workspaces/organizations).
+
+## Attachments
+
+Choose **Add files** under **Attachments** on the task page, or drop files onto it. Subtasks can have attachments too. Click a file to download it.
+
+| Limit            | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| File size        | 10 MB per file.                                                |
+| Files per upload | 5.                                                             |
+| Allowed types    | PNG, JPEG, WebP, PDF, DOCX, PPTX, XLSX, CSV, TXT and Markdown. |
+
+RAGNA Studio checks the content of each file, not just its name. Agents do not read attachments. Attachments also appear in the [Media library](/media/library).
+
+## Agents and tasks
+
+Turn on the **Tasks** tool in an agent. It can then list, read, create, update and move tasks in the workspace. It can also assign agents and attach existing labels. Agents cannot delete tasks. Use **Canceled** to drop work. See [Agent tools](/agents/tools).
+
+Changes made by an agent show up after you reload the page.

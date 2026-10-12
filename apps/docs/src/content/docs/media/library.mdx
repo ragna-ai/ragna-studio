@@ -1,0 +1,52 @@
+---
+title: Media library
+description: Where uploaded and generated files live, and what happens when you delete them.
+sidebar:
+  order: 2
+---
+
+The media library is the shared store for every file in a workspace. Files from chats, tasks, generated images and videos, and social posts all land there. One file can be used in several places without being copied.
+
+There is no separate media page yet. You reach the library from the features that use it.
+
+## What lands there
+
+| Source             | Files                                                                     |
+| ------------------ | ------------------------------------------------------------------------- |
+| Chat attachments   | Files you attach to a chat message.                                       |
+| Task attachments   | Files you add to a task. See [Tasks](/content/tasks).                     |
+| Generated images   | Results from [Images](/media/images), plus reference uploads.             |
+| Generated videos   | Results from [Videos](/media/videos), plus uploaded frames.               |
+| Social post images | Images you add to a post. See [Social posts](/integrations/social-posts). |
+
+Uploads accept PNG, JPEG and WebP images plus PDF, DOCX, PPTX, XLSX, CSV, TXT and Markdown files, up to 10 MB each. Individual features may narrow this. Social posts, for example, take images only.
+
+Every file belongs to a workspace. It is visible to everyone with access to that workspace.
+
+<Aside type="note">
+  A file that exists only as an attachment in somebody else's chat stays private to that chat's
+  author. It appears in the library once it is used somewhere else.
+</Aside>
+
+## Browse and reuse
+
+You pick from the library in these places:
+
+- **Attach from library** when you compose an email. The picker is titled **Attach from media library**. See [Email](/integrations/email).
+- **From gallery** in the image form, to use a generated image as a reference. See [Images](/media/images).
+- **From gallery** in the video form, to animate a generated image. See [Videos](/media/videos).
+
+Generated images and videos also have their own galleries on the **Images** and **Videos** pages.
+
+## Deleting files
+
+RAGNA Studio counts how often a file is used. Deleting a use removes only that use. The file itself is deleted when nothing uses it any more.
+
+For example, you delete a generated image that a social post also uses. The image disappears from the gallery, but the post keeps it. The file is removed once the post no longer uses it.
+
+Other rules:
+
+- Deleting a chat deletes its attachments, unless something else still uses them.
+- Deleting a whole task removes its attachment links. The files are cleaned up automatically within about a day, unless something else uses them.
+- Deleting a workspace deletes all of its files.
+- Files that nothing has used for 24 hours are cleaned up automatically. This catches uploads you never sent.

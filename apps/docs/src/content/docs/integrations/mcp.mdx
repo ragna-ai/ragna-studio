@@ -1,0 +1,58 @@
+---
+title: MCP connector
+description: Let Claude Desktop read and write your RAGNA Studio data, and control exactly what it may do.
+sidebar:
+  order: 1
+---
+
+The MCP connector lets an external AI app, such as Claude Desktop, work with your RAGNA Studio data on your behalf. Today the connector covers datasets. Claude can find datasets, read rows, add and change rows, and create new datasets. It cannot delete anything.
+
+Nothing is shared until you turn it on. You decide per resource type what the app may do, and you can revoke access at any time.
+
+<Aside type="note">
+  The connector is off by default on the server. On a self-hosted instance, the instance operator
+  must enable it and name the allowed apps first. See [Environment
+  variables](/reference/environment-variables). If **MCP is not available** appears on the settings
+  page, the server has not enabled it.
+</Aside>
+
+## Turn on MCP
+
+1. Open the user menu and choose **MCP**.
+2. Switch on **Allow external AI apps to access Ragna (MCP)**.
+
+The **Connector URL** card appears. Turning MCP off later asks for confirmation, because it disconnects every connected app at once. If you turn it on again, you have to reconnect your apps.
+
+## Choose what apps may do
+
+Under **Resource access**, set a level for each resource type. Every type starts at **Off**.
+
+| Level            | What the app can do                                                |
+| ---------------- | ------------------------------------------------------------------ |
+| **Off**          | Nothing. The app does not see this resource type.                  |
+| **Read**         | Find datasets and read their rows.                                 |
+| **Read & write** | Everything in Read, plus create datasets, add, edit and move rows. |
+
+The level applies to all datasets in the workspace you connect. You cannot pick single datasets. Changes take effect on the app's next request. The app does not need to reconnect.
+
+## Connect Claude Desktop
+
+1. On the MCP settings page, copy the **Connector URL** with the copy button.
+2. In Claude Desktop, go to **Settings > Connectors > Add custom connector** and paste the URL.
+3. Claude Desktop opens RAGNA Studio. Sign in if needed.
+4. On the **Connect this app to Ragna** screen, choose a **Workspace**. The screen also shows what the app will be able to do.
+5. Choose **Approve**. Choose **Deny** to cancel.
+
+If MCP is off, the screen shows **MCP is turned off** and a link to the settings. Turn MCP on first, then connect again.
+
+Each connection belongs to one workspace. To work in another workspace, revoke the connection and connect again.
+
+## Rows written by an app
+
+When an app adds or changes rows, RAGNA marks the origin. Datasets created by an app show **MCP** in the **Origin** column of the dataset list. Rows written by an app carry the note **Written by a connected app via MCP** in the dataset grid. RAGNA also records each write call per connection. Reads only update the **Last used** time.
+
+See [Datasets](/content/datasets) for the grid.
+
+## See and revoke connections
+
+The **Connected apps** card lists each app with its **Workspace**, when it was **Connected** and when it was **Last used**. Choose **Revoke** next to an app and confirm. The app is disconnected immediately and has to connect again.

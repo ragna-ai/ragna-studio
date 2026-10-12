@@ -1,0 +1,47 @@
+---
+title: Team node
+description: Let a lead agent delegate work to a team of specialist agents.
+sidebar:
+  order: 2
+---
+
+The team node lets one agent lead several others. You give the lead a task. The lead splits it up, hands the parts to specialists and writes the final answer. Use it when one agent is not enough, for example research by one agent and writing by another.
+
+## Set up a team
+
+1. Add a **Team** node and select it.
+2. Choose a **Lead agent**, or keep **None (use default agent)**.
+3. Write the **Prompt**. It can use `{{input}}` for the output of the previous node.
+4. Click **Add member** for each specialist.
+5. For each member, pick an agent and write a short role, such as "researches background facts".
+
+A team has one to five members. Each member needs an agent and a role. The role tells the lead when to hand work to that member. If you leave it empty, the lead only sees the agent's name.
+
+All agents must belong to the same workspace as the workflow. The same agent can be a member twice with different roles.
+
+## How delegation works
+
+The mode is delegate. The lead gets a briefing with the list of members and their roles. It then works in a loop:
+
+1. The lead breaks the task into subtasks.
+2. It sends each subtask to the member whose role fits.
+3. It reads the reports and can send work back to refine it.
+4. When it is satisfied, it writes the final answer itself.
+
+The output of the team node is that final answer.
+
+When the lead sends independent subtasks in the same step, the members work at the same time. How much work runs in parallel depends on the lead's choices.
+
+## Lead and member settings
+
+- **Referenced lead:** the lead keeps its own model, instructions, knowledge and tools. It can use them next to delegating.
+- **Default lead:** the default agent leads with no tools. It only delegates.
+- **Members:** each member runs like it does in chat, with its own model, tools and settings.
+
+## Limits
+
+A lead takes at most 12 steps. A member takes at most 15 steps per delegated task. A very large team with long tasks can still take a while.
+
+## See what happened
+
+Open the run and select the team node. **Agent trace** shows each step of the lead, every delegation and the member's tool calls, with duration and tokens. See [Runs and traces](/workflows/runs).

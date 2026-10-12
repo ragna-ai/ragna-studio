@@ -12,8 +12,19 @@ const nimbusConfig = defineNimbusConfig({
   editPattern: 'https://github.com/ragna-ai/ragna-studio/edit/main/apps/docs/{path}',
   socialImageAlt: 'RAGNA documentation preview',
   sidebar: {
+    defaultCollapsed: true,
     items: [
-      { label: 'Getting started', autogenerate: { directory: 'getting-started' } },
+      {
+        label: 'Getting started',
+        autogenerate: { directory: 'getting-started' },
+        collapsed: false,
+      },
+      { label: 'Workspaces', autogenerate: { directory: 'workspaces' } },
+      { label: 'Agents', autogenerate: { directory: 'agents' } },
+      { label: 'Datasets, documents and tasks', autogenerate: { directory: 'content' } },
+      { label: 'Media', autogenerate: { directory: 'media' } },
+      { label: 'Workflows', autogenerate: { directory: 'workflows' } },
+      { label: 'Integrations', autogenerate: { directory: 'integrations' } },
       { label: 'Self-hosting', autogenerate: { directory: 'self-hosting' } },
       { label: 'Reference', autogenerate: { directory: 'reference' } },
       {
@@ -30,6 +41,9 @@ export default defineConfig({
   // Slashless URLs; wrangler.jsonc's html_handling redirects the old slashed ones.
   trailingSlash: 'never',
   build: { format: 'file' },
+  redirects: {
+    '/getting-started/workspaces': '/workspaces',
+  },
   // Tailwind v4 via its Vite plugin (the integration Astro recommends for
   // Tailwind v4 — replaces the PostCSS plugin, which doesn't build under
   // Astro 7's Vite 8 bundler).
