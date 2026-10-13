@@ -45,7 +45,6 @@
     "userMenu": {
       "upgrade": "Auf Pro upgraden",
       "account": "Konto",
-      "statistics": "Statistiken",
       "settings": "Einstellungen",
       "mcp": "MCP",
       "signOut": "Abmelden",
@@ -334,7 +333,7 @@
       "copy": "Text kopieren",
       "copied": "In die Zwischenablage kopiert",
       "toolGroup": {
-        "summary": "{count} Werkzeuge verwendet"
+        "summary": "Werkzeuge verwendet | {count} Werkzeug verwendet | {count} Werkzeuge verwendet"
       }
     },
     "history": {
@@ -342,6 +341,7 @@
       "subtitle": "Verlauf deiner Unterhaltungen.",
       "toggle": "Chatverlauf ein-/ausblenden",
       "groupBy": "Gruppierung ändern",
+      "openAll": "Gesamten Chat-Verlauf öffnen",
       "close": "Schließen",
       "empty": "Noch keine Chats",
       "rename": "Chat umbenennen",

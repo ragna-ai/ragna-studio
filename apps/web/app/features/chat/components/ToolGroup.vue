@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDownIcon, WrenchIcon } from '@lucide/vue';
+import { ChevronDownIcon, LayersIcon } from '@lucide/vue';
 import type { ReasoningUIPart, ToolUIPart } from 'ai';
 import { isStaticToolUIPart } from 'ai';
 import {
@@ -41,31 +41,6 @@ const isRunning = computed(() =>
   ),
 );
 
-const userToggled = ref(false);
-const open = ref(isRunning.value);
-
-// Debounced like Reasoning.vue's own auto-close, so a brief gap between steps doesn't flicker.
-const AUTO_CLOSE_DELAY_MS = 1000;
-
-watch(isRunning, (running, _previous, onCleanup) => {
-  if (userToggled.value) return;
-
-  if (running) {
-    open.value = true;
-    return;
-  }
-
-  const timer = setTimeout(() => {
-    open.value = false;
-  }, AUTO_CLOSE_DELAY_MS);
-  onCleanup(() => clearTimeout(timer));
-});
-
-function handleOpenChange(value: boolean) {
-  userToggled.value = true;
-  open.value = value;
-}
-
 const summaryState = computed<ToolUIPart['state']>(() => {
   if (isRunning.value) return 'input-available';
   if (toolMembers.value.some((part) => part.state === 'output-error')) {
@@ -76,40 +51,21 @@ const summaryState = computed<ToolUIPart['state']>(() => {
   }
   return 'output-available';
 });
-
-const isSingleCall = computed(() => toolMembers.value.length <= 1);
 </script>
 
 <template>
-  <template v-if="isSingleCall">
-    <template v-for="(member, index) in members" :key="index">
-      <ToolCall v-if="isStaticToolUIPart(member)" :part="member" />
-      <Reasoning v-else :is-streaming="member.state === 'streaming'">
-        <ReasoningTrigger />
-        <ReasoningContent :content="member.text" />
-      </Reasoning>
-    </template>
-  </template>
-
-  <Collapsible
-    v-else
-    :open="open"
-    class="group not-prose w-full"
-    @update:open="handleOpenChange"
-  >
+  <Collapsible class="group not-prose w-full">
     <CollapsibleTrigger
       class="group/tool flex w-full items-center justify-between gap-4 py-3"
     >
       <div class="flex items-center gap-2">
-        <WrenchIcon
+        <LayersIcon
           class="size-4 stroke-1.5 text-muted-foreground group-hover/tool:text-foreground"
         />
         <span
           class="text-sm text-foreground/60 group-hover/tool:text-foreground"
         >
-          {{
-            t('chat.message.toolGroup.summary', { count: toolMembers.length })
-          }}
+          {{ t('chat.message.toolGroup.summary', toolMembers.length) }}
         </span>
         <ToolStatusBadge :state="summaryState" />
         <ChevronDownIcon
