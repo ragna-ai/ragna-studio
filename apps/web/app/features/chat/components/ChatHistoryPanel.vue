@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { CalendarIcon, XIcon } from '@lucide/vue';
+import { CalendarIcon, HistoryIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 import ChatHistoryItemRow from '~/features/chat/components/ChatHistoryItem.vue';
 import {
   useGetChatHistory,
@@ -101,28 +107,59 @@ const groups = computed<ChatGroup[]>(() => {
       <h2 class="truncate text-sm font-semibold">
         {{ t('chat.history.title') }}
       </h2>
-      <div class="flex items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          :aria-label="t('chat.history.groupBy')"
-          :title="t('chat.history.groupBy')"
-          @click="cycleGroupBy"
-        >
-          <CalendarIcon class="size-4 stroke-1.5" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          :aria-label="t('chat.history.close')"
-          :title="t('chat.history.close')"
-          @click="sidePanel.close()"
-        >
-          <XIcon class="size-4" />
-        </Button>
-      </div>
+      <TooltipProvider :delay-duration="300">
+        <div class="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                as-child
+                variant="ghost"
+                size="icon"
+                :aria-label="t('chat.history.openAll')"
+              >
+                <NuxtLinkLocale to="/chat/history">
+                  <HistoryIcon class="size-4 stroke-1.5" />
+                </NuxtLinkLocale>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{ t('chat.history.openAll') }}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                :aria-label="t('chat.history.groupBy')"
+                @click="cycleGroupBy"
+              >
+                <CalendarIcon class="size-4 stroke-1.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{ t('chat.history.groupBy') }}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                :aria-label="t('chat.history.close')"
+                @click="sidePanel.close()"
+              >
+                <XIcon class="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{ t('chat.history.close') }}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
     </div>
     <Separator />
 

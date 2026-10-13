@@ -3,6 +3,7 @@ import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import ChatHeading from '~/features/chat/components/ChatHeading.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
+import ChatSearchButton from '~/features/chat/components/ChatSearchButton.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
 import { useChatStore } from '~/features/chat/stores/chat.store';
 
@@ -58,7 +59,10 @@ onScopeDispose(() => chatStore.setChat());
 </script>
 
 <template>
-  <ChatHistoryToggle class="absolute top-2 left-2 z-10" />
+  <div class="absolute top-2 left-2 z-10 flex flex-col gap-0">
+    <ChatHistoryToggle />
+    <ChatSearchButton />
+  </div>
   <div class="absolute top-2 right-5 z-10">
     <ChatHeading v-if="chatStore.id" />
   </div>

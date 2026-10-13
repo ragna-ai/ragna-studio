@@ -45,7 +45,6 @@
     "userMenu": {
       "upgrade": "Upgrade to Pro",
       "account": "Account",
-      "statistics": "Statistics",
       "settings": "Settings",
       "mcp": "MCP",
       "signOut": "Sign out",
@@ -328,7 +327,7 @@
       "copy": "Copy text",
       "copied": "Copied to clipboard",
       "toolGroup": {
-        "summary": "Used {count} tools"
+        "summary": "Used tools | Used {count} tool | Used {count} tools"
       }
     },
     "history": {
@@ -336,6 +335,7 @@
       "subtitle": "Your past conversations.",
       "toggle": "Toggle chat history",
       "groupBy": "Change grouping",
+      "openAll": "Open full chat history",
       "close": "Close",
       "empty": "No chats yet",
       "rename": "Rename chat",

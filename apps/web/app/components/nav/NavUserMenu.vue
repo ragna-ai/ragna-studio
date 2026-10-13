@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ChartColumnIcon,
   ChevronsUpDownIcon,
   CoinsIcon,
   LogOutIcon,
@@ -123,12 +122,6 @@ async function signOut() {
           <NuxtLink to="/account">
             <UserIcon class="mr-2 size-4 stroke-1.5" />
             {{ $t('nav.userMenu.account') }}
-          </NuxtLink>
-        </DropdownMenuItem>
-        <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
-          <NuxtLink to="/account/statistics">
-            <ChartColumnIcon class="mr-2 size-4 stroke-1.5" />
-            {{ $t('nav.userMenu.statistics') }}
           </NuxtLink>
         </DropdownMenuItem>
         <DropdownMenuItem as-child class="cursor-pointer px-4 py-2">
