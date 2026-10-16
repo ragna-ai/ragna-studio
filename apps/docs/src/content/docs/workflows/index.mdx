@@ -6,19 +6,19 @@ sidebar:
   label: Build a workflow
 ---
 
-A workflow is a chain of steps that RAGNA Studio runs for you. Each step is a node on a canvas. You connect the nodes, and the output of one node becomes the input of the next. Use workflows to automate multi-step tasks with [agents](/agents), branching and text templates.
+A workflow is a chain of steps that RAGNA Studio runs automatically. Each step is a node on a canvas. Nodes are connected, and the output of one node becomes the input of the next. Use workflows to automate multi-step tasks with [agents](/agents), branching and text templates.
 
 ## Create a workflow
 
 1. Open **Workflows** in the sidebar.
 2. Click **New workflow**.
-3. Enter a name and create it. You land on the canvas.
+3. Enter a name and create it. The canvas opens.
 
 The list shows each workflow as **Draft** or **Published**. A workflow with a schedule also shows when it runs (see [Triggers and schedules](/workflows/triggers)).
 
 ## Add nodes
 
-Use **Add node** to put a node on the canvas. Click a node to open its settings in a side panel. There you set a **Label** and the node's configuration.
+Use **Add node** to put a node on the canvas. Click a node to open its settings in a side panel. The panel holds a **Label** and the node's configuration.
 
 | Node          | What it does                                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -28,7 +28,7 @@ Use **Add node** to put a node on the canvas. Click a node to open its settings 
 | **Condition** | Compares two values and sends the flow down a `true` or a `false` branch.                                    |
 | **Transform** | Builds new text from a **Template**.                                                                         |
 
-A saved agent runs like it does in chat: with its own model, tools and settings. Without one, the node uses the default agent and your system prompt, with no tools.
+A saved agent runs like it does in chat: with its own model, tools and settings. Without one, the node uses the default agent and its own system prompt, with no tools.
 
 ## Connect nodes
 
@@ -62,17 +62,17 @@ Two connections leave the node, labeled `true` and `false`. Connect each to the 
 
 ## Save, publish and run
 
-Your edits are a draft. Click **Save** to keep them. The editor shows **Unpublished changes** when the draft differs from the published version.
+Edits are a draft. Click **Save** to keep them. The editor shows **Unpublished changes** when the draft differs from the published version.
 
-Runs always use the published version. Click **Publish** to make your draft the live version.
+Runs always use the published version. Click **Publish** to make the draft the live version.
 
 1. Click **Run** in the editor.
 2. Optionally enter an **Input**. It becomes the input of the first node.
-3. Click **Run published version**. If you never published, click **Publish & run**.
+3. Click **Run published version**. If the workflow was never published, click **Publish & run**.
 
-The dialog warns you when a run uses an older published version than your latest edits. The run opens in a new view. See [Runs and traces](/workflows/runs).
+The dialog warns when a run uses an older published version than the latest edits. The run opens in a new view. See [Runs and traces](/workflows/runs).
 
 <Aside type="note">
-  Workflows that call agents use your configured AI models. On a self-hosted install the model
+  Workflows that call agents use the configured AI models. On a self-hosted install the model
   providers need API keys. See [Optional providers](/self-hosting/optional-providers).
 </Aside>

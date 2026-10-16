@@ -5,13 +5,13 @@ sidebar:
   order: 3
 ---
 
-Storage is optional. Without it, the app runs, but file uploads and image/video generation don't work.
+Storage is optional. Without it, RAGNA Studio runs, but file uploads and image/video generation don't work.
 
 Create two buckets: one for images and one for documents. Only the images bucket is public-read. Keep the documents bucket private.
 
 | Var                        | Meaning                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------ |
-| `S3_ENDPOINT`              | Endpoint of your S3 provider                                                   |
+| `S3_ENDPOINT`              | Endpoint of the S3 provider                                                    |
 | `S3_REGION`                | Optional, default `auto`. R2 wants `auto`. AWS needs the bucket's real region. |
 | `S3_ACCESS_KEY_ID`         | Access key                                                                     |
 | `S3_SECRET_ACCESS_KEY`     | Secret key                                                                     |
@@ -56,6 +56,6 @@ If `MEDIA_URL` is missing, the backend and worker log a startup warning and medi
 
   </TabItem>
   <TabItem label="Other">
-    Any S3-compatible server works, including one on localhost. Running it is up to you. We don't ship or support one.
+    Any S3-compatible server works, including one on localhost. The operator runs it. RAGNA does not ship or support one.
   </TabItem>
 </Tabs>

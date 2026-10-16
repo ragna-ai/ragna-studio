@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Knowledge is background material your agent should always have. Add it on the **Context** tab of the agent. It works for facts like product details, style guides or price lists. For rules and behavior, use the instructions on the **Persona** tab instead.
+Knowledge is background material an agent should always have. Add it on the **Context** tab of the agent. It works for facts like product details, style guides or price lists. For rules and behavior, use the instructions on the **Persona** tab instead.
 
 ## Free text
 
@@ -15,7 +15,7 @@ Type or paste text into the **Context** field. It is limited to 30,000 character
 
 Upload files in the **Documents** section of the **Context** tab. RAGNA Studio extracts the text and adds it to the agent's knowledge.
 
-You can drag files into the drop zone or click it to browse. The supported types are PDF, DOCX, PPTX, XLSX, CSV, TXT and MD. Each file can be up to 10 MB. An agent holds up to 25 documents.
+Files can be dragged into the drop zone, or the zone can be clicked to browse. The supported types are PDF, DOCX, PPTX, XLSX, CSV, TXT and MD. Each file can be up to 10 MB. An agent holds up to 25 documents.
 
 Each document shows a status:
 
@@ -25,20 +25,20 @@ Each document shows a status:
 | **Ready**   | The agent can use the document.                                                   |
 | **Failed**  | Extraction failed. Hover the badge to see why. Use the retry button to try again. |
 
-For each document you can rename it, replace its file, retry a failed extraction or delete it. Very long documents are cut off after 500,000 characters. The list then notes "Truncated: only the first part of this document was kept."
+Each document can be renamed, have its file replaced, be retried after a failed extraction or be deleted. Very long documents are cut off after 500,000 characters. The list then notes "Truncated: only the first part of this document was kept."
 
 Only **Ready** documents count. The panel shows a summary of how the agent uses them.
 
 ## Small and large knowledge
 
-RAGNA Studio decides how the agent reads your documents. You do not configure it.
+RAGNA Studio decides how the agent reads its documents. Users don't configure it.
 
 - **Up to 30,000 characters in total:** the full text of all ready documents goes into every chat. The agent sees everything at once.
 - **Above 30,000 characters in total:** the agent gets only a list of document names and sizes. It uses a **Search Context** step to look up the passages it needs.
 
-The switch is automatic. It happens when your documents grow past the limit, and it reverts if they shrink again. The free text in the **Context** field always goes into the chat in full.
+The switch is automatic. It happens when the documents grow past the limit, and it reverts if they shrink again. The free text in the **Context** field always goes into the chat in full.
 
-What you notice in large setups: in a chat the agent shows a **Search Context** tool call before it answers. Answers draw on the best matching passages, not on the whole document. If an answer misses a detail, ask the agent to search for it by name.
+What changes in large setups: in a chat the agent shows a **Search Context** tool call before it answers. Answers draw on the best matching passages, not on the whole document. If an answer misses a detail, ask the agent to search for it by name.
 
 ## Related
 

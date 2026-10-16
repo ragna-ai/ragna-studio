@@ -1,6 +1,6 @@
 # OAuth and MCP hardening
 
-Status: in-progress (2026-10-16). Decisions settled 2026-10-16. Branch `fix/oauth-mcp-hardening`.
+Status: implemented (2026-10-16, PR #110, released in v0.6.2). Docs in PR #111.
 Source: OAuth/MCP audit against the investigation checklist, see [backlog](../backlog.md).
 
 ## Summary

@@ -39,6 +39,8 @@ Cloudflare deploys also have `wrangler.jsonc` at the project root.
 
 ## Writing docs
 
+Load the `docs-writing` skill before writing or editing a page. It holds the voice, naming and diagram rules.
+
 Frontmatter validates against the schema from `docsCollection()` (`@cloudflare/nimbus-docs/content`). Required: `title`.
 
 Write the brand as **RAGNA** in prose, titles, and descriptions. Keep it lowercase in identifiers: URLs, domains, repo paths, package and Worker names.

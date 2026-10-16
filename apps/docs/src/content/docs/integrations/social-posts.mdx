@@ -1,13 +1,13 @@
 ---
 title: Social posts
-description: Draft LinkedIn posts yourself or with an agent, add images, and publish them from RAGNA Studio.
+description: Draft social posts by hand or with an agent, add images, and publish them from RAGNA Studio (LinkedIn).
 sidebar:
   order: 2
 ---
 
-RAGNA Studio can prepare LinkedIn posts and publish them to your LinkedIn profile. You write a draft yourself, or an agent writes it for you. Nothing goes live until you choose **Publish**.
+RAGNA Studio can prepare social posts and publish them to the user's profile. LinkedIn is the supported network. A user writes a draft, or an agent writes it. Nothing goes live until the user chooses **Publish**.
 
-Posts belong to the workspace you create them in. Publishing is manual. There is no scheduling.
+Posts belong to the workspace they are created in. Publishing is manual. There is no scheduling.
 
 <Aside type="note">
   On a self-hosted instance, publishing needs a LinkedIn app. See [Optional
@@ -17,25 +17,25 @@ Posts belong to the workspace you create them in. Publishing is manual. There is
 
 ## Connect LinkedIn
 
-You can write drafts without a connection. To publish, connect your LinkedIn account first.
+Drafts can be written without a connection. To publish, connect a LinkedIn account first.
 
-1. Open your account page and find **Connected accounts**.
+1. Open the account page and find **Connected accounts**.
 2. Next to **LinkedIn**, choose **Connect**.
 3. Sign in at LinkedIn and approve the access.
 
-The status changes to **Connected**. Choose **Disconnect** to remove the link. If you try to publish without a connection, the post page shows **LinkedIn not connected** with a **Go to account settings** link.
+The status changes to **Connected**. Choose **Disconnect** to remove the link. If a user tries to publish without a connection, the post page shows **LinkedIn not connected** with a **Go to account settings** link.
 
 LinkedIn access expires after about 60 days. RAGNA cannot renew it on its own. When publishing fails because of this, connect LinkedIn again and retry.
 
 ## Write a post
 
-Open **Social** in the navigation. The page **Social posts** lists your posts with their status.
+Open **Social** in the navigation. The page **Social posts** lists the posts with their status.
 
 1. Choose **New post**. RAGNA creates an empty draft and opens the editor.
 2. Write in the text field **What do you want to share?**. A post can have up to 3,000 characters.
 3. Choose **Save**. The toast **Draft saved.** confirms it.
 
-Open a post from the list to edit it. You can delete a post from the list after confirming.
+Open a post from the list to edit it. A post can be deleted from the list after confirming.
 
 ### Add images
 
@@ -53,19 +53,19 @@ Turn on the **LinkedIn Draft** tool for an agent. See [Agent tools](/agents/tool
 
 Workflows can create drafts too. See [Workflows](/workflows).
 
-Agent drafts show up in the **Social posts** list like any other. Review and edit them before you publish.
+Agent drafts show up in the **Social posts** list like any other. Review and edit them before publishing.
 
 ## Publish
 
 1. Open the draft.
 2. Choose **Publish**.
 
-RAGNA sends the text and images to LinkedIn. A post cannot be empty. When it works, the status turns to **Published**, you see **Post published.**, and **View on LinkedIn** opens the live post. Publishing can take a moment when the post has several images.
+RAGNA sends the text and images to LinkedIn. A post cannot be empty. When it works, the status turns to **Published**, RAGNA Studio shows **Post published.**, and **View on LinkedIn** opens the live post. Publishing can take a moment when the post has several images.
 
 ## Post statuses
 
-| Status        | Meaning                                                                                                    |
-| ------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Draft**     | Saved in RAGNA, not on LinkedIn. You can edit and publish it.                                              |
-| **Published** | Live on LinkedIn.                                                                                          |
-| **Failed**    | LinkedIn rejected the post, or your LinkedIn access expired. Fix the cause, then choose **Publish** again. |
+| Status        | Meaning                                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| **Draft**     | Saved in RAGNA, not on LinkedIn. It can be edited and published.                                          |
+| **Published** | Live on LinkedIn.                                                                                         |
+| **Failed**    | LinkedIn rejected the post, or the LinkedIn access expired. Fix the cause, then choose **Publish** again. |

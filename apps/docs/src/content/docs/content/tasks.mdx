@@ -5,24 +5,24 @@ sidebar:
   order: 2
 ---
 
-Tasks give each workspace one kanban board. You and your agents create tasks, move them between columns and attach files. The board belongs to the workspace, so everyone with access to the workspace sees the same tasks.
+Tasks give each workspace one kanban board. Users and agents create tasks, move them between columns and attach files. The board belongs to the workspace, so every user with access to the workspace sees the same tasks.
 
 Open **Tasks** in the sidebar. Each task gets an ID like `TSK-12`, numbered per workspace.
 
 ## Board and list
 
-Switch between **Board** and **List** in the toolbar. The app remembers your choice.
+Switch between **Board** and **List** in the toolbar. RAGNA Studio remembers the choice.
 
-- **Board** shows one column per status. Drag a card to another column or to a new position. You can also add a task straight into a column with the **New task title...** field.
+- **Board** shows one column per status. Drag a card to another column or to a new position. A task can also be added straight into a column with the **New task title...** field.
 - **List** shows a table grouped by status. It lists ID, priority, **Labels**, **Due date** and **Assignee**. Click a row to open the task.
 
-Use the filters **Status**, **Priority** and **Label** to narrow down what you see. Both views share the filters.
+Use the filters **Status**, **Priority** and **Label** to narrow down what is shown. Both views share the filters.
 
 Choose **New task** to create a task. Cards show the ID, title, priority, labels, due date (overdue dates are highlighted), assignee and subtask progress such as `2/5`.
 
 ## Status columns
 
-The columns are fixed. You cannot add or rename them.
+The columns are fixed. They cannot be added or renamed.
 
 | Status          | Use it for                   |
 | --------------- | ---------------------------- |
@@ -31,7 +31,7 @@ The columns are fixed. You cannot add or rename them.
 | **In Progress** | Work that is underway.       |
 | **In Review**   | Work that waits for a check. |
 | **Done**        | Finished work.               |
-| **Canceled**    | Work you dropped.            |
+| **Canceled**    | Dropped work.                |
 
 ## Task details
 
@@ -39,7 +39,7 @@ Click a card to open the task page. The title and description are editable in pl
 
 - **Priority:** **No priority**, **Low**, **Medium**, **High** or **Urgent**.
 - **Due date:** pick a date or choose **Clear due date**.
-- **Assignee:** assign the task to one of your agents. Assignment is a label only. The agent does not start working on its own.
+- **Assignee:** assign the task to one of the workspace's agents. Assignment is a label only. The agent does not start working on its own.
 - **Labels:** tick one or more labels.
 - **Remind me:** see below.
 
@@ -64,7 +64,7 @@ Set a due date, then choose a value under **Remind me**:
 - **Custom** (a number of days)
 - **Off**
 
-Without a due date the option is disabled. RAGNA Studio sends one in-app notification, titled **Task reminder**, to the bell. The reminder moves with the due date. If you change the due date, it is armed again. A task in **Done** or **Canceled** sends no reminder.
+Without a due date the option is disabled. RAGNA Studio sends one in-app notification, titled **Task reminder**, to the bell. The reminder moves with the due date. If the due date changes, the reminder is armed again. A task in **Done** or **Canceled** sends no reminder.
 
 The notification goes to the organization owners. See [Organizations](/workspaces/organizations).
 
@@ -84,4 +84,4 @@ RAGNA Studio checks the content of each file, not just its name. Agents do not r
 
 Turn on the **Tasks** tool in an agent. It can then list, read, create, update and move tasks in the workspace. It can also assign agents and attach existing labels. Agents cannot delete tasks. Use **Canceled** to drop work. See [Agent tools](/agents/tools).
 
-Changes made by an agent show up after you reload the page.
+Changes made by an agent show up after the page reloads.

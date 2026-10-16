@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-All settings go into `.env`. The [installer](/self-hosting/install-options/one-line-setup) creates it from the release's `.env.example`. An empty default means the feature stays off until you set it.
+All settings go into `.env`. The [installer](/self-hosting/install-options/one-line-setup) creates it from the release's `.env.example`. An empty default means the feature stays off until it is set.
 
 ## App and domains
 
@@ -59,7 +59,7 @@ See [Configuration](/self-hosting/configuration#secrets).
 
 | Variable                   | Default | Meaning                                           |
 | -------------------------- | ------- | ------------------------------------------------- |
-| `S3_ENDPOINT`              |         | Endpoint of your S3 provider                      |
+| `S3_ENDPOINT`              |         | Endpoint of the S3 provider                       |
 | `S3_REGION`                | `auto`  | Bucket region. R2 wants `auto`.                   |
 | `S3_ACCESS_KEY_ID`         |         | Access key                                        |
 | `S3_SECRET_ACCESS_KEY`     |         | Secret key                                        |
@@ -79,7 +79,7 @@ See [Storage](/self-hosting/storage).
 | `MICROSOFT_CLIENT_ID`     |                 | Microsoft OAuth client                                                                                                  |
 | `MICROSOFT_CLIENT_SECRET` |                 | Microsoft OAuth secret                                                                                                  |
 | `MICROSOFT_TENANT_ID`     | `organizations` | `organizations` for work accounts only, `common` to allow personal accounts, or a tenant ID to lock to one organization |
-| `ALLOWED_LOGIN_EMAILS`    |                 | Comma-separated allowlist. Empty allows everyone.                                                                       |
+| `ALLOWED_LOGIN_EMAILS`    |                 | Comma-separated allowlist. Empty allows every user.                                                                     |
 
 See [Configuration](/self-hosting/configuration#oauth).
 

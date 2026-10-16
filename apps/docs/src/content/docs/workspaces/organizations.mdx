@@ -1,11 +1,11 @@
 ---
 title: Organizations
-description: Invite people, manage organization roles and keep an eye on restricted workspaces.
+description: Invite users, manage organization roles and keep an eye on restricted workspaces.
 sidebar:
   order: 2
 ---
 
-An organization groups the people who work together. It owns its workspaces. Everyone you invite joins the same organization. Open its settings from the user menu with **Organization**.
+An organization groups the users who work together. It owns its workspaces. Every invited user joins the same organization. Its settings open from the user menu with **Organization**.
 
 ## Organization roles
 
@@ -17,48 +17,48 @@ An organization groups the people who work together. It owns its workspaces. Eve
 
 These roles differ from the [workspace roles](/workspaces/members) manager and editor.
 
-## Invite someone
+## Invite a user
 
-Organization owners and admins invite people.
+Organization owners and admins invite users.
 
 1. Open **Organization** from the user menu.
 2. In **Invitations**, choose **Invite member**.
 3. Enter the **Email address** and pick a **Role**: **Member** or **Admin**.
 4. Choose **Send invitation**.
 
-The person gets an email. They join your organization when they sign up with this email address. The invitation is valid for 48 hours.
+The invited user gets an email. They join the organization when they sign up with this email address. The invitation is valid for 48 hours.
 
-Pending invitations show their role and expiry date. Choose **Copy link** to share the invitation yourself, or the cross icon (**Cancel invitation**) to withdraw it.
+Pending invitations show their role and expiry date. Choose **Copy link** to share the invitation by hand, or the cross icon (**Cancel invitation**) to withdraw it.
 
 Some invitations are rejected:
 
-- The person already has an account.
-- The person was removed from your organization. Restore them in the member list instead.
+- The user already has an account.
+- The user was removed from the organization. Restore them in the member list instead.
 - On a self-hosted instance, the email is not on the list of allowed sign-in emails.
 
-You cannot invite someone as owner. Use ownership transfer instead.
+No user can be invited as owner. Use ownership transfer instead.
 
 ## Manage members
 
-The **Members** card lists everyone in the organization. Owners and admins can:
+The **Members** card lists every user in the organization. Organization owners and admins can:
 
 - change a role between **Member** and **Admin** in the role menu,
 - remove a member with the trash icon.
 
 A removed member is signed out and loses access right away. The member list marks them **Removed** and shows a **Deleted on** date. Choose **Restore** to bring them back before that date. After 30 days their account and personal data are deleted for good.
 
-You cannot remove the owner.
+The owner cannot be removed.
 
 ## Organization name
 
-Owners and admins can rename the organization in the **Organization name** card.
+Organization owners and admins can rename the organization in the **Organization name** card.
 
 ## Restricted workspaces
 
-Restricted workspaces are private to their members, but owners and admins keep oversight. The **Restricted workspaces** card lists every restricted workspace with its number of workspace members.
+Restricted workspaces are private to their members, but organization owners and admins keep oversight. The **Restricted workspaces** card lists every restricted workspace with its number of workspace members.
 
-- If you are a member, the row shows **You are a member** and an **Open** button.
-- If you are not, choose **Join as manager**. You then appear as a workspace manager in that workspace and can open it from the switcher.
+- For a workspace member, the row shows **You are a member** and an **Open** button.
+- Otherwise the row offers **Join as manager**. The owner or admin then appears as a workspace manager in that workspace and can open it from the switcher.
 
 ## Transfer ownership
 
@@ -67,7 +67,7 @@ Only the owner sees **Transfer ownership**.
 1. Choose a member under **Choose a member**.
 2. Choose **Transfer ownership** and confirm.
 
-The new owner takes over. You become an organization admin. You cannot undo this yourself.
+The new owner takes over. The previous owner becomes an organization admin. Only the new owner can undo this.
 
 ## Delete the organization
 
@@ -76,12 +76,12 @@ Only the owner can delete the organization under **Danger zone**.
 1. Choose **Delete organization**.
 2. Type the organization name to confirm.
 
-All members are signed out and lose access right away. You have 30 days to restore the organization. After that, all its data is deleted for good.
+All members are signed out and lose access right away. The owner has 30 days to restore the organization. After that, all its data is deleted for good.
 
-During those 30 days everyone who signs in sees "is scheduled for deletion" with the final date. Only the owner sees **Restore organization**.
+During those 30 days every user who signs in sees "is scheduled for deletion" with the final date. Only the owner sees **Restore organization**.
 
 ## Leave the organization
 
-Members and admins leave by deleting their own account. Open your account settings, go to the **Delete account** tab and choose **Delete my account**. You are signed out right away. Your organization can restore your account for 30 days. After that, your account and personal data are deleted for good.
+Organization members and admins leave by deleting their own account. They open the account settings, go to the **Delete account** tab and choose **Delete my account**. The user is signed out right away. The organization can restore the account for 30 days. After that, the account and personal data are deleted for good.
 
 The owner cannot leave. Transfer ownership or delete the organization first.

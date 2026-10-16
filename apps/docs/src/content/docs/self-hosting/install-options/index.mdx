@@ -1,15 +1,15 @@
 ---
 title: Install options
-description: Choose how to install RAGNA Studio on your server.
+description: Choose how to install RAGNA Studio on a server.
 sidebar:
   order: 1
 ---
 
 Both options run the same release images with the same compose files. They differ in who writes the setup.
 
-| Option                                                                       | Best for                                                                                                                          |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [One-line setup](/self-hosting/install-options/one-line-setup)               | Most installs. One command checks your system, writes `.env` with generated secrets, asks for your settings and starts the stack. |
-| [Install using Docker Compose](/self-hosting/install-options/docker-compose) | Full control. You download the compose files and write `.env` yourself.                                                           |
+| Option                                                                       | Best for                                                                                                                        |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [One-line setup](/self-hosting/install-options/one-line-setup)               | Most installs. One command checks the system, writes `.env` with generated secrets, asks for the settings and starts the stack. |
+| [Install using Docker Compose](/self-hosting/install-options/docker-compose) | Full control. The operator downloads the compose files and writes `.env` by hand.                                               |
 
-You can switch later. A manual setup with `RAGNA_VERSION` in `.env` works with the installer's `--upgrade`.
+Switching later is possible. A manual setup with `RAGNA_VERSION` in `.env` works with the installer's `--upgrade`.
