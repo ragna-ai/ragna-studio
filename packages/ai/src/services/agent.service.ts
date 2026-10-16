@@ -28,6 +28,8 @@ type BuildInstructionsInput = {
   context: string | null;
   /** Soft pin, null/undefined = no pin. */
   defaultDatasetId?: string | null;
+  /** Default true. False for runs without tool calling: skips the pinned dataset and the document index. */
+  toolCalling?: boolean;
 };
 
 /**
@@ -276,12 +278,16 @@ export async function buildAgentInstructions({
   systemPrompt,
   context,
   defaultDatasetId,
+  toolCalling = true,
 }: BuildInstructionsInput): Promise<AgentInstructionsResult> {
-  const [memoryContent, agentContext, pinnedDataset] = await Promise.all([
+  const [memoryContent, loadedContext, pinnedDataset] = await Promise.all([
     loadAgentMemoryContent(agentId, tools),
     loadAgentContext(agentId),
-    loadPinnedDataset(workspaceId, tools, defaultDatasetId),
+    toolCalling ? loadPinnedDataset(workspaceId, tools, defaultDatasetId) : undefined,
   ]);
+  const agentContext = toolCalling
+    ? loadedContext
+    : { ...loadedContext, documentIndex: undefined, retrievalMode: false };
 
   const instructions = buildInstructions(
     systemPrompt,

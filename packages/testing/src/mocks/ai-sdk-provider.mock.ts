@@ -73,7 +73,9 @@ function toLanguageResult(output: ScriptedModelOutput): LanguageGenerateResult {
   };
 }
 
-function defaultLanguageGenerate(): Promise<LanguageGenerateResult> {
+function defaultLanguageGenerate(
+  _options: Parameters<LanguageGenerateFn>[0],
+): Promise<LanguageGenerateResult> {
   return Promise.resolve(toLanguageResult(scriptedOutputs.shift() ?? { text: DEFAULT_TEXT }));
 }
 
