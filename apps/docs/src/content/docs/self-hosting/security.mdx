@@ -26,6 +26,11 @@ Go through this list before you share the app.
 - **Never rotate `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD`.** Encrypted data such as stored OAuth tokens becomes unreadable. Changing `BETTER_AUTH_SECRET` also ends every session.
 - **Back up both secrets with your data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
 
+## MCP
+
+- **Leave `MCP_ENABLED` off unless you need it.** When off, the MCP endpoint, its OAuth endpoints and the settings page don't exist.
+- **List only the apps you trust in `MCP_ALLOWED_CLIENT_IDS`.** Apps not on the list can't start a connection. See [MCP connector](/integrations/mcp#how-access-is-protected) for how users grant and revoke access.
+
 ## Storage
 
 - **Only the images bucket is public-read.** The documents bucket stays private. See [Storage](/self-hosting/storage).

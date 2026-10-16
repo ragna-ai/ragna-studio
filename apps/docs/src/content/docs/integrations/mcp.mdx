@@ -1,13 +1,13 @@
 ---
 title: MCP connector
-description: Let Claude Desktop read and write your RAGNA Studio data, and control exactly what it may do.
+description: Let AI apps such as Claude Desktop read and write RAGNA Studio data, with exact control over what they may do.
 sidebar:
   order: 1
 ---
 
-The MCP connector lets an external AI app, such as Claude Desktop, work with your RAGNA Studio data on your behalf. Today the connector covers datasets. Claude can find datasets, read rows, add and change rows, and create new datasets. It cannot delete anything.
+The MCP connector lets an external AI app (an MCP client, such as Claude Desktop) work with a user's RAGNA Studio data on their behalf. Access is granted per resource type, such as datasets. Apps can read and write, but they cannot delete anything.
 
-Nothing is shared until you turn it on. You decide per resource type what the app may do, and you can revoke access at any time.
+Nothing is shared until the user turns it on. Each user decides per resource type what the app may do, and can revoke access at any time.
 
 <Aside type="note">
   The connector is off by default on the server. On a self-hosted instance, the instance operator
@@ -21,7 +21,15 @@ Nothing is shared until you turn it on. You decide per resource type what the ap
 1. Open the user menu and choose **MCP**.
 2. Switch on **Allow external AI apps to access Ragna (MCP)**.
 
-The **Connector URL** card appears. Turning MCP off later asks for confirmation, because it disconnects every connected app at once. If you turn it on again, you have to reconnect your apps.
+The **Connector URL** card appears. Turning MCP off later asks for confirmation, because it disconnects every connected app at once. After turning it on again, every app has to be reconnected.
+
+## Supported resources
+
+| Resource | Read                               | Read & write                                  |
+| -------- | ---------------------------------- | --------------------------------------------- |
+| Datasets | Find datasets and read their rows. | Create datasets, and add, edit and move rows. |
+
+More resource types will follow.
 
 ## Choose what apps may do
 
@@ -30,10 +38,10 @@ Under **Resource access**, set a level for each resource type. Every type starts
 | Level            | What the app can do                                                |
 | ---------------- | ------------------------------------------------------------------ |
 | **Off**          | Nothing. The app does not see this resource type.                  |
-| **Read**         | Find datasets and read their rows.                                 |
-| **Read & write** | Everything in Read, plus create datasets, add, edit and move rows. |
+| **Read**         | Find and read resources of this type.                              |
+| **Read & write** | Everything in Read, plus create and change resources of this type. |
 
-The level applies to all datasets in the workspace you connect. You cannot pick single datasets. Changes take effect on the app's next request. The app does not need to reconnect.
+See [Supported resources](#supported-resources) for what each level allows per resource type. The level applies to all resources of that type in the connected workspace. Single resources cannot be picked. Changes take effect on the app's next request. The app does not need to reconnect.
 
 ## Connect Claude Desktop
 
@@ -56,3 +64,49 @@ See [Datasets](/content/datasets) for the grid.
 ## See and revoke connections
 
 The **Connected apps** card lists each app with its **Workspace**, when it was **Connected** and when it was **Last used**. Choose **Revoke** next to an app and confirm. The app is disconnected immediately and has to connect again.
+
+Turning MCP off under **Allow external AI apps to access Ragna (MCP)** revokes every connected app at once.
+
+## How access is protected
+
+An app can only be connected to an account by the owner of that account. The connection belongs to the user who is signed in when **Approve** is chosen. The app never sees the user's password or sign-in session.
+
+<pre class="mermaid">{`
+sequenceDiagram
+  actor User
+  participant App as AI app (MCP client)
+  participant Studio as RAGNA Studio
+  participant API as RAGNA API
+
+  App->>API: Request without a token
+  API-->>App: 401, with where to sign in
+  App->>Studio: Open sign-in in the user's browser
+  User->>Studio: Sign in with their own account
+  Studio->>User: Consent screen: app, redirect, workspace, access
+  User->>Studio: Approve
+  Studio->>API: Save connection for this user, app and workspace
+  Studio-->>App: Redirect back with a one-time code
+  App->>API: Exchange the code for a token (PKCE)
+  API-->>App: Token for this user and app only
+
+  loop Every request
+    App->>API: Tool call with the token
+    API->>API: Check token, MCP on, connection exists, access level
+    API-->>App: Result, limited to the connected workspace
+  end
+
+  User->>Studio: Revoke the app or turn MCP off
+  Studio->>API: Delete connection, revoke tokens
+  App->>API: Next tool call
+  API-->>App: 401, reconnect required
+`}</pre>
+
+What this guarantees:
+
+- **Nobody can connect an app to someone else's account.** The consent screen requires the account owner's sign-in. Anyone who copies another user's connector URL goes through the same flow and has to sign in as themselves.
+- **An app can't do more than its user.** The user can only pick a workspace they are a member of. The access levels on the MCP settings page limit the app further.
+- **Each request is checked again.** The token alone is not enough. On every call, RAGNA checks that MCP is still on for the user and the connection still exists, and reads the current access levels.
+- **Revoking takes effect immediately.** A user can revoke an app under **Connected apps**, or turn MCP off to revoke all of them. The app's next request fails, and it can't refresh its token. See [See and revoke connections](#see-and-revoke-connections).
+- **Only allowed apps can ask.** The server only accepts apps that its operator has listed. Any other app is rejected before a consent screen is shown.
+
+Users should approve a connection only if they started it themselves. The consent screen names the app and the host it redirects to after approval. If the request came from an unexpected link, the right choice is **Deny**.

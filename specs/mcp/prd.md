@@ -56,19 +56,27 @@ they turn it on.
 
 ## Overview
 
-```
-Claude Desktop
-  │ 1. POST /mcp without token  ──► 401 + WWW-Authenticate (resource metadata URL)
-  │ 2. discovery (RFC 9728 / 8414), client identified via CIMD
-  │ 3. /auth/oauth2/authorize ──► Ragna login (if needed) ──► consent page (apps/web)
-  │                                   pick workspace, see allowed access, approve
-  │ 4. token exchange (PKCE)
-  │
-  └─► POST /mcp  Authorization: Bearer <JWT>
-        ├─ requireMcpAuth: signature, expiry, audience = /mcp
-        ├─ load connection (sub + client) + current MCP settings
-        └─ tools/list | tools/call ──► integration registry
-                                          └─ datasets ──► ToolDefinition.execute
+```mermaid
+sequenceDiagram
+  participant Claude as Claude Desktop
+  participant Web as apps/web
+  participant API as apps/api
+
+  Claude->>API: POST /mcp without token
+  API-->>Claude: 401 + WWW-Authenticate (resource metadata URL)
+  Claude->>API: Discovery (RFC 9728 / 8414), client identified via CIMD
+  Claude->>API: /auth/oauth2/authorize
+  API->>Web: Ragna login (if needed), then consent page
+  Web->>API: Pick workspace, see allowed access, approve
+  API-->>Claude: Authorization code (redirect)
+  Claude->>API: Token exchange (PKCE)
+  API-->>Claude: JWT access token + refresh token
+
+  Claude->>API: POST /mcp, Authorization: Bearer JWT
+  API->>API: requireMcpAuth: signature, expiry, audience = /mcp
+  API->>API: Load connection (sub + client) + current MCP settings
+  API->>API: tools/list or tools/call via integration registry
+  API-->>Claude: Result (datasets: ToolDefinition.execute)
 ```
 
 ## Design
