@@ -1,6 +1,7 @@
 import {
   seedAuthenticatedUser,
   seedGoogleAccountWithoutGmailScope,
+  seedMicrosoftAccountWithoutMailScope,
   truncateAllTables,
 } from '@repo/testing';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
@@ -11,6 +12,7 @@ import { resetEmailQueueMock } from './support/email-queue.mock';
 import {
   fillProviderTokens,
   loadProviderAccount,
+  loadProviderAccounts,
   mockGoogleRevoke,
   type GoogleRevokeMock,
 } from './support/provider-grant-fixtures';
@@ -96,6 +98,22 @@ describe('POST /email/account/disconnect provider grants', () => {
     expect(revokeMock.revokedTokens().toSorted()).toEqual(
       [mailAccount?.accessToken ?? 'missing', signInAccount.accessToken].toSorted(),
     );
+  });
+
+  test('microsoft: clears every linked Microsoft account, not only the first', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedConnectedMicrosoftAccount({ userId, cookieHeader });
+    await seedMicrosoftAccountWithoutMailScope({ userId });
+    revokeMock = mockGoogleRevoke();
+
+    const response = await disconnectRequest(cookieHeader);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const accounts = await loadProviderAccounts({ userId, providerId: 'microsoft' });
+    expect(accounts).toHaveLength(2);
+    for (const account of accounts) {
+      expect(account).toMatchObject({ accessToken: null, refreshToken: null, scope: null });
+    }
   });
 
   test('keeps the account row as the login identity', async () => {

@@ -59,3 +59,13 @@ export async function loadProviderAccount({
 }) {
   return db.query.account.findFirst({ where: { userId, providerId } });
 }
+
+export async function loadProviderAccounts({
+  userId,
+  providerId,
+}: {
+  userId: string;
+  providerId: string;
+}) {
+  return db.query.account.findMany({ where: { userId, providerId } });
+}
