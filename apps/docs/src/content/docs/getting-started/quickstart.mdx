@@ -10,7 +10,7 @@ One command installs and starts RAGNA Studio on localhost. It needs no proxy and
 ## Who this is for
 
 - **Trying RAGNA Studio on a local machine:** follow this page.
-- **Running it on a server for others:** the same command works there. Follow [Self-hosting](/self-hosting) for domains and the reverse proxy.
+- **Running it on a server for other users:** the same command works there. Follow [Self-hosting](/self-hosting) for domains and the reverse proxy.
 - **Setting it up by hand with Docker Compose:** the script is not needed, see [Install using Docker Compose](/self-hosting/install-options/docker-compose).
 
 ## Requirements
@@ -76,7 +76,7 @@ If a setting is missing, the script lists it and stops. Fill it in `ragna-studio
 | Postgres   | Stores the data, including vector search for documents                   |
 | Redis      | Queues the background jobs                                               |
 
-Only the frontend and backend have ports, and they listen on `127.0.0.1` only. All other services stay inside the Docker network. To serve RAGNA Studio to others, follow [Self-hosting](/self-hosting).
+Only the frontend and backend have ports, and they listen on `127.0.0.1` only. All other services stay inside the Docker network. To serve RAGNA Studio to other users, follow [Self-hosting](/self-hosting).
 
 ## Everyday commands
 

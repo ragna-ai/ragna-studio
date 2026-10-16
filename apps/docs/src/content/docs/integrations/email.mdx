@@ -7,7 +7,7 @@ sidebar:
 
 RAGNA Studio has a built-in email client for connected mailboxes. Gmail and Outlook are supported. Users read, search, reply and organize mail. RAGNA sorts new mail into categories. An agent chosen by the user can write reply drafts. RAGNA never sends anything without the user's review.
 
-Each user connects one mailbox. Nobody else in the workspace can see it.
+Each user connects one mailbox. No other user in the workspace can see it.
 
 <Aside type="note">
   On a self-hosted instance the mail connection needs Google or Microsoft OAuth with mail scopes.
@@ -41,12 +41,12 @@ The same happens when an organization member is removed from the organization or
 
 ### Access at Google and Microsoft
 
-- **Gmail:** disconnecting also asks Google to revoke the app's access. Google then invalidates all tokens it issued to the app for the account. If the user signs in with Google, Google asks for consent again next time.
+- **Gmail:** disconnecting also asks Google to revoke RAGNA Studio's access. Google then invalidates all tokens it issued to RAGNA Studio for the account. If the user signs in with Google, Google asks for consent again next time.
 - **Outlook:** Microsoft offers apps no way to revoke access, so only the stored tokens are deleted. To remove the access by hand:
-  - Work or school account: open [My Apps](https://myapps.microsoft.com), choose the app, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask the Microsoft administrator to remove it in Entra under **Enterprise applications**.
-  - Personal account (outlook.com, hotmail): open [account.live.com/consent/Manage](https://account.live.com/consent/Manage) and remove the app.
+  - Work or school account: open [My Apps](https://myapps.microsoft.com), choose RAGNA Studio, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask the Microsoft administrator to remove it in Entra under **Enterprise applications**.
+  - Personal account (outlook.com, hotmail): open [account.live.com/consent/Manage](https://account.live.com/consent/Manage) and remove RAGNA Studio.
 
-The app appears at Google and Microsoft under the name the operator registered it with.
+RAGNA Studio appears at Google and Microsoft under the name the operator registered it with.
 
 ## Keep the connection alive
 
@@ -112,7 +112,7 @@ Deleting a category keeps the history of messages in it, just without a category
 
 An agent can write a reply. The result is a draft that the user reviews, edits and sends.
 
-The agent drafts with its instructions, context and memory. It does not use its tools while drafting, because incoming mail can contain instructions from anyone. To look something up for a reply, ask the agent in a chat.
+The agent drafts with its instructions, context and memory. It does not use its tools while drafting, because incoming mail can contain instructions from any sender. To look something up for a reply, ask the agent in a chat.
 
 ### Draft on demand
 

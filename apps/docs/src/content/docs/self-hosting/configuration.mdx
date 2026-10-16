@@ -69,13 +69,13 @@ Connecting an Outlook mailbox needs two extra settings in the app registration:
 
 ## Restricting sign-up
 
-By default everyone who can reach the app and has an account at the OAuth provider can sign in. Restrict it with a comma-separated list:
+By default every user who can reach RAGNA Studio and has an account at the OAuth provider can sign in. Restrict it with a comma-separated list:
 
 ```bash title=".env"
 ALLOWED_LOGIN_EMAILS="you@example.com,teammate@example.com"
 ```
 
-An empty value allows everyone.
+An empty value allows every user.
 
 ## Language base URL
 
