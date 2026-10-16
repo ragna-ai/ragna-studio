@@ -22,6 +22,7 @@ import {
   NotFoundException,
   OrganizationDeletedException,
 } from '../exceptions';
+import { removeMailAccessForUser } from './email.service';
 
 const MICRO_CREDITS_PER_CREDIT = 1_000_000;
 
@@ -182,6 +183,7 @@ export async function removeMemberForUser({
   if (target.deletedAt) throw new BadRequestException('This member was already removed.');
 
   await softDeleteMemberAccount({ userId: target.userId });
+  await removeMailAccessForUser({ userId: target.userId });
 }
 
 export async function restoreMemberForUser({
@@ -211,6 +213,7 @@ export async function leaveOrganization({ userId }: { userId: string }): Promise
   }
 
   await softDeleteMemberAccount({ userId });
+  await removeMailAccessForUser({ userId });
 }
 
 export async function transferOwnershipForUser({

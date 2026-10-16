@@ -1,6 +1,6 @@
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, lt } from 'drizzle-orm';
 import { db } from '../db';
-import type { McpAccess, McpConnection } from '../schema';
+import type { McpAccess, McpConnection, McpToolCallAccess } from '../schema';
 import { workspaceAccessCondition } from './workspace.repo';
 import {
   mcpConnection,
@@ -198,14 +198,35 @@ export async function touchMcpConnection({
     .where(eq(mcpConnection.id, connectionId));
 }
 
-export async function recordMcpToolCall({
-  connectionId,
-  toolName,
-  isError,
-}: {
+export interface RecordMcpToolCallParams {
   connectionId: string;
+  userId: string;
+  clientId: string;
+  workspaceId: string;
   toolName: string;
+  access: McpToolCallAccess;
+  resourceId: string | null;
   isError: boolean;
-}): Promise<void> {
-  await db.insert(mcpToolCall).values({ connectionId, toolName, isError });
+}
+
+export async function recordMcpToolCall(params: RecordMcpToolCallParams): Promise<void> {
+  await db.insert(mcpToolCall).values({
+    connectionId: params.connectionId,
+    userId: params.userId,
+    clientId: params.clientId,
+    workspaceId: params.workspaceId,
+    toolName: params.toolName,
+    access: params.access,
+    resourceId: params.resourceId,
+    isError: params.isError,
+  });
+}
+
+export async function deleteMcpToolCallsOlderThan({ date }: { date: Date }): Promise<number> {
+  const deletedCalls = await db
+    .delete(mcpToolCall)
+    .where(lt(mcpToolCall.createdAt, date))
+    .returning({ id: mcpToolCall.id });
+
+  return deletedCalls.length;
 }

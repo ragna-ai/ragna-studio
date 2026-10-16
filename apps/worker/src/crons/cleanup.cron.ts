@@ -1,11 +1,13 @@
 import {
   deleteExpiredSessions,
   deleteExpiredVerifications,
+  deleteMcpToolCallsOlderThan,
   deleteReadNotificationsOlderThan,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 // better-auth only removes expired sessions lazily on lookup and never
 // sweeps verification rows at all, so both tables grow unbounded. Each step
@@ -19,6 +21,11 @@ export async function cleanupProcessor() {
   const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
   await runCleanupStep('read notifications', () =>
     deleteReadNotificationsOlderThan({ date: thirtyDaysAgo }),
+  );
+
+  const ninetyDaysAgo = new Date(Date.now() - NINETY_DAYS_MS);
+  await runCleanupStep('MCP tool calls', () =>
+    deleteMcpToolCallsOlderThan({ date: ninetyDaysAgo }),
   );
 
   logger.info('Cleanup cron job completed');

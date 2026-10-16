@@ -5,6 +5,7 @@ import { workspace } from './workspace.schema';
 
 export type McpAccessLevel = 'off' | 'read' | 'write';
 export type McpIntegrationId = 'datasets';
+export type McpToolCallAccess = 'read' | 'write';
 export type McpAccess = Partial<Record<McpIntegrationId, McpAccessLevel>>;
 
 const emptyMcpAccess: McpAccess = {};
@@ -50,20 +51,33 @@ export const mcpConnection = pgTable(
 export type McpConnection = typeof mcpConnection.$inferSelect;
 export type NewMcpConnection = typeof mcpConnection.$inferInsert;
 
-// Audit trail for write calls only (P7); reads only touch
-// mcp_connections.last_used_at.
+// Audit trail for every tool call. Owner columns are copied at insert so
+// rows survive revoking the connection (connection_id is set to null).
 export const mcpToolCall = pgTable(
   'mcp_tool_calls',
   {
     id: primaryIdColumn,
-    connectionId: text('connection_id')
+    connectionId: text('connection_id').references(() => mcpConnection.id, {
+      onDelete: 'set null',
+    }),
+    userId: text('user_id')
       .notNull()
-      .references(() => mcpConnection.id, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
+    clientId: text('client_id').notNull(),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
     toolName: text('tool_name').notNull(),
+    access: text('access').notNull().$type<McpToolCallAccess>(),
+    resourceId: text('resource_id'),
     isError: boolean('is_error').notNull(),
     createdAt: timestamp('created_at', { precision: 3 }).defaultNow().notNull(),
   },
-  (table) => [index('mcpToolCall_connectionId_idx').on(table.connectionId)],
+  (table) => [
+    index('mcpToolCall_connectionId_idx').on(table.connectionId),
+    index('mcpToolCall_userId_idx').on(table.userId),
+    index('mcpToolCall_createdAt_idx').on(table.createdAt),
+  ],
 );
 
 export type McpToolCall = typeof mcpToolCall.$inferSelect;

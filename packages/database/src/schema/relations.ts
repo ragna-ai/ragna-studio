@@ -294,6 +294,16 @@ export const relations = defineRelations(schema, (r) => ({
     connection: r.one.mcpConnection({
       from: r.mcpToolCall.connectionId,
       to: r.mcpConnection.id,
+      optional: true,
+    }),
+    user: r.one.user({
+      from: r.mcpToolCall.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+    workspace: r.one.workspace({
+      from: r.mcpToolCall.workspaceId,
+      to: r.workspace.id,
       optional: false,
     }),
   },

@@ -12,7 +12,7 @@ import {
 } from '../exceptions';
 
 // gmail maps to better-auth's 'google' social provider id.
-const BETTER_AUTH_PROVIDER_ID: Record<MailProviderKind, string> = {
+export const BETTER_AUTH_PROVIDER_ID: Record<MailProviderKind, string> = {
   gmail: 'google',
   microsoft: 'microsoft',
 };

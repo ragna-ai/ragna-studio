@@ -6,7 +6,10 @@ import {
 } from '~/features/mcp/composables/useMcpApi';
 import { MCP_INTEGRATION_IDS } from '~/features/mcp/constants';
 import { useGetOAuthClientPublic } from '~/features/mcp/composables/useOAuthClient';
-import { clientHost } from '~/features/mcp/lib/oauth-client';
+import {
+  clientHost,
+  parseRedirectTarget,
+} from '~/features/mcp/lib/oauth-client';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 import { extractErrorMessage } from '~/lib/api-error';
 
@@ -47,6 +50,9 @@ const clientDisplayLabel = computed(() => {
   const name = clientInfo.value?.client_name;
   return name ? `${name} (${clientHostname.value})` : clientHostname.value;
 });
+const redirectTarget = computed(() =>
+  parseRedirectTarget(route.query.redirect_uri),
+);
 const workspaces = computed(() => workspacesData.value?.workspaces ?? []);
 const isMcpUnavailable = computed(
   () =>
@@ -164,6 +170,16 @@ async function deny() {
         <p class="mt-2 text-sm text-muted-foreground">
           {{ t('mcp.consent.subtitle', { client: clientDisplayLabel }) }}
         </p>
+        <template v-if="redirectTarget">
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ t('mcp.consent.redirectHost', { host: redirectTarget.host }) }}
+          </p>
+          <Alert v-if="redirectTarget.isLoopback" class="mt-3">
+            <AlertDescription>
+              {{ t('mcp.consent.localRedirectWarning') }}
+            </AlertDescription>
+          </Alert>
+        </template>
 
         <div class="mt-6 space-y-4">
           <div class="space-y-1.5">

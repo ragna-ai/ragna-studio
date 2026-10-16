@@ -17,9 +17,9 @@ import { allowedOrigins } from '../../src/utils/allowed-origins';
 // validation or DB lookup (verified by reading every controller's
 // `.use()` chain), so the placeholder never needs to be a real id.
 //
-// Two routes are intentionally excluded: `GET /health` (liveness probe) and
+// Three routes are intentionally excluded: `GET /health` (liveness probe),
 // `/auth/*` (better-auth's own handler, which mints sessions and so can't
-// require one).
+// require one) and `GET /.well-known/*` (OAuth discovery, public by design).
 //
 // Note for anyone tempted to sabotage-test this file by deleting a single
 // controller's `.use(authMiddleware)`: every workspace-scoped controller is
@@ -42,7 +42,12 @@ function collectRoutesRequiringAuth(): RouteUnderTest[] {
   const routes: RouteUnderTest[] = [];
 
   for (const { method, path } of app.routes) {
-    if (method === 'ALL' || path === '/health' || path.startsWith('/auth/')) {
+    if (
+      method === 'ALL' ||
+      path === '/health' ||
+      path.startsWith('/auth/') ||
+      path.startsWith('/.well-known/')
+    ) {
       continue;
     }
 
