@@ -1,104 +1,104 @@
 ---
 title: Email
-description: Connect Gmail or Outlook, read and write mail in RAGNA Studio, and let an agent draft replies.
+description: Connect a mailbox (Gmail or Outlook), read and write mail in RAGNA Studio, and let an agent draft replies.
 sidebar:
   order: 0
 ---
 
-RAGNA Studio has a built-in email client for Gmail and Outlook. You read, search, reply and organize mail. RAGNA sorts new mail into categories. An agent of your choice can write reply drafts for you. RAGNA never sends anything without your review.
+RAGNA Studio has a built-in email client for connected mailboxes. Gmail and Outlook are supported. Users read, search, reply and organize mail. RAGNA sorts new mail into categories. An agent chosen by the user can write reply drafts. RAGNA never sends anything without the user's review.
 
-Each user connects one mailbox. Other people in your workspace cannot see it.
+Each user connects one mailbox. Nobody else in the workspace can see it.
 
 <Aside type="note">
   On a self-hosted instance the mail connection needs Google or Microsoft OAuth with mail scopes.
   See [Optional providers](/self-hosting/optional-providers).
 </Aside>
 
-## Mail lives in your private workspace
+## Mail lives in the private workspace
 
-Your mailbox, its drafts and attachments belong to your private workspace. The **Mail** page only works while that workspace is active. In any other workspace you see **Mail lives in your private workspace** with a **Switch to your private workspace** button. RAGNA does not switch for you.
+The mailbox, its drafts and attachments belong to the user's private workspace. The **Mail** page only works while that workspace is active. In any other workspace, the page shows **Mail lives in your private workspace** with a **Switch to your private workspace** button. RAGNA does not switch automatically.
 
-Draft agents and attachments from the media library also come from your private workspace only. To use an agent or a file from a shared workspace, copy it to your private workspace first. See [Workspaces](/workspaces).
+Draft agents and attachments from the media library also come from the private workspace only. To use an agent or a file from a shared workspace, copy it to the private workspace first. See [Workspaces](/workspaces).
 
-## Connect your mailbox
+## Connect a mailbox
 
 1. Open **Mail**.
 2. Choose **Connect Gmail** or **Connect Outlook**.
 3. Sign in at Google or Microsoft and grant the requested access.
-4. You return to RAGNA Studio. It shows **Syncing your mailbox…** while it imports your most recent 50 inbox threads.
+4. The browser returns to RAGNA Studio. It shows **Syncing your mailbox…** while it imports the most recent 50 inbox threads.
 
-Older mail is not imported up front. When you open an older thread, RAGNA loads it from your provider.
+Older mail is not imported up front. When an older thread is opened, RAGNA loads it from the mail provider.
 
-## Disconnect your mailbox
+## Disconnect a mailbox
 
 Open **Email settings**, go to **General** and choose **Disconnect mailbox**. Disconnecting:
 
 - removes the synced mail, categories and drafts.
-- deletes the stored access tokens of your mailbox.
-- keeps you signed in.
+- deletes the stored access tokens of the mailbox.
+- keeps the user signed in.
 
-The same happens when a member is removed from an organization or leaves it.
+The same happens when an organization member is removed from the organization or leaves it.
 
 ### Access at Google and Microsoft
 
-- **Gmail:** disconnecting also asks Google to revoke the app's access. Google then invalidates all tokens it issued to the app for your account. If you sign in with Google, Google asks for your consent again next time.
-- **Outlook:** Microsoft offers apps no way to revoke access, so only the stored tokens are deleted. To remove the access yourself:
-  - Work or school account: open [My Apps](https://myapps.microsoft.com), choose the app, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask your administrator to remove it in Entra under **Enterprise applications**.
+- **Gmail:** disconnecting also asks Google to revoke the app's access. Google then invalidates all tokens it issued to the app for the account. If the user signs in with Google, Google asks for consent again next time.
+- **Outlook:** Microsoft offers apps no way to revoke access, so only the stored tokens are deleted. To remove the access by hand:
+  - Work or school account: open [My Apps](https://myapps.microsoft.com), choose the app, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask the Microsoft administrator to remove it in Entra under **Enterprise applications**.
   - Personal account (outlook.com, hotmail): open [account.live.com/consent/Manage](https://account.live.com/consent/Manage) and remove the app.
 
-The app appears at Google and Microsoft under the name your administrator registered it with.
+The app appears at Google and Microsoft under the name the operator registered it with.
 
 ## Keep the connection alive
 
-RAGNA checks your mailbox for changes every 5 minutes by default. Use **Sync now** (the refresh button at the bottom of the sidebar) to check right away. The sidebar shows the status: **Syncing...**, **Synced** with a time, or **Sync error**.
+RAGNA checks the mailbox for changes every 5 minutes by default. Use **Sync now** (the refresh button at the bottom of the sidebar) to check right away. The sidebar shows the status: **Syncing...**, **Synced** with a time, or **Sync error**.
 
-Sometimes your provider revokes access, for example after a password change. The status then reads **Reconnect needed**, and RAGNA shows a toast that your mailbox access expired. To fix it:
+Sometimes the mail provider revokes access, for example after a password change. The status then reads **Reconnect needed**, and RAGNA shows a toast that the mailbox access expired. To fix it:
 
 1. Open **Email settings** and go to **General**.
 2. Choose **Reconnect Gmail** or **Reconnect Outlook**.
 3. Grant access again.
 
-Syncing resumes. Your categories and settings stay. If connecting fails on a self-hosted instance, see [Troubleshooting](/self-hosting/troubleshooting).
+Syncing resumes. Categories and settings stay. If connecting fails on a self-hosted instance, see [Troubleshooting](/self-hosting/troubleshooting).
 
 ## Read and organize mail
 
-The sidebar lists these folders: **Inbox**, **Starred**, **Sent**, **Archive**, **Trash** and **Drafts**. Below them you find your **Categories** and your provider's **Labels**. Labels are read-only. You can filter by them, but not edit them.
+The sidebar lists these folders: **Inbox**, **Starred**, **Sent**, **Archive**, **Trash** and **Drafts**. Below them are the user's **Categories** and the provider's **Labels**. Labels are read-only. They can be used as filters, but not edited.
 
-Select a thread to read it. In the thread you can:
+Select a thread to read it. In the thread, a user can:
 
 - **Star** it, toggle read or unread, **Archive** it, or **Move to trash**. In Trash, the same button reads **Restore from trash**.
 - Download attachments with **Download**.
 
-Changes you make here are also made in your Gmail or Outlook mailbox.
+Changes made here are also made in the Gmail or Outlook mailbox.
 
 ### Search and filter
 
-Type in **Search mail**. The search uses your provider's own syntax. For Gmail, try `from:name`, `is:unread` or `has:attachment`. For Outlook, try `from:name` or `hasattachments:true`. Click the help icon next to the field for a reminder.
+Type in **Search mail**. The search uses the provider's own syntax. For Gmail, try `from:name`, `is:unread` or `has:attachment`. For Outlook, try `from:name` or `hasattachments:true`. Click the help icon next to the field for a reminder.
 
-Above the list you can filter by **Unread**, **Starred** and **Date range**.
+Above the list, filters cover **Unread**, **Starred** and **Date range**.
 
 ### Move many threads to trash
 
-Tick the checkbox on threads, or use **Select all** for every loaded thread. Then choose **Move to trash** and confirm. You can select up to 50 threads at once. You can restore them later from **Trash**.
+Tick the checkbox on threads, or use **Select all** for every loaded thread. Then choose **Move to trash** and confirm. Up to 50 threads can be selected at once. They can be restored later from **Trash**.
 
 ## Write mail
 
 Choose **Compose** for a new message. On a message, choose **Reply**, **Reply all** or **Forward**.
 
 - Fields: **To**, **Subject**, and **Add Cc/Bcc** for **Cc** and **Bcc**.
-- The editor supports rich text. Reply and forward include the quoted history below your text.
+- The editor supports rich text. Reply and forward include the quoted history below the new text.
 - Attach files with **Attach files** or **Attach from library**. Attachments may total 25 MB at most.
-- Choose **Send** when you are done.
+- Choose **Send** when the message is ready.
 
-A thread holds one unsent draft at a time. If you start a different kind of draft (for example a forward while a reply is open), RAGNA asks whether to discard the current one.
+A thread holds one unsent draft at a time. If a user starts a different kind of draft (for example a forward while a reply is open), RAGNA asks whether to discard the current one.
 
-Your drafts appear in the **Drafts** folder. The badge shows how many need your attention. RAGNA saves them as you type. Drafts live in RAGNA only. They do not appear in the Drafts folder of Gmail or Outlook.
+Drafts appear in the **Drafts** folder. The badge shows how many need attention. RAGNA saves them while the user types. Drafts live in RAGNA only. They do not appear in the Drafts folder of Gmail or Outlook.
 
 ## Categories
 
 RAGNA sorts new incoming mail into categories with a small AI model. New accounts start with five categories: **To Respond**, **FYI**, **Newsletters**, **Marketing** and **Notifications**. Click a category in the sidebar to see its mail.
 
-Only recent mail is classified. By default that means mail less than one day old, so a first sync does not label your whole inbox.
+Only recent mail is classified. By default that means mail less than one day old, so a first sync does not label the whole inbox.
 
 To manage categories, open **Email settings** and go to **Categories**.
 
@@ -110,21 +110,21 @@ Deleting a category keeps the history of messages in it, just without a category
 
 ## Draft replies with an agent
 
-An agent can write a reply for you. The result is a draft that you review, edit and send yourself.
+An agent can write a reply. The result is a draft that the user reviews, edits and sends.
 
 The agent drafts with its instructions, context and memory. It does not use its tools while drafting, because incoming mail can contain instructions from anyone. To look something up for a reply, ask the agent in a chat.
 
 ### Draft on demand
 
-Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from your default draft agent. While it works, the thread shows **Drafting a reply...**.
+Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from the default draft agent. While it works, the thread shows **Drafting a reply...**.
 
 ### Draft automatically
 
 RAGNA drafts a reply on its own in two cases:
 
 - The message falls into a category with **Auto-draft** on.
-- The sender is on your auto-draft list. Open **Email settings**, go to **Auto-draft senders** and add the address. Mail from these senders gets a draft regardless of its category.
+- The sender is on the auto-draft list. Open **Email settings**, go to **Auto-draft senders** and add the address. Mail from these senders gets a draft regardless of its category.
 
 ### Choose the default agent
 
-In **Email settings** under **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of your private workspace. If you pick none, RAGNA uses the default agent of your private workspace. See [Agents](/agents) to create one.
+In **Email settings** under **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of the private workspace. If none is picked, RAGNA uses the default agent of the private workspace. See [Agents](/agents) to create one.

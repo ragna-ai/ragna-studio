@@ -1,6 +1,6 @@
 ---
 title: Upgrades and backups
-description: Upgrade to a new release and keep your data safe.
+description: Upgrade to a new release and keep the data safe.
 sidebar:
   order: 6
 ---
@@ -19,19 +19,19 @@ Migrations run automatically and only go forward.
 
 ### Manual setup
 
-If you [installed by hand](/self-hosting/install-options/docker-compose), do the same steps yourself:
+For a setup [installed by hand](/self-hosting/install-options/docker-compose), do the same steps manually:
 
 1. Set `RAGNA_VERSION` in `.env` to the new release.
 2. Download that release's files, as in [step 1](/self-hosting/install-options/docker-compose#step-1-download-the-release-files).
 3. Run the `up -d --wait` command from [step 3](/self-hosting/install-options/docker-compose#step-3-start-everything). It pulls the new images and restarts.
 
-Or switch to the installer. It recognizes your folder because `.env` has `RAGNA_VERSION`.
+Or switch to the installer. It recognizes the folder because `.env` has `RAGNA_VERSION`.
 
 ## Backups
 
-The state you own is Postgres, Redis and both buckets. Backups are up to you.
+The state to protect is Postgres, Redis and both buckets. Backups are the operator's job.
 
-<Aside type="caution" title="Keep your secrets with your backups">
+<Aside type="caution" title="Keep the secrets with the backups">
   Encrypted values in the database, such as stored OAuth tokens, are only readable with the same
-  `BETTER_AUTH_SECRET` and `ENCRYPTION_PASSWORD`. Store both safely, next to your backups.
+  `BETTER_AUTH_SECRET` and `ENCRYPTION_PASSWORD`. Store both safely, next to the backups.
 </Aside>

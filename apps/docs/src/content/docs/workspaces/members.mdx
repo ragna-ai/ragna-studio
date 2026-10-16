@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Each workspace has its own members and roles. Access to a workspace depends on its [type](/workspaces) and on your role in the organization.
+Each workspace has its own members and roles. Access to a workspace depends on its [type](/workspaces) and on the user's role in the organization.
 
 ## Workspace roles
 
@@ -14,13 +14,13 @@ Each workspace has its own members and roles. Access to a workspace depends on i
 | **Manager** | Renames and deletes the workspace and manages its members.          |
 | **Editor**  | Works with the content of the workspace. Cannot manage its members. |
 
-You become manager of every workspace you create. A workspace can have several managers.
+The creator becomes manager of every workspace they create. A workspace can have several managers.
 
 ## Who has which role
 
 | Workspace type   | Roles                                                                                                              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Personal**     | Only you, as manager. It has no member list and you cannot delete it.                                              |
+| **Personal**     | Only its owner, as manager. It has no member list and cannot be deleted.                                           |
 | **Organization** | Every organization member works as an editor. Only managers are listed. Add a manager to give someone more rights. |
 | **Restricted**   | Only the listed workspace members. Each one is a manager or an editor.                                             |
 
@@ -35,9 +35,9 @@ Only workspace managers can add members.
 3. Pick people under **Add workspace members**. For a restricted workspace, also pick a role: **Manager** or **Editor**.
 4. Choose **Add**.
 
-You can only add active members of your organization. To bring in someone new, [invite them to the organization](/workspaces/organizations) first.
+Only active members of the organization can be added. To bring in someone new, [invite them to the organization](/workspaces/organizations) first.
 
-In an organization workspace the panel is called **Managers** and you can only add managers.
+In an organization workspace the panel is called **Managers** and only managers can be added.
 
 ## Change a role or remove a member
 
@@ -47,10 +47,10 @@ The role of members in an organization workspace cannot change, because everyone
 
 ## Leave a workspace
 
-If you are listed as a workspace member, choose **Leave workspace** at the bottom of the members panel. Confirm the dialog. You can only open the workspace again if a manager adds you.
+A listed workspace member can choose **Leave workspace** at the bottom of the members panel and confirm the dialog. The workspace opens again only if a manager adds the user back.
 
 Organization owners and admins keep access to every restricted workspace, even after they leave one.
 
 ## Personal workspace
 
-Your personal workspace is called "Private". Nobody else can open it, not even organization owners and admins. It has no member list and you cannot delete it. Your [email](/integrations/email) inbox, drafts and attachments live there.
+The personal workspace is called "Private". Nobody else can open it, not even organization owners and admins. It has no member list and cannot be deleted. The user's [email](/integrations/email) inbox, drafts and attachments live there.

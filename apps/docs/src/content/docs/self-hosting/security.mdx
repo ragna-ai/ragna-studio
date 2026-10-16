@@ -1,22 +1,22 @@
 ---
 title: Security checklist
-description: What to check before you open RAGNA Studio to others.
+description: What to check before opening RAGNA Studio to others.
 sidebar:
   order: 7
 ---
 
-Go through this list before you share the app.
+Go through this list before sharing the app.
 
 ## Network
 
 - **Open only ports 80 and 443** in the firewall. The reverse proxy serves both domains on them.
 - **Keep ports 3000 and 3010 on `127.0.0.1`.** The self-host override publishes them there. Don't change it to `0.0.0.0`, or the app is reachable without TLS.
-- **Never publish the `webbrowser` service.** It fetches any URL an agent asks for. Exposed, it lets anyone reach hosts inside your network. It has no published port by default, keep it that way.
+- **Never publish the `webbrowser` service.** It fetches any URL an agent asks for. Exposed, it lets anyone reach hosts inside the operator's network. It has no published port by default, keep it that way.
 - **Postgres and Redis stay inside the Docker network.** They have no published ports either.
 
 ## Sign-in
 
-- **Restrict who can sign in.** By default, everyone with an account at your OAuth provider can sign in. Set `ALLOWED_LOGIN_EMAILS`, see [Configuration](/self-hosting/configuration#restricting-sign-up).
+- **Restrict who can sign in.** By default, everyone with an account at the OAuth provider can sign in. Set `ALLOWED_LOGIN_EMAILS`, see [Configuration](/self-hosting/configuration#restricting-sign-up).
 - **Serve both domains over https.** `NUXT_PUBLIC_API_BASE_URL` must be the https API URL.
 
 ## Secrets
@@ -24,12 +24,12 @@ Go through this list before you share the app.
 - **Keep `.env` private.** It holds every secret. The installer creates it with mode `600`. Keep it out of version control.
 - **Use generated secrets.** Never keep the placeholder values from `.env.example`.
 - **Never rotate `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD`.** Encrypted data such as stored OAuth tokens becomes unreadable. Changing `BETTER_AUTH_SECRET` also ends every session.
-- **Back up both secrets with your data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
+- **Back up both secrets with the data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
 
 ## MCP
 
-- **Leave `MCP_ENABLED` off unless you need it.** When off, the MCP endpoint, its OAuth endpoints and the settings page don't exist.
-- **List only the apps you trust in `MCP_ALLOWED_CLIENT_IDS`.** Apps not on the list can't start a connection. See [MCP connector](/integrations/mcp#how-access-is-protected) for how users grant and revoke access.
+- **Leave `MCP_ENABLED` off unless it is needed.** When off, the MCP endpoint, its OAuth endpoints and the settings page don't exist.
+- **List only trusted apps in `MCP_ALLOWED_CLIENT_IDS`.** Apps not on the list can't start a connection. See [MCP connector](/integrations/mcp#how-access-is-protected) for how users grant and revoke access.
 
 ## Storage
 

@@ -7,9 +7,9 @@ sidebar:
 
 ## Who this is for
 
-This page is for you if you want full control over the setup, or want to see every step the installer takes. For a setup without manual steps, use the [installer](/self-hosting/install-options/one-line-setup). It does all of this for you.
+This page is for operators who want full control over the setup, or want to see every step the installer takes. For a setup without manual steps, use the [installer](/self-hosting/install-options/one-line-setup). It does all of this automatically.
 
-## What you need
+## Requirements
 
 - A server that meets the [requirements](/self-hosting#server).
 - Docker Engine with the Docker Compose v2 plugin. Check with `docker compose version`.
@@ -56,7 +56,7 @@ Keep `.env` out of version control. Then set these values:
 
 Use hex secrets. `DB_PASSWORD` becomes part of the database URL, so characters like `/` break the connection.
 
-For localhost, the URLs in `.env.example` already fit. On a server, set your domains as in [Configuration](/self-hosting/configuration#domains). Storage is optional, see [Storage](/self-hosting/storage).
+For localhost, the URLs in `.env.example` already fit. On a server, set the domains as in [Configuration](/self-hosting/configuration#domains). Storage is optional, see [Storage](/self-hosting/storage).
 
 <Aside type="danger" title="Never rotate BETTER_AUTH_SECRET">
   Pick the secrets once. Changing `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD` later makes stored
@@ -78,7 +78,7 @@ docker compose --project-directory . \
 
 The second file is the self-host override. It sets the in-network hosts for Postgres, Redis and the webbrowser, and publishes the frontend and backend on `127.0.0.1` only.
 
-### What you've just set up
+### What this sets up
 
 | Service      | Role                                                     |
 | ------------ | -------------------------------------------------------- |
@@ -111,4 +111,4 @@ If something fails, see [Troubleshooting](/self-hosting/troubleshooting).
 
 ## Use the installer later
 
-Because `.env` has `RAGNA_VERSION`, the installer recognizes this folder as its own. You can upgrade with it from the parent folder, see [Upgrades and backups](/self-hosting/upgrades-and-backups).
+Because `.env` has `RAGNA_VERSION`, the installer recognizes this folder as its own. The installer can upgrade it from the parent folder, see [Upgrades and backups](/self-hosting/upgrades-and-backups).

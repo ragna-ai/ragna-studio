@@ -1,13 +1,13 @@
 ---
 title: Datasets
-description: Structured tables that you and your agents can read and edit.
+description: Structured tables that users and agents can read and edit.
 sidebar:
   order: 0
 ---
 
-A dataset is a table with typed columns. You edit it in a grid. Agents read and write the same rows with tools. Use datasets for task queues, plans, content calendars and any other state that should outlive a single chat.
+A dataset is a table with typed columns. Users edit it in a grid. Agents read and write the same rows with tools. Use datasets for task queues, plans, content calendars and any other state that should outlive a single chat.
 
-Open **Datasets** in the sidebar to see all datasets in your active workspace. The list shows the origin, the row count and the workspace of each dataset.
+Open **Datasets** in the sidebar to see all datasets in the active workspace. The list shows the origin, the row count and the workspace of each dataset.
 
 ## Create a dataset
 
@@ -15,7 +15,7 @@ Open **Datasets** in the sidebar to see all datasets in your active workspace. T
 2. Pick a starting point under **Start from**: **Empty** or **Task tracker**. The task tracker comes with task, instructions and status columns.
 3. Enter a name and create the dataset.
 
-Agents can create datasets too. The **Origin** column in the list tells you whether a dataset came from a user, an agent or a connected app (MCP).
+Agents can create datasets too. The **Origin** column in the list shows whether a dataset came from a user, an agent or a connected app (MCP).
 
 ## Columns
 
@@ -28,27 +28,27 @@ Open **Columns** on the dataset page to manage the columns. Each column has a na
 | **Date**   | A calendar date.                                                                |
 | **Select** | One value from a fixed list. Enter the choices as **Options**, comma separated. |
 
-Use the up and down buttons to reorder columns. Choose **Save columns** to apply your changes. A dataset can have up to 20 columns. Removing a column removes its values from all rows.
+Use the up and down buttons to reorder columns. Choose **Save columns** to apply the changes. A dataset can have up to 20 columns. Removing a column removes its values from all rows.
 
 ## Edit rows in the grid
 
 Choose **Add row** to append an empty row. Click a cell to edit it. Select columns offer a dropdown with their options.
 
 - **Expand row** opens a side panel with one field per column. Use it for long text. The panel also shows when the row was created and last changed, and it has the delete action.
-- **Move row up** and **Move row down** appear when you hover a row. The new order is saved at once.
+- **Move row up** and **Move row down** appear on hover over a row. The new order is saved at once.
 - **Delete row** asks for confirmation first.
 
 A dataset holds up to 1,000 rows. Rows keep their order. New rows go to the end.
 
 ## Who wrote a row
 
-Every row remembers who wrote it: you, an agent, or a connected app. Rows written by a connected app show a plug badge in the grid with the tooltip **Written by a connected app via MCP**. See [MCP](/integrations/mcp).
+Every row remembers who wrote it: a user, an agent, or a connected app. Rows written by a connected app show a plug badge in the grid with the tooltip **Written by a connected app via MCP**. See [MCP](/integrations/mcp).
 
-Agents can see this information too. A workflow can use it to tell its own rows from yours.
+Agents can see this information too. A workflow can use it to tell its own rows from the rows of users.
 
 ## Validation of agent writes
 
-Agent writes go through the same checks as your own edits. A write fails with an error if:
+Agent writes go through the same checks as edits by a user. A write fails with an error if:
 
 - the row refers to a column that does not exist,
 - a number column gets text,
@@ -62,6 +62,6 @@ Choose **Export** on the dataset page and pick a format: **CSV**, **Excel**, **P
 
 ## How agents use datasets
 
-Turn on the **Datasets** tool in an agent to let it find datasets, read rows, add rows, update rows and move rows. Agents cannot delete rows or export. You can set a **Default dataset** so the agent goes straight to that table instead of searching. See [Agent tools](/agents/tools).
+Turn on the **Datasets** tool in an agent to let it find datasets, read rows, add rows, update rows and move rows. Agents cannot delete rows or export. A **Default dataset** can be set so the agent goes straight to that table instead of searching. See [Agent tools](/agents/tools).
 
 An agent that runs in a workspace only sees the datasets of that workspace. If an agent appends several rows in one turn, they keep the order the agent intended.

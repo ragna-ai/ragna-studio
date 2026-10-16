@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Run RAGNA Studio on your own machine for a local try-out.
+description: Run RAGNA Studio on a local machine for a try-out.
 sidebar:
   order: 1
 ---
@@ -9,15 +9,15 @@ One command installs and starts RAGNA Studio on localhost. It needs no proxy and
 
 ## Who this is for
 
-- **Trying RAGNA Studio on your machine:** follow this page.
+- **Trying RAGNA Studio on a local machine:** follow this page.
 - **Running it on a server for others:** the same command works there. Follow [Self-hosting](/self-hosting) for domains and the reverse proxy.
-- **You want to set it up by hand with Docker Compose:** you don't need the script, see [Install using Docker Compose](/self-hosting/install-options/docker-compose).
+- **Setting it up by hand with Docker Compose:** the script is not needed, see [Install using Docker Compose](/self-hosting/install-options/docker-compose).
 
-## What you need
+## Requirements
 
-This method uses Docker. Docker runs RAGNA Studio in self-contained packages, so you don't have to install or configure anything else yourself. If you don't have it yet, [install Docker](https://docs.docker.com/get-started/get-docker/). It includes Docker Compose, which the install command also needs.
+This method uses Docker. Docker runs RAGNA Studio in self-contained packages, so nothing else needs to be installed or configured by hand. If Docker is missing, [install Docker](https://docs.docker.com/get-started/get-docker/). It includes Docker Compose, which the install command also needs.
 
-You don't need to know Docker to follow this guide. Just have it installed and running in the background.
+No Docker knowledge is needed. Docker only has to be installed and running in the background.
 
 <Aside type="note" title="Docker requirements">
   The install command needs the `docker compose` v2 plugin, not the older standalone
@@ -30,7 +30,7 @@ The command also uses `curl` and `openssl`. Most systems already have both. Have
 
 - **An OAuth client** (Google or Microsoft) for sign-in, see [Configuration](/self-hosting/configuration#oauth). Use `http://localhost:3010/auth/callback/<provider>` as the redirect URI.
 - **At least one LLM API key** (Anthropic, OpenAI, Google Gemini or Mistral).
-- **Optional: S3-compatible storage**, see [Storage](/self-hosting/storage). Without it, file uploads and image/video generation don't work. You can add it later.
+- **Optional: S3-compatible storage**, see [Storage](/self-hosting/storage). Without it, file uploads and image/video generation don't work. It can be added later.
 
 ## Run the command
 
@@ -41,16 +41,16 @@ curl -fsSL https://get.ragna.io | sh
 The script:
 
 <Steps>
-  <Step title="Checks your system">
-    It checks that Docker is installed and running, and tells you what's missing if not.
+  <Step title="Checks the system">
+    It checks that Docker is installed and running, and reports what is missing if not.
   </Step>
   <Step title="Creates a folder">
-    It creates a `ragna-studio` folder in your current folder. It downloads the compose files of the
+    It creates a `ragna-studio` folder in the current folder. It downloads the compose files of the
     latest release into it. Set `RAGNA_DIR` to use another folder.
   </Step>
   <Step title="Writes the settings">
     It creates `.env` with generated secrets and pins the release as `RAGNA_VERSION`. Then it asks
-    for your domains (press Enter for localhost), OAuth client, storage (press Enter to skip) and AI
+    for the domains (press Enter for localhost), OAuth client, storage (press Enter to skip) and AI
     keys.
   </Step>
   <Step title="Starts RAGNA Studio">It pulls the images of that release and starts the stack.</Step>
@@ -63,7 +63,7 @@ Then open [localhost:3000](http://localhost:3000). If something goes wrong, see 
   service is ready.
 </Aside>
 
-If a setting is missing, the script lists it and stops. Fill it in `ragna-studio/.env` and run the command again from the same folder. Running it again is safe: it keeps your `.env` and data, and starts the stack with your current settings. The [environment variables](/reference/environment-variables) reference lists every setting.
+If a setting is missing, the script lists it and stops. Fill it in `ragna-studio/.env` and run the command again from the same folder. Running it again is safe: it keeps the `.env` and data, and starts the stack with the current settings. The [environment variables](/reference/environment-variables) reference lists every setting.
 
 ## What's included
 
@@ -73,7 +73,7 @@ If a setting is missing, the script lists it and stops. Fill it in `ragna-studio
 | Backend    | The API on port 3010                                                     |
 | Worker     | Runs background jobs, for example image generation and document indexing |
 | Webbrowser | Fetches web pages for agents                                             |
-| Postgres   | Stores your data, including vector search for documents                  |
+| Postgres   | Stores the data, including vector search for documents                   |
 | Redis      | Queues the background jobs                                               |
 
 Only the frontend and backend have ports, and they listen on `127.0.0.1` only. All other services stay inside the Docker network. To serve RAGNA Studio to others, follow [Self-hosting](/self-hosting).
@@ -90,11 +90,11 @@ Run these from the folder that contains `ragna-studio`.
 | Upgrade                       | `curl -fsSL https://get.ragna.io \| sh -s -- --upgrade`                         |
 | Uninstall and delete all data | `docker compose -p ragna_studio down -v`, then delete the `ragna-studio` folder |
 
-Stopping keeps your data in the Docker volumes. Uninstalling deletes it.
+Stopping keeps the data in the Docker volumes. Uninstalling deletes it.
 
 ### What an upgrade changes
 
-An upgrade moves `RAGNA_VERSION` in `.env` to the latest release. It refreshes the compose files, pulls the new images and restarts. Your data, secrets and other settings stay as they are. Without `--upgrade`, the script keeps the pinned release.
+An upgrade moves `RAGNA_VERSION` in `.env` to the latest release. It refreshes the compose files, pulls the new images and restarts. Data, secrets and other settings stay as they are. Without `--upgrade`, the script keeps the pinned release.
 
 ## Options
 
@@ -118,4 +118,4 @@ sh install.sh
 
 ## Windows
 
-The command needs a POSIX shell. Command Prompt and PowerShell don't work. Use [WSL](https://learn.microsoft.com/windows/wsl/install) with Docker Desktop's WSL 2 integration turned on, and run the command in the WSL terminal. Run it in your WSL home folder, not under `/mnt/c/...`. Folders on the Windows drive are slow and cause permission problems.
+The command needs a POSIX shell. Command Prompt and PowerShell don't work. Use [WSL](https://learn.microsoft.com/windows/wsl/install) with Docker Desktop's WSL 2 integration turned on, and run the command in the WSL terminal. Run it in the WSL home folder, not under `/mnt/c/...`. Folders on the Windows drive are slow and cause permission problems.

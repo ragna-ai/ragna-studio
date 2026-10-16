@@ -5,16 +5,16 @@ sidebar:
   order: 1
 ---
 
-Every workflow starts at its trigger node. The trigger decides how runs begin. You can start a run by hand or let RAGNA Studio start it on a schedule.
+Every workflow starts at its trigger node. The trigger decides how runs begin. A run starts by hand or on a schedule.
 
 ## Trigger types
 
 Select the trigger node and choose a **Trigger type**.
 
-| Type         | Behavior                                                    |
-| ------------ | ----------------------------------------------------------- |
-| **Manual**   | The workflow runs when you click **Run**. No configuration. |
-| **Schedule** | The workflow runs by itself at the times you set.           |
+| Type         | Behavior                                                        |
+| ------------ | --------------------------------------------------------------- |
+| **Manual**   | The workflow runs when a user clicks **Run**. No configuration. |
+| **Schedule** | The workflow runs by itself at the configured times.            |
 
 ## Set a schedule
 
@@ -22,7 +22,7 @@ Select the trigger node and choose a **Trigger type**.
 2. Choose a **Frequency**: **Hourly**, **Daily**, **Weekly** or **Custom**.
 3. Set the **Time**. For weekly schedules, also set the **Day of week**.
 4. For **Custom**, enter a **Cron expression**.
-5. Check the **Timezone**. It defaults to your browser timezone.
+5. Check the **Timezone**. It defaults to the browser timezone.
 6. Look at **Next runs**. It shows the next three run times.
 7. **Save** and **Publish**.
 
@@ -30,11 +30,11 @@ A custom cron expression has five fields: minute, hour, day of month, month and 
 
 ## When a schedule is active
 
-Only the published version counts. A schedule starts when you publish a workflow with a **Schedule** trigger. Editing the draft does not change it. If you publish a version with a **Manual** trigger, or delete the workflow, the schedule stops.
+Only the published version counts. A schedule starts when a workflow is published with a **Schedule** trigger. Editing the draft does not change it. If a version with a **Manual** trigger is published, or the workflow is deleted the workflow, the schedule stops.
 
 To change a schedule, edit the trigger and publish again.
 
-Runs started by a schedule are marked **Scheduled** in the run history. Runs started by you are marked **Manual**. A scheduled run has no input, so `{{input}}` is empty in the first node.
+Runs started by a schedule are marked **Scheduled** in the run history. Runs started by hand are marked **Manual**. A scheduled run has no input, so `{{input}}` is empty in the first node.
 
 ## Overlap protection
 
@@ -48,7 +48,7 @@ The badge explains: "The author can no longer run this workflow." There is no fa
 
 ## After a restart
 
-If the background services restart, RAGNA Studio restores all schedules from your published workflows. You do not need to publish again.
+If the background services restart, RAGNA Studio restores all schedules from the published workflows. Nothing needs to be published again.
 
 ## Failed scheduled runs
 

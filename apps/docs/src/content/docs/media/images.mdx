@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-Describe an image and RAGNA Studio generates it. Open **Images** in the sidebar to get the **Text to Image** page. The form sits at the top. Your generated images fill the gallery below it.
+Describe an image and RAGNA Studio generates it. Open **Images** in the sidebar to get the **Text to Image** page. The form sits at the top. Generated images fill the gallery below it.
 
 <Aside type="note">
   Self-hosted installs need a key for at least one image provider. See [Optional
@@ -21,17 +21,17 @@ Describe an image and RAGNA Studio generates it. Open **Images** in the sidebar 
 5. Set the **Number of images**: 1 to 4.
 6. Choose **Generate image**.
 
-Your settings are remembered for next time. The long edge of a `2K` image is 1920 pixels.
+The settings are remembered for next time. The long edge of a `2K` image is 1920 pixels.
 
 ## Models and providers
 
-The model list shows every image model your installation offers. RAGNA Studio supports three providers:
+The model list shows every image model the installation offers. RAGNA Studio supports three providers:
 
 - Black Forest Labs (FLUX)
 - Google Vertex (Imagen)
 - OpenAI
 
-Which models you see depends on what the person running your installation has set up.
+Which models appear depends on what the operator has set up.
 
 ## Advanced options
 
@@ -39,7 +39,7 @@ Open **Advanced options** for more control. Each option works only where the sel
 
 - **Negative prompt:** describe what to avoid.
 - **Seed:** a number that makes results repeatable.
-- **Use reference images:** guide the result with up to four images. Choose **From gallery** to pick one of your completed images, or **Upload** to add a new one. The counter shows how many you selected. The maximum depends on the model.
+- **Use reference images:** guide the result with up to four images. Choose **From gallery** to pick one of the completed images, or **Upload** to add a new one. The counter shows how many are selected. The maximum depends on the model.
 
 The settings are cleared after each run. To repeat a run, open an image and choose **Reuse settings**. It copies the model, ratio, resolution, seed and negative prompt into the form. Fields the model does not support are dropped.
 
@@ -49,13 +49,13 @@ Turn on **Label as AI generated** to burn a small badge into the image. See [AI 
 
 ## Background execution
 
-Generation runs in the background. New images appear in the gallery at once as pending tiles. You can leave the page. When the batch finishes, a notification arrives in the bell: **Images ready** or **Image generation failed**.
+Generation runs in the background. New images appear in the gallery at once as pending tiles. The page can be left meanwhile. When the batch finishes, a notification arrives in the bell: **Images ready** or **Image generation failed**.
 
 If a batch fails, every image in it shows **Image generation failed.** Try again with a different prompt or model.
 
 ## Work with a result
 
-Click an image to open **Generated image**. You can:
+Click an image to open **Generated image**. It offers these actions:
 
 - see the prompt, model and settings,
 - **Copy prompt**,

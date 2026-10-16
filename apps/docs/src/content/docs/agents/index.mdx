@@ -6,7 +6,7 @@ sidebar:
   label: Create an agent
 ---
 
-An agent is an AI assistant with its own instructions, model, knowledge, memory and tools. You chat with it, and workflows can run it too. Agents belong to a workspace, so everyone with access to that workspace sees them.
+An agent is an AI assistant with its own instructions, model, knowledge, memory and tools. Users chat with it, and workflows can run it too. Agents belong to a workspace, so everyone with access to that workspace sees them.
 
 ## Create an agent
 
@@ -15,7 +15,7 @@ An agent is an AI assistant with its own instructions, model, knowledge, memory 
 3. Fill in the tabs below. Only the name and the model are required.
 4. Choose **Save**.
 
-Some tabs need a saved agent first. **Context** documents and **Memory** show "Save the agent first" until you save once. Open the agent again afterwards to use them.
+Some tabs need a saved agent first. **Context** documents and **Memory** show "Save the agent first" until the agent is saved once. Open the agent again afterwards to use them.
 
 To change an agent later, open its row actions in the list and choose **Edit**. **Delete** is in the same menu. The list also has a **Chat** button per agent.
 
@@ -34,7 +34,7 @@ Pick the model the agent uses. The selector lists text models only.
 
 | Setting                         | What it does                                                                                                                                                        |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Make this the default agent** | Chats you start without picking an agent use this one. Only one agent per workspace can be the default. Setting a new one clears the old one.                       |
+| **Make this the default agent** | Chats started without picking an agent use this one. Only one agent per workspace can be the default. Setting a new one clears the old one.                         |
 | **Temperature**                 | Controls how varied the answers are. The slider runs from 0 to 1. At 0 it shows **Disabled**: RAGNA Studio sends no temperature and the model uses its own default. |
 | **Max output tokens**           | Caps the length of one answer. Leave it empty to use the model's default. The maximum is 64,000.                                                                    |
 | **Reasoning**                   | Lets the model think before it answers: **Default**, **Off**, **Low**, **Medium** or **High**.                                                                      |
@@ -43,7 +43,7 @@ Reasoning only has an effect on models that support it. Other models ignore it. 
 
 ## Default agent
 
-The agent marked **Default** has a badge in the agent list. When you open a new chat from **Chat** without choosing an agent, you talk to the default agent of the current workspace. If the workspace has none yet, RAGNA Studio creates one for you on first use.
+The agent marked **Default** has a badge in the agent list. A new chat opened from **Chat** without choosing an agent goes to the default agent of the current workspace. If the workspace has none yet, RAGNA Studio creates one on first use.
 
 ## Next steps
 

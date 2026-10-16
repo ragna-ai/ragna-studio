@@ -5,25 +5,25 @@ sidebar:
   order: 0
 ---
 
-RAGNA Studio is an AI workspace where agents are your co-workers. Your agents read your documents and keep their state in datasets. They delegate to each other and run on a schedule.
+RAGNA Studio is an AI workspace where agents work as co-workers. Agents read documents and keep their state in datasets. They delegate to each other and run on a schedule.
 
 ## Core ideas
 
 - **[Workspaces](/workspaces)** hold every resource: agents, datasets, documents, tasks, chats, workflows and media. Agents only see the workspace they run in.
 - **[Agents](/agents)** are specialists. Each has its own instructions, model, tools and knowledge documents. It keeps a memory that it writes itself.
-- **[Datasets](/content/datasets)** are tables with typed columns. You edit them in a grid. Agents read and write them through tools, so a dataset works as a queue and as durable agent state.
+- **[Datasets](/content/datasets)** are tables with typed columns. Users edit them in a grid. Agents read and write them through tools, so a dataset works as a queue and as durable agent state.
 - **[Workflows](/workflows)** run on a visual canvas and a cron schedule. A team node lets a lead agent delegate to up to five specialists in parallel. Every run keeps a full trace.
 
 ## Two ways to run it
 
-|       | Hosted                               | Self-hosted              |
-| ----- | ------------------------------------ | ------------------------ |
-| Where | [app.ragna.io](https://app.ragna.io) | Your own server          |
-| Setup | Sign in and start                    | Docker Compose on one VM |
+|       | Hosted                               | Self-hosted               |
+| ----- | ------------------------------------ | ------------------------- |
+| Where | [app.ragna.io](https://app.ragna.io) | The operator's own server |
+| Setup | Sign in and start                    | Docker Compose on one VM  |
 
-The self-hosted version is open source under [AGPL-3.0](https://github.com/ragna-ai/ragna-studio/blob/main/LICENSE). You host it, you own the data, and you bring your own model keys or run local models.
+The self-hosted version is open source under [AGPL-3.0](https://github.com/ragna-ai/ragna-studio/blob/main/LICENSE). The operator hosts it, owns the data and brings their own model keys or runs local models.
 
-To try it on your own machine, follow the [Quickstart](/getting-started/quickstart). To run it for a team, see [Self-hosting](/self-hosting).
+To try it on a local machine, follow the [Quickstart](/getting-started/quickstart). To run it for a team, see [Self-hosting](/self-hosting).
 
 ## Supported providers
 
@@ -41,4 +41,4 @@ To try it on your own machine, follow the [Quickstart](/getting-started/quicksta
 
 ## Privacy
 
-RAGNA Studio sends no telemetry. A self-hosted instance only reaches the services you configure, such as your LLM provider, storage and mail account.
+RAGNA Studio sends no telemetry. A self-hosted instance only reaches the services the operator configures, such as the LLM provider, storage and mail account.

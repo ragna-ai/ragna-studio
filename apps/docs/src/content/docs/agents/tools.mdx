@@ -5,36 +5,36 @@ sidebar:
   order: 3
 ---
 
-Tools let an agent act, not only answer. You turn them on per agent on the **Tools** tab. An agent can only use the tools you tick. In a chat, each use shows as a step, and several steps in a row are grouped as "Used N tools".
+Tools let an agent act, not only answer. Users turn them on per agent on the **Tools** tab. An agent can only use the ticked tools. In a chat, each use shows as a step, and several steps in a row are grouped as "Used N tools".
 
 ## Available tools
 
-| Tool                 | What the agent can do                                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Think**            | Reason in a separate step before it answers. Useful for complex questions.                                                                            |
-| **Memory**           | Save and recall notes across chats. See [Memory](/agents/memory).                                                                                     |
-| **Web Search**       | Find up-to-date information on the web.                                                                                                               |
-| **Web Browser**      | Open a web page and read its content. Only secure `https://` addresses work.                                                                          |
-| **Image Generation** | Create images from a text prompt. See [Images](/media/images).                                                                                        |
-| **Video Generation** | Create videos from a text prompt, optionally animating a generated image. See [Videos](/media/videos).                                                |
-| **LinkedIn Draft**   | Write LinkedIn post drafts, with generated images attached. It never publishes. You publish yourself. See [Social posts](/integrations/social-posts). |
-| **Documents**        | List, read, create and edit documents in the workspace. See [Documents](/content/documents).                                                          |
-| **Tasks**            | List, read, create, update and move tasks on the workspace board. See [Tasks](/content/tasks).                                                        |
-| **Datasets**         | Read and write structured data tables, such as task queues and plans. See [Datasets](/content/datasets).                                              |
+| Tool                 | What the agent can do                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Think**            | Reason in a separate step before it answers. Useful for complex questions.                                                                             |
+| **Memory**           | Save and recall notes across chats. See [Memory](/agents/memory).                                                                                      |
+| **Web Search**       | Find up-to-date information on the web.                                                                                                                |
+| **Web Browser**      | Open a web page and read its content. Only secure `https://` addresses work.                                                                           |
+| **Image Generation** | Create images from a text prompt. See [Images](/media/images).                                                                                         |
+| **Video Generation** | Create videos from a text prompt, optionally animating a generated image. See [Videos](/media/videos).                                                 |
+| **LinkedIn Draft**   | Write LinkedIn post drafts, with generated images attached. It never publishes. The user publishes it. See [Social posts](/integrations/social-posts). |
+| **Documents**        | List, read, create and edit documents in the workspace. See [Documents](/content/documents).                                                           |
+| **Tasks**            | List, read, create, update and move tasks on the workspace board. See [Tasks](/content/tasks).                                                         |
+| **Datasets**         | Read and write structured data tables, such as task queues and plans. See [Datasets](/content/datasets).                                               |
 
 Tools work inside the agent's workspace. The agent sees the documents, tasks and datasets of that workspace only.
 
 ## Default dataset
 
-When you tick **Datasets**, a **Default dataset** picker appears. Choose a dataset the agent should use first. With **None**, the agent searches for the right dataset when it needs one.
+Ticking **Datasets** shows a **Default dataset** picker. It sets the dataset the agent uses first. With **None**, the agent searches for the right dataset when it needs one.
 
 ## Knowledge search
 
-Agents with many uploaded documents get a **Search Context** step automatically. You do not tick it. See [Knowledge](/agents/knowledge).
+Agents with many uploaded documents get a **Search Context** step automatically. Nobody ticks it. See [Knowledge](/agents/knowledge).
 
 ## Image and video generation
 
-While an agent generates an image or video, the chat shows "Generating image" or "Generating video" with your prompt. Results land in your [media library](/media/library).
+While an agent generates an image or video, the chat shows "Generating image" or "Generating video" with the prompt. Results land in the [media library](/media/library).
 
 <Aside type="note">
   On a self-hosted install, **Web Search** needs a search API key. **Web Browser** needs the browser
