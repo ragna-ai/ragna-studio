@@ -95,7 +95,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import { getMailProviderForConnectRequest, getMailProviderForUser } from './email-provider.service';
+import {
+  BETTER_AUTH_PROVIDER_ID,
+  getMailProviderForConnectRequest,
+  getMailProviderForUser,
+} from './email-provider.service';
+import { revokeProviderGrants } from './provider-grant.service';
 
 // Attachment bytes (and metadata) are never persisted,
 // so a compose request's fresh uploads
@@ -269,7 +274,7 @@ export async function connectEmailAccount({
   return account;
 }
 
-// [POST] /email/account/disconnect. Cascades to threads/messages/etc; the linked social account itself stays untouched.
+// [POST] /email/account/disconnect. Cascades to threads/messages/etc; the linked social account stays as login identity, its tokens are revoked and cleared.
 export async function disconnectEmailAccount({ userId }: { userId: string }): Promise<void> {
   const account = await loadEmailAccount({ userId });
 
@@ -279,6 +284,26 @@ export async function disconnectEmailAccount({ userId }: { userId: string }): Pr
     logger.error('Failed to disconnect email account', error);
     throw new InternalServerErrorException('Failed to disconnect your mailbox');
   }
+
+  await revokeProviderGrants({
+    userId,
+    providerIds: [BETTER_AUTH_PROVIDER_ID[account.provider]],
+  });
+}
+
+/** Offboarding, best effort: drops the user's mailbox if any and revokes every mail-capable provider grant. */
+export async function removeMailAccessForUser({ userId }: { userId: string }): Promise<void> {
+  const { error } = await tryCatch(async () => {
+    const account = await getEmailAccountByUserId({ userId });
+    if (account) {
+      await deleteEmailAccountById({ id: account.id });
+    }
+  });
+  if (error !== null) {
+    logger.error('Failed to delete mailbox during offboarding', error);
+  }
+
+  await revokeProviderGrants({ userId, providerIds: Object.values(BETTER_AUTH_PROVIDER_ID) });
 }
 
 /**

@@ -1392,6 +1392,8 @@
       "pageTitle": "App verbinden",
       "title": "Diese App mit Ragna verbinden",
       "subtitle": "{client} möchte auf deine Ragna-Daten zugreifen.",
+      "redirectHost": "Nach der Freigabe wirst du zu {host} weitergeleitet.",
+      "localRedirectWarning": "Diese App läuft auf diesem Computer. Genehmige nur, wenn du sie selbst gestartet hast.",
       "workspaceLabel": "Arbeitsbereich",
       "workspacePlaceholder": "Arbeitsbereich auswählen",
       "accessLabel": "Diese App kann Folgendes tun:",

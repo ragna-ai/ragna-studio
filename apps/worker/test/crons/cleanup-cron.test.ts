@@ -5,9 +5,11 @@ import { cleanupProcessor } from '../../src/crons/cleanup.cron';
 import {
   daysFromNow,
   hoursAgo,
+  listMcpToolCallIds,
   listNotificationIds,
   listSessionIds,
   listVerificationIds,
+  seedMcpToolCall,
   seedNotification,
   seedSession,
   seedVerification,
@@ -59,6 +61,18 @@ describe('cleanup cron', () => {
     expect(remaining.has(oldReadId)).toBe(false);
     expect(remaining.has(recentReadId)).toBe(true);
     expect(remaining.has(unreadId)).toBe(true);
+  });
+
+  test('removes MCP tool calls older than 90 days and keeps newer ones', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    const oldId = await seedMcpToolCall({ userId, workspaceId, createdAt: daysAgo(91) });
+    const recentId = await seedMcpToolCall({ userId, workspaceId, createdAt: daysAgo(89) });
+
+    await cleanupProcessor();
+
+    const remaining = await listMcpToolCallIds();
+    expect(remaining.has(oldId)).toBe(false);
+    expect(remaining.has(recentId)).toBe(true);
   });
 
   test('one failing step does not skip the others', async () => {

@@ -15,7 +15,12 @@ import {
   installMcpJwksFetchBridge,
   uninstallMcpJwksFetchBridge,
 } from './support/jwks-fetch-bridge';
-import { mintMcpAccessToken, seedMcpConnection, seedOAuthClient } from './support/mcp-fixtures';
+import {
+  mintMcpAccessToken,
+  seedMcpConnection,
+  seedOAuthClient,
+  TEST_MCP_CLIENT_ID,
+} from './support/mcp-fixtures';
 
 // /mcp: the Streamable HTTP JSON-RPC endpoint.
 // RequireMcpAuth verifies the bearer token against the auth
@@ -331,5 +336,96 @@ describe('POST /mcp: tools/call', () => {
       rowId: siblingRow.id,
     });
     expect(untouchedRow?.data).toEqual({ status: 'todo' });
+  });
+});
+
+describe('POST /mcp: audit trail', () => {
+  test('a read call is recorded with access read and the dataset as resource', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    const connection = await seedMcpConnection({
+      userId,
+      workspaceId,
+      access: { datasets: 'read' },
+    });
+    const token = await mintMcpAccessToken({ userId });
+    const dataset = await createDataset({
+      userId,
+      workspaceId,
+      name: 'Audited',
+      columns: [{ id: 'status', name: 'Status', type: 'text' }],
+    });
+
+    await callTool(token, 'datasetListRows', { datasetId: dataset.id });
+
+    const [call, ...otherCalls] = await db.query.mcpToolCall.findMany({
+      where: { connectionId: connection.id },
+    });
+    expect(otherCalls).toHaveLength(0);
+    expect(call).toMatchObject({
+      toolName: 'datasetListRows',
+      access: 'read',
+      resourceId: dataset.id,
+      userId,
+      clientId: TEST_MCP_CLIENT_ID,
+      workspaceId,
+      isError: false,
+    });
+  });
+
+  test('a write call is recorded with access write', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    await seedMcpConnection({ userId, workspaceId, access: { datasets: 'write' } });
+    const token = await mintMcpAccessToken({ userId });
+    const dataset = await createDataset({
+      userId,
+      workspaceId,
+      name: 'Audited',
+      columns: [{ id: 'status', name: 'Status', type: 'text' }],
+    });
+
+    await callTool(token, 'datasetAppendRow', { datasetId: dataset.id, data: { status: 'todo' } });
+
+    const calls = await db.query.mcpToolCall.findMany({ where: { userId } });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      toolName: 'datasetAppendRow',
+      access: 'write',
+      resourceId: dataset.id,
+    });
+  });
+
+  test('revoking the connection keeps the rows with the owner columns', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    const connection = await seedMcpConnection({
+      userId,
+      workspaceId,
+      access: { datasets: 'read' },
+    });
+    const token = await mintMcpAccessToken({ userId });
+    const dataset = await createDataset({
+      userId,
+      workspaceId,
+      name: 'Audited',
+      columns: [],
+    });
+    await callTool(token, 'datasetListRows', { datasetId: dataset.id });
+
+    const revokeResponse = await app.request(`/mcp-settings/connections/${connection.id}`, {
+      method: 'DELETE',
+      headers: { cookie: cookieHeader },
+    });
+    expect(revokeResponse.status).toBe(204);
+
+    const calls = await db.query.mcpToolCall.findMany({ where: { userId } });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      connectionId: null,
+      userId,
+      clientId: TEST_MCP_CLIENT_ID,
+      workspaceId,
+    });
   });
 });

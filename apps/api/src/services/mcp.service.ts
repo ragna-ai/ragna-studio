@@ -25,6 +25,7 @@ const MCP_SERVER_VERSION = '1.0.0';
 export interface McpConnectionScope {
   connectionId: string;
   userId: string;
+  clientId: string;
   workspaceId: string;
   access: McpAccess;
 }
@@ -32,6 +33,7 @@ export interface McpConnectionScope {
 const mcpConnectionScopeSchema = z.object({
   connectionId: z.string(),
   userId: z.string(),
+  clientId: z.string(),
   workspaceId: z.string(),
   access: mcpAccessSchema,
 });
@@ -56,6 +58,7 @@ async function resolveMcpConnectionScope({
   return {
     connectionId: connection.id,
     userId,
+    clientId,
     workspaceId: connection.workspaceId,
     access: settings.access,
   };
@@ -82,21 +85,32 @@ function toMcpToolCallResult(output: unknown): CallToolResult {
   };
 }
 
-// Best-effort: the tool's write already committed, so a failure here must not surface to the client.
+const datasetIdInputSchema = z.object({ datasetId: z.string() });
+
+function extractResourceId(input: unknown): string | null {
+  const parsed = datasetIdInputSchema.safeParse(input);
+  return parsed.success ? parsed.data.datasetId : null;
+}
+
+// Best-effort: the tool already ran, so a failure here must not surface to the client.
 async function recordMcpToolCallOutcome(
   scope: McpConnectionScope,
   definition: ToolDefinition<z.ZodObject, unknown>,
+  input: unknown,
   result: CallToolResult,
 ): Promise<void> {
   try {
     await touchMcpConnection({ connectionId: scope.connectionId });
-    if (definition.access === 'write') {
-      await recordMcpToolCall({
-        connectionId: scope.connectionId,
-        toolName: definition.name,
-        isError: result.isError ?? false,
-      });
-    }
+    await recordMcpToolCall({
+      connectionId: scope.connectionId,
+      userId: scope.userId,
+      clientId: scope.clientId,
+      workspaceId: scope.workspaceId,
+      toolName: definition.name,
+      access: definition.access,
+      resourceId: extractResourceId(input),
+      isError: result.isError ?? false,
+    });
   } catch (error) {
     logger.warn(
       `Failed to record MCP tool call bookkeeping for tool ${definition.name} (connection ${scope.connectionId})`,
@@ -106,7 +120,7 @@ async function recordMcpToolCallOutcome(
 }
 
 // The one MCP adapter: turns a transport-neutral
-// ToolDefinition into an MCP tool, recording writes and touching the
+// ToolDefinition into an MCP tool, recording every call and touching the
 // connection's last_used_at (P7).
 function registerMcpTool(
   server: McpServer,
@@ -128,7 +142,7 @@ function registerMcpTool(
       });
       const result = toMcpToolCallResult(output);
 
-      await recordMcpToolCallOutcome(scope, definition, result);
+      await recordMcpToolCallOutcome(scope, definition, input, result);
 
       return result;
     },
@@ -207,6 +221,7 @@ const mcpAuthGate = requireMcpAuth(
         extra: {
           connectionId: scope.connectionId,
           userId: scope.userId,
+          clientId: scope.clientId,
           workspaceId: scope.workspaceId,
           access: scope.access,
         },

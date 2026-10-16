@@ -31,6 +31,8 @@ Older mail is not imported up front. When you open an older thread, RAGNA loads 
 
 To disconnect, open **Email settings**, go to **General** and choose **Disconnect mailbox**. This removes the synced mail, categories and drafts from RAGNA. Your Gmail or Outlook account itself is not changed.
 
+Disconnecting also revokes the Google access you granted to RAGNA Studio and deletes the stored tokens. This applies when a member is removed from an organization or leaves it, too. Microsoft offers no revocation for apps. RAGNA Studio deletes its stored Microsoft tokens, but a Microsoft administrator who wants to end the grant fully revokes it in Entra under **Enterprise applications**.
+
 ## Keep the connection alive
 
 RAGNA checks your mailbox for changes every 5 minutes by default. Use **Sync now** (the refresh button at the bottom of the sidebar) to check right away. The sidebar shows the status: **Syncing...**, **Synced** with a time, or **Sync error**.

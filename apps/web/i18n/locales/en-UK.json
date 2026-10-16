@@ -1386,6 +1386,8 @@
       "pageTitle": "Connect app",
       "title": "Connect this app to Ragna",
       "subtitle": "{client} wants to access your Ragna data.",
+      "redirectHost": "After approval you are sent to {host}.",
+      "localRedirectWarning": "This app runs on this computer. Only approve if you started it yourself.",
       "workspaceLabel": "Workspace",
       "workspacePlaceholder": "Select a workspace",
       "accessLabel": "This app will be able to:",

@@ -1,6 +1,7 @@
 import { createTask, createWorkflow, db } from '@repo/database';
 import {
   emailAccount,
+  mcpToolCall,
   notification,
   session,
   verification,
@@ -154,4 +155,34 @@ export async function seedEmailAccount({
     .returning();
   if (!created) throw new Error('Failed to seed email account');
   return created;
+}
+
+export async function seedMcpToolCall({
+  userId,
+  workspaceId,
+  createdAt,
+}: {
+  userId: string;
+  workspaceId: string;
+  createdAt: Date;
+}): Promise<string> {
+  const [created] = await db
+    .insert(mcpToolCall)
+    .values({
+      userId,
+      clientId: 'test-client',
+      workspaceId,
+      toolName: 'datasetListRows',
+      access: 'read',
+      isError: false,
+      createdAt,
+    })
+    .returning({ id: mcpToolCall.id });
+  if (!created) throw new Error('Failed to seed MCP tool call');
+  return created.id;
+}
+
+export async function listMcpToolCallIds(): Promise<Set<string>> {
+  const rows = await db.select({ id: mcpToolCall.id }).from(mcpToolCall);
+  return new Set(rows.map((row) => row.id));
 }
