@@ -52,6 +52,8 @@ export const app = new Hono()
   // .use('*', timeout(15 * 60 * 1000))
   // Auth handler
   .on(['POST', 'GET'], '/auth/*', ({ req }) => auth.handler(req.raw))
+  // MCP clients look for OAuth discovery at the root, not under /auth.
+  .get('/.well-known/*', ({ req }) => auth.handler(req.raw))
   // Health check
   .get('/health', (c) => c.json({ status: 'ok' }))
   // Controllers

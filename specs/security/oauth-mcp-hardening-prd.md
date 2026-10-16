@@ -147,6 +147,17 @@ the lead, so no worker runs `test:setup` (it recreates the shared test DB).
 
 Both: TDD, run their own tests, `pnpm check-types` before reporting. No commits.
 
+## Found during testing: OAuth discovery routing
+
+Connecting Claude Code to a local MCP server failed. `GET /.well-known/*` was never forwarded to
+`auth.handler`, although the [MCP PRD](../mcp/prd.md) requires it. And `wsController` had no base
+path, so its origin check ran for every unmatched route and returned 403 instead of 404.
+
+Fixed in the same PR: `apps/api/src/app.ts` forwards `/.well-known/*`, `wsController` uses
+`.basePath('/ws')`. Tests pin the discovery metadata (no `registration_endpoint`) and a 404 for
+unknown routes. Production likely had the same gap. After deploy, check
+`/.well-known/oauth-protected-resource/mcp` on the api host and connect Claude Desktop once.
+
 ## Out of scope
 
 - LinkedIn incremental scopes (backlog).

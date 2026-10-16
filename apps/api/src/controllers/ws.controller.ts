@@ -37,10 +37,11 @@ function parseMessagePayload(payload: unknown): MessageFramePayload | null {
 }
 
 export const wsController = new Hono()
+  .basePath('/ws')
   .use(requireAllowedOrigin)
   .use(authMiddleware)
   .get(
-    '/ws',
+    '/',
     upgradeWebSocket((c: Context<AuthEnv>) => {
       const user = c.get('user');
       const session = c.get('session');
