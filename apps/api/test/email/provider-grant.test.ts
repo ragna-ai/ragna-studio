@@ -1,4 +1,8 @@
-import { seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
+import {
+  seedAuthenticatedUser,
+  seedGoogleAccountWithoutGmailScope,
+  truncateAllTables,
+} from '@repo/testing';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import { app } from '../../src/app';
@@ -77,6 +81,21 @@ describe('POST /email/account/disconnect provider grants', () => {
     expect(revokeMock.revokedTokens()).toHaveLength(0);
     const after = await loadProviderAccount({ userId, providerId: 'microsoft' });
     expect(after).toMatchObject({ accessToken: null, refreshToken: null, scope: null });
+  });
+
+  test('gmail: revokes every linked Google account, not only the first', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedConnectedGmailAccount({ userId, cookieHeader });
+    const mailAccount = await loadProviderAccount({ userId, providerId: 'google' });
+    const signInAccount = await seedGoogleAccountWithoutGmailScope({ userId });
+    revokeMock = mockGoogleRevoke();
+
+    const response = await disconnectRequest(cookieHeader);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(revokeMock.revokedTokens().toSorted()).toEqual(
+      [mailAccount?.accessToken ?? 'missing', signInAccount.accessToken].toSorted(),
+    );
   });
 
   test('keeps the account row as the login identity', async () => {

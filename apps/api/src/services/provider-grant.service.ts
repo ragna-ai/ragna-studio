@@ -3,8 +3,9 @@
 import { auth } from '@repo/auth/server';
 import {
   clearAccountTokensByUserIdAndProviders,
-  getAccountByUserIdAndProvider,
+  listAccountsByUserIdAndProvider,
 } from '@repo/database';
+import type { Account } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 
@@ -16,12 +17,9 @@ export interface RevokeProviderGrantsParams {
   providerIds: string[];
 }
 
-async function revokeGoogleGrant({ userId }: { userId: string }): Promise<void> {
-  const account = await getAccountByUserIdAndProvider({ userId, providerId: GOOGLE_PROVIDER_ID });
-  if (!account) return;
-
+async function revokeGoogleGrant(account: Account): Promise<void> {
   const { accessToken } = await auth.api.getAccessToken({
-    body: { accountId: account.id, userId },
+    body: { accountId: account.id, userId: account.userId },
   });
   if (!accessToken) return;
 
@@ -35,8 +33,22 @@ async function revokeGoogleGrant({ userId }: { userId: string }): Promise<void> 
   }
 }
 
+async function revokeAllGoogleGrants({ userId }: { userId: string }): Promise<void> {
+  const accounts = await listAccountsByUserIdAndProvider({
+    userId,
+    providerId: GOOGLE_PROVIDER_ID,
+  });
+
+  for (const account of accounts) {
+    const { error } = await tryCatch(() => revokeGoogleGrant(account));
+    if (error !== null) {
+      logger.error('Failed to revoke Google grant', error);
+    }
+  }
+}
+
 /**
- * Revokes the Google grant (Microsoft has no client-side revocation) and
+ * Revokes every Google grant of the user (Microsoft has no client-side revocation) and
  * clears the stored tokens. A failed provider call is logged, never thrown.
  */
 export async function revokeProviderGrants({
@@ -44,10 +56,7 @@ export async function revokeProviderGrants({
   providerIds,
 }: RevokeProviderGrantsParams): Promise<void> {
   if (providerIds.includes(GOOGLE_PROVIDER_ID)) {
-    const { error } = await tryCatch(() => revokeGoogleGrant({ userId }));
-    if (error !== null) {
-      logger.error('Failed to revoke Google grant', error);
-    }
+    await revokeAllGoogleGrants({ userId });
   }
 
   const { error: clearError } = await tryCatch(() =>

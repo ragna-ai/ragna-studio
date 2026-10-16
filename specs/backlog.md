@@ -39,6 +39,14 @@ when it ships; move it into a PRD when it gets designed.
       page's LinkedIn connect (`linkSocial` with `scopes`), and have the social post service
       return "reconnect LinkedIn". First verify with a test app that LinkedIn honors a second
       authorization with extra scopes, and that better-auth merges them into `account.scope`.
+- [ ] Mail resolves its provider account by `userId + providerId` (`findFirst`, no order). With
+      `allowDifferentEmails`, a user can have two Google rows (sign-in with A, Gmail with B), so
+      mail may use the wrong token. Store the linked `account.id` on `email_account` at connect
+      and resolve through it (api `email-provider.service.ts`, worker `mail/mail-provider.ts`).
+      Part of a wider cleanup of account linking, see the next item.
+- [ ] Account linking review: decide which provider accounts a user may link (one per provider?
+      different emails?) and what each one is for (sign-in, mail, LinkedIn posting). Today the
+      rules are implicit and features guess the right row.
 - [ ] Better Auth 1.8 upgrade, once 1.8 is stable. Gap analysis against the beta:
       [specs/auth/better-auth-1.8-gap-analysis.md](./auth/better-auth-1.8-gap-analysis.md).
       Must-do: `oauthClient.sector_identifier` column before the bump.
