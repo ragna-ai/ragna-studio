@@ -29,9 +29,24 @@ Draft agents and attachments from the media library also come from your private 
 
 Older mail is not imported up front. When you open an older thread, RAGNA loads it from your provider.
 
-To disconnect, open **Email settings**, go to **General** and choose **Disconnect mailbox**. This removes the synced mail, categories and drafts from RAGNA. Your Gmail or Outlook account itself is not changed.
+## Disconnect your mailbox
 
-Disconnecting also revokes the Google access you granted to RAGNA Studio and deletes the stored tokens. You stay signed in. If you sign in with the same Google account, Google asks for your consent again the next time. This applies when a member is removed from an organization or leaves it, too. Microsoft offers no revocation for apps. RAGNA Studio deletes its stored Microsoft tokens, but a Microsoft administrator who wants to end the grant fully revokes it in Entra under **Enterprise applications**.
+Open **Email settings**, go to **General** and choose **Disconnect mailbox**. Disconnecting:
+
+- removes the synced mail, categories and drafts.
+- deletes the stored access tokens of your mailbox.
+- keeps you signed in.
+
+The same happens when a member is removed from an organization or leaves it.
+
+### Access at Google and Microsoft
+
+- **Gmail:** disconnecting also asks Google to revoke the app's access. Google then invalidates all tokens it issued to the app for your account. If you sign in with Google, Google asks for your consent again next time.
+- **Outlook:** Microsoft offers apps no way to revoke access, so only the stored tokens are deleted. To remove the access yourself:
+  - Work or school account: open [My Apps](https://myapps.microsoft.com), choose the app, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask your administrator to remove it in Entra under **Enterprise applications**.
+  - Personal account (outlook.com, hotmail): open [account.live.com/consent/Manage](https://account.live.com/consent/Manage) and remove the app.
+
+The app appears at Google and Microsoft under the name your administrator registered it with.
 
 ## Keep the connection alive
 
@@ -96,6 +111,8 @@ Deleting a category keeps the history of messages in it, just without a category
 ## Draft replies with an agent
 
 An agent can write a reply for you. The result is a draft that you review, edit and send yourself.
+
+The agent drafts with its instructions, context and memory. It does not use its tools while drafting, because incoming mail can contain instructions from anyone. To look something up for a reply, ask the agent in a chat.
 
 ### Draft on demand
 

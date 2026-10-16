@@ -48,6 +48,9 @@ when it ships; move it into a PRD when it gets designed.
 - [ ] Account linking review: decide which provider accounts a user may link (one per provider?
       different emails?) and what each one is for (sign-in, mail, LinkedIn posting). Today the
       rules are implicit and features guess the right row.
+- [ ] White-labeling: decide which surfaces carry the brand (app UI, public docs, emails). Then
+      adjust the AGENTS.md branding rule and sweep (docs mention RAGNA about 80 times on 24 pages;
+      UI strings like "Connect this app to Ragna"). The UI likely needs a configurable app name.
 - [ ] Better Auth 1.8 upgrade, once 1.8 is stable. Gap analysis against the beta:
       [specs/auth/better-auth-1.8-gap-analysis.md](./auth/better-auth-1.8-gap-analysis.md).
       Must-do: `oauthClient.sector_identifier` column before the bump.
