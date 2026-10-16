@@ -32,7 +32,7 @@ when it ships; move it into a PRD when it gets designed.
 
 ## Security
 
-- [ ] OAuth and MCP hardening, in progress on `fix/oauth-mcp-hardening`:
+- [x] OAuth and MCP hardening, shipped in PR #110 (v0.6.2, 2026-10-16):
       [specs/security/oauth-mcp-hardening-prd.md](./security/oauth-mcp-hardening-prd.md).
       Mail token revocation, MCP audit trail, consent page redirect host.
 - [ ] LinkedIn sign-in requests `w_member_social` up front. Request it only on the account

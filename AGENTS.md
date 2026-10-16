@@ -145,6 +145,10 @@ In user-facing text and docs, write the brand as `RAGNA` (all caps) and the prod
 This repo is public. `specs/` holds only technical docs for features that are decided or being built.
 Business strategy, pricing, product lineup and undecided drafts live outside this repo; never write them into `specs/`.
 
+Spec bookkeeping ships in the same PR as the code, never as a separate docs-only PR: PRD `Status: implemented (date, PR #N)`,
+the ticked item in `specs/backlog.md`, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
+Exception: docs about a security fix wait until its advisory is published.
+
 # Browser use
 
 Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate because you don't have credentials. Ask the user to share images or details if required.

@@ -150,9 +150,11 @@ Gmail-backed email client (`/mail`): three-pane UI, AI auto-categorization
 into user-defined categories, AI reply drafts via a configurable agent
 (auto-triggered per category/sender or manual), markdown-canonical content
 pipeline rendered through `@repo/editor`. Polling sync with manual
-"Sync now".
+"Sync now". Drafts run without agent tools (inbound mail is untrusted).
+Disconnect and offboarding revoke the Google grant and clear provider tokens.
 → [specs/email/prd.md](./email/prd.md),
-[gmail-client-decision.md](./email/gmail-client-decision.md)
+[gmail-client-decision.md](./email/gmail-client-decision.md),
+[OAuth and MCP hardening](./security/oauth-mcp-hardening-prd.md)
 
 ## Supporting services
 
