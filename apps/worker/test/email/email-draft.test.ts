@@ -1,11 +1,13 @@
 import type { EmailDraft } from '@repo/database';
 import {
+  createDataset,
   deleteAgentById,
   deleteWorkspaceById,
   getAgentsByWorkspaceId,
   getOrganizationIdByUserId,
   listEmailDraftsByAccountId,
   updateEmailAccountSettings,
+  upsertMemory,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
 import { EMAIL_DRAFT_JOB } from '@repo/queue';
@@ -27,6 +29,7 @@ import {
   seedMailUser,
   type SeededMailUser,
 } from '../support/email-fixtures';
+import { seedReadyDocument } from '../support/generation-fixtures';
 import { buildJob } from '../support/job';
 
 interface DraftJobParams {
@@ -328,6 +331,97 @@ describe('processEmailDraftJob', () => {
 
       const [draft] = await listAllDrafts(scenario.mailUser.account.id);
       expect(draft?.status).toBe('discarded');
+    });
+  });
+  describe('untrusted email content', () => {
+    function lastModelCall() {
+      const call = languageModelGenerateMock.mock.calls.at(-1);
+      if (!call) throw new Error('model was not called');
+      return call[0];
+    }
+
+    function systemText(): string {
+      return lastModelCall()
+        .prompt.filter((message) => message.role === 'system')
+        .map((message) => String(message.content))
+        .join('\n');
+    }
+
+    async function runDraftWithAgent(
+      scenario: SeededDraftScenario,
+      agentId: string,
+    ): Promise<void> {
+      scriptModelOutput({ text: 'ok' });
+      await processEmailDraftJob(
+        draftJob({ ...scenario, replyToMessageId: scenario.messageId, agentId }),
+      );
+    }
+
+    test('the model call receives no tools even when the agent has them enabled', async () => {
+      const scenario = await seedScenario();
+      const agent = await seedAgent({
+        userId: scenario.mailUser.userId,
+        workspaceId: scenario.mailUser.personalWorkspaceId,
+        tools: ['webBrowser', 'datasets', 'memory', 'think'],
+      });
+
+      await runDraftWithAgent(scenario, agent.id);
+
+      expect(lastModelCall().tools ?? []).toHaveLength(0);
+    });
+
+    test('instructions keep the memory block and drop the pinned dataset', async () => {
+      const scenario = await seedScenario();
+      const dataset = await createDataset({
+        userId: scenario.mailUser.userId,
+        workspaceId: scenario.mailUser.personalWorkspaceId,
+        name: 'Secret Customers',
+      });
+      const agent = await seedAgent({
+        userId: scenario.mailUser.userId,
+        workspaceId: scenario.mailUser.personalWorkspaceId,
+        tools: ['datasets', 'memory'],
+        defaultDatasetId: dataset.id,
+      });
+      await upsertMemory({ agentId: agent.id, content: 'Sven prefers short replies.' });
+
+      await runDraftWithAgent(scenario, agent.id);
+
+      const instructions = systemText();
+      expect(instructions).toContain('<memory>');
+      expect(instructions).toContain('Sven prefers short replies.');
+      expect(instructions).not.toContain('<pinned_dataset');
+      expect(instructions).not.toContain('Secret Customers');
+    });
+
+    test('retrieval mode adds no document index', async () => {
+      const scenario = await seedScenario();
+      const agent = await seedAgent({
+        userId: scenario.mailUser.userId,
+        workspaceId: scenario.mailUser.personalWorkspaceId,
+        tools: ['documents'],
+      });
+      await seedReadyDocument({ agentId: agent.id, extractedTextLength: 40_000 });
+
+      await runDraftWithAgent(scenario, agent.id);
+
+      const instructions = systemText();
+      expect(instructions).not.toContain('<document_index>');
+      expect(instructions).not.toContain('existing.txt');
+    });
+
+    test('the task prompt marks the thread as untrusted', async () => {
+      const scenario = await seedScenario();
+      const agent = await seedAgent({
+        userId: scenario.mailUser.userId,
+        workspaceId: scenario.mailUser.personalWorkspaceId,
+      });
+      await runDraftWithAgent(scenario, agent.id);
+
+      const userText = JSON.stringify(
+        lastModelCall().prompt.filter((message) => message.role === 'user'),
+      );
+      expect(userText).toContain('untrusted');
     });
   });
 });

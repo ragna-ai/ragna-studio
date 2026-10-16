@@ -163,12 +163,12 @@ describe('processWorkflowJob', () => {
     };
     const run = await seedRun({ owner: user, definition });
     const defaultGenerate = languageModelGenerateMock.getMockImplementation();
-    languageModelGenerateMock.mockImplementationOnce(async () => {
+    languageModelGenerateMock.mockImplementationOnce(async (options) => {
       await updateRunStatus({ runId: run.id, status: 'cancelled', finishedAt: new Date() });
       if (!defaultGenerate) {
         throw new Error('default language mock implementation missing');
       }
-      return defaultGenerate();
+      return defaultGenerate(options);
     });
 
     await processWorkflowJob(runJob(run.id));

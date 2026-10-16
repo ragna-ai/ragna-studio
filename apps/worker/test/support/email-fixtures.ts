@@ -1,4 +1,4 @@
-import type { Agent, EmailAccount, EmailProvider } from '@repo/database';
+import type { Agent, AgentTools, EmailAccount, EmailProvider } from '@repo/database';
 import { createAgent, createEmailAccount, db } from '@repo/database';
 import { agentTemplate } from '@repo/database/schema';
 import { seedAuthenticatedUser, seedTokenPricedAiModel } from '@repo/testing';
@@ -40,9 +40,17 @@ export interface SeedAgentParams {
   userId: string;
   workspaceId: string;
   name?: string;
+  tools?: AgentTools;
+  defaultDatasetId?: string;
 }
 
-export async function seedAgent({ userId, workspaceId, name }: SeedAgentParams): Promise<Agent> {
+export async function seedAgent({
+  userId,
+  workspaceId,
+  name,
+  tools,
+  defaultDatasetId,
+}: SeedAgentParams): Promise<Agent> {
   const { aiModelId } = await seedTokenPricedAiModel();
 
   return createAgent({
@@ -51,5 +59,7 @@ export async function seedAgent({ userId, workspaceId, name }: SeedAgentParams):
     aiModelId,
     name: name ?? 'Draft Agent',
     systemPrompt: 'You draft email replies.',
+    tools,
+    defaultDatasetId,
   });
 }
