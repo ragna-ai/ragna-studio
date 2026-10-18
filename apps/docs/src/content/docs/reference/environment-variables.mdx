@@ -104,14 +104,15 @@ Set at least one chat provider. Each `*_API_BASE_URL` is optional and overrides 
 
 ## Web search and browser
 
-| Variable                     | Default                 | Meaning                                       |
-| ---------------------------- | ----------------------- | --------------------------------------------- |
-| `SERP_API_KEY`               |                         | SerpAPI key for web search                    |
-| `WEBBROWSER_PORT`            | `3011`                  | Port of the headless browser service          |
-| `WEBBROWSER_BASE_URL`        | `http://localhost:3011` | URL the API uses to reach the browser service |
-| `BROWSER_NAVIGATION_TIMEOUT` | `25000`                 | Page navigation timeout in ms                 |
-| `BROWSER_BODY_LOAD_TIMEOUT`  | `10000`                 | Page body load timeout in ms                  |
-| `BROWSER_MAX_CONCURRENCY`    | `4`                     | Parallel browser pages                        |
+| Variable                     | Default                 | Meaning                                                       |
+| ---------------------------- | ----------------------- | ------------------------------------------------------------- |
+| `SERP_API_KEY`               |                         | SerpAPI key for web search                                    |
+| `WEBBROWSER_PORT`            | `3011`                  | Port of the headless browser service                          |
+| `WEBBROWSER_BASE_URL`        | `http://localhost:3011` | URL the API uses to reach the browser service                 |
+| `BROWSER_NAVIGATION_TIMEOUT` | `25000`                 | Page navigation timeout in ms                                 |
+| `BROWSER_BODY_LOAD_TIMEOUT`  | `10000`                 | Page body load timeout in ms                                  |
+| `BROWSER_MAX_CONCURRENCY`    | `4`                     | Parallel browser pages                                        |
+| `BROWSER_MAX_QUEUE`          | `20`                    | Scrapes that may wait for a page before new ones are rejected |
 
 ## Mail
 

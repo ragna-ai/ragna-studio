@@ -76,6 +76,10 @@ const ConfigSchema = z.object({
     .string()
     .optional()
     .transform((val) => Number(val) || 4),
+  BROWSER_MAX_QUEUE: z
+    .string()
+    .optional()
+    .transform((val) => Number(val) || 20),
   // Email sync poll interval in ms. Default
   // 5 minutes.
   EMAIL_SYNC_INTERVAL: z
@@ -418,6 +422,10 @@ export class ConfigService {
 
   get browserMaxConcurrency(): number {
     return this._config.BROWSER_MAX_CONCURRENCY;
+  }
+
+  get browserMaxQueue(): number {
+    return this._config.BROWSER_MAX_QUEUE;
   }
 
   get emailSyncInterval(): number {

@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { scrapePage } from './services/browser.service';
+import { QueueFullError } from './utils/semaphore';
 import { UrlNotAllowedError } from './utils/url-guard';
 import { scrapeQuerySchema } from './validation/scrape.schema';
 
@@ -22,11 +23,24 @@ export const app = new Hono()
     }),
     async (c) => {
       const { url } = c.req.valid('query');
+      const signal = c.req.raw.signal;
 
       try {
-        const result = await scrapePage(url);
+        const result = await scrapePage(url, signal);
         return c.json(result);
       } catch (error) {
+        if (signal.aborted) {
+          logger.info(`Client disconnected, cancelled scrape of ${url}`);
+          throw new HTTPException(StatusCodes.REQUEST_TIMEOUT, {
+            message: 'Client disconnected',
+          });
+        }
+        if (error instanceof QueueFullError) {
+          logger.warn('Rejected scrape request because the queue is full');
+          throw new HTTPException(StatusCodes.SERVICE_UNAVAILABLE, {
+            message: 'Too many scrapes in progress, try again later',
+          });
+        }
         if (error instanceof UrlNotAllowedError) {
           logger.warn('Rejected scrape request for a URL that is not allowed');
           throw new HTTPException(StatusCodes.BAD_REQUEST, {
