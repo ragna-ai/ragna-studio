@@ -39,9 +39,6 @@ const scrapeSlots = new Semaphore(config.browserMaxConcurrency, config.browserMa
 
 const MAX_MARKDOWN_LENGTH = 10_000;
 
-// Scrapes are rare, so an idle Chromium would hold a few hundred MB for nothing.
-const BROWSER_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
-
 // Elements that only add navigation/decoration noise to the extracted markdown.
 const REMOVED_ELEMENTS_SELECTOR =
   'script, footer, .footer, #footer, header, .header, #header, nav, .nav, #nav, ' +
@@ -91,15 +88,17 @@ function markScrapeStarted(): void {
   }
 }
 
+// Scrapes are rare, so an idle Chromium would hold a few hundred MB for nothing.
+// A close-after of 0 keeps the browser running.
 function markScrapeFinished(): void {
   pendingScrapes--;
-  if (pendingScrapes > 0) {
+  if (pendingScrapes > 0 || config.browserIdleCloseAfter === 0) {
     return;
   }
   idleTimer = setTimeout(() => {
     idleTimer = null;
     closeBrowser().catch((error) => logger.error('Failed to close idle browser:', error));
-  }, BROWSER_IDLE_TIMEOUT_MS);
+  }, config.browserIdleCloseAfter);
 }
 
 // One Chromium process is shared across requests while scrapes keep coming;
@@ -107,16 +106,29 @@ function markScrapeFinished(): void {
 // request was costing hundreds of ms of startup and CPU on every single scrape.
 let browserPromise: Promise<Browser> | null = null;
 
+/**
+ * Returns the shared browser, relaunching it after a crash or a failed launch.
+ * Concurrent callers share one relaunch instead of each starting their own.
+ */
 async function getBrowser(): Promise<Browser> {
-  if (browserPromise) {
-    const browser = await browserPromise;
-    if (browser.connected) {
+  const current = browserPromise;
+  if (current) {
+    const browser = await current.catch(() => null);
+    if (browser?.connected) {
       return browser;
     }
-    browserPromise = null;
+    // Another caller may already have replaced it while we awaited.
+    if (browserPromise === current) {
+      browserPromise = null;
+    }
   }
 
-  browserPromise = puppeteer.launch({
+  browserPromise ??= launchBrowser();
+  return browserPromise;
+}
+
+function launchBrowser(): Promise<Browser> {
+  return puppeteer.launch({
     pipe: true,
     args: [
       '--no-sandbox',
@@ -128,8 +140,6 @@ async function getBrowser(): Promise<Browser> {
       '--js-flags=--jitless',
     ],
   });
-
-  return browserPromise;
 }
 
 export async function closeBrowser(): Promise<void> {
@@ -140,8 +150,8 @@ export async function closeBrowser(): Promise<void> {
   // instead of reusing the one being closed.
   const closingBrowser = browserPromise;
   browserPromise = null;
-  const browser = await closingBrowser;
-  if (browser.connected) {
+  const browser = await closingBrowser.catch(() => null);
+  if (browser?.connected) {
     await browser.close();
   }
 }

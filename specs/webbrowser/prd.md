@@ -47,7 +47,7 @@ this monorepo's conventions (Hono + Bun + tsdown).
 - New config in `@repo/config`: `WEBBROWSER_PORT` (3011 — `API_PORT`
   already owns 3010), `WEBBROWSER_BASE_URL` (consumed by the agent tool
   instead of a hardcoded URL), `BROWSER_NAVIGATION_TIMEOUT`,
-  `BROWSER_BODY_LOAD_TIMEOUT`, `BROWSER_MAX_CONCURRENCY`, `BROWSER_MAX_QUEUE`.
+  `BROWSER_BODY_LOAD_TIMEOUT`, `BROWSER_MAX_CONCURRENCY`, `BROWSER_MAX_QUEUE`, `BROWSER_IDLE_CLOSE_AFTER`.
 - `web-browser.tool.ts` now calls `${config.webBrowserBaseUrl}/scrape`
   instead of a hardcoded `localhost:3010`, which silently collided with the
   API app's own port and was never actually reachable.
@@ -77,8 +77,10 @@ context is closed, so abandoned scrapes don't hold a slot.
   `puppeteer.launch()` per request cost hundreds of ms and a whole Chromium
   process per scrape. The browser is now a lazily-launched singleton
   (auto-relaunched if it disconnects or crashes), reused across requests via
-  a fresh browser context per call. It is closed after 5 minutes without
-  scrapes, so an idle service holds no Chromium processes.
+  a fresh browser context per call. It is closed after
+  `BROWSER_IDLE_CLOSE_AFTER` (default `5m`, `0m` = never) without scrapes,
+  so an idle service holds no Chromium processes. A failed launch is not
+  cached, and concurrent callers share one relaunch.
 - **One incognito context per scrape.** Cookies and cache never carry over
   between users' scrapes and don't pile up in the long-lived browser.
 - **Concurrency cap via an in-process semaphore**
