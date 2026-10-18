@@ -47,7 +47,7 @@ this monorepo's conventions (Hono + Bun + tsdown).
 - New config in `@repo/config`: `WEBBROWSER_PORT` (3011 — `API_PORT`
   already owns 3010), `WEBBROWSER_BASE_URL` (consumed by the agent tool
   instead of a hardcoded URL), `BROWSER_NAVIGATION_TIMEOUT`,
-  `BROWSER_BODY_LOAD_TIMEOUT`, `BROWSER_MAX_CONCURRENCY`.
+  `BROWSER_BODY_LOAD_TIMEOUT`, `BROWSER_MAX_CONCURRENCY`, `BROWSER_MAX_QUEUE`, `BROWSER_IDLE_CLOSE_AFTER`.
 - `web-browser.tool.ts` now calls `${config.webBrowserBaseUrl}/scrape`
   instead of a hardcoded `localhost:3010`, which silently collided with the
   API app's own port and was never actually reachable.
@@ -55,16 +55,21 @@ this monorepo's conventions (Hono + Bun + tsdown).
 ## Request lifecycle
 
 1. Validate `url` (zod): must be `https://`.
-2. Acquire a concurrency slot (in-process semaphore, default 4 — see
-   `BROWSER_MAX_CONCURRENCY`).
-3. Get (or lazily launch) the shared Chromium instance; open a new tab.
+2. Acquire a concurrency slot (in-process semaphore, default 4, see
+   `BROWSER_MAX_CONCURRENCY`). At most `BROWSER_MAX_QUEUE` (default 20)
+   requests wait; beyond that the request gets 503 right away.
+3. Get (or lazily launch) the shared Chromium instance; open a tab in a
+   fresh incognito browser context.
 4. Navigate with `waitUntil: ['domcontentloaded', 'networkidle2']`, then a
    bounded, non-fatal wait for `document.readyState === 'complete'`.
 5. Extract allow-listed `<meta>` tags in a single browser-side pass.
 6. Strip nav/header/footer/aside/script/iframe/fixed-position-overlay
    elements, then read `body.innerHTML`.
 7. Convert to markdown, truncate to 10k characters, drop blank lines.
-8. Close the tab (not the browser), release the concurrency slot.
+8. Close the context (not the browser), release the concurrency slot.
+
+If the client disconnects at any step, the request leaves the queue or its
+context is closed, so abandoned scrapes don't hold a slot.
 
 ## Reliability decisions
 
@@ -72,11 +77,18 @@ this monorepo's conventions (Hono + Bun + tsdown).
   `puppeteer.launch()` per request cost hundreds of ms and a whole Chromium
   process per scrape. The browser is now a lazily-launched singleton
   (auto-relaunched if it disconnects or crashes), reused across requests via
-  `browser.newPage()` per call.
+  a fresh browser context per call. It is closed after
+  `BROWSER_IDLE_CLOSE_AFTER` (default `5m`, `0m` = never) without scrapes,
+  so an idle service holds no Chromium processes. A failed launch is not
+  cached, and concurrent callers share one relaunch.
+- **One incognito context per scrape.** Cookies and cache never carry over
+  between users' scrapes and don't pile up in the long-lived browser.
 - **Concurrency cap via an in-process semaphore**
   (`apps/webbrowser/src/utils/semaphore.ts`), default 4. Bounds how many
   tabs/navigations run at once so a burst of agent calls can't exhaust the
-  container.
+  container. The queue is capped too (`BROWSER_MAX_QUEUE`): callers get 503
+  instead of waiting past the agent tool's 30 s timeout, and the tool tells
+  the agent the browser is busy.
 - **Fire-and-forget puppeteer event listeners must not crash the process.**
   `request.continue()/abort()` in the request-interception handler and
   `dialog.accept()` return unawaited promises; a page/frame torn down

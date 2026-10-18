@@ -35,7 +35,7 @@ const turndownService = new TurndownService();
 // Caps how many pages navigate concurrently. Each scrape is a real Chromium
 // tab; without this, a burst of agent calls could spawn unbounded tabs and
 // exhaust the container's memory/CPU.
-const scrapeSlots = new Semaphore(config.browserMaxConcurrency);
+const scrapeSlots = new Semaphore(config.browserMaxConcurrency, config.browserMaxQueue);
 
 const MAX_MARKDOWN_LENGTH = 10_000;
 
@@ -63,48 +63,95 @@ export type ScrapeResult = {
   body: string;
 };
 
-export async function scrapePage(url: string): Promise<ScrapeResult> {
-  return scrapeSlots.withLock(async () => {
-    const { bodyHtml, meta } = await getPageContents(url);
-    return { meta, body: toMarkdown(bodyHtml) };
-  });
+/** Scrapes a page; `signal` cancels it when the caller has gone away. */
+export async function scrapePage(url: string, signal: AbortSignal): Promise<ScrapeResult> {
+  markScrapeStarted();
+  try {
+    return await scrapeSlots.withLock(async () => {
+      const { bodyHtml, meta } = await getPageContents(url, signal);
+      return { meta, body: toMarkdown(bodyHtml) };
+    }, signal);
+  } finally {
+    markScrapeFinished();
+  }
 }
 
-// One Chromium process is shared across requests; each request gets its own
-// tab. Launching a fresh browser per request was costing hundreds of ms of
-// startup and CPU on every single scrape.
+// Counts queued scrapes too, so the browser is never closed while one waits for a slot.
+let pendingScrapes = 0;
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+function markScrapeStarted(): void {
+  pendingScrapes++;
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+}
+
+// Scrapes are rare, so an idle Chromium would hold a few hundred MB for nothing.
+// A close-after of 0 keeps the browser running.
+function markScrapeFinished(): void {
+  pendingScrapes--;
+  if (pendingScrapes > 0 || config.browserIdleCloseAfter === 0) {
+    return;
+  }
+  idleTimer = setTimeout(() => {
+    idleTimer = null;
+    closeBrowser().catch((error) => logger.error('Failed to close idle browser:', error));
+  }, config.browserIdleCloseAfter);
+}
+
+// One Chromium process is shared across requests while scrapes keep coming;
+// each request gets its own incognito context. Launching a fresh browser per
+// request was costing hundreds of ms of startup and CPU on every single scrape.
 let browserPromise: Promise<Browser> | null = null;
 
+/**
+ * Returns the shared browser, relaunching it after a crash or a failed launch.
+ * Concurrent callers share one relaunch instead of each starting their own.
+ */
 async function getBrowser(): Promise<Browser> {
-  if (browserPromise) {
-    const browser = await browserPromise;
-    if (browser.connected) {
+  const current = browserPromise;
+  if (current) {
+    const browser = await current.catch(() => null);
+    if (browser?.connected) {
       return browser;
     }
-    browserPromise = null;
+    // Another caller may already have replaced it while we awaited.
+    if (browserPromise === current) {
+      browserPromise = null;
+    }
   }
 
-  browserPromise = puppeteer.launch({
+  browserPromise ??= launchBrowser();
+  return browserPromise;
+}
+
+function launchBrowser(): Promise<Browser> {
+  return puppeteer.launch({
     pipe: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      // Safe because the sandbox is already off; saves two zygote processes.
+      '--no-zygote',
       '--js-flags=--jitless',
     ],
   });
-
-  return browserPromise;
 }
 
 export async function closeBrowser(): Promise<void> {
   if (!browserPromise) {
     return;
   }
-  const browser = await browserPromise;
+  // Cleared before awaiting so a scrape arriving meanwhile launches a new browser
+  // instead of reusing the one being closed.
+  const closingBrowser = browserPromise;
   browserPromise = null;
-  if (browser.connected) {
+  const browser = await closingBrowser.catch(() => null);
+  if (browser?.connected) {
     await browser.close();
   }
 }
@@ -116,15 +163,27 @@ function toMarkdown(bodyHtml: string): string {
   return truncated.replace(/^\s*[\r\n]/gm, '');
 }
 
-async function getPageContents(url: string): Promise<{ meta: PageMeta; bodyHtml: string }> {
+async function getPageContents(
+  url: string,
+  signal: AbortSignal,
+): Promise<{ meta: PageMeta; bodyHtml: string }> {
   // Reject before a tab is opened. Redirect hops and sub-requests are checked
   // again in the request handler below.
   await assertPublicUrl(url);
 
   const browser = await getBrowser();
-  const page = await browser.newPage();
+  signal.throwIfAborted();
+  // A throwaway context per scrape keeps cookies and cache from leaking
+  // between users' scrapes and from piling up in a long-lived browser.
+  const context = await browser.createBrowserContext();
+  // Closing the context makes the pending page calls reject, which ends the scrape.
+  const closeContext = () => {
+    context.close().catch(() => {});
+  };
+  signal.addEventListener('abort', closeContext, { once: true });
 
   try {
+    const page = await context.newPage();
     page.setDefaultNavigationTimeout(config.browserNavigationTimeout);
     await page.setViewport({ width: 800, height: 600 });
     await blockNonEssentialRequests(page);
@@ -155,9 +214,8 @@ async function getPageContents(url: string): Promise<{ meta: PageMeta; bodyHtml:
 
     return { meta, bodyHtml };
   } finally {
-    if (!page.isClosed()) {
-      await page.close().catch(() => {});
-    }
+    signal.removeEventListener('abort', closeContext);
+    await context.close().catch(() => {});
   }
 }
 

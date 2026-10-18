@@ -14,6 +14,9 @@ const webBrowserSchema = z.object({
     .describe('The valid HTTPS URL of the website to visit.'),
 });
 
+// Matches the webbrowser service's response when its scrape queue is full.
+const BROWSER_BUSY_STATUS = 503;
+
 type WebBrowserInput = z.infer<typeof webBrowserSchema>;
 type WebBrowserOutput = {
   meta: null;
@@ -51,6 +54,13 @@ export const getWebBrowserResults = (
           },
           signal: AbortSignal.timeout(30_000),
         });
+
+        if (response.status === BROWSER_BUSY_STATUS) {
+          return {
+            meta: null,
+            body: 'the web browser is busy right now. try again shortly.',
+          };
+        }
 
         if (response.ok !== true || !response.body) {
           throw new Error('Failed to scrape');
