@@ -80,7 +80,9 @@ context is closed, so abandoned scrapes don't hold a slot.
   a fresh browser context per call. It is closed after
   `BROWSER_IDLE_CLOSE_AFTER` (default `5m`, `0m` = never) without scrapes,
   so an idle service holds no Chromium processes. A failed launch is not
-  cached, and concurrent callers share one relaunch.
+  cached, and concurrent callers share one relaunch. Closing leaves orphaned
+  Chromium helpers, which tini reaps
+  ([zombie-reaping-prd.md](./zombie-reaping-prd.md)).
 - **One incognito context per scrape.** Cookies and cache never carry over
   between users' scrapes and don't pile up in the long-lived browser.
 - **Concurrency cap via an in-process semaphore**
