@@ -11,7 +11,8 @@ export interface TruncateAllTablesResult {
  * `pg_tables` rather than hardcoded, so a new schema table is covered
  * automatically. Drizzle's own bookkeeping tables (only present when using
  * `db:generate` + migrate, not the `db:push` flow this repo uses) are
- * excluded defensively.
+ * excluded defensively. `jwks` is kept because the JWKS cached by
+ * `requireMcpAuth` can't follow a signing key rotated on every test.
  *
  * Guards against ever touching the dev database: the truncate can only run
  * once `assertConnectedToTestDatabase` confirms we're on `studio_test`.
@@ -21,7 +22,7 @@ export async function truncateAllTables(): Promise<TruncateAllTablesResult> {
 
   const result = await db.execute(sql`
     select tablename from pg_tables
-    where schemaname = 'public' and tablename not like '%drizzle%'
+    where schemaname = 'public' and tablename not like '%drizzle%' and tablename <> 'jwks'
   `);
   const truncatedTables = (result.rows as { tablename: string }[]).map((row) => row.tablename);
 
