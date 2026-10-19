@@ -823,6 +823,9 @@ function createEngine(props: MessageScrollerProviderProps) {
         return;
       }
     }
+    // Re-anchor before paint: waiting for the resize frame paints one
+    // clamped frame when a trailing element (e.g. the loader) is removed.
+    if (reanchorToAnchoredMessage()) return;
     if (mode === 'following-bottom' && autoScroll()) {
       scrollToEnd({ behavior: 'auto' });
     } else {
