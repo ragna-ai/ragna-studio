@@ -268,9 +268,6 @@ importers:
       http-status-codes:
         specifier: ^2.3.0
         version: 2.3.0
-      unstorage:
-        specifier: ^1.17.6
-        version: 1.17.6(db0@0.3.4(drizzle-orm@1.0.0-rc.4(@types/pg@8.23.1)(bun-types@1.4.3)(pg@8.23.1)(zod@4.6.7)))(ioredis@5.11.1(supports-color@10.2.2))
       zod:
         specifier: 'catalog:'
         version: 4.6.7
