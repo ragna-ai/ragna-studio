@@ -60,7 +60,7 @@ FROM oven/bun:debian AS runner
 WORKDIR /app
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends chromium wget \
+  && apt-get install -y --no-install-recommends chromium wget tini \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
@@ -77,4 +77,7 @@ EXPOSE 3011
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- "http://localhost:${WEBBROWSER_PORT}/health" || exit 1
 
+# Bun as PID 1 doesn't reap orphaned Chromium helpers after the idle close.
+# -s also covers pods with a shared PID namespace, where tini isn't PID 1.
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["bun", "dist/index.mjs"]
