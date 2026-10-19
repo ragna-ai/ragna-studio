@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@repo/config": "workspace:*",
-    "s3mini": "^1.0.2",
-    "unstorage": "^1.17.5"
+    "s3mini": "^1.0.3",
+    "unstorage": "^1.17.6"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
