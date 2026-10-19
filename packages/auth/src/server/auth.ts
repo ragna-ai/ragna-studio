@@ -10,9 +10,12 @@ import {
   MEMBER_REMOVED_BAN_REASON,
   ORGANIZATION_DELETED_BAN_REASON,
 } from '@repo/database';
-import { logger } from '@repo/logger';
 import * as schema from '@repo/database/schema';
+import { logger } from '@repo/logger';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
 import {
   enqueueInvitationEmail,
   rejectInvitingRemovedMember,
@@ -20,9 +23,6 @@ import {
   validateInvitation,
 } from './organization-invitations';
 import { prepareUserRemoval } from './organization-removal';
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
 
 // Real permissions come from mcp_settings; offline_access
 // is only here because OAuth Provider gates refresh-token issuance on it.
@@ -66,6 +66,7 @@ export const auth = betterAuth({
   // tests can't sign up through the API). Gated on NODE_ENV so it's absent
   // in dev and production.
   plugins: [
+    ...(config.isTest ? [testUtils()] : []),
     admin({ bannedUserMessage: bannedUserMessageFor }),
     lastLoginMethod(),
     organization({
@@ -78,7 +79,6 @@ export const auth = betterAuth({
         beforeUpdateMemberRole: rejectOwnerRoleChange,
       },
     }),
-    ...(config.isTest ? [testUtils()] : []),
     ...(config.mcpEnabled
       ? [
           jwt(),
