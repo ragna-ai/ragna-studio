@@ -5,15 +5,16 @@
 
 # ============================================================
 # Base — node + pnpm + turbo (pruning + build only; the runner
-# installs its own system Chromium, so no Chrome needed here)
+# installs its own system Chromium, so no Chrome needed here).
+# Debian slim, not Alpine: mdream ships a native addon per libc, and
+# the install-time binary must be glibc to load in the runner below.
 # ============================================================
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
 ENV TURBO_TELEMETRY_DISABLED=1
-# Puppeteer's postinstall would otherwise try to download a Chrome build
-# that can't run on Alpine/musl anyway — the runner uses system Chromium.
+# The runner uses system Chromium, so the build stage needs no Chrome download.
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 WORKDIR /app
@@ -22,7 +23,9 @@ WORKDIR /app
 # "packageManager" field — read it instead of hardcoding it here.
 COPY package.json ./
 
-RUN apk add --no-cache libc6-compat curl \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
   && PNPM_VERSION="$(sed -n 's/.*"packageManager": *"pnpm@\([0-9][0-9.]*\).*/\1/p' package.json)" \
   && curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION="$PNPM_VERSION" SHELL=/bin/sh ENV="$HOME/.shrc" sh - \
   && npm install -g turbo
@@ -53,7 +56,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # ============================================================
 # Runner — Bun on Debian + system Chromium. Bun's default/debian
-# image has glibc and apt, unlike Alpine, which can't run Chrome.
+# image has glibc and apt, which Chromium needs.
 # ============================================================
 FROM oven/bun:debian AS runner
 

@@ -5,10 +5,10 @@
 // `formatThreadForPrompt` (the only caller) receives already-converted
 // `text` strings; stripping is a prompt-assembly step, not part of the
 // stored canonical text. Two heuristics, chosen to match both plain-text
-// `>` quoting and how turndown renders the common HTML quote shapes:
+// `>` quoting and how mdream renders the common HTML quote shapes:
 //
 // 1. Gmail/Outlook/etc. wrap history in `<blockquote>`, usually preceded by
-//    an "On DATE, NAME wrote:" attribution line. Turndown renders the
+//    an "On DATE, NAME wrote:" attribution line. mdream renders the
 //    blockquote as consecutive `>`-prefixed lines, so once we find that
 //    attribution line we drop it and everything after.
 // 2. Some clients omit the attribution line and just wrap history in a bare

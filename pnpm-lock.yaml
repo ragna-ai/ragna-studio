@@ -13,6 +13,9 @@ catalogs:
     ai:
       specifier: ^7.0.143
       version: 7.0.143
+    mdream:
+      specifier: 2.0.3
+      version: 2.0.3
     oxfmt:
       specifier: ^0.73.0
       version: 0.73.0
@@ -365,6 +368,9 @@ importers:
       http-status-codes:
         specifier: ^2.3.0
         version: 2.3.0
+      mdream:
+        specifier: 'catalog:'
+        version: 2.0.3
       puppeteer:
         specifier: ^25.14.0
         version: 25.14.0
@@ -383,9 +389,6 @@ importers:
       puppeteer-extra-plugin-stealth:
         specifier: ^2.11.2
         version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.14.0)(puppeteer@25.14.0)(supports-color@10.2.2))(supports-color@10.2.2)
-      turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
       zod:
         specifier: 'catalog:'
         version: 4.6.7
@@ -399,9 +402,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.1.0
-      '@types/turndown':
-        specifier: ^5.0.6
-        version: 5.0.6
       tsdown:
         specifier: 'catalog:'
         version: 0.23.1(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
@@ -813,7 +813,7 @@ importers:
         specifier: 18.1.1
         version: 18.1.1
       mdream:
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       nodemailer:
         specifier: ^10.1.2
@@ -2813,9 +2813,6 @@ packages:
 
   '@microsoft/microsoft-graph-types@2.43.1':
     resolution: {integrity: sha512-7r3FiJYW2qTWnl+Li8GV5MzJqPiJp27hvY98kH5V/ZMzGuIOkcJqOfIpusoIQrskLDfYk5kFT8AjpeW713qcIg==}
-
-  '@mixmark-io/domino@2.2.0':
-    resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
   '@miyaneee/rollup-plugin-json5@1.2.0':
     resolution: {integrity: sha512-JjTIaXZp9WzhUHpElrqPnl1AzBi/rvRs065F71+aTmlqvTMVkdbjZ8vfFl4nRlgJy+TPBw69ZK4pwFdmOAt4aA==}
@@ -4969,9 +4966,6 @@ packages:
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
-
-  '@types/turndown@5.0.6':
-    resolution: {integrity: sha512-ru00MoyeeouE5BX4gRL+6m/BsDfbRayOskWqUvh7CLGW+UXxHQItqALa38kKnOiZPqJrtzJUgAC2+F0rL1S4Pg==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -9638,10 +9632,6 @@ packages:
     resolution: {integrity: sha512-k2ev5dv9OgP2pJwaPuydkZdid+haX2U5TDGcPtpAz0gb0nbRR3eXY/cpfrlvHih52YRTxWIcRVKc0ri3C2Scrg==}
     hasBin: true
 
-  turndown@7.2.4:
-    resolution: {integrity: sha512-I8yFsfRzmzK0WV1pNNOA4A7y4RDfFxPRxb3t+e3ui14qSGOxGtiSP6GjeX+Y6CHb7HYaFj7ECUD7VE5kQMZWGQ==}
-    engines: {node: '>=18', npm: '>=9'}
-
   tw-animate-css@1.4.0:
     resolution: {integrity: sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==}
 
@@ -12405,8 +12395,6 @@ snapshots:
 
   '@microsoft/microsoft-graph-types@2.43.1': {}
 
-  '@mixmark-io/domino@2.2.0': {}
-
   '@miyaneee/rollup-plugin-json5@1.2.0(rollup@4.62.4)':
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.62.4)
@@ -14911,8 +14899,6 @@ snapshots:
 
   '@types/trusted-types@2.0.7':
     optional: true
-
-  '@types/turndown@5.0.6': {}
 
   '@types/unist@2.0.11': {}
 
@@ -20490,10 +20476,6 @@ snapshots:
       '@turbo/linux-arm64': 2.11.9
       '@turbo/windows-64': 2.11.9
       '@turbo/windows-arm64': 2.11.9
-
-  turndown@7.2.4:
-    dependencies:
-      '@mixmark-io/domino': 2.2.0
 
   tw-animate-css@1.4.0: {}
 
