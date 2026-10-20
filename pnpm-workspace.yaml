@@ -24,6 +24,12 @@ packageExtensions:
     dependencies:
       drizzle-orm: 1.0.0-rc.4
 
+# Keeps pnpm-lock.yaml a single YAML document. GitHub's dependency graph only
+# reads the first document, so pnpm 12's leading env document hides every
+# locked package from Dependabot (dependabot/dependabot-core#15904).
+# CI and the Dockerfiles install the pnpm version from `packageManager`.
+pmOnFail: ignore
+
 minimumReleaseAgeExclude:
   - 'nuxt'
   - '@nuxt/*'
