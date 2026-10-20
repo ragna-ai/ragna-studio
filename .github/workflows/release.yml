@@ -90,6 +90,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # Signed build provenance: OIDC token for Sigstore, attestation and storage record APIs.
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
@@ -126,6 +130,22 @@ jobs:
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf "${IMAGE}@sha256:%s " *)
+
+      # Attest the multi-arch index users pull, not the per-platform digests.
+      - id: index
+        name: Resolve manifest list digest
+        env:
+          IMAGE: ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          digest=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{json .Manifest}}' | jq -re .digest)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}
+          subject-digest: ${{ steps.index.outputs.digest }}
+          push-to-registry: true
 
   github-release:
     needs: merge
