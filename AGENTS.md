@@ -86,7 +86,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 
 **Queue/Worker pattern**: To add a new background job — (1) add a queue name constant in `@repo/queue/src/constants/`, (2) add a DTO in `@repo/queue/src/dtos/`, (3) add a processor in `apps/worker/src/processors/`, (4) register it in `apps/worker/src/processors/index.ts`.
 
-**Config/secrets**: All env vars route through `@repo/config`. Sensitive values use `config.getSecret('KEY')` (encrypted at rest); non-sensitive ones are direct properties.
+**Config/secrets**: All env vars route through `@repo/config`. Sensitive values use `config.getSecret('KEY')` (redacted from logs, not encrypted); non-sensitive ones are direct properties.
 
 **shadcn-vue components**: Add new UI components via `npx shadcn-vue@latest add <component>` from `apps/web/`. Components land in `app/components/ui/`.
 

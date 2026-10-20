@@ -52,7 +52,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
   version used locally. `apps/api` tests run with `bun test`, and the test
   database script uses `Bun.SQL`.
 - **Env:** job-level, dummy values: `DB_HOST`, `DB_PORT`, `DB_USERNAME`,
-  `DB_PASSWORD`, `ENCRYPTION_PASSWORD` (16+ characters), `BETTER_AUTH_SECRET`.
+  `DB_PASSWORD`, `BETTER_AUTH_SECRET`.
   `DB_DATABASE`, `CREDITS_ENABLED`, and `REDIS_DB` come from `.env.testing`,
   which `@repo/config` loads when `NODE_ENV=test`.
 - **Steps:** checkout, pnpm, Node 24, Bun, `pnpm install --frozen-lockfile`,

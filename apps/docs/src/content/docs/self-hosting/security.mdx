@@ -23,8 +23,8 @@ Go through this list before sharing RAGNA Studio.
 
 - **Keep `.env` private.** It holds every secret. The installer creates it with mode `600`. Keep it out of version control.
 - **Use generated secrets.** Never keep the placeholder values from `.env.example`.
-- **Never rotate `BETTER_AUTH_SECRET` or `ENCRYPTION_PASSWORD`.** Encrypted data such as stored OAuth tokens becomes unreadable. Changing `BETTER_AUTH_SECRET` also ends every session.
-- **Back up both secrets with the data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
+- **Never rotate `BETTER_AUTH_SECRET`.** Encrypted data such as stored OAuth tokens becomes unreadable. Every session also ends.
+- **Back up `BETTER_AUTH_SECRET` with the data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
 
 ## MCP
 

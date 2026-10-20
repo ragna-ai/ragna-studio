@@ -193,8 +193,9 @@ planned Starlight docs. Sections:
 2. **Domains:** `app.example.com` and `api.example.com`, `COOKIE_DOMAIN`,
    `TRUSTED_ORIGINS`, `APP_URL`/`API_BASE_URL`/`NUXT_PUBLIC_API_BASE_URL`.
 3. **Secrets:** generating them with `openssl rand`. Warning:
-   `ENCRYPTION_PASSWORD` must never change, or stored secrets become
-   unreadable.
+   `BETTER_AUTH_SECRET` must never change, or stored OAuth tokens become
+   unreadable. (`ENCRYPTION_PASSWORD` was removed on 2026-10-20: nothing
+   read it.)
 4. **Storage:** two buckets, public read on images only, `S3_ENDPOINT`,
    `S3_REGION`, `MEDIA_URL`. Example values for R2 and AWS. For localhost,
    one paragraph: any S3-compatible server works, running it is up to the

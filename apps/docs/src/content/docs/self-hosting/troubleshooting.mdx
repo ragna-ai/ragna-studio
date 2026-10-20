@@ -26,12 +26,11 @@ Add a service name, such as `backend` or `migrate`, to see only its logs.
 
 ## Startup
 
-| Symptom                                                                        | Likely cause and fix                                                                                                                            |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `migrate` fails with `ECONNREFUSED` on port 5432                               | Releases before the Postgres health check started `migrate` too early on the first start. Run the installer again, or upgrade.                  |
-| `backend` exits with `Encryption password must be at least 16 characters long` | `ENCRYPTION_PASSWORD` is too short. Set a generated value. Only do this before the first start, see [Security](/self-hosting/security#secrets). |
-| `backend` or `migrate` can't log in to Postgres                                | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value.                       |
-| Log warning `MEDIA_URL is not set`                                             | No storage configured. Fine if storage was skipped, see [Storage](/self-hosting/storage).                                                       |
+| Symptom                                          | Likely cause and fix                                                                                                           |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `migrate` fails with `ECONNREFUSED` on port 5432 | Releases before the Postgres health check started `migrate` too early on the first start. Run the installer again, or upgrade. |
+| `backend` or `migrate` can't log in to Postgres  | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value.      |
+| Log warning `MEDIA_URL is not set`               | No storage configured. Fine if storage was skipped, see [Storage](/self-hosting/storage).                                      |
 
 ## Sign-in / Auth
 

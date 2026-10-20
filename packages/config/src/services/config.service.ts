@@ -113,13 +113,6 @@ const ConfigSchema = z.object({
     .transform((val) => val !== 'false')
     .default(true),
 
-  // Encryption
-  ENCRYPTION_PASSWORD: z
-    .string()
-    .trim()
-    .min(16, 'Encryption password must be at least 16 characters long')
-    .default('replace-me-with-a-strong-password'),
-
   // Database connection components
   DB_TYPE: z.string().default('postgres'),
   DB_HOST: z.string().default('localhost'),
@@ -362,7 +355,6 @@ export class ConfigService {
 
       // Track sensitive keys
       this._secrets = new Set([
-        'ENCRYPTION_PASSWORD',
         'DATABASE_URL',
         'REDIS_PASSWORD',
         'SMTP_PASSWORD',
@@ -661,7 +653,6 @@ export class ConfigService {
   }
 
   // Secret getters - use carefully, never log these
-  getSecret(key: 'ENCRYPTION_PASSWORD'): string;
   getSecret(key: 'DATABASE_URL'): string;
   getSecret(key: 'REDIS_PASSWORD'): string;
   getSecret(key: 'SMTP_PASSWORD'): string;
