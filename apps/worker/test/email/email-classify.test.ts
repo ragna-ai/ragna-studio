@@ -109,6 +109,32 @@ describe('processEmailClassifyJob', () => {
     expect(calls.join('')).toContain('Please pay by Friday.');
   });
 
+  test('forwarded content is left out of the prompt', async () => {
+    const { account } = await seedMailUser();
+    await seedCategory({ accountId: account.id, name: 'Invoices' });
+    const { messageId } = await seedEmailThreadWithMessage({
+      accountId: account.id,
+      textBody: [
+        'Please pay by Friday.',
+        '',
+        '---------- Forwarded message ---------',
+        'From: Ada <ada@example.test>',
+        'Date: Mon, 19 Oct 2026',
+        'Subject: Original',
+        '',
+        'Forwarded secret text',
+      ].join('\n'),
+      htmlBody: '',
+    });
+    scriptCategory('NONE');
+
+    await processEmailClassifyJob(classifyJob({ accountId: account.id, messageId }));
+
+    const calls = languageModelGenerateMock.mock.calls.map((call) => JSON.stringify(call));
+    expect(calls.join('')).toContain('Please pay by Friday.');
+    expect(calls.join('')).not.toContain('Forwarded secret text');
+  });
+
   test('NONE leaves the message uncategorized', async () => {
     const { account } = await seedMailUser();
     await seedCategory({ accountId: account.id, name: 'Invoices' });
