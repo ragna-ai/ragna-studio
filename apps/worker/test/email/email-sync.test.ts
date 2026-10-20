@@ -1,5 +1,6 @@
 import {
   getEmailAccountById,
+  getEmailDraftByProviderDraftId,
   getEmailMessageById,
   getEmailThreadByProviderThreadId,
   listEmailMessagesByThreadId,
@@ -7,9 +8,12 @@ import {
 import { MailProviderError } from '@repo/mail/provider';
 import { EMAIL_CLASSIFY_JOB, EMAIL_SYNC_JOB } from '@repo/queue';
 import {
+  buildFakeMailDraft,
   buildFakeMailMessage,
   buildFakeMailThread,
   fetchThreadMock,
+  getDraftMock,
+  listDraftsMock,
   listRecentInboxThreadIdsMock,
   enqueuedJobs,
   resetProviderMocks,
@@ -286,6 +290,36 @@ describe('processEmailSyncJob', () => {
       expect(enqueuedJobs(EMAIL_CLASSIFY_JOB)).toHaveLength(0);
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncCursor).toBe('history-cursor-0');
+    });
+  });
+
+  describe('draft reconciliation', () => {
+    test('an html-only draft is stored as readable text without hidden or head content', async () => {
+      const { account } = await seedMailUser({ syncCursor: 'cursor-1' });
+      const draft = buildFakeMailDraft({
+        id: 'draft-2',
+        threadId: 'draft-thread-2',
+        body: {
+          text: '',
+          html: '<head><style>.x{color:red}</style><title>T</title></head><p style="display:none">preheader</p><p>Hello <b>there</b></p>',
+          attachments: [],
+        },
+      });
+      syncFromCursorMock.mockResolvedValueOnce({
+        status: 'ok',
+        changes: [],
+        nextCursor: 'cursor-2',
+      });
+      listDraftsMock.mockResolvedValueOnce([draft]);
+      getDraftMock.mockResolvedValueOnce(draft);
+
+      await processEmailSyncJob(syncJob(account.id));
+
+      const stored = await getEmailDraftByProviderDraftId({
+        providerDraftId: 'draft-2',
+        accountId: account.id,
+      });
+      expect(stored?.content).toBe('Hello **there**');
     });
   });
 

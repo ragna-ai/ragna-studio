@@ -1,18 +1,17 @@
 // packages/mail/src/content/html-to-text.ts
+import { logger } from '@repo/logger';
 import { removeExcessiveWhitespace, truncate } from '@repo/utils';
 import EmailReplyParser from 'email-reply-parser';
-import { convert, type FormatCallback } from 'html-to-text';
+import { htmlToMarkdown as convertWithMdream } from 'mdream';
+import { EXCLUDED_SELECTORS } from './excluded-selectors';
 
-const IMAGE_ALT_MAX_LENGTH = 160;
-const IMAGE_PLACEHOLDER = '[image]';
-// email-reply-parser's header regexes are quadratic on hostile input, so it
+const WORD_WRAP_WIDTH = 130;
+// email-reply-parser's header regexes are quadratic on pathological input, so it
 // only ever sees this much text. Twice the largest caller maxLength (drafts).
 const MAX_PARSED_TEXT_LENGTH = 20_000;
-const GENERIC_IMAGE_ALT_TEXT_PATTERN =
-  /^(?:avatar|decorative|graphic|icon|image|img|logo|photo|picture|pixel|spacer|tracking pixel)$/i;
 
 // The lookbehinds and `:[^\r\n]+` keep matching linear: without them a long
-// run of dashes or spaces in a hostile email backtracks in quadratic time.
+// run of dashes or spaces in a long email backtracks in quadratic time.
 const FORWARDED_CONTENT_PATTERNS = [
   // Gmail style
   /(?:\r?\n|\r)?(?<![-_])(?:-{3,}|_{3,})\s*Forwarded message\s*(?:-{3,}|_{3,})/i,
@@ -38,55 +37,28 @@ export function stripForwardedContent(text: string): string {
   return text;
 }
 
-const formatImageAltText: FormatCallback = (elem, _walk, builder) => {
-  builder.addInline(getImageText(elem.attribs?.alt), {
-    noWordTransform: true,
-  });
-};
-
-function getImageText(value: unknown) {
-  if (typeof value !== 'string') return IMAGE_PLACEHOLDER;
-
-  const altText = removeExcessiveWhitespace(value).trim();
-  if (!altText) return IMAGE_PLACEHOLDER;
-  if (GENERIC_IMAGE_ALT_TEXT_PATTERN.test(altText)) return IMAGE_PLACEHOLDER;
-
-  return `[image: ${truncate(altText, IMAGE_ALT_MAX_LENGTH)}]`;
-}
-
 export type EmailToContentOptions = {
   maxLength?: number;
   includeReply?: boolean;
   includeForwarded?: boolean;
-  includeLinkUrls?: boolean;
-  includeImageAltText?: boolean;
 };
 
-// important to do before processing html emails
-// this will cut down an email from 100,000 characters to 1,000 characters in some cases
-export function htmlToText(
-  html: string,
-  {
-    includeLinkUrls = false,
-    includeImageAltText = false,
-  }: Pick<EmailToContentOptions, 'includeLinkUrls' | 'includeImageAltText'> = {},
-) {
-  const text = convert(html, {
-    wordwrap: 130,
-    formatters: { imageAltText: formatImageAltText },
-    selectors: [
-      {
-        selector: 'a',
-        options: includeLinkUrls ? { hideLinkHrefIfSameAsText: true } : { ignoreHref: true },
-      },
-      {
-        selector: 'img',
-        format: includeImageAltText ? 'imageAltText' : 'skip',
-      },
-    ],
-  });
-
-  return text;
+/**
+ * Flattens HTML to plain text, dropping images and link targets. Do this before
+ * processing HTML emails: it cuts a 100,000 character email down to around 1,000
+ * in some cases. A failed conversion is logged and yields an empty string.
+ */
+export function htmlToText(html: string): string {
+  try {
+    return convertWithMdream(html, {
+      format: 'text',
+      wrapWidth: WORD_WRAP_WIDTH,
+      filter: { exclude: [...EXCLUDED_SELECTORS, 'img'] },
+    }).trim();
+  } catch (error) {
+    logger.error('Failed to convert email HTML to text', error);
+    return '';
+  }
 }
 
 export function parseReply(plainText: string) {
@@ -102,21 +74,12 @@ export interface EmailBody {
 
 export function emailBodyToText(
   body: EmailBody,
-  {
-    maxLength = 2000,
-    includeReply = false,
-    includeForwarded = false,
-    includeLinkUrls = false,
-    includeImageAltText = false,
-  }: EmailToContentOptions = {},
+  { maxLength = 2000, includeReply = false, includeForwarded = false }: EmailToContentOptions = {},
 ): string | null {
   let emailText = '';
 
   if (body.htmlBody?.trim()) {
-    emailText = htmlToText(body.htmlBody, {
-      includeLinkUrls,
-      includeImageAltText,
-    });
+    emailText = htmlToText(body.htmlBody);
   } else if (body.textBody?.trim()) {
     emailText = body.textBody;
   } else {

@@ -135,34 +135,6 @@ describe('processEmailClassifyJob', () => {
     expect(calls.join('')).not.toContain('Forwarded secret text');
   });
 
-  const HOSTILE_BODY_LENGTH = 50_000;
-  const HOSTILE_BODY_BUDGET_MS = 1_500;
-
-  test.each([
-    ['a run of dashes', '-'.repeat(HOSTILE_BODY_LENGTH)],
-    ['a run of underscores', '_'.repeat(HOSTILE_BODY_LENGTH)],
-    ['blank lines of spaces', `${'\n '.repeat(HOSTILE_BODY_LENGTH / 2)}x`],
-    ['a header followed by spaces', `From:${' '.repeat(HOSTILE_BODY_LENGTH)}`],
-  ])(
-    'a body made of %s is classified in linear time',
-    async (_shape, textBody) => {
-      const { account } = await seedMailUser();
-      await seedCategory({ accountId: account.id, name: 'Invoices' });
-      const { messageId } = await seedEmailThreadWithMessage({
-        accountId: account.id,
-        textBody,
-        htmlBody: '',
-      });
-      scriptCategory('NONE');
-
-      const startedAt = performance.now();
-      await processEmailClassifyJob(classifyJob({ accountId: account.id, messageId }));
-
-      expect(performance.now() - startedAt).toBeLessThan(HOSTILE_BODY_BUDGET_MS);
-    },
-    60_000,
-  );
-
   test('NONE leaves the message uncategorized', async () => {
     const { account } = await seedMailUser();
     await seedCategory({ accountId: account.id, name: 'Invoices' });

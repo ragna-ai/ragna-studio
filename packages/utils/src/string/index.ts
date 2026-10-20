@@ -37,7 +37,7 @@ export function removeExcessiveWhitespace(str: string) {
       // Normalize all types of line breaks to \n
       .replace(/\r\n|\r/g, '\n')
       // Collapse spaces first: the patterns below would otherwise backtrack
-      // over long space runs in quadratic time on hostile input
+      // over long space runs in quadratic time on pathological input
       .replace(/[^\S\n]+/g, ' ')
       .replace(/ ?\n ?/g, '\n')
       // Collapse 3 or more newlines into double newlines
