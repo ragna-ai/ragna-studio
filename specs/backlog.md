@@ -73,6 +73,11 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 - [ ] Replace `email-reply-parser` with a small line-based reply parser in `packages/mail`, or
       add `re2` so the library uses a linear regex engine. Today `emailBodyToText` caps its
       input instead.
+- [ ] Watch [dependabot-core#15904](https://github.com/dependabot/dependabot-core/issues/15904):
+      GitHub's dependency graph reads only the first YAML document of a pnpm 12 lockfile. Until
+      it's fixed, `pmOnFail: ignore` (PR #118) keeps the lockfile single-document and the CI
+      step "Lockfile is a single YAML document" (PR #124) guards it. Once fixed, drop both, so
+      pnpm switches to the pinned version on its own again.
 
 ## Code cleanup
 
