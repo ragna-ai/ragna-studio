@@ -161,5 +161,7 @@ Disconnect and offboarding revoke the Google grant and clear provider tokens.
 ### Web browser service
 
 Standalone scraping/browser-automation service (`apps/webbrowser`, port
-3011). SSRF hardening deferred since it's internal-only for now.
-→ [specs/webbrowser/prd.md](./webbrowser/prd.md)
+3011). SSRF hardening deferred since it's internal-only for now. Chromium is
+closed after 5 min idle; `tini` reaps its orphaned helper processes.
+→ [specs/webbrowser/prd.md](./webbrowser/prd.md),
+[zombie-reaping-prd.md](./webbrowser/zombie-reaping-prd.md)

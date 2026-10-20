@@ -19,7 +19,6 @@ work first, shipped reference and dead/historical docs last.
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | in-progress (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | in-progress (started 2026-09-24 on `feat/mcp-server`) |
 | [Testing Strategy](./testing/strategy.md) | in-progress |
-| [Web Browser: Reap Orphaned Chromium Processes (PRD)](./webbrowser/zombie-reaping-prd.md) | in-progress (2026-10-19) |
 
 ## Decided
 
@@ -87,6 +86,7 @@ work first, shipped reference and dead/historical docs last.
 | [Worker test suite](./testing/worker-prd.md) | implemented (PR #103, merged 2026-10-10) |
 | [Video generation v2: BFL FLUX 3 video + draft mode (PRD)](./videogen/prd-v2.md) | implemented (2026-08-05, three subagents: packages foundation, api, web; verification and commit left to the user) |
 | [Web Browser Service (PRD)](./webbrowser/prd.md) | implemented (`apps/webbrowser`, 2026-07-19) |
+| [Web Browser: Reap Orphaned Chromium Processes (PRD)](./webbrowser/zombie-reaping-prd.md) | implemented (2026-10-19, PR #116) |
 | [Workflows: scheduled triggers](./workflow/workflows-scheduling.md) | implemented |
 | [Workflows: team node (multi-agent delegation)](./workflow/workflows-team-node.md) | implemented (delegate mode plus the agent-trace increment), July 2026 |
 | [Workflows](./workflow/workflows.md) | implemented |
