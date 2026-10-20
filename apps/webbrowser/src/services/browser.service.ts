@@ -11,7 +11,7 @@ import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import anonymizeUaPlugin from 'puppeteer-extra-plugin-anonymize-ua';
 import blockResourcesPlugin from 'puppeteer-extra-plugin-block-resources';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import TurndownService from 'turndown';
+import { toMarkdown } from '../utils/html-to-markdown';
 import { Semaphore } from '../utils/semaphore';
 import { assertPublicUrl, isPublicUrl } from '../utils/url-guard';
 
@@ -30,14 +30,10 @@ puppeteer.use(
 );
 puppeteer.use(anonymizeUaPlugin());
 
-const turndownService = new TurndownService();
-
 // Caps how many pages navigate concurrently. Each scrape is a real Chromium
 // tab; without this, a burst of agent calls could spawn unbounded tabs and
 // exhaust the container's memory/CPU.
 const scrapeSlots = new Semaphore(config.browserMaxConcurrency, config.browserMaxQueue);
-
-const MAX_MARKDOWN_LENGTH = 10_000;
 
 // Elements that only add navigation/decoration noise to the extracted markdown.
 const REMOVED_ELEMENTS_SELECTOR =
@@ -154,13 +150,6 @@ export async function closeBrowser(): Promise<void> {
   if (browser?.connected) {
     await browser.close();
   }
-}
-
-function toMarkdown(bodyHtml: string): string {
-  const markdown = turndownService.turndown(bodyHtml);
-  const truncated =
-    markdown.length > MAX_MARKDOWN_LENGTH ? markdown.slice(0, MAX_MARKDOWN_LENGTH) : markdown;
-  return truncated.replace(/^\s*[\r\n]/gm, '');
 }
 
 async function getPageContents(

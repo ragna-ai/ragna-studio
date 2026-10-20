@@ -43,7 +43,7 @@ this monorepo's conventions (Hono + Bun + tsdown).
 - Routes: `GET /health`, `GET /scrape?url=`.
 - Scraping stack: `puppeteer-extra` with stealth, adblocker,
   block-resources (images/stylesheets/fonts dropped), and anonymize-ua
-  plugins; `turndown` for HTML → Markdown.
+  plugins; `mdream` for HTML → Markdown.
 - New config in `@repo/config`: `WEBBROWSER_PORT` (3011 — `API_PORT`
   already owns 3010), `WEBBROWSER_BASE_URL` (consumed by the agent tool
   instead of a hardcoded URL), `BROWSER_NAVIGATION_TIMEOUT`,
