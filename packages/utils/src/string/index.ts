@@ -36,12 +36,12 @@ export function removeExcessiveWhitespace(str: string) {
       .replace(/\u200B|\u200C|\u200D|\u200E|\u200F|\uFEFF|\u3164|\u00AD|\u034F/g, ' ')
       // Normalize all types of line breaks to \n
       .replace(/\r\n|\r/g, '\n')
-      // Then collapse multiple newlines (3 or more) into double newlines
-      .replace(/\n\s*\n\s*\n+/g, '\n\n')
-      // Clean up spaces around newlines (but preserve double newlines)
-      .replace(/[^\S\n]*\n[^\S\n]*/g, '\n')
-      // Replace multiple spaces (but not newlines) with single space
+      // Collapse spaces first: the patterns below would otherwise backtrack
+      // over long space runs in quadratic time on hostile input
       .replace(/[^\S\n]+/g, ' ')
+      .replace(/ ?\n ?/g, '\n')
+      // Collapse 3 or more newlines into double newlines
+      .replace(/\n{3,}/g, '\n\n')
       // Clean up any trailing/leading whitespace
       .trim()
   );

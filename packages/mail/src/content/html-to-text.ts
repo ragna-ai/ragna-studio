@@ -5,16 +5,21 @@ import { convert, type FormatCallback } from 'html-to-text';
 
 const IMAGE_ALT_MAX_LENGTH = 160;
 const IMAGE_PLACEHOLDER = '[image]';
+// email-reply-parser's header regexes are quadratic on hostile input, so it
+// only ever sees this much text. Twice the largest caller maxLength (drafts).
+const MAX_PARSED_TEXT_LENGTH = 20_000;
 const GENERIC_IMAGE_ALT_TEXT_PATTERN =
   /^(?:avatar|decorative|graphic|icon|image|img|logo|photo|picture|pixel|spacer|tracking pixel)$/i;
 
+// The lookbehinds and `:[^\r\n]+` keep matching linear: without them a long
+// run of dashes or spaces in a hostile email backtracks in quadratic time.
 const FORWARDED_CONTENT_PATTERNS = [
   // Gmail style
-  /(?:\r?\n|\r)?(?:-{3,}|_{3,})\s*Forwarded message\s*(?:-{3,}|_{3,})/i,
+  /(?:\r?\n|\r)?(?<![-_])(?:-{3,}|_{3,})\s*Forwarded message\s*(?:-{3,}|_{3,})/i,
   // Simple forward markers
-  /(?:\r?\n|\r)?(?:-{3,}|_{3,})\s*Forward(?:ed)?(?:\s*message)?(?:-{3,}|_{3,})/i,
+  /(?:\r?\n|\r)?(?<![-_])(?:-{3,}|_{3,})\s*Forward(?:ed)?(?:\s*message)?(?:-{3,}|_{3,})/i,
   // Forwarded email header blocks
-  /(?:^|\r?\n)From:\s*[^\r\n]+(?:\r?\n(?:Date|Sent|To|Cc|Bcc|Subject):\s*[^\r\n]+){2,}/im,
+  /(?:^|\r?\n)From:[^\r\n]+(?:\r?\n(?:Date|Sent|To|Cc|Bcc|Subject):[^\r\n]+){2,}/im,
   // iOS/Mac style
   /(?:\r?\n|\r)?Begin forwarded message:/im,
   // Outlook style
@@ -117,6 +122,8 @@ export function emailBodyToText(
   } else {
     return null;
   }
+
+  emailText = removeExcessiveWhitespace(emailText).slice(0, MAX_PARSED_TEXT_LENGTH);
 
   if (includeReply !== true) {
     emailText = parseReply(emailText);
