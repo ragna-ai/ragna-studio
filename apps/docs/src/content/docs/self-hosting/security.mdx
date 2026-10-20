@@ -24,7 +24,7 @@ Go through this list before sharing RAGNA Studio.
 - **Keep `.env` private.** It holds every secret. The installer creates it with mode `600`. Keep it out of version control.
 - **Use generated secrets.** Never keep the placeholder values from `.env.example`.
 - **Never rotate `BETTER_AUTH_SECRET`.** Encrypted data such as stored OAuth tokens becomes unreadable. Every session also ends.
-- **Back up `BETTER_AUTH_SECRET` with the data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
+- **Back up `BETTER_AUTH_SECRET` with the data.** A database backup is useless without it, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
 
 ## MCP
 
@@ -39,3 +39,8 @@ Go through this list before sharing RAGNA Studio.
 ## Updates
 
 - **Stay on a current release.** Upgrade with `--upgrade`, see [Upgrades and backups](/self-hosting/upgrades-and-backups).
+- **Verify images before an upgrade (optional).** From v0.6.7 on, every release image carries a signed build provenance attestation. It proves the image was built from this repository by the RAGNA Studio release workflow. Check it with the GitHub CLI, per image and version:
+
+  ```bash
+  gh attestation verify oci://ghcr.io/ragna-ai/ragna-studio-backend:0.6.7 -R ragna-ai/ragna-studio
+  ```

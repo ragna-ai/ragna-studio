@@ -37,6 +37,8 @@ jobs:
             platform-slug: linux-arm64
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -74,8 +76,8 @@ jobs:
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          mkdir -p "${{ runner.temp }}/digests"
-          touch "${{ runner.temp }}/digests/${DIGEST#sha256:}"
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -90,6 +92,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # Signed build provenance: OIDC token for Sigstore, attestation and storage record APIs.
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
@@ -127,6 +133,22 @@ jobs:
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf "${IMAGE}@sha256:%s " *)
 
+      # Attest the multi-arch index users pull, not the per-platform digests.
+      - id: index
+        name: Resolve manifest list digest
+        env:
+          IMAGE: ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          digest=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{json .Manifest}}' | jq -re .digest)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}
+          subject-digest: ${{ steps.index.outputs.digest }}
+          push-to-registry: true
+
   github-release:
     needs: merge
     runs-on: ubuntu-latest
@@ -143,4 +165,4 @@ jobs:
     needs: merge
     permissions:
       packages: write
-    uses: ./.github/workflows/ghcr-cleanup.yml
+    uses: $/.github/workflows/ghcr-cleanup.yml

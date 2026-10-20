@@ -6,12 +6,13 @@ on:
   workflow_dispatch:
   workflow_call:
 
-permissions:
-  packages: write
+permissions: {}
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       # Multi-arch aware: build-push-action stores provenance as child manifests,
       # which a plain "delete untagged" would remove and break tagged images.
