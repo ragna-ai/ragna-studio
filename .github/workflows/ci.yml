@@ -27,6 +27,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      # GitHub's dependency graph reads only the first YAML document of the lockfile,
+      # so a leading env document (pnpm 12) hides every locked package from Dependabot.
+      - name: Lockfile is a single YAML document
+        run: |
+          if grep -qx -- '---' pnpm-lock.yaml; then
+            echo "::error::pnpm-lock.yaml has a leading env document. Keep pmOnFail: ignore, remove the first document and reinstall."
+            exit 1
+          fi
+
       # Turbo maps changed files to packages and their dependents. It ignores root
       # files outside any package, so those that affect CI force a full run.
       - id: detect
