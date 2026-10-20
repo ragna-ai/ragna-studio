@@ -9,9 +9,13 @@ import type {
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 
 // GFM table cell rules: `|` would otherwise split the cell, and a literal
-// newline would break the row onto multiple lines.
+// newline would break the row onto multiple lines. Backslashes go first, so a
+// cell's own `\` can't turn the escaped `\|` back into a column split.
 function escapeMarkdownCell(text: string): string {
-  return text.replace(/\|/g, '\\|').replace(/\r\n|\r|\n/g, '<br>');
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\r\n|\r|\n/g, '<br>');
 }
 
 // `date` columns render European-style, `dd.mm.yyyy`;

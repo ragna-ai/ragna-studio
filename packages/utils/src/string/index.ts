@@ -47,34 +47,12 @@ export function removeExcessiveWhitespace(str: string) {
   );
 }
 
-export function generalizeSubject(subject = '') {
-  return (
-    subject
-      // Remove content in parentheses
-      .replace(/\([^)]*\)/g, '')
-      // Remove numbers and IDs
-      .replace(/(?:#\d+|\b\d+\b)/g, '')
-      // Clean up extra whitespace
-      .replace(/\s+/g, ' ')
-      .trim()
-  );
-}
-
 export function pluralize(count: number, singular: string, plural = `${singular}s`) {
   return count === 1 ? singular : plural;
 }
 
 export function formatBulletList(list: string[]) {
   return list.map((item) => `- ${item}`).join('\n');
-}
-
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}\s_-]/gu, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 export function convertNewlinesToBr(text: string): string {

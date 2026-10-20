@@ -258,4 +258,26 @@ describe('GET /workspace/:workspaceId/dataset/:datasetId/export', () => {
     expect(text).toContain('Name');
     expect(text).toContain('Ada');
   });
+
+  test('a Markdown export keeps a cell ending in a backslash inside its column', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { dataset } = await createDataset(cookieHeader, workspaceId, {
+      name: 'Paths',
+      columns: [nameColumn],
+    });
+    await app.request(`/workspace/${workspaceId}/dataset/${dataset.id}/row`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ data: { [nameColumn.id]: 'C:\\temp\\|x' } }),
+    });
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/dataset/${dataset.id}/export?format=md`,
+      { headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const text = await response.text();
+    expect(text).toContain('| C:\\\\temp\\\\\\|x |');
+  });
 });
