@@ -70,8 +70,17 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
       agent node, an email draft and an image/video job, and assert the run/row fails cleanly.
 - [ ] Migrations are only checked on scratch DBs by hand. Consider a CI step that runs
       `migrate.ts` on a fresh Postgres.
+- [ ] `htmlToText` (`packages/mail`) has no `limits.maxDepth`: very deeply nested email HTML
+      overflows the stack and fails the classify or draft job.
+- [ ] Replace `email-reply-parser` with a small line-based reply parser in `packages/mail`, or
+      add `re2` so the library uses a linear regex engine. Today `emailBodyToText` caps its
+      input instead.
 
 ## Code cleanup
+
+- [ ] CodeQL cleanup: delete unused `encryptData`/`decryptData`, `generalizeSubject` and
+      `slugify` in `packages/utils`; decode `&amp;` last in `decodeHtmlEntities`; escape `\` in
+      the markdown export's table cells. Dismiss the remaining alerts as false positives.
 
 - [ ] Nested `await` in returns and call arguments (clean-code rule 10), about 30 older spots.
       Separate PR. Found in: `creditGuard.ts:39`, `chat.service.ts:365`,

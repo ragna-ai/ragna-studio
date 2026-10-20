@@ -1,6 +1,6 @@
 # Web Browser: Reap Orphaned Chromium Processes (PRD)
 
-> **Status: in-progress** (2026-10-19). Dockerfile change written, not yet deployed or verified in prod.
+> **Status: implemented** (2026-10-19, PR #116). Released in v0.6.4 and verified in prod.
 
 Follow-up to the idle shutdown in [prd.md](./prd.md) (`BROWSER_IDLE_CLOSE_AFTER`).
 
@@ -83,6 +83,10 @@ tini forwards signals to Bun, so stopping the container behaves as before.
 If zombies still appear, check their PPID. A PPID equal to Bun's PID means
 Bun spawned them and isn't waiting on them. Then the fix belongs in how
 Puppeteer's child process runs under Bun, not in the init process.
+
+Result in prod with v0.6.4 (2026-10-19): `tini` runs as the parent of `bun`.
+After the idle close, Chromium and both `chrome_crashpad` helpers exited and
+`top` reported 0 zombies. Before, the same cycle left five.
 
 ## Out of scope
 
