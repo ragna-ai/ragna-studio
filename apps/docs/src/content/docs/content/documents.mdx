@@ -13,15 +13,79 @@ Open **Documents** in the sidebar. Choose **New document**, enter a title (or ke
 
 The editor saves changes on its own. The status next to the title reads **Saving...** and then **Saved**. Click the title (**Rename document**) to change it.
 
-The toolbar offers:
+There is no fixed toolbar. Controls appear next to the text instead.
 
-- headings, **Bold**, **Italic**, **Underline**, **Strikethrough** and **Highlight**,
-- text alignment, lists and a **Task list**,
-- **Code block**, **Link** and **Image** (by URL),
-- tables with row and column actions,
-- **Undo** and **Redo**.
+### Format selected text
 
-A word count shows at the bottom. Documents are stored as Markdown. Formatting that Markdown cannot express is not supported.
+Selecting text shows a menu above the selection. It has:
+
+- a **Block type** dropdown: **Text** and **Heading 1** to **Heading 4**,
+- **Bold**, **Italic**, **Strikethrough** and **Inline code**,
+- **Bulleted list**, **Numbered list**, **Task list**, **Quote** and **Code block** buttons,
+- **Link**. Enter the address and choose **Apply**. Choose **Remove** to take a link off.
+
+The dropdown shows the type of the current block. It reads **Mixed** when the selection spans blocks of different types. Choosing a type converts every selected block.
+
+The list, quote and code block buttons show when they are active. Choosing an active list, quote or code block button turns the block back into text.
+
+The menu does not appear on an image. Inside a code block it appears, but the formatting and link buttons are disabled.
+
+### Tables
+
+When the cursor is in a table, a table menu appears. It can add a row above or below, add a column before or after, and delete a row, a column or the whole table. A new table has three rows, three columns and a header row.
+
+### Insert blocks with /
+
+Type `/` on an empty line or after a space to open the command menu. Keep typing to narrow the list. Use the arrow keys and **Enter** to pick an item. Press **Esc** to close the menu and keep the `/` as text.
+
+The menu offers:
+
+- **Text**, **Heading 1** to **Heading 4**,
+- **Bulleted list**, **Numbered list** and **Task list**,
+- **Quote** and **Code block**,
+- **Divider** and **Table**,
+- **Image** (by URL).
+
+Each item shows its Markdown shortcut. The menu does not open inside a code block or inline code.
+
+### Markdown shortcuts
+
+Markdown typed at the start of a line converts as the user types:
+
+| Type          | Result         |
+| ------------- | -------------- |
+| `#` to `####` | Heading 1 to 4 |
+| `-`           | Bulleted list  |
+| `1.`          | Numbered list  |
+| `[ ]`         | Task list      |
+| `>`           | Quote          |
+| ` ``` `       | Code block     |
+| `---`         | Divider        |
+
+Type a space after `#`, `-`, `1.`, `[ ]` and `>`.
+
+### Keyboard shortcuts
+
+Use ⌘ on macOS and Ctrl on Windows and Linux.
+
+| Action         | Shortcut                          |
+| -------------- | --------------------------------- |
+| Bold           | ⌘ B / Ctrl+B                      |
+| Italic         | ⌘ I / Ctrl+I                      |
+| Strikethrough  | ⌘ Shift S / Ctrl+Shift+S          |
+| Inline code    | ⌘ E / Ctrl+E                      |
+| Link           | ⌘ K / Ctrl+K                      |
+| Text           | ⌘ Option 0 / Ctrl+Alt+0           |
+| Heading 1 to 4 | ⌘ Option 1 to 4 / Ctrl+Alt+1 to 4 |
+| Numbered list  | ⌘ Shift 7 / Ctrl+Shift+7          |
+| Bulleted list  | ⌘ Shift 8 / Ctrl+Shift+8          |
+| Task list      | ⌘ Shift 9 / Ctrl+Shift+9          |
+| Quote          | ⌘ Shift B / Ctrl+Shift+B          |
+| Code block     | ⌘ Option C / Ctrl+Alt+C           |
+| Undo           | ⌘ Z / Ctrl+Z                      |
+| Redo           | ⌘ Shift Z / Ctrl+Shift+Z          |
+
+Documents are stored as Markdown. Formatting that Markdown cannot express is not supported. This includes underline, highlight and text alignment.
 
 <Aside type="note">
   Only one user should edit a document at a time. There is no live collaboration. The last save

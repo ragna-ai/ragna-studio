@@ -980,7 +980,7 @@
       "loadError": "Dokument konnte nicht geladen werden.",
       "loading": "Dokument wird geladen...",
       "rename": "Dokument umbenennen",
-      "contentPlaceholder": "Schreib los...",
+      "contentPlaceholder": "Schreib los oder tippe / für Befehle",
       "saveStatus": {
         "saved": "Gespeichert",
         "saving": "Speichert..."
@@ -991,45 +991,6 @@
         "text": "Text",
         "pdf": "PDF",
         "word": "Word"
-      }
-    },
-    "toolbar": {
-      "heading1": "Überschrift 1",
-      "heading2": "Überschrift 2",
-      "bold": "Fett",
-      "italic": "Kursiv",
-      "underline": "Unterstrichen",
-      "strike": "Durchgestrichen",
-      "align": "Textausrichtung",
-      "list": "Liste",
-      "taskList": "Aufgabenliste",
-      "highlight": "Markieren",
-      "codeBlock": "Codeblock",
-      "undo": "Rückgängig",
-      "redo": "Wiederholen",
-      "wordCount": "{count} Wörter",
-      "link": {
-        "label": "Link",
-        "placeholder": "https://beispiel.de",
-        "apply": "Übernehmen",
-        "remove": "Entfernen"
-      },
-      "image": {
-        "label": "Bild",
-        "placeholder": "https://beispiel.de/bild.png",
-        "insert": "Einfügen"
-      },
-      "table": {
-        "insert": "Tabelle einfügen",
-        "addRowBefore": "Zeile darüber einfügen",
-        "addRowAfter": "Zeile darunter einfügen",
-        "deleteRow": "Zeile löschen",
-        "addColumnBefore": "Spalte davor einfügen",
-        "addColumnAfter": "Spalte danach einfügen",
-        "deleteColumn": "Spalte löschen",
-        "toggleHeaderRow": "Kopfzeile umschalten",
-        "toggleHeaderColumn": "Kopfspalte umschalten",
-        "deleteTable": "Tabelle löschen"
       }
     }
   },
@@ -1043,6 +1004,57 @@
       "deleteTitle": "Ordner löschen",
       "deleteMessage": "„{name}“ löschen? Die enthaltenen Dokumente werden auf die oberste Ebene verschoben, nicht gelöscht.",
       "empty": "Noch keine Ordner."
+    }
+  },
+  "editor": {
+    "blockType": {
+      "paragraph": "Text",
+      "h1": "Überschrift 1",
+      "h2": "Überschrift 2",
+      "h3": "Überschrift 3",
+      "h4": "Überschrift 4",
+      "bulletList": "Aufzählung",
+      "orderedList": "Nummerierte Liste",
+      "taskList": "Aufgabenliste",
+      "blockquote": "Zitat",
+      "codeBlock": "Codeblock",
+      "mixed": "Gemischt",
+      "label": "Blocktyp"
+    },
+    "format": {
+      "label": "Textformatierung",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strike": "Durchgestrichen",
+      "code": "Inline-Code"
+    },
+    "link": {
+      "label": "Link",
+      "placeholder": "https://beispiel.de",
+      "apply": "Übernehmen",
+      "remove": "Entfernen"
+    },
+    "image": {
+      "label": "Bild",
+      "placeholder": "https://beispiel.de/bild.png",
+      "insert": "Einfügen"
+    },
+    "table": {
+      "label": "Tabelle",
+      "addRowBefore": "Zeile oberhalb einfügen",
+      "addRowAfter": "Zeile unterhalb einfügen",
+      "deleteRow": "Zeile löschen",
+      "addColumnBefore": "Spalte davor einfügen",
+      "addColumnAfter": "Spalte danach einfügen",
+      "deleteColumn": "Spalte löschen",
+      "deleteTable": "Tabelle löschen"
+    },
+    "slash": {
+      "label": "Befehle",
+      "horizontalRule": "Trennlinie",
+      "table": "Tabelle",
+      "image": "Bild",
+      "noResults": "Keine Ergebnisse"
     }
   },
   "task": {
@@ -1115,7 +1127,7 @@
       "loadError": "Aufgabe konnte nicht geladen werden.",
       "rename": "Aufgabe umbenennen",
       "titlePlaceholder": "Unbenannte Aufgabe",
-      "descriptionPlaceholder": "Beschreibung hinzufügen...",
+      "descriptionPlaceholder": "Füge eine Beschreibung hinzu oder tippe / für Befehle",
       "subtasks": "Unteraufgaben",
       "addSubtaskPlaceholder": "Titel der neuen Unteraufgabe...",
       "backToParent": "Zurück zur übergeordneten Aufgabe",
@@ -1249,7 +1261,7 @@
       "addCcBcc": "Cc/Bcc hinzufügen",
       "subject": "Betreff",
       "subjectPlaceholder": "Betreff",
-      "bodyPlaceholder": "Nachricht schreiben...",
+      "bodyPlaceholder": "Schreib deine Nachricht oder tippe / für Befehle",
       "send": "Senden",
       "newTitle": "Neue Nachricht",
       "attachments": {

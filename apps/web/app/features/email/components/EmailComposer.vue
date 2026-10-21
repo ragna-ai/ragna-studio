@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { EditorContent } from '@repo/editor';
 import { useDebounceFn } from '@vueuse/core';
-import EditorMenu from '~/features/document/components/EditorMenu.vue';
+import RichTextEditor from '~/components/editor/RichTextEditor.vue';
+import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Spinner } from '~/components/ui/spinner';
 import EmailComposerAttachments from '~/features/email/components/EmailComposerAttachments.vue';
 import EmailRecipientsField from '~/features/email/components/EmailRecipientsField.vue';
-import { useEmailComposeEditor } from '~/features/email/composables/useEmailComposeEditor';
 import {
   useSendEmailDraft,
   useUpdateEmailDraft,
@@ -80,13 +79,13 @@ const media = ref<MediaListItem[]>([]);
 // to be a plain, never-reset ref rather than a snapshot of mutation state.
 const isDraftGone = ref(false);
 
-const controller = useEmailComposeEditor({
+const controller = useRichTextEditor({
   content: props.draft.content,
+  contentType: 'html',
   placeholder: t('email.compose.bodyPlaceholder'),
   autofocus: props.autofocus,
   onUpdate: () => emitChange(),
 });
-const editor = controller.editor;
 
 watch([to, cc, bcc, subject], () => emitChange());
 onBeforeUnmount(() => {
@@ -113,7 +112,7 @@ function buildContentFields(): Pick<
   'content' | 'text'
 > {
   return {
-    content: controller.getHtml(),
+    content: controller.getContent(),
     text: controller.getText(),
   };
 }
@@ -149,7 +148,7 @@ async function saveDraftNow(flush: boolean) {
 // Debounced ~1s after the last edit,
 // and debounced *here* rather than in EmailDraftPanel.vue: the
 // real cost per call isn't building the snapshot object, it's
-// `getHtml()`/`getText()` re-serializing the whole editor document, and
+// `getContent()`/`getText()` re-serializing the whole editor document, and
 // that should run once per pause in typing, not once per keystroke.
 const emitChange = useDebounceFn(() => {
   void saveDraftNow(false);
@@ -235,17 +234,7 @@ async function handleSend() {
       </div>
     </div>
 
-    <div class="shrink-0 border-b">
-      <EditorMenu :controller="controller" class="px-4 py-2" />
-    </div>
-    <!-- Auto-height, same document-sheet typography as the document/task editors
-         (DocumentEditor.css) instead of a flex-1/overflow-y-auto box: the editor
-         grows with its content and, when embedded in a bounded ancestor (the
-         inline draft panel), this form's own overflow-y-auto is what scrolls, not a
-         separate clipped inner box. -->
-    <div class="document-sheet min-h-40 px-4 py-3">
-      <EditorContent :editor="editor" class="flex flex-1 flex-col" />
-    </div>
+    <RichTextEditor :controller="controller" class="min-h-40 px-4 py-3" />
 
     <div class="shrink-0 space-y-3 border-t px-4 py-3">
       <EmailComposerAttachments
@@ -264,5 +253,3 @@ async function handleSend() {
     </div>
   </form>
 </template>
-
-<style src="~/features/document/components/DocumentEditor.css"></style>

@@ -129,20 +129,6 @@
   background: color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
-.document-sheet .ProseMirror .column-resize-handle {
-  position: absolute;
-  right: -2px;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background-color: var(--primary);
-  pointer-events: none;
-}
-
-.document-sheet .ProseMirror.resize-cursor {
-  cursor: col-resize;
-}
-
 .document-sheet .ProseMirror img {
   max-width: 100%;
   height: auto;
