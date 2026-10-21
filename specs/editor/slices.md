@@ -1,6 +1,6 @@
 # Rich text editor: implementation slices
 
-Status: in-progress (decided 2026-10-21, building on `feat/shared-editor`). Build plan for [prd.md](./prd.md).
+Status: implemented (2026-10-21, PR #127). Build plan for [prd.md](./prd.md).
 
 Three waves, one PR. Wave 1 builds the `@repo/editor` package and the copy (i18n, docs) in
 parallel. Wave 2 builds the shared web editor and its menus in parallel, against real package

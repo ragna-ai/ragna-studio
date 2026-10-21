@@ -1,6 +1,6 @@
 # Rich text editor: one shared editor with inline controls (PRD)
 
-Status: in-progress (decided 2026-10-21, building on `feat/shared-editor`).
+Status: implemented (2026-10-21, PR #127).
 
 One rich text editor for the whole app, used by documents, the task description and the email
 composer. It supports only what markdown (CommonMark + GFM) can store. The fixed toolbar is

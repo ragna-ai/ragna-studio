@@ -13,8 +13,6 @@ work first, shipped reference and dead/historical docs last.
 | Doc | Status |
 | --- | --- |
 | [API tests in CI (PRD)](./ci-cd/api-tests-prd.md) | in-progress (2026-09-29) |
-| [Rich text editor: one shared editor with inline controls (PRD)](./editor/prd.md) | in-progress (decided 2026-10-21, building on `feat/shared-editor`) |
-| [Rich text editor: implementation slices](./editor/slices.md) | in-progress (decided 2026-10-21, building on `feat/shared-editor`) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
 | [Email Thread List: Mass (Bulk) Trash (change request)](./email/mass-deletion-change-request.md) | in-progress (approved by Sven 2026-08-17; design fully clarified, no open points remain; implementation kicked off same day) |
@@ -61,6 +59,8 @@ work first, shipped reference and dead/historical docs last.
 | [Export (datasets and documents) and manual dataset row reorder](./datasets/export-and-row-reorder.md) | implemented (2026-07-22); user verification and commit pending |
 | [Per-service memory and CPU limits](./docker-deploy/resource-limits.md) | implemented (2026-09-23) |
 | [Documents Feature (PRD)](./documents/prd.md) | implemented (branch `feat/documents`, 2026-07-18) |
+| [Rich text editor: one shared editor with inline controls (PRD)](./editor/prd.md) | implemented (2026-10-21, PR #127) |
+| [Rich text editor: implementation slices](./editor/slices.md) | implemented (2026-10-21, PR #127) |
 | [Gmail Sync: Detect and Surface Dead Credentials (change request)](./email/gmail-reauth-change-request.md) | implemented (raised, decided, and built 2026-08-30; commit left to Sven per repo convention) |
 | [Microsoft (Outlook) mailbox provider](./email/microsoft-provider-prd.md) | implemented (merged to main via PR #22, 2026-09-24; all design questions answered; apps/api 482 pass / 0 fail; connect and first sync live-tested with Outlook, reply/forward/send and large attachments not yet) |
 | [Microsoft provider: implementation slices](./email/microsoft-provider-slices.md) | implemented (approved and built 2026-09-24, merged via PR #22) |
