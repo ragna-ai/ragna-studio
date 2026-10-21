@@ -19,8 +19,9 @@
   lockFileMaintenance: {
     enabled: true,
   },
+  // Dependabot security updates open the fix PRs; this avoids a duplicate PR per alert.
   vulnerabilityAlerts: {
-    labels: ['dependencies', 'security'],
+    enabled: false,
   },
   ignoreDeps: [
     // nuxt is upgraded with `nuxt upgrade`, which also dedupes its transitive tree

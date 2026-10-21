@@ -207,8 +207,9 @@ until deleted.
 
 ## Dependency updates (2026-10-21)
 
-Renovate opens all dependency PRs; config in `.github/renovate.json5`. It
-runs as the Mend-hosted GitHub app. Dependabot stays on for alerts only.
+Renovate opens version bump PRs; config in `.github/renovate.json5`. It runs
+as the Mend-hosted GitHub app. Dependabot keeps alerts and security update
+PRs, set by the enforced org security configuration.
 
 - **Weekly batch** on Monday morning (Europe/Berlin): one draft PR with all
   minor and patch bumps, plus small groups for packages that move together
@@ -218,9 +219,10 @@ runs as the Mend-hosted GitHub app. Dependabot stays on for alerts only.
 - **Majors** wait for approval on the Dependency Dashboard issue, then get one
   PR each. Majors of the Postgres and Redis images are off: a Postgres major
   needs a data migration.
-- **Security fixes:** Renovate reads the open Dependabot alerts and opens a
-  fix PR right away, outside the schedule and the cooldown. Dependabot
-  security update PRs are off so only one bot writes the lockfile.
+- **Security fixes:** Dependabot security updates open the fix PRs (grouped
+  per manifest directory). They aren't drafts, Dependabot can't open those.
+  Renovate's `vulnerabilityAlerts` is off to avoid a second PR per alert. A
+  fix PR that conflicts with a Renovate PR is rebased by its bot.
 - **Cooldown:** new releases wait 3 days. Renovate doesn't read pnpm's
   settings, so the value is set in both `.github/renovate.json5` and
   `pnpm-workspace.yaml` (`minimumReleaseAge: 4320`). pnpm also rejects
@@ -229,7 +231,8 @@ runs as the Mend-hosted GitHub app. Dependabot stays on for alerts only.
 - **Bumped by hand:** `nuxt` (via `nuxt upgrade`), Node, TypeScript,
   `@types/node`, drizzle (pinned RC), the pnpm version in `packageManager`,
   `vue-stream-markdown`.
-- **No automerge.** Every PR is a draft and passes the required checks.
+- **No automerge.** Renovate PRs are drafts; every PR passes the required
+  checks.
 
 ## Phase 3: API tests
 
