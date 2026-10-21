@@ -86,7 +86,7 @@ export default defineNuxtConfig({
     dirs: [
       {
         path: '~/components',
-        ignore: ['ai-elements/**'],
+        ignore: ['ai-elements/**', 'editor/*.ts'],
       },
     ],
   },

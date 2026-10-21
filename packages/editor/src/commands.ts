@@ -1,72 +1,123 @@
+import type { ChainedCommands, Editor as CoreEditor } from '@tiptap/core';
 import type { Editor } from '@tiptap/vue-3';
 
-export type TextFormat = 'h1' | 'h2' | 'bold' | 'italic' | 'underline' | 'strike' | 'highlight';
+export type TextFormat = 'bold' | 'italic' | 'strike' | 'code';
+
+export type BlockType =
+  | 'paragraph'
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'bulletList'
+  | 'orderedList'
+  | 'taskList'
+  | 'blockquote'
+  | 'codeBlock';
 
 /**
- * Formatting/list/focus commands, kept behind plain typed functions for the
- * same reason as `getDocumentMarkdown()`: each one chains a command that an
- * extension adds to `ChainedCommands` via `declare module '@tiptap/core'`
- * (e.g. `toggleHeading` from the heading extension, `setTextAlign` from
- * text-align). tsdown's dts rollup doesn't carry those augmentations to this
- * package's consumers, and apps/web has no @tiptap dependency of its own to
- * pull them in, so the augmented `.chain()` calls have to live here, where
- * kit.ts's extension imports keep the augmentations in scope.
+ * Formatting/block commands, kept behind plain typed functions for the same
+ * reason as `getEditorContent()`: each one chains a command that an extension
+ * adds to `ChainedCommands` via `declare module '@tiptap/core'`
+ * (e.g. `toggleBold` from the bold extension). tsdown's dts rollup doesn't
+ * carry those augmentations to this package's consumers, and apps/web has no
+ * @tiptap dependency of its own to pull them in, so the augmented `.chain()`
+ * calls have to live here, where kit.ts's extension imports keep the
+ * augmentations in scope.
  */
 export function formatText(editor: Editor, format: TextFormat): boolean {
   const chain = editor.chain().focus();
   switch (format) {
-    case 'h1':
-      return chain.toggleHeading({ level: 1 }).run();
-    case 'h2':
-      return chain.toggleHeading({ level: 2 }).run();
     case 'bold':
       return chain.toggleBold().run();
     case 'italic':
       return chain.toggleItalic().run();
-    case 'underline':
-      return chain.toggleUnderline().run();
     case 'strike':
       return chain.toggleStrike().run();
-    case 'highlight':
-      return chain.toggleHighlight().run();
+    case 'code':
+      return chain.toggleCode().run();
   }
 }
 
-export function cycleList(editor: Editor): boolean {
-  const chain = editor.chain().focus();
-  if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
-    return chain.toggleOrderedList().run();
-  }
-  return chain.toggleBulletList().run();
+const HEADING_LEVELS = { h1: 1, h2: 2, h3: 3, h4: 4 } as const;
+
+function isHeadingType(type: BlockType): type is keyof typeof HEADING_LEVELS {
+  return type in HEADING_LEVELS;
 }
 
-export function cycleTextOrientation(editor: Editor): boolean {
-  const chain = editor.chain().focus();
-  if (editor.isActive({ textAlign: 'left' })) {
-    return chain.setTextAlign('center').run();
+/**
+ * Appends the commands that turn the selected blocks into `type`. Shared by
+ * `setBlockType` and the slash command so both are one undo step.
+ */
+export function applyBlockType(
+  editor: CoreEditor,
+  chain: ChainedCommands,
+  type: BlockType,
+): ChainedCommands {
+  if (getActiveBlockType(editor) === type) return chain;
+  const plainBlocks = chain.clearNodes();
+  if (isHeadingType(type)) return plainBlocks.setHeading({ level: HEADING_LEVELS[type] });
+  switch (type) {
+    case 'paragraph':
+      return plainBlocks;
+    case 'bulletList':
+      return plainBlocks.toggleBulletList();
+    case 'orderedList':
+      return plainBlocks.toggleOrderedList();
+    case 'taskList':
+      return plainBlocks.toggleTaskList();
+    case 'blockquote':
+      return plainBlocks.toggleBlockquote();
+    case 'codeBlock':
+      return plainBlocks.setCodeBlock();
   }
-  if (editor.isActive({ textAlign: 'center' })) {
-    return chain.setTextAlign('right').run();
-  }
-  if (editor.isActive({ textAlign: 'right' })) {
-    return chain.setTextAlign('justify').run();
-  }
-  if (editor.isActive({ textAlign: 'justify' })) {
-    return chain.setTextAlign('left').run();
-  }
-  return chain.setTextAlign('center').run();
 }
 
-export function toggleTaskList(editor: Editor): boolean {
-  return editor.chain().focus().toggleTaskList().run();
+/** Sets the selected blocks to `type`. Picking the current type does nothing. */
+export function setBlockType(editor: Editor, type: BlockType): boolean {
+  if (getActiveBlockType(editor) === type) return false;
+  return applyBlockType(editor, editor.chain().focus(), type).run();
 }
 
-export function undo(editor: Editor): boolean {
-  return editor.chain().focus().undo().run();
+function getBlockTypeAt(editor: CoreEditor, pos: number): BlockType {
+  const $pos = editor.state.doc.resolve(pos);
+  const textblock = $pos.parent;
+  if (textblock.type.name === 'codeBlock') return 'codeBlock';
+  if (textblock.type.name === 'heading') {
+    const level = textblock.attrs.level;
+    if (level === 1) return 'h1';
+    if (level === 2) return 'h2';
+    if (level === 3) return 'h3';
+    if (level === 4) return 'h4';
+  }
+  for (let depth = $pos.depth - 1; depth > 0; depth--) {
+    const name = $pos.node(depth).type.name;
+    if (
+      name === 'taskList' ||
+      name === 'bulletList' ||
+      name === 'orderedList' ||
+      name === 'blockquote'
+    ) {
+      return name;
+    }
+  }
+  return 'paragraph';
 }
 
-export function redo(editor: Editor): boolean {
-  return editor.chain().focus().redo().run();
+/** The block type of the selection, or 'mixed' when it spans different types. */
+export function getActiveBlockType(editor: CoreEditor): BlockType | 'mixed' {
+  const { from, to } = editor.state.selection;
+  const types = new Set<BlockType>();
+  editor.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (node.isTextblock) types.add(getBlockTypeAt(editor, pos + 1));
+    return !node.isTextblock;
+  });
+  if (types.size > 1) return 'mixed';
+  return types.values().next().value ?? 'paragraph';
+}
+
+export function setHorizontalRule(editor: Editor): boolean {
+  return editor.chain().focus().setHorizontalRule().run();
 }
 
 /** Moves the caret to the end of the document and focuses the editor. */
@@ -111,14 +162,6 @@ export function deleteTable(editor: Editor): boolean {
   return editor.chain().focus().deleteTable().run();
 }
 
-export function toggleHeaderRow(editor: Editor): boolean {
-  return editor.chain().focus().toggleHeaderRow().run();
-}
-
-export function toggleHeaderColumn(editor: Editor): boolean {
-  return editor.chain().focus().toggleHeaderColumn().run();
-}
-
 /** Current link URL at the caret, or an empty string when not on a link. */
 export function getLinkUrl(editor: Editor): string {
   return editor.getAttributes('link').href ?? '';
@@ -134,16 +177,4 @@ export function unsetLink(editor: Editor): boolean {
 
 export function insertImage(editor: Editor, url: string): boolean {
   return editor.chain().focus().setImage({ src: url }).run();
-}
-
-export function toggleCodeBlock(editor: Editor): boolean {
-  return editor.chain().focus().toggleCodeBlock().run();
-}
-
-export function getCharacterCount(editor: Editor): number {
-  return editor.storage.characterCount.characters();
-}
-
-export function getWordCount(editor: Editor): number {
-  return editor.storage.characterCount.words();
 }

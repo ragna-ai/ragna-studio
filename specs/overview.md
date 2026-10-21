@@ -113,6 +113,13 @@ Markdown documents edited with the `@repo/editor` Tiptap kit, shared
 between humans and agents within a workspace.
 → [specs/documents/prd.md](./documents/prd.md)
 
+### Rich text editor
+
+One shared editor for documents, task descriptions and the email composer. Markdown-only
+feature set (CommonMark + GFM), Linear-style inline controls: bubble menu with a block type
+dropdown, table menu, `/` command menu.
+→ [specs/editor/prd.md](./editor/prd.md)
+
 ### Datasets
 
 Structured, spreadsheet-like state shared between humans and agents,

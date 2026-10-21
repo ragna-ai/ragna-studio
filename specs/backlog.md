@@ -81,6 +81,9 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 
 ## Code cleanup
 
+- [ ] Remove `LegacyMarks` from `@repo/editor` once documents and task descriptions saved before
+      the shared editor have been re-saved (it reads old `++underline++` / `==highlight==` as
+      plain text). Source: [editor/prd.md](./editor/prd.md).
 - [ ] Nested `await` in returns and call arguments (clean-code rule 10), about 30 older spots.
       Separate PR. Found in: `creditGuard.ts:39`, `chat.service.ts:365`,
       `task-attachment.service.ts:205`, `social-post.service.ts:345`,

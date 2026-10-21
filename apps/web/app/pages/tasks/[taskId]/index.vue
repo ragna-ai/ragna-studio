@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CornerUpLeftIcon } from '@lucide/vue';
+import { CornerUpLeftIcon, SaveCheckIcon, SavePenIcon } from '@lucide/vue';
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
@@ -22,6 +22,7 @@ const taskId = computed(() => route.params.taskId as string);
 // Refs
 const title = ref('');
 const isTitleDirty = ref(false);
+const descriptionSaveStatus = ref<'saved' | 'saving'>('saved');
 const descriptionEditorRef = useTemplateRef('descriptionEditorRef');
 
 // Composables
@@ -131,8 +132,15 @@ async function handleDelete() {
 
 <template>
   <div v-if="task" class="flex h-full flex-col">
-    <header class="flex items-center border-b p-4">
+    <header class="flex items-center justify-between border-b p-4">
       <PageBreadcrumb :items="ancestorItems" />
+      <div class="shrink-0 text-muted-foreground">
+        <SavePenIcon
+          v-if="descriptionSaveStatus === 'saving'"
+          class="size-4 stroke-1.5"
+        />
+        <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+      </div>
     </header>
 
     <div class="flex min-h-0 flex-1 overflow-hidden">
@@ -151,21 +159,22 @@ async function handleDelete() {
                pattern as components/InlineNameField.vue), so the title
                keeps proper heading structure in the document outline while
                still behaving as a plain in-place text field. -->
-          <h1 class="text-3xl font-semibold">
+          <h1 class="text-2xl font-semibold">
             <input
               :value="title"
               :placeholder="t('task.detail.titlePlaceholder')"
               :aria-label="t('task.detail.rename')"
-              class="w-full truncate rounded-sm border-none bg-transparent p-0 text-3xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+              class="w-full truncate rounded-sm border-none bg-transparent p-0 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
               @input="handleTitleInput"
               @blur="commitTitleNow"
               @keydown.enter.prevent="handleTitleEnter"
             />
           </h1>
 
-          <div class="space-y-6 pt-2">
+          <div class="space-y-6">
             <TaskDescriptionEditor
               ref="descriptionEditorRef"
+              v-model:save-status="descriptionSaveStatus"
               :task-id="task.id"
               :description="task.description"
             />
