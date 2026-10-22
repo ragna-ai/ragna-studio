@@ -23,7 +23,8 @@
     "noTools": "No tools",
     "publish": "Publish",
     "saveRename": "Save name",
-    "cancelRename": "Cancel rename"
+    "cancelRename": "Cancel rename",
+    "generating": "Generating…"
   },
   "nav": {
     "home": "Dashboard",

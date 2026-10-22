@@ -1,12 +1,14 @@
 <script setup lang="ts">
 // Imports
 import { SparklesIcon } from '@lucide/vue';
+import { toast } from 'vue-sonner';
 import VideoGenPreviewDialog from '~/features/video/components/VideoGenPreviewDialog.vue';
 import type {
   GeneratedVideo,
   VideoGenAspectRatio,
 } from '~/features/video/composables/useVideoGenApi';
 import {
+  useDeleteGenVideo,
   useEnhanceGenVideo,
   useGetGenVideos,
 } from '~/features/video/composables/useVideoGenApi';
@@ -17,6 +19,9 @@ import {
 // ImageGenGrid.
 const { data, isLoading, isError } = useGetGenVideos({ limit: 100 });
 const { mutate: enhanceVideo } = useEnhanceGenVideo();
+const { mutateAsync: deleteGenVideo } = useDeleteGenVideo();
+const { t } = useI18n();
+const { confirm } = useConfirmDialog();
 
 // Refs
 const previewVideo = ref<GeneratedVideo | null>(null);
@@ -28,6 +33,7 @@ const videoElements = new Map<string, HTMLVideoElement>();
 // recent call, this needs to survive re-renders of the specific tile that
 // triggered it and block re-submission until it settles.
 const enhancingDraftId = ref<string | null>(null);
+const deletingVideoId = ref<string | null>(null);
 
 // Computed
 const videos = computed(() => data.value?.genVideos ?? []);
@@ -96,6 +102,27 @@ function isEnhanceDisabled(video: GeneratedVideo) {
   return enhancingDraftId.value === video.id || hasActiveEnhance(video.id);
 }
 
+async function deleteFailedVideo(video: GeneratedVideo) {
+  const confirmed = await confirm({
+    title: t('videogen.deleteConfirm.title'),
+    message: t('videogen.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) return;
+
+  deletingVideoId.value = video.id;
+  try {
+    await deleteGenVideo(video.id);
+    toast.success(t('videogen.preview.deleteSuccess'));
+  } catch {
+    // useDeleteGenVideo already toasts the error.
+  } finally {
+    deletingVideoId.value = null;
+  }
+}
+
 function handleEnhance(video: GeneratedVideo) {
   if (isEnhanceDisabled(video)) return;
 
@@ -152,27 +179,20 @@ function handleEnhance(video: GeneratedVideo) {
         />
       </button>
 
-      <div
+      <GenerationFailedTile
         v-else-if="video.status === 'failed'"
-        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :prompt="video.prompt"
+        :error="video.error ?? $t('videogen.grid.failed')"
+        :is-deleting="deletingVideoId === video.id"
         :class="tileAspectClass(video)"
-      >
-        <p class="line-clamp-4 text-sm">{{ video.prompt }}</p>
-        <p class="text-xs text-destructive">
-          {{ video.error ?? $t('videogen.grid.failed') }}
-        </p>
-      </div>
+        @delete="deleteFailedVideo(video)"
+      />
 
-      <div
+      <GenerationPendingTile
         v-else
-        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :prompt="video.prompt"
         :class="tileAspectClass(video)"
-      >
-        <p class="line-clamp-4 text-sm text-muted-foreground">
-          {{ video.prompt }}
-        </p>
-        <Spinner class="size-4" />
-      </div>
+      />
 
       <div
         v-if="isEnhanceableDraft(video)"

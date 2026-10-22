@@ -27,14 +27,14 @@ const imageGenFormRef = useTemplateRef('imageGenFormRef');
 </script>
 
 <template>
-  <div
-    class="mx-auto flex h-full w-full max-w-4xl flex-col gap-8 overflow-y-auto p-4"
-  >
-    <ImageGenForm ref="imageGenFormRef" :gen-images="genImages" />
-    <ImageGenGrid
-      :gen-images="genImages"
-      :is-error="isGenImagesError"
-      @reuse="(settings) => imageGenFormRef?.applyReusedSettings(settings)"
-    />
+  <div class="h-full w-full overflow-y-auto">
+    <div class="mx-auto flex w-full max-w-4xl flex-col gap-8 p-4">
+      <ImageGenForm ref="imageGenFormRef" :gen-images="genImages" />
+      <ImageGenGrid
+        :gen-images="genImages"
+        :is-error="isGenImagesError"
+        @reuse="(settings) => imageGenFormRef?.applyReusedSettings(settings)"
+      />
+    </div>
   </div>
 </template>

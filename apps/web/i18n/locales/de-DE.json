@@ -23,7 +23,8 @@
     "noTools": "Keine Werkzeuge",
     "publish": "Veröffentlichen",
     "saveRename": "Namen speichern",
-    "cancelRename": "Umbenennen abbrechen"
+    "cancelRename": "Umbenennen abbrechen",
+    "generating": "Wird generiert…"
   },
   "nav": {
     "home": "Dashboard",

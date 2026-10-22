@@ -199,12 +199,13 @@ async function deleteImage() {
               {{ $t('imagen.preview.download') }}
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
+              class="hover:text-destructive"
               :disabled="isDeleting"
               @click="deleteImage"
             >
               <Spinner v-if="isDeleting" class="mr-2" />
-              <Trash2Icon v-else class="mr-2 size-4" />
+              <Trash2Icon v-else class="mr-2 size-4 stroke-1.5" />
               {{ $t('imagen.preview.delete') }}
             </Button>
           </div>
