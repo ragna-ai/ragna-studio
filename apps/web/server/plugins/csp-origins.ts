@@ -20,9 +20,11 @@ export default defineNitroPlugin(async (nitroApp) => {
   const mediaOrigin = toOrigin(publicConfig.mediaUrl);
 
   const extraSources: Record<CspDirective, string[]> = {
-    'connect-src': apiOrigin
-      ? [apiOrigin, toWebSocketUrl(apiOrigin).origin]
-      : [],
+    'connect-src': [
+      ...(apiOrigin ? [apiOrigin, toWebSocketUrl(apiOrigin).origin] : []),
+      // download buttons fetch the media file as a blob to save it
+      ...(mediaOrigin ? [mediaOrigin] : []),
+    ],
     'img-src': mediaOrigin ? [mediaOrigin] : [],
     'media-src': mediaOrigin ? [mediaOrigin] : [],
   };
