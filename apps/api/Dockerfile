@@ -59,7 +59,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # can't load anydoc's glibc-linked binary, hence oven/bun:debian, the same
 # runner apps/webbrowser uses and for the same glibc reason.
 # ============================================================
-FROM oven/bun:debian AS runner
+FROM oven/bun:1.4.4-debian AS runner
 
 WORKDIR /app
 

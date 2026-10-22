@@ -48,7 +48,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
   ([testing strategy](../testing/strategy.md)), and nothing under
   `apps/api/test` or `packages/testing` connects to Redis. If a test ever
   needs it, add a `redis:8.8.0-alpine3.23` service (no password) then.
-- **Bun:** `oven-sh/setup-bun`, pinned to a SHA and to Bun `1.3.14`, the
+- **Bun:** `oven-sh/setup-bun`, pinned to a SHA and to Bun `1.4.4`, the
   version used locally. `apps/api` tests run with `bun test`, and the test
   database script uses `Bun.SQL`.
 - **Env:** job-level, dummy values: `DB_HOST`, `DB_PORT`, `DB_USERNAME`,
@@ -79,7 +79,7 @@ A second job, `api-tests`, in `.github/workflows/ci.yml`.
 
 - The first PR run is green. Fix the env list if `@repo/config` complains
   about a missing value.
-- Bun `1.3.14` matches the `bun-types` in the lockfile closely enough. Bump the
+- Bun `1.4.4` matches the `bun-types` in the lockfile closely enough. Bump the
   pin together with local Bun.
 - Wall time of the job. The PRD estimate for CI was 60 to 90 seconds per run.
 
