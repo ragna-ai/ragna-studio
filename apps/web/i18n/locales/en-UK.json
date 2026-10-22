@@ -300,18 +300,24 @@
     "conversation": {
       "title": "Chat",
       "subtitle": "Chat with your AI agent.",
-      "disclaimer": "AI generated. Responses may be incorrect. Verify important information.",
+      "disclaimer": "AI agents can make mistakes.",
       "errors": {
         "generic": "Something went wrong. Please try again."
       }
     },
     "input": {
       "placeholder": "How can I help you?",
-      "attach": "Attach files",
+      "menu": "Add",
+      "attach": "Add files",
       "errors": {
         "unsupportedType": "\"{name}\" isn't a supported file type.",
         "tooLarge": "\"{name}\" is larger than 10 MB."
       }
+    },
+    "agentSelect": {
+      "placeholder": "Select an agent",
+      "search": "Search agents...",
+      "empty": "No agents found."
     },
     "attachment": {
       "dropHint": "Drop files to attach them",

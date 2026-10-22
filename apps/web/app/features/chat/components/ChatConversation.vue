@@ -12,14 +12,17 @@ import {
   type UITools,
 } from 'ai';
 import { toast } from 'vue-sonner';
+import ChatAgentSelect from '~/features/chat/components/ChatAgentSelect.vue';
 import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import {
   useCreateChat,
   type ChatAttachment,
 } from '~/features/chat/composables/useChatApi';
+import { useChatAgentSelection } from '~/features/chat/composables/useChatAgentSelection';
 import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
+import type { ChatAgent } from '~/features/chat/types';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { isOutOfCreditsError, OUT_OF_CREDITS_MESSAGE } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
@@ -27,6 +30,7 @@ import { createPrimaryId } from '~/lib/utils';
 // Props
 interface Props {
   chatId?: string;
+  agent?: ChatAgent;
   initialMessages?: UIMessage[];
 }
 
@@ -43,6 +47,7 @@ const inputText = ref('');
 const { mutateAsync: createNewChat } = useCreateChat();
 const invalidateCreditBalance = useInvalidateCreditBalance();
 const chatAttachments = useChatAttachments(ensureChat);
+const newChatAgent = useChatAgentSelection();
 const { isOverDropZone } = useDropZone(conversationRef, {
   multiple: true,
   onDrop: (files) => {
@@ -54,6 +59,16 @@ const { isOverDropZone } = useDropZone(conversationRef, {
 const initialMessages = props.initialMessages
   ? structuredClone(toRaw(props.initialMessages))
   : undefined;
+
+// An opened chat shows its own agent. A new chat offers the workspace agents
+// until it is created, then keeps showing the chosen one, locked.
+const agentOptions = computed(() =>
+  props.agent ? [props.agent] : newChatAgent.agents.value,
+);
+const selectedAgentId = computed(
+  () => props.agent?.id ?? newChatAgent.selectedAgentId.value,
+);
+const isAgentLocked = computed(() => chatId.value !== null);
 
 // The imageGen/videoGen tools write a transient `data-imageGen` /
 // `data-videoGen` chunk the moment generation starts. Transient chunks never
@@ -178,7 +193,9 @@ const hasVisibleReply = computed(() => {
 async function ensureChat(): Promise<string> {
   if (chatId.value) return chatId.value;
 
-  const { chat } = await createNewChat({ agentId: undefined });
+  const { chat } = await createNewChat({
+    agentId: selectedAgentId.value ?? undefined,
+  });
   if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
   chatId.value = chat.id;
   return chatId.value;
@@ -210,7 +227,10 @@ async function handleSubmit(text: string) {
 </script>
 
 <template>
-  <div ref="conversationRef" class="relative flex h-full w-full flex-col p-4">
+  <div
+    ref="conversationRef"
+    class="relative flex h-full w-full flex-col p-4 pb-1"
+  >
     <!-- Drag-n-drop overlay, covers the whole conversation while dragging -->
     <div
       v-if="isOverDropZone"
@@ -263,15 +283,6 @@ async function handleSubmit(text: string) {
       </MessageScroller>
     </MessageScrollerProvider>
 
-    <!-- Disclaimer -->
-    <!-- 
-    <div class="mt-auto border-0">
-      <p class="pt-8 pb-2 text-center text-xs text-muted-foreground/75">
-        {{ $t('chat.conversation.disclaimer') }}
-      </p>
-    </div>
-    -->
-
     <!-- input -->
     <div class="mx-auto w-full max-w-4xl">
       <ChatInput
@@ -284,7 +295,16 @@ async function handleSubmit(text: string) {
         @files="chatAttachments.handleFiles"
         @retry="chatAttachments.retry"
         @remove="chatAttachments.remove"
-      />
+      >
+        <template #toolbar-end>
+          <ChatAgentSelect
+            :agents="agentOptions"
+            :selected-agent-id="selectedAgentId"
+            :disabled="isAgentLocked"
+            @select="newChatAgent.selectAgent"
+          />
+        </template>
+      </ChatInput>
     </div>
   </div>
 </template>

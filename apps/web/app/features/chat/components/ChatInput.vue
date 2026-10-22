@@ -1,9 +1,15 @@
 <script setup lang="ts">
 // Imports
 import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
-import { PaperclipIcon } from '@lucide/vue';
+import { PaperclipIcon, PlusIcon } from '@lucide/vue';
 import type { ChatStatus } from 'ai';
 import { Button } from '~/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 import { Textarea } from '~/components/ui/textarea';
 import ChatPendingAttachment from '~/features/chat/components/ChatPendingAttachment.vue';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
@@ -100,22 +106,41 @@ onMounted(() => {
         v-model="text"
         :placeholder="t('chat.input.placeholder')"
         name="message"
-        class="max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-20 shadow-inner!"
+        class="max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-14 shadow-inner!"
         @keydown.enter.exact.prevent="onSubmit"
         @paste="onPaste"
       />
-      <div class="absolute right-2 bottom-2 flex items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          :title="t('chat.input.attach')"
-          @click="openFilePicker()"
-        >
-          <PaperclipIcon class="size-4 stroke-1.5 opacity-75" />
-        </Button>
+      <div class="absolute right-2 bottom-2">
         <PromptInputSubmit :status="status" :disabled="!isBusy && !canSubmit" />
       </div>
+    </div>
+
+    <div class="mt-1 flex items-center gap-2 px-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            class="size-6"
+            :title="t('chat.input.menu')"
+          >
+            <PlusIcon class="size-4 stroke-1.5 opacity-75" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top">
+          <DropdownMenuItem @select="openFilePicker()">
+            <PaperclipIcon />
+            {{ t('chat.input.attach') }}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <p
+        class="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground/75"
+      >
+        {{ t('chat.conversation.disclaimer') }}
+      </p>
+      <slot name="toolbar-end" />
     </div>
   </form>
 </template>

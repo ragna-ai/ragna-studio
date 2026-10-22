@@ -306,18 +306,24 @@
     "conversation": {
       "title": "Chat",
       "subtitle": "Unterhalte dich mit deinem KI-Agenten.",
-      "disclaimer": "KI Generiert. Antworten können fehlerhaft sein. Überprüfe wichtige Informationen.",
+      "disclaimer": "KI-Agenten können Fehler machen.",
       "errors": {
         "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
       }
     },
     "input": {
       "placeholder": "Wie kann ich dir helfen?",
-      "attach": "Dateien anhängen",
+      "menu": "Hinzufügen",
+      "attach": "Dateien hinzufügen",
       "errors": {
         "unsupportedType": "„{name}“ ist kein unterstützter Dateityp.",
         "tooLarge": "„{name}“ ist größer als 10 MB."
       }
+    },
+    "agentSelect": {
+      "placeholder": "Agent auswählen",
+      "search": "Agenten suchen...",
+      "empty": "Keine Agenten gefunden."
     },
     "attachment": {
       "dropHint": "Dateien hier ablegen, um sie anzuhängen",
