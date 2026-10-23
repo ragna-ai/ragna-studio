@@ -23,7 +23,7 @@ export const validChatAttachmentParams = myzValidator(
 export const validCreateChatBody = myzValidator(
   'json',
   z.object({
-    agentId: primaryId.optional(),
+    agentId: primaryId,
   }),
 );
 

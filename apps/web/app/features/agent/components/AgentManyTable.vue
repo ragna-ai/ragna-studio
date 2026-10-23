@@ -111,10 +111,7 @@ const handleDeleteFavorite = (agentId: string) => {
             <div class="size-8 rounded-full bg-slate-200"></div>
           </TableCell>
           <TableCell class="">
-            <div class="flex items-center gap-1.5">
-              <span class="text-sm font-semibold">{{ agent.name }}</span>
-              <Badge v-if="agent.isDefault" variant="secondary">Default</Badge>
-            </div>
+            <span class="text-sm font-semibold">{{ agent.name }}</span>
           </TableCell>
           <TableCell class="whitespace-nowrap">
             <div v-if="agent.aiModel" class="flex items-center space-x-2">

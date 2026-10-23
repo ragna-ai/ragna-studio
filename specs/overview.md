@@ -63,6 +63,13 @@ Split a conversation into a new chat at any message, preserving history
 up to that point. Reachable via a hover-revealed menu on each message.
 → [specs/chat/branching.md](./chat/branching.md)
 
+### Agent selection
+
+Every chat, email auto-draft and workflow node runs on an agent the user
+picked; there is no default agent. A workspace without agents shows a
+prompt in the chat with quick create from a template.
+→ [specs/agent/remove-default-agent-prd.md](./agent/remove-default-agent-prd.md)
+
 ### Agent context & memory
 
 Agents can be given free-text context, read attached documents, and (past

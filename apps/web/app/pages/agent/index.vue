@@ -24,11 +24,13 @@ const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
 
 // Functions
 const handleDeleteAgent = async (agentId: string) => {
+  const agentName =
+    data.value?.agents.find((agent) => agent.id === agentId)?.name ?? '';
   const confirmed = await confirm({
-    title: 'Delete Agent',
-    message: 'Are you sure you want to delete this agent?',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    title: t('agent.list.deleteConfirm.title'),
+    message: t('agent.list.deleteConfirm.message', { name: agentName }),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {

@@ -7,6 +7,7 @@ import { ORGANIZATION_DELETED_CODE, OrganizationDeletedException } from './excep
 import { logger as honoLogger } from 'hono/logger';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { agentContextDocumentController } from './controllers/agent-context-document.controller';
+import { agentTemplateController } from './controllers/agent-template.controller';
 import { agentController } from './controllers/agent.controller';
 import { aiModelController } from './controllers/aimodel.controller';
 import { chatController } from './controllers/chat.controller';
@@ -62,6 +63,7 @@ export const app = new Hono()
   .route('/', creditController)
   .route('/', organizationController)
   .route('/', agentController)
+  .route('/', agentTemplateController)
   .route('/', agentContextDocumentController)
   .route('/', aiModelController)
   .route('/', genImageController)

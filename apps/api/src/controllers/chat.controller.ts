@@ -48,7 +48,7 @@ export const chatController = new Hono()
   })
   /**
    * [POST] /workspace/:workspaceId/chat
-   * Create a new chat. Defaults to the workspace's default agent.
+   * Create a new chat with one of the workspace's agents.
    */
   .post('/', validCreateChatBody, async (c) => {
     const user = c.get('user');

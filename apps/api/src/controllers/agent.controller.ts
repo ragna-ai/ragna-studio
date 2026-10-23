@@ -4,6 +4,7 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   createAgentForWorkspace,
+  createAgentFromTemplateForWorkspace,
   deleteAgentForWorkspace,
   getAgentForWorkspace,
   getAgentMemoryForWorkspace,
@@ -12,6 +13,7 @@ import {
   updateAgentForWorkspace,
 } from '../services/agent.service';
 import {
+  validAgentFromTemplateBody,
   validAgentIdParam,
   validAgentMemoryBody,
   validCreateAgentBody,
@@ -58,9 +60,25 @@ export const agentController = new Hono()
       systemPrompt: body.systemPrompt,
       context: body.context,
       tools: body.tools,
-      isDefault: body.isDefault,
       defaultDatasetId: body.defaultDatasetId,
       settings: body.settings,
+    });
+
+    return c.json({ agent }, StatusCodes.CREATED);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/agent/from-template
+   * Create an agent in this workspace from an agent template.
+   */
+  .post('/from-template', validAgentFromTemplateBody, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const body = c.req.valid('json');
+
+    const agent = await createAgentFromTemplateForWorkspace({
+      workspaceId: workspace.id,
+      userId: user.id,
+      templateId: body.templateId,
     });
 
     return c.json({ agent }, StatusCodes.CREATED);
@@ -97,7 +115,6 @@ export const agentController = new Hono()
       systemPrompt: body.systemPrompt,
       context: body.context,
       tools: body.tools,
-      isDefault: body.isDefault,
       defaultDatasetId: body.defaultDatasetId,
       settings: body.settings,
     });

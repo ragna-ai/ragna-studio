@@ -57,7 +57,7 @@ export interface ChatResponse {
 }
 
 interface NewChatBody {
-  agentId?: string;
+  agentId: string;
 }
 
 export interface ChatHistoryItem {

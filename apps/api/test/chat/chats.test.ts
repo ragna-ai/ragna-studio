@@ -1,4 +1,5 @@
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
+import { createPrimaryId } from '@repo/utils';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -9,14 +10,17 @@ import { app } from '../../src/app';
 // is out of scope here. Auth/authorization are covered exhaustively in
 // test/auth/; this file only checks the chat feature's own behavior.
 
-const chatSchema = z.object({
+const chatSchema = z.strictObject({
   id: z.string(),
   userId: z.string(),
   workspaceId: z.string(),
   agentId: z.string(),
   title: z.string(),
+  forkedFromChatId: z.string().nullable(),
+  forkedFromMessageId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
 });
 
 const chatAgentSchema = z.object({
@@ -152,6 +156,30 @@ describe('POST /workspace/:workspaceId/chat', () => {
     expect(chat.workspaceId).toBe(workspaceId);
     expect(chat.agentId).toBe(agentId);
     expect(chat.title).toBe('Chat');
+  });
+
+  test('rejects a body without an agentId', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await app.request(`/workspace/${workspaceId}/chat`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+
+  test('404s for a well-formed agentId that does not exist', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await app.request(`/workspace/${workspaceId}/chat`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ agentId: createPrimaryId() }),
+    });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
   });
 
   test('rejects an unknown agentId', async () => {

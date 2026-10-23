@@ -9,25 +9,32 @@ import { app } from '../../src/app';
 // exhaustively in test/auth/ and test/workspace/workspace-authorization.test.ts;
 // this file only checks the agent feature's own behavior.
 
-const agentSchema = z.object({
+const agentSchema = z.strictObject({
   id: z.string(),
+  userId: z.string(),
   workspaceId: z.string(),
+  aiModelId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  aiModelId: z.string(),
   systemPrompt: z.string(),
-  isDefault: z.boolean(),
+  context: z.string().nullable(),
+  tools: z.array(z.string()),
+  defaultDatasetId: z.string().nullable(),
+  settings: z.record(z.string(), z.unknown()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
 });
 
-// The list endpoint (getAgentsByWorkspaceId, packages/database/src/
-// repositories/agent.repo.ts) selects a narrower column set than the
-// single-agent responses below: no workspaceId/aiModelId/systemPrompt, and
-// the AI model comes through as a nested relation instead of a bare id.
-const agentListItemSchema = z.object({
+// The list endpoint selects a narrower column set, with the AI model as a nested relation.
+const agentListItemSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  isDefault: z.boolean(),
+  tools: z.array(z.string()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  aiModel: z.strictObject({ provider: z.string(), model: z.string(), displayName: z.string() }),
 });
 
 const agentListResponseSchema = z.object({
@@ -117,6 +124,21 @@ describe('POST /workspace/:workspaceId/agent', () => {
     expect(agent.workspaceId).toBe(workspaceId);
   });
 
+  test('ignores an isDefault flag in the body', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+
+    const { status, agent } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Support bot',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+      isDefault: true,
+    });
+
+    expect(status).toBe(StatusCodes.CREATED);
+    expect(agent).not.toHaveProperty('isDefault');
+  });
+
   test('rejects an empty name', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const { aiModelId } = await seedTokenPricedAiModel();
@@ -181,6 +203,47 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId', () => {
     const body = agentResponseSchema.parse(await response.json());
     expect(body.agent.name).toBe('Renamed');
     expect(body.agent.systemPrompt).toBe('Original prompt');
+  });
+
+  test.each([
+    ['an empty body', {}],
+    ['only an isDefault flag', { isDefault: true }],
+  ])('rejects %s with no updatable field', async (_label, body) => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Original',
+      aiModelId,
+      systemPrompt: 'Original prompt',
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/agent/${created.id}`, {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+
+  test('ignores an isDefault flag in the body', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Original',
+      aiModelId,
+      systemPrompt: 'Original prompt',
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/agent/${created.id}`, {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Renamed', isDefault: true }),
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = agentResponseSchema.parse(await response.json());
+    expect(body.agent).not.toHaveProperty('isDefault');
   });
 
   test('404s for an agent id that does not exist', async () => {

@@ -1,5 +1,8 @@
 # Agent Defaults & Settings
 
+> Part A (default agent) is superseded by
+> [remove-default-agent-prd.md](remove-default-agent-prd.md). Part B stays valid.
+
 Status: implemented, verified
 
 Two related gaps in the agent Settings tab, fixed together:

@@ -1,14 +1,4 @@
-import { sql } from 'drizzle-orm';
-import {
-  boolean,
-  foreignKey,
-  index,
-  jsonb,
-  pgTable,
-  text,
-  unique,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core';
+import { foreignKey, index, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { dataset } from './dataset.schema';
@@ -81,7 +71,6 @@ export const agent = pgTable(
     aiModelId: text('ai_model_id')
       .notNull()
       .references(() => aiModel.id, { onDelete: 'cascade' }),
-    isDefault: boolean('is_default').notNull().default(false),
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
@@ -111,9 +100,6 @@ export const agent = pgTable(
       foreignColumns: [dataset.workspaceId, dataset.id],
       name: 'agents_default_dataset_workspace_fk',
     }),
-    uniqueIndex('agent_default_workspace_idx')
-      .on(table.workspaceId)
-      .where(sql`${table.isDefault}`),
   ],
 );
 

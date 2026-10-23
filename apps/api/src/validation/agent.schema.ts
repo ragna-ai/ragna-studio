@@ -11,6 +11,13 @@ export const validAgentIdParam = myzValidator(
   }),
 );
 
+export const validAgentFromTemplateBody = myzValidator(
+  'json',
+  z.object({
+    templateId: primaryId,
+  }),
+);
+
 export const validAgentMemoryBody = myzValidator(
   'json',
   z.object({
@@ -29,7 +36,6 @@ export const validCreateAgentBody = myzValidator(
     systemPrompt: z.string(),
     context: z.string().max(30_000).nullish(),
     tools: agentToolsSchema,
-    isDefault: z.boolean().optional(),
     defaultDatasetId: primaryId.nullish(),
     settings: agentSettingsSchema,
   }),
@@ -39,15 +45,18 @@ export const validCreateAgentBody = myzValidator(
 // old upsert endpoint's update half.
 export const validUpdateAgentBody = myzValidator(
   'json',
-  z.object({
-    name: z.string().min(1).max(255).optional(),
-    description: z.string().optional(),
-    aiModelId: primaryId.optional(),
-    systemPrompt: z.string().optional(),
-    context: z.string().max(30_000).nullish(),
-    tools: agentToolsSchema,
-    isDefault: z.boolean().optional(),
-    defaultDatasetId: primaryId.nullish(),
-    settings: agentSettingsSchema,
-  }),
+  z
+    .object({
+      name: z.string().min(1).max(255).optional(),
+      description: z.string().optional(),
+      aiModelId: primaryId.optional(),
+      systemPrompt: z.string().optional(),
+      context: z.string().max(30_000).nullish(),
+      tools: agentToolsSchema,
+      defaultDatasetId: primaryId.nullish(),
+      settings: agentSettingsSchema,
+    })
+    .refine((body) => Object.values(body).some((value) => value !== undefined), {
+      message: 'At least one field to update is required',
+    }),
 );

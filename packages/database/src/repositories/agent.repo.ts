@@ -1,14 +1,10 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { Agent } from '../schema';
 import { agent, task } from '../schema';
 import type { ICreateAgent } from '../zod';
-import { getDefaultAgent } from './agent-template.repo';
-import { getPersonalWorkspaceIdByUserId } from './organization.repo';
 
 export type { Agent, AgentReasoningEffort, AgentSettings, AgentTool, AgentTools } from '../schema';
-
-type AgentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 // Every agent now lives in exactly one workspace (workspaceId is NOT NULL),
 // so "scope" is always a concrete (userId, workspaceId) pair; there is no
@@ -19,7 +15,6 @@ type UpdateAgentFields = Partial<
     | 'name'
     | 'description'
     | 'aiModelId'
-    | 'isDefault'
     | 'systemPrompt'
     | 'context'
     | 'tools'
@@ -28,24 +23,6 @@ type UpdateAgentFields = Partial<
   >
 >;
 
-// Clears `isDefault` on every other agent in `workspaceId`, so at most one
-// default agent exists per workspace. Must run in the same transaction as the
-// write that sets the new default, otherwise a race can leave two defaults.
-async function clearOtherDefaultAgentsInWorkspace(
-  tx: AgentTransaction,
-  { workspaceId, exceptAgentId }: { workspaceId: string; exceptAgentId?: string },
-): Promise<void> {
-  await tx
-    .update(agent)
-    .set({ isDefault: false })
-    .where(
-      and(
-        eq(agent.workspaceId, workspaceId),
-        exceptAgentId ? sql`${agent.id} <> ${exceptAgentId}` : undefined,
-      ),
-    );
-}
-
 export async function createAgent(values: ICreateAgent): Promise<Agent> {
   const {
     userId,
@@ -53,7 +30,6 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     name,
     description,
     aiModelId,
-    isDefault,
     systemPrompt,
     context,
     tools,
@@ -61,81 +37,28 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     defaultDatasetId,
   } = values;
 
-  return db.transaction(async (tx) => {
-    if (isDefault) {
-      await clearOtherDefaultAgentsInWorkspace(tx, { workspaceId });
-    }
-
-    const [createdAgent] = await tx
-      .insert(agent)
-      .values({
-        userId,
-        workspaceId,
-        aiModelId,
-        isDefault,
-        name,
-        description,
-        systemPrompt,
-        context,
-        tools,
-        defaultDatasetId,
-        // Omit when unset so the column's $defaultFn default applies.
-        ...(settings !== undefined ? { settings } : {}),
-      })
-      .returning();
-
-    if (!createdAgent) {
-      throw new Error('Failed to create agent');
-    }
-
-    return createdAgent;
-  });
-}
-
-// Get the workspace's shared clone of the default agent, creating it on first use.
-// `userId` is only the author of a newly created clone.
-export async function getOrCreateDefaultAgentForWorkspace({
-  userId,
-  workspaceId,
-}: {
-  userId: string;
-  workspaceId: string;
-}): Promise<Agent> {
-  const findExisting = () => db.query.agent.findFirst({ where: { workspaceId, isDefault: true } });
-
-  const existingAgent = await findExisting();
-  if (existingAgent) {
-    return existingAgent;
-  }
-
-  const defaultAgent = await getDefaultAgent();
-
-  // Not createAgent: its default-clearing would demote a default a colleague
-  // just committed. On conflict the colleague's default wins and is re-read.
   const [createdAgent] = await db
     .insert(agent)
     .values({
       userId,
       workspaceId,
-      aiModelId: defaultAgent.aiModelId,
-      isDefault: true,
-      name: defaultAgent.name,
-      description: defaultAgent.description,
-      systemPrompt: defaultAgent.systemPrompt,
-      tools: defaultAgent.tools,
-      settings: defaultAgent.settings,
+      aiModelId,
+      name,
+      description,
+      systemPrompt,
+      context,
+      tools,
+      defaultDatasetId,
+      // Omit when unset so the column's $defaultFn default applies.
+      ...(settings !== undefined ? { settings } : {}),
     })
-    .onConflictDoNothing({ target: agent.workspaceId, where: sql`${agent.isDefault}` })
     .returning();
-  if (createdAgent) {
-    return createdAgent;
+
+  if (!createdAgent) {
+    throw new Error('Failed to create agent');
   }
 
-  const concurrentAgent = await findExisting();
-  if (!concurrentAgent) {
-    throw new Error('Failed to create default agent');
-  }
-  return concurrentAgent;
+  return createdAgent;
 }
 
 export async function getAgentCountByWorkspaceId({
@@ -190,9 +113,8 @@ export interface ResolveEmailDraftAgentParams {
 }
 
 /**
- * Picks the agent that drafts an email reply: the override, else the stored default,
- * else the private workspace's default agent. Candidates outside the private workspace
- * are skipped. Returns null only when the user has no private workspace.
+ * Picks the agent that drafts an email reply: the override, else the stored default.
+ * Candidates outside the private workspace are skipped. Returns null when neither resolves.
  */
 export async function resolveEmailDraftAgent({
   userId,
@@ -215,16 +137,7 @@ export async function resolveEmailDraftAgent({
     }
   }
 
-  const personalWorkspaceId = await getPersonalWorkspaceIdByUserId({ userId });
-  if (!personalWorkspaceId) {
-    return null;
-  }
-
-  const workspaceDefaultAgent = await getOrCreateDefaultAgentForWorkspace({
-    userId,
-    workspaceId: personalWorkspaceId,
-  });
-  return getAgentInPersonalWorkspace({ agentId: workspaceDefaultAgent.id, userId });
+  return null;
 }
 
 export async function getAgentsByWorkspaceId({
@@ -244,7 +157,6 @@ export async function getAgentsByWorkspaceId({
       name: true,
       description: true,
       tools: true,
-      isDefault: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -279,19 +191,13 @@ export async function updateAgent({
   agentId: string;
   workspaceId: string;
 } & UpdateAgentFields): Promise<Agent | null> {
-  return db.transaction(async (tx) => {
-    if (fields.isDefault) {
-      await clearOtherDefaultAgentsInWorkspace(tx, { workspaceId, exceptAgentId: agentId });
-    }
+  const [updatedAgent] = await db
+    .update(agent)
+    .set(fields)
+    .where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)))
+    .returning();
 
-    const [updatedAgent] = await tx
-      .update(agent)
-      .set(fields)
-      .where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)))
-      .returning();
-
-    return updatedAgent ?? null;
-  });
+  return updatedAgent ?? null;
 }
 
 // DELETE an agent by ID, scoped to its workspace.

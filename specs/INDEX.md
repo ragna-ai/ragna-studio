@@ -12,6 +12,7 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
+| [Remove the default agent (PRD)](./agent/remove-default-agent-prd.md) | in-progress (2026-10-23) |
 | [API tests in CI (PRD)](./ci-cd/api-tests-prd.md) | in-progress (2026-09-29) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
@@ -24,8 +25,10 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
+| [Agent media models (PRD)](./agent/agent-media-models-prd.md) | decided (2026-10-23) |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
+| [Organizations: AI model selection (PRD)](./organizations/ai-models-prd.md) | decided (2026-10-23) |
 
 ## Proposed
 

@@ -116,7 +116,7 @@ The agent drafts with its instructions, context and memory. It does not use its 
 
 ### Draft on demand
 
-Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from the default draft agent. While it works, the thread shows **Drafting a reply...**.
+Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from the draft agent set in **Email settings**. While it works, the thread shows **Drafting a reply...**.
 
 ### Draft automatically
 
@@ -125,6 +125,6 @@ RAGNA drafts a reply on its own in two cases:
 - The message falls into a category with **Auto-draft** on.
 - The sender is on the auto-draft list. Open **Email settings**, go to **Auto-draft senders** and add the address. Mail from these senders gets a draft regardless of its category.
 
-### Choose the default agent
+### Choose the draft agent
 
-In **Email settings** under **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of the private workspace. If none is picked, RAGNA uses the default agent of the private workspace. See [Agents](/agents) to create one.
+In **Email settings** under **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of the private workspace. Automatic drafts need this agent. If none is picked, no draft is written, and the settings show "Pick an agent to enable auto-drafts". See [Agents](/agents) to create one.

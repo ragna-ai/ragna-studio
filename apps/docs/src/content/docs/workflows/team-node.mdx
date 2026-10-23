@@ -10,7 +10,7 @@ The team node lets one agent lead several others. The lead gets a task, splits i
 ## Set up a team
 
 1. Add a **Team** node and select it.
-2. Choose a **Lead agent**, or keep **None (use default agent)**.
+2. Choose a **Lead agent**. It is required.
 3. Write the **Prompt**. It can use `{{input}}` for the output of the previous node.
 4. Click **Add member** for each specialist.
 5. For each member, pick an agent and write a short role, such as "researches background facts".
@@ -34,8 +34,7 @@ When the lead sends independent subtasks in the same step, the members work at t
 
 ## Lead and member settings
 
-- **Referenced lead:** the lead keeps its own model, instructions, knowledge and tools. It can use them next to delegating.
-- **Default lead:** the default agent leads with no tools. It only delegates.
+- **Lead:** the lead keeps its own model, instructions, knowledge and tools. It can use them next to delegating.
 - **Members:** each member runs like it does in chat, with its own model, tools and settings.
 
 ## Limits

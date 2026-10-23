@@ -1,7 +1,8 @@
+import { createPrimaryId } from '@repo/utils';
 import { and, eq, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Chat, ChatMessage } from '../schema';
-import { chat, chatAttachment, chatMessage } from '../schema';
+import { agent, chat, chatAttachment, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
 
 export type { Chat, ChatMessage } from '../schema';
@@ -16,22 +17,26 @@ function chatScopeFilter({ chatId, userId, workspaceId }: ChatScope & { chatId: 
   return and(eq(chat.id, chatId), eq(chat.userId, userId), eq(chat.workspaceId, workspaceId));
 }
 
-export async function createChat(payload: ICreateChat): Promise<Chat> {
+/** Creates a chat for an agent of the workspace in one statement. Null when the agent is not found there. */
+export async function createChat(payload: ICreateChat): Promise<Chat | null> {
   const [createdChat] = await db
     .insert(chat)
-    .values({
-      userId: payload.userId,
-      workspaceId: payload.workspaceId,
-      agentId: payload.agentId,
-      title: payload.title,
-    })
+    .select(
+      db
+        .select({
+          id: sql<string>`${createPrimaryId()}::text`.as('id'),
+          userId: sql<string>`${payload.userId}::text`.as('user_id'),
+          workspaceId: agent.workspaceId,
+          agentId: agent.id,
+          title: sql<string>`${payload.title}::text`.as('title'),
+          updatedAt: sql<Date>`${new Date().toISOString()}::timestamp`.as('updated_at'),
+        })
+        .from(agent)
+        .where(and(eq(agent.id, payload.agentId), eq(agent.workspaceId, payload.workspaceId))),
+    )
     .returning();
 
-  if (!createdChat) {
-    throw new Error('Failed to create chat');
-  }
-
-  return createdChat;
+  return createdChat ?? null;
 }
 
 // WS layer only (runChatStream, the subscribe authorizer): the socket has no

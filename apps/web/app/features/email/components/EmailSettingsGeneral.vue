@@ -119,6 +119,13 @@ function handleReconnect() {
         <p class="text-xs text-muted-foreground">
           {{ t('email.settings.general.defaultAgentHint') }}
         </p>
+        <p
+          v-if="!defaultAgentId"
+          class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400"
+        >
+          <AlertTriangleIcon class="size-3.5 shrink-0" />
+          {{ t('email.settings.general.defaultAgentMissingHint') }}
+        </p>
         <Select v-model="defaultAgentId">
           <SelectTrigger class="w-full max-w-sm">
             <SelectValue

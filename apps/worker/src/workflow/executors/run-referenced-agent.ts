@@ -58,8 +58,17 @@ export class ModelNotChargeableError extends Error {
 export type AiModelRef = { provider: string; model: string; pricing: AiModelPricing | null };
 type AgentSettingsRef = AgentSettings | null;
 
-// getAgentByIdAndWorkspaceId/getDefaultAgent both load the `aiModel` relation, but their
-// declared return types don't carry it (see agent.repo.ts). Narrow locally
+// Stored definitions are not re-validated at run time, so a node saved before
+// agents became required can reach an executor without one.
+export function requireAgentId(agentId: string | undefined): string {
+  if (!agentId) {
+    throw new Error('Pick an agent for this node');
+  }
+  return agentId;
+}
+
+// getAgentByIdAndWorkspaceId loads the `aiModel` relation, but its
+// declared return type doesn't carry it (see agent.repo.ts). Narrow locally
 // instead of widening the shared repo types.
 export function withAiModel<T>(record: T): T & { aiModel: AiModelRef } {
   return record as T & { aiModel: AiModelRef };
@@ -191,8 +200,7 @@ export type ReferencedAgentRun = {
 };
 
 // Pre-run gate, shared by every LLM call a workflow run makes on a user's
-// behalf: the agent node's referenced-agent path, its inline default-agent
-// path, the team node's lead call, and each team member's delegate call.
+// behalf: the agent node, the team node's lead call, and each team member's delegate call.
 // Returns null both when
 // credits are off (skipped entirely, no query) and when the billing entity
 // has no account; either way the caller's later settleWorkflowUsage call

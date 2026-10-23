@@ -27,7 +27,7 @@ export function createWorkflowNode(
         id,
         type,
         position,
-        data: { label, config: { prompt: '{{input}}' } },
+        data: { label, config: { agentId: '', prompt: '{{input}}' } },
       };
     case 'tool':
       return {
@@ -59,6 +59,7 @@ export function createWorkflowNode(
           label,
           config: {
             mode: 'delegate',
+            leadAgentId: '',
             prompt: '{{input}}',
             members: [{ agentId: '', role: '' }],
           },

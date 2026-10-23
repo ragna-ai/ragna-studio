@@ -1,6 +1,5 @@
 import type { Agent, AgentTools, EmailAccount, EmailProvider } from '@repo/database';
-import { createAgent, createEmailAccount, db } from '@repo/database';
-import { agentTemplate } from '@repo/database/schema';
+import { createAgent, createEmailAccount } from '@repo/database';
 import { seedAuthenticatedUser, seedTokenPricedAiModel } from '@repo/testing';
 
 export interface SeededMailUser {
@@ -26,14 +25,6 @@ export async function seedMailUser(params: SeedMailUserParams = {}): Promise<See
   });
 
   return { userId, personalWorkspaceId, sharedWorkspaceId: workspaceId, account };
-}
-
-/** The template `resolveEmailDraftAgent` copies when it must create a workspace default agent. */
-export async function seedDefaultAgentTemplate(): Promise<void> {
-  const { aiModelId } = await seedTokenPricedAiModel();
-  await db
-    .insert(agentTemplate)
-    .values({ aiModelId, name: 'Default', systemPrompt: 'Be helpful.' });
 }
 
 export interface SeedAgentParams {
