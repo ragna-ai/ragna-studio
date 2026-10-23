@@ -9,7 +9,7 @@
 # Debian slim, not Alpine: mdream ships a native addon per libc, and
 # the install-time binary must be glibc to load in the runner below.
 # ============================================================
-FROM node:24-slim AS base
+FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -58,7 +58,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # Runner — Bun on Debian + system Chromium. Bun's default/debian
 # image has glibc and apt, which Chromium needs.
 # ============================================================
-FROM oven/bun:1.4.4-debian AS runner
+FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS runner
 
 WORKDIR /app
 
