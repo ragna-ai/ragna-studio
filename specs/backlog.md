@@ -111,7 +111,7 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 ## Parked features (need a decision or PRD first)
 
 - [ ] Full RBAC on workspace resources: `viewer` role next to `manager` and `editor`.
-- [ ] Remove the default agent (chat needs an agent, quick create from template): `agent/remove-default-agent-prd.md`.
+- [x] Remove the default agent, shipped in PR #138 (2026-10-23): `agent/remove-default-agent-prd.md`.
 - [ ] Per-agent image and video models, no platform default: `agent/agent-media-models-prd.md`.
 - [ ] Org-level AI model allowlist and catalog soft delete: `organizations/ai-models-prd.md`.
 - [ ] Agent soft delete, needs its own PRD and session. Today deleting an agent cascade-deletes its

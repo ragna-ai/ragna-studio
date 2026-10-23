@@ -1,6 +1,6 @@
 # Remove the default agent (PRD)
 
-> **Status: in-progress** (2026-10-23). Every chat, email draft and workflow node
+> **Status: implemented** (2026-10-23, PR #138). Every chat, email draft and workflow node
 > runs on an agent the user picked. No code picks an agent for the user.
 
 The default agent was a comfort feature from an older chat version, where a new

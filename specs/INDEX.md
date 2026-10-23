@@ -12,7 +12,6 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
-| [Remove the default agent (PRD)](./agent/remove-default-agent-prd.md) | in-progress (2026-10-23) |
 | [API tests in CI (PRD)](./ci-cd/api-tests-prd.md) | in-progress (2026-09-29) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | in-progress (approved by Sven 2026-08-15; all five slices below built the same day, apps/api suite 463 pass / 0 fail; awaiting Sven's manual verification, no browser or worker run yet, not committed) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | in-progress (approved by Sven 2026-08-15; all slices below built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven, committed to `feat/email-client` (PR #21); still awaiting a manual browser pass through compose/reply/forward before this flips to `implemented`) |
@@ -50,6 +49,7 @@ work first, shipped reference and dead/historical docs last.
 | [Agent Context — Phase 1: Free-text context](./agent/agent-context.md) | implemented, verified |
 | [Agent Defaults & Settings](./agent/agent-default-and-settings.md) | implemented, verified |
 | [Agent memory](./agent/agent-memory.md) | implemented (Phase 1, 2026-07-18) |
+| [Remove the default agent (PRD)](./agent/remove-default-agent-prd.md) | implemented (2026-10-23, PR #138) |
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
 | [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | implemented (PR #90, 2026-10-08) |
