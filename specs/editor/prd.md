@@ -218,8 +218,8 @@ code block or inline code.
 - Items filter by label and by aliases (`h1`, `ul`, `todo`, `hr`), in both locales.
 - `cycleList()` is removed. The slash menu and the block type dropdown both use `setBlockType()`.
 - Built on `@tiptap/suggestion` with `char: '/'`. This is a new dependency of `@repo/editor`,
-  same version line as the other `@tiptap/*` packages. It must pass the release-age and
-  lockfile rules in [security/supply-chain.md](../security/supply-chain.md).
+  same version line as the other `@tiptap/*` packages. It must pass the release-age rule
+  (`minimumReleaseAge` in `pnpm-workspace.yaml`) and the CI lockfile guard.
 
 ### 6. Surfaces
 

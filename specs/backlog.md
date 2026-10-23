@@ -54,6 +54,12 @@ when it ships; move it into a PRD when it gets designed.
 - [ ] Better Auth 1.8 upgrade, once 1.8 is stable. Gap analysis against the beta:
       [specs/auth/better-auth-1.8-gap-analysis.md](./auth/better-auth-1.8-gap-analysis.md).
       Must-do: `oauthClient.sector_identifier` column before the bump.
+- [ ] Better Auth 1.7.12 bump (not urgent, no advisory). It hardens two plugins we use:
+      `requireMcpAuth` rejects JWT-plugin session JWTs (#11934; our gate already requires
+      `client_id` and a live connection), and the JWT plugin verifies with the stored key's
+      algorithm (#11925). Update the `better-auth@1.7.11` entry in `minimumReleaseAgeExclude`
+      too. `jwt()` without `issuer`/`audience` now logs a warning; set them only if the MCP
+      token claims stay unchanged. Raise priority if a GHSA is published for either fix.
 
 ## Hardening (worker tests and v2/v3 leftovers)
 
@@ -78,6 +84,10 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
       it's fixed, `pmOnFail: ignore` (PR #118) keeps the lockfile single-document and the CI
       step "Lockfile is a single YAML document" (PR #124) guards it. Once fixed, drop both, so
       pnpm switches to the pinned version on its own again.
+- [ ] Dependabot alert #15 (`katex` < 0.18.2, low) is dismissed: `vue-stream-markdown` and
+      `mermaid` still require `^0.16`. Reopen and update once both accept 0.18.
+- [ ] zizmor only runs locally, so workflow changes can reintroduce findings unnoticed. Add a CI
+      step (default persona, SHA-pinned) once the supply chain conventions have settled.
 
 ## Code cleanup
 
