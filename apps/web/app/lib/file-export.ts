@@ -1,6 +1,6 @@
 /**
  * Shared plumbing for "export as file" features (dataset rows, documents):
- * build the same-shaped fallback filename and save an already-fetched Blob
+ * build the same-shaped fallback filename and save a Blob or URL
  * via a temporary object URL. Kept feature-agnostic (no format unions here)
  * so both dataset and document exports can share it without a fake coupling
  * between their otherwise-unrelated format lists.
@@ -39,4 +39,24 @@ export function downloadBlob(blob: Blob, filename: string): void {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(objectUrl);
+}
+
+/**
+ * Fetch a cross-origin media file and save it. Skips the HTTP cache because
+ * a copy cached by an `<img>`/`<video>` tag carries no CORS headers.
+ * Throws on an HTML response: a relative URL (unset MEDIA_URL) hits the SPA
+ * fallback page, which would otherwise be saved as a broken file.
+ */
+export async function downloadFileFromUrl(
+  url: string,
+  filename: string,
+): Promise<void> {
+  const blob = await $fetch<Blob>(url, {
+    responseType: 'blob',
+    cache: 'no-store',
+  });
+  if (blob.type.startsWith('text/html')) {
+    throw new Error(`Expected a file but got an HTML page from ${url}`);
+  }
+  downloadBlob(blob, filename);
 }

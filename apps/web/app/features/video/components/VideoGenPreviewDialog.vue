@@ -9,6 +9,7 @@ import {
 } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { downloadFileFromUrl } from '~/lib/file-export';
 import {
   useDeleteGenVideo,
   useEnhanceGenVideo,
@@ -70,13 +71,7 @@ async function downloadVideo() {
 
   isDownloading.value = true;
   try {
-    const blob = await $fetch<Blob>(video.videoUrl, { responseType: 'blob' });
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = `${video.id}.mp4`;
-    link.click();
-    URL.revokeObjectURL(objectUrl);
+    await downloadFileFromUrl(video.videoUrl, `${video.id}.mp4`);
   } catch {
     toast.error(t('videogen.preview.downloadError'));
   } finally {
