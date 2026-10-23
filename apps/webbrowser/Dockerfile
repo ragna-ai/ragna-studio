@@ -58,7 +58,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # Runner — Bun on Debian + system Chromium. Bun's default/debian
 # image has glibc and apt, which Chromium needs.
 # ============================================================
-FROM oven/bun:debian AS runner
+FROM oven/bun:1.4.4-debian AS runner
 
 WORKDIR /app
 
