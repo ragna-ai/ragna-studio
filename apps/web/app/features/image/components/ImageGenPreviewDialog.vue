@@ -3,6 +3,7 @@
 import { CheckIcon, CopyIcon, DownloadIcon, Trash2Icon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { downloadFileFromUrl } from '~/lib/file-export';
 import { useDeleteGenImage } from '~/features/image/composables/useImageGenApi';
 import type {
   GeneratedImage,
@@ -47,13 +48,10 @@ async function downloadImage() {
 
   isDownloading.value = true;
   try {
-    const blob = await $fetch<Blob>(image.imgUrl, { responseType: 'blob' });
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = `${image.id}.png`;
-    link.click();
-    URL.revokeObjectURL(objectUrl);
+    await downloadFileFromUrl(image.imgUrl, {
+      baseName: image.id,
+      fallbackExtension: 'png',
+    });
   } catch {
     toast.error(t('imagen.preview.downloadError'));
   } finally {
