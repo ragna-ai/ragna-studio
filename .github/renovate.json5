@@ -26,7 +26,6 @@
   ignoreDeps: [
     // nuxt is upgraded with `nuxt upgrade`, which also dedupes its transitive tree
     'nuxt',
-    'node',
     'typescript',
     '@types/node',
     // pinned release candidate, also pinned in packageExtensions
@@ -76,6 +75,23 @@
     {
       groupName: 'docker images',
       matchDatasources: ['docker'],
+    },
+    {
+      // Node from engines, .nvmrc and setup-node is moved by hand.
+      matchDepNames: ['node'],
+      matchDatasources: ['!docker'],
+      enabled: false,
+    },
+    {
+      // Runtime base images carry the Node and Bun security fixes. Own PR, any
+      // day, not a draft: merging it is the signal to cut a release. Must stay
+      // below the 'docker images' rule to override its group.
+      groupName: 'runtime images',
+      matchDatasources: ['docker'],
+      matchPackageNames: ['node', 'oven/bun'],
+      pinDigests: true,
+      schedule: ['at any time'],
+      draftPR: false,
     },
   ],
 }
