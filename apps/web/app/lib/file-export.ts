@@ -41,15 +41,34 @@ export function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(objectUrl);
 }
 
+const EXTENSION_BY_MIME_TYPE: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+};
+
+export interface DownloadFileOptions {
+  baseName: string;
+  fallbackExtension: string;
+}
+
+function extensionFromMimeType(mimeType: string): string | null {
+  const essence = mimeType.split(';')[0]?.trim().toLowerCase() ?? '';
+  return EXTENSION_BY_MIME_TYPE[essence] ?? null;
+}
+
 /**
- * Fetch a cross-origin media file and save it. Skips the HTTP cache because
- * a copy cached by an `<img>`/`<video>` tag carries no CORS headers.
+ * Fetch a cross-origin media file and save it as `<baseName>.<ext>`, with the
+ * extension taken from the blob's MIME type (else `fallbackExtension`).
+ * Skips the HTTP cache because a copy cached by an `<img>`/`<video>` tag
+ * carries no CORS headers.
  * Throws on an HTML response: a relative URL (unset MEDIA_URL) hits the SPA
  * fallback page, which would otherwise be saved as a broken file.
  */
 export async function downloadFileFromUrl(
   url: string,
-  filename: string,
+  { baseName, fallbackExtension }: DownloadFileOptions,
 ): Promise<void> {
   const blob = await $fetch<Blob>(url, {
     responseType: 'blob',
@@ -58,5 +77,6 @@ export async function downloadFileFromUrl(
   if (blob.type.startsWith('text/html')) {
     throw new Error(`Expected a file but got an HTML page from ${url}`);
   }
-  downloadBlob(blob, filename);
+  const extension = extensionFromMimeType(blob.type) ?? fallbackExtension;
+  downloadBlob(blob, `${baseName}.${extension}`);
 }

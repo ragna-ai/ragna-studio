@@ -71,7 +71,10 @@ async function downloadVideo() {
 
   isDownloading.value = true;
   try {
-    await downloadFileFromUrl(video.videoUrl, `${video.id}.mp4`);
+    await downloadFileFromUrl(video.videoUrl, {
+      baseName: video.id,
+      fallbackExtension: 'mp4',
+    });
   } catch {
     toast.error(t('videogen.preview.downloadError'));
   } finally {

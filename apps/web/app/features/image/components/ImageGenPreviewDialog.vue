@@ -48,7 +48,10 @@ async function downloadImage() {
 
   isDownloading.value = true;
   try {
-    await downloadFileFromUrl(image.imgUrl, `${image.id}.png`);
+    await downloadFileFromUrl(image.imgUrl, {
+      baseName: image.id,
+      fallbackExtension: 'png',
+    });
   } catch {
     toast.error(t('imagen.preview.downloadError'));
   } finally {
