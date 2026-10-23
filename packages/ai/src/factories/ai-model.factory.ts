@@ -122,7 +122,7 @@ export function getLanguageModel(payload: GetLanguageModelPayload): LanguageMode
 }
 
 export function getImageModel(payload: GetImageModelPayload): ImageModel {
-  const { provider = 'bfl', model = 'flux-2-pro' } = payload;
+  const { provider = 'bfl', model = 'flux-3-image' } = payload;
 
   switch (provider) {
     case 'bfl': {

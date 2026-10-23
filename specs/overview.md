@@ -135,10 +135,11 @@ shared across chat attachments, image generation, and video generation.
 
 ### Image generation
 
-Text-to-image generation with advanced provider inputs, run as
-pending-row background jobs through the worker.
+Text-to-image generation with FLUX 3, Gemini, and OpenAI, with advanced
+provider inputs, run as pending-row background jobs through the worker.
 → [specs/imagegen/prd.md](./imagegen/prd.md),
-[worker-execution-prd.md](./imagegen/worker-execution-prd.md)
+[worker-execution-prd.md](./imagegen/worker-execution-prd.md),
+[flux-3-prd.md](./imagegen/flux-3-prd.md)
 
 ### Video generation
 

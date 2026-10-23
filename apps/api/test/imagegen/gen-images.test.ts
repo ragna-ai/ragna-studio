@@ -112,7 +112,7 @@ async function seedGenImage({
       error,
       prompt: 'a red bicycle',
       provider: 'bfl',
-      model: 'flux-pro',
+      model: 'flux-3-image',
     },
   ]);
 

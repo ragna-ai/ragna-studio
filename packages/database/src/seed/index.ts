@@ -67,12 +67,17 @@ async function seedAiModels() {
     },
     {
       provider: 'bfl',
-      model: 'flux-2-pro',
+      model: 'flux-3-image',
       modality: 'image',
       family: 'diffusion',
       size: 'medium',
-      displayName: 'FLUX 2 Pro',
+      displayName: 'FLUX 3',
       description: 'High-quality image generation by Black Forest Labs.',
+      capabilities: {
+        canGenerateImage: true,
+        supportsReferenceImages: true,
+        maxReferenceImages: 4,
+      },
     },
     {
       provider: 'google-vertex',

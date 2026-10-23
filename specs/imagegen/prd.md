@@ -12,6 +12,9 @@
 > workspace-scoped (404 otherwise). The `storageKey` round trip described
 > below no longer exists; abandoned uploads are swept by the media-sweep cron.
 
+> **Update (2026-10-23):** FLUX 1/2 rows were replaced by `flux-3-image` (no
+> seed; see `flux-3-prd.md`), so the `flux-2-*` capability row is historical.
+
 Users can steer an image generation beyond the prompt: exclude content with a
 negative prompt, reproduce a result with a seed, and condition on up to four
 reference images picked from the gallery or uploaded. Which of those are

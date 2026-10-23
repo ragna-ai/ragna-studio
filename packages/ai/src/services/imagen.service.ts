@@ -51,8 +51,7 @@ export const generateImagesSchema = z.object({
   seed: z.number().int().optional(),
   negativePrompt: z.string().max(5000).optional(),
   // bfl + openai only; enforcing that is
-  // capability-driven and lives in apps/api, not here (see the vertex
-  // branch of configProviderParams below).
+  // capability-driven and lives in apps/api, not here (see vertexParams below).
   //
   // Both mediaId and storageKey travel together: storageKey downloads the bytes to condition the
   // generation on, mediaId is the link this call writes into
@@ -90,39 +89,6 @@ const openAiSizeMap: Record<AspectRatio, OpenAIImageSize> = {
   '4:3': '1536x1024',
   '16:9': '1536x1024',
 };
-
-// @ai-sdk/black-forest-labs validates width/height against the legacy FLUX.1
-// API limit (max 1920px per axis) regardless of the model id, so 2K stays at
-// 1920 on the long edge rather than BFL's native 2048.
-const ratiosResolutionMap = {
-  '1:1': {
-    '1K': { width: 1024, height: 1024 }, // bflCost: 1MP
-    '2K': { width: 1920, height: 1920 }, // bflCost: ~3.7MP
-  },
-  '4:3': {
-    '1K': { width: 1024, height: 768 }, // bflCost: 1MP
-    '2K': { width: 1920, height: 1440 }, // bflCost: ~2.8MP
-  },
-  '16:9': {
-    '1K': { width: 1024, height: 576 }, // bflCost: 1MP
-    '2K': { width: 1920, height: 1080 }, // bflCost: ~2.1MP
-  },
-};
-
-function getDimensionsFromResolutionAndAspectRatio(
-  resolution: ImageResolution,
-  aspectRatio: AspectRatio,
-): { width: number; height: number } {
-  let width = 1024;
-  let height = 1024;
-
-  if (ratiosResolutionMap[aspectRatio]?.[resolution]) {
-    width = ratiosResolutionMap[aspectRatio][resolution].width;
-    height = ratiosResolutionMap[aspectRatio][resolution].height;
-  }
-
-  return { width, height };
-}
 
 type GenerateImageParams = Parameters<typeof generateImage>[0];
 type GenerateImageProviderOptions = GenerateImageParams['providerOptions'];
@@ -300,8 +266,132 @@ export async function requestGenImages(params: CreateImageParams): Promise<GenIm
   return enqueueGenImagesJob(records, referenceImageDtos);
 }
 
+type ProviderParams = Pick<
+  GenerateImageParams,
+  'aspectRatio' | 'size' | 'seed' | 'providerOptions' | 'maxImagesPerCall'
+>;
+
+interface ImageSettings {
+  resolution: ImageResolution;
+  aspectRatio: AspectRatio;
+}
+
+type BflResolution = NonNullable<BlackForestLabsImageProviderOptions['resolution']>;
+
+const bflResolutionMap: Record<ImageResolution, BflResolution> = {
+  '1K': '1k',
+  '2K': '2k',
+};
+
+function bflParams({ resolution, aspectRatio }: ImageSettings): ProviderParams {
+  return {
+    aspectRatio,
+    seed: undefined,
+    providerOptions: toProviderOptions({
+      blackForestLabs: {
+        resolution: bflResolutionMap[resolution],
+      } satisfies BlackForestLabsImageProviderOptions,
+    }),
+  };
+}
+
+interface VertexParamsInput extends ImageSettings {
+  seed: number | null;
+  negativePrompt: string | null;
+  provider: string;
+  model: string;
+}
+
+function vertexParams({
+  resolution,
+  aspectRatio,
+  seed,
+  negativePrompt,
+  provider,
+  model,
+}: VertexParamsInput): ProviderParams {
+  // @ai-sdk/google-vertex 5.0.63+ dropped Imagen entirely: image
+  // requests now go through Gemini's generateContent, which has no
+  // addWatermark or negativePrompt option. That's fine for the EU AI
+  // Act Art. 50(2) guardrail:
+  // Gemini image models apply SynthID unconditionally, with no
+  // API-level toggle to disable it.
+  if (negativePrompt) {
+    logger.warn(
+      'negativePrompt dropped for Vertex: Gemini image models have no equivalent option',
+      {
+        provider,
+        model,
+      },
+    );
+  }
+
+  // Gemini image models don't honor seed for reproducible output.
+  if (seed !== null) {
+    logger.warn(
+      'Seed dropped for Vertex Gemini image models: not supported for reproducible output',
+      {
+        provider,
+        model,
+      },
+    );
+  }
+
+  return {
+    aspectRatio,
+    seed: undefined,
+    // doGenerate throws for n > 1, so fan the batch out into one call
+    // per image instead of one call for the whole batch.
+    maxImagesPerCall: 1,
+    providerOptions: toProviderOptions({
+      vertex: {
+        imageConfig: {
+          imageSize: resolution === '1K' ? '1K' : '2K',
+          personGeneration: 'ALLOW_ALL',
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        ],
+      } satisfies GoogleVertexImageProviderOptions,
+    }),
+  };
+}
+
+interface OpenAiParamsInput extends ImageSettings {
+  seed: number | null;
+}
+
+function openAiParams({ resolution, aspectRatio, seed }: OpenAiParamsInput): ProviderParams {
+  return {
+    size: openAiSizeMap[aspectRatio],
+    seed: seed ?? undefined,
+    providerOptions: toProviderOptions({
+      openai: {
+        quality: resolution === '2K' ? 'high' : 'medium',
+        outputFormat: 'png',
+      } satisfies OpenAIImageModelGenerationOptions,
+    }),
+  };
+}
+
+type GeneratedMediaType = 'image/png' | 'image/jpeg' | 'image/webp';
+
+const fileExtensionByMediaType: Record<GeneratedMediaType, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+};
+
+function isGeneratedMediaType(mediaType: string): mediaType is GeneratedMediaType {
+  return mediaType in fileExtensionByMediaType;
+}
+
 interface GeneratedImageUpload {
   storageKey: string;
+  mimeType: GeneratedMediaType;
   size: number;
   // The actual outcome of this image's upload, not the request: true only
   // when the watermark attempt below both ran and succeeded.
@@ -332,108 +422,21 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
   if (!userId) {
     throw new Error(`Gen image ${first.id} has no author left to store its output under`);
   }
-  // gen_images.resolution/aspectRatio are typed columns ($type<GenImageResolution
-  // | GenImageAspectRatio>, genimage.schema.ts), structurally identical to
-  // this package's own ImageResolution/AspectRatio aliases, so no cast is
-  // needed to satisfy configProviderParams below.
   const resolution: ImageResolution = first.resolution ?? '1K';
   const aspectRatio: AspectRatio = first.aspectRatio ?? '1:1';
 
-  const configProviderParams = (): Pick<
-    GenerateImageParams,
-    'aspectRatio' | 'size' | 'seed' | 'providerOptions' | 'maxImagesPerCall'
-  > => {
+  const providerParams = (() => {
     switch (provider) {
-      case 'bfl': {
-        const { width, height } = getDimensionsFromResolutionAndAspectRatio(
-          resolution,
-          aspectRatio,
-        );
-        return {
-          aspectRatio,
-          seed: seed ?? undefined,
-          providerOptions: toProviderOptions({
-            blackForestLabs: {
-              width,
-              height,
-              outputFormat: 'png',
-              promptUpsampling: false,
-            } satisfies BlackForestLabsImageProviderOptions,
-          }),
-        };
-      }
-      case 'google-vertex': {
-        // @ai-sdk/google-vertex 5.0.63+ dropped Imagen entirely: image
-        // requests now go through Gemini's generateContent, which has no
-        // addWatermark or negativePrompt option. That's fine for the EU AI
-        // Act Art. 50(2) guardrail:
-        // Gemini image models apply SynthID unconditionally, with no
-        // API-level toggle to disable it.
-        if (negativePrompt) {
-          logger.warn(
-            'negativePrompt dropped for Vertex: Gemini image models have no equivalent option',
-            {
-              provider,
-              model,
-            },
-          );
-        }
-
-        // Gemini image models don't honor seed for reproducible output.
-        if (seed !== null) {
-          logger.warn(
-            'Seed dropped for Vertex Gemini image models: not supported for reproducible output',
-            {
-              provider,
-              model,
-            },
-          );
-        }
-
-        return {
-          aspectRatio,
-          seed: undefined,
-          // doGenerate throws for n > 1, so fan the batch out into one call
-          // per image instead of one call for the whole batch.
-          maxImagesPerCall: 1,
-          providerOptions: toProviderOptions({
-            vertex: {
-              imageConfig: {
-                imageSize: resolution === '1K' ? '1K' : '2K',
-                personGeneration: 'ALLOW_ALL',
-              },
-              safetySettings: [
-                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                {
-                  category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-                },
-                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                {
-                  category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-                },
-              ],
-            } satisfies GoogleVertexImageProviderOptions,
-          }),
-        };
-      }
-      case 'openai': {
-        return {
-          size: openAiSizeMap[aspectRatio],
-          seed: seed ?? undefined,
-          providerOptions: toProviderOptions({
-            openai: {
-              quality: resolution === '2K' ? 'high' : 'medium',
-              outputFormat: 'png',
-            } satisfies OpenAIImageModelGenerationOptions,
-          }),
-        };
-      }
+      case 'bfl':
+        return bflParams({ resolution, aspectRatio });
+      case 'google-vertex':
+        return vertexParams({ resolution, aspectRatio, seed, negativePrompt, provider, model });
+      case 'openai':
+        return openAiParams({ resolution, aspectRatio, seed });
       default:
         return { seed: undefined };
     }
-  };
+  })();
 
   // AI SDK v7 accepts `prompt` as a plain string, or as `{ text, images }`
   // to condition the generation on reference images. Only switching to the
@@ -461,8 +464,6 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
 
     generateImagePrompt = { text: prompt, images: referenceBuffers };
   }
-
-  const providerParams = configProviderParams();
 
   const { error: imageGenError, data: imageGenResult } = await tryCatch(() =>
     generateImage({
@@ -504,36 +505,41 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
   const watermarkResults = await Promise.all(
     genImages.map(async (image) => {
       const buffer = Buffer.from(image.uint8Array);
+      const { mediaType } = image;
+
+      if (!isGeneratedMediaType(mediaType)) {
+        throw new Error(`Unsupported generated image type: ${mediaType}`);
+      }
 
       if (!visibleWatermark) {
-        return { buffer, applied: false };
+        return { buffer, mimeType: mediaType, applied: false };
       }
 
       const { error, data } = await tryCatch(() =>
-        applyImageWatermark({ buffer, mimeType: 'image/png' }),
+        applyImageWatermark({ buffer, mimeType: mediaType }),
       );
 
       if (error !== null || !data) {
         logger.warn('Visible watermark failed, storing raw image instead', { error });
-        return { buffer, applied: false };
+        return { buffer, mimeType: mediaType, applied: false };
       }
 
-      return { buffer: data.buffer, applied: true };
+      return { buffer: data.buffer, mimeType: mediaType, applied: true };
     }),
   );
 
   const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
 
   const uploads = await Promise.all(
-    watermarkResults.map(async ({ buffer, applied }) => {
+    watermarkResults.map(async ({ buffer, mimeType, applied }) => {
       const { key } = await uploadObjectBuffer({
         bucketName,
-        key: `${prefix}/${randomUUID()}.png`,
+        key: `${prefix}/${randomUUID()}.${fileExtensionByMediaType[mimeType]}`,
         buffer,
-        contentType: 'image/png',
+        contentType: mimeType,
       });
 
-      return { storageKey: key, size: buffer.byteLength, visibleWatermark: applied };
+      return { storageKey: key, mimeType, size: buffer.byteLength, visibleWatermark: applied };
     }),
   );
 
@@ -585,7 +591,7 @@ export async function runGenImages({
         bucket: config.s3ImagesBucketName,
         storageKey: upload.storageKey,
         filename: upload.storageKey.split('/').pop() ?? upload.storageKey,
-        mimeType: 'image/png',
+        mimeType: upload.mimeType,
         size: upload.size,
         origin: 'generated',
       }),

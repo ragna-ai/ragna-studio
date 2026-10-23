@@ -5,6 +5,7 @@ import type {
   GenImageReference,
   GenImageStatus,
   GenImageWithMedia,
+  Media,
   NewGenImage,
   NewGenImageReference,
 } from '../schema';
@@ -79,22 +80,26 @@ export async function getGenImageCountByWorkspaceId({
 // Ownership check for attaching gen images to another record (e.g. a
 // LinkedIn draft): only returns rows that belong to userId, so a caller can
 // tell an attempt to reuse someone else's image apart from a typo'd id by
-// comparing the result length against the requested ids. Callers here only
-// ever need the plain mediaId FK (to link it onto their own row), not the
-// joined media row, so this stays unjoined.
+// comparing the result length against the requested ids. Joins the output
+// media row so callers can read its mime type without a second query.
+export interface GenImageWithOutputMedia extends GenImage {
+  media: Media | null;
+}
+
 export async function getGenImagesByIds({
   ids,
   userId,
 }: {
   ids: string[];
   userId: string;
-}): Promise<GenImage[]> {
+}): Promise<GenImageWithOutputMedia[]> {
   if (ids.length === 0) {
     return [];
   }
 
   return db.query.genImage.findMany({
     where: { id: { in: ids }, userId },
+    with: { media: true },
   });
 }
 

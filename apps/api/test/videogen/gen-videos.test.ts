@@ -431,7 +431,7 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
         mediaId: imageMedia.id,
         prompt: 'source image',
         provider: 'bfl',
-        model: 'flux-pro',
+        model: 'flux-3-image',
       },
     ]);
 

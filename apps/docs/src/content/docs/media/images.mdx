@@ -21,13 +21,13 @@ Describe an image and RAGNA Studio generates it. Open **Images** in the sidebar 
 5. Set the **Number of images**: 1 to 4.
 6. Choose **Generate image**.
 
-The settings are remembered for next time. The long edge of a `2K` image is 1920 pixels.
+The settings are remembered for next time. Each model picks the exact pixel size for the chosen resolution.
 
 ## Models and providers
 
 The model list shows every image model the installation offers. RAGNA Studio supports three providers:
 
-- Black Forest Labs (FLUX)
+- Black Forest Labs (FLUX 3)
 - Google Vertex (Imagen)
 - OpenAI
 
@@ -38,7 +38,7 @@ Which models appear depends on what the operator has set up.
 Open **Advanced options** for more control. Each option works only where the selected model supports it. Otherwise the field is disabled, and a tooltip names the model that lacks it.
 
 - **Negative prompt:** describe what to avoid.
-- **Seed:** a number that makes results repeatable.
+- **Seed:** a number that makes results repeatable. FLUX 3 does not support a seed, so the field is disabled for it.
 - **Use reference images:** guide the result with up to four images. Choose **From gallery** to pick one of the completed images, or **Upload** to add a new one. The counter shows how many are selected. The maximum depends on the model.
 
 The settings are cleared after each run. To repeat a run, open an image and choose **Reuse settings**. It copies the model, ratio, resolution, seed and negative prompt into the form. Fields the model does not support are dropped.
