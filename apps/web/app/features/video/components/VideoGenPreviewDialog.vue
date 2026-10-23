@@ -206,12 +206,13 @@ async function deleteVideo() {
               {{ $t('videogen.preview.download') }}
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
+              class="hover:text-destructive"
               :disabled="isDeleting"
               @click="deleteVideo"
             >
               <Spinner v-if="isDeleting" class="mr-2" />
-              <Trash2Icon v-else class="mr-2 size-4" />
+              <Trash2Icon v-else class="mr-2 size-4 stroke-1.5" />
               {{ $t('videogen.preview.delete') }}
             </Button>
           </div>

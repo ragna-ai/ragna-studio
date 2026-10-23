@@ -20,6 +20,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-wash-sea: var(--wash-sea);
+  --color-wash-sand: var(--wash-sand);
+  --color-wash-sage: var(--wash-sage);
+  --color-wash-ochre: var(--wash-ochre);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -70,6 +74,10 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  --wash-sea: #d3e6e8;
+  --wash-sand: #eee2cb;
+  --wash-sage: #dce4d2;
+  --wash-ochre: #f2ddb6;
   --sidebar: oklch(0.985 0.001 106.423);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
   --sidebar-primary: oklch(0.216 0.006 56.043);
@@ -104,6 +112,10 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  --wash-sea: #24495a;
+  --wash-sand: #3d3a2c;
+  --wash-sage: #2f4038;
+  --wash-ochre: #4a3a1e;
   --sidebar: oklch(0.216 0.006 56.043);
   --sidebar-foreground: oklch(0.985 0.001 106.423);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -137,6 +149,19 @@
 
 @utility animate-loader-dot {
   animation: loader-dot-bounce 1.4s ease-in-out infinite;
+}
+
+@keyframes wash-drift {
+  from {
+    transform: translate(-6px, -4px) scale(1);
+  }
+  to {
+    transform: translate(6px, 4px) scale(1.12);
+  }
+}
+
+@utility animate-wash-drift {
+  animation: wash-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 }
 
 @layer base {

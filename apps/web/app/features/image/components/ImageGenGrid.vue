@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // Imports
+import { toast } from 'vue-sonner';
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
+import { useDeleteGenImage } from '~/features/image/composables/useImageGenApi';
 import type {
   GeneratedImage,
   ImageAspectRatio,
@@ -30,6 +32,12 @@ const emit = defineEmits<{
 
 // Refs
 const previewImage = ref<GeneratedImage | null>(null);
+const deletingImageId = ref<string | null>(null);
+
+// Composables
+const { t } = useI18n();
+const { confirm } = useConfirmDialog();
+const { mutateAsync: deleteGenImage } = useDeleteGenImage();
 
 // Computed
 const isEmpty = computed(() => props.genImages.length === 0);
@@ -39,6 +47,27 @@ const isEmpty = computed(() => props.genImages.length === 0);
 function openPreview(image: GeneratedImage) {
   if (image.status === 'completed') {
     previewImage.value = image;
+  }
+}
+
+async function deleteFailedImage(image: GeneratedImage) {
+  const confirmed = await confirm({
+    title: t('imagen.deleteConfirm.title'),
+    message: t('imagen.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) return;
+
+  deletingImageId.value = image.id;
+  try {
+    await deleteGenImage(image.id);
+    toast.success(t('imagen.preview.deleteSuccess'));
+  } catch {
+    // useDeleteGenImage already toasts the error.
+  } finally {
+    deletingImageId.value = null;
   }
 }
 
@@ -88,27 +117,20 @@ function tileAspectClass(image: GeneratedImage) {
         />
       </button>
 
-      <div
+      <GenerationFailedTile
         v-else-if="image.status === 'failed'"
-        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :prompt="image.prompt"
+        :error="image.error ?? $t('imagen.grid.failed')"
+        :is-deleting="deletingImageId === image.id"
         :class="tileAspectClass(image)"
-      >
-        <p class="line-clamp-4 text-sm">{{ image.prompt }}</p>
-        <p class="text-xs text-destructive">
-          {{ image.error ?? $t('imagen.grid.failed') }}
-        </p>
-      </div>
+        @delete="deleteFailedImage(image)"
+      />
 
-      <div
+      <GenerationPendingTile
         v-else
-        class="flex flex-col justify-between gap-2 rounded-lg bg-muted p-3"
+        :prompt="image.prompt"
         :class="tileAspectClass(image)"
-      >
-        <p class="line-clamp-4 text-sm text-muted-foreground">
-          {{ image.prompt }}
-        </p>
-        <Spinner class="size-4" />
-      </div>
+      />
     </div>
   </div>
 
