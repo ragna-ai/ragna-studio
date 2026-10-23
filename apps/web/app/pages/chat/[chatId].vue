@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
-import ChatHeading from '~/features/chat/components/ChatHeading.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import ChatSearchButton from '~/features/chat/components/ChatSearchButton.vue';
 import { useGetChat } from '~/features/chat/composables/useChatApi';
@@ -63,13 +62,11 @@ onScopeDispose(() => chatStore.setChat());
     <ChatHistoryToggle />
     <ChatSearchButton />
   </div>
-  <div class="absolute top-2 right-5 z-10">
-    <ChatHeading v-if="chatStore.id" />
-  </div>
   <ChatConversation
     v-if="data?.chat"
     :key="data.chat.id"
     :chatId="data.chat.id"
+    :agent="data.chat.agent"
     :initialMessages="data.chat.messages ?? []"
   />
   <div

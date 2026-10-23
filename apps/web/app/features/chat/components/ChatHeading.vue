@@ -18,16 +18,8 @@ const props = defineProps<{
       )
     "
   >
-    <div class="flex space-x-1 truncate text-xs">
-      <!-- 
-      <p class="max-w-xs truncate">
-        {{ chatStore.title ?? $t('chat.new.title') }}
-      </p>
-      <p class="">/</p>
-      -->
-      <p class="max-w-40 truncate text-foreground">
-        {{ chatStore.agent?.name ?? 'Default Agent' }}
-      </p>
-    </div>
+    <p class="max-w-xs truncate text-xs text-foreground">
+      {{ chatStore.title }}
+    </p>
   </div>
 </template>

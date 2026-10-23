@@ -7,3 +7,10 @@ export interface ChatAgent {
     displayName: string;
   };
 }
+
+export interface ChatAgentOption {
+  id: string;
+  name: string;
+  description?: string;
+  aiModel?: { displayName: string };
+}
