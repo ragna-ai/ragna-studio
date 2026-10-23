@@ -137,7 +137,7 @@ services:
       - app_net
 
   redis:
-    image: redis:8.8.0-alpine3.23
+    image: redis:8.10.2-alpine3.23
     container_name: ragna_studio_redis
     restart: always
     mem_limit: 256m
