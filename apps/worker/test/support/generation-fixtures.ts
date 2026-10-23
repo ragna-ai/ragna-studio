@@ -10,6 +10,10 @@ import { seedAuthenticatedUser, seedTokenPricedAiModel } from '@repo/testing';
 export interface SeedGenImageBatchParams {
   count?: number;
   withAuthor?: boolean;
+  provider?: string;
+  resolution?: GenImage['resolution'];
+  aspectRatio?: GenImage['aspectRatio'];
+  seed?: number;
 }
 
 export interface SeedGenImageBatchResult {
@@ -21,14 +25,21 @@ export interface SeedGenImageBatchResult {
 export async function seedGenImageBatch({
   count = 2,
   withAuthor = true,
+  provider = 'bfl',
+  resolution,
+  aspectRatio,
+  seed,
 }: SeedGenImageBatchParams = {}): Promise<SeedGenImageBatchResult> {
   const { userId, workspaceId } = await seedAuthenticatedUser();
   const records = Array.from({ length: count }, () => ({
     userId: withAuthor ? userId : null,
     workspaceId,
     prompt: 'a red bicycle',
-    provider: 'bfl',
-    model: 'flux-pro',
+    provider,
+    model: 'flux-3-image',
+    resolution,
+    aspectRatio,
+    seed,
   }));
   const rows = await createGenImageRecords(records);
   return { userId, workspaceId, rows };

@@ -101,6 +101,10 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 ## Parked features (need a decision or PRD first)
 
 - [ ] Full RBAC on workspace resources: `viewer` role next to `manager` and `editor`.
+- [ ] Admin page for AI models (platform admin): CRUD on `ai_models`, capabilities, pricing,
+      and an `is_default` flag per modality (partial unique index). Without a flag, fall back to
+      the oldest row by `created_at`. No credentials check. Replaces hand-set SQL and the
+      `findFirst` default (see Risks in `imagegen/flux-3-prd.md`).
 - [ ] Shareable chats (own feature, WS auth implications).
 - [ ] Task reminder recipients beyond the org owner (touches notifications).
 - [ ] Workflow duplicate route. Today a schedule whose author was purged stays paused for good.

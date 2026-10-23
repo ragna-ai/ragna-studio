@@ -1,3 +1,5 @@
+import { getLinkedinDraft } from '@repo/ai';
+import { createGenImageRecords, createMedia, db } from '@repo/database';
 import {
   createPostMock,
   resetProviderMocks,
@@ -9,6 +11,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
 
 // social-post.
 // Auth/authorization are covered exhaustively in test/auth/
@@ -233,5 +236,45 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     });
     const body = postResponseSchema.parse(await getResponse.json());
     expect(body.post.status).toBe('failed');
+  });
+});
+
+describe('linkedinDraft tool image attachments', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
+
+  test('stores the mime type of the attached gen image', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    const media = await createMedia({
+      ownerWorkspaceId: workspaceId,
+      bucket: 'images',
+      storageKey: `${userId}/images/generated/photo.jpg`,
+      filename: 'photo.jpg',
+      mimeType: 'image/jpeg',
+      size: 10,
+      origin: 'generated',
+    });
+    const [genImage] = await createGenImageRecords([
+      {
+        userId,
+        workspaceId,
+        mediaId: media.id,
+        status: 'completed',
+        prompt: 'a red bicycle',
+        provider: 'bfl',
+        model: 'flux-3-image',
+      },
+    ]);
+    if (!genImage) {
+      throw new Error('Gen image was not created');
+    }
+    const tool = getLinkedinDraft(stubStreamWriter, userId, workspaceId);
+
+    await tool.execute?.({ text: 'Hello', imageIds: [genImage.id] }, stubToolExecutionOptions);
+
+    const attached = await db.query.socialPostMedia.findMany();
+    expect(attached.map((item) => item.mimeType)).toEqual(['image/jpeg']);
   });
 });

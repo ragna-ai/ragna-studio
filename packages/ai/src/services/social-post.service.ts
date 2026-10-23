@@ -38,11 +38,6 @@ const LINKEDIN_POST_MAX_LENGTH = 3000;
 // LINKEDIN_POST_MAX_LENGTH above.
 const LINKEDIN_MAX_IMAGES = 9;
 
-// Generated images are always uploaded as PNG by imagen.service.ts; the
-// gen_images table doesn't store a mime type, so this mirrors that fact
-// rather than guessing from the file extension.
-const GEN_IMAGE_MIME_TYPE = 'image/png';
-
 function validatePostText(text: string): string | null {
   if (text.length < 1) {
     return 'The post content cannot be empty.';
@@ -212,7 +207,7 @@ async function attachImagesToDraft({
   // mediaId is null for a pending/processing/failed row:
   // a generation that
   // hasn't produced an object yet has nothing to attach.
-  if (genImages.some((image) => image.mediaId === null)) {
+  if (genImages.some((image) => image.media === null)) {
     return 'One or more selected images are still generating.';
   }
 
@@ -236,16 +231,16 @@ async function attachImagesToDraft({
       imageIds.map((imageId, index) => {
         const genImage = genImageById.get(imageId);
         // Unreachable: every id was confirmed present in genImageById, and
-        // every mediaId confirmed non-null, above. The mediaId check is
-        // what narrows it from `string | null` to `string` here without a
+        // every media confirmed non-null, above. The media check is
+        // what narrows it from `Media | null` to `Media` here without a
         // cast.
-        if (!genImage || !genImage.mediaId) {
+        if (!genImage || !genImage.media) {
           throw new Error(`Missing generated image ${imageId}`);
         }
         return {
           socialPostId: postId,
-          mediaId: genImage.mediaId,
-          mimeType: GEN_IMAGE_MIME_TYPE,
+          mediaId: genImage.media.id,
+          mimeType: genImage.media.mimeType,
           origin: 'genImage' as const,
           sortOrder: index,
         };

@@ -43,7 +43,7 @@ describe('AI SDK provider mocks', () => {
   test('runGenImages renders through the fake image model', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     const rows = await createGenImageRecords([
-      { userId, workspaceId, prompt: 'a red bicycle', provider: 'bfl', model: 'flux-pro' },
+      { userId, workspaceId, prompt: 'a red bicycle', provider: 'bfl', model: 'flux-3-image' },
     ]);
 
     const completed = await runGenImages({ genImageIds: rows.map((row) => row.id) });
