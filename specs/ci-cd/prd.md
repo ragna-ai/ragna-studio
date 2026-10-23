@@ -29,7 +29,7 @@ manual. Production deploys are now handled outside this repo.
   "API tests" below. Cost is not the blocker.
 - **Multi-arch images.** Production runs `linux/amd64` only. `arm64`
   stays a local build (`--platform=mac`).
-- Dependabot/Renovate, CodeQL, gitleaks. Revisit if the repo goes public.
+- gitleaks. Secret scanning with push protection covers it.
 - Turbo remote cache (Vercel). The GitHub Actions cache is enough.
 
 ## Cost research (2026-09-27)
@@ -202,9 +202,37 @@ until deleted.
   action, which has `packages: write`.
 - **`actions/*` and `docker/*` stay on major tags** (GitHub and a verified
   publisher).
-- **No Dependabot version updates.** Sven doesn't want PRs just for
-  upgrades. Dependabot alerts are on (notification only, no security-update
-  PRs). Update the two pins by hand alongside regular dependency upgrades.
+- **Update:** every action, `actions/*` and `docker/*` included,
+  is now pinned to a commit SHA. Renovate keeps the pins current (see below).
+
+## Dependency updates (2026-10-21)
+
+Renovate opens version bump PRs; config in `.github/renovate.json5`. It runs
+as the Mend-hosted GitHub app. Dependabot keeps alerts and security update
+PRs, set by the enforced org security configuration.
+
+- **Weekly batch** on Monday morning (Europe/Berlin): one draft PR with all
+  minor and patch bumps, plus small groups for packages that move together
+  (AI SDK, better-auth, Nuxt modules, tiptap, oxc, actions, Docker images).
+  Weekly lockfile maintenance re-resolves transitive packages within their
+  ranges, which fixes most transitive alerts.
+- **Majors** wait for approval on the Dependency Dashboard issue, then get one
+  PR each. Majors of the Postgres and Redis images are off: a Postgres major
+  needs a data migration.
+- **Security fixes:** Dependabot security updates open the fix PRs (grouped
+  per manifest directory). They aren't drafts, Dependabot can't open those.
+  Renovate's `vulnerabilityAlerts` is off to avoid a second PR per alert. A
+  fix PR that conflicts with a Renovate PR is rebased by its bot.
+- **Cooldown:** new releases wait 3 days. Renovate doesn't read pnpm's
+  settings, so the value is set in both `.github/renovate.json5` and
+  `pnpm-workspace.yaml` (`minimumReleaseAge: 4320`). pnpm also rejects
+  younger entries in the lockfile. An urgent fix gets its exact version in
+  `minimumReleaseAgeExclude`, never a name pattern.
+- **Bumped by hand:** `nuxt` (via `nuxt upgrade`), Node, TypeScript,
+  `@types/node`, drizzle (pinned RC), the pnpm version in `packageManager`,
+  `vue-stream-markdown`.
+- **No automerge.** Renovate PRs are drafts; every PR passes the required
+  checks.
 
 ## Phase 3: API tests
 

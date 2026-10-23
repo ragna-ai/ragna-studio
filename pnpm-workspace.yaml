@@ -30,14 +30,10 @@ packageExtensions:
 # CI and the Dockerfiles install the pnpm version from `packageManager`.
 pmOnFail: ignore
 
-minimumReleaseAgeExclude:
-  - 'nuxt'
-  - '@nuxt/*'
-  - '@ai-sdk/*'
-  - '@firecrawl/*'
-  - 'ai*'
-  - '@better-auth*'
-  - better-auth@1.7.11
+# 3 days, kept equal to minimumReleaseAge in .github/renovate.json5. For an urgent
+# security fix, add its exact version (never a name pattern) to minimumReleaseAgeExclude
+# and remove it once it's older than 3 days.
+minimumReleaseAge: 4320
 
 allowBuilds:
   '@parcel/watcher': false

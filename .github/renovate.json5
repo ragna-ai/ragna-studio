@@ -1,0 +1,81 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    'schedule:weekly',
+    'group:allNonMajor',
+    ':disablePeerDependencies',
+    'helpers:pinGitHubActionDigestsToSemver',
+  ],
+  timezone: 'Europe/Berlin',
+  labels: ['dependencies'],
+  draftPR: true,
+  rangeStrategy: 'bump',
+  postUpdateOptions: ['pnpmDedupe'],
+  prConcurrentLimit: 5,
+  // Keep in sync with minimumReleaseAge in pnpm-workspace.yaml: Renovate doesn't read pnpm's setting.
+  minimumReleaseAge: '3 days',
+  minimumReleaseAgeBehaviour: 'timestamp-required',
+  lockFileMaintenance: {
+    enabled: true,
+  },
+  // Dependabot security updates open the fix PRs; this avoids a duplicate PR per alert.
+  vulnerabilityAlerts: {
+    enabled: false,
+  },
+  ignoreDeps: [
+    // nuxt is upgraded with `nuxt upgrade`, which also dedupes its transitive tree
+    'nuxt',
+    'node',
+    'typescript',
+    '@types/node',
+    // pinned release candidate, also pinned in packageExtensions
+    'drizzle-orm',
+    'drizzle-kit',
+    // the pnpm version in packageManager; CI and the Dockerfiles install it
+    'pnpm',
+    // v2 needs upstream fixes before we can move
+    'vue-stream-markdown',
+  ],
+  packageRules: [
+    {
+      matchUpdateTypes: ['major'],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // a Postgres major needs a data migration, not a tag bump
+      matchDatasources: ['docker'],
+      matchPackageNames: ['pgvector/pgvector', 'redis'],
+      matchUpdateTypes: ['major'],
+      enabled: false,
+    },
+    {
+      groupName: 'ai sdk',
+      matchPackageNames: ['ai', '@ai-sdk/**'],
+    },
+    {
+      groupName: 'better-auth',
+      matchPackageNames: ['better-auth', '@better-auth/**'],
+    },
+    {
+      groupName: 'nuxt modules',
+      matchPackageNames: ['@nuxt/**', '@nuxtjs/**', 'nuxt-security'],
+    },
+    {
+      groupName: 'tiptap',
+      matchPackageNames: ['@tiptap/**'],
+    },
+    {
+      groupName: 'oxc',
+      matchPackageNames: ['oxlint', 'oxfmt', 'tsdown'],
+    },
+    {
+      groupName: 'github actions',
+      matchManagers: ['github-actions'],
+    },
+    {
+      groupName: 'docker images',
+      matchDatasources: ['docker'],
+    },
+  ],
+}
