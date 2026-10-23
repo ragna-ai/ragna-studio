@@ -1,6 +1,6 @@
 # Image generation: FLUX 3 image model (PRD)
 
-> **Status: decided** (2026-10-23). Replaces the BFL FLUX 1/2 image models with
+> **Status: implemented** (2026-10-23, PR #135). Replaces the BFL FLUX 1/2 image models with
 > `flux-3-image`. No backward compatibility for the dropped models.
 > `flux-3-image-klein` is not supported. Gemini (`google-vertex`),
 > `gpt-image-1` (`openai`), Veo and `flux-3-video` are unchanged.

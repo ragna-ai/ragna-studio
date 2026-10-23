@@ -26,7 +26,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
-| [Image generation: FLUX 3 image model (PRD)](./imagegen/flux-3-prd.md) | decided (2026-10-23) |
 
 ## Proposed
 
@@ -70,6 +69,7 @@ work first, shipped reference and dead/historical docs last.
 | [Email Compose: Sandbox the Quoted History in an Iframe (change request)](./email/quote-iframe-change-request.md) | implemented (raised, decided, and built by parallel Sonnet agents 2026-08-16, committed to `main` same day; manual browser pass through reply/forward compose confirmed by Sven 2026-08-16) |
 | [Hardening batch 1](./hardening/batch-1-prd.md) | implemented (PR #105, 2026-10-10) |
 | [Home Overview (PRD)](./home/prd.md) | implemented (2026-07-21, verified and approved by the user) |
+| [Image generation: FLUX 3 image model (PRD)](./imagegen/flux-3-prd.md) | implemented (2026-10-23, PR #135) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |
 | [LinkedIn Integration Strategy](./linkedin-strategy.md) | implemented (2026-07-14) |
