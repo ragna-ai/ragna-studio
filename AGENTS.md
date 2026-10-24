@@ -117,6 +117,12 @@ production goes through `db:generate` (commits SQL under `packages/database/driz
 A fan-out is fine only when validation caps it at a handful of items (e.g. max 5 team members).
 Reviewers treat a new per-item query on a request path as a blocking issue.
 
+### Standards
+
+Repo-wide standards (deletion, retention, and more to come) live in `specs/standards/`. Follow
+every standard there whose status is `decided` or `implemented`. Every feature PRD answers the
+checklist in `specs/standards/README.md`.
+
 ### Coding
 
 Always load the clean-code skill. For `apps/api` changes, also load the tdd skill.
@@ -146,8 +152,14 @@ This repo is public. `specs/` holds only technical docs for features that are de
 Business strategy, pricing, product lineup and undecided drafts live outside this repo; never write them into `specs/`.
 
 Spec bookkeeping ships in the same PR as the code, never as a separate docs-only PR: PRD `Status: implemented (date, PR #N)`,
-the ticked item in `specs/backlog.md`, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
+`Closes #N` for its issue in the PR body, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
 Exception: docs about a security fix wait until its advisory is published.
+
+### Issues
+
+Open work lives in GitHub Issues, planned on the org project [RAGNA Studio](https://github.com/orgs/ragna-ai/projects/1).
+File a follow-up as an issue, not as a note in `specs/`: `gh issue create --type <Task|Bug|Feature|Epic> --label <area>`.
+Split bundled work into sub-issues (`--parent N`). Exploitable security findings never go into public issues.
 
 # Browser use
 

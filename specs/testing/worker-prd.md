@@ -1,6 +1,6 @@
 # Worker test suite
 
-Status: implemented (PR #103, merged 2026-10-10). Source: the "Hardening" section of [backlog](../backlog.md).
+Status: implemented (PR #103, merged 2026-10-10). Source: the "Hardening" section of [backlog](https://github.com/ragna-ai/ragna-studio/blob/058e954e/specs/backlog.md).
 
 ## Summary
 

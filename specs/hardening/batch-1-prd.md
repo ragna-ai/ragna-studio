@@ -1,6 +1,6 @@
 # Hardening batch 1
 
-Status: implemented (PR #105, 2026-10-10). Source: the "Hardening" section of [backlog](../backlog.md).
+Status: implemented (PR #105, 2026-10-10). Source: the "Hardening" section of [backlog](https://github.com/ragna-ai/ragna-studio/blob/058e954e/specs/backlog.md).
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # OAuth and MCP hardening
 
 Status: implemented (2026-10-16, PR #110, released in v0.6.2). Docs in PR #111.
-Source: OAuth/MCP audit against the investigation checklist, see [backlog](../backlog.md).
+Source: OAuth/MCP audit against the investigation checklist, see [backlog](https://github.com/ragna-ai/ragna-studio/blob/058e954e/specs/backlog.md).
 
 ## Summary
 
@@ -15,7 +15,7 @@ per-request connection check. Three hygiene gaps are in scope here, a fourth is 
 | 1   | MCP audit log is deleted on revoke, reads not logged     | Medium | database, api, worker | B     |
 | 2   | Mail tokens stay stored after disconnect and offboarding | Medium | api, database         | A     |
 | 3   | MCP consent page hides the redirect URI host             | Low    | web                   | B     |
-| -   | LinkedIn sign-in requests posting rights up front        | Low    | deferred, see backlog | -     |
+| -   | LinkedIn sign-in requests posting rights up front        | Low    | deferred, see #153    | -     |
 
 None of these items needs a change to the better-auth configuration, and none depends on the
 better-auth 1.8 upgrade ([gap analysis](../auth/better-auth-1.8-gap-analysis.md)).
@@ -28,7 +28,7 @@ Settled 2026-10-16. Do not re-open them.
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Audit row columns           | Copy `user_id`, `client_id`, `workspace_id` onto each row. Add `resource_id` and `access`. Tool arguments stay out. |
 | Audit retention             | 90-day constant in `apps/worker/src/crons/cleanup.cron.ts`. No env var.                                             |
-| LinkedIn incremental scopes | Moved to the backlog. Needs a LinkedIn test app first, nobody asked for it.                                         |
+| LinkedIn incremental scopes | Moved to #153. Needs a LinkedIn test app first, nobody asked for it.                                                |
 | Consent page                | Ships with item 1 (both MCP).                                                                                       |
 | Microsoft token race        | Delete the mailbox row first, then clear tokens. Document the remaining window, no worker check.                    |
 | Mail token `scope` reset    | Set `account.scope` to `null`. `getMailProviderScopeStatus` then reports "reconnect", sign-in ignores it.           |
@@ -160,7 +160,7 @@ unknown routes. Production likely had the same gap. After deploy, check
 
 ## Out of scope
 
-- LinkedIn incremental scopes (backlog).
+- LinkedIn incremental scopes (#153).
 - DPoP-bound MCP tokens (better-auth supports it, Claude does not send DPoP yet).
 - Google OAuth verification / CASA and Microsoft Publisher Verification: process, not code.
 - Frame protection for the consent page: owned by Traefik, outside this repo.
