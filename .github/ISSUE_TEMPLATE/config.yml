@@ -3,3 +3,9 @@ contact_links:
   - name: Report a security vulnerability
     url: https://github.com/ragna-ai/ragna-studio/security/advisories/new
     about: Report vulnerabilities privately. Do not open a public issue.
+  - name: Suggest a feature
+    url: https://github.com/ragna-ai/ragna-studio/discussions/categories/ideas
+    about: Share ideas in Discussions. Accepted ideas become issues on the roadmap.
+  - name: Ask a question
+    url: https://github.com/ragna-ai/ragna-studio/discussions/categories/q-a
+    about: Get help with setup or usage.

@@ -106,7 +106,7 @@ Removing an extension also removes it from the schema. Pasted HTML with `<u>`, `
 `++text++` or `==text==`. Without a parser for them, they would show the raw signs. A small
 parse-only extension (`legacy-marks.ts` in `@repo/editor`) reads both syntaxes and returns the
 plain text, without a mark. The next save writes clean markdown. No data migration is needed.
-Remove the extension once enough time has passed (backlog item).
+Remove the extension once enough time has passed (#165).
 
 Alignment and header columns were never persisted, so there is nothing to migrate.
 

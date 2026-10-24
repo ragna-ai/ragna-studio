@@ -152,8 +152,14 @@ This repo is public. `specs/` holds only technical docs for features that are de
 Business strategy, pricing, product lineup and undecided drafts live outside this repo; never write them into `specs/`.
 
 Spec bookkeeping ships in the same PR as the code, never as a separate docs-only PR: PRD `Status: implemented (date, PR #N)`,
-the ticked item in `specs/backlog.md`, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
+`Closes #N` for its issue in the PR body, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
 Exception: docs about a security fix wait until its advisory is published.
+
+### Issues
+
+Open work lives in GitHub Issues, planned on the org project [RAGNA Studio](https://github.com/orgs/ragna-ai/projects/1).
+File a follow-up as an issue, not as a note in `specs/`: `gh issue create --type <Task|Bug|Feature|Epic> --label <area>`.
+Split bundled work into sub-issues (`--parent N`). Exploitable security findings never go into public issues.
 
 # Browser use
 
