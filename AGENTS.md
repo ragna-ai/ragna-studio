@@ -117,6 +117,12 @@ production goes through `db:generate` (commits SQL under `packages/database/driz
 A fan-out is fine only when validation caps it at a handful of items (e.g. max 5 team members).
 Reviewers treat a new per-item query on a request path as a blocking issue.
 
+### Standards
+
+Repo-wide standards (deletion, retention, and more to come) live in `specs/standards/`. Follow
+every standard there whose status is `decided` or `implemented`. Every feature PRD answers the
+checklist in `specs/standards/README.md`.
+
 ### Coding
 
 Always load the clean-code skill. For `apps/api` changes, also load the tdd skill.
