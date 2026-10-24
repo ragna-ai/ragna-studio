@@ -73,7 +73,7 @@ function agentNodeDefinition(agentId: string) {
   };
 }
 
-function teamDefinition(config: { leadAgentId?: string; memberAgentIds: string[] }) {
+function teamDefinition(config: { leadAgentId: string; memberAgentIds: string[] }) {
   return {
     nodes: [
       triggerNode,
@@ -111,7 +111,7 @@ const definitionLocations: DefinitionLocation[] = [
   {
     name: 'a team member',
     build: (foreignAgentId, ownAgentId) =>
-      teamDefinition({ memberAgentIds: [ownAgentId, foreignAgentId] }),
+      teamDefinition({ leadAgentId: ownAgentId, memberAgentIds: [ownAgentId, foreignAgentId] }),
   },
 ];
 
@@ -254,6 +254,55 @@ describe('workflow definition agents stay inside the workspace', () => {
     const response = await postWorkflow(cookieHeader, workspaceId, { nodes: [], edges: [] });
 
     expect(response.status).toBe(StatusCodes.CREATED);
+  });
+
+  test('POST rejects an agent node without an agent and creates nothing', async () => {
+    const { cookieHeader, workspaceId } = await seedAuthenticatedUser();
+    const definition = agentNodeDefinition('');
+    const withoutAgentId = {
+      ...definition,
+      nodes: definition.nodes.map((node) =>
+        node.type === 'agent'
+          ? { ...node, data: { label: 'Agent', config: { prompt: 'Do it' } } }
+          : node,
+      ),
+    };
+
+    for (const body of [definition, withoutAgentId]) {
+      const response = await postWorkflow(cookieHeader, workspaceId, body);
+      expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    }
+    expect(await listWorkflowCount(cookieHeader, workspaceId)).toBe(0);
+  });
+
+  test('POST rejects a team node without a lead and creates nothing', async () => {
+    const { cookieHeader, workspaceId } = await seedAuthenticatedUser();
+    const agentId = await createAgent(cookieHeader, workspaceId);
+    const definition = teamDefinition({ leadAgentId: '', memberAgentIds: [agentId] });
+    const withoutLead = {
+      ...definition,
+      nodes: definition.nodes.map((node) =>
+        node.type === 'team'
+          ? {
+              ...node,
+              data: {
+                label: 'Team',
+                config: {
+                  mode: 'delegate',
+                  prompt: '{{input}}',
+                  members: [{ agentId, role: '' }],
+                },
+              },
+            }
+          : node,
+      ),
+    };
+
+    for (const body of [definition, withoutLead]) {
+      const response = await postWorkflow(cookieHeader, workspaceId, body);
+      expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    }
+    expect(await listWorkflowCount(cookieHeader, workspaceId)).toBe(0);
   });
 
   test('PATCH without a definition still succeeds', async () => {

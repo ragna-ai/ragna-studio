@@ -15,6 +15,7 @@ import { toast } from 'vue-sonner';
 import ChatAgentSelect from '~/features/chat/components/ChatAgentSelect.vue';
 import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
+import ChatNoAgentState from '~/features/chat/components/ChatNoAgentState.vue';
 import {
   useCreateChat,
   type ChatAttachment,
@@ -69,6 +70,10 @@ const selectedAgentId = computed(
   () => props.agent?.id ?? newChatAgent.selectedAgentId.value,
 );
 const isAgentLocked = computed(() => chatId.value !== null);
+const showNoAgentState = computed(
+  () => !props.agent && newChatAgent.hasNoAgents.value,
+);
+const isSendDisabled = computed(() => selectedAgentId.value === null);
 
 // The imageGen/videoGen tools write a transient `data-imageGen` /
 // `data-videoGen` chunk the moment generation starts. Transient chunks never
@@ -193,9 +198,10 @@ const hasVisibleReply = computed(() => {
 async function ensureChat(): Promise<string> {
   if (chatId.value) return chatId.value;
 
-  const { chat } = await createNewChat({
-    agentId: selectedAgentId.value ?? undefined,
-  });
+  const agentId = selectedAgentId.value;
+  if (!agentId) throw createError({ statusMessage: 'Select an agent first' });
+
+  const { chat } = await createNewChat({ agentId });
   if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
   chatId.value = chat.id;
   return chatId.value;
@@ -240,7 +246,17 @@ async function handleSubmit(text: string) {
         {{ $t('chat.attachment.dropHint') }}
       </p>
     </div>
-    <MessageScrollerProvider auto-scroll default-scroll-position="last-anchor">
+    <div
+      v-if="showNoAgentState"
+      class="flex flex-1 items-center justify-center"
+    >
+      <ChatNoAgentState @created="newChatAgent.addAndSelectAgent" />
+    </div>
+    <MessageScrollerProvider
+      v-else
+      auto-scroll
+      default-scroll-position="last-anchor"
+    >
       <MessageScroller>
         <MessageScrollerViewport>
           <MessageScrollerContent
@@ -290,6 +306,7 @@ async function handleSubmit(text: string) {
         :items="chatAttachments.items.value"
         :status="status"
         :is-busy="isBusy"
+        :is-send-disabled="isSendDisabled"
         @submit="handleSubmit"
         @stop="stop"
         @files="chatAttachments.handleFiles"

@@ -29,7 +29,6 @@ import {
   getChatSearchMatchCount,
   getChatSearchMatchedChats,
   getChatSearchMessageSnippetsForChats,
-  getOrCreateDefaultAgentForWorkspace,
   settleCreditUsage,
   updateChatTitle,
   upsertChatMessages,
@@ -44,7 +43,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import { getAgentForWorkspace } from './agent.service';
 import { assertCanSpend } from './credit.service';
 
 // CHAT CRUD
@@ -325,29 +323,9 @@ export async function getChatForWorkspace({
   };
 }
 
-async function resolveDefaultAgentId({
-  workspaceId,
-  userId,
-}: {
-  workspaceId: string;
-  userId: string;
-}): Promise<string> {
-  const { error, data: agent } = await tryCatch(() =>
-    getOrCreateDefaultAgentForWorkspace({ userId, workspaceId }),
-  );
-
-  if (error !== null || !agent) {
-    logger.error(`Error fetching default agent for workspace ${workspaceId}`, error);
-    throw new InternalServerErrorException('Failed to fetch default agent');
-  }
-
-  return agent.id;
-}
-
 /**
  * [POST] /workspace/:workspaceId/chat
- * Creates a chat, defaulting to the workspace's default agent when no
- * agentId is given.
+ * Creates a chat for an agent of the workspace. 404 when the agent isn't there.
  */
 export async function createChatForWorkspace({
   workspaceId,
@@ -356,21 +334,19 @@ export async function createChatForWorkspace({
 }: {
   workspaceId: string;
   userId: string;
-  agentId?: string;
+  agentId: string;
 }): Promise<Chat> {
-  if (agentId) {
-    await getAgentForWorkspace({ workspaceId, agentId });
-  }
-
-  const resolvedAgentId = agentId ?? (await resolveDefaultAgentId({ workspaceId, userId }));
-
   const { error, data: chatRecord } = await tryCatch(() =>
-    createChat({ userId, agentId: resolvedAgentId, title: 'Chat', workspaceId }),
+    createChat({ userId, agentId, title: 'Chat', workspaceId }),
   );
 
-  if (error !== null || !chatRecord) {
+  if (error !== null) {
     logger.error(`Error creating chat for user ${userId}`, error);
     throw new InternalServerErrorException('Failed to create chat');
+  }
+
+  if (!chatRecord) {
+    throw new NotFoundException('Agent not found');
   }
 
   return chatRecord;

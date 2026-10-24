@@ -20,15 +20,15 @@ The list shows each workflow as **Draft** or **Published**. A workflow with a sc
 
 Use **Add node** to put a node on the canvas. Click a node to open its settings in a side panel. The panel holds a **Label** and the node's configuration.
 
-| Node          | What it does                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Trigger**   | Starts the workflow. Every workflow has exactly one. Manual or scheduled.                                    |
-| **Agent**     | Runs an [agent](/agents) with a prompt. Pick a saved agent, or leave it empty and write a **System prompt**. |
-| **Team**      | A lead agent delegates work to specialist agents. See [Team node](/workflows/team-node).                     |
-| **Condition** | Compares two values and sends the flow down a `true` or a `false` branch.                                    |
-| **Transform** | Builds new text from a **Template**.                                                                         |
+| Node          | What it does                                                                             |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| **Trigger**   | Starts the workflow. Every workflow has exactly one. Manual or scheduled.                |
+| **Agent**     | Runs an [agent](/agents) with a prompt. Pick a saved agent. An agent is required.        |
+| **Team**      | A lead agent delegates work to specialist agents. See [Team node](/workflows/team-node). |
+| **Condition** | Compares two values and sends the flow down a `true` or a `false` branch.                |
+| **Transform** | Builds new text from a **Template**.                                                     |
 
-A saved agent runs like it does in chat: with its own model, tools and settings. Without one, the node uses the default agent and its own system prompt, with no tools.
+The agent runs like it does in chat: with its own model, tools and settings. A workflow cannot be saved with an agent node that has no agent. A node in an older workflow without an agent fails the run with "Pick an agent for this node". Edit the node to fix it.
 
 ## Connect nodes
 

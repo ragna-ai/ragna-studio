@@ -184,7 +184,7 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
       <div v-if="teamMemberCount !== undefined" class="flex flex-col gap-1">
         <span class="truncate">{{
           t('workflow.node.lead', {
-            name: teamLead?.name ?? t('workflow.node.defaultAgent'),
+            name: teamLead?.name ?? '…',
           })
         }}</span>
         <span

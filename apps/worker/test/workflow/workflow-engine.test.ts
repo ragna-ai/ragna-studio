@@ -1,4 +1,5 @@
 import { createAgent, createAiModel, db, getStepsByRunId } from '@repo/database';
+import { creditUsageEvent } from '@repo/database/schema';
 import { WORKFLOW_RUN_JOB } from '@repo/queue';
 import {
   languageModelGenerateMock,
@@ -20,6 +21,7 @@ import {
   seedPricedAgent,
   seedWorkflow,
   seedWorkflowRun,
+  teamNode,
   transformNode,
   triggerNode,
 } from '../support/workflow-fixtures';
@@ -192,7 +194,6 @@ describe('workflow engine', () => {
       name: 'Unpriced',
       description: null,
       systemPrompt: 'Write.',
-      isDefault: false,
       tools: [],
     });
     const run = await seedAgentRun(user, agent.id);
@@ -200,6 +201,54 @@ describe('workflow engine', () => {
     await expect(processRun(run.id)).rejects.toThrow('Model is not chargeable');
 
     expect(languageModelGenerateMock).not.toHaveBeenCalled();
+  });
+
+  describe('a stored node without an agent', () => {
+    // Definitions saved before agents became required carry an empty agent id.
+    const NO_AGENT_ID = '';
+
+    async function expectNodeFailsWithoutCharge(node: WorkflowDefinition['nodes'][number]) {
+      const user = await seedAuthenticatedUser();
+      await seedCreditAccount({ userId: user.userId, balanceMicroCredits: 10_000_000n });
+      const definition: WorkflowDefinition = {
+        nodes: [triggerNode(), node],
+        edges: [edge('trigger', node.id)],
+      };
+      const workflowId = await seedWorkflow({
+        userId: user.userId,
+        workspaceId: user.workspaceId,
+        definition,
+      });
+      const run = await seedWorkflowRun({ workflowId, triggeredByUserId: user.userId, definition });
+
+      await expect(processRun(run.id)).rejects.toThrow('Pick an agent for this node');
+
+      const stored = await loadRun(run.id);
+      const step = stored.steps.find((candidate) => candidate.nodeId === node.id);
+      expect(step?.status).toBe('failed');
+      expect(step?.error).toBe('Pick an agent for this node');
+      expect(languageModelGenerateMock).not.toHaveBeenCalled();
+      expect(await db.select().from(creditUsageEvent)).toHaveLength(0);
+      return stored.run;
+    }
+
+    test('an agent node fails the run and charges nothing', async () => {
+      const run = await expectNodeFailsWithoutCharge(agentNode('writer', NO_AGENT_ID, 'go'));
+
+      expect(run?.status).toBe('failed');
+      expect(run?.error).toBe('Pick an agent for this node');
+    });
+
+    test('a team node without a lead fails the run and charges nothing', async () => {
+      const user = await seedAuthenticatedUser();
+      const memberId = await seedPricedAgent({
+        userId: user.userId,
+        workspaceId: user.workspaceId,
+      });
+      const run = await expectNodeFailsWithoutCharge(teamNode('crew', NO_AGENT_ID, memberId));
+
+      expect(run?.status).toBe('failed');
+    });
   });
 
   test('a retry reuses completed steps instead of re-running them', async () => {

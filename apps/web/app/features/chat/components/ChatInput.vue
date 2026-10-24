@@ -20,6 +20,7 @@ interface Props {
   items: PendingAttachment[];
   status: ChatStatus;
   isBusy: boolean;
+  isSendDisabled?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -57,6 +58,7 @@ const isUploading = computed(() =>
 // exist yet.
 const canSubmit = computed(
   () =>
+    !props.isSendDisabled &&
     (text.value.trim().length > 0 || hasFinishedAttachment.value) &&
     !isUploading.value,
 );

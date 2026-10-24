@@ -78,9 +78,7 @@ export async function generateEmailDraft({
     defaultAgentId: account.defaultAgentId,
   });
   if (!agentRecord) {
-    logger.warn(
-      `User ${account.userId} has no private workspace, skipping draft for thread ${threadId}`,
-    );
+    logger.warn(`User ${account.userId} has no draft agent, skipping draft for thread ${threadId}`);
     return;
   }
   const agentId = agentRecord.id;

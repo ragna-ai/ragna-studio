@@ -24,8 +24,10 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
+| [Agent media models (PRD)](./agent/agent-media-models-prd.md) | decided (2026-10-23) |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | decided (2026-08-20) |
 | [Chat search (PRD)](./chat/search-prd.md) | decided (2026-09-08) |
+| [Organizations: AI model selection (PRD)](./organizations/ai-models-prd.md) | decided (2026-10-23) |
 
 ## Proposed
 
@@ -47,6 +49,7 @@ work first, shipped reference and dead/historical docs last.
 | [Agent Context — Phase 1: Free-text context](./agent/agent-context.md) | implemented, verified |
 | [Agent Defaults & Settings](./agent/agent-default-and-settings.md) | implemented, verified |
 | [Agent memory](./agent/agent-memory.md) | implemented (Phase 1, 2026-07-18) |
+| [Remove the default agent (PRD)](./agent/remove-default-agent-prd.md) | implemented (2026-10-23, PR #138) |
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
 | [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | implemented (PR #90, 2026-10-08) |

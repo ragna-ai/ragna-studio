@@ -28,7 +28,6 @@ type UpsertAgentProps = {
   description?: string;
   context?: string | null;
   tools?: string[];
-  isDefault?: boolean;
   settings?: AgentSettings | null;
   defaultDatasetId?: string | null;
 };
@@ -72,7 +71,6 @@ const agentUpsertSchema = z.object({
   description: z.string(),
   context: z.string().max(30_000),
   tools: z.array(z.string()),
-  isDefault: z.boolean(),
   settings: agentSettingsSchema,
   defaultDatasetId: z.uuidv7().nullable(),
 });
@@ -85,7 +83,6 @@ const form = useForm({
     description: props.description ?? '',
     context: props.context ?? '',
     tools: props.tools ?? [],
-    isDefault: props.isDefault ?? false,
     settings: {
       temperature: props.settings?.temperature ?? null,
       maxOutputTokens: props.settings?.maxOutputTokens ?? null,
@@ -340,20 +337,6 @@ const siderBarTabs = computed(() => [
       <!-- TAB 7: Settings -->
       <template #settings>
         <div class="max-w-lg space-y-8">
-          <form.Field name="isDefault">
-            <template v-slot="{ field, state }">
-              <div class="flex items-center space-x-3">
-                <Switch
-                  :id="field.name"
-                  :model-value="state.value"
-                  @update:model-value="field.handleChange"
-                />
-                <Label :for="field.name">{{
-                  t('agent.upsert.defaultAgentLabel')
-                }}</Label>
-              </div>
-            </template>
-          </form.Field>
           <div class="space-y-6">
             <form.Field name="settings.temperature">
               <template v-slot="{ field, state }">

@@ -30,16 +30,16 @@ Postgres 18 with pgvector and Redis ship in the compose file.
 
 ## The stack
 
-| Service      | Role                                                     |
-| ------------ | -------------------------------------------------------- |
-| `frontend`   | The web app, on port 3000                                |
-| `backend`    | The API, on port 3010                                    |
-| `worker`     | Background jobs and scheduled workflows                  |
-| `webbrowser` | Headless browser for agents that read web pages          |
-| `postgres`   | Database, with pgvector                                  |
-| `redis`      | Queues                                                   |
-| `migrate`    | Applies the schema on start, then exits                  |
-| `seed`       | Adds the model catalog and the default agent, then exits |
+| Service      | Role                                                            |
+| ------------ | --------------------------------------------------------------- |
+| `frontend`   | The web app, on port 3000                                       |
+| `backend`    | The API, on port 3010                                           |
+| `worker`     | Background jobs and scheduled workflows                         |
+| `webbrowser` | Headless browser for agents that read web pages                 |
+| `postgres`   | Database, with pgvector                                         |
+| `redis`      | Queues                                                          |
+| `migrate`    | Applies the schema on start, then exits                         |
+| `seed`       | Adds the model catalog and a starter agent template, then exits |
 
 ## Steps
 

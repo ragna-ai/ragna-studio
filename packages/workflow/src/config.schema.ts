@@ -25,8 +25,7 @@ export const triggerConfigSchema = z.discriminatedUnion('kind', [
 export type TriggerConfig = z.infer<typeof triggerConfigSchema>;
 
 export const agentConfigSchema = z.object({
-  agentId: z.string().optional(),
-  systemPrompt: z.string().optional(),
+  agentId: z.string().min(1),
   prompt: z.string().min(1),
 });
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
@@ -73,7 +72,7 @@ const teamMemberSchema = z.object({
 
 const delegateTeamConfigSchema = z.object({
   mode: z.literal('delegate'),
-  leadAgentId: z.string().optional(), // default agent if unset
+  leadAgentId: z.string().min(1),
   prompt: z.string().min(1), // template, {{input}} supported
   members: z.array(teamMemberSchema).min(1).max(5),
 });

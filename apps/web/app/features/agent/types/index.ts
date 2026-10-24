@@ -23,12 +23,22 @@ export interface Agent {
   description?: string;
   context?: string | null;
   tools?: string[];
-  isDefault: boolean;
   settings?: AgentSettings | null;
   aiModel?: AgentAiModelRef;
   // Soft pin: the dataset injected into this
   // agent's system prompt when the `datasets` tool is enabled.
   defaultDatasetId?: string | null;
+}
+
+export interface AgentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  aiModel: { displayName: string };
+}
+
+export interface AgentTemplateManyResponse {
+  templates: AgentTemplate[];
 }
 
 export interface AgentResponse {

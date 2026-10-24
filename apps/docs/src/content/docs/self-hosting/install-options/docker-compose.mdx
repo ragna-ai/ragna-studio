@@ -78,16 +78,16 @@ The second file is the self-host override. It sets the in-network hosts for Post
 
 ### What this sets up
 
-| Service      | Role                                                     |
-| ------------ | -------------------------------------------------------- |
-| `postgres`   | Database, with pgvector. Has a health check.             |
-| `redis`      | Queues                                                   |
-| `migrate`    | Applies the schema once Postgres is healthy, then exits  |
-| `seed`       | Adds the model catalog and the default agent, then exits |
-| `backend`    | The API, on `127.0.0.1:3010`                             |
-| `worker`     | Background jobs and scheduled workflows                  |
-| `frontend`   | The web app, on `127.0.0.1:3000`                         |
-| `webbrowser` | Headless browser for agents. Not published.              |
+| Service      | Role                                                            |
+| ------------ | --------------------------------------------------------------- |
+| `postgres`   | Database, with pgvector. Has a health check.                    |
+| `redis`      | Queues                                                          |
+| `migrate`    | Applies the schema once Postgres is healthy, then exits         |
+| `seed`       | Adds the model catalog and a starter agent template, then exits |
+| `backend`    | The API, on `127.0.0.1:3010`                                    |
+| `worker`     | Background jobs and scheduled workflows                         |
+| `frontend`   | The web app, on `127.0.0.1:3000`                                |
+| `webbrowser` | Headless browser for agents. Not published.                     |
 
 `migrate` and `seed` run on every start and are idempotent.
 

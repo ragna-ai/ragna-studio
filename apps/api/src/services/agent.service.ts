@@ -1,11 +1,13 @@
-import type { Agent, AgentSettings, AgentTools } from '@repo/database';
+import type { Agent, AgentSettings, AgentTemplateListItem, AgentTools } from '@repo/database';
 import {
   createAgent,
+  createAgentFromTemplate,
   deleteAgentById,
   getAgentByIdAndWorkspaceId,
   getAgentCountByWorkspaceId,
   getAgentsByWorkspaceId,
   getMemoryByAgentId,
+  listAgentTemplates,
   updateAgent,
   upsertMemory,
 } from '@repo/database';
@@ -105,7 +107,6 @@ export interface CreateAgentInput {
   systemPrompt: string;
   context?: string | null;
   tools?: AgentTools;
-  isDefault?: boolean;
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -130,6 +131,52 @@ export async function createAgentForWorkspace(input: CreateAgentInput): Promise<
   return createdAgent;
 }
 
+export interface CreateAgentFromTemplateInput {
+  workspaceId: string;
+  userId: string;
+  templateId: string;
+}
+
+/**
+ * [POST] /workspace/:workspaceId/agent/from-template
+ * Copies an agent template into a new agent of the workspace. 404 for an unknown template.
+ */
+export async function createAgentFromTemplateForWorkspace(
+  input: CreateAgentFromTemplateInput,
+): Promise<Agent> {
+  const { error, data: createdAgent } = await tryCatch(() => createAgentFromTemplate(input));
+
+  if (error !== null) {
+    logger.error('Failed to create agent from template', error);
+    throw new InternalServerErrorException('Failed to create agent');
+  }
+
+  if (!createdAgent) {
+    throw new NotFoundException('Agent template not found');
+  }
+
+  return createdAgent;
+}
+
+export interface AgentTemplateListResponse {
+  templates: AgentTemplateListItem[];
+}
+
+/**
+ * [GET] /agent-template
+ * Lists every agent template with its model's display name.
+ */
+export async function listAgentTemplatesForUser(): Promise<AgentTemplateListResponse> {
+  const { error, data: templates } = await tryCatch(() => listAgentTemplates());
+
+  if (error !== null || !templates) {
+    logger.error('Failed to list agent templates', error);
+    throw new InternalServerErrorException('Failed to list agent templates');
+  }
+
+  return { templates };
+}
+
 export interface UpdateAgentInput {
   workspaceId: string;
   agentId: string;
@@ -139,7 +186,6 @@ export interface UpdateAgentInput {
   systemPrompt?: string;
   context?: string | null;
   tools?: AgentTools;
-  isDefault?: boolean;
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -162,7 +208,6 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
       systemPrompt: input.systemPrompt,
       context: input.context,
       tools: input.tools,
-      isDefault: input.isDefault,
       defaultDatasetId: input.defaultDatasetId,
       settings: input.settings,
     }),

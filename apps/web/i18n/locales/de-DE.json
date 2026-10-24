@@ -159,6 +159,10 @@
       "title": "KI-Agenten",
       "subtitle": "Liste aller KI-Agenten, die du erstellt hast.",
       "newAgent": "KI-Agent erstellen",
+      "deleteConfirm": {
+        "title": "Agent löschen?",
+        "message": "Dadurch werden \"{name}\" und alle zugehörigen Chats, sein Gedächtnis und seine Kontextdokumente endgültig gelöscht. Das lässt sich nicht rückgängig machen."
+      },
       "table": {
         "favorite": "Favorit",
         "avatar": "Avatar"
@@ -184,7 +188,6 @@
       "contextLabel": "Kontext",
       "contextHint": "Hintergrundwissen, über das dieser Agent immer verfügen soll. Für Verhalten und Regeln nutze Persona.",
       "saveFirstMemory": "Speichere den Agenten zuerst, um sein Gedächtnis anzusehen und zu bearbeiten.",
-      "defaultAgentLabel": "Diesen Agenten als Standard festlegen",
       "temperatureLabel": "Temperatur",
       "temperatureDisabled": "Deaktiviert",
       "temperatureHint": "Setze die Temperatur auf 0, um sie zu deaktivieren.",
@@ -320,6 +323,13 @@
         "unsupportedType": "„{name}“ ist kein unterstützter Dateityp.",
         "tooLarge": "„{name}“ ist größer als 10 MB."
       }
+    },
+    "noAgent": {
+      "title": "Für einen Chat brauchst du einen Agenten",
+      "description": "Erstelle einen eigenen Agenten oder starte mit einer Vorlage.",
+      "create": "Eigenen Agenten erstellen",
+      "templateDivider": "oder mit Vorlage starten",
+      "useTemplate": "Nutzen"
     },
     "agentSelect": {
       "placeholder": "Agent auswählen",
@@ -496,7 +506,6 @@
     },
     "node": {
       "lead": "Lead: {name}",
-      "defaultAgent": "Standardagent",
       "memberSingular": "Mitglied",
       "memberPlural": "Mitglieder",
       "toolCallTooltip": "{count} Werkzeugaufruf(e) in dieser Ausführung",
@@ -508,13 +517,10 @@
       "loading": "Agenten werden geladen..."
     },
     "agentConfig": {
-      "noneUseSystemPrompt": "Keiner (Systemprompt unten verwenden)",
       "agentConfiguration": "Agentenkonfiguration",
       "editAgentSettings": "Agenteneinstellungen bearbeiten",
       "tools": "Werkzeuge",
-      "note": "Der Agent läuft während des Workflows mit diesem Modell und diesen Werkzeugen.",
-      "systemPromptLabel": "Systemprompt",
-      "systemPromptPlaceholder": "Du bist ein hilfreicher Assistent."
+      "note": "Der Agent läuft während des Workflows mit diesem Modell und diesen Werkzeugen."
     },
     "conditionConfig": {
       "leftLabel": "Links",
@@ -524,7 +530,6 @@
     },
     "teamConfig": {
       "leadAgentLabel": "Lead-Agent",
-      "noneUseDefaultAgent": "Keiner (Standardagent verwenden)",
       "membersLabel": "Mitglieder",
       "addMember": "Mitglied hinzufügen",
       "memberN": "Mitglied {index}",
@@ -1319,6 +1324,7 @@
         "defaultAgent": "Standard-Entwurfsagent",
         "defaultAgentHint": "Wird für Auto-Entwürfe genutzt und bei manuellen \"Mit KI entwerfen\"-Anfragen vorausgewählt.",
         "defaultAgentPlaceholder": "Agent wählen",
+        "defaultAgentMissingHint": "Wähle einen Agenten, um Auto-Entwürfe zu aktivieren",
         "dangerZone": "Gefahrenzone",
         "disconnect": "Postfach trennen",
         "disconnectConfirmTitle": "Postfach trennen",

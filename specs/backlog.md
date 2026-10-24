@@ -111,10 +111,18 @@ removal): [specs/hardening/batch-1-prd.md](./hardening/batch-1-prd.md).
 ## Parked features (need a decision or PRD first)
 
 - [ ] Full RBAC on workspace resources: `viewer` role next to `manager` and `editor`.
-- [ ] Admin page for AI models (platform admin): CRUD on `ai_models`, capabilities, pricing,
-      and an `is_default` flag per modality (partial unique index). Without a flag, fall back to
-      the oldest row by `created_at`. No credentials check. Replaces hand-set SQL and the
-      `findFirst` default (see Risks in `imagegen/flux-3-prd.md`).
+- [x] Remove the default agent, shipped in PR #138 (2026-10-23): `agent/remove-default-agent-prd.md`.
+- [ ] Per-agent image and video models, no platform default: `agent/agent-media-models-prd.md`.
+- [ ] Org-level AI model allowlist and catalog soft delete: `organizations/ai-models-prd.md`.
+- [ ] Agent soft delete, needs its own PRD and session. Today deleting an agent cascade-deletes its
+      chats, memory and context documents, and an agent that wrote an email draft can't be
+      deleted at all (`email_drafts.agent_id` has no `onDelete`, so the API most likely returns 500; not tested).
+      Decided direction: delete sets `agents.deleted_at` (the column already exists via
+      `timestamps`, no migration); chats stay readable but can't receive new messages; branching
+      continues them with another agent (branch must then accept a new `agentId`, today it copies
+      the source agent); lists and pickers hide deleted agents; workflows, auto-drafts and tasks
+      fail closed. Open: branch agent picker always or only for deleted agents, purge (none
+      planned, purging would cascade chats), restore. Update the delete dialog text with it.
 - [ ] Shareable chats (own feature, WS auth implications).
 - [ ] Task reminder recipients beyond the org owner (touches notifications).
 - [ ] Workflow duplicate route. Today a schedule whose author was purged stays paused for good.

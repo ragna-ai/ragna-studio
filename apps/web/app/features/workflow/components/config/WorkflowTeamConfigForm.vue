@@ -6,7 +6,6 @@ import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplat
 
 // Imports
 
-const NO_AGENT = '__none__';
 const MIN_MEMBERS = 1;
 const MAX_MEMBERS = 5;
 
@@ -23,13 +22,6 @@ const { t } = useI18n();
 
 // Computed
 const agentOptions = computed(() => agentsData.value?.agents ?? []);
-
-const selectedLeadAgentId = computed({
-  get: () => props.node.data.config.leadAgentId ?? NO_AGENT,
-  set: (value: string) => {
-    props.node.data.config.leadAgentId = value === NO_AGENT ? undefined : value;
-  },
-});
 
 const members = computed(() => props.node.data.config.members);
 const canAddMember = computed(() => members.value.length < MAX_MEMBERS);
@@ -53,14 +45,11 @@ function removeMember(index: number) {
       <Label class="mb-2 block text-sm font-medium">{{
         t('workflow.teamConfig.leadAgentLabel')
       }}</Label>
-      <Select v-model="selectedLeadAgentId">
+      <Select v-model="node.data.config.leadAgentId">
         <SelectTrigger class="w-full">
           <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem :value="NO_AGENT">{{
-            t('workflow.teamConfig.noneUseDefaultAgent')
-          }}</SelectItem>
           <SelectItem
             v-for="agent in agentOptions"
             :key="agent.id"

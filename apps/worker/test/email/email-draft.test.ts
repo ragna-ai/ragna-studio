@@ -3,7 +3,6 @@ import {
   createDataset,
   deleteAgentById,
   deleteWorkspaceById,
-  getAgentsByWorkspaceId,
   getOrganizationIdByUserId,
   listEmailDraftsByAccountId,
   updateEmailAccountSettings,
@@ -23,12 +22,7 @@ import {
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { processEmailDraftJob } from '../../src/processors/email-draft.processor';
-import {
-  seedAgent,
-  seedDefaultAgentTemplate,
-  seedMailUser,
-  type SeededMailUser,
-} from '../support/email-fixtures';
+import { seedAgent, seedMailUser, type SeededMailUser } from '../support/email-fixtures';
 import { seedReadyDocument } from '../support/generation-fixtures';
 import { buildJob } from '../support/job';
 
@@ -62,6 +56,11 @@ interface SeededDraftScenario {
 
 async function seedScenario(): Promise<SeededDraftScenario> {
   const mailUser = await seedMailUser();
+  const draftAgent = await seedAgent({
+    userId: mailUser.userId,
+    workspaceId: mailUser.personalWorkspaceId,
+  });
+  await updateEmailAccountSettings({ id: mailUser.account.id, defaultAgentId: draftAgent.id });
   const seeded = await seedEmailThreadWithMessage({
     accountId: mailUser.account.id,
     from: { name: 'Carol', email: 'carol@example.test' },
@@ -81,7 +80,6 @@ describe('processEmailDraftJob', () => {
   beforeEach(async () => {
     await truncateAllTables();
     resetProviderMocks();
-    await seedDefaultAgentTemplate();
   });
 
   test('unknown job name throws', async () => {
@@ -247,36 +245,48 @@ describe('processEmailDraftJob', () => {
       expect(draft?.agentId).toBe(defaultAgent.id);
     });
 
-    test('a shared-workspace default is never used, the personal default agent takes over', async () => {
+    test('a shared-workspace default is never used, no draft is written', async () => {
       const scenario = await seedScenario();
-      const { userId, personalWorkspaceId, sharedWorkspaceId, account } = scenario.mailUser;
+      const { userId, sharedWorkspaceId, account } = scenario.mailUser;
       const sharedAgent = await seedAgent({ userId, workspaceId: sharedWorkspaceId });
       await updateEmailAccountSettings({ id: account.id, defaultAgentId: sharedAgent.id });
-      scriptModelOutput({ text: 'Reply.' });
 
-      await processEmailDraftJob(draftJob({ ...scenario, replyToMessageId: scenario.messageId }));
+      const result = await processEmailDraftJob(
+        draftJob({ ...scenario, replyToMessageId: scenario.messageId }),
+      );
 
-      const [draft] = await listAllDrafts(account.id);
-      expect(draft?.agentId).not.toBe(sharedAgent.id);
-      const [personalDefault] = await getAgentsByWorkspaceId({ workspaceId: personalWorkspaceId });
-      expect(draft?.agentId).toBe(personalDefault?.id ?? null);
-      expect(personalDefault?.isDefault).toBe(true);
+      expect(result).toEqual({ success: true });
+      expect(await listAllDrafts(account.id)).toHaveLength(0);
+      expect(languageModelGenerateMock).not.toHaveBeenCalled();
     });
 
-    test('a deleted default agent falls back to the personal default agent', async () => {
+    test('a deleted default agent leaves no agent, so no draft is written', async () => {
       const scenario = await seedScenario();
       const { userId, personalWorkspaceId, account } = scenario.mailUser;
       const doomed = await seedAgent({ userId, workspaceId: personalWorkspaceId });
       await updateEmailAccountSettings({ id: account.id, defaultAgentId: doomed.id });
       await deleteAgentById({ agentId: doomed.id, workspaceId: personalWorkspaceId });
-      scriptModelOutput({ text: 'Reply.' });
 
-      await processEmailDraftJob(draftJob({ ...scenario, replyToMessageId: scenario.messageId }));
+      const result = await processEmailDraftJob(
+        draftJob({ ...scenario, replyToMessageId: scenario.messageId }),
+      );
 
-      const [draft] = await listAllDrafts(account.id);
-      expect(draft?.status).toBe('ready');
-      expect(draft?.agentId).not.toBe(doomed.id);
-      expect(draft?.agentId).not.toBeNull();
+      expect(result).toEqual({ success: true });
+      expect(await listAllDrafts(account.id)).toHaveLength(0);
+      expect(languageModelGenerateMock).not.toHaveBeenCalled();
+    });
+
+    test('an account without any agent writes no draft', async () => {
+      const scenario = await seedScenario();
+      await updateEmailAccountSettings({ id: scenario.mailUser.account.id, defaultAgentId: null });
+
+      const result = await processEmailDraftJob(
+        draftJob({ ...scenario, replyToMessageId: scenario.messageId }),
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(await listAllDrafts(scenario.mailUser.account.id)).toHaveLength(0);
+      expect(languageModelGenerateMock).not.toHaveBeenCalled();
     });
 
     test('a user without a personal workspace gets no draft and no throw', async () => {

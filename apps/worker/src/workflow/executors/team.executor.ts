@@ -12,7 +12,7 @@ import {
 } from '@repo/ai';
 import type { ToolSet } from '@repo/ai';
 import type { AiModelPricing } from '@repo/database';
-import { getAgentByIdAndWorkspaceId, getDefaultAgent } from '@repo/database';
+import { getAgentByIdAndWorkspaceId } from '@repo/database';
 import type { TeamConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
 import { noopWriter } from './noop-writer';
@@ -23,6 +23,7 @@ import {
   InsufficientCreditsError,
   logTraceStepDebug,
   ModelNotChargeableError,
+  requireAgentId,
   runReferencedAgent,
   settleWorkflowUsage,
   withAiModel,
@@ -79,8 +80,8 @@ function assignToolNames(members: ResolvedMember[]): string[] {
   });
 }
 
-// Appended to a referenced lead's own instructions, or used alone for the
-// default-agent lead: the member roster and the delegation protocol.
+// Appended to the lead's own instructions: the member roster and the
+// delegation protocol.
 function buildTeamBriefing(members: ResolvedMember[]): string {
   // The role may be empty (draft save allows it); the name alone still
   // gives the lead something to route by.
@@ -188,7 +189,7 @@ type LeadSetup = {
   pricing: AiModelPricing | null;
 };
 
-async function resolveReferencedLead(
+async function resolveLead(
   leadAgentId: string,
   ctx: ExecutorContext,
   briefing: string,
@@ -236,27 +237,9 @@ async function resolveReferencedLead(
   };
 }
 
-async function resolveDefaultLead(briefing: string): Promise<LeadSetup> {
-  const defaultAgent = withAiModel(await getDefaultAgent());
-
-  return {
-    model: getLanguageModel({
-      provider: defaultAgent.aiModel.provider,
-      model: defaultAgent.aiModel.model,
-    }),
-    instructions: briefing,
-    // Only a referenced lead brings its own tools and settings; the default
-    // agent runs plain, same as the agent node's inline path.
-    ownTools: {},
-    modelSettings: toModelSettings(undefined),
-    aiModelId: defaultAgent.aiModelId,
-    provider: defaultAgent.aiModel.provider,
-    pricing: defaultAgent.aiModel.pricing,
-  };
-}
-
 export const executeTeam: Executor = async (node, ctx) => {
   const config = node.data.config as TeamConfig;
+  const leadAgentId = requireAgentId(config.leadAgentId);
   const prompt = resolveTemplate(config.prompt, ctx);
 
   const members = await resolveMembers(config.members, ctx);
@@ -264,9 +247,7 @@ export const executeTeam: Executor = async (node, ctx) => {
   const briefing = buildTeamBriefing(members);
 
   const { model, instructions, ownTools, modelSettings, aiModelId, provider, pricing } =
-    config.leadAgentId
-      ? await resolveReferencedLead(config.leadAgentId, ctx, briefing)
-      : await resolveDefaultLead(briefing);
+    await resolveLead(leadAgentId, ctx, briefing);
 
   // Gate the lead's own call once its model (and pricing) is known. Each
   // member's delegate call gets its own independent gate inside

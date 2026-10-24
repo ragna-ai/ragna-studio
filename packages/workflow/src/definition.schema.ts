@@ -78,14 +78,12 @@ export function getWorkflowAgentIds(definition: WorkflowDefinition): string[] {
   const agentIds = new Set<string>();
 
   for (const node of definition.nodes) {
-    if (node.type === 'agent' && node.data.config.agentId) {
+    if (node.type === 'agent') {
       agentIds.add(node.data.config.agentId);
     }
     if (node.type === 'team') {
       const { leadAgentId, members } = node.data.config;
-      if (leadAgentId) {
-        agentIds.add(leadAgentId);
-      }
+      agentIds.add(leadAgentId);
       for (const member of members) {
         agentIds.add(member.agentId);
       }

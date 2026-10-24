@@ -32,6 +32,23 @@ export function agentNode(id: string, agentId: string, prompt: string): Workflow
   return { id, type: 'agent', position: ORIGIN, data: { label: id, config: { agentId, prompt } } };
 }
 
+export function teamNode(id: string, leadAgentId: string, memberAgentId: string): WorkflowNode {
+  return {
+    id,
+    type: 'team',
+    position: ORIGIN,
+    data: {
+      label: id,
+      config: {
+        mode: 'delegate',
+        leadAgentId,
+        prompt: 'go',
+        members: [{ agentId: memberAgentId, role: '' }],
+      },
+    },
+  };
+}
+
 export function edge(
   source: string,
   target: string,
@@ -107,7 +124,6 @@ export async function seedPricedAgent(params: SeedPricedAgentParams): Promise<st
     name: 'Writer',
     description: 'Seeded for worker tests',
     systemPrompt: 'Write.',
-    isDefault: false,
     tools: [],
   });
   return agent.id;

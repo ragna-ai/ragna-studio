@@ -1,21 +1,11 @@
-import { db, resolveEmailDraftAgent } from '@repo/database';
-import { agentTemplate } from '@repo/database/schema';
-import {
-  resetProviderMocks,
-  seedAuthenticatedUser,
-  seedTokenPricedAiModel,
-  truncateAllTables,
-} from '@repo/testing';
+import { resolveEmailDraftAgent } from '@repo/database';
+import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { createAgentForWorkspace } from './support/email-fixtures';
 
 beforeEach(async () => {
   await truncateAllTables();
   resetProviderMocks();
-  const { aiModelId } = await seedTokenPricedAiModel();
-  await db
-    .insert(agentTemplate)
-    .values({ aiModelId, name: 'Default', systemPrompt: 'Be helpful.' });
 });
 
 async function seedUserWithAgents() {
@@ -64,8 +54,8 @@ describe('resolveEmailDraftAgent', () => {
     expect(resolved?.id).toBe(privateAgentId);
   });
 
-  test('falls back to the private default agent when the stored default is stale', async () => {
-    const { userId, sharedAgentId, personalWorkspaceId } = await seedUserWithAgents();
+  test('returns null when the stored default is outside the private workspace', async () => {
+    const { userId, sharedAgentId } = await seedUserWithAgents();
 
     const resolved = await resolveEmailDraftAgent({
       userId,
@@ -73,12 +63,11 @@ describe('resolveEmailDraftAgent', () => {
       defaultAgentId: sharedAgentId,
     });
 
-    expect(resolved?.workspaceId).toBe(personalWorkspaceId);
-    expect(resolved?.isDefault).toBe(true);
+    expect(resolved).toBeNull();
   });
 
-  test('falls back to the private default agent when nothing is configured', async () => {
-    const { userId, personalWorkspaceId } = await seedUserWithAgents();
+  test('returns null when nothing is configured', async () => {
+    const { userId } = await seedUserWithAgents();
 
     const resolved = await resolveEmailDraftAgent({
       userId,
@@ -86,7 +75,6 @@ describe('resolveEmailDraftAgent', () => {
       defaultAgentId: null,
     });
 
-    expect(resolved?.workspaceId).toBe(personalWorkspaceId);
-    expect(resolved?.isDefault).toBe(true);
+    expect(resolved).toBeNull();
   });
 });

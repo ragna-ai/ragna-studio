@@ -159,6 +159,10 @@
       "title": "AI agents",
       "subtitle": "All AI agents you have created.",
       "newAgent": "Create AI agent",
+      "deleteConfirm": {
+        "title": "Delete agent?",
+        "message": "This permanently deletes \"{name}\" and all of its chats, its memory and its context documents. This can't be undone."
+      },
       "table": {
         "favorite": "Favorite",
         "avatar": "Avatar"
@@ -184,7 +188,6 @@
       "contextLabel": "Context",
       "contextHint": "Background knowledge this agent should always have. For behavior and rules, use Persona.",
       "saveFirstMemory": "Save the agent first to view and edit its memory.",
-      "defaultAgentLabel": "Make this the default agent",
       "temperatureLabel": "Temperature",
       "temperatureDisabled": "Disabled",
       "temperatureHint": "Set temperature to 0 to disable it.",
@@ -314,6 +317,13 @@
         "unsupportedType": "\"{name}\" isn't a supported file type.",
         "tooLarge": "\"{name}\" is larger than 10 MB."
       }
+    },
+    "noAgent": {
+      "title": "You need an agent to start a chat",
+      "description": "Create your own agent or start from a template.",
+      "create": "Create your own agent",
+      "templateDivider": "or start from a template",
+      "useTemplate": "Use"
     },
     "agentSelect": {
       "placeholder": "Select an agent",
@@ -490,7 +500,6 @@
     },
     "node": {
       "lead": "Lead: {name}",
-      "defaultAgent": "Default agent",
       "memberSingular": "member",
       "memberPlural": "members",
       "toolCallTooltip": "{count} tool call(s) in this run",
@@ -502,13 +511,10 @@
       "loading": "Loading agents..."
     },
     "agentConfig": {
-      "noneUseSystemPrompt": "None (use system prompt below)",
       "agentConfiguration": "Agent configuration",
       "editAgentSettings": "Edit agent settings",
       "tools": "Tools",
-      "note": "The agent runs with this model and these tools during the workflow.",
-      "systemPromptLabel": "System prompt",
-      "systemPromptPlaceholder": "You are a helpful assistant."
+      "note": "The agent runs with this model and these tools during the workflow."
     },
     "conditionConfig": {
       "leftLabel": "Left",
@@ -518,7 +524,6 @@
     },
     "teamConfig": {
       "leadAgentLabel": "Lead agent",
-      "noneUseDefaultAgent": "None (use default agent)",
       "membersLabel": "Members",
       "addMember": "Add member",
       "memberN": "Member {index}",
@@ -1313,6 +1318,7 @@
         "defaultAgent": "Default draft agent",
         "defaultAgentHint": "Used for auto-drafts and preselected on manual \"Draft with AI\" requests.",
         "defaultAgentPlaceholder": "Choose an agent",
+        "defaultAgentMissingHint": "Pick an agent to enable auto-drafts",
         "dangerZone": "Danger zone",
         "disconnect": "Disconnect mailbox",
         "disconnectConfirmTitle": "Disconnect mailbox",

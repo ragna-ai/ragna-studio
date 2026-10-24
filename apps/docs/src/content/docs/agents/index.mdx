@@ -32,18 +32,13 @@ Pick the model the agent uses. The selector lists text models only.
 
 ## Settings
 
-| Setting                         | What it does                                                                                                                                                        |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Make this the default agent** | Chats started without picking an agent use this one. Only one agent per workspace can be the default. Setting a new one clears the old one.                         |
-| **Temperature**                 | Controls how varied the answers are. The slider runs from 0 to 1. At 0 it shows **Disabled**: RAGNA Studio sends no temperature and the model uses its own default. |
-| **Max output tokens**           | Caps the length of one answer. Leave it empty to use the model's default. The maximum is 64,000.                                                                    |
-| **Reasoning**                   | Lets the model think before it answers: **Default**, **Off**, **Low**, **Medium** or **High**.                                                                      |
+| Setting               | What it does                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Temperature**       | Controls how varied the answers are. The slider runs from 0 to 1. At 0 it shows **Disabled**: RAGNA Studio sends no temperature and the model uses its own default. |
+| **Max output tokens** | Caps the length of one answer. Leave it empty to use the model's default. The maximum is 64,000.                                                                    |
+| **Reasoning**         | Lets the model think before it answers: **Default**, **Off**, **Low**, **Medium** or **High**.                                                                      |
 
 Reasoning only has an effect on models that support it. Other models ignore it. **Default** leaves the choice to the model. **Off** switches reasoning off explicitly, which matters for models that reason by default.
-
-## Default agent
-
-The agent marked **Default** has a badge in the agent list. A new chat opened from **Chat** without choosing an agent goes to the default agent of the current workspace. If the workspace has none yet, RAGNA Studio creates one on first use.
 
 ## Next steps
 

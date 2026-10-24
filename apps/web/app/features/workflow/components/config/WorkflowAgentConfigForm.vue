@@ -6,10 +6,6 @@ import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplat
 import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 import { firstToUpperCase } from '~/lib/utils';
 
-// Imports
-
-const NO_AGENT = '__none__';
-
 // Props
 // The panel only renders this form when node.type === 'agent', so the
 // narrowed node (and therefore its config) is guaranteed to be AgentConfig.
@@ -23,13 +19,6 @@ const { t } = useI18n();
 
 // Computed
 const agentOptions = computed(() => agentsData.value?.agents ?? []);
-
-const selectedAgentId = computed({
-  get: () => props.node.data.config.agentId ?? NO_AGENT,
-  set: (value: string) => {
-    props.node.data.config.agentId = value === NO_AGENT ? undefined : value;
-  },
-});
 
 // The full config summary below is a read-only window into the selected
 // agent's chat config (model, tools); it is edited on the agent's own page.
@@ -46,14 +35,11 @@ const selectedAgent = computed(() =>
       <Label class="mb-2 block text-sm font-medium">{{
         t(NODE_TYPE_LABEL_KEYS.agent)
       }}</Label>
-      <Select v-model="selectedAgentId">
+      <Select v-model="node.data.config.agentId">
         <SelectTrigger class="w-full">
           <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem :value="NO_AGENT">{{
-            t('workflow.agentConfig.noneUseSystemPrompt')
-          }}</SelectItem>
           <SelectItem
             v-for="agent in agentOptions"
             :key="agent.id"
@@ -116,17 +102,6 @@ const selectedAgent = computed(() =>
       <p class="text-xs text-muted-foreground">
         {{ t('workflow.agentConfig.note') }}
       </p>
-    </div>
-
-    <div v-if="!node.data.config.agentId">
-      <Label class="mb-2 block text-sm font-medium">{{
-        t('workflow.agentConfig.systemPromptLabel')
-      }}</Label>
-      <Textarea
-        v-model="node.data.config.systemPrompt"
-        rows="4"
-        :placeholder="t('workflow.agentConfig.systemPromptPlaceholder')"
-      />
     </div>
 
     <div>
