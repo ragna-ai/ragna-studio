@@ -122,7 +122,7 @@ const renderItems = computed<RenderItem[]>(() => {
             v-if="isImageMediaType(item.mediaType)"
             :src="item.url"
             :alt="item.filename || 'attachment'"
-            class="max-h-64 w-auto rounded-lg"
+            class="max-h-64 w-auto max-w-full self-start rounded-lg"
           />
           <a
             v-else
