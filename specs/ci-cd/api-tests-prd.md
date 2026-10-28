@@ -1,7 +1,7 @@
 # API tests in CI (PRD)
 
-> **Status: in-progress** (2026-09-29). Implements phase 3 of [prd.md](./prd.md).
-> The `api-tests` job is written; the first green run on a PR is still open.
+> **Status: implemented** (2026-09-29, PR #47). Implements phase 3 of [prd.md](./prd.md).
+> `api-tests` is a required check in the `Protect main` ruleset. PR #203 ran it green.
 
 `pnpm test:api` (513 tests, about 20 seconds) only runs on a developer machine.
 A change can break it without anyone noticing. On 2026-09-29 the suite sat at

@@ -1,7 +1,7 @@
 # Chat search (PRD)
 
-> **Status: decided** (2026-09-08). Design agreed via discussion, not built
-> yet.
+> **Status: implemented** (2026-09-08, commits f3af3d05, 603d63fe, 6f4614bf
+> on main, no PR).
 
 Full-text search across a workspace's chats: matches chat titles and the
 text content of chat messages. Surfaced as a dedicated search page, live

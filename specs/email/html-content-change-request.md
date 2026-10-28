@@ -1,10 +1,6 @@
 # Email Content: HTML/Text Instead of Markdown (change request)
 
-> **Status: in-progress** (approved by Sven 2026-08-15; all slices below
-> built the same day, apps/api suite 464 pass / 0 fail; confirmed by Sven,
-> committed to `feat/email-client` (PR #21); still awaiting a manual
-> browser pass through compose/reply/forward before this flips to
-> `implemented`). Amends [prd.md](./prd.md)'s
+> **Status: implemented** (2026-08-15, PR #21). Amends [prd.md](./prd.md)'s
 > "Content pipeline" section and
 > [drafts-change-request.md](./drafts-change-request.md)'s draft-content
 > assumptions. Reverses the "markdown is canonical for everything" rule for

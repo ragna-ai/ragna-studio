@@ -57,6 +57,13 @@ so there's no single spec doc; the closest reference is the message
 persistence design.
 → [specs/chat/chat-message-persistence.md](./chat/chat-message-persistence.md)
 
+### Chat search
+
+Live, debounced search across a workspace's chats by title and message
+content. Substring and case-insensitive. Results show Google-style snippets
+per chat.
+→ [specs/chat/search-prd.md](./chat/search-prd.md)
+
 ### Chat branching
 
 Split a conversation into a new chat at any message, preserving history
@@ -163,13 +170,25 @@ Automatically tags AI-generated media with a provenance badge, best-effort
 
 Gmail-backed email client (`/mail`): three-pane UI, AI auto-categorization
 into user-defined categories, AI reply drafts via a configurable agent
-(auto-triggered per category/sender or manual), markdown-canonical content
-pipeline rendered through `@repo/editor`. Polling sync with manual
+(auto-triggered per category/sender or manual), Gmail-backed local-first
+drafts, bulk trash of selected threads, and HTML content shown in a
+sandboxed iframe (markdown only for the LLM). Polling sync with manual
 "Sync now". Drafts run without agent tools (inbound mail is untrusted).
 Disconnect and offboarding revoke the Google grant and clear provider tokens.
 → [specs/email/prd.md](./email/prd.md),
 [gmail-client-decision.md](./email/gmail-client-decision.md),
+[drafts](./email/drafts-change-request.md),
+[bulk trash](./email/mass-deletion-change-request.md),
+[HTML content](./email/html-content-change-request.md),
 [OAuth and MCP hardening](./security/oauth-mcp-hardening-prd.md)
+
+## Integrations
+
+### MCP server
+
+Remote MCP server in `apps/api` that lets Claude Desktop read and write
+RAGNA Studio resources. Datasets are first, the tool layer is generic.
+→ [specs/mcp/prd.md](./mcp/prd.md), [slices.md](./mcp/slices.md)
 
 ## Supporting services
 
