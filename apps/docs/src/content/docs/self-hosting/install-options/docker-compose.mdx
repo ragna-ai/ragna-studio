@@ -23,10 +23,10 @@ This page is for operators who want full control over the setup, or want to see 
 
 ## Step 1: Download the release files
 
-Pick a release from [GitHub releases](https://github.com/ragna-ai/ragna-studio/releases) and set it without the `v`:
+Find the current version on [GitHub releases](https://github.com/ragna-ai/ragna-studio/releases). Replace `X.Y.Z` with it, without the `v`:
 
 ```bash
-VERSION=0.5.0
+VERSION=X.Y.Z
 mkdir -p ragna-studio/docker && cd ragna-studio
 for file in docker/docker-compose.yml docker/docker-compose.selfhost.yml docker/postgres-init.sql .env.example; do
   curl -fsSL "https://raw.githubusercontent.com/ragna-ai/ragna-studio/v$VERSION/$file" -o "$file"
@@ -46,7 +46,7 @@ Keep `.env` out of version control. Then set these values:
 
 | Setting              | Value                                                                                                                               |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `RAGNA_VERSION`      | The release from step 1, for example `0.5.0`. Add this line, `.env.example` doesn't have it.                                        |
+| `RAGNA_VERSION`      | The release from step 1 (`X.Y.Z`). Add this line, `.env.example` doesn't have it.                                                   |
 | `BETTER_AUTH_SECRET` | Output of `openssl rand -hex 32`                                                                                                    |
 | `DB_PASSWORD`        | Output of `openssl rand -hex 24`                                                                                                    |
 | `REDIS_PASSWORD`     | Output of `openssl rand -hex 24`                                                                                                    |
