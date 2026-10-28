@@ -166,7 +166,8 @@
       "table": {
         "favorite": "Favorite",
         "avatar": "Avatar"
-      }
+      },
+      "chat": "Chat"
     },
     "upsert": {
       "title": "Edit AI agent",
@@ -298,6 +299,34 @@
         "label": "Tasks",
         "description": "List, read, create, update, and move tasks on the workspace board."
       }
+    },
+    "memory": {
+      "label": "Memory"
+    },
+    "context": {
+      "empty": "No documents uploaded yet.",
+      "uploading": "Uploading...",
+      "tableSize": "Size",
+      "truncated": "Truncated: only the first part of this document was kept.",
+      "actions": {
+        "rename": "Rename document",
+        "replace": "Replace file",
+        "retry": "Retry extraction",
+        "delete": "Delete document"
+      },
+      "dropzone": {
+        "prompt": "Drag and drop files here, or click to browse.",
+        "formats": "PDF, DOCX, PPTX, XLSX, CSV, TXT or MD, up to {size} each."
+      },
+      "errors": {
+        "fileTooLarge": "\"{name}\" is larger than {size}",
+        "tooManyFiles": "An agent can have at most {max} documents"
+      },
+      "status": {
+        "pending": "Pending",
+        "ready": "Ready",
+        "failed": "Failed"
+      }
     }
   },
   "chat": {
@@ -372,6 +401,9 @@
       "loading": "Searching...",
       "empty": "No chats match your search.",
       "error": "An error occurred while searching."
+    },
+    "create": {
+      "label": "New chat"
     }
   },
   "workflow": {

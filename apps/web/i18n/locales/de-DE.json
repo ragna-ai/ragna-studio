@@ -166,7 +166,8 @@
       "table": {
         "favorite": "Favorit",
         "avatar": "Avatar"
-      }
+      },
+      "chat": "Chat"
     },
     "upsert": {
       "title": "KI-Agent bearbeiten",
@@ -297,6 +298,34 @@
       },
       "searchContextDocuments": {
         "label": "Kontext durchsuchen"
+      }
+    },
+    "memory": {
+      "label": "Erinnerungen"
+    },
+    "context": {
+      "empty": "Noch keine Dokumente hochgeladen.",
+      "uploading": "Wird hochgeladen...",
+      "tableSize": "Größe",
+      "truncated": "Gekürzt: Nur der erste Teil dieses Dokuments wurde übernommen.",
+      "actions": {
+        "rename": "Dokument umbenennen",
+        "replace": "Datei ersetzen",
+        "retry": "Extraktion wiederholen",
+        "delete": "Dokument löschen"
+      },
+      "dropzone": {
+        "prompt": "Ziehe Dateien hierher oder klicke zum Auswählen.",
+        "formats": "PDF, DOCX, PPTX, XLSX, CSV, TXT oder MD, je bis zu {size}."
+      },
+      "errors": {
+        "fileTooLarge": "\"{name}\" ist größer als {size}",
+        "tooManyFiles": "Ein Agent kann höchstens {max} Dokumente haben"
+      },
+      "status": {
+        "pending": "Ausstehend",
+        "ready": "Bereit",
+        "failed": "Fehlgeschlagen"
       }
     }
   },
