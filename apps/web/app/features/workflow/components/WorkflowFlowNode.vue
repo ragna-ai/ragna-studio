@@ -208,8 +208,8 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
         props.type === 'trigger' ? '' : t('workflow.node.input')
       }}</span>
       <span v-if="isCondition" class="flex gap-3">
-        <span>true</span>
-        <span>false</span>
+        <span>{{ t('workflow.branch.true') }}</span>
+        <span>{{ t('workflow.branch.false') }}</span>
       </span>
       <span v-else>{{ t('workflow.node.output') }}</span>
     </div>

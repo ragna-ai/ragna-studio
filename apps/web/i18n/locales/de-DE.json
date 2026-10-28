@@ -600,6 +600,10 @@
       "agentTrace": "Verlauf",
       "copyOutput": "Ausgabe kopieren"
     },
+    "branch": {
+      "true": "wahr",
+      "false": "falsch"
+    },
     "node": {
       "lead": "Lead: {name}",
       "memberSingular": "Mitglied",

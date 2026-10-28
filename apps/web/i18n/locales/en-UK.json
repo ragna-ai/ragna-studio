@@ -597,6 +597,10 @@
       "agentTrace": "Agent trace",
       "copyOutput": "Copy output"
     },
+    "branch": {
+      "true": "true",
+      "false": "false"
+    },
     "node": {
       "lead": "Lead: {name}",
       "memberSingular": "member",
