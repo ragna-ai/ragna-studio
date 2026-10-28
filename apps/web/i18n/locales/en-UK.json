@@ -166,7 +166,8 @@
       "table": {
         "favorite": "Favorite",
         "avatar": "Avatar"
-      }
+      },
+      "chat": "Chat"
     },
     "upsert": {
       "title": "Edit AI agent",
@@ -298,6 +299,34 @@
         "label": "Tasks",
         "description": "List, read, create, update, and move tasks on the workspace board."
       }
+    },
+    "memory": {
+      "label": "Memory"
+    },
+    "context": {
+      "empty": "No documents uploaded yet.",
+      "uploading": "Uploading...",
+      "tableSize": "Size",
+      "truncated": "Truncated: only the first part of this document was kept.",
+      "actions": {
+        "rename": "Rename document",
+        "replace": "Replace file",
+        "retry": "Retry extraction",
+        "delete": "Delete document"
+      },
+      "dropzone": {
+        "prompt": "Drag and drop files here, or click to browse.",
+        "formats": "PDF, DOCX, PPTX, XLSX, CSV, TXT or MD, up to {size} each."
+      },
+      "errors": {
+        "fileTooLarge": "\"{name}\" is larger than {size}",
+        "tooManyFiles": "An agent can have at most {max} documents"
+      },
+      "status": {
+        "pending": "Pending",
+        "ready": "Ready",
+        "failed": "Failed"
+      }
     }
   },
   "chat": {
@@ -372,6 +401,9 @@
       "loading": "Searching...",
       "empty": "No chats match your search.",
       "error": "An error occurred while searching."
+    },
+    "create": {
+      "label": "New chat"
     }
   },
   "workflow": {
@@ -1357,7 +1389,7 @@
   "mcp": {
     "settings": {
       "title": "MCP",
-      "subtitle": "Let external AI apps like Claude Desktop read and write your Ragna data.",
+      "subtitle": "Let external AI apps like Claude Desktop read and write your data.",
       "notAvailable": {
         "title": "MCP is not available",
         "message": "This feature isn't enabled for your instance yet."
@@ -1365,7 +1397,7 @@
       "loadError": "Failed to load MCP settings.",
       "masterToggle": {
         "title": "Enable MCP",
-        "label": "Allow external AI apps to access Ragna (MCP)"
+        "label": "Allow external AI apps to access your account (MCP)"
       },
       "disableConfirm": {
         "title": "Turn off MCP?",
@@ -1409,8 +1441,8 @@
     },
     "consent": {
       "pageTitle": "Connect app",
-      "title": "Connect this app to Ragna",
-      "subtitle": "{client} wants to access your Ragna data.",
+      "title": "Connect this app to your account",
+      "subtitle": "{client} wants to access your data.",
       "redirectHost": "After approval you are sent to {host}.",
       "localRedirectWarning": "This app runs on this computer. Only approve if you started it yourself.",
       "workspaceLabel": "Workspace",
@@ -1428,7 +1460,7 @@
         "message": "Turn on MCP in your settings before connecting an app.",
         "settingsLink": "Go to MCP settings"
       },
-      "testimonial": "Bring your Ragna workspace into the tools you already use."
+      "testimonial": "Bring your workspace into the tools you already use."
     }
   },
   "organization": {

@@ -39,8 +39,8 @@ Go through this list before sharing RAGNA Studio.
 ## Updates
 
 - **Stay on a current release.** Upgrade with `--upgrade`, see [Upgrades and backups](/self-hosting/upgrades-and-backups).
-- **Verify images before an upgrade (optional).** From v0.6.7 on, every release image carries a signed build provenance attestation. It proves the image was built from this repository by the RAGNA Studio release workflow. Check it with the GitHub CLI, per image and version:
+- **Verify images before an upgrade (optional).** From v0.6.7 on, every release image carries a signed build provenance attestation. It proves the image was built from this repository by the RAGNA Studio release workflow. Check it with the GitHub CLI, per image and version. Replace `X.Y.Z` with the release to verify, see [GitHub releases](https://github.com/ragna-ai/ragna-studio/releases):
 
   ```bash
-  gh attestation verify oci://ghcr.io/ragna-ai/ragna-studio-backend:0.6.7 -R ragna-ai/ragna-studio
+  gh attestation verify oci://ghcr.io/ragna-ai/ragna-studio-backend:X.Y.Z -R ragna-ai/ragna-studio
   ```

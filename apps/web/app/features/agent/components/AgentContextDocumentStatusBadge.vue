@@ -2,7 +2,6 @@
 // Imports
 import type { BadgeVariants } from '~/components/ui/badge';
 import type { AgentContextDocumentStatus } from '~/features/agent/types';
-import { cn } from '~/lib/utils';
 
 // Props
 const props = defineProps<{
@@ -32,7 +31,7 @@ const colorClass = computed(() => colorClassByStatus[props.status]);
 </script>
 
 <template>
-  <Badge :variant="variant" :class="cn('capitalize', colorClass)">{{
-    status
+  <Badge :variant="variant" :class="colorClass">{{
+    $t(`agent.context.status.${status}`)
   }}</Badge>
 </template>

@@ -47,7 +47,7 @@ watch(
     </div>
     <div v-else class="space-y-2">
       <Label class="block text-sm font-medium" for="agent-memory-content">
-        Memory
+        {{ $t('agent.memory.label') }}
       </Label>
       <Textarea
         id="agent-memory-content"
@@ -60,7 +60,7 @@ watch(
     <div class="flex justify-end">
       <Button :disabled="isLoading || isSaving" @click="handleSave">
         <Spinner v-if="isSaving" class="mr-2" />
-        Save
+        {{ $t('common.save') }}
       </Button>
     </div>
   </div>

@@ -125,7 +125,7 @@ const handleDeleteFavorite = (agentId: string) => {
             @click.stop
           >
             <Button variant="outline" @click="() => handleNewChat(agent.id)">
-              Chat
+              {{ t('agent.list.chat') }}
               <MessageSquareIcon
                 class="ml-2 size-4 shrink-0 stroke-1.5 text-primary"
               />
