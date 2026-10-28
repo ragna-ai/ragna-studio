@@ -73,22 +73,31 @@ export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
 export type WorkflowDefinition = z.infer<typeof workflowDefinitionSchema>;
 
+/** Where a node stores an agent id, as a path inside `node.data.config`. */
+export interface NodeAgentReference {
+  path: (string | number)[];
+  agentId: string;
+}
+
+export function getNodeAgentReferences(node: WorkflowNode): NodeAgentReference[] {
+  if (node.type === 'agent') {
+    return [{ path: ['agentId'], agentId: node.data.config.agentId }];
+  }
+  if (node.type === 'team') {
+    const { leadAgentId, members } = node.data.config;
+    return [
+      { path: ['leadAgentId'], agentId: leadAgentId },
+      ...members.map((member, index) => ({
+        path: ['members', index, 'agentId'],
+        agentId: member.agentId,
+      })),
+    ];
+  }
+  return [];
+}
+
 /** Distinct agent ids referenced by any node of the definition. */
 export function getWorkflowAgentIds(definition: WorkflowDefinition): string[] {
-  const agentIds = new Set<string>();
-
-  for (const node of definition.nodes) {
-    if (node.type === 'agent') {
-      agentIds.add(node.data.config.agentId);
-    }
-    if (node.type === 'team') {
-      const { leadAgentId, members } = node.data.config;
-      agentIds.add(leadAgentId);
-      for (const member of members) {
-        agentIds.add(member.agentId);
-      }
-    }
-  }
-
-  return [...agentIds];
+  const references = definition.nodes.flatMap(getNodeAgentReferences);
+  return [...new Set(references.map((reference) => reference.agentId))];
 }
