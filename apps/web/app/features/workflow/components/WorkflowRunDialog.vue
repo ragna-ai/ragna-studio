@@ -2,15 +2,12 @@
 import { TriangleAlertIcon } from '@lucide/vue';
 import type { WorkflowDefinition } from '@repo/workflow';
 import { isExecutionEquivalent } from '@repo/workflow';
-import { toast } from 'vue-sonner';
 import {
   useCreateWorkflowRun,
   usePublishWorkflow,
   useUpdateWorkflow,
 } from '~/features/workflow/composables/useWorkflowApi';
-import { getBlockingMessage } from '~/features/workflow/lib/validate-draft';
 import type { Workflow } from '~/features/workflow/types';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
 
 // Imports
 
@@ -18,6 +15,7 @@ import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
 const props = defineProps<{
   workflow: Workflow;
   draftDefinition: WorkflowDefinition;
+  canPublish: boolean;
 }>();
 
 // Emits
@@ -35,7 +33,6 @@ const { mutateAsync: publishWorkflow, isPending: isPublishing } =
   usePublishWorkflow();
 const { mutateAsync: createRun, isPending: isCreatingRun } =
   useCreateWorkflowRun(() => props.workflow.id);
-const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Computed
@@ -69,19 +66,10 @@ async function handleRun() {
   }
 }
 
-function isPublishBlocked(): boolean {
-  if (!validation || validation.value.canPublish) {
-    return false;
-  }
-  const { messageKey, count } = getBlockingMessage(validation.value);
-  toast.error(t(messageKey, { count }, count));
-  open.value = false;
-  emit('publish-blocked');
-  return true;
-}
-
 async function handlePublishAndRun() {
-  if (isPublishBlocked()) {
+  if (!props.canPublish) {
+    open.value = false;
+    emit('publish-blocked');
     return;
   }
   try {

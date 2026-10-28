@@ -136,13 +136,10 @@ export function validateDraft(
 }
 
 export function findFieldIssue(
-  validation: WorkflowDraftValidation | undefined,
-  nodeId: string,
+  issues: readonly WorkflowFieldIssue[],
   field: string,
 ): WorkflowFieldIssue | undefined {
-  return validation?.nodeIssues
-    .get(nodeId)
-    ?.find((issue) => issue.field === field);
+  return issues.find((issue) => issue.field === field);
 }
 
 export function getFirstInvalidNodeId(

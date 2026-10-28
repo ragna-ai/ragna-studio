@@ -18,17 +18,21 @@ import { Canvas } from '~/components/ai-elements/canvas';
 import { Controls } from '~/components/ai-elements/controls';
 import WorkflowFlowNode from '~/features/workflow/components/WorkflowFlowNode.vue';
 import type { WorkflowNodeData } from '~/features/workflow/types/node-data';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 
 // Imports
 
 interface Props {
   /** Disables dragging, connecting, and deleting; used by the run view. */
   readonly?: boolean;
+  /** Validation issues per node id; the run view passes none. */
+  nodeIssues?: ReadonlyMap<string, WorkflowFieldIssue[]>;
 }
 
 // Props
 withDefaults(defineProps<Props>(), {
   readonly: false,
+  nodeIssues: () => new Map(),
 });
 
 // Emits
@@ -170,7 +174,10 @@ function toWorkflowNodeProps(
       :key="nodeType"
       #[`node-${nodeType}`]="nodeProps"
     >
-      <WorkflowFlowNode v-bind="toWorkflowNodeProps(nodeProps)" />
+      <WorkflowFlowNode
+        v-bind="toWorkflowNodeProps(nodeProps)"
+        :issues="nodeIssues.get(nodeProps.id) ?? []"
+      />
     </template>
     <Controls position="bottom-left" />
   </Canvas>

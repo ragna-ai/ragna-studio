@@ -4,21 +4,19 @@ import { CrownIcon } from '@lucide/vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { getAgentSlotLabel } from '~/features/workflow/lib/agent-slot';
 import { findFieldIssue } from '~/features/workflow/lib/validate-draft';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 import { cn } from '~/lib/utils';
 
 // Imports
 
 // Props
 const props = defineProps<{
-  nodeId: string;
   config: TeamConfig;
+  issues: readonly WorkflowFieldIssue[];
 }>();
 
 // Composables
 const { data: agentsData } = useGetAllAgents();
-// The run view provides no validation, so it shows the plain roster.
-const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Functions
@@ -29,8 +27,7 @@ function slotLabel(agentId: string) {
 function slotClass(field: string) {
   return cn(
     'truncate',
-    findFieldIssue(validation?.value, props.nodeId, field) &&
-      'text-destructive',
+    findFieldIssue(props.issues, field) && 'text-destructive',
   );
 }
 </script>

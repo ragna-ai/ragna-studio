@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { findFieldIssue } from '~/features/workflow/lib/validate-draft';
 import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 
 // Props
-defineProps<{
-  issue?: WorkflowFieldIssue;
+const props = defineProps<{
+  issues: readonly WorkflowFieldIssue[];
+  field: string;
 }>();
 
 // Composables
 const { t } = useI18n();
+
+// Computed
+const issue = computed(() => findFieldIssue(props.issues, props.field));
 </script>
 
 <template>

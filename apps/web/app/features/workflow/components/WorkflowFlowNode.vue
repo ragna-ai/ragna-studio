@@ -21,7 +21,7 @@ import {
 import { Badge } from '~/components/ui/badge';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowTeamRoster from '~/features/workflow/components/WorkflowTeamRoster.vue';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 import {
   NODE_TYPE_LABEL_KEYS,
   type WorkflowNodeData,
@@ -30,18 +30,20 @@ import { cn, firstToUpperCase } from '~/lib/utils';
 
 // Imports
 
-type Props = NodeProps<WorkflowNodeData, object, WorkflowNodeType>;
+interface Props extends NodeProps<WorkflowNodeData, object, WorkflowNodeType> {
+  issues?: readonly WorkflowFieldIssue[];
+}
 
 // Props
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  issues: () => [],
+});
 
 // Composables
 // Every agent node calls this; TanStack vue-query dedupes by query key, so
 // this is one shared fetch (or cache hit) for the whole canvas, not one per
 // node, and no prop plumbing through Vue Flow is needed.
 const { data: agentsData } = useGetAllAgents();
-// The run view provides no validation, so its nodes show no markers.
-const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Computed
@@ -66,7 +68,7 @@ const typeIcon = computed(
 );
 
 const firstIssueMessage = computed(() => {
-  const [firstIssue] = validation?.value.nodeIssues.get(props.id) ?? [];
+  const [firstIssue] = props.issues;
   return firstIssue ? t(firstIssue.messageKey) : undefined;
 });
 
@@ -185,8 +187,8 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
 
       <WorkflowTeamRoster
         v-if="teamConfig"
-        :node-id="props.id"
         :config="teamConfig"
+        :issues="props.issues"
       />
     </NodeContent>
 

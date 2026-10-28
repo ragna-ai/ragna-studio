@@ -31,7 +31,6 @@ import {
   validateDraft,
 } from '~/features/workflow/lib/validate-draft';
 import type { Workflow } from '~/features/workflow/types';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
 
 // Imports
 
@@ -95,7 +94,6 @@ const knownAgentIds = computed(() => getCompleteAgentIds(agentsData.value));
 const validation = computed(() =>
   validateDraft(draftDefinition.value, knownAgentIds.value),
 );
-provide(WORKFLOW_VALIDATION_KEY, validation);
 
 // Functions
 function addNode(type: WorkflowNodeType) {
@@ -144,13 +142,13 @@ function isBlocked(isAllowed: boolean): boolean {
   if (isAllowed) {
     return false;
   }
-  const { messageKey, count } = getBlockingMessage(validation.value);
-  toast.error(t(messageKey, { count }, count));
-  selectFirstInvalidNode();
+  showWhyBlocked();
   return true;
 }
 
-function selectFirstInvalidNode() {
+function showWhyBlocked() {
+  const { messageKey, count } = getBlockingMessage(validation.value);
+  toast.error(t(messageKey, { count }, count));
   const nodeId = getFirstInvalidNodeId(validation.value);
   if (nodeId) {
     selectedNodeId.value = nodeId;
@@ -269,6 +267,7 @@ async function handlePublish() {
         <WorkflowCanvas
           v-model:nodes="nodes"
           v-model:edges="edges"
+          :node-issues="validation.nodeIssues"
           @select-node="selectedNodeId = $event"
         />
       </div>
@@ -285,6 +284,7 @@ async function handlePublish() {
         v-else-if="selectedNode"
         :key="selectedNode.id"
         :node="selectedNode"
+        :issues="validation.nodeIssues.get(selectedNode.id) ?? []"
         @delete="deleteSelectedNode"
         @close="selectedNodeId = null"
       />
@@ -294,7 +294,8 @@ async function handlePublish() {
       v-model:open="isRunDialogOpen"
       :workflow="workflow"
       :draft-definition="draftDefinition"
-      @publish-blocked="selectFirstInvalidNode"
+      :can-publish="validation.canPublish"
+      @publish-blocked="showWhyBlocked"
     />
     <WorkflowRunsList
       v-model:open="isRunsListOpen"

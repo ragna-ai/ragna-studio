@@ -7,7 +7,7 @@ import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplat
 import { getAgentSlotLabel } from '~/features/workflow/lib/agent-slot';
 import { findFieldIssue } from '~/features/workflow/lib/validate-draft';
 import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 
 // Imports
 
@@ -19,11 +19,11 @@ const MAX_MEMBERS = 5;
 // narrowed node (and therefore its config) is guaranteed to be TeamConfig.
 const props = defineProps<{
   node: Extract<WorkflowNode, { type: 'team' }>;
+  issues: readonly WorkflowFieldIssue[];
 }>();
 
 // Composables
 const { data: agentsData, isLoading: isLoadingAgents } = useGetAllAgents();
-const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Computed
@@ -34,9 +34,6 @@ const canAddMember = computed(() => members.value.length < MAX_MEMBERS);
 const canRemoveMember = computed(() => members.value.length > MIN_MEMBERS);
 
 // Functions
-function fieldIssue(field: string) {
-  return findFieldIssue(validation?.value, props.node.id, field);
-}
 
 function memberLabel(agentId: string) {
   return getAgentSlotLabel(agentId, agentsData.value, t);
@@ -72,7 +69,7 @@ function removeMember(index: number) {
         <Select v-model="node.data.config.leadAgentId">
           <SelectTrigger
             class="w-full"
-            :aria-invalid="!!fieldIssue('leadAgentId')"
+            :aria-invalid="!!findFieldIssue(issues, 'leadAgentId')"
           >
             <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
           </SelectTrigger>
@@ -89,7 +86,7 @@ function removeMember(index: number) {
         <p v-if="isLoadingAgents" class="mt-1 text-xs text-muted-foreground">
           {{ t('workflow.agentPicker.loading') }}
         </p>
-        <WorkflowFieldError :issue="fieldIssue('leadAgentId')" />
+        <WorkflowFieldError :issues="issues" field="leadAgentId" />
       </div>
 
       <div>
@@ -97,7 +94,7 @@ function removeMember(index: number) {
           t('common.prompt')
         }}</Label>
         <Textarea v-model="node.data.config.prompt" rows="6" />
-        <WorkflowFieldError :issue="fieldIssue('prompt')" />
+        <WorkflowFieldError :issues="issues" field="prompt" />
         <WorkflowTemplateHint class="mt-1" />
       </div>
     </section>
@@ -161,7 +158,9 @@ function removeMember(index: number) {
               <Select v-model="member.agentId">
                 <SelectTrigger
                   class="w-full"
-                  :aria-invalid="!!fieldIssue(`members.${index}.agentId`)"
+                  :aria-invalid="
+                    !!findFieldIssue(issues, `members.${index}.agentId`)
+                  "
                 >
                   <SelectValue
                     :placeholder="t('workflow.agentPicker.placeholder')"
@@ -178,7 +177,8 @@ function removeMember(index: number) {
                 </SelectContent>
               </Select>
               <WorkflowFieldError
-                :issue="fieldIssue(`members.${index}.agentId`)"
+                :issues="issues"
+                :field="`members.${index}.agentId`"
               />
             </div>
 

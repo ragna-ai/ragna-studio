@@ -6,7 +6,7 @@ import WorkflowFieldError from '~/features/workflow/components/WorkflowFieldErro
 import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplateHint.vue';
 import { findFieldIssue } from '~/features/workflow/lib/validate-draft';
 import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
-import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 import { firstToUpperCase } from '~/lib/utils';
 
 // Props
@@ -14,11 +14,11 @@ import { firstToUpperCase } from '~/lib/utils';
 // narrowed node (and therefore its config) is guaranteed to be AgentConfig.
 const props = defineProps<{
   node: Extract<WorkflowNode, { type: 'agent' }>;
+  issues: readonly WorkflowFieldIssue[];
 }>();
 
 // Composables
 const { data: agentsData, isLoading: isLoadingAgents } = useGetAllAgents();
-const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Computed
@@ -31,11 +31,6 @@ const selectedAgent = computed(() =>
     (agent) => agent.id === props.node.data.config.agentId,
   ),
 );
-
-// Functions
-function fieldIssue(field: string) {
-  return findFieldIssue(validation?.value, props.node.id, field);
-}
 </script>
 
 <template>
@@ -45,7 +40,10 @@ function fieldIssue(field: string) {
         t(NODE_TYPE_LABEL_KEYS.agent)
       }}</Label>
       <Select v-model="node.data.config.agentId">
-        <SelectTrigger class="w-full" :aria-invalid="!!fieldIssue('agentId')">
+        <SelectTrigger
+          class="w-full"
+          :aria-invalid="!!findFieldIssue(issues, 'agentId')"
+        >
           <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
         </SelectTrigger>
         <SelectContent>
@@ -61,7 +59,7 @@ function fieldIssue(field: string) {
       <p v-if="isLoadingAgents" class="mt-1 text-xs text-muted-foreground">
         {{ t('workflow.agentPicker.loading') }}
       </p>
-      <WorkflowFieldError :issue="fieldIssue('agentId')" />
+      <WorkflowFieldError :issues="issues" field="agentId" />
     </div>
 
     <div
@@ -119,7 +117,7 @@ function fieldIssue(field: string) {
         t('common.prompt')
       }}</Label>
       <Textarea v-model="node.data.config.prompt" rows="6" />
-      <WorkflowFieldError :issue="fieldIssue('prompt')" />
+      <WorkflowFieldError :issues="issues" field="prompt" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
   </div>
