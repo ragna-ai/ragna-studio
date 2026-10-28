@@ -18,7 +18,7 @@ const props = defineProps<{
       v-if="props.state.meta.isValidating"
       class="block pt-2 text-xs text-muted-foreground"
     >
-      Validating...
+      {{ $t('common.validating') }}
     </span>
   </template>
 </template>

@@ -1,5 +1,11 @@
 {
   "common": {
+    "settings": "Einstellungen",
+    "descriptionPlaceholder": "Beschreibung hinzufügen...",
+    "dismissError": "Fehlermeldung schließen",
+    "validating": "Wird geprüft...",
+    "nameRequired": "Name ist erforderlich.",
+    "titleRequired": "Titel ist erforderlich.",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -27,6 +33,9 @@
     "generating": "Wird generiert…"
   },
   "nav": {
+    "helpMenu": {
+      "version": "App-Version: {version}"
+    },
     "home": "Dashboard",
     "workflows": "Workflows",
     "agents": "Agenten",
@@ -54,6 +63,12 @@
     }
   },
   "notification": {
+    "toast": {
+      "markReadFailed": "Benachrichtigung konnte nicht als gelesen markiert werden",
+      "markAllReadFailed": "Benachrichtigungen konnten nicht als gelesen markiert werden",
+      "deleteFailed": "Benachrichtigung konnte nicht gelöscht werden",
+      "deleteAllFailed": "Benachrichtigungen konnten nicht gelöscht werden"
+    },
     "workflowRunSucceeded": {
       "title": "Workflow abgeschlossen",
       "message": "„{name}“ wurde erfolgreich ausgeführt."
@@ -114,6 +129,10 @@
     }
   },
   "home": {
+    "favorites": {
+      "title": "Favoriten",
+      "startChat": "Chat starten"
+    },
     "title": "Dashboard",
     "titleWithName": "Willkommen, {name}",
     "subtitle": "Wie kann ich dir heute helfen?",
@@ -155,6 +174,21 @@
     }
   },
   "agent": {
+    "toast": {
+      "created": "Agent erstellt",
+      "createFailed": "Agent konnte nicht erstellt werden",
+      "updated": "Agent aktualisiert",
+      "updateFailed": "Agent konnte nicht aktualisiert werden",
+      "memoryUpdated": "Erinnerungen aktualisiert",
+      "memoryUpdateFailed": "Erinnerungen konnten nicht aktualisiert werden",
+      "deleted": "Agent gelöscht",
+      "deleteFailed": "Agent konnte nicht gelöscht werden",
+      "documentsUploadFailed": "Dokumente konnten nicht hochgeladen werden",
+      "documentRenameFailed": "Dokument konnte nicht umbenannt werden",
+      "documentReplaceFailed": "Dokument konnte nicht ersetzt werden",
+      "documentRetryFailed": "Dokument konnte nicht erneut verarbeitet werden",
+      "documentDeleteFailed": "Dokument konnte nicht gelöscht werden"
+    },
     "list": {
       "title": "KI-Agenten",
       "subtitle": "Liste aller KI-Agenten, die du erstellt hast.",
@@ -330,6 +364,25 @@
     }
   },
   "chat": {
+    "toast": {
+      "createFailed": "Chat konnte nicht erstellt werden",
+      "branchFailed": "Chat konnte nicht abgezweigt werden",
+      "renameFailed": "Chat konnte nicht umbenannt werden",
+      "deleted": "Chat gelöscht",
+      "deleteFailed": "Chat konnte nicht gelöscht werden"
+    },
+    "deleteConfirm": {
+      "title": "Chat löschen",
+      "message": "Möchtest du diesen Chat wirklich löschen?"
+    },
+    "view": {
+      "loadError": "Beim Laden des Chats ist ein Fehler aufgetreten.",
+      "historyLoadError": "Beim Laden des Chat-Verlaufs ist ein Fehler aufgetreten.",
+      "loading": "Chat wird geladen..."
+    },
+    "toolCall": {
+      "generatedImage": "Generiertes Bild"
+    },
     "new": {
       "title": "Chat"
     },
@@ -410,6 +463,20 @@
     }
   },
   "workflow": {
+    "toast": {
+      "created": "Workflow erstellt",
+      "createFailed": "Workflow konnte nicht erstellt werden",
+      "saved": "Workflow gespeichert",
+      "saveFailed": "Workflow konnte nicht gespeichert werden",
+      "deleted": "Workflow gelöscht",
+      "deleteFailed": "Workflow konnte nicht gelöscht werden",
+      "published": "Workflow veröffentlicht",
+      "publishFailed": "Workflow konnte nicht veröffentlicht werden",
+      "runStartFailed": "Ausführung konnte nicht gestartet werden",
+      "runCancelled": "Ausführung abgebrochen",
+      "runCancelFailed": "Ausführung konnte nicht abgebrochen werden",
+      "cycleConnection": "Diese Verbindung würde eine Schleife erzeugen"
+    },
     "list": {
       "title": "Workflows",
       "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
@@ -586,6 +653,11 @@
     }
   },
   "imagen": {
+    "toast": {
+      "generateFailed": "Bilder konnten nicht generiert werden",
+      "referenceUploadFailed": "Referenzbild konnte nicht hochgeladen werden",
+      "deleteFailed": "Bild konnte nicht gelöscht werden"
+    },
     "title": "Text zu Bild",
     "form": {
       "promptPlaceholder": "Beschreibe das Bild, das du generieren möchtest...",
@@ -638,6 +710,12 @@
     }
   },
   "videogen": {
+    "toast": {
+      "generateFailed": "Video konnte nicht generiert werden",
+      "enhanceFailed": "Verbesserung konnte nicht angefordert werden",
+      "frameUploadFailed": "Frame-Bild konnte nicht hochgeladen werden",
+      "deleteFailed": "Video konnte nicht gelöscht werden"
+    },
     "title": "Text zu Video",
     "form": {
       "promptPlaceholder": "Beschreibe das Video, das du generieren möchtest...",
@@ -688,6 +766,7 @@
     }
   },
   "credit": {
+    "outOfCredits": "Du hast keine Credits mehr. Dein Guthaben findest du im Kontomenü.",
     "usage": {
       "title": "Guthabennutzung",
       "subtitle": "Wofür deine Credits ausgegeben wurden.",
@@ -710,6 +789,14 @@
     }
   },
   "user": {
+    "toast": {
+      "profileUpdated": "Profil aktualisiert",
+      "profileUpdateFailed": "Profil konnte nicht aktualisiert werden"
+    },
+    "validation": {
+      "nameMinLength": "Der Name muss mindestens 4 Zeichen lang sein.",
+      "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein."
+    },
     "tabs": {
       "profile": "Profil",
       "accounts": "Verbundene Konten",
@@ -752,6 +839,9 @@
     }
   },
   "social": {
+    "validation": {
+      "contentRequired": "Der Inhalt des Posts darf nicht leer sein."
+    },
     "list": {
       "title": "Social Posts",
       "subtitle": "Entwürfe ansehen und auf LinkedIn veröffentlichen.",
@@ -817,6 +907,19 @@
     }
   },
   "dataset": {
+    "toast": {
+      "created": "Datensatz erstellt",
+      "createFailed": "Datensatz konnte nicht erstellt werden",
+      "saved": "Datensatz gespeichert",
+      "saveFailed": "Datensatz konnte nicht gespeichert werden",
+      "deleted": "Datensatz gelöscht",
+      "deleteFailed": "Datensatz konnte nicht gelöscht werden",
+      "rowAddFailed": "Zeile konnte nicht hinzugefügt werden",
+      "rowUpdateFailed": "Zeile konnte nicht aktualisiert werden",
+      "rowDeleteFailed": "Zeile konnte nicht gelöscht werden",
+      "rowMoveFailed": "Zeile konnte nicht verschoben werden",
+      "exportFailed": "Datensatz konnte nicht exportiert werden"
+    },
     "list": {
       "title": "Datensätze",
       "subtitle": "Strukturierte Tabellen, die du und deine Agenten lesen und bearbeiten können.",
@@ -990,6 +1093,13 @@
     }
   },
   "document": {
+    "toast": {
+      "createFailed": "Dokument konnte nicht erstellt werden",
+      "saveFailed": "Dokument konnte nicht gespeichert werden",
+      "deleted": "Dokument gelöscht",
+      "deleteFailed": "Dokument konnte nicht gelöscht werden",
+      "exportFailed": "Dokument konnte nicht exportiert werden"
+    },
     "list": {
       "title": "Dokumente",
       "subtitle": "Notizen, die du und deine Agenten erstellen und bearbeiten könnt.",
@@ -1036,6 +1146,14 @@
     }
   },
   "folder": {
+    "toast": {
+      "created": "Ordner erstellt",
+      "createFailed": "Ordner konnte nicht erstellt werden",
+      "renamed": "Ordner umbenannt",
+      "renameFailed": "Ordner konnte nicht umbenannt werden",
+      "deleted": "Ordner gelöscht",
+      "deleteFailed": "Ordner konnte nicht gelöscht werden"
+    },
     "manage": {
       "title": "Ordner",
       "description": "Gruppiere Dokumente in Ordnern.",
@@ -1099,6 +1217,22 @@
     }
   },
   "task": {
+    "toast": {
+      "createFailed": "Aufgabe konnte nicht erstellt werden",
+      "saveFailed": "Aufgabe konnte nicht gespeichert werden",
+      "moveFailed": "Aufgabe konnte nicht verschoben werden",
+      "deleted": "Aufgabe gelöscht",
+      "deleteFailed": "Aufgabe konnte nicht gelöscht werden",
+      "labelCreated": "Label erstellt",
+      "labelCreateFailed": "Label konnte nicht erstellt werden",
+      "labelUpdated": "Label aktualisiert",
+      "labelUpdateFailed": "Label konnte nicht aktualisiert werden",
+      "labelDeleted": "Label gelöscht",
+      "labelDeleteFailed": "Label konnte nicht gelöscht werden"
+    },
+    "validation": {
+      "colorInvalid": "Muss eine Hex-Farbe sein, z. B. #4287f5."
+    },
     "list": {
       "title": "Aufgaben",
       "subtitle": "Plane und verfolge Arbeit auf einem Linear-artigen Board.",
@@ -1213,6 +1347,45 @@
     }
   },
   "email": {
+    "toast": {
+      "settingsUpdated": "E-Mail-Einstellungen aktualisiert",
+      "settingsUpdateFailed": "E-Mail-Einstellungen konnten nicht aktualisiert werden",
+      "syncStartFailed": "Synchronisierung konnte nicht gestartet werden",
+      "mailboxDisconnected": "Postfach getrennt",
+      "mailboxDisconnectFailed": "Postfach konnte nicht getrennt werden",
+      "senderAdded": "Absender hinzugefügt",
+      "senderAddFailed": "Absender konnte nicht hinzugefügt werden",
+      "senderRemoved": "Absender entfernt",
+      "senderRemoveFailed": "Absender konnte nicht entfernt werden",
+      "categoryCreated": "Kategorie erstellt",
+      "categoryCreateFailed": "Kategorie konnte nicht erstellt werden",
+      "categoryUpdateFailed": "Kategorie konnte nicht aktualisiert werden",
+      "categoryDeleted": "Kategorie gelöscht",
+      "categoryDeleteFailed": "Kategorie konnte nicht gelöscht werden",
+      "draftCreateFailed": "Entwurf konnte nicht erstellt werden",
+      "draftSaveFailed": "Entwurf konnte nicht gespeichert werden",
+      "draftDiscardFailed": "Entwurf konnte nicht verworfen werden",
+      "sent": "E-Mail gesendet",
+      "sendFailed": "Entwurf konnte nicht gesendet werden",
+      "replyDraftFailed": "Antwortentwurf konnte nicht gestartet werden",
+      "messageArchiveFailed": "Nachricht konnte nicht archiviert werden",
+      "messageTrashFailed": "Nachricht konnte nicht in den Papierkorb verschoben werden",
+      "starFailed": "Markierung konnte nicht geändert werden",
+      "readStatusFailed": "Lesestatus konnte nicht geändert werden",
+      "attachmentDownloadFailed": "Anhang konnte nicht heruntergeladen werden",
+      "threadArchiveFailed": "Unterhaltung konnte nicht archiviert werden",
+      "threadTrashFailed": "Unterhaltung konnte nicht in den Papierkorb verschoben werden",
+      "threadRestoreFailed": "Unterhaltung konnte nicht wiederhergestellt werden",
+      "threadsTrashFailed": "Die ausgewählten Unterhaltungen konnten nicht in den Papierkorb verschoben werden",
+      "connectStartFailed": "Verbindung zu {provider} konnte nicht gestartet werden",
+      "reconnectStartFailed": "Erneute Verbindung zu {provider} konnte nicht gestartet werden",
+      "connected": "{provider} verbunden",
+      "reconnected": "{provider} erneut verbunden",
+      "connectFailed": "Verbindung zu {provider} fehlgeschlagen. Versuche, sie erneut herzustellen"
+    },
+    "content": {
+      "iframeTitle": "E-Mail-Inhalt"
+    },
     "pageTitle": "E-Mail",
     "privateWorkspace": {
       "title": "Mail liegt in deinem privaten Workspace",
@@ -1390,6 +1563,10 @@
     }
   },
   "mcp": {
+    "toast": {
+      "settingsSaveFailed": "MCP-Einstellungen konnten nicht gespeichert werden",
+      "revokeFailed": "Verbindung konnte nicht widerrufen werden"
+    },
     "settings": {
       "title": "MCP",
       "subtitle": "Erlaube externen KI-Apps wie Claude Desktop, auf deine Daten zuzugreifen.",
@@ -1467,6 +1644,7 @@
     }
   },
   "organization": {
+    "requestFailed": "Anfrage fehlgeschlagen",
     "title": "Organisation",
     "subtitle": "Verwalte deine Organisation, ihre Mitglieder und Einladungen.",
     "loadError": "Die Organisation konnte nicht geladen werden.",
@@ -1583,6 +1761,21 @@
       "join": "Als Manager beitreten",
       "joined": "Du bist als Manager beigetreten.",
       "joinError": "Beitritt zum Arbeitsbereich fehlgeschlagen."
+    }
+  },
+  "pagination": {
+    "label": "Seitennavigation",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "goToPage": "Gehe zu Seite {page}",
+    "itemsPerPage": "Einträge pro Seite",
+    "perPage": "pro Seite",
+    "entries": "{count} von {total} Einträgen"
+  },
+  "aimodel": {
+    "selector": {
+      "loadError": "KI-Modelle konnten nicht geladen werden.",
+      "placeholder": "KI-Modell auswählen"
     }
   }
 }

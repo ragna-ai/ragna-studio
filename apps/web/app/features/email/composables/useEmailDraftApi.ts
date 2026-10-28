@@ -229,7 +229,7 @@ export function extractConflictingDraft(error: unknown): EmailDraft | null {
  * recover the existing draft and handle it themselves.
  */
 export function useCreateEmailDraft() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, CreateEmailDraftRequest>({
     mutationFn: (body) =>
@@ -241,7 +241,9 @@ export function useCreateEmailDraft() {
       }),
     onError: (error) => {
       if (extractConflictingDraft(error)) return;
-      toast.error(extractErrorMessage(error, 'Failed to create draft'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.draftCreateFailed')),
+      );
     },
   });
 }
@@ -262,7 +264,7 @@ interface UpdateEmailDraftVariables extends UpdateEmailDraftRequest {
  * sends just `{ cc }`.
  */
 export function useUpdateEmailDraft() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, UpdateEmailDraftVariables>({
     mutationFn: ({ draftId, threadId: _threadId, ...patch }) =>
@@ -273,7 +275,9 @@ export function useUpdateEmailDraft() {
     onSuccess: (_, { draftId, threadId }) =>
       invalidateDraftQueries(queryClient, { draftId, threadId }),
     onError: (error) =>
-      toast.error(extractErrorMessage(error, 'Failed to save draft')),
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.draftSaveFailed')),
+      ),
   });
 }
 
@@ -285,7 +289,7 @@ interface DiscardEmailDraftVariables {
 
 /** [POST] /email/draft/:draftId/discard */
 export function useDiscardEmailDraft() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<EmailDraftResponse, unknown, DiscardEmailDraftVariables>({
     mutationFn: ({ draftId }) =>
@@ -307,7 +311,9 @@ export function useDiscardEmailDraft() {
       );
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, 'Failed to discard draft')),
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.draftDiscardFailed')),
+      ),
     onSettled: (_, __, { draftId, threadId }) =>
       invalidateDraftQueries(queryClient, { draftId, threadId }),
   });
@@ -325,7 +331,7 @@ interface SendEmailDraftMutationVariables extends SendEmailDraftVariables {
 
 /** [POST] /email/draft/:draftId/send - same multipart shape as /email/send. */
 export function useSendEmailDraft() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<
     SendEmailResponse,
@@ -346,10 +352,12 @@ export function useSendEmailDraft() {
         queryKey: emailKeys.thread(result.threadId),
       });
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
-      toast.success('Email sent');
+      toast.success($i18n.t('email.toast.sent'));
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, 'Failed to send draft')),
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.sendFailed')),
+      ),
   });
 }
 
@@ -363,7 +371,7 @@ export function useSendEmailDraft() {
  * shape, not `void`.
  */
 export function useTriggerEmailDraft() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, TriggerEmailDraftRequest>({
     mutationFn: (body) =>
@@ -378,7 +386,7 @@ export function useTriggerEmailDraft() {
     onError: (error, { threadId }) => {
       clearDraftTriggerPending(threadId);
       toast.error(
-        extractErrorMessage(error, 'Failed to start drafting a reply'),
+        extractErrorMessage(error, $i18n.t('email.toast.replyDraftFailed')),
       );
     },
   });

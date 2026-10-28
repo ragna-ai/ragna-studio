@@ -43,7 +43,7 @@ export function useGetNotificationList(open: MaybeRefOrGetter<boolean> = true) {
 }
 
 export function useMarkReadNotification() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<NotificationResponse, unknown, string>({
     mutationFn: (notificationId) =>
@@ -58,14 +58,17 @@ export function useMarkReadNotification() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, 'Failed to mark notification as read'),
+        extractErrorMessage(
+          error,
+          $i18n.t('notification.toast.markReadFailed'),
+        ),
       );
     },
   });
 }
 
 export function useMarkAllReadNotification() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ count: number }, unknown, void>({
     mutationFn: () =>
@@ -78,14 +81,17 @@ export function useMarkAllReadNotification() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, 'Failed to mark all notifications as read'),
+        extractErrorMessage(
+          error,
+          $i18n.t('notification.toast.markAllReadFailed'),
+        ),
       );
     },
   });
 }
 
 export function useDeleteNotification() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, unknown, string>({
     mutationFn: (notificationId) =>
@@ -99,13 +105,15 @@ export function useDeleteNotification() {
       queryClient.invalidateQueries({ queryKey: notificationKeys.list() });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete notification'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('notification.toast.deleteFailed')),
+      );
     },
   });
 }
 
 export function useDeleteAllNotifications() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<{ count: number }, unknown, void>({
     mutationFn: () =>
@@ -118,7 +126,10 @@ export function useDeleteAllNotifications() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, 'Failed to delete all notifications'),
+        extractErrorMessage(
+          error,
+          $i18n.t('notification.toast.deleteAllFailed'),
+        ),
       );
     },
   });

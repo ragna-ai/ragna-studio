@@ -17,13 +17,6 @@ import type { TaskLabel } from '~/features/task/types';
 
 const DEFAULT_COLOR = '#78716c';
 
-const createLabelSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }),
-  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
-    message: 'Must be a hex color, e.g. #4287f5.',
-  }),
-});
-
 // Props
 const props = defineProps<{ labels: TaskLabel[] }>();
 
@@ -41,6 +34,13 @@ const { mutateAsync: updateTaskLabel, isPending: isRenaming } =
 const { mutateAsync: deleteTaskLabel } = useDeleteTaskLabel();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
+
+const createLabelSchema = z.object({
+  name: z.string().min(1, { message: t('common.nameRequired') }),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
+    message: t('task.validation.colorInvalid'),
+  }),
+});
 
 const createForm = useForm({
   defaultValues: { name: '', color: DEFAULT_COLOR },

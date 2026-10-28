@@ -17,7 +17,7 @@ const hasFavoriteAssistants = computed(
   <div v-if="hasFavoriteAssistants" class="flex flex-col">
     <div class="flex items-center space-x-2 pb-4">
       <StarIcon class="size-5 stroke-1.5" />
-      <h2 class="text-2xl font-semibold">Favorites</h2>
+      <h2 class="text-2xl font-semibold">{{ $t('home.favorites.title') }}</h2>
     </div>
     <div class="flex flex-wrap gap-4 pb-4">
       <div
@@ -33,7 +33,7 @@ const hasFavoriteAssistants = computed(
           <button
             class="self-start rounded-lg border px-2 py-1 text-xs hover:bg-stone-200"
           >
-            Start Chat
+            {{ $t('home.favorites.startChat') }}
           </button>
         </div>
       </div>

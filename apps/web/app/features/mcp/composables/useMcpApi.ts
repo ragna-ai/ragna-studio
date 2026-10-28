@@ -42,7 +42,7 @@ export function useGetMcpSettings(options: QueryOpts = {}) {
 }
 
 export function useUpdateMcpSettings() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<McpSettingsResponse, unknown, UpdateMcpSettingsRequest>({
     mutationFn: (body) =>
@@ -52,7 +52,9 @@ export function useUpdateMcpSettings() {
       queryClient.invalidateQueries({ queryKey: mcpKeys.connections });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to save MCP settings'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('mcp.toast.settingsSaveFailed')),
+      );
     },
   });
 }
@@ -87,7 +89,7 @@ export function useCreateMcpConnection() {
 }
 
 export function useRevokeMcpConnection() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (connectionId) =>
@@ -98,7 +100,7 @@ export function useRevokeMcpConnection() {
       queryClient.invalidateQueries({ queryKey: mcpKeys.connections });
     },
     onError: () => {
-      toast.error('Failed to revoke connection');
+      toast.error($i18n.t('mcp.toast.revokeFailed'));
     },
   });
 }

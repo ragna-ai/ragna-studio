@@ -17,17 +17,17 @@ const TASK_TRACKER_COLUMNS: DatasetColumn[] = [
   },
 ];
 
-const datasetCreateSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }),
-  description: z.string(),
-});
-
 // Refs
 const preset = ref<DatasetPreset>('empty');
 
 // Composables
 const { isPending, mutateAsync } = useCreateDataset();
 const { t } = useI18n();
+
+const datasetCreateSchema = z.object({
+  name: z.string().min(1, { message: t('common.nameRequired') }),
+  description: z.string(),
+});
 
 useHead({
   title: t('dataset.create.title'),

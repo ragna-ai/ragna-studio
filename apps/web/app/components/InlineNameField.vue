@@ -20,9 +20,15 @@ const name = defineModel<string>('name', { required: true });
 const isEditing = ref(false);
 const formRef = useTemplateRef('formRef');
 
+// Composables
+const { t } = useI18n();
+
 // Functions
 const nameSchema = z.object({
-  name: z.string().trim().min(1, { message: 'Name is required.' }),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: t('common.nameRequired') }),
 });
 
 const form = useForm({

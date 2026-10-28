@@ -25,7 +25,7 @@ import { useChatAttachments } from '~/features/chat/composables/useChatAttachmen
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import type { ChatAgent } from '~/features/chat/types';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
-import { isOutOfCreditsError, OUT_OF_CREDITS_MESSAGE } from '~/lib/api-error';
+import { isOutOfCreditsError } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -45,6 +45,7 @@ const chatId = ref(props.chatId ?? null);
 const inputText = ref('');
 
 // Composables
+const { t } = useI18n();
 const { mutateAsync: createNewChat } = useCreateChat();
 const invalidateCreditBalance = useInvalidateCreditBalance();
 const chatAttachments = useChatAttachments(ensureChat);
@@ -142,7 +143,7 @@ const { messages, sendMessage, status, error, stop } = useChat({
   // `error.message` rendering below.
   onError: (streamError) => {
     if (isOutOfCreditsError(streamError)) {
-      toast.error(OUT_OF_CREDITS_MESSAGE);
+      toast.error(t('credit.outOfCredits'));
     }
   },
 });

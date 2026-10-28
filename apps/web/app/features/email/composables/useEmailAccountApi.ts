@@ -57,7 +57,7 @@ export function useGetEmailAccount(options: QueryOpts = {}) {
 }
 
 export function useUpdateEmailAccountSettings() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<
     UpdateEmailAccountSettingsResponse,
@@ -71,11 +71,11 @@ export function useUpdateEmailAccountSettings() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.account() });
-      toast.success('Email settings updated');
+      toast.success($i18n.t('email.toast.settingsUpdated'));
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, 'Failed to update email settings'),
+        extractErrorMessage(error, $i18n.t('email.toast.settingsUpdateFailed')),
       );
     },
   });
@@ -94,7 +94,7 @@ export function useUpdateEmailAccountSettings() {
  * from the account query's own polling.
  */
 export function useSyncEmailAccount() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<SyncEmailAccountResponse, unknown, void>({
     mutationFn: () =>
@@ -115,23 +115,30 @@ export function useSyncEmailAccount() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to start syncing'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.syncStartFailed')),
+      );
     },
   });
 }
 
 export function useDisconnectEmailAccount() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, void>({
     mutationFn: () =>
       $api<void>('/email/account/disconnect', { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email'] });
-      toast.success('Mailbox disconnected');
+      toast.success($i18n.t('email.toast.mailboxDisconnected'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to disconnect mailbox'));
+      toast.error(
+        extractErrorMessage(
+          error,
+          $i18n.t('email.toast.mailboxDisconnectFailed'),
+        ),
+      );
     },
   });
 }

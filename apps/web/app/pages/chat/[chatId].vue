@@ -74,13 +74,13 @@ onScopeDispose(() => chatStore.setChat());
     class="flex h-full w-full items-center justify-center"
   >
     <p class="text-sm text-stone-500">
-      {{ chatError.message || 'An error occurred while fetching the chat.' }}
+      {{ chatError.message || t('chat.view.loadError') }}
     </p>
   </div>
   <div
     v-if="loadingTakesLonger"
     class="flex h-full w-full items-center justify-center"
   >
-    <Shimmer class="h-6 w-48"> Loading chat... </Shimmer>
+    <Shimmer class="h-6 w-48"> {{ t('chat.view.loading') }} </Shimmer>
   </div>
 </template>

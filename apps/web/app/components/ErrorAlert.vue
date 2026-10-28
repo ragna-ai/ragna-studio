@@ -26,7 +26,7 @@ const { error, clearError } = useErrorAlert();
         variant="ghost"
         size="icon"
         class="size-6 text-destructive hover:bg-destructive/20 hover:text-destructive"
-        aria-label="Dismiss error"
+        :aria-label="$t('common.dismissError')"
         @click="clearError"
       >
         <XIcon class="size-4" />

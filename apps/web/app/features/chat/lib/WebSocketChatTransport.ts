@@ -110,7 +110,10 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
         case 'error': {
           const payload = frame.payload as ChatErrorFramePayload | undefined;
           const error: ChatStreamError = Object.assign(
-            new Error(payload?.message ?? 'Chat stream error'),
+            new Error(
+              payload?.message ??
+                useNuxtApp().$i18n.t('chat.conversation.errors.generic'),
+            ),
             { code: payload?.code },
           );
           settleAck?.(error);

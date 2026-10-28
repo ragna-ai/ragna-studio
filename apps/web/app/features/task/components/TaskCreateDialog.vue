@@ -5,19 +5,19 @@ import { useCreateTask } from '~/features/task/composables/useTaskApi';
 import { isTaskStatus, STATUS_COLUMNS } from '~/features/task/lib/task-display';
 import { TASK_STATUSES, type TaskStatus } from '~/features/task/types';
 
-// z.enum over the same tuple TaskStatus is derived from (types/index.ts), so
-// the schema's output type IS TaskStatus, not a widened `string`.
-const createTaskSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required.' }),
-  status: z.enum(TASK_STATUSES),
-});
-
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 
 // Composables
 const { mutateAsync: createTask, isPending } = useCreateTask();
 const { t } = useI18n();
+
+// z.enum over the same tuple TaskStatus is derived from (types/index.ts), so
+// the schema's output type IS TaskStatus, not a widened `string`.
+const createTaskSchema = z.object({
+  title: z.string().min(1, { message: t('common.titleRequired') }),
+  status: z.enum(TASK_STATUSES),
+});
 
 const form = useForm({
   defaultValues: { title: '', status: 'backlog' as TaskStatus },

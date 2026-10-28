@@ -25,10 +25,10 @@ const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
 // Functions
 const handleDeleteChat = async (chatId: string) => {
   const confirmed = await confirm({
-    title: 'Delete Chat',
-    message: 'Are you sure you want to delete this chat?',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    title: t('chat.deleteConfirm.title'),
+    message: t('chat.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
     variant: 'destructive',
   });
   if (!confirmed) {
@@ -68,10 +68,7 @@ const handleDeleteChat = async (chatId: string) => {
     </div>
     <div v-else-if="chatsError">
       <p class="text-sm text-stone-500">
-        {{
-          chatsError.message ||
-          'An error occurred while fetching the chat history.'
-        }}
+        {{ chatsError.message || $t('chat.view.historyLoadError') }}
       </p>
     </div>
   </SectionWrapper>

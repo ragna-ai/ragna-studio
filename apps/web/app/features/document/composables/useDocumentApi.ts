@@ -68,7 +68,7 @@ export function useGetDocument(
 }
 
 export function useCreateDocument() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, CreateDocumentRequest>({
@@ -83,7 +83,9 @@ export function useCreateDocument() {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to create document'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('document.toast.createFailed')),
+      );
     },
   });
 }
@@ -99,7 +101,7 @@ interface UpdateDocumentVariables extends UpdateDocumentRequest {
  * pass their own `onSuccess` to `mutate()` to surface one.
  */
 export function useUpdateDocument() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, UpdateDocumentVariables>({
@@ -121,13 +123,15 @@ export function useUpdateDocument() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to save document'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('document.toast.saveFailed')),
+      );
     },
   });
 }
 
 export function useDeleteDocument() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -139,10 +143,12 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.all(workspaceId),
       });
-      toast.success('Document deleted');
+      toast.success($i18n.t('document.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete document'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('document.toast.deleteFailed')),
+      );
     },
   });
 }
@@ -161,7 +167,7 @@ export function useExportDocument(
   documentId: MaybeRefOrGetter<string>,
   documentTitle: MaybeRefOrGetter<string>,
 ) {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useMutation<void, unknown, ExportDocumentVariables>({
     mutationFn: async ({ format }) => {
@@ -183,7 +189,7 @@ export function useExportDocument(
       downloadBlob(response._data, filename);
     },
     onError: () => {
-      toast.error('Failed to export document');
+      toast.error($i18n.t('document.toast.exportFailed'));
     },
   });
 }

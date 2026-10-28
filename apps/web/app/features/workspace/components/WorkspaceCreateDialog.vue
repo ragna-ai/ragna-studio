@@ -6,18 +6,21 @@ import { useCreateWorkspace } from '~/features/workspace/composables/useWorkspac
 import { primaryIdSchema } from '~/lib/schema';
 import type { CreateWorkspaceInput } from '~/features/workspace/types';
 
-const createWorkspaceSchema = z.object({
-  name: z.string().trim().min(1, { message: 'Name is required.' }),
-  visibility: z.enum(['organization', 'restricted']),
-  memberUserIds: z.array(primaryIdSchema),
-});
-
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 
 // Composables
 const { mutateAsync: createWorkspace, isPending } = useCreateWorkspace();
 const { t } = useI18n();
+
+const createWorkspaceSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: t('common.nameRequired') }),
+  visibility: z.enum(['organization', 'restricted']),
+  memberUserIds: z.array(primaryIdSchema),
+});
 
 const form = useForm({
   defaultValues: {
