@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/vue-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import type {
   AgentContextDocumentManyResponse,
@@ -35,7 +40,10 @@ function agentBasePath(workspaceId: WorkspaceId): string {
   return `/workspace/${toValue(workspaceId)}/agent`;
 }
 
-export function useGetAgent(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
+export function useGetAgent(
+  agentId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentResponse>({
@@ -77,7 +85,8 @@ export function useCreateAgent() {
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, CreateAgentRequest>({
-    mutationFn: (body) => $api<AgentResponse>(agentBasePath(workspaceId), { method: 'POST', body }),
+    mutationFn: (body) =>
+      $api<AgentResponse>(agentBasePath(workspaceId), { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
       toast.success('Agent created');
@@ -115,16 +124,19 @@ export function useUpdateAgent() {
   });
 }
 
-export function useGetAgentMemory(agentId: MaybeRefOrGetter<string>, options: QueryOpts = {}) {
+export function useGetAgentMemory(
+  agentId: MaybeRefOrGetter<string>,
+  options: QueryOpts = {},
+) {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useQuery<AgentMemoryResponse>({
     queryKey: agentKeys.memory(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      $api<AgentMemoryResponse>(`${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`, {
-        method: 'GET',
-        signal,
-      }),
+      $api<AgentMemoryResponse>(
+        `${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`,
+        { method: 'GET', signal },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
   });
@@ -138,10 +150,10 @@ export function useUpdateAgentMemory() {
   const queryClient = useQueryClient();
   return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
     mutationFn: ({ agentId, content }) =>
-      $api<AgentMemoryResponse>(`${agentBasePath(workspaceId)}/${agentId}/memory`, {
-        method: 'PUT',
-        body: { content },
-      }),
+      $api<AgentMemoryResponse>(
+        `${agentBasePath(workspaceId)}/${agentId}/memory`,
+        { method: 'PUT', body: { content } },
+      ),
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({
         queryKey: agentKeys.memory(workspaceId, agentId),
@@ -178,7 +190,8 @@ export function useDeleteAgent() {
 // are rejected before a request is even sent.
 export const AGENT_CONTEXT_DOCUMENT_MAX_FILES = 25;
 export const AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-export const AGENT_CONTEXT_DOCUMENT_ACCEPT = '.pdf,.docx,.pptx,.xlsx,.csv,.txt,.md';
+export const AGENT_CONTEXT_DOCUMENT_ACCEPT =
+  '.pdf,.docx,.pptx,.xlsx,.csv,.txt,.md';
 
 // While any listed document is still 'pending', poll for its terminal
 // status. 'failed' is terminal and doesn't poll.
@@ -197,16 +210,18 @@ export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
   return useQuery<AgentContextDocumentManyResponse>({
     queryKey: agentKeys.documents(workspaceId, agentId),
     queryFn: ({ signal }) =>
-      $api<AgentContextDocumentManyResponse>(contextDocumentBasePath(workspaceId, agentId), {
-        method: 'GET',
-        signal,
-      }),
+      $api<AgentContextDocumentManyResponse>(
+        contextDocumentBasePath(workspaceId, agentId),
+        { method: 'GET', signal },
+      ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     refetchInterval: (query) => {
       const hasPendingDocument = query.state.data?.documents.some(
         (document) => document.status === 'pending',
       );
-      return hasPendingDocument ? AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS : false;
+      return hasPendingDocument
+        ? AGENT_CONTEXT_DOCUMENT_POLL_INTERVAL_MS
+        : false;
     },
   });
 }
@@ -228,10 +243,13 @@ export function useUploadAgentContextDocuments() {
     mutationFn: ({ agentId, files }) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
-      return $api<AgentContextDocumentManyResponse>(contextDocumentBasePath(workspaceId, agentId), {
-        method: 'POST',
-        body: formData,
-      });
+      return $api<AgentContextDocumentManyResponse>(
+        contextDocumentBasePath(workspaceId, agentId),
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
     },
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({
@@ -254,7 +272,11 @@ export function useRenameAgentContextDocument() {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentResponse, unknown, RenameAgentContextDocumentVariables>({
+  return useMutation<
+    AgentContextDocumentResponse,
+    unknown,
+    RenameAgentContextDocumentVariables
+  >({
     mutationFn: ({ agentId, documentId, name }) =>
       $api<AgentContextDocumentResponse>(
         `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`,
@@ -320,7 +342,11 @@ export function useRetryAgentContextDocument() {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
-  return useMutation<AgentContextDocumentResponse, unknown, AgentContextDocumentIdVariables>({
+  return useMutation<
+    AgentContextDocumentResponse,
+    unknown,
+    AgentContextDocumentIdVariables
+  >({
     mutationFn: ({ agentId, documentId }) =>
       $api<AgentContextDocumentResponse>(
         `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}/retry`,
@@ -345,9 +371,12 @@ export function useDeleteAgentContextDocument() {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, AgentContextDocumentIdVariables>({
     mutationFn: ({ agentId, documentId }) =>
-      $api<void>(`${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`, {
-        method: 'DELETE',
-      }),
+      $api<void>(
+        `${contextDocumentBasePath(workspaceId, agentId)}/${documentId}`,
+        {
+          method: 'DELETE',
+        },
+      ),
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({
         queryKey: agentKeys.documents(workspaceId, agentId),

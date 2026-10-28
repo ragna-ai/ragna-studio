@@ -1,6 +1,12 @@
 <script setup lang="ts">
 // Imports
-import { FileUpIcon, PencilIcon, RotateCcwIcon, Trash2Icon, UploadIcon } from '@lucide/vue';
+import {
+  FileUpIcon,
+  PencilIcon,
+  RotateCcwIcon,
+  Trash2Icon,
+  UploadIcon,
+} from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import {
   AGENT_CONTEXT_DOCUMENT_ACCEPT,
@@ -33,8 +39,11 @@ const renameValue = ref('');
 
 // Composables
 const { t } = useI18n();
-const { data, isPending: isLoading } = useGetAgentContextDocuments(() => props.agentId);
-const { isPending: isUploading, mutate: uploadDocuments } = useUploadAgentContextDocuments();
+const { data, isPending: isLoading } = useGetAgentContextDocuments(
+  () => props.agentId,
+);
+const { isPending: isUploading, mutate: uploadDocuments } =
+  useUploadAgentContextDocuments();
 const { mutate: renameDocument } = useRenameAgentContextDocument();
 const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile();
 const { mutate: retryDocument } = useRetryAgentContextDocument();
@@ -46,7 +55,9 @@ const { isOverDropZone } = useDropZone(dropZoneRef, {
 
 // Computed
 const maxFileSizeLabel = formatFileSize(AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES);
-const documents = computed<AgentContextDocument[]>(() => data.value?.documents ?? []);
+const documents = computed<AgentContextDocument[]>(
+  () => data.value?.documents ?? [],
+);
 const summaryText = computed<string | null>(() => {
   const summary = data.value?.summary;
   if (!summary) return null;
@@ -72,7 +83,9 @@ function formatFileSize(bytes: number): string {
 function uploadFiles(files: File[] | null) {
   if (!files || files.length === 0) return;
 
-  const oversizedFile = files.find((file) => file.size > AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES);
+  const oversizedFile = files.find(
+    (file) => file.size > AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,
+  );
   if (oversizedFile) {
     toast.error(
       t('agent.context.errors.fileTooLarge', {
@@ -83,7 +96,10 @@ function uploadFiles(files: File[] | null) {
     return;
   }
 
-  if (documents.value.length + files.length > AGENT_CONTEXT_DOCUMENT_MAX_FILES) {
+  if (
+    documents.value.length + files.length >
+    AGENT_CONTEXT_DOCUMENT_MAX_FILES
+  ) {
     toast.error(
       t('agent.context.errors.tooManyFiles', {
         max: AGENT_CONTEXT_DOCUMENT_MAX_FILES,
@@ -160,7 +176,10 @@ function handleDelete(document: AgentContextDocument) {
     <div v-if="isLoading" class="flex items-center justify-center py-8">
       <Spinner />
     </div>
-    <div v-else-if="documents.length === 0" class="text-sm text-muted-foreground">
+    <div
+      v-else-if="documents.length === 0"
+      class="text-sm text-muted-foreground"
+    >
       {{ $t('agent.context.empty') }}
     </div>
     <Table v-else>
@@ -193,7 +212,10 @@ function handleDelete(document: AgentContextDocument) {
               >
                 {{ document.name }}
               </button>
-              <p v-if="document.isTruncated" class="text-xs text-muted-foreground">
+              <p
+                v-if="document.isTruncated"
+                class="text-xs text-muted-foreground"
+              >
                 {{ $t('agent.context.truncated') }}
               </p>
             </template>
@@ -202,11 +224,15 @@ function handleDelete(document: AgentContextDocument) {
             {{ formatFileSize(document.fileSize) }}
           </TableCell>
           <TableCell>
-            <TooltipProvider v-if="document.status === 'failed' && document.errorMessage">
+            <TooltipProvider
+              v-if="document.status === 'failed' && document.errorMessage"
+            >
               <Tooltip>
                 <TooltipTrigger as-child>
                   <span>
-                    <AgentContextDocumentStatusBadge :status="document.status" />
+                    <AgentContextDocumentStatusBadge
+                      :status="document.status"
+                    />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -258,7 +284,10 @@ function handleDelete(document: AgentContextDocument) {
         </TableRow>
       </TableBody>
     </Table>
-    <p v-if="isUploading" class="flex items-center gap-2 text-sm text-muted-foreground">
+    <p
+      v-if="isUploading"
+      class="flex items-center gap-2 text-sm text-muted-foreground"
+    >
       <Spinner class="size-4" />
       {{ $t('agent.context.uploading') }}
     </p>

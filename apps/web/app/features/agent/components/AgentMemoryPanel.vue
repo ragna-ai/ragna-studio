@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { useGetAgentMemory, useUpdateAgentMemory } from '~/features/agent/composables/useAgentApi';
+import {
+  useGetAgentMemory,
+  useUpdateAgentMemory,
+} from '~/features/agent/composables/useAgentApi';
 
 type AgentMemoryPanelProps = {
   agentId: string;

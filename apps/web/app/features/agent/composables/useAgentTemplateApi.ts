@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import { agentKeys } from '~/features/agent/composables/useAgentApi';
-import type { AgentResponse, AgentTemplateManyResponse } from '~/features/agent/types';
+import type {
+  AgentResponse,
+  AgentTemplateManyResponse,
+} from '~/features/agent/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
 export const agentTemplateKeys = {
@@ -27,10 +30,13 @@ export function useCreateAgentFromTemplate() {
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, string>({
     mutationFn: (templateId) =>
-      $api<AgentResponse>(`/workspace/${toValue(workspaceId)}/agent/from-template`, {
-        method: 'POST',
-        body: { templateId },
-      }),
+      $api<AgentResponse>(
+        `/workspace/${toValue(workspaceId)}/agent/from-template`,
+        {
+          method: 'POST',
+          body: { templateId },
+        },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
     },

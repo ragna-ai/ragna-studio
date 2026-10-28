@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { MessageSquareIcon, MoreVerticalIcon, PencilIcon, StarIcon, Trash2Icon } from '@lucide/vue';
+import {
+  MessageSquareIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  StarIcon,
+  Trash2Icon,
+} from '@lucide/vue';
 import type { Agent } from '~/features/agent/types';
 import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
@@ -87,9 +93,16 @@ const handleDeleteFavorite = (agentId: string) => {
                 size="icon"
                 @click="() => handleDeleteFavorite(agent.id)"
               >
-                <StarIcon class="size-6! fill-blue-500 stroke-none stroke-1.5" />
+                <StarIcon
+                  class="size-6! fill-blue-500 stroke-none stroke-1.5"
+                />
               </Button>
-              <Button v-else variant="ghost" size="icon" @click="() => handleAddFavorite(agent.id)">
+              <Button
+                v-else
+                variant="ghost"
+                size="icon"
+                @click="() => handleAddFavorite(agent.id)"
+              >
                 <StarIcon class="size-5! stroke-stone-400 stroke-1.5" />
               </Button>
             </div>
@@ -107,15 +120,24 @@ const handleDeleteFavorite = (agentId: string) => {
             </div>
           </TableCell>
           <!-- Actions -->
-          <TableCell class="flex justify-end space-x-2 text-right whitespace-nowrap" @click.stop>
+          <TableCell
+            class="flex justify-end space-x-2 text-right whitespace-nowrap"
+            @click.stop
+          >
             <Button variant="outline" @click="() => handleNewChat(agent.id)">
               {{ t('agent.list.chat') }}
-              <MessageSquareIcon class="ml-2 size-4 shrink-0 stroke-1.5 text-primary" />
+              <MessageSquareIcon
+                class="ml-2 size-4 shrink-0 stroke-1.5 text-primary"
+              />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
-                <Button variant="outline" size="icon" :aria-label="t('common.actions')">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  :aria-label="t('common.actions')"
+                >
                   <MoreVerticalIcon class="size-4 stroke-1.5" />
                 </Button>
               </DropdownMenuTrigger>
