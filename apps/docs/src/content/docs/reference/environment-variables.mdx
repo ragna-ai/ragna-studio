@@ -34,16 +34,16 @@ See [Configuration](/self-hosting/configuration#secrets).
 
 ## Database
 
-| Variable             | Default     | Meaning                                                       |
-| -------------------- | ----------- | ------------------------------------------------------------- |
-| `DB_HOST`            | `localhost` | Postgres host                                                 |
-| `DB_PORT`            | `5432`      | Postgres port                                                 |
-| `DB_DATABASE`        | `studio`    | Database name                                                 |
-| `DB_USERNAME`        | `postgres`  | Database user                                                 |
-| `DB_PASSWORD`        |             | Database password                                             |
-| `DB_SSL`             | `false`     | Connect over TLS                                              |
-| `DATABASE_URL`       |             | Full connection string. Overrides the `DB_*` values when set. |
-| `DATABASE_POOL_SIZE` | `10`        | Connection pool size                                          |
+| Variable             | Default     | Meaning                                                            |
+| -------------------- | ----------- | ------------------------------------------------------------------ |
+| `DB_HOST`            | `localhost` | Postgres host                                                      |
+| `DB_PORT`            | `5432`      | Postgres port                                                      |
+| `DB_DATABASE`        | `studio`    | Database name                                                      |
+| `DB_USERNAME`        | `postgres`  | Database user                                                      |
+| `DB_PASSWORD`        |             | Database password. Postgres needs it. The installer generates one. |
+| `DB_SSL`             | `false`     | Connect over TLS                                                   |
+| `DATABASE_URL`       |             | Full connection string. Overrides the `DB_*` values when set.      |
+| `DATABASE_POOL_SIZE` | `10`        | Connection pool size                                               |
 
 ## Redis
 

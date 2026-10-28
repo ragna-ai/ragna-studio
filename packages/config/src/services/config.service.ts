@@ -48,6 +48,8 @@ const OptionalBaseUrlSchema = z
   .optional()
   .transform((val) => val || undefined);
 
+const DEFAULT_DB_PASSWORD = '';
+
 // Define which variables are required vs optional based on environment
 const ConfigSchema = z.object({
   // App configuration
@@ -124,7 +126,7 @@ const ConfigSchema = z.object({
     .default(false),
   DB_DATABASE: z.string().default('studio'),
   DB_USERNAME: z.string().default('postgres'),
-  DB_PASSWORD: z.string().default('mypassword'),
+  DB_PASSWORD: z.string().default(DEFAULT_DB_PASSWORD),
 
   // Database - composed from individual parts if not provided
   DATABASE_URL: z
@@ -139,7 +141,7 @@ const ConfigSchema = z.object({
       // Otherwise, compose it from individual components
       const dbType = process.env.DB_TYPE || 'postgres';
       const dbUser = process.env.DB_USERNAME || 'postgres';
-      const dbPass = process.env.DB_PASSWORD || 'mypassword';
+      const dbPass = process.env.DB_PASSWORD || DEFAULT_DB_PASSWORD;
       const dbHost = process.env.DB_HOST || 'localhost';
       const dbPort = process.env.DB_PORT || '5432';
       const dbName = process.env.DB_DATABASE || 'studio';
@@ -356,6 +358,7 @@ export class ConfigService {
       // Track sensitive keys
       this._secrets = new Set([
         'DATABASE_URL',
+        'DB_PASSWORD',
         'REDIS_PASSWORD',
         'SMTP_PASSWORD',
         'BREVO_API_KEY',

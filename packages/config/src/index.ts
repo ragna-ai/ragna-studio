@@ -30,4 +30,5 @@ if (process.env.NODE_ENV !== 'production') {
   dotenvConfig({ path: envFiles.map((file) => resolve(rootDir, file)) });
 }
 
+export { ConfigService };
 export const config = new ConfigService();
