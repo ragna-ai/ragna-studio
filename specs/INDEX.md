@@ -57,7 +57,7 @@ work first, shipped reference and dead/historical docs last.
 | [Chat branching (PRD)](./chat/branching.md) | implemented (2026-08-08) |
 | [CI/CD with GitHub Actions (PRD)](./ci-cd/prd.md) | implemented (2026-09-27, phase 1 and 2) |
 | [Credit System (PRD)](./credits/prd.md) | implemented (merged via PR #13, 2026-07-29) |
-| [Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment](./database/drizzle-1.0-rc5-upgrade.md) | implemented (2026-10-28) |
+| [Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment](./database/drizzle-1.0-rc5-upgrade.md) | implemented (2026-10-28, PR #211) |
 | [Database migrations and seeding in production](./database/migrations-and-seed.md) | implemented (2026-09-19) |
 | [Batch per-item queries (N+1)](./database/n-plus-one-batching.md) | implemented (PR #92, 2026-10-08) |
 | [Datasets: shared structured state for humans and agents](./datasets/datasets.md) | implemented (2026-07-17) |

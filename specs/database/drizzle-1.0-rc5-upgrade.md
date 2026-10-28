@@ -1,6 +1,6 @@
 # Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment
 
-Status: implemented (2026-10-28). Assessed by a trial upgrade first.
+Status: implemented (2026-10-28, PR #211). Assessed by a trial upgrade first.
 
 ## Verdict
 
