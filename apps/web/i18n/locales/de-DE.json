@@ -1363,7 +1363,7 @@
   "mcp": {
     "settings": {
       "title": "MCP",
-      "subtitle": "Erlaube externen KI-Apps wie Claude Desktop, auf deine Ragna-Daten zuzugreifen.",
+      "subtitle": "Erlaube externen KI-Apps wie Claude Desktop, auf deine Daten zuzugreifen.",
       "notAvailable": {
         "title": "MCP ist nicht verfügbar",
         "message": "Diese Funktion ist für deine Instanz noch nicht aktiviert."
@@ -1371,7 +1371,7 @@
       "loadError": "MCP-Einstellungen konnten nicht geladen werden.",
       "masterToggle": {
         "title": "MCP aktivieren",
-        "label": "Externen KI-Apps Zugriff auf Ragna erlauben (MCP)"
+        "label": "Externen KI-Apps Zugriff auf dein Konto erlauben (MCP)"
       },
       "disableConfirm": {
         "title": "MCP deaktivieren?",
@@ -1415,8 +1415,8 @@
     },
     "consent": {
       "pageTitle": "App verbinden",
-      "title": "Diese App mit Ragna verbinden",
-      "subtitle": "{client} möchte auf deine Ragna-Daten zugreifen.",
+      "title": "Diese App mit deinem Konto verbinden",
+      "subtitle": "{client} möchte auf deine Daten zugreifen.",
       "redirectHost": "Nach der Freigabe wirst du zu {host} weitergeleitet.",
       "localRedirectWarning": "Diese App läuft auf diesem Computer. Genehmige nur, wenn du sie selbst gestartet hast.",
       "workspaceLabel": "Arbeitsbereich",
@@ -1434,7 +1434,7 @@
         "message": "Schalte MCP in deinen Einstellungen ein, bevor du eine App verbindest.",
         "settingsLink": "Zu den MCP-Einstellungen"
       },
-      "testimonial": "Bring deinen Ragna-Arbeitsbereich in die Tools, die du bereits nutzt."
+      "testimonial": "Bring deinen Arbeitsbereich in die Tools, die du bereits nutzt."
     }
   },
   "organization": {
