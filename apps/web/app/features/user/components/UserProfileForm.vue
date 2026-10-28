@@ -16,14 +16,15 @@ const props = defineProps<{
 // Composables
 const { updateUserProfile } = useUserApi();
 const { isPending, mutate } = updateUserProfile();
+const { t } = useI18n();
 
 // Functions
 const updateSchema = z.object({
   name: z.string().min(4, {
-    message: 'Name must be at least 4 characters.',
+    message: t('user.validation.nameMinLength'),
   }),
   email: z.email({
-    message: 'Please enter a valid email address.',
+    message: t('user.validation.emailInvalid'),
   }),
 });
 

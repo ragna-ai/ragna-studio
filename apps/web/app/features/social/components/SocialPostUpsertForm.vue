@@ -11,13 +11,6 @@ import {
 } from '~/features/social/composables/useSocialPostApi';
 import useUserSocialAccounts from '~/features/user/composables/useUserSocialAccounts';
 
-const socialPostUpsertSchema = z.object({
-  id: z.uuidv7(),
-  content: z.string().refine((value) => value.trim().length > 0, {
-    message: 'Post content cannot be empty.',
-  }),
-});
-
 // Props
 const props = defineProps<{
   post: SocialPost;
@@ -25,6 +18,14 @@ const props = defineProps<{
 
 // Composables
 const { t } = useI18n();
+
+const socialPostUpsertSchema = z.object({
+  id: z.uuidv7(),
+  content: z.string().refine((value) => value.trim().length > 0, {
+    message: t('social.validation.contentRequired'),
+  }),
+});
+
 const { accounts, isLoading: isLoadingAccounts } = useUserSocialAccounts();
 const { mutate: updatePost, isPending: isUpdating } = useUpdateSocialPost();
 const { mutate: publishPost, isPending: isPublishing } = usePublishSocialPost();

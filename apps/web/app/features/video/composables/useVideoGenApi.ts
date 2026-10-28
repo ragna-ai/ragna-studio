@@ -224,7 +224,7 @@ export function useGetGenVideos(
 }
 
 export function useGenerateVideo() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<GenerateVideoResponse, unknown, GenerateVideoBody>({
@@ -250,7 +250,9 @@ export function useGenerateVideo() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to generate video'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('videogen.toast.generateFailed')),
+      );
     },
   });
 }
@@ -264,7 +266,7 @@ export function useGenerateVideo() {
  * "already has an enhance" check (VideoGenGrid.vue) was stale.
  */
 export function useEnhanceGenVideo() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<GenerateVideoResponse, unknown, string>({
@@ -290,7 +292,9 @@ export function useEnhanceGenVideo() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to request enhance'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('videogen.toast.enhanceFailed')),
+      );
       queryClient.invalidateQueries({
         queryKey: videoGenKeys.all(workspaceId),
       });
@@ -299,7 +303,7 @@ export function useEnhanceGenVideo() {
 }
 
 export function useUploadVideoFrame() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   return useMutation<FrameUploadResponse, unknown, File>({
     mutationKey: videoGenKeys.frameUpload(),
@@ -312,13 +316,15 @@ export function useUploadVideoFrame() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to upload frame image'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('videogen.toast.frameUploadFailed')),
+      );
     },
   });
 }
 
 export function useDeleteGenVideo() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -333,7 +339,9 @@ export function useDeleteGenVideo() {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete video'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('videogen.toast.deleteFailed')),
+      );
     },
   });
 }

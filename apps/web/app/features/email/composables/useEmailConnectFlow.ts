@@ -55,6 +55,7 @@ interface ConnectEmailAccountResponse {
 
 // Provider-aware two-step connect flow: linkSocial() redirects to the provider and back, then POST /email/account/connect creates the row.
 export function useEmailConnectFlow() {
+  const { $i18n } = useNuxtApp();
   const authClient = useAuth();
   const queryClient = useQueryClient();
   // linkSocial() resolves once the redirect starts, so stay busy until the page unloads.
@@ -87,12 +88,16 @@ export function useEmailConnectFlow() {
         return;
       }
       toast.error(
-        `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        $i18n.t('email.toast.connectStartFailed', {
+          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+        }),
       );
     },
     onError: (_error, { provider }) =>
       toast.error(
-        `Failed to start connecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        $i18n.t('email.toast.connectStartFailed', {
+          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+        }),
       ),
   });
 
@@ -105,12 +110,16 @@ export function useEmailConnectFlow() {
         return;
       }
       toast.error(
-        `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        $i18n.t('email.toast.reconnectStartFailed', {
+          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+        }),
       );
     },
     onError: (_error, { provider }) =>
       toast.error(
-        `Failed to start reconnecting ${PROVIDER_AUTH_CONFIG[provider].displayName}`,
+        $i18n.t('email.toast.reconnectStartFailed', {
+          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+        }),
       ),
   });
 
@@ -133,7 +142,11 @@ export function useEmailConnectFlow() {
         emailKeys.account(),
         { connected: true, account },
       );
-      toast.success(`${PROVIDER_AUTH_CONFIG[provider].displayName} connected`);
+      toast.success(
+        $i18n.t('email.toast.connected', {
+          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+        }),
+      );
     },
     onError: (error, provider) => {
       // A 400 here almost always means the link is missing or lacks the required scope
@@ -141,7 +154,9 @@ export function useEmailConnectFlow() {
       toast.error(
         extractErrorMessage(
           error,
-          `Failed to connect ${PROVIDER_AUTH_CONFIG[provider].displayName}. Try reconnecting`,
+          $i18n.t('email.toast.connectFailed', {
+            provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+          }),
         ),
       );
     },
@@ -173,7 +188,9 @@ export function useEmailConnectFlow() {
     finishReconnect: (provider: EmailProviderKind) =>
       syncAccount().then(() =>
         toast.success(
-          `${PROVIDER_AUTH_CONFIG[provider].displayName} reconnected`,
+          $i18n.t('email.toast.reconnected', {
+            provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+          }),
         ),
       ),
   };

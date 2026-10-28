@@ -24,5 +24,7 @@ const totalCount = computed(() => props.meta?.totalCount ?? props.itemsLength);
 </script>
 
 <template>
-  <TableCaption>{{ itemsLength }} of {{ totalCount }} entries</TableCaption>
+  <TableCaption>{{
+    $t('pagination.entries', { count: itemsLength, total: totalCount })
+  }}</TableCaption>
 </template>

@@ -37,7 +37,7 @@ export function useGetFolders(options: QueryOpts = {}) {
 }
 
 export function useCreateFolder() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, { name: string }>({
@@ -48,10 +48,12 @@ export function useCreateFolder() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
-      toast.success('Folder created');
+      toast.success($i18n.t('folder.toast.created'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to create folder'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('folder.toast.createFailed')),
+      );
     },
   });
 }
@@ -62,7 +64,7 @@ interface RenameFolderVariables {
 }
 
 export function useRenameFolder() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, RenameFolderVariables>({
@@ -79,17 +81,19 @@ export function useRenameFolder() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.list(workspaceId),
       });
-      toast.success('Folder renamed');
+      toast.success($i18n.t('folder.toast.renamed'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to rename folder'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('folder.toast.renameFailed')),
+      );
     },
   });
 }
 
 /** Deleting a folder moves its documents to root; it never deletes them. */
 export function useDeleteFolder() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -102,10 +106,12 @@ export function useDeleteFolder() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.list(workspaceId),
       });
-      toast.success('Folder deleted');
+      toast.success($i18n.t('folder.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete folder'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('folder.toast.deleteFailed')),
+      );
     },
   });
 }

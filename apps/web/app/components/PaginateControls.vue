@@ -97,13 +97,13 @@ function setLimit(value: unknown) {
     <nav
       v-if="totalPages > 1"
       class="flex items-center space-x-1"
-      aria-label="Pagination"
+      :aria-label="$t('pagination.label')"
     >
       <Button
         variant="ghost"
         size="icon"
         :disabled="page <= 1"
-        aria-label="Previous page"
+        :aria-label="$t('pagination.previous')"
         @click="goToPage(page - 1)"
       >
         <ChevronLeftIcon class="size-4 stroke-1.5" />
@@ -122,7 +122,7 @@ function setLimit(value: unknown) {
           v-else
           size="icon"
           :variant="pageNumber === page ? 'outline' : 'ghost'"
-          :aria-label="`Go to page ${pageNumber}`"
+          :aria-label="$t('pagination.goToPage', { page: pageNumber })"
           :aria-current="pageNumber === page ? 'page' : undefined"
           @click="goToPage(pageNumber)"
         >
@@ -134,7 +134,7 @@ function setLimit(value: unknown) {
         variant="ghost"
         size="icon"
         :disabled="page >= totalPages"
-        aria-label="Next page"
+        :aria-label="$t('pagination.next')"
         @click="goToPage(page + 1)"
       >
         <ChevronRightIcon class="size-4 stroke-1.5" />
@@ -144,7 +144,7 @@ function setLimit(value: unknown) {
     <!-- Items per page -->
     <div class="flex items-center gap-2">
       <Select :model-value="String(limit)" @update:model-value="setLimit">
-        <SelectTrigger size="sm" aria-label="Items per page">
+        <SelectTrigger size="sm" :aria-label="$t('pagination.itemsPerPage')">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -157,7 +157,9 @@ function setLimit(value: unknown) {
           </SelectItem>
         </SelectContent>
       </Select>
-      <span class="text-sm text-muted-foreground">per page</span>
+      <span class="text-sm text-muted-foreground">{{
+        $t('pagination.perPage')
+      }}</span>
     </div>
   </div>
 </template>

@@ -64,7 +64,7 @@ const generatedImages = computed<GeneratedAgentImage[]>(() => {
       v-for="image in generatedImages"
       :key="image.id"
       :src="image.imgUrl"
-      alt="Generated image"
+      :alt="t('chat.toolCall.generatedImage')"
       class="w-full rounded-lg"
     />
   </div>

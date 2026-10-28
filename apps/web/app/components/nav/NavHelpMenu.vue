@@ -16,7 +16,9 @@ const version = import.meta.env.VITE_APP_VERSION || 'dev';
       side="bottom"
     >
       <div class="p-5">
-        <p class="text-xs opacity-75">App Version: {{ version }}</p>
+        <p class="text-xs opacity-75">
+          {{ $t('nav.helpMenu.version', { version }) }}
+        </p>
       </div>
     </PopoverContent>
   </Popover>

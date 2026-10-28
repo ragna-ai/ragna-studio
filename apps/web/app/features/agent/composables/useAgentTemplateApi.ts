@@ -25,7 +25,7 @@ export function useGetAgentTemplates() {
 
 /** Creates an agent in the active workspace from a template. Callers may also write the result into their own cache. */
 export function useCreateAgentFromTemplate() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, string>({
@@ -41,7 +41,9 @@ export function useCreateAgentFromTemplate() {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to create agent'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('agent.toast.createFailed')),
+      );
     },
   });
 }

@@ -23,7 +23,7 @@ export function useGetEmailCategories() {
 }
 
 export function useCreateEmailCategory() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<
     EmailCategoryResponse,
@@ -34,10 +34,12 @@ export function useCreateEmailCategory() {
       $api<EmailCategoryResponse>('/email/category', { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.categories() });
-      toast.success('Category created');
+      toast.success($i18n.t('email.toast.categoryCreated'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to create category'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.categoryCreateFailed')),
+      );
     },
   });
 }
@@ -47,7 +49,7 @@ interface UpdateEmailCategoryVariables extends UpdateEmailCategoryRequest {
 }
 
 export function useUpdateEmailCategory() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<
     EmailCategoryResponse,
@@ -67,13 +69,15 @@ export function useUpdateEmailCategory() {
       queryClient.invalidateQueries({ queryKey: ['email', 'thread'] });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to update category'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.categoryUpdateFailed')),
+      );
     },
   });
 }
 
 export function useDeleteEmailCategory() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (categoryId) =>
@@ -81,10 +85,12 @@ export function useDeleteEmailCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.categories() });
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
-      toast.success('Category deleted');
+      toast.success($i18n.t('email.toast.categoryDeleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete category'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('email.toast.categoryDeleteFailed')),
+      );
     },
   });
 }

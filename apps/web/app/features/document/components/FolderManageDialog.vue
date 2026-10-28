@@ -15,10 +15,6 @@ import {
 } from '~/features/document/composables/useFolderApi';
 import type { Folder } from '~/features/document/types';
 
-const createFolderSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }),
-});
-
 // Props
 const props = defineProps<{ folders: Folder[] }>();
 
@@ -33,6 +29,10 @@ const { mutateAsync: renameFolder, isPending: isRenaming } = useRenameFolder();
 const { mutateAsync: deleteFolder } = useDeleteFolder();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
+
+const createFolderSchema = z.object({
+  name: z.string().min(1, { message: t('common.nameRequired') }),
+});
 
 const createForm = useForm({
   defaultValues: { name: '' },

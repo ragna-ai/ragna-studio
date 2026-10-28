@@ -1,5 +1,11 @@
 {
   "common": {
+    "settings": "Settings",
+    "descriptionPlaceholder": "Add a description...",
+    "dismissError": "Dismiss error",
+    "validating": "Validating...",
+    "nameRequired": "Name is required.",
+    "titleRequired": "Title is required.",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -27,6 +33,9 @@
     "generating": "Generating…"
   },
   "nav": {
+    "helpMenu": {
+      "version": "App version: {version}"
+    },
     "home": "Dashboard",
     "workflows": "Workflows",
     "agents": "Agents",
@@ -76,6 +85,10 @@
     }
   },
   "home": {
+    "favorites": {
+      "title": "Favorites",
+      "startChat": "Start chat"
+    },
     "title": "Dashboard",
     "titleWithName": "Welcome, {name}",
     "subtitle": "How can I help you today?",
@@ -117,6 +130,12 @@
     }
   },
   "notification": {
+    "toast": {
+      "markReadFailed": "Failed to mark notification as read",
+      "markAllReadFailed": "Failed to mark all notifications as read",
+      "deleteFailed": "Failed to delete notification",
+      "deleteAllFailed": "Failed to delete all notifications"
+    },
     "workflowRunSucceeded": {
       "title": "Workflow completed",
       "message": "\"{name}\" finished successfully."
@@ -155,6 +174,21 @@
     "clearAll": "Clear all"
   },
   "agent": {
+    "toast": {
+      "created": "Agent created",
+      "createFailed": "Failed to create agent",
+      "updated": "Agent updated",
+      "updateFailed": "Failed to update agent",
+      "memoryUpdated": "Memory updated",
+      "memoryUpdateFailed": "Failed to update memory",
+      "deleted": "Agent deleted",
+      "deleteFailed": "Failed to delete agent",
+      "documentsUploadFailed": "Failed to upload documents",
+      "documentRenameFailed": "Failed to rename document",
+      "documentReplaceFailed": "Failed to replace document",
+      "documentRetryFailed": "Failed to retry document",
+      "documentDeleteFailed": "Failed to delete document"
+    },
     "list": {
       "title": "AI agents",
       "subtitle": "All AI agents you have created.",
@@ -330,6 +364,25 @@
     }
   },
   "chat": {
+    "toast": {
+      "createFailed": "Failed to create chat",
+      "branchFailed": "Failed to branch chat",
+      "renameFailed": "Failed to rename chat",
+      "deleted": "Chat deleted",
+      "deleteFailed": "Failed to delete chat"
+    },
+    "deleteConfirm": {
+      "title": "Delete chat",
+      "message": "Are you sure you want to delete this chat?"
+    },
+    "view": {
+      "loadError": "An error occurred while fetching the chat.",
+      "historyLoadError": "An error occurred while fetching the chat history.",
+      "loading": "Loading chat..."
+    },
+    "toolCall": {
+      "generatedImage": "Generated image"
+    },
     "conversation": {
       "title": "Chat",
       "subtitle": "Chat with your AI agent.",
@@ -407,6 +460,20 @@
     }
   },
   "workflow": {
+    "toast": {
+      "created": "Workflow created",
+      "createFailed": "Failed to create workflow",
+      "saved": "Workflow saved",
+      "saveFailed": "Failed to save workflow",
+      "deleted": "Workflow deleted",
+      "deleteFailed": "Failed to delete workflow",
+      "published": "Workflow published",
+      "publishFailed": "Failed to publish workflow",
+      "runStartFailed": "Failed to start run",
+      "runCancelled": "Run cancelled",
+      "runCancelFailed": "Failed to cancel run",
+      "cycleConnection": "This connection would create a loop"
+    },
     "list": {
       "title": "Workflows",
       "subtitle": "Automate multi-step tasks with agents, tools, and conditions.",
@@ -530,6 +597,10 @@
       "agentTrace": "Agent trace",
       "copyOutput": "Copy output"
     },
+    "branch": {
+      "true": "true",
+      "false": "false"
+    },
     "node": {
       "lead": "Lead: {name}",
       "memberSingular": "member",
@@ -583,6 +654,11 @@
     }
   },
   "imagen": {
+    "toast": {
+      "generateFailed": "Failed to generate images",
+      "referenceUploadFailed": "Failed to upload reference image",
+      "deleteFailed": "Failed to delete image"
+    },
     "title": "Text to Image",
     "form": {
       "promptPlaceholder": "Describe the image you want to generate...",
@@ -635,6 +711,12 @@
     }
   },
   "videogen": {
+    "toast": {
+      "generateFailed": "Failed to generate video",
+      "enhanceFailed": "Failed to request enhance",
+      "frameUploadFailed": "Failed to upload frame image",
+      "deleteFailed": "Failed to delete video"
+    },
     "title": "Text to Video",
     "form": {
       "promptPlaceholder": "Describe the video you want to generate...",
@@ -685,6 +767,7 @@
     }
   },
   "credit": {
+    "outOfCredits": "You're out of credits. Check your balance in the account menu.",
     "usage": {
       "title": "Credit usage",
       "subtitle": "What your credits have been spent on.",
@@ -707,6 +790,14 @@
     }
   },
   "user": {
+    "toast": {
+      "profileUpdated": "Profile updated",
+      "profileUpdateFailed": "Failed to update profile"
+    },
+    "validation": {
+      "nameMinLength": "Name must be at least 4 characters.",
+      "emailInvalid": "Please enter a valid email address."
+    },
     "tabs": {
       "profile": "Profile",
       "accounts": "Connected accounts",
@@ -749,6 +840,9 @@
     }
   },
   "social": {
+    "validation": {
+      "contentRequired": "Post content cannot be empty."
+    },
     "list": {
       "title": "Social posts",
       "subtitle": "Review and publish drafts to LinkedIn.",
@@ -814,6 +908,19 @@
     }
   },
   "dataset": {
+    "toast": {
+      "created": "Dataset created",
+      "createFailed": "Failed to create dataset",
+      "saved": "Dataset saved",
+      "saveFailed": "Failed to save dataset",
+      "deleted": "Dataset deleted",
+      "deleteFailed": "Failed to delete dataset",
+      "rowAddFailed": "Failed to add row",
+      "rowUpdateFailed": "Failed to update row",
+      "rowDeleteFailed": "Failed to delete row",
+      "rowMoveFailed": "Failed to move row",
+      "exportFailed": "Failed to export dataset"
+    },
     "list": {
       "title": "Datasets",
       "subtitle": "Structured tables you and your agents can read and edit.",
@@ -987,6 +1094,13 @@
     }
   },
   "document": {
+    "toast": {
+      "createFailed": "Failed to create document",
+      "saveFailed": "Failed to save document",
+      "deleted": "Document deleted",
+      "deleteFailed": "Failed to delete document",
+      "exportFailed": "Failed to export document"
+    },
     "list": {
       "title": "Documents",
       "subtitle": "Notes you and your agents can create and edit.",
@@ -1033,6 +1147,14 @@
     }
   },
   "folder": {
+    "toast": {
+      "created": "Folder created",
+      "createFailed": "Failed to create folder",
+      "renamed": "Folder renamed",
+      "renameFailed": "Failed to rename folder",
+      "deleted": "Folder deleted",
+      "deleteFailed": "Failed to delete folder"
+    },
     "manage": {
       "title": "Folders",
       "description": "Group documents into folders.",
@@ -1096,6 +1218,22 @@
     }
   },
   "task": {
+    "toast": {
+      "createFailed": "Failed to create task",
+      "saveFailed": "Failed to save task",
+      "moveFailed": "Failed to move task",
+      "deleted": "Task deleted",
+      "deleteFailed": "Failed to delete task",
+      "labelCreated": "Label created",
+      "labelCreateFailed": "Failed to create label",
+      "labelUpdated": "Label updated",
+      "labelUpdateFailed": "Failed to update label",
+      "labelDeleted": "Label deleted",
+      "labelDeleteFailed": "Failed to delete label"
+    },
+    "validation": {
+      "colorInvalid": "Must be a hex color, e.g. #4287f5."
+    },
     "list": {
       "title": "Tasks",
       "subtitle": "Plan and track work on a Linear-style board.",
@@ -1210,6 +1348,45 @@
     }
   },
   "email": {
+    "toast": {
+      "settingsUpdated": "Email settings updated",
+      "settingsUpdateFailed": "Failed to update email settings",
+      "syncStartFailed": "Failed to start syncing",
+      "mailboxDisconnected": "Mailbox disconnected",
+      "mailboxDisconnectFailed": "Failed to disconnect mailbox",
+      "senderAdded": "Sender added",
+      "senderAddFailed": "Failed to add sender",
+      "senderRemoved": "Sender removed",
+      "senderRemoveFailed": "Failed to remove sender",
+      "categoryCreated": "Category created",
+      "categoryCreateFailed": "Failed to create category",
+      "categoryUpdateFailed": "Failed to update category",
+      "categoryDeleted": "Category deleted",
+      "categoryDeleteFailed": "Failed to delete category",
+      "draftCreateFailed": "Failed to create draft",
+      "draftSaveFailed": "Failed to save draft",
+      "draftDiscardFailed": "Failed to discard draft",
+      "sent": "Email sent",
+      "sendFailed": "Failed to send draft",
+      "replyDraftFailed": "Failed to start drafting a reply",
+      "messageArchiveFailed": "Failed to archive message",
+      "messageTrashFailed": "Failed to move message to trash",
+      "starFailed": "Failed to update star",
+      "readStatusFailed": "Failed to update read status",
+      "attachmentDownloadFailed": "Failed to download attachment",
+      "threadArchiveFailed": "Failed to archive thread",
+      "threadTrashFailed": "Failed to move thread to trash",
+      "threadRestoreFailed": "Failed to restore thread from trash",
+      "threadsTrashFailed": "Failed to trash the selected threads",
+      "connectStartFailed": "Failed to start connecting {provider}",
+      "reconnectStartFailed": "Failed to start reconnecting {provider}",
+      "connected": "{provider} connected",
+      "reconnected": "{provider} reconnected",
+      "connectFailed": "Failed to connect {provider}. Try reconnecting"
+    },
+    "content": {
+      "iframeTitle": "Email content"
+    },
     "pageTitle": "Mail",
     "privateWorkspace": {
       "title": "Mail lives in your private workspace",
@@ -1387,6 +1564,10 @@
     }
   },
   "mcp": {
+    "toast": {
+      "settingsSaveFailed": "Failed to save MCP settings",
+      "revokeFailed": "Failed to revoke connection"
+    },
     "settings": {
       "title": "MCP",
       "subtitle": "Let external AI apps like Claude Desktop read and write your data.",
@@ -1464,6 +1645,7 @@
     }
   },
   "organization": {
+    "requestFailed": "Request failed",
     "title": "Organization",
     "subtitle": "Manage your organization, its members and invitations.",
     "loadError": "Failed to load the organization.",
@@ -1580,6 +1762,21 @@
       "join": "Join as manager",
       "joined": "You joined as manager.",
       "joinError": "Failed to join the workspace."
+    }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "goToPage": "Go to page {page}",
+    "itemsPerPage": "Items per page",
+    "perPage": "per page",
+    "entries": "{count} of {total} entries"
+  },
+  "aimodel": {
+    "selector": {
+      "loadError": "Error loading AI models.",
+      "placeholder": "Select an AI model"
     }
   }
 }

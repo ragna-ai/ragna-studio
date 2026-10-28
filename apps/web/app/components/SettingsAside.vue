@@ -18,13 +18,7 @@ interface Props {
   closeLabel?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  title: 'Settings',
-  nameLabel: 'Name',
-  descriptionLabel: 'Description',
-  descriptionPlaceholder: 'Add a description...',
-  closeLabel: 'Close',
-});
+const props = defineProps<Props>();
 
 // Emits
 const emit = defineEmits<{
@@ -82,11 +76,13 @@ function emitIfChanged() {
     class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4"
   >
     <div class="flex items-center justify-between">
-      <p class="text-sm font-semibold">{{ props.title }}</p>
+      <p class="text-sm font-semibold">
+        {{ props.title ?? $t('common.settings') }}
+      </p>
       <Button
         variant="ghost"
         size="icon"
-        :aria-label="props.closeLabel"
+        :aria-label="props.closeLabel ?? $t('common.close')"
         @click="emit('close')"
       >
         <XIcon class="size-4 stroke-1.5" />
@@ -95,20 +91,22 @@ function emitIfChanged() {
 
     <div class="space-y-1">
       <Label class="text-xs text-muted-foreground" :for="nameFieldId">
-        {{ props.nameLabel }}
+        {{ props.nameLabel ?? $t('common.name') }}
       </Label>
       <Input :id="nameFieldId" v-model="nameDraft" @blur="commitName" />
     </div>
 
     <div class="space-y-1">
       <Label class="text-xs text-muted-foreground" :for="descriptionFieldId">
-        {{ props.descriptionLabel }}
+        {{ props.descriptionLabel ?? $t('common.description') }}
       </Label>
       <Textarea
         :id="descriptionFieldId"
         v-model="descriptionDraft"
         class="min-h-24"
-        :placeholder="props.descriptionPlaceholder"
+        :placeholder="
+          props.descriptionPlaceholder ?? $t('common.descriptionPlaceholder')
+        "
         @blur="commitDescription"
       />
     </div>

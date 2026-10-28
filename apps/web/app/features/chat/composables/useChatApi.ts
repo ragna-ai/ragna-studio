@@ -133,7 +133,7 @@ export function useGetChatHistory(options: QueryOpts = {}) {
 }
 
 export function useCreateChat() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, NewChatBody>({
@@ -146,7 +146,9 @@ export function useCreateChat() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to create chat'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('chat.toast.createFailed')),
+      );
     },
   });
 }
@@ -173,7 +175,7 @@ interface BranchChatVariables {
 // to and including messageId into a brand new chat and navigates to it,
 // mirroring useCreateChatAndNavigate.
 export function useBranchChatAndNavigate() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
 
@@ -187,7 +189,9 @@ export function useBranchChatAndNavigate() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to branch chat'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('chat.toast.branchFailed')),
+      );
     },
   });
 
@@ -205,7 +209,7 @@ interface UpdateChatTitleVariables {
 }
 
 export function useUpdateChatTitle() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<ChatResponse, unknown, UpdateChatTitleVariables>({
@@ -218,13 +222,15 @@ export function useUpdateChatTitle() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to rename chat'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('chat.toast.renameFailed')),
+      );
     },
   });
 }
 
 export function useDeleteChat() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -234,10 +240,12 @@ export function useDeleteChat() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
-      toast.success('Chat deleted');
+      toast.success($i18n.t('chat.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete chat'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('chat.toast.deleteFailed')),
+      );
     },
   });
 }

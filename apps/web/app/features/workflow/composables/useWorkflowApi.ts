@@ -59,7 +59,7 @@ export function useGetWorkflow(
 }
 
 export function useCreateWorkflow() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, CreateWorkflowRequest>({
@@ -72,10 +72,10 @@ export function useCreateWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.all(workspaceId),
       });
-      toast.success('Workflow created');
+      toast.success($i18n.t('workflow.toast.created'));
     },
     onError: () => {
-      toast.error('Failed to create workflow');
+      toast.error($i18n.t('workflow.toast.createFailed'));
     },
   });
 }
@@ -85,7 +85,7 @@ interface UpdateWorkflowVariables extends UpdateWorkflowRequest {
 }
 
 export function useUpdateWorkflow() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, UpdateWorkflowVariables>({
@@ -104,16 +104,16 @@ export function useUpdateWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
-      toast.success('Workflow saved');
+      toast.success($i18n.t('workflow.toast.saved'));
     },
     onError: () => {
-      toast.error('Failed to save workflow');
+      toast.error($i18n.t('workflow.toast.saveFailed'));
     },
   });
 }
 
 export function useDeleteWorkflow() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -125,16 +125,16 @@ export function useDeleteWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.all(workspaceId),
       });
-      toast.success('Workflow deleted');
+      toast.success($i18n.t('workflow.toast.deleted'));
     },
     onError: () => {
-      toast.error('Failed to delete workflow');
+      toast.error($i18n.t('workflow.toast.deleteFailed'));
     },
   });
 }
 
 export function usePublishWorkflow() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, string>({
@@ -149,16 +149,18 @@ export function usePublishWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
-      toast.success('Workflow published');
+      toast.success($i18n.t('workflow.toast.published'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to publish workflow'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('workflow.toast.publishFailed')),
+      );
     },
   });
 }
 
 export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, string | undefined>({
@@ -176,7 +178,9 @@ export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to start run'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('workflow.toast.runStartFailed')),
+      );
     },
   });
 }
@@ -185,7 +189,7 @@ export function useCancelWorkflowRun(
   workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
 ) {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
@@ -201,10 +205,12 @@ export function useCancelWorkflowRun(
       queryClient.invalidateQueries({
         queryKey: workflowKeys.runs(workspaceId, workflowId),
       });
-      toast.success('Run cancelled');
+      toast.success($i18n.t('workflow.toast.runCancelled'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to cancel run'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('workflow.toast.runCancelFailed')),
+      );
     },
   });
 }

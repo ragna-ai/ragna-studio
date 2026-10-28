@@ -25,7 +25,10 @@ export const organizationKeys = {
 /** Turns a better-auth `{ data, error }` result into a value or a thrown error with the server message. */
 function unwrapAuthResult<T>(result: AuthResult<T>): T {
   if (result.error || result.data === null) {
-    throw new Error(result.error?.message ?? 'Request failed');
+    throw new Error(
+      result.error?.message ??
+        useNuxtApp().$i18n.t('organization.requestFailed'),
+    );
   }
   return result.data;
 }

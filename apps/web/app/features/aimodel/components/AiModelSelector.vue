@@ -44,11 +44,11 @@ const normalizeModelProvider = (provider: string) => {
 <template>
   <div>
     <p v-if="isError" class="text-sm text-destructive">
-      Error loading AI models.
+      {{ $t('aimodel.selector.loadError') }}
     </p>
     <Select v-else v-model="modelValue">
       <SelectTrigger :class="props.class">
-        <SelectValue placeholder="Select an AI model" />
+        <SelectValue :placeholder="$t('aimodel.selector.placeholder')" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem v-for="model in models" :key="model.id" :value="model.id">

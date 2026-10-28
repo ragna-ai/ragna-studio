@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
     "
     sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
     referrerpolicy="no-referrer"
-    title="Email content"
+    :title="$t('email.content.iframeTitle')"
     @load="onIframeLoad"
   />
 </template>

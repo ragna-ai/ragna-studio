@@ -45,6 +45,7 @@ const edges = defineModel<WorkflowEdge[]>('edges', { required: true });
 const isDraggingCycleConnection = ref(false);
 
 // Composables
+const { t } = useI18n();
 
 // Computed
 
@@ -107,7 +108,7 @@ function onConnectEnd() {
     return;
   }
   isDraggingCycleConnection.value = false;
-  toast.error('This connection would create a loop');
+  toast.error(t('workflow.toast.cycleConnection'));
 }
 
 function onConnect(connection: Connection) {

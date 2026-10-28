@@ -10,11 +10,6 @@ import type { Folder } from '~/features/document/types';
 // AgentToolList's NO_DATASET.
 const NO_FOLDER = '__none__';
 
-const createDocumentSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required.' }),
-  folderId: z.string(),
-});
-
 // Props
 const props = defineProps<{ folders: Folder[] }>();
 
@@ -24,6 +19,11 @@ const open = defineModel<boolean>('open', { default: false });
 // Composables
 const { mutateAsync: createDocument, isPending } = useCreateDocument();
 const { t } = useI18n();
+
+const createDocumentSchema = z.object({
+  title: z.string().min(1, { message: t('common.titleRequired') }),
+  folderId: z.string(),
+});
 
 const form = useForm({
   defaultValues: { title: '', folderId: NO_FOLDER },

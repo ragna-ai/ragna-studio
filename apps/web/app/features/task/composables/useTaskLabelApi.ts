@@ -43,7 +43,7 @@ export function useGetTaskLabels(options: QueryOpts = {}) {
 }
 
 export function useCreateTaskLabel() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<TaskLabelResponse, unknown, CreateTaskLabelRequest>({
@@ -56,11 +56,13 @@ export function useCreateTaskLabel() {
       queryClient.invalidateQueries({
         queryKey: taskLabelKeys.all(workspaceId),
       });
-      toast.success('Label created');
+      toast.success($i18n.t('task.toast.labelCreated'));
     },
     onError: (error) => {
       // Surfaces the API's duplicate-name 400.
-      toast.error(extractErrorMessage(error, 'Failed to create label'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('task.toast.labelCreateFailed')),
+      );
     },
   });
 }
@@ -70,7 +72,7 @@ interface UpdateTaskLabelVariables extends UpdateTaskLabelRequest {
 }
 
 export function useUpdateTaskLabel() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<TaskLabelResponse, unknown, UpdateTaskLabelVariables>({
@@ -89,17 +91,19 @@ export function useUpdateTaskLabel() {
       // Tasks embed their labels inline, so a rename/recolor needs to
       // refresh the board/list/detail caches too.
       queryClient.invalidateQueries({ queryKey: taskKeys.all(workspaceId) });
-      toast.success('Label updated');
+      toast.success($i18n.t('task.toast.labelUpdated'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to update label'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('task.toast.labelUpdateFailed')),
+      );
     },
   });
 }
 
 /** Cascades the join rows only; never touches tasks. */
 export function useDeleteTaskLabel() {
-  const { $api } = useNuxtApp();
+  const { $api, $i18n } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -112,10 +116,12 @@ export function useDeleteTaskLabel() {
         queryKey: taskLabelKeys.all(workspaceId),
       });
       queryClient.invalidateQueries({ queryKey: taskKeys.all(workspaceId) });
-      toast.success('Label deleted');
+      toast.success($i18n.t('task.toast.labelDeleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, 'Failed to delete label'));
+      toast.error(
+        extractErrorMessage(error, $i18n.t('task.toast.labelDeleteFailed')),
+      );
     },
   });
 }

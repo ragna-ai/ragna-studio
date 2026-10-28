@@ -31,9 +31,6 @@ function hasErrorCode(value: unknown): value is { code: number } {
 // account has no credits left.
 const PAYMENT_REQUIRED_CODE = 402;
 
-export const OUT_OF_CREDITS_MESSAGE =
-  "You're out of credits. Check your balance in the account menu.";
-
 /**
  * True for an ofetch error whose parsed body is `{ code: 402, ... }` (the
  * global `onError` envelope, apps/api/src/app.ts), and also for the `Error`
@@ -61,7 +58,7 @@ export function isOutOfCreditsError(error: unknown): boolean {
  */
 export function extractErrorMessage(error: unknown, fallback: string): string {
   if (isOutOfCreditsError(error)) {
-    return OUT_OF_CREDITS_MESSAGE;
+    return useNuxtApp().$i18n.t('credit.outOfCredits');
   }
   const data = (error as FetchErrorWithData | undefined)?.data;
   if (hasErrorList(data)) {
