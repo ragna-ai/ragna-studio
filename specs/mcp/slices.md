@@ -1,6 +1,6 @@
 # MCP server: implementation slices
 
-> **Status: in-progress** (started 2026-09-24 on `feat/mcp-server`). Build plan for [prd.md](./prd.md).
+> **Status: implemented** (2026-09-25, PR #26). Build plan for [prd.md](./prd.md).
 
 Two waves. Wave 1 lands the database, auth and tool-definition foundations
 in parallel. Wave 2 builds the API and the web UI against real types.

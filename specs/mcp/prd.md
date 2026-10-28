@@ -1,6 +1,6 @@
 # MCP server: Ragna as a connector for Claude Desktop
 
-> **Status: in-progress** (approved 2026-09-24, building on `feat/mcp-server`, see [slices.md](./slices.md)). A remote MCP server in
+> **Status: implemented** (2026-09-25, PR #26; see [slices.md](./slices.md)). A remote MCP server in
 > `apps/api` that lets Claude Desktop read and write Ragna resources on the
 > user's behalf. Datasets are the first integration. The layer is generic so
 > tasks, documents and others can follow.

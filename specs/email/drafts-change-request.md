@@ -1,8 +1,6 @@
 # Email Drafts (change request to the Email Client PRD)
 
-> **Status: in-progress** (approved by Sven 2026-08-15; all five slices
-> below built the same day, apps/api suite 463 pass / 0 fail; awaiting
-> Sven's manual verification, no browser or worker run yet, not committed).
+> **Status: implemented** (2026-08-15, PR #21).
 > Amends [prd.md](./prd.md): drafts become
 > a first-class, Gmail-backed object covering new mail, reply, reply-all and
 > forward, edited inline in the thread area instead of a modal. Reverses two

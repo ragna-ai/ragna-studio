@@ -1,7 +1,6 @@
 # Email Thread List: Mass (Bulk) Trash (change request)
 
-> **Status: in-progress** (approved by Sven 2026-08-17; design fully
-> clarified, no open points remain; implementation kicked off same day).
+> **Status: implemented** (2026-08-17, commit 18e57273 on main, no PR).
 > Scoped to trash only; no other bulk action (archive, read/unread, star)
 > is in scope for this change.
 

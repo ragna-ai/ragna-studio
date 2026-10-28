@@ -35,3 +35,4 @@ Answer each line in the PRD, or write "n/a".
   (schedules, jobs, R2 objects)?
 - **Retention**: does the feature store data that must expire (logs, derived data, caches)?
 - **Erasure**: is personal data reached by user and organization purge?
+- **Docs**: which `apps/docs` page changes with this feature? Name it, or write "none exists yet" and say so in the PR.

@@ -153,6 +153,8 @@ Business strategy, pricing, product lineup and undecided drafts live outside thi
 
 Spec bookkeeping ships in the same PR as the code, never as a separate docs-only PR: PRD `Status: implemented (date, PR #N)`,
 `Closes #N` for its issue in the PR body, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
+Any user-visible change (UI, behaviour, config or env vars, self-hosting) updates its `apps/docs` page in the same PR.
+If no page exists, say so in the PR body.
 Exception: docs about a security fix wait until its advisory is published.
 
 ### Issues
