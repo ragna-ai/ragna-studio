@@ -24,14 +24,20 @@ One source of truth for types and validation, used by web, api, and worker:
 - The workflow definition type (vue-flow-shaped `nodes[]` / `edges[]`).
 - Run and step status enums.
 
-Web renders node config forms from the Zod schemas (VeeValidate) and validates before save. Worker validates the definition again before execution.
+The editor runs the same `@repo/workflow` checks as the API:
+
+- **Shape** (`workflowDefinitionSchema`) and **agent references** (every agent id exists in the workspace) block Save, Publish and "Publish and Run".
+- **Graph** (`validateWorkflowDefinition`: one trigger, no cycles, valid edges) blocks only Publish, matching the API.
+
+Invalid nodes are marked on the canvas. The config panel shows the field errors. Worker validates the definition again before execution.
 
 ## Node catalog (v1)
 
 | Node type   | Config                                                                                    |
 | ----------- | ----------------------------------------------------------------------------------------- |
 | `trigger`   | Manual or cron (see [workflows-scheduling.md](./workflows-scheduling.md)). Webhook later. |
-| `agent`     | References an `agents` row, or inline model + prompt. Runs via `@repo/ai`.                |
+| `agent`     | References an `agents` row of the workspace (required). Runs via `@repo/ai`.              |
+| `team`      | A lead agent plus 1 to 5 member agents, each an `agents` row of the workspace.            |
 | `tool`      | One of the existing tools: think, webSearch, webBrowser, imageGen.                        |
 | `condition` | Branch on an expression or an LLM classification.                                         |
 | `transform` | Template string or field mapping between nodes.                                           |

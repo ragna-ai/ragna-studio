@@ -10,12 +10,16 @@ The team node lets one agent lead several others. The lead gets a task, splits i
 ## Set up a team
 
 1. Add a **Team** node and select it.
-2. Choose a **Lead agent**. It is required.
-3. Write the **Prompt**. It can use `{{input}}` for the output of the previous node.
-4. Click **Add member** for each specialist.
-5. For each member, pick an agent and write a short role, such as "researches background facts".
+2. In the **Lead** section, choose the lead agent. It is required.
+3. Write the **Prompt**. The lead gets this task and hands parts of it to the members. It can use `{{input}}` for the output of the previous node.
+4. In the **Members** section, click **Add member** for each specialist. The heading shows the count, for example **Members (2/5)**.
+5. For each member, pick an agent. Fill in the **Role**, such as "researches background facts".
 
-A team has one to five members. Each member needs an agent and a role. The role tells the lead when to hand work to that member. If it is empty, the lead only sees the agent's name.
+A team has one to five members. The last member cannot be removed, because a team needs at least one. Each member needs an agent. The **Role** tells the lead when to hand work to that member. If it is empty, the lead only sees the agent's name.
+
+## Read the team on the canvas
+
+The team node lists the **Lead** first, then each member with its agent name and role. An agent that is not picked yet shows "No agent yet". An agent that was deleted shows "Deleted agent". A lead or member with a problem is shown in red. In the side panel, each member card is titled with the agent name.
 
 All agents must belong to the same workspace as the workflow. The same agent can be a member twice with different roles.
 

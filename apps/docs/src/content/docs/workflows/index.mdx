@@ -72,6 +72,23 @@ Runs always use the published version. Click **Publish** to make the draft the l
 
 The dialog warns when a run uses an older published version than the latest edits. The run opens in a new view. See [Runs and traces](/workflows/runs).
 
+## Why can't I save?
+
+Save, **Publish** and **Publish & run** check the workflow first. A node with a problem gets a red border and a warning icon with the reason. The side panel shows the message next to the field.
+
+Common causes:
+
+- An **Agent** node has no agent picked.
+- A **Team** node has no lead agent, or a member has no agent.
+- A picked agent was deleted.
+- The workflow was created before agents became required.
+
+To fix it, click the marked node, pick an agent in the side panel and save again.
+
+Renaming a workflow always works, even while a node has a problem.
+
+Publishing also needs exactly one trigger and no loops.
+
 <Aside type="note">
   Workflows that call agents use the configured AI models. On a self-hosted install the model
   providers need API keys. See [Optional providers](/self-hosting/optional-providers).
