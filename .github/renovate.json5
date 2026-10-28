@@ -28,7 +28,7 @@
     'nuxt',
     'typescript',
     '@types/node',
-    // pinned release candidate, also pinned in packageExtensions
+    // pinned release candidate, upgraded manually
     'drizzle-orm',
     'drizzle-kit',
     // the pnpm version in packageManager; CI and the Dockerfiles install it

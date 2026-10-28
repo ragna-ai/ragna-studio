@@ -109,8 +109,10 @@ function mediaVisibleToUser(userId: string): SQL {
     not(exists(chatAttachmentOf(eq(chat.userId, userId)))),
     ...referencedOutsideChats.map((reference) => not(exists(reference))),
   );
+  // and() is typed SQL | undefined; fail closed (hidden) if it ever yields nothing.
+  const hiddenOrFailClosed = hiddenFromUser ?? sql`true`;
 
-  return not(hiddenFromUser ?? sql`false`);
+  return sql`not (${hiddenOrFailClosed})`;
 }
 
 /** The workspace's media the user may see, in one query. */

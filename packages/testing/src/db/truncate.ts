@@ -20,11 +20,11 @@ export interface TruncateAllTablesResult {
 export async function truncateAllTables(): Promise<TruncateAllTablesResult> {
   await assertConnectedToTestDatabase();
 
-  const result = await db.execute(sql`
+  const result = await db.execute<{ tablename: string }>(sql`
     select tablename from pg_tables
     where schemaname = 'public' and tablename not like '%drizzle%' and tablename <> 'jwks'
   `);
-  const truncatedTables = (result.rows as { tablename: string }[]).map((row) => row.tablename);
+  const truncatedTables = result.rows.map((row) => row.tablename);
 
   if (truncatedTables.length === 0) {
     return { truncatedTables };

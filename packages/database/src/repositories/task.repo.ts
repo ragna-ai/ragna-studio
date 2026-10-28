@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, isNotNull, isNull, ne, notInArray, sql } from 'drizzle-orm';
+import { EmptyFilter } from 'drizzle-orm/relations';
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
 import type {
@@ -71,8 +72,8 @@ export async function listTasks({
   const tasks = await db.query.task.findMany({
     where: {
       workspaceId,
-      status,
-      priority,
+      status: status ?? EmptyFilter,
+      priority: priority ?? EmptyFilter,
       ...(taskIdsWithLabel ? { id: { in: taskIdsWithLabel } } : {}),
     },
     with: {

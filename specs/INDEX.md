@@ -28,7 +28,6 @@ work first, shipped reference and dead/historical docs last.
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
-| [Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment](./database/drizzle-1.0-rc5-upgrade.md) | proposed (2026-10-24) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
@@ -53,6 +52,7 @@ work first, shipped reference and dead/historical docs last.
 | [API tests in CI (PRD)](./ci-cd/api-tests-prd.md) | implemented (2026-09-29, PR #47) |
 | [CI/CD with GitHub Actions (PRD)](./ci-cd/prd.md) | implemented (2026-09-27, phase 1 and 2) |
 | [Credit System (PRD)](./credits/prd.md) | implemented (merged via PR #13, 2026-07-29) |
+| [Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment](./database/drizzle-1.0-rc5-upgrade.md) | implemented (2026-10-28, PR #211) |
 | [Database migrations and seeding in production](./database/migrations-and-seed.md) | implemented (2026-09-19) |
 | [Batch per-item queries (N+1)](./database/n-plus-one-batching.md) | implemented (PR #92, 2026-10-08) |
 | [Datasets: shared structured state for humans and agents](./datasets/datasets.md) | implemented (2026-07-17) |
