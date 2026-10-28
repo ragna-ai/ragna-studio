@@ -1,6 +1,8 @@
 # Better Auth 1.7 upgrade
 
-Status: decided (2026-08-20). Design agreed via discussion, not built yet.
+Status: implemented (2026-08-20, commit 89147fa6 on main, no PR).
+
+Deviations: the `issuer` `NOT NULL` column and the unique `(issuer, accountId)` index (scope 1) were dropped, as were the backfill and the Microsoft re-link (scope 3). Better-auth 1.7.3 reverted the issuer identity change. The schema comment in `account.schema.ts` says accounts are recognized by `providerId` + `accountId` again, so `issuer` stays nullable and the unique index stays on `(providerId, accountId)`. The worker call site lives in `apps/worker/src/mail/mail-provider.ts`, not `gmail-provider.ts`. Scope 6 shipped in the same commit, which changed `packages/auth/src/client/auth-client-vue.ts`.
 
 `@repo/auth` (`packages/auth/src/server/auth.ts`) pins `better-auth@^1.6.27`.
 1.7 restructures how the `account` table identifies a linked provider
