@@ -56,10 +56,7 @@ export interface AgentManyResponse {
 // (`/workspace/:workspaceId/agent`). The client knows whether it is
 // creating or editing, so create and update are separate requests instead
 // of one upsert.
-export type CreateAgentRequest = Omit<
-  Agent,
-  'id' | 'userId' | 'workspaceId' | 'aiModel'
->;
+export type CreateAgentRequest = Omit<Agent, 'id' | 'userId' | 'workspaceId' | 'aiModel'>;
 
 export type UpdateAgentRequest = Partial<CreateAgentRequest>;
 

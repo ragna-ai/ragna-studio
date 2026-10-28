@@ -1,12 +1,6 @@
 <script setup lang="ts">
 // Imports
-import {
-  FileUpIcon,
-  PencilIcon,
-  RotateCcwIcon,
-  Trash2Icon,
-  UploadIcon,
-} from '@lucide/vue';
+import { FileUpIcon, PencilIcon, RotateCcwIcon, Trash2Icon, UploadIcon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import {
   AGENT_CONTEXT_DOCUMENT_ACCEPT,
@@ -38,11 +32,9 @@ const renamingDocumentId = ref<string | null>(null);
 const renameValue = ref('');
 
 // Composables
-const { data, isPending: isLoading } = useGetAgentContextDocuments(
-  () => props.agentId,
-);
-const { isPending: isUploading, mutate: uploadDocuments } =
-  useUploadAgentContextDocuments();
+const { t } = useI18n();
+const { data, isPending: isLoading } = useGetAgentContextDocuments(() => props.agentId);
+const { isPending: isUploading, mutate: uploadDocuments } = useUploadAgentContextDocuments();
 const { mutate: renameDocument } = useRenameAgentContextDocument();
 const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile();
 const { mutate: retryDocument } = useRetryAgentContextDocument();
@@ -53,9 +45,8 @@ const { isOverDropZone } = useDropZone(dropZoneRef, {
 });
 
 // Computed
-const documents = computed<AgentContextDocument[]>(
-  () => data.value?.documents ?? [],
-);
+const maxFileSizeLabel = formatFileSize(AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES);
+const documents = computed<AgentContextDocument[]>(() => data.value?.documents ?? []);
 const summaryText = computed<string | null>(() => {
   const summary = data.value?.summary;
   if (!summary) return null;
@@ -81,20 +72,22 @@ function formatFileSize(bytes: number): string {
 function uploadFiles(files: File[] | null) {
   if (!files || files.length === 0) return;
 
-  const oversizedFile = files.find(
-    (file) => file.size > AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,
-  );
+  const oversizedFile = files.find((file) => file.size > AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES);
   if (oversizedFile) {
-    toast.error(`"${oversizedFile.name}" is larger than 10 MB`);
+    toast.error(
+      t('agent.context.errors.fileTooLarge', {
+        name: oversizedFile.name,
+        size: maxFileSizeLabel,
+      }),
+    );
     return;
   }
 
-  if (
-    documents.value.length + files.length >
-    AGENT_CONTEXT_DOCUMENT_MAX_FILES
-  ) {
+  if (documents.value.length + files.length > AGENT_CONTEXT_DOCUMENT_MAX_FILES) {
     toast.error(
-      `An agent can have at most ${AGENT_CONTEXT_DOCUMENT_MAX_FILES} documents`,
+      t('agent.context.errors.tooManyFiles', {
+        max: AGENT_CONTEXT_DOCUMENT_MAX_FILES,
+      }),
     );
     return;
   }
@@ -167,19 +160,16 @@ function handleDelete(document: AgentContextDocument) {
     <div v-if="isLoading" class="flex items-center justify-center py-8">
       <Spinner />
     </div>
-    <div
-      v-else-if="documents.length === 0"
-      class="text-sm text-muted-foreground"
-    >
-      No documents uploaded yet.
+    <div v-else-if="documents.length === 0" class="text-sm text-muted-foreground">
+      {{ $t('agent.context.empty') }}
     </div>
     <Table v-else>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Size</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead class="text-right">Actions</TableHead>
+          <TableHead>{{ $t('common.name') }}</TableHead>
+          <TableHead>{{ $t('agent.context.tableSize') }}</TableHead>
+          <TableHead>{{ $t('common.status') }}</TableHead>
+          <TableHead class="text-right">{{ $t('common.actions') }}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -203,11 +193,8 @@ function handleDelete(document: AgentContextDocument) {
               >
                 {{ document.name }}
               </button>
-              <p
-                v-if="document.isTruncated"
-                class="text-xs text-muted-foreground"
-              >
-                Truncated: only the first part of this document was kept.
+              <p v-if="document.isTruncated" class="text-xs text-muted-foreground">
+                {{ $t('agent.context.truncated') }}
               </p>
             </template>
           </TableCell>
@@ -215,15 +202,11 @@ function handleDelete(document: AgentContextDocument) {
             {{ formatFileSize(document.fileSize) }}
           </TableCell>
           <TableCell>
-            <TooltipProvider
-              v-if="document.status === 'failed' && document.errorMessage"
-            >
+            <TooltipProvider v-if="document.status === 'failed' && document.errorMessage">
               <Tooltip>
                 <TooltipTrigger as-child>
                   <span>
-                    <AgentContextDocumentStatusBadge
-                      :status="document.status"
-                    />
+                    <AgentContextDocumentStatusBadge :status="document.status" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -238,7 +221,7 @@ function handleDelete(document: AgentContextDocument) {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Rename document"
+              :aria-label="$t('agent.context.actions.rename')"
               @click.stop="startRename(document)"
             >
               <PencilIcon class="size-4 stroke-1.5" />
@@ -247,7 +230,7 @@ function handleDelete(document: AgentContextDocument) {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Replace file"
+              :aria-label="$t('agent.context.actions.replace')"
               @click.stop="openReplacePicker(document)"
             >
               <FileUpIcon class="size-4 stroke-1.5" />
@@ -257,7 +240,7 @@ function handleDelete(document: AgentContextDocument) {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Retry extraction"
+              :aria-label="$t('agent.context.actions.retry')"
               @click.stop="handleRetry(document)"
             >
               <RotateCcwIcon class="size-4 stroke-1.5" />
@@ -266,7 +249,7 @@ function handleDelete(document: AgentContextDocument) {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Delete document"
+              :aria-label="$t('agent.context.actions.delete')"
               @click.stop="handleDelete(document)"
             >
               <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
@@ -275,12 +258,9 @@ function handleDelete(document: AgentContextDocument) {
         </TableRow>
       </TableBody>
     </Table>
-    <p
-      v-if="isUploading"
-      class="flex items-center gap-2 text-sm text-muted-foreground"
-    >
+    <p v-if="isUploading" class="flex items-center gap-2 text-sm text-muted-foreground">
       <Spinner class="size-4" />
-      Uploading...
+      {{ $t('agent.context.uploading') }}
     </p>
 
     <div
@@ -299,10 +279,10 @@ function handleDelete(document: AgentContextDocument) {
     >
       <UploadIcon class="size-6 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">
-        Drag and drop files here, or click to browse.
+        {{ $t('agent.context.dropzone.prompt') }}
       </p>
       <p class="text-xs text-muted-foreground">
-        PDF, DOCX, PPTX, XLSX, CSV, TXT or MD, up to 10 MB each.
+        {{ $t('agent.context.dropzone.formats', { size: maxFileSizeLabel }) }}
       </p>
     </div>
     <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a

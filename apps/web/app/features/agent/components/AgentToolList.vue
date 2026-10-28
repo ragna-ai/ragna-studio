@@ -150,16 +150,11 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
       :name="tool.id"
       :model-value="selectedTools.includes(tool.id)"
       class="border-stone-600"
-      @update:model-value="
-        (checked) => handleCheckedChange(tool.id, Boolean(checked))
-      "
+      @update:model-value="(checked) => handleCheckedChange(tool.id, Boolean(checked))"
     >
       <CheckIcon class="size-3.5" />
     </Checkbox>
-    <Label
-      :for="`form-rhf-checkbox-${tool.id}`"
-      class="flex cursor-pointer space-x-3"
-    >
+    <Label :for="`form-rhf-checkbox-${tool.id}`" class="flex cursor-pointer space-x-3">
       <div class="flex justify-center">
         <component :is="tool.icon" class="size-5 stroke-1.5" />
       </div>
@@ -172,34 +167,24 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
     </Label>
   </div>
 
-  <div
-    v-if="selectedTools.includes('datasets')"
-    class="ml-8 max-w-xs space-y-2 border-l pl-4"
-  >
+  <div v-if="selectedTools.includes('datasets')" class="ml-8 max-w-xs space-y-2 border-l pl-4">
     <Label class="text-xs text-muted-foreground">
       {{ $t('agent.tool.datasets.defaultDatasetLabel') }}
     </Label>
     <Select
       :model-value="defaultDatasetId ?? NO_DATASET"
       @update:model-value="
-        (v) =>
-          emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
+        (v) => emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
       "
     >
       <SelectTrigger class="w-full">
-        <SelectValue
-          :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')"
-        />
+        <SelectValue :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem :value="NO_DATASET">
           {{ $t('agent.tool.datasets.defaultDatasetNone') }}
         </SelectItem>
-        <SelectItem
-          v-for="dataset in pickerDatasets"
-          :key="dataset.id"
-          :value="dataset.id"
-        >
+        <SelectItem v-for="dataset in pickerDatasets" :key="dataset.id" :value="dataset.id">
           {{ dataset.name }}
         </SelectItem>
       </SelectContent>

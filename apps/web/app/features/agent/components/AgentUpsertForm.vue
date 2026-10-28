@@ -12,10 +12,7 @@ import { z } from 'zod';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
-import {
-  useCreateAgent,
-  useUpdateAgent,
-} from '~/features/agent/composables/useAgentApi';
+import { useCreateAgent, useUpdateAgent } from '~/features/agent/composables/useAgentApi';
 import type { AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
@@ -149,11 +146,7 @@ const siderBarTabs = computed(() => [
         {{ t('common.save') }}
       </Button>
     </div>
-    <TabSidebar
-      v-model="currentTab"
-      :tabs="siderBarTabs"
-      :error-tabs="tabsWithErrors"
-    >
+    <TabSidebar v-model="currentTab" :tabs="siderBarTabs" :error-tabs="tabsWithErrors">
       <!-- TAB 1: Persona -->
       <template #persona>
         <div class="space-y-8">
@@ -170,9 +163,7 @@ const siderBarTabs = computed(() => [
                   <InputGroupInput
                     :id="field.name"
                     :model-value="state.value"
-                    @update:model-value="
-                      (v: string | number) => field.handleChange(String(v))
-                    "
+                    @update:model-value="(v: string | number) => field.handleChange(String(v))"
                     @blur="field.handleBlur"
                     autocomplete="off"
                   />
@@ -192,9 +183,7 @@ const siderBarTabs = computed(() => [
                   :id="field.name"
                   rows="4"
                   :model-value="state.value"
-                  @update:model-value="
-                    (v: string | number) => field.handleChange(String(v))
-                  "
+                  @update:model-value="(v: string | number) => field.handleChange(String(v))"
                   @blur="field.handleBlur"
                   autocomplete="off"
                 />
@@ -212,9 +201,7 @@ const siderBarTabs = computed(() => [
                   :id="field.name"
                   rows="10"
                   :model-value="state.value"
-                  @update:model-value="
-                    (v: string | number) => field.handleChange(String(v))
-                  "
+                  @update:model-value="(v: string | number) => field.handleChange(String(v))"
                   @blur="field.handleBlur"
                   class="max-h-130 min-h-60"
                   autocomplete="off"
@@ -237,9 +224,7 @@ const siderBarTabs = computed(() => [
                 :id="field.name"
                 rows="10"
                 :model-value="state.value"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
+                @update:model-value="(v: string | number) => field.handleChange(String(v))"
                 @blur="field.handleBlur"
                 class="min-h-100"
                 autocomplete="off"
@@ -295,10 +280,7 @@ const siderBarTabs = computed(() => [
             {{ t('agent.upsert.documentsHint') }}
           </p>
           <AgentContextDocumentPanel v-if="props.id" :agent-id="props.id" />
-          <div
-            v-else
-            class="rounded-lg border p-4 text-sm text-muted-foreground"
-          >
+          <div v-else class="rounded-lg border p-4 text-sm text-muted-foreground">
             {{ t('agent.upsert.saveFirstDocuments') }}
           </div>
         </div>
@@ -315,9 +297,7 @@ const siderBarTabs = computed(() => [
                 :id="field.name"
                 rows="10"
                 :model-value="state.value"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
+                @update:model-value="(v: string | number) => field.handleChange(String(v))"
                 @blur="field.handleBlur"
                 class="min-h-60"
                 autocomplete="off"
@@ -346,11 +326,7 @@ const siderBarTabs = computed(() => [
                       t('agent.upsert.temperatureLabel')
                     }}</Label>
                     <span class="text-sm text-muted-foreground">
-                      {{
-                        state.value
-                          ? state.value
-                          : t('agent.upsert.temperatureDisabled')
-                      }}
+                      {{ state.value ? state.value : t('agent.upsert.temperatureDisabled') }}
                     </span>
                   </div>
                   <Slider
@@ -359,9 +335,7 @@ const siderBarTabs = computed(() => [
                     :min="0"
                     :max="1"
                     :step="0.05"
-                    @update:model-value="
-                      (v) => field.handleChange(v?.[0] ? v[0] : null)
-                    "
+                    @update:model-value="(v) => field.handleChange(v?.[0] ? v[0] : null)"
                   />
                   <p class="mt-2 text-sm text-muted-foreground">
                     {{ t('agent.upsert.temperatureHint') }}
@@ -373,10 +347,7 @@ const siderBarTabs = computed(() => [
             <form.Field name="settings.maxOutputTokens">
               <template v-slot="{ field, state }">
                 <div>
-                  <Label
-                    class="mb-2 block text-sm font-medium"
-                    :for="field.name"
-                  >
+                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
                     {{ t('agent.upsert.maxOutputTokensLabel') }}
                   </Label>
                   <Input
@@ -386,8 +357,7 @@ const siderBarTabs = computed(() => [
                     max="64000"
                     :model-value="state.value ?? ''"
                     @update:model-value="
-                      (v: string | number) =>
-                        field.handleChange(v === '' ? null : Number(v))
+                      (v: string | number) => field.handleChange(v === '' ? null : Number(v))
                     "
                     @blur="field.handleBlur"
                     autocomplete="off"
@@ -402,10 +372,7 @@ const siderBarTabs = computed(() => [
             <form.Field name="settings.reasoning">
               <template v-slot="{ field, state }">
                 <div>
-                  <Label
-                    class="mb-2 block text-sm font-medium"
-                    :for="field.name"
-                  >
+                  <Label class="mb-2 block text-sm font-medium" :for="field.name">
                     {{ t('agent.upsert.reasoningLabel') }}
                   </Label>
                   <Select
