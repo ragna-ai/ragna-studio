@@ -474,6 +474,24 @@
       "runCancelFailed": "Failed to cancel run",
       "cycleConnection": "This connection would create a loop"
     },
+    "validation": {
+      "agentRequired": "Pick an agent.",
+      "leadAgentRequired": "Pick a lead agent.",
+      "memberAgentRequired": "Pick an agent for this member.",
+      "agentDeleted": "This agent was deleted. Pick another one.",
+      "promptRequired": "Enter a prompt.",
+      "cronInvalid": "Enter a valid cron expression.",
+      "timezoneInvalid": "Pick a valid timezone.",
+      "nodeInvalid": "This node has invalid settings.",
+      "definitionInvalid": "The workflow is invalid.",
+      "nodesNeedAttention": "{count} node needs attention | {count} nodes need attention",
+      "graph": {
+        "triggerCount": "The workflow needs exactly one trigger.",
+        "unknownEdgeNode": "A connection points to a node that no longer exists.",
+        "conditionHandle": "Only condition nodes can have true and false outputs.",
+        "cycle": "The workflow contains a loop. Remove the connection that closes it."
+      }
+    },
     "list": {
       "title": "Workflows",
       "subtitle": "Automate multi-step tasks with agents, tools, and conditions.",
@@ -602,16 +620,15 @@
       "false": "false"
     },
     "node": {
-      "lead": "Lead: {name}",
-      "memberSingular": "member",
-      "memberPlural": "members",
       "toolCallTooltip": "{count} tool call(s) in this run",
       "input": "input",
       "output": "output"
     },
     "agentPicker": {
       "placeholder": "Select an agent",
-      "loading": "Loading agents..."
+      "loading": "Loading agents...",
+      "none": "No agent yet",
+      "deleted": "Deleted agent"
     },
     "agentConfig": {
       "agentConfiguration": "Agent configuration",
@@ -626,13 +643,16 @@
       "note": "The two edges leaving this node are labeled \"true\" and \"false\"; connect each to the branch that should run."
     },
     "teamConfig": {
-      "leadAgentLabel": "Lead agent",
-      "membersLabel": "Members",
+      "lead": "Lead",
+      "leadIntro": "The lead gets this task and hands parts of it to the members.",
+      "members": "Members",
+      "membersWithCount": "Members ({count}/{max})",
       "addMember": "Add member",
-      "memberN": "Member {index}",
       "removeMember": "Remove member",
-      "rolePlaceholder": "Role, e.g. researches background facts",
-      "note": "1 to 5 members. Each needs an agent and a short role describing what it handles."
+      "removeDisabledReason": "A team needs at least one member.",
+      "roleLabel": "Role",
+      "roleHint": "Tells the lead when to hand work to this member.",
+      "rolePlaceholder": "e.g. researches background facts"
     },
     "toolConfig": {
       "selectTool": "Select a tool"

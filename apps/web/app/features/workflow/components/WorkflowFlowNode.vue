@@ -5,6 +5,7 @@ import {
   GitBranchIcon,
   ShuffleIcon,
   SparklesIcon,
+  TriangleAlertIcon,
   UsersIcon,
   WrenchIcon,
   ZapIcon,
@@ -19,6 +20,8 @@ import {
 } from '~/components/ai-elements/node';
 import { Badge } from '~/components/ui/badge';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
+import WorkflowTeamRoster from '~/features/workflow/components/WorkflowTeamRoster.vue';
+import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
 import {
   NODE_TYPE_LABEL_KEYS,
   type WorkflowNodeData,
@@ -37,6 +40,8 @@ const props = defineProps<Props>();
 // this is one shared fetch (or cache hit) for the whole canvas, not one per
 // node, and no prop plumbing through Vue Flow is needed.
 const { data: agentsData } = useGetAllAgents();
+// The run view provides no validation, so its nodes show no markers.
+const validation = inject(WORKFLOW_VALIDATION_KEY, null);
 const { t } = useI18n();
 
 // Computed
@@ -60,21 +65,18 @@ const typeIcon = computed(
     })[props.type],
 );
 
-const isCondition = computed(() => props.type === 'condition');
+const firstIssueMessage = computed(() => {
+  const [firstIssue] = validation?.value.nodeIssues.get(props.id) ?? [];
+  return firstIssue ? t(firstIssue.messageKey) : undefined;
+});
 
-// The team node's lead agent, once loaded. Shown instead of the agent-only
-// model/tools card below, since a lead has no toolset of its own in v1.
-const teamLead = computed(() => {
-  if (props.type !== 'team') return undefined;
-  const config = props.data.config;
-  const leadAgentId = 'leadAgentId' in config ? config.leadAgentId : undefined;
-  return agentsData.value?.agents.find((agent) => agent.id === leadAgentId);
-});
-const teamMemberCount = computed(() => {
-  if (props.type !== 'team') return undefined;
-  const config = props.data.config;
-  return 'members' in config ? config.members.length : undefined;
-});
+const teamConfig = computed(() =>
+  props.type === 'team' && 'members' in props.data.config
+    ? props.data.config
+    : undefined,
+);
+
+const isCondition = computed(() => props.type === 'condition');
 
 // A one-line summary shown under the label so the canvas is scannable
 // without opening the config panel for every node.
@@ -91,8 +93,6 @@ const summary = computed(() => {
         : '';
     case 'transform':
       return 'template' in config ? config.template : '';
-    case 'team':
-      return 'prompt' in config ? config.prompt : '';
     default:
       return '';
   }
@@ -116,16 +116,11 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
     :class="
       cn(
         props.data.stepStatus && statusStyles[props.data.stepStatus],
+        firstIssueMessage && 'border-destructive',
         props.selected && 'ring-2 ring-primary',
       )
     "
   >
-    <Handle
-      v-if="props.type !== 'trigger'"
-      type="target"
-      :position="Position.Left"
-    />
-
     <NodeHeader>
       <NodeTitle class="flex items-center justify-between gap-2 text-sm">
         <span class="flex min-w-0 items-center gap-2">
@@ -136,6 +131,13 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
           <span class="truncate">{{ props.data.label }}</span>
         </span>
         <span class="flex shrink-0 items-center gap-1.5">
+          <TriangleAlertIcon
+            v-if="firstIssueMessage"
+            role="img"
+            class="size-4 stroke-1.5 text-destructive"
+            :aria-label="firstIssueMessage"
+            :title="firstIssueMessage"
+          />
           <span
             v-if="props.data.stepToolCallCount"
             class="flex items-center gap-0.5 text-xs font-normal text-muted-foreground"
@@ -156,7 +158,7 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
     </NodeHeader>
 
     <NodeContent
-      v-if="summary || selectedAgent || teamMemberCount !== undefined"
+      v-if="summary || selectedAgent || teamConfig"
       class="flex flex-col gap-1.5 text-xs text-muted-foreground"
     >
       <p v-if="summary" class="truncate">{{ summary }}</p>
@@ -181,53 +183,37 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
         </span>
       </div>
 
-      <div v-if="teamMemberCount !== undefined" class="flex flex-col gap-1">
-        <span class="truncate">{{
-          t('workflow.node.lead', {
-            name: teamLead?.name ?? '…',
-          })
-        }}</span>
-        <span
-          >{{ teamMemberCount }}
-          {{
-            teamMemberCount === 1
-              ? t('workflow.node.memberSingular')
-              : t('workflow.node.memberPlural')
-          }}
-        </span>
-      </div>
+      <WorkflowTeamRoster
+        v-if="teamConfig"
+        :node-id="props.id"
+        :config="teamConfig"
+      />
     </NodeContent>
 
-    <!-- Labels the handles below: "input" on the left for every node but
-         the trigger (it has no target handle), "output" on the right, or
-         "true"/"false" for a condition's two branch handles. -->
+    <!-- Each handle sits in the row of its label so it centres on it. The
+         trigger has no input; a condition's "false" gets its own row. -->
     <div
-      class="flex items-center justify-between px-3 pb-2 text-xs text-muted-foreground"
+      class="relative flex items-center px-3 py-1 text-xs text-muted-foreground"
     >
-      <span>{{
-        props.type === 'trigger' ? '' : t('workflow.node.input')
+      <template v-if="props.type !== 'trigger'">
+        <Handle type="target" :position="Position.Left" />
+        <span>{{ t('workflow.node.input') }}</span>
+      </template>
+      <span class="ml-auto">{{
+        isCondition ? t('workflow.branch.true') : t('workflow.node.output')
       }}</span>
-      <span v-if="isCondition" class="flex gap-3">
-        <span>{{ t('workflow.branch.true') }}</span>
-        <span>{{ t('workflow.branch.false') }}</span>
-      </span>
-      <span v-else>{{ t('workflow.node.output') }}</span>
+      <Handle
+        type="source"
+        :position="Position.Right"
+        :id="isCondition ? 'true' : undefined"
+      />
     </div>
-
-    <template v-if="isCondition">
-      <Handle
-        type="source"
-        :position="Position.Right"
-        id="true"
-        style="top: 55%"
-      />
-      <Handle
-        type="source"
-        :position="Position.Right"
-        id="false"
-        style="top: 80%"
-      />
-    </template>
-    <Handle v-else type="source" :position="Position.Right" />
+    <div
+      v-if="isCondition"
+      class="relative flex items-center justify-end px-3 py-1 text-xs text-muted-foreground"
+    >
+      <span>{{ t('workflow.branch.false') }}</span>
+      <Handle type="source" :position="Position.Right" id="false" />
+    </div>
   </Node>
 </template>

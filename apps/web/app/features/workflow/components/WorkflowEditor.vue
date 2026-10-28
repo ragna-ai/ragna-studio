@@ -5,7 +5,9 @@ import type {
   WorkflowNode,
   WorkflowNodeType,
 } from '@repo/workflow';
+import { toast } from 'vue-sonner';
 import { isExecutionEquivalent } from '@repo/workflow';
+import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
 import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
@@ -22,7 +24,14 @@ import {
   nextFreePosition,
 } from '~/features/workflow/lib/default-node';
 import { toWorkflowDefinition } from '~/features/workflow/lib/serialize-definition';
+import { getCompleteAgentIds } from '~/features/workflow/lib/agent-slot';
+import {
+  getBlockingMessage,
+  getFirstInvalidNodeId,
+  validateDraft,
+} from '~/features/workflow/lib/validate-draft';
 import type { Workflow } from '~/features/workflow/types';
+import { WORKFLOW_VALIDATION_KEY } from '~/features/workflow/types/validation';
 
 // Imports
 
@@ -62,6 +71,7 @@ watch(selectedNodeId, (nodeId) => {
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
 const { mutateAsync: publishWorkflow, isPending: isPublishing } =
   usePublishWorkflow();
+const { data: agentsData } = useGetAllAgents();
 const { t } = useI18n();
 
 // Computed
@@ -80,6 +90,12 @@ const hasUnpublishedChanges = computed(
       props.workflow.publishedDefinition,
     ),
 );
+
+const knownAgentIds = computed(() => getCompleteAgentIds(agentsData.value));
+const validation = computed(() =>
+  validateDraft(draftDefinition.value, knownAgentIds.value),
+);
+provide(WORKFLOW_VALIDATION_KEY, validation);
 
 // Functions
 function addNode(type: WorkflowNodeType) {
@@ -113,10 +129,35 @@ async function handleSaveSettings(value: {
 }) {
   name.value = value.name;
   description.value = value.description;
-  await handleSave();
+  await handleSaveDetails();
 }
 
-async function handleSave() {
+async function handleSaveDetails() {
+  await saveWorkflow({
+    workflowId: props.workflow.id,
+    name: name.value,
+    description: description.value || undefined,
+  });
+}
+
+function isBlocked(isAllowed: boolean): boolean {
+  if (isAllowed) {
+    return false;
+  }
+  const { messageKey, count } = getBlockingMessage(validation.value);
+  toast.error(t(messageKey, { count }, count));
+  selectFirstInvalidNode();
+  return true;
+}
+
+function selectFirstInvalidNode() {
+  const nodeId = getFirstInvalidNodeId(validation.value);
+  if (nodeId) {
+    selectedNodeId.value = nodeId;
+  }
+}
+
+async function saveDraft() {
   await saveWorkflow({
     workflowId: props.workflow.id,
     name: name.value,
@@ -125,9 +166,19 @@ async function handleSave() {
   });
 }
 
+async function handleSave() {
+  if (isBlocked(validation.value.canSave)) {
+    return;
+  }
+  await saveDraft();
+}
+
 async function handlePublish() {
+  if (isBlocked(validation.value.canPublish)) {
+    return;
+  }
   try {
-    await handleSave();
+    await saveDraft();
     await publishWorkflow(props.workflow.id);
   } catch {
     // Both mutations already surface a toast on failure.
@@ -146,7 +197,7 @@ async function handlePublish() {
             <InlineNameField
               v-model:name="name"
               :label="t('workflow.editor.nameLabel')"
-              @save="handleSave"
+              @save="handleSaveDetails"
             />
           </template>
         </PageBreadcrumb>
@@ -243,6 +294,7 @@ async function handlePublish() {
       v-model:open="isRunDialogOpen"
       :workflow="workflow"
       :draft-definition="draftDefinition"
+      @publish-blocked="selectFirstInvalidNode"
     />
     <WorkflowRunsList
       v-model:open="isRunsListOpen"
