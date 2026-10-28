@@ -16,14 +16,6 @@ injectWorkspacePackages: true
 syncInjectedDepsAfterScripts:
   - build
 
-# drizzle-kit resolves `drizzle-orm/_relations` from its own subtree but declares
-# no drizzle-orm dependency, so pnpm otherwise links the hoisted 0.45.2 (pulled in
-# by db0/nuxt/better-auth) which lacks that subpath. Pin the matching RC here.
-packageExtensions:
-  drizzle-kit:
-    dependencies:
-      drizzle-orm: 1.0.0-rc.4
-
 # Keeps pnpm-lock.yaml a single YAML document. GitHub's dependency graph only
 # reads the first document, so pnpm 12's leading env document hides every
 # locked package from Dependabot (dependabot/dependabot-core#15904).

@@ -9,8 +9,8 @@ export interface ConnectedDatabaseName {
 }
 
 export async function getConnectedDatabaseName(): Promise<ConnectedDatabaseName> {
-  const result = await db.execute(sql`select current_database() as name`);
-  const [row] = result.rows as { name: string }[];
+  const result = await db.execute<{ name: string }>(sql`select current_database() as name`);
+  const [row] = result.rows;
 
   if (!row) {
     throw new Error('Could not determine the connected database name.');
