@@ -5,73 +5,97 @@ sidebar:
   order: 0
 ---
 
-All settings go into `.env`. The [installer](/self-hosting/install-options/one-line-setup) creates it from the release's `.env.example`. An empty default means the feature stays off until it is set.
+All settings go into `.env`. The [installer](/self-hosting/install-options/one-line-setup) creates it from the release's `.env.example`.
+
+The **Code default** column shows the value RAGNA Studio uses when a variable is not set. `.env.example` sets its own values for some variables. Because the installer copies that file to `.env`, those values win. See [Values set by `.env.example`](#values-set-by-envexample). An empty code default means the feature stays off until the variable is set.
 
 ## App and domains
 
-| Variable                    | Default                 | Meaning                                                                               |
-| --------------------------- | ----------------------- | ------------------------------------------------------------------------------------- |
-| `NODE_ENV`                  | `development`           | `development`, `production` or `test`                                                 |
-| `RAGNA_VERSION`             | `latest`                | Image tag for the RAGNA Studio containers, such as `0.5.0`. Read by Docker Compose.   |
-| `APP_URL`                   | `http://localhost:3000` | Public URL of the web app                                                             |
-| `API_BASE_URL`              |                         | Public URL of the API                                                                 |
-| `NUXT_PUBLIC_API_BASE_URL`  |                         | Public API URL for the browser. Must be **https** in production.                      |
-| `TRUSTED_ORIGINS`           | `http://localhost:3000` | Comma-separated list of allowed origins                                               |
-| `COOKIE_DOMAIN`             |                         | Parent domain, such as `.example.com`. Needed when app and API are on separate hosts. |
-| `NUXT_PUBLIC_I18N_BASE_URL` | `https://ragna.io`      | Base URL for language links                                                           |
-| `LOG_LEVEL`                 | `info`                  | `trace`, `normal`, `debug`, `info`, `warn` or `error`                                 |
-| `AI_SDK_LOG_WARNINGS`       | `true`                  | Set to `false` to silence AI SDK warnings                                             |
+| Variable                    | Code default                | Meaning                                                                                                                                                       |
+| --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                  | `development`               | `development`, `production` or `test`                                                                                                                         |
+| `RAGNA_VERSION`             | `latest`                    | Image tag for the RAGNA Studio containers, such as `X.Y.Z`, see [GitHub releases](https://github.com/ragna-ai/ragna-studio/releases). Read by Docker Compose. |
+| `APP_URL`                   | `http://localhost:APP_PORT` | Public URL of the web app                                                                                                                                     |
+| `APP_PORT`                  | `3000`                      | Port used to build the default `APP_URL`. It does not change the port the web app listens on.                                                                 |
+| `API_PORT`                  | `3010`                      | Port the API listens on. The compose files and the health check assume `3010`.                                                                                |
+| `API_BASE_URL`              | `APP_URL` + `/`             | Public URL of the API                                                                                                                                         |
+| `NUXT_PUBLIC_API_BASE_URL`  |                             | Public API URL for the browser. Must be **https** in production.                                                                                              |
+| `TRUSTED_ORIGINS`           | `http://localhost:3000`     | Comma-separated list of allowed origins                                                                                                                       |
+| `COOKIE_DOMAIN`             |                             | Parent domain, such as `.example.com`. Needed when app and API are on separate hosts.                                                                         |
+| `NUXT_PUBLIC_I18N_BASE_URL` | `https://ragna.io`          | Base URL for language links                                                                                                                                   |
+| `LOG_LEVEL`                 | `info`                      | `trace`, `normal`, `debug`, `info`, `warn` or `error`                                                                                                         |
+| `AI_SDK_LOG_WARNINGS`       | `true`                      | Set to `false` to silence AI SDK warnings                                                                                                                     |
 
 See [Configuration](/self-hosting/configuration#domains).
 
+## Values set by `.env.example`
+
+These variables have a different value in `.env.example` than in the code. The installer copies them into `.env`.
+
+| Variable              | Code default    | `.env.example`          | Note                                                            |
+| --------------------- | --------------- | ----------------------- | --------------------------------------------------------------- |
+| `API_BASE_URL`        | `APP_URL` + `/` | `http://localhost:3010` | The installer sets it to the API URL entered.                   |
+| `LOG_LEVEL`           | `info`          | `debug`                 |                                                                 |
+| `AI_SDK_LOG_WARNINGS` | `true`          | `false`                 |                                                                 |
+| `MAIL_FROM`           |                 | `noreply@example.com`   |                                                                 |
+| `SMTP_PORT`           | `587`           | `2525`                  | Port of a local mail catcher.                                   |
+| `DB_PORT`             | `5432`          | `5437`                  | The self-host compose override sets `5432` for the containers.  |
+| `DB_PASSWORD`         | `mypassword`    | `changeme`              | The installer generates a random value.                         |
+| `REDIS_HOST`          |                 | `localhost`             | The self-host compose override sets `redis` for the containers. |
+| `REDIS_PORT`          | `6379`          | `6381`                  | The self-host compose override sets `6379` for the containers.  |
+| `REDIS_PASSWORD`      |                 | `changeme`              | The installer generates a random value.                         |
+
 ## Secrets
 
-| Variable             | Default | Meaning                                                                                 |
-| -------------------- | ------- | --------------------------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET` |         | Signs sessions and encrypts stored OAuth tokens. Never change it after the first start. |
+| Variable             | Code default | Meaning                                                                                 |
+| -------------------- | ------------ | --------------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET` |              | Signs sessions and encrypts stored OAuth tokens. Never change it after the first start. |
 
 See [Configuration](/self-hosting/configuration#secrets).
 
 ## Database
 
-| Variable             | Default     | Meaning                                                       |
-| -------------------- | ----------- | ------------------------------------------------------------- |
-| `DB_HOST`            | `localhost` | Postgres host                                                 |
-| `DB_PORT`            | `5432`      | Postgres port                                                 |
-| `DB_DATABASE`        | `studio`    | Database name                                                 |
-| `DB_USERNAME`        | `postgres`  | Database user                                                 |
-| `DB_PASSWORD`        |             | Database password                                             |
-| `DB_SSL`             | `false`     | Connect over TLS                                              |
-| `DATABASE_URL`       |             | Full connection string. Overrides the `DB_*` values when set. |
-| `DATABASE_POOL_SIZE` | `10`        | Connection pool size                                          |
+| Variable             | Code default      | Meaning                                                                                |
+| -------------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `DB_TYPE`            | `postgres`        | Protocol of the connection string built from the `DB_*` values. Keep it at `postgres`. |
+| `DB_HOST`            | `localhost`       | Postgres host                                                                          |
+| `DB_PORT`            | `5432`            | Postgres port                                                                          |
+| `DB_DATABASE`        | `studio`          | Database name                                                                          |
+| `DB_USERNAME`        | `postgres`        | Database user                                                                          |
+| `DB_PASSWORD`        | `mypassword`      | Database password                                                                      |
+| `DB_SSL`             | `false`           | Connect over TLS                                                                       |
+| `DATABASE_URL`       | Built from `DB_*` | Full connection string. Overrides the `DB_*` values when set.                          |
+| `DATABASE_POOL_SIZE` | `10`              | Connection pool size                                                                   |
 
 ## Redis
 
-| Variable         | Default | Meaning                         |
-| ---------------- | ------- | ------------------------------- |
-| `REDIS_HOST`     |         | Redis host                      |
-| `REDIS_PORT`     | `6379`  | Redis port                      |
-| `REDIS_PASSWORD` |         | Redis password                  |
-| `REDIS_DB`       | `0`     | Logical database index, 0 to 15 |
+| Variable         | Code default | Meaning                         |
+| ---------------- | ------------ | ------------------------------- |
+| `REDIS_HOST`     |              | Redis host                      |
+| `REDIS_PORT`     | `6379`       | Redis port                      |
+| `REDIS_PASSWORD` |              | Redis password                  |
+| `REDIS_DB`       | `0`          | Logical database index, 0 to 15 |
 
 ## Storage
 
-| Variable                   | Default | Meaning                                           |
-| -------------------------- | ------- | ------------------------------------------------- |
-| `S3_ENDPOINT`              |         | Endpoint of the S3 provider                       |
-| `S3_REGION`                | `auto`  | Bucket region. R2 wants `auto`.                   |
-| `S3_ACCESS_KEY_ID`         |         | Access key                                        |
-| `S3_SECRET_ACCESS_KEY`     |         | Secret key                                        |
-| `S3_IMAGES_BUCKET_NAME`    |         | Public-read bucket for images and generated media |
-| `S3_DOCUMENTS_BUCKET_NAME` |         | Private bucket for documents                      |
-| `MEDIA_URL`                |         | Public base URL of the images bucket              |
-| `NUXT_PUBLIC_MEDIA_URL`    |         | Same value as `MEDIA_URL`                         |
+| Variable                   | Code default | Meaning                                           |
+| -------------------------- | ------------ | ------------------------------------------------- |
+| `S3_ENDPOINT`              |              | Endpoint of the S3 provider                       |
+| `S3_REGION`                | `auto`       | Bucket region. R2 wants `auto`.                   |
+| `S3_ACCESS_KEY_ID`         |              | Access key                                        |
+| `S3_SECRET_ACCESS_KEY`     |              | Secret key                                        |
+| `S3_IMAGES_BUCKET_NAME`    |              | Public-read bucket for images and generated media |
+| `S3_DOCUMENTS_BUCKET_NAME` |              | Private bucket for documents                      |
+| `MEDIA_URL`                |              | Public base URL of the images bucket              |
+| `NUXT_PUBLIC_MEDIA_URL`    |              | Same value as `MEDIA_URL`                         |
+
+Setting `S3_ENDPOINT` requires `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_IMAGES_BUCKET_NAME`, `S3_DOCUMENTS_BUCKET_NAME` and `MEDIA_URL`. The installer refuses to start until all of them are set. `S3_REGION` stays optional.
 
 See [Storage](/self-hosting/storage).
 
 ## Sign-in
 
-| Variable                  | Default         | Meaning                                                                                                                 |
+| Variable                  | Code default    | Meaning                                                                                                                 |
 | ------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `GOOGLE_CLIENT_ID`        |                 | Google OAuth client                                                                                                     |
 | `GOOGLE_CLIENT_SECRET`    |                 | Google OAuth secret                                                                                                     |
@@ -96,60 +120,60 @@ Set at least one chat provider. Each `*_API_BASE_URL` is optional and overrides 
 | `BFL_API_KEY`, `BFL_API_BASE_URL`                                                                                                             | Black Forest Labs, for FLUX images and video |
 | `LMSTUDIO_API_KEY`, `LMSTUDIO_API_BASE_URL`                                                                                                   | LM Studio, for local models                  |
 
-| Variable                    | Default            | Meaning                       |
+| Variable                    | Code default       | Meaning                       |
 | --------------------------- | ------------------ | ----------------------------- |
 | `CHAT_TITLE_MODEL_PROVIDER` | `anthropic`        | Provider that names new chats |
 | `CHAT_TITLE_MODEL`          | `claude-haiku-4-5` | Model that names new chats    |
 
 ## Web search and browser
 
-| Variable                     | Default                 | Meaning                                                                                                   |
-| ---------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------- |
-| `SERP_API_KEY`               |                         | SerpAPI key for web search                                                                                |
-| `WEBBROWSER_PORT`            | `3011`                  | Port of the headless browser service                                                                      |
-| `WEBBROWSER_BASE_URL`        | `http://localhost:3011` | URL the API uses to reach the browser service                                                             |
-| `BROWSER_NAVIGATION_TIMEOUT` | `25000`                 | Page navigation timeout in ms                                                                             |
-| `BROWSER_BODY_LOAD_TIMEOUT`  | `10000`                 | Page body load timeout in ms                                                                              |
-| `BROWSER_MAX_CONCURRENCY`    | `4`                     | Parallel browser pages                                                                                    |
-| `BROWSER_MAX_QUEUE`          | `20`                    | Scrapes that may wait for a page before new ones are rejected                                             |
-| `BROWSER_IDLE_CLOSE_AFTER`   | `5m`                    | Close the idle browser after this long without scrapes. Units: `m`, `h`, `d`, `w`. `0m` keeps it running. |
+| Variable                     | Code default                       | Meaning                                                                                                   |
+| ---------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `SERP_API_KEY`               |                                    | SerpAPI key for web search                                                                                |
+| `WEBBROWSER_PORT`            | `3011`                             | Port of the headless browser service                                                                      |
+| `WEBBROWSER_BASE_URL`        | `http://localhost:WEBBROWSER_PORT` | URL the API uses to reach the browser service                                                             |
+| `BROWSER_NAVIGATION_TIMEOUT` | `25000`                            | Page navigation timeout in ms                                                                             |
+| `BROWSER_BODY_LOAD_TIMEOUT`  | `10000`                            | Page body load timeout in ms                                                                              |
+| `BROWSER_MAX_CONCURRENCY`    | `4`                                | Parallel browser pages                                                                                    |
+| `BROWSER_MAX_QUEUE`          | `20`                               | Scrapes that may wait for a page before new ones are rejected                                             |
+| `BROWSER_IDLE_CLOSE_AFTER`   | `5m`                               | Close the idle browser after this long without scrapes. Units: `m`, `h`, `d`, `w`. `0m` keeps it running. |
 
 ## Mail
 
-| Variable                              | Default     | Meaning                                                        |
-| ------------------------------------- | ----------- | -------------------------------------------------------------- |
-| `MAIL_TRANSPORT`                      | `smtp`      | `smtp` or `brevo`                                              |
-| `MAIL_FROM`                           |             | Sender address                                                 |
-| `SMTP_HOST`                           | `127.0.0.1` | SMTP host                                                      |
-| `SMTP_PORT`                           | `587`       | SMTP port                                                      |
-| `SMTP_USER`                           |             | SMTP user                                                      |
-| `SMTP_PASSWORD`                       |             | SMTP password                                                  |
-| `BREVO_API_KEY`                       |             | Brevo key, when `MAIL_TRANSPORT` is `brevo`                    |
-| `EMAIL_SYNC_INTERVAL`                 | `300000`    | Mailbox poll interval in ms                                    |
-| `EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE` | `1d`        | Only newer mail is auto-classified. Units: `m`, `h`, `d`, `w`. |
+| Variable                              | Code default | Meaning                                                        |
+| ------------------------------------- | ------------ | -------------------------------------------------------------- |
+| `MAIL_TRANSPORT`                      | `smtp`       | `smtp` or `brevo`                                              |
+| `MAIL_FROM`                           |              | Sender address                                                 |
+| `SMTP_HOST`                           | `127.0.0.1`  | SMTP host                                                      |
+| `SMTP_PORT`                           | `587`        | SMTP port                                                      |
+| `SMTP_USER`                           |              | SMTP user                                                      |
+| `SMTP_PASSWORD`                       |              | SMTP password                                                  |
+| `BREVO_API_KEY`                       |              | Brevo key, when `MAIL_TRANSPORT` is `brevo`                    |
+| `EMAIL_SYNC_INTERVAL`                 | `300000`     | Mailbox poll interval in ms                                    |
+| `EMAIL_AUTO_CLASSIFY_MAX_MESSAGE_AGE` | `1d`         | Only newer mail is auto-classified. Units: `m`, `h`, `d`, `w`. |
 
 ## LinkedIn
 
-| Variable                 | Default | Meaning                                    |
-| ------------------------ | ------- | ------------------------------------------ |
-| `LINKEDIN_CLIENT_ID`     |         | LinkedIn app client, for publishing drafts |
-| `LINKEDIN_CLIENT_SECRET` |         | LinkedIn app secret                        |
+| Variable                 | Code default | Meaning                                    |
+| ------------------------ | ------------ | ------------------------------------------ |
+| `LINKEDIN_CLIENT_ID`     |              | LinkedIn app client, for publishing drafts |
+| `LINKEDIN_CLIENT_SECRET` |              | LinkedIn app secret                        |
 
 ## MCP server
 
-| Variable                        | Default   | Meaning                                         |
-| ------------------------------- | --------- | ----------------------------------------------- |
-| `MCP_ENABLED`                   | `false`   | Turns the MCP server on                         |
-| `MCP_ALLOWED_CLIENT_IDS`        |           | Comma-separated client ID URLs that may connect |
-| `MCP_ACCESS_TOKEN_TTL_SECONDS`  | `3600`    | Access token lifetime                           |
-| `MCP_REFRESH_TOKEN_TTL_SECONDS` | `2592000` | Refresh token lifetime (30 days)                |
+| Variable                        | Code default | Meaning                                         |
+| ------------------------------- | ------------ | ----------------------------------------------- |
+| `MCP_ENABLED`                   | `false`      | Turns the MCP server on                         |
+| `MCP_ALLOWED_CLIENT_IDS`        |              | Comma-separated client ID URLs that may connect |
+| `MCP_ACCESS_TOKEN_TTL_SECONDS`  | `3600`       | Access token lifetime                           |
+| `MCP_REFRESH_TOKEN_TTL_SECONDS` | `2592000`    | Refresh token lifetime (30 days)                |
 
 ## Credits and billing
 
 Off by default. Self-hosted instances usually leave these unset.
 
-| Variable                    | Default | Meaning                                                                    |
-| --------------------------- | ------- | -------------------------------------------------------------------------- |
-| `CREDITS_ENABLED`           | `false` | Turns the credit system on                                                 |
-| `CREDIT_MARKUP_BPS`         | `15000` | Markup in basis points. `10000` is cost price. `NULL` disables the markup. |
-| `STRIPE_*`, `PAYMENT_*_URL` |         | Stripe keys, price IDs and payment redirects                               |
+| Variable                    | Code default | Meaning                                                                    |
+| --------------------------- | ------------ | -------------------------------------------------------------------------- |
+| `CREDITS_ENABLED`           | `false`      | Turns the credit system on                                                 |
+| `CREDIT_MARKUP_BPS`         | `15000`      | Markup in basis points. `10000` is cost price. `NULL` disables the markup. |
+| `STRIPE_*`, `PAYMENT_*_URL` |              | Stripe keys, price IDs and payment redirects                               |
