@@ -22,6 +22,9 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 // Computed
+// The tool registry only has a placeholder, so tool nodes are not offered. Saved ones still render.
+const ADDABLE_NODE_TYPES = NODE_TYPES.filter((type) => type !== 'tool');
+
 const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
   trigger: ZapIcon,
   agent: BotIcon,
@@ -38,7 +41,7 @@ const typeIcon: Record<WorkflowNodeType, typeof ZapIcon> = {
       {{ t('workflow.palette.addNode') }}
     </p>
     <Button
-      v-for="type in NODE_TYPES"
+      v-for="type in ADDABLE_NODE_TYPES"
       :key="type"
       variant="outline"
       size="sm"
