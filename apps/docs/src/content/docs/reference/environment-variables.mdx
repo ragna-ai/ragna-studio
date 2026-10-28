@@ -166,13 +166,3 @@ Set at least one chat provider. Each `*_API_BASE_URL` is optional and overrides 
 | `MCP_ALLOWED_CLIENT_IDS`        |           | Comma-separated client ID URLs that may connect |
 | `MCP_ACCESS_TOKEN_TTL_SECONDS`  | `3600`    | Access token lifetime                           |
 | `MCP_REFRESH_TOKEN_TTL_SECONDS` | `2592000` | Refresh token lifetime (30 days)                |
-
-## Credits and billing
-
-Off by default. Self-hosted instances usually leave these unset.
-
-| Variable                    | Default | Meaning                                                                    |
-| --------------------------- | ------- | -------------------------------------------------------------------------- |
-| `CREDITS_ENABLED`           | `false` | Turns the credit system on                                                 |
-| `CREDIT_MARKUP_BPS`         | `15000` | Markup in basis points. `10000` is cost price. `NULL` disables the markup. |
-| `STRIPE_*`, `PAYMENT_*_URL` |         | Stripe keys, price IDs and payment redirects                               |
