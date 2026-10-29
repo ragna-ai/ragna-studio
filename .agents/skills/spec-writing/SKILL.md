@@ -7,6 +7,32 @@ A spec answers what to build and how we know it is done. Write it for two reader
 
 `specs/README.md` owns the Status vocabulary and `pnpm specs:index`. `specs/standards/README.md` owns the checklist every PRD answers. AGENTS.md owns the bookkeeping that ships with the code (Status, `Closes #N`, `overview.md`, `apps/docs`). This skill covers the writing.
 
+## Folders and file names
+
+Every spec gets its own folder, named after its GitHub issue: `specs/<area>/<issue>-<slug>/`. The issue number makes the path unique, so a second spec in the same area never collides. It is the same number the PR closes with `Closes #N`. Same pattern as Kubernetes KEPs (`keps/sig-<area>/<issue>-<slug>/`).
+
+```text
+specs/
+  integrations/
+    224-connections/
+      prd.md
+      design.md
+      slices.md
+    reference/
+      known-issues.md
+  decisions/
+    0001-<slug>.md
+```
+
+1. **Issue first.** Open the issue (`gh issue create`), then create the folder. No issue, no folder.
+2. **Area** = the existing feature folder (`email`, `organizations`, `workflow`). A new area only for a new product surface.
+3. **Slug** = 1 to 4 lowercase words, hyphenated, naming the change: `224-connections`, `231-drafts`. No `prd`, `v2` or dates in the slug.
+4. **Fixed file names inside:** `prd.md`, `design.md`, `slices.md`. Nothing else is needed. Never `<topic>-prd.md`.
+5. **Follow-ups get their own folder.** A version 2, a change request or a later phase is a new issue and a new folder. Its PRD links the older one in its header ("Extends #224" or "Supersedes #224"). Mark the old PRD `superseded` when it no longer holds.
+6. **Reference docs** without a build lifecycle (known issues, reviews, strategy notes) go in `specs/<area>/reference/`. Reviews carry their date: `review-2026-07-29.md`.
+7. **Cross-cutting decisions** go in `specs/decisions/NNNN-<slug>.md`, numbered in order, once that log exists.
+8. **Existing specs stay where they are.** The convention applies to new specs. Don't move old files: issues, PRs and `overview.md` link to their paths.
+
 ## One feature, up to three files
 
 | File         | Holds                                                            | Rule                                              |

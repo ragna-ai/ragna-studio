@@ -2,13 +2,28 @@
 
 PRDs and design docs for ragna-studio, one folder per feature area.
 
+## Layout
+
+New specs get one folder per GitHub issue inside their area:
+
+```text
+specs/<area>/<issue>-<slug>/prd.md       requirements: stories, acceptance criteria, testing
+specs/<area>/<issue>-<slug>/design.md    schema, API, per-package changes (optional)
+specs/<area>/<issue>-<slug>/slices.md    build plan for parallel agents (optional)
+specs/<area>/reference/                  known issues, reviews, notes without a Status line
+```
+
+Example: `integrations/224-connections/prd.md` for issue #224. Follow-ups
+(version 2, change requests, later phases) get a new issue and a new folder. Specs written before
+2026-10-29 keep their old paths.
+
 ## Writing a spec
 
 Start a new PRD from the template in the spec-writing skill
-([`.agents/skills/spec-writing/`](../.agents/skills/spec-writing/SKILL.md)). It covers user
-stories, Given/When/Then acceptance criteria, the testing table, the length budget and when to
-record a decision. The research behind it is in
-[spec-writing/assessment-2026-10-29.md](./spec-writing/assessment-2026-10-29.md).
+([`.agents/skills/spec-writing/`](../.agents/skills/spec-writing/SKILL.md)). It covers the layout
+above, user stories, Given/When/Then acceptance criteria, the testing table, the length budget and
+when to record a decision. The research behind it is in
+[spec-writing/reference/assessment-2026-10-29.md](./spec-writing/reference/assessment-2026-10-29.md).
 
 ## Status convention
 

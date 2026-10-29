@@ -1,6 +1,6 @@
 # Spec writing: best practices 2026 and gap assessment
 
-Reference doc, not a PRD: no `Status:` line (see [../README.md](../README.md)). Research and
+Reference doc, not a PRD: no `Status:` line (see [../../README.md](../../README.md)). Research and
 assessment from 2026-10-29.
 
 ## Outcome
@@ -13,6 +13,9 @@ Given/When/Then acceptance criteria, and one-line rules for pure constraints. Im
   mapped in the PR body.
 - AGENTS.md loads `spec-writing` for `specs/` changes. `specs/README.md` points to the template.
 - The clipped Atlassian page in `specs/prd-template/` is removed.
+- A folder layout: `specs/<area>/<issue>-<slug>/{prd,design,slices}.md`, reference docs in
+  `specs/<area>/reference/`. New specs only; existing paths stay. See "Folder and file naming"
+  below.
 
 Not done yet: an ADR log, section-name linting in `specs:index`, a glossary, and the cleanup of
 `sw-dev-lifecycle.md` and the root `*-strategy.md` files. Existing `slices.md` files keep their
@@ -351,6 +354,34 @@ What this added to the recommendations:
 4. **Remove the repeated rules from `slices.md`.** Point to the skills and AGENTS.md instead of
    copying them.
 
+## Folder and file naming
+
+Added on 2026-10-29. Fixed names like `prd.md` break as soon as an area gets a second spec. The
+repo already shows it: `organizations/v2-prd.md` next to `videogen/prd-v2.md`,
+`notifications/ws-push-prd.md`, six `email/*-change-request.md` files, and slices tied to their
+PRD only by a name prefix.
+
+Every robust scheme puts a unique ID in the path and keeps fixed file names inside the folder:
+
+| Who               | Where specs live            | Path                                                | ID source                   |
+| ----------------- | --------------------------- | --------------------------------------------------- | --------------------------- |
+| Kubernetes (KEPs) | Repo                        | `keps/sig-<area>/<issue>-<slug>/README.md`          | Tracking issue number       |
+| Rust (RFCs)       | Repo                        | `text/<pr>-<slug>.md`                               | PR number                   |
+| Oxide (RFDs)      | Repo                        | `rfd/0042/README.md`, one branch per RFD            | Next free sequential number |
+| GitHub Spec Kit   | Repo                        | `specs/001-<slug>/{spec,plan,tasks}.md`             | Sequential or timestamp     |
+| Kiro              | Repo                        | `.kiro/specs/<slug>/{requirements,design,tasks}.md` | None, slug only             |
+| Pocock skills     | Issue tracker, ADRs in repo | `docs/adr/0001-<slug>.md`                           | Sequential (ADRs)           |
+| Linear            | Linear project documents    | Project overview + documents under Resources        | The tracker                 |
+
+Linear keeps specs in the tool, owned by the project lead and kept short. It also calls user
+stories an anti-pattern, but its objection is to stories as issues: user experience is discussed
+"at the product level, not the task level". RAGNA keeps stories in the PRD and issues as tasks,
+which fits that split.
+
+Decision: the Kubernetes pattern, `specs/<area>/<issue>-<slug>/`. GitHub Issues come first
+anyway, the PR closes the same number, and area folders stay. Linear's in-tool specs don't fit a
+public repo whose index, overview and docs bookkeeping read the files.
+
 ## Recommendations
 
 Fix the requirements layer and leave the lifecycle layer alone. Apply all of this to new specs
@@ -406,6 +437,12 @@ Web research (search results and fetched pages):
 - [Card, Conversation, Confirmation (Ron Jeffries)](https://ronjeffries.com/xprog/articles/expcardconversationconfirmation/)
 - [User stories (Mike Cohn)](https://www.mountaingoatsoftware.com/agile/user-stories)
 - [PR/FAQ method (LogRocket)](https://blog.logrocket.com/product-management/pr-faq-method-product-innovation/)
+- [Kubernetes KEPs README](https://github.com/kubernetes/enhancements/blob/master/keps/README.md)
+- [Rust RFCs README](https://github.com/rust-lang/rfcs/blob/master/README.md)
+- [Oxide RFD 1](https://oxide.computer/blog/rfd-1-requests-for-discussion)
+- [Linear Method](https://linear.app/method/introduction)
+- [Linear: Write issues not user stories](https://linear.app/method/write-issues-not-user-stories)
+- [Linear docs: Projects](https://linear.app/docs/projects)
 - [Working Backwards (Hustle Badger)](https://www.hustlebadger.com/what-do-product-teams-do/amazon-working-backwards-process/)
 
 Repos read directly (shallow clones, 2026-10-29):
