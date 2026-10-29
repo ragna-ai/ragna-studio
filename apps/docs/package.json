@@ -34,6 +34,6 @@
     "pagefind": "^1.5.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.3",
-    "wrangler": "^4.151.2"
+    "wrangler": "^4.153.0"
   }
 }
