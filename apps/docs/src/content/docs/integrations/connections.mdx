@@ -1,0 +1,56 @@
+---
+title: Connections
+description: Connect Google, Microsoft or LinkedIn accounts for mail and social posts, reconnect them and remove them.
+sidebar:
+  order: 3
+---
+
+A connection is an external account that RAGNA Studio acts with, for example the Google account behind a mailbox or the LinkedIn profile that publishes posts. Connections are separate from sign-in. Signing in with Google, Microsoft or LinkedIn only identifies the user. It grants no mail or posting permission.
+
+Each user connects their own accounts. A connection belongs to one user and no other user can use it.
+
+## What a connection can do
+
+| Integration      | Provider  | Used by                                    |
+| ---------------- | --------- | ------------------------------------------ |
+| Gmail            | Google    | The [email client](/integrations/email)    |
+| Outlook mail     | Microsoft | The [email client](/integrations/email)    |
+| LinkedIn posting | LinkedIn  | [Social posts](/integrations/social-posts) |
+
+A user has one connection per provider. Connecting a second integration of the same provider asks the provider for the added permissions and keeps the single connection. Removing one integration later does not narrow the permissions already granted on the account.
+
+## Connect an account
+
+1. Open the user menu and choose **Connections**.
+2. Under **Available integrations**, choose **Connect** next to the integration.
+3. Sign in at the provider and grant the requested access.
+
+The browser returns to the **Connections** page. Each connection shows the provider, the account email, the integrations that use it and its status.
+
+The mail and social post pages offer the same step where it is needed: **Connect Gmail**, **Connect Outlook** and **Connect LinkedIn**.
+
+### Which account can be connected
+
+- **Google and Microsoft:** the account email must equal the email the user signs in with. Otherwise RAGNA Studio shows **Connect the account you sign in with**, and nothing is saved. This keeps personal connections personal.
+- **LinkedIn:** any LinkedIn account works, because a posting profile often uses another email.
+
+## Status and reconnecting
+
+The status reads **Active** or **Needs reconnect**. A connection needs a reconnect when the provider rejects it, for example after a password change or when the access was revoked there. RAGNA Studio then sends one notification and shows **Reconnect** on the connection. A mailbox on that connection stops syncing until it is reconnected.
+
+Choose **Reconnect** and grant access again. Settings and synced mail stay.
+
+## Remove a connection
+
+Choose **Remove** on the connection and confirm. RAGNA Studio first asks the provider to revoke the access, then deletes the connection.
+
+- **A connection used by a mailbox:** the mailbox and its synced mail, categories and drafts are removed too.
+- **Google:** RAGNA Studio no longer appears under third-party access in the Google account.
+- **Microsoft:** Microsoft offers apps no way to revoke access. Remove RAGNA Studio in the Microsoft account under **My apps**. For a personal account, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
+- **LinkedIn:** the access is revoked at LinkedIn. It can also be removed in the LinkedIn settings under permitted services.
+
+Connections are also revoked and deleted when a user is removed from the organization, leaves it or is deleted.
+
+## Tokens
+
+Access and refresh tokens are stored encrypted and never leave the server. No page, API response or log shows them. On a self-hosted instance the encryption key is `APP_KEY`, see [Environment variables](/reference/environment-variables#secrets).

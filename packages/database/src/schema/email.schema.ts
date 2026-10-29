@@ -1,6 +1,7 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
+import { integrationConnection } from './integration.schema';
 import { user } from './user.schema';
 
 export type EmailProvider = 'gmail' | 'microsoft';
@@ -41,9 +42,8 @@ export interface EmailDraftAttachment {
 }
 
 // EMAIL ACCOUNT
-// One row per user. The
-// actual OAuth tokens live in better-auth's `account` table via
-// linkSocial(); this row only tracks the mailbox connection and sync state.
+// One row per user. The OAuth tokens live on the bound integration connection;
+// this row only tracks the mailbox and its sync state.
 export const emailAccount = pgTable(
   'email_accounts',
   {
@@ -52,6 +52,9 @@ export const emailAccount = pgTable(
       .notNull()
       .unique()
       .references(() => user.id, { onDelete: 'cascade' }),
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => integrationConnection.id, { onDelete: 'cascade' }),
     provider: text('provider').notNull().$type<EmailProvider>(),
     email: text('email').notNull(),
     // Opaque cursor: Gmail's historyId today, a Graph delta token later.
@@ -67,7 +70,10 @@ export const emailAccount = pgTable(
     lastSyncedAt: timestamp('last_synced_at'),
     ...timestamps,
   },
-  (table) => [index('emailAccount_defaultAgentId_idx').on(table.defaultAgentId)],
+  (table) => [
+    index('emailAccount_defaultAgentId_idx').on(table.defaultAgentId),
+    index('emailAccount_connectionId_idx').on(table.connectionId),
+  ],
 );
 
 export type EmailAccount = typeof emailAccount.$inferSelect;

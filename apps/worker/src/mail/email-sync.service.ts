@@ -20,6 +20,7 @@ import {
   upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
+import { ConnectionNeedsReauthError, getConnectionAccessToken } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { toCanonicalText } from '@repo/mail/content';
 import { isMailAuthError } from '@repo/mail/provider';
@@ -83,6 +84,7 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
   await updateEmailAccountSyncState({ id: accountId, syncState: 'syncing' });
 
   try {
+    await getConnectionAccessToken({ connectionId: account.connectionId });
     const provider = getMailProviderForAccount(account);
 
     if (account.syncCursor) {
@@ -106,6 +108,12 @@ export async function syncEmailAccount(accountId: string): Promise<void> {
       lastSyncedAt: new Date(),
     });
   } catch (error) {
+    if (error instanceof ConnectionNeedsReauthError) {
+      logger.warn(`Connection of email account ${accountId} needs to be reconnected`);
+      await updateEmailAccountSyncState({ id: accountId, syncState: 'reauth_required' });
+      return;
+    }
+
     await updateEmailAccountSyncState({
       id: accountId,
       syncState: isMailAuthError(error) ? 'reauth_required' : 'error',

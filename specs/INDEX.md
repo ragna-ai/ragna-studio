@@ -19,6 +19,7 @@ work first, shipped reference and dead/historical docs last.
 | Doc | Status |
 | --- | --- |
 | [Agent media models (PRD)](./agent/agent-media-models-prd.md) | decided (2026-10-23) |
+| [Integrations: connections separate from sign-in (PRD)](./integrations/224-connections/prd.md) | decided (2026-10-29) |
 | [Organizations: AI model selection (PRD)](./organizations/ai-models-prd.md) | decided (2026-10-23) |
 
 ## Proposed

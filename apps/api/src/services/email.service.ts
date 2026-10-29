@@ -26,6 +26,7 @@ import {
   deleteEmailAccountById,
   deleteEmailCategory,
   getAgentInPersonalWorkspace,
+  getConnectionById,
   getEmailAccountByUserId,
   getEmailCategoryById,
   getEmailDraftById,
@@ -53,6 +54,7 @@ import {
   upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
+import { removeConnection } from '@repo/integrations';
 import { logger } from '@repo/logger';
 // `email_message_bodies.textBody` is the LLM-facing canonical text (plain-
 // text part preferred, else markdown from HTML), same convention
@@ -95,12 +97,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
-import {
-  BETTER_AUTH_PROVIDER_ID,
-  getMailProviderForConnectRequest,
-  getMailProviderForUser,
-} from './email-provider.service';
-import { revokeProviderGrants } from './provider-grant.service';
+import { getMailProviderForConnectRequest, getMailProviderForUser } from './email-provider.service';
 
 // Attachment bytes (and metadata) are never persisted,
 // so a compose request's fresh uploads
@@ -171,7 +168,18 @@ export async function getEmailAccountStatus({
     throw new InternalServerErrorException('Failed to load email account');
   }
 
-  return toAccountStatus(account);
+  if (!account) {
+    return toAccountStatus(null);
+  }
+
+  const connection = await getConnectionById({ id: account.connectionId });
+  const needsReconnect = connection?.status === 'needs_reauth';
+
+  const status = toAccountStatus(account);
+  if (needsReconnect && status.account) {
+    status.account.syncState = 'reauth_required';
+  }
+  return status;
 }
 
 // Superhuman-style default set: natural
@@ -213,9 +221,11 @@ const DEFAULT_EMAIL_CATEGORIES: ReadonlyArray<{
 export async function connectEmailAccount({
   userId,
   provider: providerKind,
+  connectionId,
 }: {
   userId: string;
   provider: MailProviderKind;
+  connectionId: string;
 }): Promise<EmailAccount> {
   const { data: existing } = await tryCatch(() => getEmailAccountByUserId({ userId }));
 
@@ -223,7 +233,11 @@ export async function connectEmailAccount({
     throw new BadRequestException('A mailbox is already connected');
   }
 
-  const provider = await getMailProviderForConnectRequest({ userId, provider: providerKind });
+  const provider = await getMailProviderForConnectRequest({
+    userId,
+    provider: providerKind,
+    connectionId,
+  });
 
   const { error: profileError, data: profile } = await tryCatch(() => provider.getProfile());
 
@@ -235,7 +249,12 @@ export async function connectEmailAccount({
   }
 
   const { error, data: account } = await tryCatch(() =>
-    createEmailAccount({ userId, provider: providerKind, email: profile.emailAddress }),
+    createEmailAccount({
+      userId,
+      connectionId,
+      provider: providerKind,
+      email: profile.emailAddress,
+    }),
   );
 
   if (error !== null || !account) {
@@ -274,36 +293,23 @@ export async function connectEmailAccount({
   return account;
 }
 
-// [POST] /email/account/disconnect. Cascades to threads/messages/etc; the linked social account stays as login identity, its tokens are revoked and cleared.
+// [POST] /email/account/disconnect. Removes the mailbox's connection (revoked at the provider), which cascades to threads, messages and the rest.
 export async function disconnectEmailAccount({ userId }: { userId: string }): Promise<void> {
   const account = await loadEmailAccount({ userId });
+  const connection = await getConnectionById({ id: account.connectionId });
 
-  const { error } = await tryCatch(() => deleteEmailAccountById({ id: account.id }));
+  const { error } = await tryCatch(async () => {
+    if (connection) {
+      await removeConnection(connection);
+      return;
+    }
+    await deleteEmailAccountById({ id: account.id });
+  });
 
   if (error !== null) {
     logger.error('Failed to disconnect email account', error);
     throw new InternalServerErrorException('Failed to disconnect your mailbox');
   }
-
-  await revokeProviderGrants({
-    userId,
-    providerIds: [BETTER_AUTH_PROVIDER_ID[account.provider]],
-  });
-}
-
-/** Offboarding, best effort: drops the user's mailbox if any and revokes every mail-capable provider grant. */
-export async function removeMailAccessForUser({ userId }: { userId: string }): Promise<void> {
-  const { error } = await tryCatch(async () => {
-    const account = await getEmailAccountByUserId({ userId });
-    if (account) {
-      await deleteEmailAccountById({ id: account.id });
-    }
-  });
-  if (error !== null) {
-    logger.error('Failed to delete mailbox during offboarding', error);
-  }
-
-  await revokeProviderGrants({ userId, providerIds: Object.values(BETTER_AUTH_PROVIDER_ID) });
 }
 
 /**

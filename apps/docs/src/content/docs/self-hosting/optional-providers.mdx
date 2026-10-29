@@ -10,7 +10,22 @@ Each provider is enabled by its own env vars. The [environment variables](/refer
 - An OpenAI key for embeddings, which power retrieval over large knowledge bases
 - A Black Forest Labs key for FLUX images and video, or Google Vertex for Imagen and Veo
 - A SerpAPI key for web search
-- Google or Microsoft OAuth with mail scopes for the email client
+- Google or Microsoft OAuth for the email client
 - A LinkedIn app for publishing drafts
 - SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`). The verify, welcome and invitation emails need it. Without SMTP, invitations still work: the invite link shown in the org settings can be shared by hand.
 - An email allowlist (`ALLOWED_LOGIN_EMAILS`), see [Restricting sign-up](/self-hosting/configuration#restricting-sign-up)
+
+## Connections
+
+Mail and LinkedIn posting use [connections](/integrations/connections), which reuse the OAuth apps used for sign-in (`GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID`, `LINKEDIN_CLIENT_ID`). Two more steps are needed:
+
+1. Set `APP_KEY`, the key that encrypts stored connection tokens. The installer generates it. Otherwise run `pnpm key:generate` and put the result in `.env`. Without it, connecting fails with "APP_KEY is not set".
+2. Add this redirect URI to each provider app, with `API_BASE_URL` as the host:
+
+   ```text
+   https://api.example.com/integration/oauth/callback
+   ```
+
+   The API logs the exact URI at startup.
+
+Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`). Sign-in itself asks only for `openid`, `profile` and `email`. `LINKEDIN_SCOPES` is deprecated and ignored.

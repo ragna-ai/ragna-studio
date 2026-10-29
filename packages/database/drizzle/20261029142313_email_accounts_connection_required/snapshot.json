@@ -1,0 +1,29 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "799d09e0-8295-4f95-a2c7-dc6ab10bba0c",
+  "prevIds": ["b2156f43-9776-4f98-a1d9-793bb49f5569"],
+  "footprints": [
+    {
+      "statementType": "alter_column",
+      "statementTarget": ["column", "public", "email_accounts", "connection_id"],
+      "writes": ["s|colprop|public.email_accounts.connection_id.notNull"],
+      "reads": [
+        "n|tbl|public.email_accounts",
+        "n|sch|public",
+        "n|col|public.email_accounts.connection_id"
+      ],
+      "sqlHash": "37ee2c0c3af29537"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"email_accounts\",\"connection_id\"]",
+      "set": {
+        "notNull": true
+      }
+    }
+  ]
+}

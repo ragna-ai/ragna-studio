@@ -10,10 +10,13 @@ import { purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
   queueAddBulkMock,
+  providerHttp,
   queueAddMock,
+  resetProviderMocks,
   resetQueueMock,
   resetStorageProviderMock,
   seedAuthenticatedUser,
+  seedGmailConnection,
   seedOrganizationMember,
   truncateAllTables,
 } from '@repo/testing';
@@ -28,6 +31,7 @@ const errorBodySchema = z.object({ message: z.string() });
 
 beforeEach(async () => {
   await truncateAllTables();
+  resetProviderMocks();
   resetQueueMock();
   resetStorageProviderMock();
 });
@@ -83,6 +87,21 @@ describe('platform admin remove-user', () => {
     const purgeCalls = queueAddMock.mock.calls.filter(([name]) => name === PURGE_ORGANIZATION_JOB);
     expect(purgeCalls).toHaveLength(1);
     expect(purgeOrganizationJobSchema.parse(purgeCalls[0]?.[1])).toEqual({ organizationId });
+  });
+
+  test('revokes the connections of the removed user at the provider', async () => {
+    const { colleague } = await seedOwnerWithColleague();
+    const { refreshToken } = await seedGmailConnection({ userId: colleague.userId });
+
+    const response = await removeUserAsPlatformAdmin(colleague.userId);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(providerHttp.revokeRequests).toEqual([
+      { provider: 'google', token: refreshToken ?? 'missing' },
+    ]);
+    expect(
+      await db.query.integrationConnection.findMany({ where: { userId: colleague.userId } }),
+    ).toHaveLength(0);
   });
 
   test('running the enqueued job removes the organization, workspaces and R2 objects', async () => {

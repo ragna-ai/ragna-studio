@@ -1,5 +1,7 @@
 <script setup lang="ts">
 // Imports
+import { toast } from 'vue-sonner';
+import { omitQueryParam } from '~/lib/omit-query-param';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -23,6 +25,9 @@ const providers: SocialProvider[] = [
 ];
 
 // Composables
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const {
   accounts,
   isLoading,
@@ -53,12 +58,21 @@ function handleDisconnect(accountId: string) {
 }
 
 // Hooks
+// better-auth sends a refused link back with ?error=
+onMounted(() => {
+  if (typeof route.query.error !== 'string') return;
+  toast.error(t('user.social.linkRefused'));
+  router.replace({ query: omitQueryParam(route.query, 'error') });
+});
 </script>
 
 <template>
   <Card class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ $t('user.social.title') }}</CardTitle>
+      <p class="text-sm text-muted-foreground">
+        {{ $t('user.social.description') }}
+      </p>
     </CardHeader>
     <CardContent>
       <div v-if="isLoading" class="flex justify-center py-8">

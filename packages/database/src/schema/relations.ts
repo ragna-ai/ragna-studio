@@ -20,6 +20,7 @@ import {
 import { folder } from './folder.schema';
 import { genImage, genImageReference } from './genimage.schema';
 import { genVideo } from './genvideo.schema';
+import { integrationConnection, integrationOauthState } from './integration.schema';
 import { chatAttachment, media } from './media.schema';
 import { mcpConnection, mcpSettings, mcpToolCall } from './mcp.schema';
 import { agentMemory } from './memory.schema';
@@ -101,6 +102,8 @@ const schema = {
   mcpSettings,
   mcpConnection,
   mcpToolCall,
+  integrationConnection,
+  integrationOauthState,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -136,6 +139,35 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
     }),
     mcpConnections: r.many.mcpConnection(),
+    integrationConnections: r.many.integrationConnection({ alias: 'integrationConnectionOwner' }),
+    integrationOauthStates: r.many.integrationOauthState(),
+  },
+  integrationConnection: {
+    organization: r.one.organization({
+      from: r.integrationConnection.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    user: r.one.user({
+      from: r.integrationConnection.userId,
+      to: r.user.id,
+      optional: true,
+      alias: 'integrationConnectionOwner',
+    }),
+    workspace: r.one.workspace({
+      from: r.integrationConnection.workspaceId,
+      to: r.workspace.id,
+      optional: true,
+    }),
+    emailAccounts: r.many.emailAccount(),
+    socialPosts: r.many.socialPost(),
+  },
+  integrationOauthState: {
+    user: r.one.user({
+      from: r.integrationOauthState.userId,
+      to: r.user.id,
+      optional: false,
+    }),
   },
   account: {
     user: r.one.user({
@@ -155,6 +187,7 @@ export const relations = defineRelations(schema, (r) => ({
     organizationMembers: r.many.organizationMember(),
     invitations: r.many.invitation(),
     workspaces: r.many.workspace(),
+    integrationConnections: r.many.integrationConnection(),
     creditAccount: r.one.creditAccount({
       from: r.organization.id,
       to: r.creditAccount.organizationId,
@@ -524,6 +557,11 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
       optional: false,
     }),
+    connection: r.one.integrationConnection({
+      from: r.emailAccount.connectionId,
+      to: r.integrationConnection.id,
+      optional: true,
+    }),
     defaultAgent: r.one.agent({
       from: r.emailAccount.defaultAgentId,
       to: r.agent.id,
@@ -714,6 +752,11 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.workspace.id,
       optional: false,
     }),
+    connection: r.one.integrationConnection({
+      from: r.socialPost.connectionId,
+      to: r.integrationConnection.id,
+      optional: true,
+    }),
     media: r.many.socialPostMedia(),
   },
   socialPostMedia: {
@@ -841,6 +884,7 @@ export const relations = defineRelations(schema, (r) => ({
       optional: true,
     }),
     workspaceMembers: r.many.workspaceMember(),
+    integrationConnections: r.many.integrationConnection(),
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),

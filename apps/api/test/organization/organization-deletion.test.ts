@@ -7,7 +7,12 @@ import {
   sql,
 } from '@repo/database';
 import { invitation, workflow } from '@repo/database/schema';
-import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
+import {
+  seedAuthenticatedUser,
+  seedGmailConnection,
+  seedOrganizationMember,
+  truncateAllTables,
+} from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -267,8 +272,10 @@ describe('while the organization is deleted', () => {
 
   test('email sync skips the owner of the organization', async () => {
     const { owner } = await seedOrganizationWith([]);
+    const { connection } = await seedGmailConnection({ userId: owner.userId });
     await createEmailAccount({
       userId: owner.userId,
+      connectionId: connection.id,
       provider: 'gmail',
       email: 'owner@example.com',
     });

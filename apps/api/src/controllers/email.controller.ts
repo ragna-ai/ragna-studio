@@ -85,8 +85,8 @@ export const emailController = new Hono()
    */
   .post('/account/connect', validConnectEmailAccountBody, async (c) => {
     const user = c.get('user');
-    const { provider } = c.req.valid('json');
-    const account = await connectEmailAccount({ userId: user.id, provider });
+    const { provider, connectionId } = c.req.valid('json');
+    const account = await connectEmailAccount({ userId: user.id, provider, connectionId });
     return c.json({ account }, StatusCodes.CREATED);
   })
   /**

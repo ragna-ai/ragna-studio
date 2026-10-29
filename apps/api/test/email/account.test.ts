@@ -1,16 +1,16 @@
 import {
   getProfileMock,
+  GOOGLE_IDENTITY_SCOPES,
+  providerHttp,
   resetProviderMocks,
   seedAuthenticatedUser,
   seedEmailThreadWithMessage,
-  seedGmailLinkedAccount,
-  seedGoogleAccountWithoutGmailScope,
-  seedMicrosoftAccountWithoutMailScope,
-  seedMicrosoftLinkedAccount,
-  seedMicrosoftLinkedAccountWithShortScopes,
+  seedGmailConnection,
+  seedOutlookConnection,
   truncateAllTables,
 } from '@repo/testing';
-import { getEmailThreadById } from '@repo/database';
+import { db, getConnectionById, getEmailThreadById } from '@repo/database';
+import { account } from '@repo/database/schema';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -24,7 +24,7 @@ import { emailSyncAddMock, resetEmailQueueMock } from './support/email-queue.moc
 
 // Auth/authorization for /email/* in general is covered by test/auth/route-sweep.test.ts, not here.
 
-const accountStatusSchema = z.object({
+const accountStatusSchema = z.strictObject({
   id: z.string(),
   provider: z.enum(['gmail', 'microsoft']),
   email: z.string(),
@@ -33,15 +33,21 @@ const accountStatusSchema = z.object({
   lastSyncedAt: z.string().nullable(),
 });
 
-const statusResponseSchema = z.object({
+const statusResponseSchema = z.strictObject({
   connected: z.boolean(),
   account: accountStatusSchema.nullable(),
 });
 
-const fullAccountResponseSchema = z.object({
-  account: z.object({
+const fullAccountResponseSchema = z.strictObject({
+  account: z.strictObject({
     id: z.string(),
+    syncCursor: z.string().nullable(),
+    lastSyncedAt: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
     userId: z.string(),
+    connectionId: z.string(),
     provider: z.enum(['gmail', 'microsoft']),
     email: z.string(),
     defaultAgentId: z.string().nullable(),
@@ -49,11 +55,15 @@ const fullAccountResponseSchema = z.object({
   }),
 });
 
-function connectRequest(cookieHeader: string, provider: 'gmail' | 'microsoft') {
+function connectRequest(
+  cookieHeader: string,
+  provider: 'gmail' | 'microsoft',
+  connectionId: string,
+) {
   return app.request('/email/account/connect', {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ provider }),
+    body: JSON.stringify({ provider, connectionId }),
   });
 }
 
@@ -108,20 +118,21 @@ describe('GET /email/account', () => {
 });
 
 describe('POST /email/account/connect - gmail', () => {
-  test('creates the account row, seeds default categories, and enqueues the initial sync', async () => {
+  test('creates the account row on the connection, seeds default categories, and enqueues the initial sync', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedGmailLinkedAccount({ userId });
+    const { connection } = await seedGmailConnection({ userId });
     getProfileMock.mockImplementationOnce(() =>
       Promise.resolve({ emailAddress: 'newly-connected@gmail.test', cursor: 'history-0' }),
     );
 
-    const response = await connectRequest(cookieHeader, 'gmail');
+    const response = await connectRequest(cookieHeader, 'gmail', connection.id);
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = fullAccountResponseSchema.parse(await response.json());
     expect(body.account.provider).toBe('gmail');
     expect(body.account.email).toBe('newly-connected@gmail.test');
     expect(body.account.userId).toBe(userId);
+    expect(body.account.connectionId).toBe(connection.id);
     expect(body.account.syncState).toBe('idle');
 
     const categoriesResponse = await app.request('/email/category', {
@@ -139,30 +150,77 @@ describe('POST /email/account/connect - gmail', () => {
     expect(emailSyncAddMock).toHaveBeenCalledTimes(1);
   });
 
-  test('rejects with a clean 4xx when no Google account is linked at all', async () => {
+  test('rejects a connect request without a connection id', async () => {
     const { cookieHeader } = await seedAuthenticatedUser();
 
-    const response = await connectRequest(cookieHeader, 'gmail');
+    const response = await app.request('/email/account/connect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ provider: 'gmail' }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects a connection that does not exist', async () => {
+    const { cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await connectRequest(cookieHeader, 'gmail', Bun.randomUUIDv7());
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test("rejects another user's connection", async () => {
+    const owner = await seedAuthenticatedUser();
+    const { connection } = await seedGmailConnection({ userId: owner.userId });
+    const other = await seedAuthenticatedUser();
+
+    const response = await connectRequest(other.cookieHeader, 'gmail', connection.id);
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects a connection that never granted gmail.modify', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedGmailConnection({
+      userId,
+      scopes: GOOGLE_IDENTITY_SCOPES,
+    });
+
+    const response = await connectRequest(cookieHeader, 'gmail', connection.id);
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
   });
 
-  test('rejects with a clean 4xx when Google is linked but gmail.modify was never granted', async () => {
+  test('rejects a connection of another provider', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedGoogleAccountWithoutGmailScope({ userId });
+    const { connection } = await seedOutlookConnection({ userId });
 
-    const response = await connectRequest(cookieHeader, 'gmail');
+    const response = await connectRequest(cookieHeader, 'gmail', connection.id);
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects a connection that needs to be reconnected', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedGmailConnection({ userId, status: 'needs_reauth' });
+
+    const response = await connectRequest(cookieHeader, 'gmail', connection.id);
+
+    expect(response.status).toBe(StatusCodes.CONFLICT);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
   });
 
   test('rejects a second connect once already connected', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedConnectedGmailAccount({ userId, cookieHeader });
+    const { connectionId } = await seedConnectedGmailAccount({ userId, cookieHeader });
 
-    const response = await connectRequest(cookieHeader, 'gmail');
+    const response = await connectRequest(cookieHeader, 'gmail', connectionId);
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
   });
@@ -173,7 +231,7 @@ describe('POST /email/account/connect - gmail', () => {
     const response = await app.request('/email/account/connect', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ provider: 'yahoo' }),
+      body: JSON.stringify({ provider: 'yahoo', connectionId: Bun.randomUUIDv7() }),
     });
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
@@ -184,12 +242,12 @@ describe('POST /email/account/connect - gmail', () => {
 describe('POST /email/account/connect - microsoft', () => {
   test('creates the account row with provider: microsoft', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedMicrosoftLinkedAccount({ userId });
+    const { connection } = await seedOutlookConnection({ userId });
     getProfileMock.mockImplementationOnce(() =>
       Promise.resolve({ emailAddress: 'newly-connected@outlook.test', cursor: 'delta-0' }),
     );
 
-    const response = await connectRequest(cookieHeader, 'microsoft');
+    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = fullAccountResponseSchema.parse(await response.json());
@@ -200,29 +258,56 @@ describe('POST /email/account/connect - microsoft', () => {
 
   test('accepts mail scopes stored as short names, not just full resource URIs', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedMicrosoftLinkedAccountWithShortScopes({ userId });
+    const { connection } = await seedOutlookConnection({
+      userId,
+      scopes: ['openid', 'Mail.ReadWrite', 'Mail.Send'],
+    });
 
-    const response = await connectRequest(cookieHeader, 'microsoft');
+    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
 
     expect(response.status).toBe(StatusCodes.CREATED);
   });
 
-  test('rejects with a clean 4xx when no Microsoft account is linked at all', async () => {
-    const { cookieHeader } = await seedAuthenticatedUser();
+  test('rejects a connection that never granted Mail.ReadWrite and Mail.Send', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedOutlookConnection({ userId, scopes: ['openid', 'User.Read'] });
 
-    const response = await connectRequest(cookieHeader, 'microsoft');
+    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
   });
+});
 
-  test('rejects with a clean 4xx when Microsoft is linked but Mail.ReadWrite/Mail.Send were never granted', async () => {
+describe('mailbox after an upgrade from sign-in tokens', () => {
+  test('a user without a connection is asked to connect their mailbox again', async () => {
+    const { cookieHeader } = await seedAuthenticatedUser();
+
+    const response = await app.request('/email/account', { headers: { cookie: cookieHeader } });
+
+    const body = statusResponseSchema.parse(await response.json());
+    expect(body.connected).toBe(false);
+  });
+
+  test('the sign-in account alone cannot connect a mailbox', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
-    await seedMicrosoftAccountWithoutMailScope({ userId });
+    await db.insert(account).values({
+      userId,
+      accountId: 'google-sub',
+      providerId: 'google',
+      accessToken: 'sign-in-access-token',
+      scope: 'openid,email,profile,https://www.googleapis.com/auth/gmail.modify',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
-    const response = await connectRequest(cookieHeader, 'microsoft');
+    const response = await app.request('/email/account/connect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ provider: 'gmail' }),
+    });
 
-    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
   });
 });
@@ -247,6 +332,19 @@ describe('POST /email/account/disconnect', () => {
     expect(statusBody.connected).toBe(false);
 
     expect(await getEmailThreadById({ id: thread.id, accountId })).toBeNull();
+  });
+
+  test('revokes the Google grant and removes the connection', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connectionId } = await seedConnectedGmailAccount({ userId, cookieHeader });
+
+    await app.request('/email/account/disconnect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(providerHttp.revokeRequests).toHaveLength(1);
+    expect(await getConnectionById({ id: connectionId })).toBeNull();
   });
 
   test('404s when there is nothing to disconnect', async () => {

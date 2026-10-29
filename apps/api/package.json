@@ -30,6 +30,7 @@
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/export": "workspace:*",
+    "@repo/integrations": "workspace:*",
     "@repo/linkedin": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",

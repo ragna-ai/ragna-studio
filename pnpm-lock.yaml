@@ -16,6 +16,9 @@ catalogs:
     mdream:
       specifier: 2.0.3
       version: 2.0.3
+    oauth4webapi:
+      specifier: 3.8.8
+      version: 3.8.8
     oxfmt:
       specifier: ^0.73.0
       version: 0.73.0
@@ -81,6 +84,9 @@ importers:
       '@repo/export':
         specifier: workspace:*
         version: link:../../packages/export
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@repo/linkedin':
         specifier: workspace:*
         version: link:../../packages/linkedin
@@ -224,6 +230,9 @@ importers:
       '@repo/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -424,6 +433,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -555,6 +567,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../integrations
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
@@ -589,6 +604,25 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.6.7
+    devDependencies:
+      '@repo/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.1.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.1(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/crypto:
+    dependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
@@ -740,6 +774,46 @@ importers:
       '@types/pdfmake':
         specifier: 0.3.3
         version: 0.3.3
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.1(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/integrations:
+    dependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
+      '@repo/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@repo/queue':
+        specifier: workspace:*
+        version: link:../queue
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
+      oauth4webapi:
+        specifier: 'catalog:'
+        version: 3.8.8
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+    devDependencies:
+      '@repo/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.1.0
       tsdown:
         specifier: 'catalog:'
         version: 0.23.1(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
@@ -940,6 +1014,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../integrations
       '@repo/linkedin':
         specifier: workspace:*
         version: link:../linkedin
@@ -8157,6 +8234,9 @@ packages:
     resolution: {integrity: sha512-W72Hrj1petq+b3Hk2aAC+9zswetlIFTnDW4s5djseZh2nYqBbyQLOtj472HwcbcWykPBUW1WpWpjOd4nK6gMRw==}
     engines: {node: '>=18'}
     hasBin: true
+
+  oauth4webapi@3.8.8:
+    resolution: {integrity: sha512-8N28E+a/oxfXWBgOMt+ZP/JUf/XR+IFbvkAEPP3gznXOMv9BpAAwiIj0TFNz3tGTPc0ZQ8zmWBNgN1nAys0gng==}
 
   object-identity@0.2.3:
     resolution: {integrity: sha512-2J8Joz2Tf7aaylhqFvIUJHNgpuGR38Hh75Voq9GzTbStBxJUaOtN0K1aOd3cV5qp+ij1pMqRbPrGCGMOyX303w==}
@@ -18518,6 +18598,8 @@ snapshots:
       citty: 0.2.2
       pathe: 2.0.3
       tinyexec: 1.3.1
+
+  oauth4webapi@3.8.8: {}
 
   object-identity@0.2.3: {}
 

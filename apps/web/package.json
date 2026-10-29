@@ -25,6 +25,7 @@
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/editor": "workspace:*",
+    "@repo/integrations": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",
     "@repo/workflow": "workspace:*",

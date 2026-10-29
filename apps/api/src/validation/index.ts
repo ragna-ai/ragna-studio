@@ -7,6 +7,7 @@ export * from './email.schema';
 export * from './folder.schema';
 export * from './gen-image.schema';
 export * from './gen-video.schema';
+export * from './integration.schema';
 export * from './media.schema';
 export * from './mcp-settings.schema';
 export * from './notification.schema';

@@ -60,7 +60,7 @@ const fakeLinkedinClient = {
   waitForImageAvailable: waitForImageAvailableMock,
 };
 
-export const createLinkedinClientMock = mock(() => fakeLinkedinClient);
+export const createLinkedinClientMock = mock((_accessToken: string) => fakeLinkedinClient);
 
 export function resetLinkedinProviderMock(): void {
   createLinkedinClientMock.mockClear();

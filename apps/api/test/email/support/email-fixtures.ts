@@ -2,8 +2,8 @@
 import type { EmailAccount } from '@repo/database';
 import {
   getProfileMock,
-  seedGmailLinkedAccount,
-  seedMicrosoftLinkedAccount,
+  seedGmailConnection,
+  seedOutlookConnection,
   seedTokenPricedAiModel,
 } from '@repo/testing';
 import * as z from 'zod';
@@ -12,6 +12,7 @@ import { app } from '../../../src/app';
 export interface ConnectedGmailAccount {
   userId: string;
   accountId: string;
+  connectionId: string;
   email: string;
 }
 
@@ -23,10 +24,12 @@ interface ConnectEmailAccountResult {
 async function connectEmailAccountRequest({
   cookieHeader,
   provider,
+  connectionId,
   email,
 }: {
   cookieHeader: string;
   provider: 'gmail' | 'microsoft';
+  connectionId: string;
   email?: string;
 }): Promise<ConnectEmailAccountResult> {
   if (email) {
@@ -38,7 +41,7 @@ async function connectEmailAccountRequest({
   const response = await app.request('/email/account/connect', {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ provider }),
+    body: JSON.stringify({ provider, connectionId }),
   });
 
   if (response.status !== 201) {
@@ -61,10 +64,20 @@ export async function seedConnectedGmailAccount({
   cookieHeader: string;
   email?: string;
 }): Promise<ConnectedGmailAccount> {
-  await seedGmailLinkedAccount({ userId });
-  const connected = await connectEmailAccountRequest({ cookieHeader, provider: 'gmail', email });
+  const { connection } = await seedGmailConnection({ userId, externalEmail: email ?? null });
+  const connected = await connectEmailAccountRequest({
+    cookieHeader,
+    provider: 'gmail',
+    connectionId: connection.id,
+    email,
+  });
 
-  return { userId, ...connected };
+  return {
+    userId,
+    accountId: connected.accountId,
+    connectionId: connection.id,
+    email: connected.email,
+  };
 }
 
 export async function seedConnectedMicrosoftAccount({
@@ -76,14 +89,20 @@ export async function seedConnectedMicrosoftAccount({
   cookieHeader: string;
   email?: string;
 }): Promise<ConnectedGmailAccount> {
-  await seedMicrosoftLinkedAccount({ userId });
+  const { connection } = await seedOutlookConnection({ userId, externalEmail: email ?? null });
   const connected = await connectEmailAccountRequest({
     cookieHeader,
     provider: 'microsoft',
+    connectionId: connection.id,
     email,
   });
 
-  return { userId, ...connected };
+  return {
+    userId,
+    accountId: connected.accountId,
+    connectionId: connection.id,
+    email: connected.email,
+  };
 }
 
 export async function createAgentForWorkspace(

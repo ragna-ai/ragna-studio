@@ -277,7 +277,16 @@ const ConfigSchema = z.object({
   CHAT_TITLE_MODEL_PROVIDER: z.string().default('anthropic'),
   CHAT_TITLE_MODEL: z.string().default('claude-haiku-4-5'),
 
-  LINKEDIN_SCOPES: z.array(z.string()).default([]),
+  LINKEDIN_SCOPES: z
+    .string()
+    .optional()
+    .default('')
+    .transform((val) =>
+      val
+        .split(',')
+        .map((scope) => scope.trim())
+        .filter((scope) => scope.length > 0),
+    ),
   LINKEDIN_CLIENT_ID: z.string().optional().default(''),
   LINKEDIN_CLIENT_SECRET: z.string().optional().default(''),
 
@@ -306,6 +315,10 @@ const ConfigSchema = z.object({
         .map((email) => email.trim().toLowerCase())
         .filter((email) => email.length > 0),
     ),
+
+  // Application key for secrets at rest ("base64:" plus 32 random bytes). Optional so the app boots without it.
+  APP_KEY: z.string().optional().default(''),
+  APP_PREVIOUS_KEYS: z.string().optional().default(''),
 
   // MCP server: kill switch (P2) and the CIMD client ID
   // allowlist (P4).
@@ -375,6 +388,8 @@ export class ConfigService {
         'LINKEDIN_CLIENT_SECRET',
         'MICROSOFT_CLIENT_SECRET',
         'APPLE_PRIVATE_KEY',
+        'APP_KEY',
+        'APP_PREVIOUS_KEYS',
         'MISTRAL_API_KEY',
         'LMSTUDIO_API_KEY',
       ]);
@@ -677,6 +692,8 @@ export class ConfigService {
   getSecret(key: 'LINKEDIN_CLIENT_SECRET'): string;
   getSecret(key: 'MICROSOFT_CLIENT_SECRET'): string;
   getSecret(key: 'APPLE_PRIVATE_KEY'): string;
+  getSecret(key: 'APP_KEY'): string;
+  getSecret(key: 'APP_PREVIOUS_KEYS'): string;
   getSecret(key: keyof ParsedConfig): string {
     return this._config[key] as string;
   }

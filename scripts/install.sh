@@ -156,6 +156,7 @@ create_env_file() {
   cp "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
   chmod 600 "$INSTALL_DIR/.env"
   set_env BETTER_AUTH_SECRET "$(openssl rand -hex 32)"
+  set_env APP_KEY "base64:$(openssl rand -base64 32)"
   set_env DB_PASSWORD "$(openssl rand -hex 24)"
   set_env REDIS_PASSWORD "$(openssl rand -hex 24)"
 }

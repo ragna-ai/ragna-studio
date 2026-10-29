@@ -47,9 +47,11 @@ These variables have a different value in `.env.example` than in the code. The i
 
 ## Secrets
 
-| Variable             | Default | Meaning                                                                                 |
-| -------------------- | ------- | --------------------------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET` |         | Signs sessions and encrypts stored OAuth tokens. Never change it after the first start. |
+| Variable             | Default | Meaning                                                                                                                  |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `BETTER_AUTH_SECRET` |         | Signs sessions and encrypts stored sign-in OAuth tokens. Never change it after the first start.                          |
+| `APP_KEY`            |         | Encrypts connection tokens (`base64:` plus 32 random bytes). Create one with `pnpm key:generate`. The installer sets it. |
+| `APP_PREVIOUS_KEYS`  |         | Comma-separated old keys, used only to read tokens written before a key rotation.                                        |
 
 See [Configuration](/self-hosting/configuration#secrets).
 
@@ -157,6 +159,7 @@ Set at least one chat provider. Each `*_API_BASE_URL` is optional and overrides 
 | ------------------------ | ------- | ------------------------------------------ |
 | `LINKEDIN_CLIENT_ID`     |         | LinkedIn app client, for publishing drafts |
 | `LINKEDIN_CLIENT_SECRET` |         | LinkedIn app secret                        |
+| `LINKEDIN_SCOPES`        |         | Deprecated and ignored                     |
 
 ## MCP server
 

@@ -17,6 +17,7 @@ import { documentController } from './controllers/document.controller';
 import { emailController } from './controllers/email.controller';
 import { folderController } from './controllers/folder.controller';
 import { genImageController } from './controllers/imagegen.controller';
+import { integrationController } from './controllers/integration.controller';
 import { mcpSettingsController } from './controllers/mcp-settings.controller';
 import { mcpController } from './controllers/mcp.controller';
 import { mediaController } from './controllers/media.controller';
@@ -78,6 +79,7 @@ export const app = new Hono()
   .route('/', datasetController)
   .route('/', documentController)
   .route('/', emailController)
+  .route('/', integrationController)
   .route('/', folderController)
   .route('/', taskController)
   .route('/', taskLabelController)

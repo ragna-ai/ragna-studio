@@ -1,4 +1,5 @@
 import { config } from '@repo/config';
+import { getOAuthCallbackUrl, isAppKeyConfigured } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { setTimeout } from 'node:timers/promises';
 import { app } from './app';
@@ -27,6 +28,12 @@ function main() {
   });
 
   logger.info(`API server listening on http://localhost:${port}`);
+  logger.info(`Integration OAuth redirect URI for provider apps: ${getOAuthCallbackUrl()}`);
+  if (!isAppKeyConfigured()) {
+    logger.warn(
+      'APP_KEY is not set: connecting integrations is disabled. Run `pnpm key:generate`.',
+    );
+  }
 
   return server;
 }

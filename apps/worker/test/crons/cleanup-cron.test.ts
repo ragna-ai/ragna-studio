@@ -1,4 +1,6 @@
 import * as database from '@repo/database';
+import { db } from '@repo/database';
+import { integrationOauthState } from '@repo/database/schema';
 import { resetProviderMocks, seedAuthenticatedUser, truncateAllTables } from '@repo/testing';
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 import { cleanupProcessor } from '../../src/crons/cleanup.cron';
@@ -73,6 +75,33 @@ describe('cleanup cron', () => {
     const remaining = await listMcpToolCallIds();
     expect(remaining.has(oldId)).toBe(false);
     expect(remaining.has(recentId)).toBe(true);
+  });
+
+  test('removes expired OAuth states and keeps live ones', async () => {
+    const { userId } = await seedAuthenticatedUser();
+    await db.insert(integrationOauthState).values([
+      {
+        state: 'expired-state',
+        userId,
+        integrationId: 'gmail',
+        codeVerifier: 'v',
+        returnPath: '/',
+        expiresAt: hoursAgo(1),
+      },
+      {
+        state: 'live-state',
+        userId,
+        integrationId: 'gmail',
+        codeVerifier: 'v',
+        returnPath: '/',
+        expiresAt: daysFromNow(1),
+      },
+    ]);
+
+    await cleanupProcessor();
+
+    const remaining = await db.query.integrationOauthState.findMany();
+    expect(remaining.map((row) => row.state)).toEqual(['live-state']);
   });
 
   test('one failing step does not skip the others', async () => {

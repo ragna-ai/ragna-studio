@@ -38,8 +38,9 @@ which is restorable for 30 days.
 ### Auth
 
 better-auth with a Drizzle adapter, Google OAuth, and an admin plugin.
-No dedicated PRD, it's foundational infrastructure rather than a product
-feature.
+Sign-in accounts are for sign-in only: one per provider, with the login
+email, and no feature scopes. Feature tokens live in integration
+connections (see Integrations).
 
 ### Credits
 
@@ -174,7 +175,8 @@ into user-defined categories, AI reply drafts via a configurable agent
 drafts, bulk trash of selected threads, and HTML content shown in a
 sandboxed iframe (markdown only for the LLM). Polling sync with manual
 "Sync now". Drafts run without agent tools (inbound mail is untrusted).
-Disconnect and offboarding revoke the Google grant and clear provider tokens.
+The mailbox uses its own integration connection. Disconnect and offboarding
+revoke that connection at the provider.
 → [specs/email/prd.md](./email/prd.md),
 [gmail-client-decision.md](./email/gmail-client-decision.md),
 [drafts](./email/drafts-change-request.md),
@@ -183,6 +185,18 @@ Disconnect and offboarding revoke the Google grant and clear provider tokens.
 [OAuth and MCP hardening](./security/oauth-mcp-hardening-prd.md)
 
 ## Integrations
+
+### Integration connections
+
+Feature credentials separate from sign-in. A user connects their own Google,
+Microsoft or LinkedIn account per integration (mail, LinkedIn posting); the
+scopes are requested at connect time and accumulate on one connection per
+account. Tokens are encrypted with `APP_KEY` (`@repo/crypto`), refreshed under
+a Postgres lock and never sent to the browser. Organization policy, shared
+workspace connections and agent tools are later phases.
+→ [prd.md](./integrations/224-connections/prd.md),
+[design.md](./integrations/224-connections/design.md),
+[slices.md](./integrations/224-connections/slices.md)
 
 ### MCP server
 

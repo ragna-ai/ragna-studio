@@ -59,7 +59,8 @@
       "mcp": "MCP",
       "signOut": "Sign out",
       "credits": "{count} credits",
-      "organization": "Organization"
+      "organization": "Organization",
+      "connections": "Connections"
     }
   },
   "auth": {
@@ -171,7 +172,11 @@
     "panelTitle": "Notifications",
     "empty": "No notifications.",
     "delete": "Delete notification",
-    "clearAll": "Clear all"
+    "clearAll": "Clear all",
+    "integrationNeedsReauth": {
+      "title": "Connection needs a reconnect",
+      "message": "RAGNA Studio can no longer use your {provider} connection. Reconnect it under Connections."
+    }
   },
   "agent": {
     "toast": {
@@ -843,7 +848,7 @@
       "email": "Email"
     },
     "social": {
-      "title": "Connected accounts",
+      "title": "Sign-in accounts",
       "loadError": "Failed to load connected accounts.",
       "connected": "Connected",
       "notConnected": "Not connected",
@@ -856,7 +861,9 @@
         "google": "Google",
         "microsoft": "Microsoft",
         "linkedin": "LinkedIn"
-      }
+      },
+      "description": "Accounts you can sign in with. They need your login email. Mail and LinkedIn posting are connected under Connections.",
+      "linkRefused": "This account was not linked. It must use your login email and you can link one account per provider."
     }
   },
   "social": {
@@ -900,7 +907,7 @@
     "linkedinHint": {
       "title": "LinkedIn not connected",
       "message": "Connect your LinkedIn account to publish posts.",
-      "link": "Go to account settings"
+      "connect": "Connect LinkedIn"
     },
     "media": {
       "attach": "Attach image",
@@ -920,12 +927,13 @@
       "deleteError": "Failed to delete the post.",
       "publishSuccess": "Post published.",
       "publishError": "Failed to publish the post.",
-      "linkedinNotConnected": "No LinkedIn account connected. Please connect one first.",
+      "linkedinNotConnected": "No LinkedIn account connected. Connect LinkedIn to publish.",
       "createError": "Failed to create the post.",
       "mediaUploadError": "Failed to upload the image.",
       "mediaAltTextError": "Failed to save the alt text.",
       "mediaDeleteError": "Failed to remove the image."
-    }
+    },
+    "publishedWith": "Published with {account}"
   },
   "dataset": {
     "toast": {
@@ -1797,6 +1805,57 @@
     "selector": {
       "loadError": "Error loading AI models.",
       "placeholder": "Select an AI model"
+    }
+  },
+  "integrations": {
+    "page": {
+      "title": "Connections",
+      "subtitle": "Accounts RAGNA Studio uses for your mailbox and social posts.",
+      "empty": "You have not connected an account yet.",
+      "available": "Available integrations"
+    },
+    "providers": {
+      "google": "Google",
+      "microsoft": "Microsoft",
+      "linkedin": "LinkedIn"
+    },
+    "names": {
+      "gmail": "Gmail",
+      "outlook-mail": "Outlook mail",
+      "linkedin-posting": "LinkedIn posting"
+    },
+    "status": {
+      "active": "Active",
+      "needs_reauth": "Needs reconnect"
+    },
+    "actions": {
+      "connect": "Connect",
+      "reconnect": "Reconnect",
+      "remove": "Remove"
+    },
+    "remove": {
+      "title": "Remove this connection?",
+      "message": "RAGNA Studio loses access to this account.",
+      "mailboxWarning": "Your mailbox and its synced mail are removed too.",
+      "hint": {
+        "google": "RAGNA Studio is also removed from the third-party access of your Google account.",
+        "microsoft": "Microsoft does not allow removing access from here. Remove RAGNA Studio in your Microsoft account under My apps.",
+        "linkedin": "You can also remove RAGNA Studio under permitted services in your LinkedIn settings."
+      },
+      "scopesNote": "Removing one integration does not narrow the permissions you granted on the account."
+    },
+    "toast": {
+      "connectFailed": "Failed to start the connection",
+      "removed": "Connection removed",
+      "removeFailed": "Failed to remove the connection"
+    },
+    "errors": {
+      "invalid_state": "The connection attempt expired. Try again.",
+      "invalid_request": "The provider sent an incomplete answer. Try again.",
+      "access_denied": "You did not allow access.",
+      "provider_error": "The provider reported an error. Try again.",
+      "exchange_failed": "Could not finish the connection. Try again.",
+      "email_mismatch": "Connect the account you sign in with."
     }
   }
 }

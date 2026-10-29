@@ -10,7 +10,7 @@ RAGNA Studio has a built-in email client for connected mailboxes. Gmail and Outl
 Each user connects one mailbox. No other user in the workspace can see it.
 
 <Aside type="note">
-  On a self-hosted instance the mail connection needs Google or Microsoft OAuth with mail scopes.
+  On a self-hosted instance the mail connection needs Google or Microsoft OAuth and an `APP_KEY`.
   See [Optional providers](/self-hosting/optional-providers).
 </Aside>
 
@@ -24,8 +24,12 @@ Draft agents and attachments from the media library also come from the private w
 
 1. Open **Mail**.
 2. Choose **Connect Gmail** or **Connect Outlook**.
-3. Sign in at Google or Microsoft and grant the requested access.
+3. Sign in at Google or Microsoft and grant the mail access. The account email must equal the sign-in email.
 4. The browser returns to RAGNA Studio. It shows **Syncing your mailbox…** while it imports the most recent 50 inbox threads.
+
+The mailbox uses a [connection](/integrations/connections) of its own. Signing in with Google or Microsoft asks for no mail permission.
+
+An instance upgraded from a release where the mailbox used the sign-in account asks to connect the mailbox again. The old mailbox and its synced mail are removed during the upgrade.
 
 Older mail is not imported up front. When an older thread is opened, RAGNA loads it from the mail provider.
 
@@ -34,14 +38,14 @@ Older mail is not imported up front. When an older thread is opened, RAGNA loads
 Open **Email settings**, go to **General** and choose **Disconnect mailbox**. Disconnecting:
 
 - removes the synced mail, categories and drafts.
-- deletes the stored access tokens of the mailbox.
+- revokes and deletes the connection of the mailbox.
 - keeps the user signed in.
 
 The same happens when an organization member is removed from the organization or leaves it.
 
 ### Access at Google and Microsoft
 
-- **Gmail:** disconnecting also asks Google to revoke RAGNA Studio's access. Google then invalidates all tokens it issued to RAGNA Studio for the account. If the user signs in with Google, Google asks for consent again next time.
+- **Gmail:** disconnecting also asks Google to revoke RAGNA Studio's access. Google then invalidates all tokens it issued to RAGNA Studio for the account.
 - **Outlook:** Microsoft offers apps no way to revoke access, so only the stored tokens are deleted. To remove the access by hand:
   - Work or school account: open [My Apps](https://myapps.microsoft.com), choose RAGNA Studio, then **Manage your application** and **Revoke permissions**. If it isn't listed, ask the Microsoft administrator to remove it in Entra under **Enterprise applications**.
   - Personal account (outlook.com, hotmail): open [account.live.com/consent/Manage](https://account.live.com/consent/Manage) and remove RAGNA Studio.
@@ -52,7 +56,7 @@ RAGNA Studio appears at Google and Microsoft under the name the operator registe
 
 RAGNA checks the mailbox for changes every 5 minutes by default. Use **Sync now** (the refresh button at the bottom of the sidebar) to check right away. The sidebar shows the status: **Syncing...**, **Synced** with a time, or **Sync error**.
 
-Sometimes the mail provider revokes access, for example after a password change. The status then reads **Reconnect needed**, and RAGNA shows a toast that the mailbox access expired. To fix it:
+Sometimes the mail provider revokes access, for example after a password change. The status then reads **Reconnect needed**, and RAGNA shows a toast that the mailbox access expired. The connection shows **Needs reconnect** under [Connections](/integrations/connections). To fix it:
 
 1. Open **Email settings** and go to **General**.
 2. Choose **Reconnect Gmail** or **Reconnect Outlook**.

@@ -64,6 +64,10 @@ export const notificationDataSchemas = {
     workspaceId: z.uuidv7(),
     prompt: z.string().trim().min(1),
   }),
+  integration_needs_reauth: z.object({
+    connectionId: z.uuidv7(),
+    provider: z.enum(['google', 'microsoft', 'linkedin']),
+  }),
 } as const;
 
 export type NotificationDataMap = {
