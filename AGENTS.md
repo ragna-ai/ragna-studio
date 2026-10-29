@@ -33,6 +33,9 @@ pnpm --filter @repo/database db:pull       # introspect DB into schema
 # API integration tests (see apps/api/test/README.md; one-time `pnpm --filter @repo/api test:setup` first)
 pnpm test:api
 
+# Web end-to-end tests (Playwright; see apps/web/e2e/README.md)
+pnpm test:e2e
+
 # Worker tests (see apps/worker/test/README.md; same test:setup)
 pnpm test:worker
 
