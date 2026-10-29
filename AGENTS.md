@@ -128,7 +128,8 @@ checklist in `specs/standards/README.md`.
 
 ### Coding
 
-Always load the clean-code skill. For `apps/api` changes, also load the tdd skill.
+Always load the clean-code skill. For `apps/api` changes, also load the tdd skill. For PRDs, design
+docs and slices in `specs/`, load the spec-writing skill.
 
 **Skip self-verification of changes** unless explicitly asked, means:
 
