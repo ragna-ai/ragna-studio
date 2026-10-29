@@ -90,7 +90,7 @@ async function approve() {
       errorMessage.value = error?.message ?? t('mcp.consent.genericError');
       return;
     }
-    window.location.href = data.url;
+    await navigateTo(data.url, { external: true });
   } catch (err) {
     errorMessage.value = extractErrorMessage(
       err,
@@ -112,7 +112,7 @@ async function deny() {
       errorMessage.value = error?.message ?? t('mcp.consent.genericError');
       return;
     }
-    window.location.href = data.url;
+    await navigateTo(data.url, { external: true });
   } catch {
     errorMessage.value = t('mcp.consent.genericError');
   } finally {
