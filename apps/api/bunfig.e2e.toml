@@ -1,0 +1,2 @@
+# Separate from bunfig.toml: a top-level preload there would also mock `pnpm dev`.
+preload = ["./test/mcp-env.preload.ts", "./test/preload.ts"]

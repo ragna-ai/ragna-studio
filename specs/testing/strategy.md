@@ -1,11 +1,11 @@
 # Testing Strategy
 
-Status: in-progress. Agreed 2026-07-29. Phase 1 (API integration tests) is actively being built. Phase 2 (Playwright e2e) is future work.
+Status: in-progress. Agreed 2026-07-29. Phase 1 (API integration tests) is actively being built. Phase 2 (Playwright e2e) has its first journey, an agent chat round-trip.
 
 ## Phases
 
 1. **Phase 1 (now):** API integration tests for `apps/api`.
-2. **Phase 2 (later):** Playwright e2e for `apps/web`, reusing the Phase 1 seed helpers.
+2. **Phase 2 (started):** Playwright e2e for `apps/web`, reusing the Phase 1 seed helpers.
 
 ## Phase 1: API integration tests
 
@@ -140,13 +140,26 @@ Worker processors (`apps/worker`) are out of scope for Phase 1, but queue
 assertion helpers are written so worker tests can reuse them later. The
 worker suite is specified in [worker-prd.md](./worker-prd.md).
 
-## Phase 2: e2e (later)
+## Phase 2: e2e (started)
 
-Playwright against `apps/web` with api and worker running for real. Kept
-thin: a handful of critical journeys (login, create workspace, chat
-round-trip, kanban flow), not a re-test of every endpoint. The API layer
-covers correctness; e2e proves the wiring.
+Playwright against `apps/web` and a real API. Kept thin: a handful of
+critical journeys (login, create workspace, chat round-trip, kanban flow),
+not a re-test of every endpoint. The API layer covers correctness; e2e
+proves the wiring.
 
-Google OAuth cannot be automated. Playwright's global setup seeds a user and
-session via the Phase 1 helpers and injects the cookie instead of clicking
-through OAuth.
+Built so far: one spec, `apps/web/e2e/agent-chat.spec.ts` (create an agent
+through the UI, chat with it, see the scripted reply). Run it with
+`pnpm test:e2e`; see `apps/web/e2e/README.md`.
+
+- The API runs with the Phase 1 preloads (`serve:e2e` in `apps/api`), so queue,
+  mail and AI providers are mocked. The shared AI SDK mock streams as well as
+  generates, because chat uses `streamText`.
+- Google OAuth cannot be automated. A Playwright setup project runs
+  `apps/api/test/e2e/seed-user.ts` with Bun (it resets `studio_test` and
+  seeds a user, a model and credits) and injects the session cookie and the
+  active workspace into `storageState`.
+- The e2e API and the API test suite share `studio_test` and serialize via the
+  suite lock.
+
+Not built yet: a CI job, an OAuth redirect smoke test, running against a
+production build.

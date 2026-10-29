@@ -18,6 +18,7 @@
     "preview": "bun dist/index.mjs",
     "check-types": "tsc --noEmit && tsc --noEmit -p test",
     "test": "bun test",
+    "serve:e2e": "NODE_ENV=test bun --config=bunfig.e2e.toml src/index.ts",
     "test:setup": "pnpm --filter @repo/testing test:setup"
   },
   "dependencies": {

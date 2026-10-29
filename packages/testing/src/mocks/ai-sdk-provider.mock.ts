@@ -5,6 +5,7 @@
 // models. `generateText`, `generateImage`, `embedMany` and `generateVideo`
 // stay real. Their `doGenerate`/`doEmbed` are exported mocks: use
 // `mockImplementationOnce` for failure paths, `scriptModelOutput` for text.
+import { simulateReadableStream } from 'ai';
 import { mock } from 'bun:test';
 import {
   MockEmbeddingModelV4,
@@ -19,6 +20,10 @@ type LanguageGenerateFn = Extract<
   (...args: never[]) => unknown
 >;
 type LanguageGenerateResult = Awaited<ReturnType<LanguageGenerateFn>>;
+type LanguageStreamFn = Extract<LanguageModelOptions['doStream'], (...args: never[]) => unknown>;
+type LanguageStreamResult = Awaited<ReturnType<LanguageStreamFn>>;
+type LanguageStreamPart =
+  Awaited<LanguageStreamResult['stream']> extends ReadableStream<infer Part> ? Part : never;
 type ImageGenerateFn = MockImageModelV4['doGenerate'];
 type VideoGenerateFn = NonNullable<MockVideoModelV4['doGenerate']>;
 type EmbedFn = MockEmbeddingModelV4['doEmbed'];
@@ -79,6 +84,36 @@ function defaultLanguageGenerate(
   return Promise.resolve(toLanguageResult(scriptedOutputs.shift() ?? { text: DEFAULT_TEXT }));
 }
 
+/** Text and tool-call outputs only; other content types are dropped. */
+function toStreamParts(result: LanguageGenerateResult): LanguageStreamPart[] {
+  const contentParts = result.content.flatMap((part, index): LanguageStreamPart[] => {
+    if (part.type === 'text') {
+      const id = `scripted-text-${index}`;
+      return [
+        { type: 'text-start', id },
+        { type: 'text-delta', id, delta: part.text },
+        { type: 'text-end', id },
+      ];
+    }
+    if (part.type === 'tool-call') return [part];
+    return [];
+  });
+
+  return [
+    { type: 'stream-start', warnings: result.warnings },
+    ...contentParts,
+    { type: 'finish', finishReason: result.finishReason, usage: result.usage },
+  ];
+}
+
+/** Streams whatever `languageModelGenerateMock` would return, so scripting works for both paths. */
+async function defaultLanguageStream(
+  options: Parameters<LanguageStreamFn>[0],
+): Promise<LanguageStreamResult> {
+  const result = await languageModelGenerateMock(options);
+  return { stream: simulateReadableStream({ chunks: toStreamParts(result) }) };
+}
+
 function defaultImageGenerate(
   options: Parameters<ImageGenerateFn>[0],
 ): ReturnType<ImageGenerateFn> {
@@ -114,6 +149,7 @@ function defaultEmbed(options: Parameters<EmbedFn>[0]): ReturnType<EmbedFn> {
 }
 
 export const languageModelGenerateMock = mock(defaultLanguageGenerate);
+export const languageModelStreamMock = mock(defaultLanguageStream);
 export const imageModelGenerateMock = mock(defaultImageGenerate);
 export const videoModelGenerateMock = mock(defaultVideoGenerate);
 export const embeddingModelEmbedMock = mock(defaultEmbed);
@@ -132,6 +168,8 @@ export function resetAiSdkProviderMock(): void {
   createdModels.length = 0;
   languageModelGenerateMock.mockClear();
   languageModelGenerateMock.mockImplementation(defaultLanguageGenerate);
+  languageModelStreamMock.mockClear();
+  languageModelStreamMock.mockImplementation(defaultLanguageStream);
   imageModelGenerateMock.mockClear();
   imageModelGenerateMock.mockImplementation(defaultImageGenerate);
   videoModelGenerateMock.mockClear();
@@ -151,7 +189,12 @@ function buildProvider(provider: string) {
       kind: 'language',
       provider,
       modelId,
-      model: new MockLanguageModelV4({ provider, modelId, doGenerate: languageModelGenerateMock }),
+      model: new MockLanguageModelV4({
+        provider,
+        modelId,
+        doGenerate: languageModelGenerateMock,
+        doStream: languageModelStreamMock,
+      }),
     });
   const imageModel = (modelId: string) =>
     record({
