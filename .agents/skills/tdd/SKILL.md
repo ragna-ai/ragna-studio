@@ -5,6 +5,14 @@ description: Apply when changing apps/api or a package it reaches (@repo/databas
 
 All changes to `apps/api` are test-driven. Packages reached through the API are tested through the API, not with separate package tests.
 
+## Start from the spec
+
+When the change has a PRD, its acceptance criteria are the test list. Take the criteria the PRD's testing table puts at the API level and write one failing test per criterion: Given becomes the fixture setup, When the request, Then the assertions.
+
+- Name the test after the behavior in words, never the criterion ID or a `specs/` path (clean-code rule 13).
+- List the mapping in the PR body, one line per criterion: `US-1.2 → test/workspace/workspaces.test.ts "rejects deleting the last workspace"`.
+- A criterion you can't test at the API level goes back to the PRD's testing table (e2e or worker), not silently dropped.
+
 ## Loop
 
 1. **Red:** write a failing test for the behavior first. Run it and check it fails **for the expected reason** (the assertion you wrote, not an import error or a missing fixture).
@@ -33,6 +41,7 @@ All changes to `apps/api` are test-driven. Packages reached through the API are 
 
 ## Before finishing
 
+- Does every API-level acceptance criterion have a test, mapped in the PR body?
 - Did every new test go red first, for the right reason?
 - Are response schemas strict?
 - Full suite green?

@@ -2,6 +2,14 @@
 
 PRDs and design docs for ragna-studio, one folder per feature area.
 
+## Writing a spec
+
+Start a new PRD from the template in the spec-writing skill
+([`.agents/skills/spec-writing/`](../.agents/skills/spec-writing/SKILL.md)). It covers user
+stories, Given/When/Then acceptance criteria, the testing table, the length budget and when to
+record a decision. The research behind it is in
+[spec-writing/assessment-2026-10-29.md](./spec-writing/assessment-2026-10-29.md).
+
 ## Status convention
 
 Every PRD/design doc that tracks a build carries a `Status: ...` line right
