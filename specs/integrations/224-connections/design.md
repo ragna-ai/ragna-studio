@@ -190,7 +190,8 @@ Workspace connections (phase 3) go under `/workspace/:workspaceId/integration/..
 - **Email settings**: connect goes through `POST /integration/connect` instead of `linkSocial`.
   `needs_reauth` shows a reconnect banner.
 - **Social posts**: publish without a LinkedIn connection offers "Connect LinkedIn".
-- **Account page**: sign-in providers only, no feature scopes.
+- **Account page**: no sign-in linking UI. A second provider with the same verified email is linked
+  by better-auth when the user signs in with it.
 
 ## Later phases: what the model must already fit
 
