@@ -37,6 +37,7 @@ Write code the next person can read and change without asking you. Assume that p
    - Arrays: `a.concat(b)` and `Array.from(new Set(list))`, not `[...a, ...b]` or `[...new Set(list)]`.
    - Applies to new and changed code. Rewrite existing spreads when you touch those lines.
 10. **No `await` nested in a return or call argument.** Assign the awaited value to a named `const` first, then return or pass it: `const members = await listMembers(...); return c.json(members);`, not `return c.json(await listMembers(...))`. The name says what came back, and the async step reads as its own line. Applies to `fn(await x)`, `[].push(await x)`, `{ key: await x }` and `(await x) as T`.
+    - Exception in tests: `expect(await x)` and `schema.parse(await response.json())` may stay inline. The assertion or schema already says what came back.
 
 ## Vue / Nuxt
 
