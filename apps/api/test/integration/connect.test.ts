@@ -1,6 +1,7 @@
 import { config } from '@repo/config';
 import { db } from '@repo/database';
 import {
+  failProviderProfile,
   GMAIL_MODIFY_SCOPE,
   providerHttp,
   resetProviderMocks,
@@ -224,6 +225,20 @@ describe('connecting an integration', () => {
     const location = new URL(callback.headers.get('location') ?? '');
     expect(location.pathname).toBe('/settings/email');
     expect(location.searchParams.get('integration_error')).toBe('access_denied');
+  });
+
+  test('revokes the new grant and sends the user back with an error when the profile cannot be read', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser({ email: 'anna@example.com' });
+    failProviderProfile('google');
+    const { state } = await startConnect({ cookieHeader, integrationId: 'gmail' });
+
+    const callback = await callOauthCallback({ cookieHeader, query: { code: 'code-9', state } });
+
+    const location = new URL(callback.headers.get('location') ?? '');
+    expect(location.searchParams.get('integration_error')).toBe('exchange_failed');
+    expect(await db.query.integrationConnection.findMany({ where: { userId } })).toHaveLength(0);
+    expect(providerHttp.revokeRequests).toHaveLength(1);
+    expect(providerHttp.revokeRequests[0]?.provider).toBe('google');
   });
 
   test('falls back to the connections page for a return path outside the app', async () => {

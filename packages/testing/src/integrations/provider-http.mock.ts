@@ -85,6 +85,7 @@ export interface ProviderHttpState {
   profiles: Partial<Record<ProviderId, FakeProviderProfile>>;
   grantedScopes: Partial<Record<ProviderId, string[]>>;
   refreshRejected: Set<ProviderId>;
+  profileFailing: Set<ProviderId>;
   tokenRequests: FakeTokenRequest[];
   revokeRequests: FakeRevokeRequest[];
   profileTokens: string[];
@@ -95,6 +96,7 @@ function emptyState(): ProviderHttpState {
     profiles: {},
     grantedScopes: {},
     refreshRejected: new Set(),
+    profileFailing: new Set(),
     tokenRequests: [],
     revokeRequests: [],
     profileTokens: [],
@@ -120,6 +122,11 @@ export function setProviderGrantedScopes(provider: ProviderId, scopes: string[])
 /** Makes every refresh for the provider fail the way a revoked grant does. */
 export function rejectProviderRefresh(provider: ProviderId): void {
   providerHttp.refreshRejected.add(provider);
+}
+
+/** Makes every profile read for the provider fail with a server error. */
+export function failProviderProfile(provider: ProviderId): void {
+  providerHttp.profileFailing.add(provider);
 }
 
 function json(body: unknown, status = 200): Response {
@@ -240,6 +247,10 @@ function answerToken(provider: ProviderId, form: URLSearchParams): Response {
 function answerProfile(provider: ProviderId, request: RequestInit | undefined): Response {
   const authorization = new Headers(request?.headers).get('authorization') ?? '';
   providerHttp.profileTokens.push(authorization.replace(/^Bearer /, ''));
+
+  if (providerHttp.profileFailing.has(provider)) {
+    return json({ error: 'server_error' }, 500);
+  }
 
   const profile = providerHttp.profiles[provider] ?? defaultProfile(provider);
   if (provider === 'microsoft') {

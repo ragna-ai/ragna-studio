@@ -99,8 +99,8 @@ export async function startIntegrationConnect({
     throw new BadRequestException('APP_KEY is not set');
   }
 
-  const adapter = getOAuthProvider(integration.provider);
-  if (!adapter.isConfigured()) {
+  const oauthProvider = getOAuthProvider(integration.provider);
+  if (!oauthProvider.isConfigured()) {
     throw new BadRequestException(`${integration.provider} is not configured on this instance`);
   }
 
@@ -122,7 +122,7 @@ export async function startIntegrationConnect({
     throw new InternalServerErrorException('Failed to start the connection');
   }
 
-  return adapter
+  return oauthProvider
     .buildAuthorizeUrl({
       state,
       codeChallenge,
@@ -196,22 +196,31 @@ async function saveGrantedConnection({
   state,
   codeVerifier,
 }: SaveGrantedConnectionParams): Promise<IntegrationConnectErrorCode | null> {
-  const adapter = getOAuthProvider(integration.provider);
+  const oauthProvider = getOAuthProvider(integration.provider);
 
-  const { error: grantError, data: grant } = await tryCatch(async () => {
-    const tokens = await adapter.exchangeCode({ code, state, codeVerifier });
-    const profile = await adapter.getAccountProfile(tokens.accessToken);
-    return { tokens, profile };
-  });
-  if (grantError !== null || !grant) {
-    logger.error(`Failed to exchange the ${integration.provider} authorization code`, grantError);
+  const { error: exchangeError, data: tokens } = await tryCatch(() =>
+    oauthProvider.exchangeCode({ code, state, codeVerifier }),
+  );
+  if (exchangeError !== null || !tokens) {
+    logger.error(
+      `Failed to exchange the ${integration.provider} authorization code`,
+      exchangeError,
+    );
     return 'exchange_failed';
   }
 
-  const { tokens, profile } = grant;
+  const { error: profileError, data: profile } = await tryCatch(() =>
+    oauthProvider.getAccountProfile(tokens.accessToken),
+  );
+  if (profileError !== null || !profile) {
+    logger.error(`Failed to read the ${integration.provider} account profile`, profileError);
+    await tryCatch(() => oauthProvider.revoke(tokens.refreshToken ?? tokens.accessToken));
+    return 'exchange_failed';
+  }
+
   const emailRuleApplies = PROVIDERS_WITH_LOGIN_EMAIL_RULE.has(integration.provider);
   if (emailRuleApplies && profile.email?.toLowerCase() !== userEmail.toLowerCase()) {
-    await tryCatch(() => adapter.revoke(tokens.refreshToken ?? tokens.accessToken));
+    await tryCatch(() => oauthProvider.revoke(tokens.refreshToken ?? tokens.accessToken));
     return 'email_mismatch';
   }
 
