@@ -11,6 +11,7 @@ export default defineConfig({
   testDir: 'e2e',
   workers: 1,
   forbidOnly: !!process.env.CI,
+  failOnFlakyTests: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
@@ -40,11 +41,11 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: `pnpm exec nuxt dev --port ${WEB_PORT}`,
+      command: 'pnpm exec nuxt build && node .output/server/index.mjs',
       url: WEB_URL,
-      env: { NUXT_PUBLIC_API_BASE_URL: API_URL },
+      env: { PORT: String(WEB_PORT), NUXT_PUBLIC_API_BASE_URL: API_URL },
       reuseExistingServer: false,
-      timeout: 120_000,
+      timeout: 240_000,
     },
   ],
 });

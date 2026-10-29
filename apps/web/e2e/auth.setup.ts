@@ -12,15 +12,14 @@ const seedResultSchema = z.object({
 
 const API_DIR = resolve(import.meta.dirname, '../../api');
 
-/** Runs the Bun seed script and parses its JSON result, the last stdout line. */
+/** Runs the Bun seed script and parses its JSON stdout. */
 function runSeed(): z.infer<typeof seedResultSchema> {
   const stdout = execFileSync('bun', ['test/e2e/seed-user.ts'], {
     cwd: API_DIR,
     env: { ...process.env, NODE_ENV: 'test' },
     encoding: 'utf8',
   });
-  const lastLine = stdout.trim().split('\n').at(-1) ?? '';
-  return seedResultSchema.parse(JSON.parse(lastLine));
+  return seedResultSchema.parse(JSON.parse(stdout));
 }
 
 setup('seed a signed-in user', () => {

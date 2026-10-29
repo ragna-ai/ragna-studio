@@ -12,7 +12,7 @@ interface SeedResult {
 
 /**
  * Resets the test database and seeds one signed-in user with a language
- * model and a funded credit account. Prints the result as the last stdout line.
+ * model and a funded credit account. Prints the result.
  */
 async function seed(): Promise<SeedResult> {
   await truncateAllTables();

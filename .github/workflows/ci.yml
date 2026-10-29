@@ -203,8 +203,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Same no-turbo-cache reasoning as the build-and-check job. The web app itself runs
-      # as a dev server, so only its dependencies are built.
+      # Same no-turbo-cache reasoning as the build-and-check job. Playwright builds the web
+      # app itself, so only its dependencies are built here.
       - run: pnpm turbo run build --filter=@repo/api... --filter='@repo/web^...'
       - run: pnpm --filter @repo/web exec playwright install --with-deps chromium
       - run: pnpm test:setup

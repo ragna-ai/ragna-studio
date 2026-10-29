@@ -17,7 +17,7 @@ Then:
 pnpm test:e2e
 ```
 
-Playwright starts its own API (port 3110) and Nuxt dev server (port 3100). It never reuses the dev servers on 3000 and 3010.
+Playwright starts its own API (port 3110) and a production build of the web app (port 3100). The first run builds the app and takes about a minute. It never reuses the dev servers on 3000 and 3010.
 
 ## How it works
 

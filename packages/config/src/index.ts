@@ -27,7 +27,7 @@ if (process.env.NODE_ENV !== 'production') {
   // .env.testing wins over .env when NODE_ENV=test.
   const envFiles = process.env.NODE_ENV === 'test' ? ['.env.testing', '.env'] : ['.env'];
 
-  dotenvConfig({ path: envFiles.map((file) => resolve(rootDir, file)) });
+  dotenvConfig({ path: envFiles.map((file) => resolve(rootDir, file)), quiet: true });
 }
 
 export { ConfigService };
