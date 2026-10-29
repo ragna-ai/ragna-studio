@@ -10,7 +10,7 @@ export const integrationDefinitionSchema = z.object({
   provider: providerIdSchema,
   category: integrationCategorySchema,
   authType: z.literal('oauth2'),
-  /** Provider scopes this integration needs, on top of the identity scopes the adapter adds. */
+  /** Provider scopes this integration needs, on top of the identity scopes the provider adds. */
   scopes: z.array(z.string()),
 });
 

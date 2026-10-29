@@ -2,7 +2,7 @@
   "name": "@repo/integrations",
   "version": "0.0.0",
   "private": true,
-  "description": "Provider connections: catalog, OAuth adapters, envelope crypto and token service",
+  "description": "Provider connections: catalog, OAuth providers, envelope crypto and token service",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

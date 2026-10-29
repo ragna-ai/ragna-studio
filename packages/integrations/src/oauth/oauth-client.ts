@@ -1,10 +1,6 @@
 import * as oauth from 'oauth4webapi';
 import * as z from 'zod';
-import type {
-  ExternalAccountProfile,
-  ProviderAdapter,
-  TokenSet,
-} from '../providers/provider.types';
+import type { ExternalAccountProfile, OAuthProvider, TokenSet } from '../providers/provider.types';
 import { getOAuthCallbackUrl } from './callback-url';
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -23,7 +19,9 @@ export interface OAuthProviderSpec {
   /** Always requested, so the profile can be read. */
   identityScopes: string[];
   extraAuthorizeParams?: Record<string, string>;
-  getProfile(accessToken: string): Promise<ExternalAccountProfile>;
+  profileUrl: string;
+  /** Parses the provider's profile response into the shared profile shape. */
+  profileSchema: z.ZodType<ExternalAccountProfile, unknown>;
 }
 
 export interface AuthorizationRequest {
@@ -35,10 +33,12 @@ export interface AuthorizationRequest {
 export async function createAuthorizationRequest(): Promise<AuthorizationRequest> {
   const codeVerifier = oauth.generateRandomCodeVerifier();
 
+  const codeChallenge = await oauth.calculatePKCECodeChallenge(codeVerifier);
+
   return {
     state: oauth.generateRandomState(),
     codeVerifier,
-    codeChallenge: await oauth.calculatePKCECodeChallenge(codeVerifier),
+    codeChallenge,
   };
 }
 
@@ -108,7 +108,7 @@ function toTokenSet(response: oauth.TokenEndpointResponse): TokenSet {
   };
 }
 
-export async function fetchProfileJson(url: string, accessToken: string): Promise<unknown> {
+async function fetchProfileJson(url: string, accessToken: string): Promise<unknown> {
   const response = await fetch(url, {
     headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -121,7 +121,7 @@ export async function fetchProfileJson(url: string, accessToken: string): Promis
   return response.json();
 }
 
-export function createOAuthProvider(readSpec: () => OAuthProviderSpec): ProviderAdapter {
+export function createOAuthProvider(readSpec: () => OAuthProviderSpec): OAuthProvider {
   function setup() {
     const spec = readSpec();
     const server: oauth.AuthorizationServer = {
@@ -183,7 +183,8 @@ export function createOAuthProvider(readSpec: () => OAuthProviderSpec): Provider
         requestOptions,
       );
 
-      return toTokenSet(await oauth.processAuthorizationCodeResponse(server, client, response));
+      const tokenResponse = await oauth.processAuthorizationCodeResponse(server, client, response);
+      return toTokenSet(tokenResponse);
     },
 
     async refresh(refreshToken) {
@@ -195,7 +196,8 @@ export function createOAuthProvider(readSpec: () => OAuthProviderSpec): Provider
         refreshToken,
         requestOptions,
       );
-      const tokens = toTokenSet(await oauth.processRefreshTokenResponse(server, client, response));
+      const tokenResponse = await oauth.processRefreshTokenResponse(server, client, response);
+      const tokens = toTokenSet(tokenResponse);
 
       return {
         accessToken: tokens.accessToken,
@@ -215,6 +217,10 @@ export function createOAuthProvider(readSpec: () => OAuthProviderSpec): Provider
       await oauth.processRevocationResponse(response);
     },
 
-    getAccountProfile: (accessToken) => readSpec().getProfile(accessToken),
+    async getAccountProfile(accessToken) {
+      const spec = readSpec();
+      const profileJson = await fetchProfileJson(spec.profileUrl, accessToken);
+      return spec.profileSchema.parse(profileJson);
+    },
   };
 }

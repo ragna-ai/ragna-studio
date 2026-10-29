@@ -15,7 +15,7 @@ import {
   type IntegrationDefinition,
 } from '../catalog';
 import { mergeScopes, listCoveredIntegrationIds } from '../oauth/scopes';
-import { getProviderAdapter } from '../providers';
+import { getOAuthProvider } from '../providers';
 import type { ExternalAccountProfile, TokenSet } from '../providers/provider.types';
 
 export function toIntegrationConnectionDto(
@@ -80,7 +80,7 @@ async function revokeGrantAtProvider(connection: IntegrationConnection): Promise
   if (!token) return;
 
   const { error } = await tryCatch(() =>
-    getProviderAdapter(connection.provider).revoke(decryptSecret(token)),
+    getOAuthProvider(connection.provider).revoke(decryptSecret(token)),
   );
   if (error !== null) {
     logger.error(`Failed to revoke the ${connection.provider} grant`, error);

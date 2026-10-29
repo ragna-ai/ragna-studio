@@ -1,16 +1,22 @@
 import { config } from '@repo/config';
 import * as z from 'zod';
-import { createOAuthProvider, fetchProfileJson } from '../../oauth/oauth-client';
+import { createOAuthProvider } from '../../oauth/oauth-client';
 
 const GRAPH_ME_URL =
   'https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName';
 
-const profileSchema = z.object({
-  id: z.string(),
-  displayName: z.string().nullish(),
-  mail: z.string().nullish(),
-  userPrincipalName: z.string().nullish(),
-});
+const profileSchema = z
+  .object({
+    id: z.string(),
+    displayName: z.string().nullish(),
+    mail: z.string().nullish(),
+    userPrincipalName: z.string().nullish(),
+  })
+  .transform((profile) => ({
+    id: profile.id,
+    email: profile.mail ?? profile.userPrincipalName ?? null,
+    name: profile.displayName ?? null,
+  }));
 
 export const microsoftProvider = createOAuthProvider(() => {
   const tenantBase = `https://login.microsoftonline.com/${config.microsoftTenantId}`;
@@ -25,14 +31,7 @@ export const microsoftProvider = createOAuthProvider(() => {
     usePkce: true,
     identityScopes: ['openid', 'profile', 'email', 'offline_access', 'User.Read'],
     extraAuthorizeParams: { response_mode: 'query', prompt: 'select_account' },
-    async getProfile(accessToken) {
-      const profile = profileSchema.parse(await fetchProfileJson(GRAPH_ME_URL, accessToken));
-
-      return {
-        id: profile.id,
-        email: profile.mail ?? profile.userPrincipalName ?? null,
-        name: profile.displayName ?? null,
-      };
-    },
+    profileUrl: GRAPH_ME_URL,
+    profileSchema,
   };
 });

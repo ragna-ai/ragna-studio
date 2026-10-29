@@ -11,7 +11,7 @@ import {
   catalogEntrySchema,
   findIntegration,
   createAuthorizationRequest,
-  getProviderAdapter,
+  getOAuthProvider,
   INTEGRATION_CATALOG,
   isAppKeyConfigured,
   mergeScopes,
@@ -46,7 +46,7 @@ export type IntegrationConnectErrorCode =
 /** [GET] /integration/catalog: the integrations whose provider the operator configured. */
 export function listConnectableIntegrations(): CatalogEntry[] {
   return INTEGRATION_CATALOG.filter((integration) =>
-    getProviderAdapter(integration.provider).isConfigured(),
+    getOAuthProvider(integration.provider).isConfigured(),
   ).map((integration) => catalogEntrySchema.parse(integration));
 }
 
@@ -99,7 +99,7 @@ export async function startIntegrationConnect({
     throw new BadRequestException('APP_KEY is not set');
   }
 
-  const adapter = getProviderAdapter(integration.provider);
+  const adapter = getOAuthProvider(integration.provider);
   if (!adapter.isConfigured()) {
     throw new BadRequestException(`${integration.provider} is not configured on this instance`);
   }
@@ -196,7 +196,7 @@ async function saveGrantedConnection({
   state,
   codeVerifier,
 }: SaveGrantedConnectionParams): Promise<IntegrationConnectErrorCode | null> {
-  const adapter = getProviderAdapter(integration.provider);
+  const adapter = getOAuthProvider(integration.provider);
 
   const { error: grantError, data: grant } = await tryCatch(async () => {
     const tokens = await adapter.exchangeCode({ code, state, codeVerifier });

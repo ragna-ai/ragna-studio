@@ -24,7 +24,7 @@ export interface ExchangeParams {
   codeVerifier: string;
 }
 
-export interface ProviderAdapter {
+export interface OAuthProvider {
   buildAuthorizeUrl(params: AuthorizeParams): URL;
   exchangeCode(params: ExchangeParams): Promise<TokenSet>;
   refresh(refreshToken: string): Promise<TokenSet>;

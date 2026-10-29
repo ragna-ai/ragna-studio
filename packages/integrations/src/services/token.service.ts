@@ -10,7 +10,7 @@ import { enqueueNotification } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 import { ConnectionNeedsReauthError } from '../errors';
 import { isGrantRejectedError } from '../oauth/oauth-client';
-import { getProviderAdapter } from '../providers';
+import { getOAuthProvider } from '../providers';
 
 const MIN_TOKEN_VALIDITY_MS = 60_000;
 
@@ -40,7 +40,7 @@ async function refreshUnderLock(connectionId: string): Promise<RefreshOutcome> {
 
       const refreshToken = decryptSecret(connection.refreshToken);
       const { error, data: tokens } = await tryCatch(() =>
-        getProviderAdapter(connection.provider).refresh(refreshToken),
+        getOAuthProvider(connection.provider).refresh(refreshToken),
       );
 
       if (isGrantRejectedError(error)) {
