@@ -25,7 +25,7 @@ Go through this list before sharing RAGNA Studio.
 - **Use generated secrets.** Never keep the placeholder values from `.env.example`.
 - **Keep `APP_KEY` safe and rotate it with `APP_PREVIOUS_KEYS`.** It encrypts the tokens of [connections](/integrations/connections). Moving the old key to `APP_PREVIOUS_KEYS` keeps existing connections working.
 - **Never rotate `BETTER_AUTH_SECRET`.** Encrypted data such as stored OAuth tokens becomes unreadable. Every session also ends.
-- **Back up `BETTER_AUTH_SECRET` with the data.** A database backup is useless without it, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
+- **Back up `BETTER_AUTH_SECRET` and `APP_KEY` with the data.** A database backup is useless without them, see [Upgrades and backups](/self-hosting/upgrades-and-backups#backups).
 
 ## MCP
 

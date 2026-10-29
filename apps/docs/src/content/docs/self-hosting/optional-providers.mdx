@@ -19,7 +19,7 @@ Each provider is enabled by its own env vars. The [environment variables](/refer
 
 Mail and LinkedIn posting use [connections](/integrations/connections), which reuse the OAuth apps used for sign-in (`GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID`, `LINKEDIN_CLIENT_ID`). Two more steps are needed:
 
-1. Set `APP_KEY`, the key that encrypts stored connection tokens. The installer generates it. Otherwise run `pnpm key:generate` and put the result in `.env`. Without it, connecting fails with "APP_KEY is not set".
+1. Set `APP_KEY`, the key that encrypts stored connection tokens. See [Setting APP_KEY](#setting-app_key). Without it, connecting fails with "APP_KEY is not set".
 2. Add this redirect URI to each provider app, with `API_BASE_URL` as the host:
 
    ```text
@@ -27,5 +27,26 @@ Mail and LinkedIn posting use [connections](/integrations/connections), which re
    ```
 
    The API logs the exact URI at startup.
+
+### Setting APP_KEY
+
+`APP_KEY` is generated once and then kept like a database password. Every API and worker process needs the same value. A new key makes every stored connection unreadable, so users have to connect again.
+
+| Setup                      | How to set it                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Quickstart installer       | The installer writes it to `.env`. Nothing else to do.                                                       |
+| Local development          | Run `pnpm key:generate`. It writes the key to `.env` and keeps an existing key unless `--force` is passed.   |
+| Kubernetes, other runtimes | Create the key once and store it in the secret store, then expose it to the API and the worker as `APP_KEY`. |
+
+For Kubernetes, for example:
+
+```sh
+APP_KEY="base64:$(openssl rand -base64 32)"
+kubectl create secret generic ragna-app-key --from-literal=APP_KEY="$APP_KEY"
+```
+
+`pnpm key:generate --show` prints a new key without writing it. Never generate the key at container start: each restart or replica would get a different one.
+
+To rotate the key, set the new value as `APP_KEY` and move the old one to `APP_PREVIOUS_KEYS`. Existing connections keep working.
 
 Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`). Sign-in itself asks only for `openid`, `profile` and `email`. `LINKEDIN_SCOPES` is deprecated and ignored.

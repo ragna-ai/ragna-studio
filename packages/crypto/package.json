@@ -19,7 +19,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
-    "key:generate": "node src/scripts/generate-key.ts"
+    "key:generate": "bun src/scripts/generate-key.ts"
   },
   "dependencies": {
     "@repo/config": "workspace:*"

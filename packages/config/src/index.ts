@@ -7,7 +7,7 @@ import { ConfigService } from './services/config.service';
 // always launch each app's dev script with cwd set to that app's own directory, so
 // this is stable regardless of where pnpm physically places this package's files
 // (e.g. injected as a real copy under node_modules/.pnpm instead of symlinked in place).
-function findRepoRoot(startDir: string): string {
+export function findRepoRoot(startDir: string): string {
   let dir = startDir;
   while (!existsSync(resolve(dir, 'pnpm-workspace.yaml'))) {
     const parent = dirname(dir);

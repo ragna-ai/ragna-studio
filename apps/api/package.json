@@ -44,6 +44,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/crypto": "workspace:*",
     "@repo/testing": "workspace:*",
     "@repo/ts-config": "workspace:*",
     "@types/bun": "1.4.3",

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { config } from '@repo/config';
 import { AppKeyMissingError, InvalidAppKeyError } from '../errors';
 
@@ -12,6 +13,11 @@ function parseKey(raw: string): Buffer {
     throw new InvalidAppKeyError();
   }
   return key;
+}
+
+/** A new random key in the format APP_KEY expects. */
+export function generateAppKey(): string {
+  return `${KEY_PREFIX}${randomBytes(KEY_BYTES).toString('base64')}`;
 }
 
 export function isAppKeyConfigured(): boolean {
