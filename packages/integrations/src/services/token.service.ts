@@ -1,4 +1,3 @@
-import { decryptSecret, encryptSecret } from '@repo/crypto';
 import {
   getConnectionById,
   markConnectionNeedsReauth,
@@ -11,6 +10,7 @@ import { tryCatch } from '@repo/utils';
 import { ConnectionNeedsReauthError } from '../errors';
 import { isGrantRejectedError } from '../oauth/oauth-client';
 import { getOAuthProvider } from '../providers';
+import { decryptConnectionToken, encryptConnectionToken } from './token-encryption';
 
 const MIN_TOKEN_VALIDITY_MS = 60_000;
 
@@ -22,7 +22,11 @@ function readUsableToken(connection: IntegrationConnection): string | null {
   const expiresAt = connection.accessTokenExpiresAt;
   if (expiresAt && expiresAt.getTime() - Date.now() < MIN_TOKEN_VALIDITY_MS) return null;
 
-  return decryptSecret(connection.accessToken);
+  return decryptConnectionToken({
+    owner: connection,
+    column: 'access_token',
+    envelope: connection.accessToken,
+  });
 }
 
 async function refreshUnderLock(connectionId: string): Promise<RefreshOutcome> {
@@ -38,7 +42,11 @@ async function refreshUnderLock(connectionId: string): Promise<RefreshOutcome> {
 
       if (!connection.refreshToken) return { kind: 'reauth', reason: 'no_refresh_token' };
 
-      const refreshToken = decryptSecret(connection.refreshToken);
+      const refreshToken = decryptConnectionToken({
+        owner: connection,
+        column: 'refresh_token',
+        envelope: connection.refreshToken,
+      });
       const { error, data: tokens } = await tryCatch(() =>
         getOAuthProvider(connection.provider).refresh(refreshToken),
       );
@@ -51,8 +59,18 @@ async function refreshUnderLock(connectionId: string): Promise<RefreshOutcome> {
       }
 
       await saveTokens({
-        accessToken: encryptSecret(tokens.accessToken),
-        refreshToken: tokens.refreshToken ? encryptSecret(tokens.refreshToken) : null,
+        accessToken: encryptConnectionToken({
+          owner: connection,
+          column: 'access_token',
+          token: tokens.accessToken,
+        }),
+        refreshToken: tokens.refreshToken
+          ? encryptConnectionToken({
+              owner: connection,
+              column: 'refresh_token',
+              token: tokens.refreshToken,
+            })
+          : null,
         accessTokenExpiresAt: tokens.expiresAt,
         scopes: tokens.scopes.length > 0 ? tokens.scopes : undefined,
       });

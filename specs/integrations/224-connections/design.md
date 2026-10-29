@@ -108,6 +108,12 @@ own application key, separate from `BETTER_AUTH_SECRET`, and reusable for later 
 key derived from `BETTER_AUTH_SECRET` lost: rotating that secret would have dropped every
 connection.
 
+- **Key derivation**: the AES key is HKDF-SHA256 of `APP_KEY` with the label
+  `ragna/secrets-at-rest/v1`, never the raw `APP_KEY`. A later use of `APP_KEY` derives its own
+  key with its own label.
+- **Binding**: each token is encrypted with GCM associated data naming its row and column (user,
+  workspace, provider, external account, column). A token copied to another row or column fails
+  to decrypt.
 - **Rotation**: `APP_PREVIOUS_KEYS` (comma-separated). Writes use `APP_KEY`. Reads try `APP_KEY`,
   then the previous keys; the GCM tag rejects a wrong key. Each refresh re-encrypts with the
   current key.
