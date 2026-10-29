@@ -7,8 +7,8 @@ import { toast } from 'vue-sonner';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import { startAccountSyncForcePoll } from '~/features/email/lib/email-account-sync-poll';
+import { connectIntegrationResponseSchema } from '@repo/integrations/catalog';
 import type {
-  ConnectIntegrationResponse,
   IntegrationConnectionsResponse,
   IntegrationId,
   ProviderId,
@@ -52,11 +52,18 @@ interface ConnectEmailAccountResponse {
   account: EmailAccount;
 }
 
+function withCallbackParam(returnPath: string, param: string, value: string) {
+  const [path = '', query = ''] = returnPath.split('?');
+  const params = new URLSearchParams(query);
+  params.set(param, value);
+  return `${path}?${params.toString()}`;
+}
+
 // Provider-aware two-step connect flow: POST /integration/connect redirects to the provider and back, then POST /email/account/connect binds the mailbox to the connection.
 export function useEmailConnectFlow() {
   const { $i18n } = useNuxtApp();
   const queryClient = useQueryClient();
-  // linkSocial() resolves once the redirect starts, so stay busy until the page unloads.
+  // The redirect starts without unloading the page yet, so stay busy until it does.
   const isRedirecting = ref(false);
 
   // A back-navigation can restore this page from the bfcache with the flag still set.
@@ -68,16 +75,17 @@ export function useEmailConnectFlow() {
     { provider, returnPath }: LinkVariables,
     callbackParam: string,
   ) {
-    const { url } = await useNuxtApp().$api<ConnectIntegrationResponse>(
+    const responseJson = await useNuxtApp().$api<unknown>(
       '/integration/connect',
       {
         method: 'POST',
         body: {
           integrationId: PROVIDER_AUTH_CONFIG[provider].integrationId,
-          returnPath: `${returnPath}?${callbackParam}=${provider}`,
+          returnPath: withCallbackParam(returnPath, callbackParam, provider),
         },
       },
     );
+    const { url } = connectIntegrationResponseSchema.parse(responseJson);
     window.location.assign(url);
   }
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { connectIntegrationResponseSchema } from '@repo/integrations/catalog';
 import type {
   ConnectIntegrationBody,
   ConnectIntegrationResponse,
@@ -44,13 +45,14 @@ export function useStartIntegrationConnect() {
     unknown,
     ConnectIntegrationBody
   >({
-    mutationFn: (body) =>
-      $api<ConnectIntegrationResponse>('/integration/connect', {
+    mutationFn: async (body) => {
+      const responseJson = await $api<unknown>('/integration/connect', {
         method: 'POST',
         body,
-      }),
-    onSuccess: ({ url }) => {
-      window.location.assign(url);
+      });
+      const response = connectIntegrationResponseSchema.parse(responseJson);
+      window.location.assign(response.url);
+      return response;
     },
     onError: (error) => {
       toast.error(

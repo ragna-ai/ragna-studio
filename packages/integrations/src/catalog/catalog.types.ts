@@ -46,7 +46,7 @@ export const connectIntegrationBodySchema = z.object({
   returnPath: z.string().max(500),
 });
 
-export const connectIntegrationResponseSchema = z.object({ url: z.string() });
+export const connectIntegrationResponseSchema = z.object({ url: z.url({ protocol: /^https$/ }) });
 
 export type ProviderId = z.infer<typeof providerIdSchema>;
 export type IntegrationId = z.infer<typeof integrationIdSchema>;
