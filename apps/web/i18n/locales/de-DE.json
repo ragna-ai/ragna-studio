@@ -828,7 +828,6 @@
     },
     "tabs": {
       "profile": "Profil",
-      "accounts": "Verbundene Konten",
       "language": "Sprache",
       "sidebar": "Seitenleiste",
       "credits": "Credits",
@@ -849,24 +848,6 @@
       "avatar": "Avatar",
       "change": "Ändern",
       "email": "E-Mail"
-    },
-    "social": {
-      "title": "Anmelde-Konten",
-      "loadError": "Verbundene Konten konnten nicht geladen werden.",
-      "connected": "Verbunden",
-      "notConnected": "Nicht verbunden",
-      "connect": "Verbinden",
-      "disconnect": "Trennen",
-      "connectError": "Verbindung konnte nicht gestartet werden. Bitte versuche es erneut.",
-      "disconnectSuccess": "Konto getrennt.",
-      "disconnectError": "Konto konnte nicht getrennt werden. Bitte versuche es erneut.",
-      "providers": {
-        "google": "Google",
-        "microsoft": "Microsoft",
-        "linkedin": "LinkedIn"
-      },
-      "description": "Konten, mit denen du dich anmelden kannst. Sie brauchen deine Login-E-Mail. Mail und LinkedIn-Posts verbindest du unter Verbindungen.",
-      "linkRefused": "Dieses Konto wurde nicht verknüpft. Es muss deine Login-E-Mail nutzen, und pro Anbieter ist ein Konto möglich."
     }
   },
   "social": {

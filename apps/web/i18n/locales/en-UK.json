@@ -825,7 +825,6 @@
     },
     "tabs": {
       "profile": "Profile",
-      "accounts": "Connected accounts",
       "language": "Language",
       "sidebar": "Sidebar",
       "credits": "Credits",
@@ -846,24 +845,6 @@
       "avatar": "Avatar",
       "change": "Change",
       "email": "Email"
-    },
-    "social": {
-      "title": "Sign-in accounts",
-      "loadError": "Failed to load connected accounts.",
-      "connected": "Connected",
-      "notConnected": "Not connected",
-      "connect": "Connect",
-      "disconnect": "Disconnect",
-      "connectError": "Failed to start the connection. Please try again.",
-      "disconnectSuccess": "Account disconnected.",
-      "disconnectError": "Failed to disconnect the account. Please try again.",
-      "providers": {
-        "google": "Google",
-        "microsoft": "Microsoft",
-        "linkedin": "LinkedIn"
-      },
-      "description": "Accounts you can sign in with. They need your login email. Mail and LinkedIn posting are connected under Connections.",
-      "linkRefused": "This account was not linked. It must use your login email and you can link one account per provider."
     }
   },
   "social": {
