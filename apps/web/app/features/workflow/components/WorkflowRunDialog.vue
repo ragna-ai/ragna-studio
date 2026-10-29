@@ -15,6 +15,12 @@ import type { Workflow } from '~/features/workflow/types';
 const props = defineProps<{
   workflow: Workflow;
   draftDefinition: WorkflowDefinition;
+  canPublish: boolean;
+}>();
+
+// Emits
+const emit = defineEmits<{
+  (e: 'publish-blocked'): void;
 }>();
 
 // Refs
@@ -61,6 +67,11 @@ async function handleRun() {
 }
 
 async function handlePublishAndRun() {
+  if (!props.canPublish) {
+    open.value = false;
+    emit('publish-blocked');
+    return;
+  }
   try {
     await saveWorkflow({
       workflowId: props.workflow.id,

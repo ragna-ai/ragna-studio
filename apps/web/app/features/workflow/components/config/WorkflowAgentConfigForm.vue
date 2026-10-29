@@ -2,8 +2,11 @@
 import type { WorkflowNode } from '@repo/workflow';
 import { SettingsIcon } from '@lucide/vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
+import WorkflowFieldError from '~/features/workflow/components/WorkflowFieldError.vue';
 import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplateHint.vue';
+import { findFieldIssue } from '~/features/workflow/lib/validate-draft';
 import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 import { firstToUpperCase } from '~/lib/utils';
 
 // Props
@@ -11,6 +14,7 @@ import { firstToUpperCase } from '~/lib/utils';
 // narrowed node (and therefore its config) is guaranteed to be AgentConfig.
 const props = defineProps<{
   node: Extract<WorkflowNode, { type: 'agent' }>;
+  issues: readonly WorkflowFieldIssue[];
 }>();
 
 // Composables
@@ -36,7 +40,10 @@ const selectedAgent = computed(() =>
         t(NODE_TYPE_LABEL_KEYS.agent)
       }}</Label>
       <Select v-model="node.data.config.agentId">
-        <SelectTrigger class="w-full">
+        <SelectTrigger
+          class="w-full"
+          :aria-invalid="!!findFieldIssue(issues, 'agentId')"
+        >
           <SelectValue :placeholder="t('workflow.agentPicker.placeholder')" />
         </SelectTrigger>
         <SelectContent>
@@ -52,6 +59,7 @@ const selectedAgent = computed(() =>
       <p v-if="isLoadingAgents" class="mt-1 text-xs text-muted-foreground">
         {{ t('workflow.agentPicker.loading') }}
       </p>
+      <WorkflowFieldError :issues="issues" field="agentId" />
     </div>
 
     <div
@@ -109,6 +117,7 @@ const selectedAgent = computed(() =>
         t('common.prompt')
       }}</Label>
       <Textarea v-model="node.data.config.prompt" rows="6" />
+      <WorkflowFieldError :issues="issues" field="prompt" />
       <WorkflowTemplateHint class="mt-1" />
     </div>
   </div>

@@ -273,7 +273,7 @@ export async function publishWorkflowForWorkspace({
   const validation = validateWorkflowDefinition(workflowRecord.definition);
 
   if (!validation.valid) {
-    return { published: false, errors: validation.errors };
+    return { published: false, errors: validation.issues.map((issue) => issue.message) };
   }
 
   const schedule = getScheduleFromDefinition(workflowRecord.definition);
@@ -356,7 +356,7 @@ export async function startWorkflowRun({
   const validation = validateWorkflowDefinition(workflowRecord.publishedDefinition);
 
   if (!validation.valid) {
-    return { started: false, errors: validation.errors };
+    return { started: false, errors: validation.issues.map((issue) => issue.message) };
   }
 
   const { error, data: run } = await tryCatch(() =>

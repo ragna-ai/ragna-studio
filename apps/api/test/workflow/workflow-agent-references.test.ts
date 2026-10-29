@@ -305,6 +305,34 @@ describe('workflow definition agents stay inside the workspace', () => {
     expect(await listWorkflowCount(cookieHeader, workspaceId)).toBe(0);
   });
 
+  test('POST rejects a team member without an agent and creates nothing', async () => {
+    const { cookieHeader, workspaceId } = await seedAuthenticatedUser();
+    const agentId = await createAgent(cookieHeader, workspaceId);
+    const definition = teamDefinition({ leadAgentId: agentId, memberAgentIds: [agentId, ''] });
+
+    const response = await postWorkflow(cookieHeader, workspaceId, definition);
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await listWorkflowCount(cookieHeader, workspaceId)).toBe(0);
+  });
+
+  test('PATCH rejects a team member without an agent and keeps the definition', async () => {
+    const { cookieHeader, workspaceId } = await seedAuthenticatedUser();
+    const agentId = await createAgent(cookieHeader, workspaceId);
+    const created = await postWorkflow(cookieHeader, workspaceId, { nodes: [], edges: [] });
+    const { id } = workflowResponseSchema.parse(await created.json()).workflow;
+
+    const response = await patchWorkflow(cookieHeader, workspaceId, id, {
+      definition: teamDefinition({ leadAgentId: agentId, memberAgentIds: [''] }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await getWorkflowDefinition(cookieHeader, workspaceId, id)).toEqual({
+      nodes: [],
+      edges: [],
+    });
+  });
+
   test('PATCH without a definition still succeeds', async () => {
     const { cookieHeader, workspaceId } = await seedAuthenticatedUser();
     const created = await postWorkflow(cookieHeader, workspaceId, { nodes: [], edges: [] });

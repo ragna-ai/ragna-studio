@@ -63,10 +63,8 @@ export const transformConfigSchema = z.object({
 export type TransformConfig = z.infer<typeof transformConfigSchema>;
 
 const teamMemberSchema = z.object({
-  agentId: z.string(),
-  // Tells the lead when to hand work to this member. Allowed empty so a
-  // freshly added node passes draft save; the executor falls back to the
-  // member's agent name when no role is set.
+  agentId: z.string().min(1),
+  // Allowed empty: the executor falls back to the member's agent name.
   role: z.string(),
 });
 

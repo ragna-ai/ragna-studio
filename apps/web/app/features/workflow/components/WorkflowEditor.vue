@@ -5,7 +5,9 @@ import type {
   WorkflowNode,
   WorkflowNodeType,
 } from '@repo/workflow';
+import { toast } from 'vue-sonner';
 import { isExecutionEquivalent } from '@repo/workflow';
+import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';
 import WorkflowNodeConfigPanel from '~/features/workflow/components/WorkflowNodeConfigPanel.vue';
 import WorkflowNodePalette from '~/features/workflow/components/WorkflowNodePalette.vue';
@@ -22,6 +24,12 @@ import {
   nextFreePosition,
 } from '~/features/workflow/lib/default-node';
 import { toWorkflowDefinition } from '~/features/workflow/lib/serialize-definition';
+import { getCompleteAgentIds } from '~/features/workflow/lib/agent-slot';
+import {
+  getBlockingMessage,
+  getFirstInvalidNodeId,
+  validateDraft,
+} from '~/features/workflow/lib/validate-draft';
 import type { Workflow } from '~/features/workflow/types';
 
 // Imports
@@ -62,6 +70,7 @@ watch(selectedNodeId, (nodeId) => {
 const { mutateAsync: saveWorkflow, isPending: isSaving } = useUpdateWorkflow();
 const { mutateAsync: publishWorkflow, isPending: isPublishing } =
   usePublishWorkflow();
+const { data: agentsData } = useGetAllAgents();
 const { t } = useI18n();
 
 // Computed
@@ -79,6 +88,11 @@ const hasUnpublishedChanges = computed(
       draftDefinition.value,
       props.workflow.publishedDefinition,
     ),
+);
+
+const knownAgentIds = computed(() => getCompleteAgentIds(agentsData.value));
+const validation = computed(() =>
+  validateDraft(draftDefinition.value, knownAgentIds.value),
 );
 
 // Functions
@@ -113,10 +127,35 @@ async function handleSaveSettings(value: {
 }) {
   name.value = value.name;
   description.value = value.description;
-  await handleSave();
+  await handleSaveDetails();
 }
 
-async function handleSave() {
+async function handleSaveDetails() {
+  await saveWorkflow({
+    workflowId: props.workflow.id,
+    name: name.value,
+    description: description.value || undefined,
+  });
+}
+
+function isBlocked(isAllowed: boolean): boolean {
+  if (isAllowed) {
+    return false;
+  }
+  showWhyBlocked();
+  return true;
+}
+
+function showWhyBlocked() {
+  const { messageKey, count } = getBlockingMessage(validation.value);
+  toast.error(t(messageKey, { count }, count));
+  const nodeId = getFirstInvalidNodeId(validation.value);
+  if (nodeId) {
+    selectedNodeId.value = nodeId;
+  }
+}
+
+async function saveDraft() {
   await saveWorkflow({
     workflowId: props.workflow.id,
     name: name.value,
@@ -125,9 +164,19 @@ async function handleSave() {
   });
 }
 
+async function handleSave() {
+  if (isBlocked(validation.value.canSave)) {
+    return;
+  }
+  await saveDraft();
+}
+
 async function handlePublish() {
+  if (isBlocked(validation.value.canPublish)) {
+    return;
+  }
   try {
-    await handleSave();
+    await saveDraft();
     await publishWorkflow(props.workflow.id);
   } catch {
     // Both mutations already surface a toast on failure.
@@ -146,7 +195,7 @@ async function handlePublish() {
             <InlineNameField
               v-model:name="name"
               :label="t('workflow.editor.nameLabel')"
-              @save="handleSave"
+              @save="handleSaveDetails"
             />
           </template>
         </PageBreadcrumb>
@@ -218,6 +267,7 @@ async function handlePublish() {
         <WorkflowCanvas
           v-model:nodes="nodes"
           v-model:edges="edges"
+          :node-issues="validation.nodeIssues"
           @select-node="selectedNodeId = $event"
         />
       </div>
@@ -234,6 +284,7 @@ async function handlePublish() {
         v-else-if="selectedNode"
         :key="selectedNode.id"
         :node="selectedNode"
+        :issues="validation.nodeIssues.get(selectedNode.id) ?? []"
         @delete="deleteSelectedNode"
         @close="selectedNodeId = null"
       />
@@ -243,6 +294,8 @@ async function handlePublish() {
       v-model:open="isRunDialogOpen"
       :workflow="workflow"
       :draft-definition="draftDefinition"
+      :can-publish="validation.canPublish"
+      @publish-blocked="showWhyBlocked"
     />
     <WorkflowRunsList
       v-model:open="isRunsListOpen"

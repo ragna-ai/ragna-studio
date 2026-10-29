@@ -477,6 +477,24 @@
       "runCancelFailed": "Ausführung konnte nicht abgebrochen werden",
       "cycleConnection": "Diese Verbindung würde eine Schleife erzeugen"
     },
+    "validation": {
+      "agentRequired": "Wähle einen Agenten.",
+      "leadAgentRequired": "Wähle einen Leit-Agenten.",
+      "memberAgentRequired": "Wähle einen Agenten für dieses Mitglied.",
+      "agentDeleted": "Dieser Agent wurde gelöscht. Wähle einen anderen.",
+      "promptRequired": "Gib einen Prompt ein.",
+      "cronInvalid": "Gib einen gültigen Cron-Ausdruck ein.",
+      "timezoneInvalid": "Wähle eine gültige Zeitzone.",
+      "nodeInvalid": "Dieser Knoten hat ungültige Einstellungen.",
+      "definitionInvalid": "Der Workflow ist ungültig.",
+      "nodesNeedAttention": "Bitte prüfe {count} Knoten.",
+      "graph": {
+        "triggerCount": "Der Workflow braucht genau einen Auslöser.",
+        "unknownEdgeNode": "Eine Verbindung zeigt auf einen Knoten, der nicht mehr existiert.",
+        "conditionHandle": "Nur Bedingungsknoten können Wahr- und Falsch-Ausgänge haben.",
+        "cycle": "Der Workflow enthält eine Schleife. Entferne die Verbindung, die sie schließt."
+      }
+    },
     "list": {
       "title": "Workflows",
       "subtitle": "Automatisiere mehrstufige Aufgaben mit Agenten, Werkzeugen und Bedingungen.",
@@ -605,16 +623,15 @@
       "false": "falsch"
     },
     "node": {
-      "lead": "Lead: {name}",
-      "memberSingular": "Mitglied",
-      "memberPlural": "Mitglieder",
       "toolCallTooltip": "{count} Werkzeugaufruf(e) in dieser Ausführung",
       "input": "Eingabe",
       "output": "Ausgabe"
     },
     "agentPicker": {
       "placeholder": "Agent auswählen",
-      "loading": "Agenten werden geladen..."
+      "loading": "Agenten werden geladen...",
+      "none": "Noch kein Agent",
+      "deleted": "Gelöschter Agent"
     },
     "agentConfig": {
       "agentConfiguration": "Agentenkonfiguration",
@@ -629,13 +646,16 @@
       "note": "Die beiden von diesem Knoten ausgehenden Kanten sind mit „true“ und „false“ beschriftet; verbinde jede mit dem Zweig, der ausgeführt werden soll."
     },
     "teamConfig": {
-      "leadAgentLabel": "Lead-Agent",
-      "membersLabel": "Mitglieder",
+      "lead": "Leitung",
+      "leadIntro": "Die Leitung erhält diese Aufgabe und gibt Teile davon an die Mitglieder weiter.",
+      "members": "Mitglieder",
+      "membersWithCount": "Mitglieder ({count}/{max})",
       "addMember": "Mitglied hinzufügen",
-      "memberN": "Mitglied {index}",
       "removeMember": "Mitglied entfernen",
-      "rolePlaceholder": "Rolle, z. B. recherchiert Hintergrundfakten",
-      "note": "1 bis 5 Mitglieder. Jedes benötigt einen Agenten und eine kurze Rollenbeschreibung."
+      "removeDisabledReason": "Ein Team braucht mindestens ein Mitglied.",
+      "roleLabel": "Rolle",
+      "roleHint": "Sagt der Leitung, wann sie diesem Mitglied Arbeit übergeben soll.",
+      "rolePlaceholder": "z. B. recherchiert Hintergrundfakten"
     },
     "toolConfig": {
       "selectTool": "Werkzeug auswählen"

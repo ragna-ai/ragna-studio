@@ -1,63 +1,85 @@
 import type { WorkflowDefinition } from './definition.schema';
 
-export type WorkflowValidationResult = { valid: true } | { valid: false; errors: string[] };
+export type WorkflowGraphIssueCode =
+  | 'triggerCount'
+  | 'unknownEdgeNode'
+  | 'conditionHandle'
+  | 'cycle';
+
+export interface WorkflowGraphIssue {
+  code: WorkflowGraphIssueCode;
+  message: string;
+}
+
+export type WorkflowValidationResult =
+  | { valid: true }
+  | { valid: false; issues: WorkflowGraphIssue[] };
 
 export function validateWorkflowDefinition(
   definition: WorkflowDefinition,
 ): WorkflowValidationResult {
   const nodesById = new Map(definition.nodes.map((node) => [node.id, node]));
 
-  const errors = [
+  const issues = [
     ...validateSingleTrigger(definition),
     ...validateEdgeReferences(definition, nodesById),
     ...validateConditionOnlyHandles(definition, nodesById),
     ...validateAcyclic(definition, nodesById),
   ];
 
-  return errors.length > 0 ? { valid: false, errors } : { valid: true };
+  return issues.length > 0 ? { valid: false, issues } : { valid: true };
 }
 
-function validateSingleTrigger(definition: WorkflowDefinition): string[] {
+function validateSingleTrigger(definition: WorkflowDefinition): WorkflowGraphIssue[] {
   const triggerCount = definition.nodes.filter((node) => node.type === 'trigger').length;
   if (triggerCount === 1) {
     return [];
   }
-  return [`Expected exactly one trigger node, found ${triggerCount}`];
+  return [
+    { code: 'triggerCount', message: `Expected exactly one trigger node, found ${triggerCount}` },
+  ];
 }
 
 function validateEdgeReferences(
   definition: WorkflowDefinition,
   nodesById: Map<string, WorkflowDefinition['nodes'][number]>,
-): string[] {
-  const errors: string[] = [];
+): WorkflowGraphIssue[] {
+  const issues: WorkflowGraphIssue[] = [];
   for (const edge of definition.edges) {
     if (!nodesById.has(edge.source)) {
-      errors.push(`Edge "${edge.id}" references unknown source node "${edge.source}"`);
+      issues.push({
+        code: 'unknownEdgeNode',
+        message: `Edge "${edge.id}" references unknown source node "${edge.source}"`,
+      });
     }
     if (!nodesById.has(edge.target)) {
-      errors.push(`Edge "${edge.id}" references unknown target node "${edge.target}"`);
+      issues.push({
+        code: 'unknownEdgeNode',
+        message: `Edge "${edge.id}" references unknown target node "${edge.target}"`,
+      });
     }
   }
-  return errors;
+  return issues;
 }
 
 function validateConditionOnlyHandles(
   definition: WorkflowDefinition,
   nodesById: Map<string, WorkflowDefinition['nodes'][number]>,
-): string[] {
-  const errors: string[] = [];
+): WorkflowGraphIssue[] {
+  const issues: WorkflowGraphIssue[] = [];
   for (const edge of definition.edges) {
     if (edge.sourceHandle === undefined) {
       continue;
     }
     const sourceNode = nodesById.get(edge.source);
     if (sourceNode !== undefined && sourceNode.type !== 'condition') {
-      errors.push(
-        `Edge "${edge.id}" sets sourceHandle "${edge.sourceHandle}" but source node "${edge.source}" is not a condition node`,
-      );
+      issues.push({
+        code: 'conditionHandle',
+        message: `Edge "${edge.id}" sets sourceHandle "${edge.sourceHandle}" but source node "${edge.source}" is not a condition node`,
+      });
     }
   }
-  return errors;
+  return issues;
 }
 
 // Depth-first search with a 3-color mark (unvisited / in-progress / done) to
@@ -65,7 +87,7 @@ function validateConditionOnlyHandles(
 function validateAcyclic(
   definition: WorkflowDefinition,
   nodesById: Map<string, WorkflowDefinition['nodes'][number]>,
-): string[] {
+): WorkflowGraphIssue[] {
   const adjacency = buildAdjacency(definition, nodesById);
   const state = new Map<string, 'inProgress' | 'done'>();
 
@@ -84,7 +106,7 @@ function validateAcyclic(
   };
 
   const hasCycle = definition.nodes.some((node) => hasCycleFrom(node.id));
-  return hasCycle ? ['Workflow graph contains a cycle'] : [];
+  return hasCycle ? [{ code: 'cycle', message: 'Workflow graph contains a cycle' }] : [];
 }
 
 function buildAdjacency(

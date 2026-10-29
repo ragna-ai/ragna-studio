@@ -8,6 +8,7 @@ import WorkflowToolConfigForm from '~/features/workflow/components/config/Workfl
 import WorkflowTransformConfigForm from '~/features/workflow/components/config/WorkflowTransformConfigForm.vue';
 import WorkflowTriggerConfigForm from '~/features/workflow/components/config/WorkflowTriggerConfigForm.vue';
 import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
+import type { WorkflowFieldIssue } from '~/features/workflow/types/validation';
 
 // Imports
 
@@ -17,6 +18,7 @@ import { NODE_TYPE_LABEL_KEYS } from '~/features/workflow/types/node-data';
 // serializes exactly what's shown.
 defineProps<{
   node: WorkflowNode;
+  issues: readonly WorkflowFieldIssue[];
 }>();
 
 // Emits
@@ -65,7 +67,11 @@ const { t } = useI18n();
     <Separator />
 
     <WorkflowTriggerConfigForm v-if="node.type === 'trigger'" :node="node" />
-    <WorkflowAgentConfigForm v-else-if="node.type === 'agent'" :node="node" />
+    <WorkflowAgentConfigForm
+      v-else-if="node.type === 'agent'"
+      :node="node"
+      :issues="issues"
+    />
     <WorkflowToolConfigForm v-else-if="node.type === 'tool'" :node="node" />
     <WorkflowConditionConfigForm
       v-else-if="node.type === 'condition'"
@@ -75,6 +81,10 @@ const { t } = useI18n();
       v-else-if="node.type === 'transform'"
       :node="node"
     />
-    <WorkflowTeamConfigForm v-else-if="node.type === 'team'" :node="node" />
+    <WorkflowTeamConfigForm
+      v-else-if="node.type === 'team'"
+      :node="node"
+      :issues="issues"
+    />
   </aside>
 </template>
