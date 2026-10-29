@@ -1,6 +1,11 @@
 import { createEmailAccount, db, listEmailAccountsDueForSync } from '@repo/database';
 import { oauthConsent, oauthRefreshToken, organizationMember } from '@repo/database/schema';
-import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
+import {
+  seedAuthenticatedUser,
+  seedGmailConnection,
+  seedOrganizationMember,
+  truncateAllTables,
+} from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -326,7 +331,13 @@ describe('email sync', () => {
     const target = colleagues[0];
     if (!target) throw new Error('missing colleague');
     for (const { userId } of [owner, target]) {
-      await createEmailAccount({ userId, provider: 'gmail', email: `${userId}@example.com` });
+      const { connection } = await seedGmailConnection({ userId });
+      await createEmailAccount({
+        userId,
+        connectionId: connection.id,
+        provider: 'gmail',
+        email: `${userId}@example.com`,
+      });
     }
 
     await organizationRequest(

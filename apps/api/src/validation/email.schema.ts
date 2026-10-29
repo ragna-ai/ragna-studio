@@ -14,6 +14,7 @@ export const validConnectEmailAccountBody = myzValidator(
   'json',
   z.object({
     provider: z.enum(['gmail', 'microsoft']),
+    connectionId: primaryId,
   }),
 );
 

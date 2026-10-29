@@ -4,6 +4,7 @@ import {
   getPersonalWorkspaceIdByUserId,
   markOrganizationDeleted,
 } from '@repo/database';
+import { removeUserConnections } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import {
   DELETE_MEDIA_OBJECTS_BATCH_SIZE,
@@ -71,6 +72,8 @@ async function enqueuePersonalWorkspaceCleanup({ userId }: { userId: string }): 
  * since better-auth deletes only the user row.
  */
 export async function prepareUserRemoval({ userId }: { userId: string }): Promise<void> {
+  await removeUserConnections({ userId });
+
   const owned = await getOwnedOrganization({ userId });
   if (!owned) {
     await enqueuePersonalWorkspaceCleanup({ userId });

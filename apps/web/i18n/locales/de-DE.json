@@ -59,7 +59,8 @@
       "mcp": "MCP",
       "signOut": "Abmelden",
       "credits": "{count} Credits",
-      "organization": "Organisation"
+      "organization": "Organisation",
+      "connections": "Verbindungen"
     }
   },
   "notification": {
@@ -104,7 +105,11 @@
     "panelTitle": "Benachrichtigungen",
     "empty": "Keine Benachrichtigungen.",
     "delete": "Benachrichtigung löschen",
-    "clearAll": "Alle löschen"
+    "clearAll": "Alle löschen",
+    "integrationNeedsReauth": {
+      "title": "Verbindung neu verbinden",
+      "message": "RAGNA Studio kann deine {provider}-Verbindung nicht mehr nutzen. Verbinde sie unter Verbindungen neu."
+    }
   },
   "auth": {
     "login": {
@@ -823,7 +828,6 @@
     },
     "tabs": {
       "profile": "Profil",
-      "accounts": "Verbundene Konten",
       "language": "Sprache",
       "sidebar": "Seitenleiste",
       "credits": "Credits",
@@ -844,22 +848,6 @@
       "avatar": "Avatar",
       "change": "Ändern",
       "email": "E-Mail"
-    },
-    "social": {
-      "title": "Verbundene Konten",
-      "loadError": "Verbundene Konten konnten nicht geladen werden.",
-      "connected": "Verbunden",
-      "notConnected": "Nicht verbunden",
-      "connect": "Verbinden",
-      "disconnect": "Trennen",
-      "connectError": "Verbindung konnte nicht gestartet werden. Bitte versuche es erneut.",
-      "disconnectSuccess": "Konto getrennt.",
-      "disconnectError": "Konto konnte nicht getrennt werden. Bitte versuche es erneut.",
-      "providers": {
-        "google": "Google",
-        "microsoft": "Microsoft",
-        "linkedin": "LinkedIn"
-      }
     }
   },
   "social": {
@@ -902,8 +890,8 @@
     },
     "linkedinHint": {
       "title": "LinkedIn nicht verbunden",
-      "message": "Verbinde dein LinkedIn-Konto, um Posts veröffentlichen zu können.",
-      "link": "Zu den Kontoeinstellungen"
+      "message": "Verbinde dein LinkedIn-Konto, um Beiträge zu veröffentlichen.",
+      "connect": "LinkedIn verbinden"
     },
     "media": {
       "attach": "Bild anhängen",
@@ -923,12 +911,13 @@
       "deleteError": "Post konnte nicht gelöscht werden.",
       "publishSuccess": "Post veröffentlicht.",
       "publishError": "Veröffentlichung fehlgeschlagen.",
-      "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Bitte zuerst verbinden.",
+      "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Verbinde LinkedIn, um zu veröffentlichen.",
       "createError": "Post konnte nicht erstellt werden.",
       "mediaUploadError": "Bild konnte nicht hochgeladen werden.",
       "mediaAltTextError": "Alt-Text konnte nicht gespeichert werden.",
       "mediaDeleteError": "Bild konnte nicht entfernt werden."
-    }
+    },
+    "publishedWith": "Veröffentlicht mit {account}"
   },
   "dataset": {
     "toast": {
@@ -1800,6 +1789,57 @@
     "selector": {
       "loadError": "KI-Modelle konnten nicht geladen werden.",
       "placeholder": "KI-Modell auswählen"
+    }
+  },
+  "integrations": {
+    "page": {
+      "title": "Verbindungen",
+      "subtitle": "Konten, die RAGNA Studio für dein Postfach und deine Social Posts nutzt.",
+      "empty": "Du hast noch kein Konto verbunden.",
+      "available": "Verfügbare Integrationen"
+    },
+    "providers": {
+      "google": "Google",
+      "microsoft": "Microsoft",
+      "linkedin": "LinkedIn"
+    },
+    "names": {
+      "gmail": "Gmail",
+      "outlook-mail": "Outlook-Mail",
+      "linkedin-posting": "LinkedIn-Posts"
+    },
+    "status": {
+      "active": "Aktiv",
+      "needs_reauth": "Neu verbinden"
+    },
+    "actions": {
+      "connect": "Verbinden",
+      "reconnect": "Neu verbinden",
+      "remove": "Entfernen"
+    },
+    "remove": {
+      "title": "Verbindung entfernen?",
+      "message": "RAGNA Studio verliert den Zugriff auf dieses Konto.",
+      "mailboxWarning": "Dein Postfach und die synchronisierten E-Mails werden ebenfalls entfernt.",
+      "hint": {
+        "google": "RAGNA Studio wird außerdem aus dem Drittanbieter-Zugriff deines Google-Kontos entfernt.",
+        "microsoft": "Microsoft erlaubt das Entfernen des Zugriffs nicht von hier. Entferne RAGNA Studio in deinem Microsoft-Konto unter Meine Apps.",
+        "linkedin": "Du kannst RAGNA Studio auch in deinen LinkedIn-Einstellungen unter erlaubten Diensten entfernen."
+      },
+      "scopesNote": "Das Entfernen einer Integration verkleinert die Berechtigungen nicht, die du dem Konto erteilt hast."
+    },
+    "toast": {
+      "connectFailed": "Verbindung konnte nicht gestartet werden",
+      "removed": "Verbindung entfernt",
+      "removeFailed": "Verbindung konnte nicht entfernt werden"
+    },
+    "errors": {
+      "invalid_state": "Der Verbindungsversuch ist abgelaufen. Versuche es erneut.",
+      "invalid_request": "Der Anbieter hat eine unvollständige Antwort gesendet. Versuche es erneut.",
+      "access_denied": "Du hast den Zugriff nicht erlaubt.",
+      "provider_error": "Der Anbieter hat einen Fehler gemeldet. Versuche es erneut.",
+      "exchange_failed": "Die Verbindung konnte nicht abgeschlossen werden. Versuche es erneut.",
+      "email_mismatch": "Verbinde das Konto, mit dem du dich anmeldest."
     }
   }
 }

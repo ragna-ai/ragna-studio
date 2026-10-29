@@ -42,6 +42,7 @@ export async function getSocialPostById({
     where: { id, workspaceId },
     with: {
       media: { orderBy: (t, { asc }) => asc(t.sortOrder), with: { media: true } },
+      connection: { columns: { id: true, externalEmail: true, displayName: true } },
     },
   });
 
@@ -74,6 +75,7 @@ export async function getAllSocialPostsByWorkspaceId({
     orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
     with: {
       media: { orderBy: (t, { asc }) => asc(t.sortOrder), with: { media: true } },
+      connection: { columns: { id: true, externalEmail: true, displayName: true } },
     },
   });
 }
@@ -118,11 +120,13 @@ export async function deleteSocialPostById({
 export async function markSocialPostPublished({
   id,
   workspaceId,
+  connectionId,
   externalId,
   externalUrl,
 }: {
   id: string;
   workspaceId: string;
+  connectionId: string;
   externalId: string;
   externalUrl: string;
 }): Promise<SocialPost | null> {
@@ -130,6 +134,7 @@ export async function markSocialPostPublished({
     .update(socialPost)
     .set({
       status: 'published',
+      connectionId,
       externalId,
       externalUrl,
       publishedAt: new Date(),

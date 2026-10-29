@@ -9,7 +9,7 @@ import {
   usePublishSocialPost,
   useUpdateSocialPost,
 } from '~/features/social/composables/useSocialPostApi';
-import useUserSocialAccounts from '~/features/user/composables/useUserSocialAccounts';
+import { useGetIntegrationConnections } from '~/features/integrations/composables/useIntegrationApi';
 
 // Props
 const props = defineProps<{
@@ -26,7 +26,8 @@ const socialPostUpsertSchema = z.object({
   }),
 });
 
-const { accounts, isLoading: isLoadingAccounts } = useUserSocialAccounts();
+const { data: connectionsData, isPending: isLoadingConnections } =
+  useGetIntegrationConnections();
 const { mutate: updatePost, isPending: isUpdating } = useUpdateSocialPost();
 const { mutate: publishPost, isPending: isPublishing } = usePublishSocialPost();
 const { formatDateTime } = useDateTimeFormat();
@@ -45,7 +46,10 @@ const form = useForm({
 // Computed
 const canEdit = computed(() => props.post.status === 'draft');
 const hasLinkedInConnected = computed(() =>
-  accounts.value.some((account) => account.providerId === 'linkedin'),
+  (connectionsData.value?.connections ?? []).some(
+    (connection) =>
+      connection.provider === 'linkedin' && connection.status === 'active',
+  ),
 );
 
 // Functions
@@ -111,7 +115,7 @@ function handlePublish() {
     <SocialPostPublishPanel
       :post="post"
       :has-linked-in-connected="hasLinkedInConnected"
-      :is-loading-accounts="isLoadingAccounts"
+      :is-loading-connections="isLoadingConnections"
       :is-publishing="isPublishing"
       @publish="handlePublish"
     />

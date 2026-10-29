@@ -44,6 +44,10 @@ export interface NotificationDataMap {
     workspaceId: string;
     prompt: string;
   };
+  integration_needs_reauth: {
+    connectionId: string;
+    provider: 'google' | 'microsoft' | 'linkedin';
+  };
 }
 
 export type NotificationType = keyof NotificationDataMap;

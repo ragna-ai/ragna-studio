@@ -11,6 +11,7 @@ export * from './email.schema';
 export * from './folder.schema';
 export * from './genimage.schema';
 export * from './genvideo.schema';
+export * from './integration.schema';
 export * from './mcp.schema';
 export * from './media.schema';
 export * from './memory.schema';

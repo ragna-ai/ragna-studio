@@ -1,5 +1,7 @@
 import { index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
+import type { IntegrationConnection } from './integration.schema';
+import { integrationConnection } from './integration.schema';
 import type { Media } from './media.schema';
 import { media } from './media.schema';
 import { user } from './user.schema';
@@ -19,6 +21,10 @@ export const socialPost = pgTable(
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => workspace.id, { onDelete: 'cascade' }),
+    // The connection that published this post.
+    connectionId: text('connection_id').references(() => integrationConnection.id, {
+      onDelete: 'set null',
+    }),
     platform: text('platform').notNull().$type<SocialPlatform>().default('linkedin'),
     content: text('content').notNull(),
     status: text('status').notNull().$type<SocialPostStatus>().default('draft'),
@@ -35,6 +41,7 @@ export const socialPost = pgTable(
   (table) => [
     index('socialPost_userId_idx').on(table.userId),
     index('socialPost_workspaceId_idx').on(table.workspaceId),
+    index('socialPost_connectionId_idx').on(table.connectionId),
   ],
 );
 
@@ -79,4 +86,11 @@ export type SocialPostMedia = typeof socialPostMedia.$inferSelect;
 export type NewSocialPostMedia = typeof socialPostMedia.$inferInsert;
 
 export type SocialPostMediaWithMedia = SocialPostMedia & { media: Media };
-export type SocialPostWithMedia = SocialPost & { media: SocialPostMediaWithMedia[] };
+export type SocialPostConnectionSummary = Pick<
+  IntegrationConnection,
+  'id' | 'externalEmail' | 'displayName'
+>;
+export type SocialPostWithMedia = SocialPost & {
+  media: SocialPostMediaWithMedia[];
+  connection: SocialPostConnectionSummary | null;
+};

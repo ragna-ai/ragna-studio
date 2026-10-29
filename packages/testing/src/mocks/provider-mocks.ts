@@ -16,6 +16,7 @@
 // one's top-level code, this mock registration included — before executing
 // any test body, so registration applies process-wide once any file
 // triggers it. See apps/api/test/README.md, "External-provider mocks".
+import { resetProviderHttpMock } from '../integrations/provider-http.mock';
 import { resetAiSdkProviderMock } from './ai-sdk-provider.mock';
 import { resetMailProviderMock } from '../mail/mail-provider.mock';
 import { resetLinkedinProviderMock } from './linkedin-provider.mock';
@@ -36,4 +37,5 @@ export function resetProviderMocks(): void {
   resetAiSdkProviderMock();
   resetMailSenderMock();
   resetMailProviderMock();
+  resetProviderHttpMock();
 }

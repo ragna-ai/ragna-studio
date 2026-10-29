@@ -86,6 +86,13 @@ const templateBuilders: { [T in NotificationType]: TemplateBuilder<T> } = {
     to: '/text-to-image',
     workspaceId: data.workspaceId,
   }),
+  integration_needs_reauth: (data) => ({
+    titleKey: 'notification.integrationNeedsReauth.title',
+    messageKey: 'notification.integrationNeedsReauth.message',
+    params: { provider: data.provider },
+    to: '/settings/connections',
+    workspaceId: null,
+  }),
 };
 
 const fallbackTemplate: NotificationTemplate = {

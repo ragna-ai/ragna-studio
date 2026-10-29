@@ -31,8 +31,13 @@ Write code the next person can read and change without asking you. Assume that p
 6. **Make illegal states unrepresentable.** Use unions/optional fields so bad combinations don't typecheck, instead of guarding at runtime.
 7. **`readonly` and `const` by default.** Mutate only when needed.
 8. **No non-null `!`.** Narrow with a check or early return instead.
-9. **No object spreads across serialization boundaries.** Where an object leaves the process or its shape becomes a contract — HTTP response/DTO builders, queue job payloads, JSONB column writes, external API/SDK calls — name every field explicitly instead of `{ ...rest }`. TS's excess property check only covers literal keys, never spread properties, so a spread silently forwards any extra field into the payload (data leakage, payload drift); an explicit key is compile-checked. Spreads stay fine for internal plumbing between same-domain types, and Drizzle `.values()`/`.set()` are safe targets (column-mapped, extras dropped).
-10. **No `await` nested in a return or call argument.** Assign the awaited value to a named `const` first, then return or pass it: `const members = await listMembers(...); return c.json(members);`, not `return c.json(await listMembers(...))`. The name says what came back, and the async step reads as its own line. Applies to `fn(await x)`, `[].push(await x)`, `{ key: await x }`, `...(await x)` and `(await x) as T`.
+9. **No spread or rest syntax (`...`).** Name every field instead. TS's excess property check covers only literal keys, never spread properties, so a spread silently forwards extra fields into a payload, a DB write or an API call. An explicit key is compile-checked and shows exactly what an object carries.
+   - Objects: `{ id: grant.id, scopes: grant.scopes }`, not `{ ...grant }`. Conditional fields are assigned conditionally, not with `...(cond ? { a } : {})`.
+   - Dropping a key: build the new object from the fields you keep, not `const { secret: _s, ...rest } = obj`. For a dynamic record, `Object.fromEntries(Object.entries(obj).filter(...))`.
+   - Arrays: `a.concat(b)` and `Array.from(new Set(list))`, not `[...a, ...b]` or `[...new Set(list)]`.
+   - Applies to new and changed code. Rewrite existing spreads when you touch those lines.
+10. **No `await` nested in a return or call argument.** Assign the awaited value to a named `const` first, then return or pass it: `const members = await listMembers(...); return c.json(members);`, not `return c.json(await listMembers(...))`. The name says what came back, and the async step reads as its own line. Applies to `fn(await x)`, `[].push(await x)`, `{ key: await x }` and `(await x) as T`.
+    - Exception in tests: `expect(await x)` and `schema.parse(await response.json())` may stay inline. The assertion or schema already says what came back.
 
 ## Vue / Nuxt
 

@@ -1,4 +1,3 @@
-import { auth } from '@repo/auth/server';
 import { config } from '@repo/config';
 import type {
   Media,
@@ -14,7 +13,7 @@ import {
   createSocialPostMediaRecords,
   deleteSocialPostById,
   deleteSocialPostMediaById,
-  getAccountByUserIdAndProvider,
+  getUserConnectionByProvider,
   getAllSocialPostsByWorkspaceId,
   getSocialPostById,
   getSocialPostCountByWorkspaceId,
@@ -23,6 +22,7 @@ import {
   updateSocialPostContent,
   updateSocialPostMediaAltText,
 } from '@repo/database';
+import { ConnectionNeedsReauthError, getConnectionAccessToken } from '@repo/integrations';
 import { createLinkedinClient } from '@repo/linkedin';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
@@ -93,6 +93,12 @@ function toMediaResponse(row: SocialPostMedia, media: Media): SocialPostMediaRes
 
 // Field set matches the frontend's SocialPost interface (useSocialPostApi.ts)
 // exactly: userId, workspaceId and deletedAt stay server-side.
+export interface SocialPostConnectionResponse {
+  id: string;
+  externalEmail: string | null;
+  displayName: string | null;
+}
+
 export interface SocialPostResponse {
   id: string;
   platform: SocialPlatform;
@@ -106,6 +112,7 @@ export interface SocialPostResponse {
   createdAt: Date;
   updatedAt: Date;
   media: SocialPostMediaResponse[];
+  connection: SocialPostConnectionResponse | null;
 }
 
 // Takes the post row and its media rows as two separate parameters instead
@@ -113,7 +120,11 @@ export interface SocialPostResponse {
 // from different queries (publishSocialPost re-uses media loaded earlier;
 // createSocialPostForUser has none yet) never has to fake the joined shape
 // with `{ ...post, media }`.
-function toPostResponse(post: SocialPost, media: SocialPostMediaWithMedia[]): SocialPostResponse {
+function toPostResponse(
+  post: SocialPost,
+  media: SocialPostMediaWithMedia[],
+  connection: SocialPostConnectionResponse | null,
+): SocialPostResponse {
   return {
     id: post.id,
     platform: post.platform,
@@ -127,6 +138,11 @@ function toPostResponse(post: SocialPost, media: SocialPostMediaWithMedia[]): So
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
     media: media.map((item) => toMediaResponse(item, item.media)),
+    connection: connection && {
+      id: connection.id,
+      externalEmail: connection.externalEmail,
+      displayName: connection.displayName,
+    },
   };
 }
 
@@ -195,7 +211,7 @@ export async function listSocialPosts({
   }
 
   return {
-    posts: posts.map((post) => toPostResponse(post, post.media)),
+    posts: posts.map((post) => toPostResponse(post, post.media, post.connection)),
     meta: { totalCount: totalCount ?? 0 },
   };
 }
@@ -223,7 +239,7 @@ export async function createSocialPostForUser({
     throw new InternalServerErrorException('Failed to create social post');
   }
 
-  return toPostResponse(created, []);
+  return toPostResponse(created, [], null);
 }
 
 /**
@@ -237,7 +253,7 @@ export async function getSocialPost({
   socialPostId: string;
 }): Promise<SocialPostResponse> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
-  return toPostResponse(post, post.media);
+  return toPostResponse(post, post.media, post.connection);
 }
 
 /**
@@ -270,7 +286,7 @@ export async function updateSocialPostForUser({
   // join, so the response is built from a fresh read instead (matches the
   // re-read pattern in videogen.service.ts's generateVideoForWorkspace).
   const post = await loadOwnedPost({ workspaceId, socialPostId });
-  return toPostResponse(post, post.media);
+  return toPostResponse(post, post.media, post.connection);
 }
 
 /**
@@ -508,24 +524,28 @@ export async function publishSocialPost({
     throw new BadRequestException('Add some content before publishing');
   }
 
-  const { error: accountError, data: account } = await tryCatch(() =>
-    getAccountByUserIdAndProvider({ userId, providerId: 'linkedin' }),
+  const { error: connectionError, data: connection } = await tryCatch(() =>
+    getUserConnectionByProvider({ userId, provider: 'linkedin' }),
   );
 
-  if (accountError !== null) {
-    logger.error('Failed to load LinkedIn account', accountError);
-    throw new InternalServerErrorException('Failed to load LinkedIn account');
+  if (connectionError !== null) {
+    logger.error('Failed to load the LinkedIn connection', connectionError);
+    throw new InternalServerErrorException('Failed to load the LinkedIn connection');
   }
 
-  if (!account) {
+  if (!connection || connection.status === 'needs_reauth') {
     return { linkedinNotConnected: true };
   }
 
-  const { error: tokenError, data: token } = await tryCatch(() =>
-    auth.api.getAccessToken({ body: { accountId: account.id, userId } }),
+  const { error: tokenError, data: accessToken } = await tryCatch(() =>
+    getConnectionAccessToken({ connectionId: connection.id }),
   );
 
-  if (tokenError !== null || !token?.accessToken) {
+  if (tokenError instanceof ConnectionNeedsReauthError) {
+    return { linkedinNotConnected: true };
+  }
+
+  if (tokenError !== null || !accessToken) {
     logger.error('Failed to get a valid LinkedIn access token', tokenError);
     await tryCatch(() =>
       markSocialPostFailed({
@@ -539,8 +559,8 @@ export async function publishSocialPost({
 
   const mediaResult = await uploadPostMediaToLinkedIn({
     media: post.media,
-    accessToken: token.accessToken,
-    authorId: account.accountId,
+    accessToken,
+    authorId: connection.externalAccountId,
   });
 
   if ('error' in mediaResult) {
@@ -551,11 +571,11 @@ export async function publishSocialPost({
     throw new InternalServerErrorException('Failed to publish to LinkedIn');
   }
 
-  const linkedin = createLinkedinClient(token.accessToken);
+  const linkedin = createLinkedinClient(accessToken);
 
   const { error: publishError, data: published } = await tryCatch(() =>
     linkedin.createPost({
-      authorId: account.accountId,
+      authorId: connection.externalAccountId,
       text: post.content,
       imageUrns: mediaResult.imageUrns,
     }),
@@ -577,6 +597,7 @@ export async function publishSocialPost({
     markSocialPostPublished({
       id: socialPostId,
       workspaceId,
+      connectionId: connection.id,
       externalId: published.urn,
       externalUrl: published.url,
     }),
@@ -592,6 +613,6 @@ export async function publishSocialPost({
   // of this function (`post.media`) is still accurate, no re-read needed.
   return {
     linkedinNotConnected: false,
-    post: toPostResponse(publishedPost, post.media),
+    post: toPostResponse(publishedPost, post.media, connection),
   };
 }

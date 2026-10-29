@@ -1,18 +1,34 @@
 // apps/api/src/services/email-provider.service.ts
 
-import { auth } from '@repo/auth/server';
-import { getAccountByUserIdAndProvider, getEmailAccountByUserId } from '@repo/database';
+import {
+  getEmailAccountByUserId,
+  getUserConnectionById,
+  type IntegrationConnection,
+} from '@repo/database';
+import {
+  ConnectionNeedsReauthError,
+  coversIntegration,
+  getConnectionAccessToken,
+  getIntegration,
+  type IntegrationId,
+  type ProviderId,
+} from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { createMailProvider, type MailProvider, type MailProviderKind } from '@repo/mail/provider';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
 
-// gmail maps to better-auth's 'google' social provider id.
-export const BETTER_AUTH_PROVIDER_ID: Record<MailProviderKind, string> = {
+const MAIL_INTEGRATION_ID: Record<MailProviderKind, IntegrationId> = {
+  gmail: 'gmail',
+  microsoft: 'outlook-mail',
+};
+
+const CONNECTION_PROVIDER_ID: Record<MailProviderKind, ProviderId> = {
   gmail: 'google',
   microsoft: 'microsoft',
 };
@@ -22,115 +38,31 @@ const PROVIDER_DISPLAY_NAME: Record<MailProviderKind, string> = {
   microsoft: 'Microsoft',
 };
 
-const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
+export const RECONNECT_MAILBOX_MESSAGE = 'Reconnect your mailbox';
 
-// account.scope may store these as full URIs or short names; hasOAuthScope below accepts both.
-const MICROSOFT_MAIL_SCOPES = ['Mail.ReadWrite', 'Mail.Send'];
-
-function hasOAuthScope(scopes: string[], shortName: string): boolean {
-  const needle = shortName.toLowerCase();
-  return scopes.some((scope) => {
-    const lower = scope.toLowerCase();
-    return lower === needle || lower.endsWith(`/${needle}`);
-  });
-}
-
-export interface MailProviderScopeStatus {
-  linked: boolean;
-  hasRequiredScope: boolean;
-}
-
-// Reads account.scope directly instead of calling the provider, so callers can 400 before the first mail request.
-export async function getMailProviderScopeStatus({
-  userId,
+/** The provider token is resolved once per request, so a rejected connection fails before any mail call. */
+async function buildMailProvider({
+  connectionId,
   provider,
 }: {
-  userId: string;
-  provider: MailProviderKind;
-}): Promise<MailProviderScopeStatus> {
-  const { error, data: account } = await tryCatch(() =>
-    getAccountByUserIdAndProvider({ userId, providerId: BETTER_AUTH_PROVIDER_ID[provider] }),
-  );
-
-  if (error !== null) {
-    logger.error(`Failed to load ${provider} account`, error);
-    throw new InternalServerErrorException('Failed to load linked account');
-  }
-
-  if (!account) {
-    return { linked: false, hasRequiredScope: false };
-  }
-
-  const scopes = (account.scope ?? '').split(',').filter(Boolean);
-  const hasRequiredScope =
-    provider === 'gmail'
-      ? scopes.includes(GMAIL_MODIFY_SCOPE)
-      : MICROSOFT_MAIL_SCOPES.every((scope) => hasOAuthScope(scopes, scope));
-
-  return { linked: true, hasRequiredScope };
-}
-
-function assertProviderScope(provider: MailProviderKind, status: MailProviderScopeStatus): void {
-  const name = PROVIDER_DISPLAY_NAME[provider];
-
-  if (!status.linked) {
-    throw new BadRequestException(
-      `Connect your ${name} account first, then connect your mailbox from the email settings page`,
-    );
-  }
-
-  if (!status.hasRequiredScope) {
-    throw new BadRequestException(
-      `Your ${name} account is missing mailbox access. Reconnect it and grant the required permissions`,
-    );
-  }
-}
-
-function buildMailProvider({
-  userId,
-  provider,
-}: {
-  userId: string;
-  provider: MailProviderKind;
-}): MailProvider {
-  const betterAuthProviderId = BETTER_AUTH_PROVIDER_ID[provider];
-  const name = PROVIDER_DISPLAY_NAME[provider];
-
-  return createMailProvider({
-    provider,
-    getAccessToken: async () => {
-      const { error, data: token } = await tryCatch(async () => {
-        const account = await getAccountByUserIdAndProvider({
-          userId,
-          providerId: betterAuthProviderId,
-        });
-        if (!account) {
-          throw new Error(`${name} account is no longer linked`);
-        }
-
-        return auth.api.getAccessToken({ body: { accountId: account.id, userId } });
-      });
-
-      if (error !== null || !token?.accessToken) {
-        logger.error(`Failed to get a valid ${name} access token`, error);
-        throw new InternalServerErrorException(`Failed to get a valid ${name} access token`);
-      }
-
-      return token.accessToken;
-    },
-  });
-}
-
-async function assertScopeAndBuildProvider({
-  userId,
-  provider,
-}: {
-  userId: string;
+  connectionId: string;
   provider: MailProviderKind;
 }): Promise<MailProvider> {
-  const status = await getMailProviderScopeStatus({ userId, provider });
-  assertProviderScope(provider, status);
-  return buildMailProvider({ userId, provider });
+  const { error, data: accessToken } = await tryCatch(() =>
+    getConnectionAccessToken({ connectionId }),
+  );
+
+  if (error instanceof ConnectionNeedsReauthError) {
+    throw new ConflictException(RECONNECT_MAILBOX_MESSAGE);
+  }
+  if (error !== null || !accessToken) {
+    logger.error(`Failed to get a valid ${PROVIDER_DISPLAY_NAME[provider]} access token`, error);
+    throw new InternalServerErrorException(
+      `Failed to get a valid ${PROVIDER_DISPLAY_NAME[provider]} access token`,
+    );
+  }
+
+  return createMailProvider({ provider, getAccessToken: () => Promise.resolve(accessToken) });
 }
 
 export async function getMailProviderForUser({
@@ -149,16 +81,47 @@ export async function getMailProviderForUser({
     throw new NotFoundException('Mailbox is not connected');
   }
 
-  return assertScopeAndBuildProvider({ userId, provider: account.provider });
+  return buildMailProvider({ connectionId: account.connectionId, provider: account.provider });
 }
 
-// Connect path: no email_accounts row exists yet, so the provider comes from the request body instead.
+export interface MailConnectionRequest {
+  userId: string;
+  provider: MailProviderKind;
+  connectionId: string;
+}
+
+function assertConnectionFitsMailbox(
+  connection: IntegrationConnection,
+  provider: MailProviderKind,
+): void {
+  if (connection.provider !== CONNECTION_PROVIDER_ID[provider]) {
+    throw new BadRequestException(
+      `This connection is not a ${PROVIDER_DISPLAY_NAME[provider]} account`,
+    );
+  }
+
+  if (connection.status === 'needs_reauth') {
+    throw new ConflictException(RECONNECT_MAILBOX_MESSAGE);
+  }
+
+  if (!coversIntegration(connection.scopes, getIntegration(MAIL_INTEGRATION_ID[provider]))) {
+    throw new BadRequestException(
+      `Your ${PROVIDER_DISPLAY_NAME[provider]} account is missing mailbox access. Reconnect it and grant the required permissions`,
+    );
+  }
+}
+
+/** Connect path: no email_accounts row exists yet, so the connection comes from the request body. */
 export async function getMailProviderForConnectRequest({
   userId,
   provider,
-}: {
-  userId: string;
-  provider: MailProviderKind;
-}): Promise<MailProvider> {
-  return assertScopeAndBuildProvider({ userId, provider });
+  connectionId,
+}: MailConnectionRequest): Promise<MailProvider> {
+  const connection = await getUserConnectionById({ id: connectionId, userId });
+  if (!connection) {
+    throw new NotFoundException('Connection not found');
+  }
+
+  assertConnectionFitsMailbox(connection, provider);
+  return buildMailProvider({ connectionId: connection.id, provider });
 }

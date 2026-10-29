@@ -75,6 +75,7 @@ work first, shipped reference and dead/historical docs last.
 | [Image generation: FLUX 3 image model (PRD)](./imagegen/flux-3-prd.md) | implemented (2026-10-23, PR #135) |
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |
+| [Integrations: connections separate from sign-in (PRD)](./integrations/224-connections/prd.md) | implemented (2026-10-29, PR #226) |
 | [LinkedIn Integration Strategy](./linkedin-strategy.md) | implemented (2026-07-14) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | implemented (2026-09-25, PR #26; see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | implemented (2026-09-25, PR #26) |

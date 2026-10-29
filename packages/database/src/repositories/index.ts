@@ -1,4 +1,3 @@
-export * from './account.repo';
 export * from './agent-context-document-chunk.repo';
 export * from './agent-context-document.repo';
 export * from './agent-template.repo';
@@ -18,6 +17,7 @@ export * from './email-thread.repo';
 export * from './folder.repo';
 export * from './gen-image.repo';
 export * from './gen-video.repo';
+export * from './integration-connection.repo';
 export * from './mcp.repo';
 export * from './media.repo';
 export * from './memory.repo';

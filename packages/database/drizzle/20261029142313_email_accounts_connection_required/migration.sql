@@ -1,0 +1,1 @@
+ALTER TABLE "email_accounts" ALTER COLUMN "connection_id" SET NOT NULL;

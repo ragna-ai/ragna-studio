@@ -1,0 +1,1116 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "45233429-9b5d-426f-9a51-942c5df53ec8",
+  "prevIds": ["58e2d9a4-142a-47ca-8c6a-17ff70bfdffe"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "integration_connections"],
+      "writes": [
+        "s|tbl|public.integration_connections",
+        "n|tbl|public.integration_connections",
+        "e|tbl|public.integration_connections",
+        "n|rel|public.integration_connections",
+        "n|type|public.integration_connections",
+        "n|rel|public.integration_connections_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "integration_oauth_states"],
+      "writes": [
+        "s|tbl|public.integration_oauth_states",
+        "n|tbl|public.integration_oauth_states",
+        "e|tbl|public.integration_oauth_states",
+        "n|rel|public.integration_oauth_states",
+        "n|type|public.integration_oauth_states",
+        "n|rel|public.integration_oauth_states_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "email_accounts", "connection_id"],
+      "writes": [
+        "s|col|public.email_accounts.connection_id",
+        "n|col|public.email_accounts.connection_id",
+        "e|col|public.email_accounts.connection_id"
+      ],
+      "reads": ["n|tbl|public.email_accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "social_posts", "connection_id"],
+      "writes": [
+        "s|col|public.social_posts.connection_id",
+        "n|col|public.social_posts.connection_id",
+        "e|col|public.social_posts.connection_id"
+      ],
+      "reads": ["n|tbl|public.social_posts", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "email_accounts", "emailAccount_connectionId_idx"],
+      "writes": [
+        "s|idx|public.emailAccount_connectionId_idx",
+        "n|idx|public.emailAccount_connectionId_idx",
+        "e|idx|public.emailAccount_connectionId_idx",
+        "n|rel|public.emailAccount_connectionId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.email_accounts",
+        "n|sch|public",
+        "n|col|public.email_accounts.connection_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "integration_connections",
+        "integrationConnection_organizationId_idx"
+      ],
+      "writes": [
+        "s|idx|public.integrationConnection_organizationId_idx",
+        "n|idx|public.integrationConnection_organizationId_idx",
+        "e|idx|public.integrationConnection_organizationId_idx",
+        "n|rel|public.integrationConnection_organizationId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.integration_connections.organization_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "integration_connections",
+        "integrationConnection_userId_provider_idx"
+      ],
+      "writes": [
+        "s|idx|public.integrationConnection_userId_provider_idx",
+        "n|idx|public.integrationConnection_userId_provider_idx",
+        "e|idx|public.integrationConnection_userId_provider_idx",
+        "n|rel|public.integrationConnection_userId_provider_idx"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.integration_connections.user_id",
+        "n|col|public.integration_connections.provider"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "integration_connections",
+        "integrationConnection_workspaceId_provider_externalAccountId_idx"
+      ],
+      "writes": [
+        "s|idx|public.integrationConnection_workspaceId_provider_externalAccountId_idx",
+        "n|idx|public.integrationConnection_workspaceId_provider_externalAccountId_idx",
+        "e|idx|public.integrationConnection_workspaceId_provider_externalAccountId_idx",
+        "n|rel|public.integrationConnection_workspaceId_provider_externalAccountId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.integration_connections.workspace_id",
+        "n|col|public.integration_connections.provider",
+        "n|col|public.integration_connections.external_account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "integration_oauth_states",
+        "integrationOauthState_userId_idx"
+      ],
+      "writes": [
+        "s|idx|public.integrationOauthState_userId_idx",
+        "n|idx|public.integrationOauthState_userId_idx",
+        "e|idx|public.integrationOauthState_userId_idx",
+        "n|rel|public.integrationOauthState_userId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.integration_oauth_states",
+        "n|sch|public",
+        "n|col|public.integration_oauth_states.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "integration_oauth_states",
+        "integrationOauthState_expiresAt_idx"
+      ],
+      "writes": [
+        "s|idx|public.integrationOauthState_expiresAt_idx",
+        "n|idx|public.integrationOauthState_expiresAt_idx",
+        "e|idx|public.integrationOauthState_expiresAt_idx",
+        "n|rel|public.integrationOauthState_expiresAt_idx"
+      ],
+      "reads": [
+        "n|tbl|public.integration_oauth_states",
+        "n|sch|public",
+        "n|col|public.integration_oauth_states.expires_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "social_posts", "socialPost_connectionId_idx"],
+      "writes": [
+        "s|idx|public.socialPost_connectionId_idx",
+        "n|idx|public.socialPost_connectionId_idx",
+        "e|idx|public.socialPost_connectionId_idx",
+        "n|rel|public.socialPost_connectionId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.social_posts",
+        "n|sch|public",
+        "n|col|public.social_posts.connection_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "email_accounts"],
+      "writes": [
+        "s|fk|public.email_accounts.email_accounts_connection_id_integration_connections_id_fkey",
+        "n|fk|public.email_accounts.email_accounts_connection_id_integration_connections_id_fkey",
+        "e|fk|public.email_accounts.email_accounts_connection_id_integration_connections_id_fkey",
+        "n|con|public.email_accounts.email_accounts_connection_id_integration_connections_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.email_accounts",
+        "n|sch|public",
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.email_accounts.connection_id",
+        "n|col|public.integration_connections.id",
+        "e|uniqueness|public.integration_connections.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "integration_connections"],
+      "writes": [
+        "s|fk|public.integration_connections.integration_connections_organization_id_organizations_id_fkey",
+        "n|fk|public.integration_connections.integration_connections_organization_id_organizations_id_fkey",
+        "e|fk|public.integration_connections.integration_connections_organization_id_organizations_id_fkey",
+        "n|con|public.integration_connections.integration_connections_organization_id_organizations_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|tbl|public.organizations",
+        "n|sch|public",
+        "n|col|public.integration_connections.organization_id",
+        "n|col|public.organizations.id",
+        "e|uniqueness|public.organizations.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "integration_connections"],
+      "writes": [
+        "s|fk|public.integration_connections.integration_connections_user_id_users_id_fkey",
+        "n|fk|public.integration_connections.integration_connections_user_id_users_id_fkey",
+        "e|fk|public.integration_connections.integration_connections_user_id_users_id_fkey",
+        "n|con|public.integration_connections.integration_connections_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.integration_connections.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "integration_connections"],
+      "writes": [
+        "s|fk|public.integration_connections.integration_connections_workspace_id_workspaces_id_fkey",
+        "n|fk|public.integration_connections.integration_connections_workspace_id_workspaces_id_fkey",
+        "e|fk|public.integration_connections.integration_connections_workspace_id_workspaces_id_fkey",
+        "n|con|public.integration_connections.integration_connections_workspace_id_workspaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|tbl|public.workspaces",
+        "n|sch|public",
+        "n|col|public.integration_connections.workspace_id",
+        "n|col|public.workspaces.id",
+        "e|uniqueness|public.workspaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "integration_connections"],
+      "writes": [
+        "s|fk|public.integration_connections.integration_connections_created_by_user_id_users_id_fkey",
+        "n|fk|public.integration_connections.integration_connections_created_by_user_id_users_id_fkey",
+        "e|fk|public.integration_connections.integration_connections_created_by_user_id_users_id_fkey",
+        "n|con|public.integration_connections.integration_connections_created_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.integration_connections.created_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "integration_oauth_states"],
+      "writes": [
+        "s|fk|public.integration_oauth_states.integration_oauth_states_user_id_users_id_fkey",
+        "n|fk|public.integration_oauth_states.integration_oauth_states_user_id_users_id_fkey",
+        "e|fk|public.integration_oauth_states.integration_oauth_states_user_id_users_id_fkey",
+        "n|con|public.integration_oauth_states.integration_oauth_states_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.integration_oauth_states",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.integration_oauth_states.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "social_posts"],
+      "writes": [
+        "s|fk|public.social_posts.social_posts_connection_id_integration_connections_id_fkey",
+        "n|fk|public.social_posts.social_posts_connection_id_integration_connections_id_fkey",
+        "e|fk|public.social_posts.social_posts_connection_id_integration_connections_id_fkey",
+        "n|con|public.social_posts.social_posts_connection_id_integration_connections_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.social_posts",
+        "n|sch|public",
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.social_posts.connection_id",
+        "n|col|public.integration_connections.id",
+        "e|uniqueness|public.integration_connections.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "integration_connections",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "integration_oauth_states",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "email_accounts",
+        "name": "connection_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "organization_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "workspace_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "created_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "provider",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "external_account_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "external_email",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "display_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "scopes",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "ARRAY[]",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "access_token",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "refresh_token",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "access_token_expires_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'active'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "auth_failed_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "auth_failed_reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "last_refreshed_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "created_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "updated_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "state",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "integration_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "code_verifier",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "return_path",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "expires_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "social_posts",
+        "name": "connection_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "email_accounts",
+        "name": "emailAccount_connectionId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "connection_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integrationConnection_organizationId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "organization_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integrationConnection_userId_provider_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "provider",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"user_id\" IS NOT NULL",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integrationConnection_workspaceId_provider_externalAccountId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "workspace_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "provider",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "external_account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"workspace_id\" IS NOT NULL",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "integrationOauthState_userId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "integrationOauthState_expiresAt_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "expires_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "social_posts",
+        "name": "socialPost_connectionId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "connection_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "email_accounts",
+        "name": "email_accounts_connection_id_integration_connections_id_fkey",
+        "nameExplicit": false,
+        "columns": ["connection_id"],
+        "schemaTo": "public",
+        "tableTo": "integration_connections",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integration_connections_organization_id_organizations_id_fkey",
+        "nameExplicit": false,
+        "columns": ["organization_id"],
+        "schemaTo": "public",
+        "tableTo": "organizations",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integration_connections_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integration_connections_workspace_id_workspaces_id_fkey",
+        "nameExplicit": false,
+        "columns": ["workspace_id"],
+        "schemaTo": "public",
+        "tableTo": "workspaces",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integration_connections_created_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["created_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "integration_oauth_states_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "social_posts",
+        "name": "social_posts_connection_id_integration_connections_id_fkey",
+        "nameExplicit": false,
+        "columns": ["connection_id"],
+        "schemaTo": "public",
+        "tableTo": "integration_connections",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integration_connections_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_oauth_states",
+        "name": "integration_oauth_states_pkey",
+        "columns": ["state"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integrationConnection_single_owner_check",
+        "value": "num_nonnulls(\"user_id\", \"workspace_id\") = 1",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "integrationConnection_token_envelope_check",
+        "value": "(\"access_token\" IS NULL OR \"access_token\" LIKE 'enc:v1:%') AND (\"refresh_token\" IS NULL OR \"refresh_token\" LIKE 'enc:v1:%')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

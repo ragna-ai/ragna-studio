@@ -59,6 +59,13 @@ export interface SocialPost {
   createdAt: string;
   updatedAt: string;
   media: SocialPostMedia[];
+  connection: SocialPostConnection | null;
+}
+
+export interface SocialPostConnection {
+  id: string;
+  externalEmail: string | null;
+  displayName: string | null;
 }
 
 export interface SocialPostManyResponse {

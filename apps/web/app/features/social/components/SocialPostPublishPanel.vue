@@ -9,7 +9,7 @@ import SocialPostLinkedInHint from '~/features/social/components/SocialPostLinke
 const props = defineProps<{
   post: SocialPost;
   hasLinkedInConnected: boolean;
-  isLoadingAccounts: boolean;
+  isLoadingConnections: boolean;
   isPublishing: boolean;
 }>();
 
@@ -40,7 +40,7 @@ function handlePublish() {
 <template>
   <div class="space-y-3">
     <SocialPostLinkedInHint
-      v-if="!isLoadingAccounts && !hasLinkedInConnected"
+      v-if="!isLoadingConnections && !hasLinkedInConnected"
     />
 
     <p
@@ -48,6 +48,18 @@ function handlePublish() {
       class="text-sm text-destructive"
     >
       {{ post.publishError }}
+    </p>
+
+    <p
+      v-if="post.status === 'published' && post.connection"
+      class="text-sm text-muted-foreground"
+    >
+      {{
+        t('social.publishedWith', {
+          account:
+            post.connection.displayName ?? post.connection.externalEmail ?? '',
+        })
+      }}
     </p>
 
     <a

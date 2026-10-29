@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
+import { useIntegrationErrorToast } from '~/features/integrations/composables/useIntegrationErrorToast';
+import { INTEGRATION_ERROR_QUERY_PARAM } from '~/features/integrations/lib/integration-meta';
 import EmailConnectPrompt from '~/features/email/components/EmailConnectPrompt.vue';
 import EmailDraftList from '~/features/email/components/EmailDraftList.vue';
 import EmailDraftPanel from '~/features/email/components/EmailDraftPanel.vue';
@@ -48,6 +50,9 @@ const queryClient = useQueryClient();
 const { t } = useI18n();
 const { data: accountData, isLoading: isAccountLoading } = useGetEmailAccount();
 const { finishConnect, finishReconnect } = useEmailConnectFlow();
+// Read before the toast composable strips the param from the URL.
+const returnedWithError = Boolean(route.query[INTEGRATION_ERROR_QUERY_PARAM]);
+useIntegrationErrorToast();
 const { mutateAsync: createDraft, isPending: isCreatingDraft } =
   useCreateEmailDraft();
 
@@ -56,6 +61,9 @@ const { mutateAsync: createDraft, isPending: isCreatingDraft } =
 // error; mutateAsync still rejects afterwards, so this catches and swallows
 // it instead of leaving an unhandled rejection.
 onMounted(async () => {
+  // A failed return from the provider carries integration_error and has nothing to finish.
+  if (returnedWithError) return;
+
   try {
     const connectProvider = firstQueryValue(
       route.query[MAIL_CONNECT_CALLBACK_PARAM],

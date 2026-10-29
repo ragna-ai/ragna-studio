@@ -1,4 +1,5 @@
 import { createTask, createWorkflow, db } from '@repo/database';
+import { seedGmailConnection } from '@repo/testing';
 import {
   emailAccount,
   mcpToolCall,
@@ -149,9 +150,16 @@ export async function seedEmailAccount({
   userId: string;
   syncState?: EmailAccount['syncState'];
 }): Promise<EmailAccount> {
+  const { connection } = await seedGmailConnection({ userId });
   const [created] = await db
     .insert(emailAccount)
-    .values({ userId, provider: 'gmail', email: `${crypto.randomUUID()}@example.com`, syncState })
+    .values({
+      userId,
+      connectionId: connection.id,
+      provider: 'gmail',
+      email: `${crypto.randomUUID()}@example.com`,
+      syncState,
+    })
     .returning();
   if (!created) throw new Error('Failed to seed email account');
   return created;

@@ -106,6 +106,10 @@ export default defineNuxtConfig({
         'vscode-icons:file-type-text',
         'vscode-icons:file-type-markdown',
         'vscode-icons:default-file',
+        // Provider logos live in a .ts lookup (`integration-meta.ts`), which `scan` skips.
+        'logos:google-icon',
+        'logos:microsoft-icon',
+        'logos:linkedin-icon',
       ],
     },
     customCollections: [

@@ -1,4 +1,5 @@
 import {
+  deleteExpiredOauthStates,
   deleteExpiredSessions,
   deleteExpiredVerifications,
   deleteMcpToolCallsOlderThan,
@@ -17,6 +18,7 @@ export async function cleanupProcessor() {
 
   await runCleanupStep('expired sessions', deleteExpiredSessions);
   await runCleanupStep('expired verifications', deleteExpiredVerifications);
+  await runCleanupStep('expired OAuth states', deleteExpiredOauthStates);
 
   const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
   await runCleanupStep('read notifications', () =>

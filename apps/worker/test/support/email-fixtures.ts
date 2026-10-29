@@ -1,6 +1,11 @@
 import type { Agent, AgentTools, EmailAccount, EmailProvider } from '@repo/database';
 import { createAgent, createEmailAccount } from '@repo/database';
-import { seedAuthenticatedUser, seedTokenPricedAiModel } from '@repo/testing';
+import {
+  seedAuthenticatedUser,
+  seedGmailConnection,
+  seedOutlookConnection,
+  seedTokenPricedAiModel,
+} from '@repo/testing';
 
 export interface SeededMailUser {
   userId: string;
@@ -12,14 +17,21 @@ export interface SeededMailUser {
 export interface SeedMailUserParams {
   provider?: EmailProvider;
   syncCursor?: string;
+  accessToken?: string;
 }
 
 /** A user with an email account row. The mail provider itself is mocked. */
 export async function seedMailUser(params: SeedMailUserParams = {}): Promise<SeededMailUser> {
   const { userId, personalWorkspaceId, workspaceId } = await seedAuthenticatedUser();
+  const provider = params.provider ?? 'gmail';
+  const { connection } =
+    provider === 'gmail'
+      ? await seedGmailConnection({ userId, accessToken: params.accessToken })
+      : await seedOutlookConnection({ userId, accessToken: params.accessToken });
   const account = await createEmailAccount({
     userId,
-    provider: params.provider ?? 'gmail',
+    connectionId: connection.id,
+    provider,
     email: `mailbox-${crypto.randomUUID()}@example.test`,
     syncCursor: params.syncCursor ?? null,
   });

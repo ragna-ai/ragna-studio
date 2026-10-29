@@ -1,10 +1,14 @@
 import { getLinkedinDraft } from '@repo/ai';
 import { createGenImageRecords, createMedia, db } from '@repo/database';
+import { account } from '@repo/database/schema';
 import {
   createPostMock,
   resetProviderMocks,
   seedAuthenticatedUser,
-  seedLinkedinAccount,
+  createLinkedinClientMock,
+  expireConnectionAccessToken,
+  rejectProviderRefresh,
+  seedLinkedinConnection,
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
@@ -39,6 +43,14 @@ const postSchema = z
     createdAt: z.string(),
     updatedAt: z.string(),
     media: z.array(z.object({ id: z.string() })),
+    connection: z
+      .object({
+        id: z.string(),
+        externalEmail: z.string().nullable(),
+        displayName: z.string().nullable(),
+      })
+      .strict()
+      .nullable(),
   })
   .strict();
 
@@ -187,7 +199,7 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
 
   test('publishes through the faked LinkedIn client and flips the post to published', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    await seedLinkedinAccount({ userId });
+    await seedLinkedinConnection({ userId });
     const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
 
     const response = await app.request(
@@ -202,9 +214,100 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     expect(createPostMock.mock.calls[0]?.[0]).toMatchObject({ text: 'Ready to publish' });
   });
 
+  test('publishes with the token and profile of the LinkedIn connection and records the account used', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection, accessToken } = await seedLinkedinConnection({
+      userId,
+      externalEmail: 'anna@brand.example',
+    });
+    const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/social-post/${created.id}/publish`,
+      { method: 'POST', headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(createLinkedinClientMock.mock.calls[0]?.[0]).toBe(accessToken);
+    expect(createPostMock.mock.calls[0]?.[0]).toMatchObject({
+      authorId: connection.externalAccountId,
+    });
+    const body = postResponseSchema.parse(await response.json());
+    expect(body.post.connection).toEqual({
+      id: connection.id,
+      externalEmail: 'anna@brand.example',
+      displayName: null,
+    });
+
+    const listResponse = await app.request(`/workspace/${workspaceId}/social-post`, {
+      headers: { cookie: cookieHeader },
+    });
+    const list = listResponseSchema.parse(await listResponse.json());
+    expect(list.posts[0]?.connection?.id).toBe(connection.id);
+  });
+
+  test('refreshes an expired LinkedIn token before publishing', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedLinkedinConnection({ userId });
+    await expireConnectionAccessToken({ connectionId: connection.id });
+    const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/social-post/${created.id}/publish`,
+      { method: 'POST', headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(createLinkedinClientMock.mock.calls[0]?.[0]).toBe('refreshed-access-token');
+  });
+
+  test('asks to connect LinkedIn again when the connection is rejected and keeps the draft', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedLinkedinConnection({ userId });
+    await expireConnectionAccessToken({ connectionId: connection.id });
+    rejectProviderRefresh('linkedin');
+    const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/social-post/${created.id}/publish`,
+      { method: 'POST', headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    const body = z.object({ errorCode: z.string() }).parse(await response.json());
+    expect(body.errorCode).toBe('LINKEDIN_NOT_CONNECTED');
+    expect(createPostMock).not.toHaveBeenCalled();
+    const getResponse = await app.request(`/workspace/${workspaceId}/social-post/${created.id}`, {
+      headers: { cookie: cookieHeader },
+    });
+    expect(postResponseSchema.parse(await getResponse.json()).post.status).toBe('draft');
+  });
+
+  test('does not publish with a LinkedIn sign-in account that has no connection', async () => {
+    const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    await db.insert(account).values({
+      userId,
+      accountId: 'linkedin-person',
+      providerId: 'linkedin',
+      accessToken: 'sign-in-access-token',
+      scope: 'openid,profile,email,w_member_social',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/social-post/${created.id}/publish`,
+      { method: 'POST', headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(createPostMock).not.toHaveBeenCalled();
+  });
+
   test('rejects publishing a draft with empty content', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    await seedLinkedinAccount({ userId });
+    await seedLinkedinConnection({ userId });
     const created = await createDraft(cookieHeader, workspaceId, '');
 
     const response = await app.request(
@@ -218,7 +321,7 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
 
   test('marks the post failed when the faked LinkedIn client rejects', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    await seedLinkedinAccount({ userId });
+    await seedLinkedinConnection({ userId });
     const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
 
     createPostMock.mockImplementationOnce(() => {

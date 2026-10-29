@@ -30,6 +30,7 @@ export const account = pgTable(
   (table) => [
     index('account_userId_idx').on(table.userId),
     uniqueIndex('account_providerId_accountId_idx').on(table.providerId, table.accountId),
+    uniqueIndex('account_userId_providerId_idx').on(table.userId, table.providerId),
   ],
 );
 
