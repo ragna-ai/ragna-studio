@@ -1,6 +1,6 @@
 # <Feature>: <what changes, in a few words> (PRD)
 
-> **Status: proposed** (YYYY-MM-DD). Issue #N.
+> **Status: proposed** (YYYY-MM-DD). Issue #N. <Extends or Supersedes #M, if a follow-up.>
 
 <Two or three short paragraphs. What is wrong today, for whom, and what this PRD changes. The
 first sentence is the point.>
