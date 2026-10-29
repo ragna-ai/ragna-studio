@@ -1,6 +1,6 @@
 # Integrations: connections separate from sign-in (PRD)
 
-> **Status: decided** (2026-10-29). Issue #224, closes #152, supersedes #153.
+> **Status: implemented** (2026-10-29, PR #226). Issue #224, closes #152, supersedes #153.
 
 Features use the sign-in account's tokens today. A user who links one provider twice can sync the
 wrong mailbox or post as the wrong profile, and sign-in asks for feature permissions up front. This
