@@ -19,9 +19,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "docx": "9.12.0",
-    "marked": "18.1.1",
-    "pdfmake": "0.3.12",
+    "docx": "9.14.0",
+    "marked": "18.1.2",
+    "pdfmake": "0.3.13",
     "write-excel-file": "4.1.1"
   },
   "devDependencies": {

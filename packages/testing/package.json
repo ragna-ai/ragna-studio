@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
-    "@types/bun": "1.4.3",
+    "@types/bun": "1.4.4",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

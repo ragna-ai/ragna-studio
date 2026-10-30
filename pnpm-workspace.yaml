@@ -38,7 +38,7 @@ allowBuilds:
   vue-demi: true
 
 catalog:
-  '@tailwindcss/postcss': ^4.3.0
+  '@tailwindcss/postcss': ^4.3.3
   '@types/node': 24.1.0
   tailwindcss: ^4.3.3
   tsdown: ^0.23.1

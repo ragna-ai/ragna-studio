@@ -33,7 +33,7 @@
     "@repo/logger": "workspace:*",
     "@repo/queue": "workspace:*",
     "better-auth": "^1.7.13",
-    "jose": "^6.2.12"
+    "jose": "^6.2.13"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
