@@ -96,5 +96,12 @@
       schedule: ['at any time'],
       draftPR: false,
     },
+    {
+      // a Node major moves the Dockerfiles, CI and engines together, by hand
+      matchDatasources: ['docker'],
+      matchPackageNames: ['node'],
+      matchUpdateTypes: ['major'],
+      enabled: false,
+    },
   ],
 }

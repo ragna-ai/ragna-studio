@@ -219,7 +219,8 @@ PRs, set by the enforced org security configuration.
 - **Majors:** Renovate opens no npm majors and has no Dependency Dashboard
   issue (off since 2026-10-30). Run `pnpm pkg:update` to pick majors by hand.
   Majors of the Postgres and Redis images are off: a Postgres major needs a
-  data migration.
+  data migration. Majors of the Node image are off too: a Node major moves
+  the Dockerfiles, CI and `engines` together, by hand.
 - **Security fixes:** Dependabot security updates open the fix PRs (grouped
   per manifest directory). They aren't drafts, Dependabot can't open those.
   Renovate's `vulnerabilityAlerts` is off to avoid a second PR per alert. A
