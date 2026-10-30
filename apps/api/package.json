@@ -24,7 +24,7 @@
   "dependencies": {
     "@hono/bun": "^1.0.1",
     "@hono/zod-validator": "^0.9.1",
-    "@modelcontextprotocol/server": "^2.3.1",
+    "@modelcontextprotocol/server": "^2.4.0",
     "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
@@ -39,7 +39,7 @@
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "hono": "^4.13.13",
+    "hono": "^4.13.14",
     "http-status-codes": "^2.3.0",
     "zod": "catalog:"
   },
@@ -47,7 +47,7 @@
     "@repo/crypto": "workspace:*",
     "@repo/testing": "workspace:*",
     "@repo/ts-config": "workspace:*",
-    "@types/bun": "1.4.3",
+    "@types/bun": "1.4.4",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
