@@ -16,7 +16,7 @@
 # addon): @repo/database's dependency tree (pg, drizzle-orm, @repo/workflow,
 # @repo/utils) is pure JS with no native bindings.
 # ============================================================
-FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS base
+FROM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -62,7 +62,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # ============================================================
 # Runner — minimal image for the migrate/seed one-shot commands
 # ============================================================
-FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS runner
+FROM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS runner
 
 WORKDIR /app
 

@@ -3,7 +3,7 @@
 # ============================================================
 # Base — node + pnpm + turbo
 # ============================================================
-FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS base
+FROM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -48,7 +48,7 @@ RUN pnpm turbo build --filter=@repo/web
 # ============================================================
 # Runner — minimal image, only .output is needed
 # ============================================================
-FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS runner
+FROM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS runner
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nuxt
