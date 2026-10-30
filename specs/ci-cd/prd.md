@@ -216,9 +216,10 @@ PRs, set by the enforced org security configuration.
   (AI SDK, better-auth, Nuxt modules, tiptap, oxc, actions, Docker images).
   Weekly lockfile maintenance re-resolves transitive packages within their
   ranges, which fixes most transitive alerts.
-- **Majors** wait for approval on the Dependency Dashboard issue, then get one
-  PR each. Majors of the Postgres and Redis images are off: a Postgres major
-  needs a data migration.
+- **Majors:** Renovate opens no npm majors and has no Dependency Dashboard
+  issue (off since 2026-10-30). Run `pnpm pkg:update` to pick majors by hand.
+  Majors of the Postgres and Redis images are off: a Postgres major needs a
+  data migration.
 - **Security fixes:** Dependabot security updates open the fix PRs (grouped
   per manifest directory). They aren't drafts, Dependabot can't open those.
   Renovate's `vulnerabilityAlerts` is off to avoid a second PR per alert. A

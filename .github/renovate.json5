@@ -10,6 +10,7 @@
   timezone: 'Europe/Berlin',
   labels: ['dependencies'],
   draftPR: true,
+  dependencyDashboard: false,
   rangeStrategy: 'bump',
   postUpdateOptions: ['pnpmDedupe'],
   prConcurrentLimit: 5,
@@ -38,8 +39,10 @@
   ],
   packageRules: [
     {
+      // npm majors are done by hand with `pnpm pkg:update`
+      matchDatasources: ['npm'],
       matchUpdateTypes: ['major'],
-      dependencyDashboardApproval: true,
+      enabled: false,
     },
     {
       // a Postgres major needs a data migration, not a tag bump
