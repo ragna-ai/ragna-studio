@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { NewColumnInput } from '~/features/dataset/components/DatasetSheetAddColumnPopover.vue';
 import DatasetColumnManager from '~/features/dataset/components/DatasetColumnManager.vue';
-import DatasetGrid from '~/features/dataset/components/DatasetGrid.vue';
 import DatasetRowPanel from '~/features/dataset/components/DatasetRowPanel.vue';
+import DatasetSheet from '~/features/dataset/components/DatasetSheet.vue';
 import {
   useCreateDatasetRow,
   useDeleteDatasetRow,
@@ -80,8 +81,7 @@ const { t } = useI18n();
 const datasetId = computed(() => props.dataset.id);
 const { mutateAsync: updateDataset, isPending: isSavingColumns } =
   useUpdateDataset();
-const { mutateAsync: createRow, isPending: isAddingRow } =
-  useCreateDatasetRow(datasetId);
+const { mutateAsync: createRow } = useCreateDatasetRow(datasetId);
 const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
 const { mutateAsync: deleteRow } = useDeleteDatasetRow(datasetId);
 const { mutate: moveRow, isPending: isMovingRow } =
@@ -106,8 +106,22 @@ async function handleSaveSettings(value: {
   });
 }
 
+async function handleAddColumn(column: NewColumnInput) {
+  const newColumn: DatasetColumn = {
+    id: crypto.randomUUID(),
+    name: column.name,
+    type: column.type,
+    options: column.options,
+  };
+  await updateDataset({
+    datasetId: props.dataset.id,
+    columns: props.dataset.columns.concat(newColumn),
+  });
+}
+
 async function handleAddRow() {
-  await createRow({});
+  const { row } = await createRow({});
+  return row.id;
 }
 
 // Shared by both the grid's inline cells and the row panel's fields: same
@@ -174,15 +188,18 @@ async function handleDeleteRow(rowId: string) {
 
 <template>
   <div class="flex min-h-0 flex-1">
-    <div class="min-w-0 flex-1 overflow-y-auto p-4">
-      <DatasetGrid
-        :columns="dataset.columns"
+    <div
+      class="flex min-h-0 min-w-0 flex-1 flex-col bg-stone-50 px-4 pt-2 pb-4"
+    >
+      <DatasetSheet
+        v-model:column-manager-open="columnManagerOpen"
+        :dataset="dataset"
         :rows="rows"
-        :is-adding-row="isAddingRow"
         :is-moving-row="isMovingRow"
         :expanded-row-id="selectedRowId"
-        @update-cell="handleUpdateCell"
-        @add-row="handleAddRow"
+        :update-cell="handleUpdateCell"
+        :add-row="handleAddRow"
+        @add-column="handleAddColumn"
         @delete-row="handleDeleteRow"
         @expand-row="handleExpandRow"
         @move-row-up="handleMoveRowUp"
