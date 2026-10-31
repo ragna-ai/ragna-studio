@@ -1,6 +1,6 @@
 # Settings area and expandable sidebar: one settings section with its own nav (PRD)
 
-> **Status: decided** (2026-10-31). Issue #246.
+> **Status: implemented** (2026-10-31, PR #247). Issue #246.
 
 Settings are spread over four pages that the user reaches through five links in the user menu.
 Two of those links open the same page. This PRD moves all account, organization and integration

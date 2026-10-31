@@ -20,7 +20,6 @@ work first, shipped reference and dead/historical docs last.
 | --- | --- |
 | [Agent media models (PRD)](./agent/agent-media-models-prd.md) | decided (2026-10-23) |
 | [Organizations: AI model selection (PRD)](./organizations/ai-models-prd.md) | decided (2026-10-23) |
-| [Settings area and expandable sidebar: one settings section with its own nav (PRD)](./settings/246-settings-area/prd.md) | decided (2026-10-31) |
 
 ## Proposed
 
@@ -90,6 +89,7 @@ work first, shipped reference and dead/historical docs last.
 | [Security response headers](./security/headers.md) | implemented (2026-09-21) |
 | [OAuth and MCP hardening](./security/oauth-mcp-hardening-prd.md) | implemented (2026-10-16, PR #110, released in v0.6.2) |
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
+| [Settings area and expandable sidebar: one settings section with its own nav (PRD)](./settings/246-settings-area/prd.md) | implemented (2026-10-31, PR #247) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |
 | [Tasks / Kanban Board (PRD)](./tasks/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Live Team Chat over WebSocket (PRD)](./team-chat/prd.md) | implemented (phase 1 only, merged via PR #5, 2026-07-19) |
