@@ -25,6 +25,14 @@ const isCreateDialogOpen = ref(false);
 const isManageDialogOpen = ref(false);
 
 const session = useAuthSession();
+const {
+  open: isMenuOpen,
+  setOpen: setMenuOpen,
+  onTriggerEnter,
+  onTriggerLeave,
+  onContentEnter,
+  onContentLeave,
+} = useHoverMenu();
 const { data: organization } = useGetOrganization();
 const {
   workspaces,
@@ -56,12 +64,14 @@ async function signOut() {
 </script>
 
 <template>
-  <DropdownMenu>
+  <DropdownMenu :open="isMenuOpen" :modal="false" @update:open="setMenuOpen">
     <DropdownMenuTrigger as-child>
       <button
         type="button"
         class="sidebar-row h-11"
         :aria-label="session?.user?.name"
+        @pointerenter="onTriggerEnter"
+        @pointerleave="onTriggerLeave"
       >
         <span
           class="flex size-7 shrink-0 items-center justify-center rounded-full bg-stone-200 text-xs font-medium text-foreground"
@@ -86,6 +96,8 @@ async function signOut() {
       class="w-[15.6rem] rounded-2xl p-0"
       side="right"
       align="end"
+      @pointerenter="onContentEnter"
+      @pointerleave="onContentLeave"
     >
       <div class="flex items-center gap-3 p-4">
         <div
@@ -127,7 +139,11 @@ async function signOut() {
             </span>
             <ChevronsUpDownIcon class="size-4 shrink-0" />
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent class="w-56">
+          <DropdownMenuSubContent
+            class="w-56"
+            @pointerenter="onContentEnter"
+            @pointerleave="onContentLeave"
+          >
             <WorkspaceMenuItems
               :groups="groups"
               :is-active="isActive"
@@ -161,7 +177,10 @@ async function signOut() {
             <HelpCircleIcon class="mr-2 size-4 stroke-1.5" />
             {{ $t('nav.help') }}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
+          <DropdownMenuSubContent
+            @pointerenter="onContentEnter"
+            @pointerleave="onContentLeave"
+          >
             <p class="px-3 py-2 text-xs text-muted-foreground">
               {{ $t('nav.helpMenu.version', { version: appVersion }) }}
             </p>

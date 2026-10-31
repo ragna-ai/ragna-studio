@@ -126,6 +126,26 @@ test.describe('app sidebar', () => {
     ).toBeVisible();
   });
 
+  test('opens the user menu on hover and closes it when the mouse leaves', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await userRow(page).hover();
+    await expect(page.getByRole('menu')).toBeVisible();
+
+    await page.getByRole('main').hover();
+    await expect(page.getByRole('menu')).toBeHidden();
+  });
+
+  test('keeps the user menu open when its trigger is clicked after hovering', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await openUserMenu(page);
+
+    await expect(page.getByRole('menu')).toBeVisible();
+  });
+
   test('opens settings and help from the user menu', async ({ page }) => {
     await page.goto('/');
     await openUserMenu(page);
