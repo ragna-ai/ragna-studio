@@ -92,49 +92,70 @@ data, and every stored value as possibly not fitting it.
 
 ## Layout and look
 
+- The page top bar matches the document editor's: breadcrumb left; Export menu, Columns (column
+  manager) and Settings right, with the same spacing and button style.
+- Below it, on a `bg-stone-50` page (`px-4 pt-2 pb-4`), the sheet is one white card spanning the
+  page width, like Fennel (`rounded-xl border border-stone-200`, no shadow, as `SettingsCard`):
+  - **Heading bar** (`DatasetSheetToolbar`, `border-b`): table icon and dataset name left;
+    Filter, Sort, Display right as ghost buttons with a count badge when active.
+  - **Grid:** only as wide as its columns (`w-fit`), plain white to its right. The card hugs its
+    height; the grid scrolls on both axes once it passes the available space.
+  - **Footer** (`border-t`): a small `+` add-row button left, counts right ("N rows · M columns"
+    or "X of N rows", `text-xs text-stone-500`).
 - CSS grid of divs with `role="grid"`, `role="row"`, `role="columnheader"`, `role="gridcell"`,
   `aria-rowcount`, `aria-colcount` and `aria-selected` on the focused cell. Not a `<table>`:
   sticky pinned columns and a later virtualizer (#249) are simpler on a grid.
-- Fixed row height (`h-9`). Text never wraps in display mode.
-- White panel on the stone-50 page, hairline `border-stone-200` grid lines, no card shadow (same as
-  `SettingsCard`). Header row stone-50 with a type icon (`TypeIcon`, `HashIcon`, `CalendarIcon`,
-  `CircleChevronDownIcon`, `size-4 stroke-1.5 text-stone-500`) and the name, normal weight.
-- Hover row: soft stone tint. Active cell: 2px ring in the primary colour, inset. No bold, no
-  scaling.
-- Header and pinned columns are `position: sticky` with a solid background.
-- Grid ends (US-1.5): after the data rows comes one add-row row: `+` in the row-number column,
-  the whole row is the click target (aria-label `dataset.sheet.addRow`). After the data columns
-  comes one add-column column: `+` in its header opens `DatasetSheetAddColumnPopover`; its body
-  cells are empty and it is a fixed 44px wide. No filler rows or columns. See the card layout
-  below.
-- The sheet is one white card spanning the page width, like Fennel: a heading bar (table icon +
-  dataset name left; Filter, Sort, Display right; `border-b`), the grid, and a footer bar
-  (`border-t`, a small `+` add-row icon button left, counts right: "N rows · M columns" or "X of N rows", `text-xs text-stone-500`).
-  The grid inside is only as wide as its columns (`w-fit`), plain white to its right. The card
-  hugs its height and the grid scrolls once it passes the available space.
-- Add row (US-4.4): creates the row with empty data, calls `keepRowVisible`, focuses its first
-  data cell. Disabled while in flight.
-- Add column (US-9): saving appends `{ id: crypto.randomUUID(), name, type, options }` to
-  `dataset.columns` via the existing `useUpdateDataset`. Disabled at 20 columns.
-- Spacing: the toolbar sits close to the grid (`gap-2`), and the page padding matches the top
-  bar's `px-4`.
-- The page area around the panel is `bg-stone-50`, like the document editor.
+- Fixed row height (`h-9`). Text never wraps in display mode. Hairline `border-stone-200` lines.
+- Header row stone-50 with a type icon (`TypeIcon`, `HashIcon`, `CalendarIcon`,
+  `CircleChevronDownIcon`, `size-4 stroke-1.5 text-stone-500`) and the name, normal weight. The
+  header sticks on vertical scroll; only the row-number column is pinned left (#251 for user
+  pinning).
+- Hover row: soft stone tint. Active cell: `bg-stone-50` with a 1px `ring-stone-500` inset ring.
+  Editors inside the cell draw no border or ring of their own. No bold, no scaling.
+- Numbers display through a cached `Intl.NumberFormat` per locale (`utils/formatNumber.ts`, up to
+  20 fraction digits); editing uses the raw number.
+
+## Adding rows and columns
+
+- **Grid ends (US-1.5):** after the data rows comes one add-row row; after the data columns one
+  fixed 44px add-column column. Both are tinted `bg-stone-50` (hover `bg-stone-100`) so they don't
+  read as data. No filler rows or columns.
+- **Add row (US-4.4):** the `+` in the add-row row, any cell of it, or the footer `+`. The row is
+  created with empty data, kept visible under a filter, and once it appears in the refetch its
+  cell opens for typing: the clicked column, or the first visible data column for the `+`
+  buttons. `useDatasetSheetPendingEdit` owns this flow.
+- **Keys typed while the row is created** are buffered on the document (printable keys and
+  Backspace, no modifiers) and seed the editor draft (`utils/sheetDraftSeed.ts`: text as typed,
+  number keeps digits, `.` and `-`, date and select ignore it). Enter is queued and commits once
+  the editor opens. Escape or any pointerdown clears the buffer.
+- **Add column (US-9):** the `+` header opens `DatasetSheetAddColumnPopover` (name, type, options
+  for select). Saving appends `{ id: crypto.randomUUID(), name, type, options }` to
+  `dataset.columns` via `useUpdateDataset`. Disabled at 20 columns (local constant, the web app
+  can't import `MAX_COLUMNS_PER_DATASET`).
+
+## Focus and scrolling
+
+- Focusing the grid selects the first cell only on keyboard focus (`:focus-visible`), never on a
+  mouse click into a non-focusable cell.
+- Cells and editors focus with `preventScroll` and then `scrollIntoView({ block: 'nearest',
+  inline: 'nearest' })`; the container's scroll padding keeps the sticky header and the pinned
+  column from covering the cell.
 
 ## Row number column
 
-- Shows the 1-based display position. On row hover the number swaps for a `⋯` trigger opening a
-  `DropdownMenu`: Expand, Move up, Move down, Delete.
+- Shows the 1-based display position. On row hover, focus within the row, or while the menu is
+  open, the number fades out and a `⋯` trigger fades in at the same spot. The trigger stays in
+  layout (opacity, not `display: none`), so the menu keeps its anchor while it animates out.
+- The menu: Expand, Move up, Move down, Delete. Shift+F10 or the ContextMenu key opens it for the
+  active cell's row; focus returns to the cell on close. The trigger is `tabindex=-1`, so the grid
+  stays one tab stop.
 - The MCP marker (`PlugIcon`, tooltip) sits next to the number.
 - Expand opens the existing `DatasetRowPanel`. Delete keeps the confirm dialog.
 
-## Toolbar
+## View tools
 
-- The page top bar matches the document editor's: breadcrumb left; Export menu, Columns
-  (column manager) and Settings right, with the same spacing and button style.
-- A sheet toolbar row above the grid holds Filter, Sort and Display as ghost buttons, each with
-  a count badge when active.
 - **Filter:** popover listing filter rows (column, operator, value) with add and remove, plus
-  "Clear filters".
+  "Clear filters". A row only reaches the table once its value is complete.
 - **Sort:** popover with column and direction, plus "Clear sort". Clicking a header also cycles
   ascending, descending, none.
 - **Display:** popover with a switch per column.
@@ -147,28 +168,36 @@ don't linger. Columns missing from `columnVisibility` are visible, which covers 
 
 ## Files
 
-| File                                                                 | Change                                         |
-| -------------------------------------------------------------------- | ---------------------------------------------- |
-| `composables/useDatasetSheet.ts`                                     | New: table, edit state, view persistence       |
-| `utils/datasetSheetColumns.ts`                                       | New: column defs, sort and filter fns per type |
-| `utils/parseCellValue.ts`                                            | New: empty, valid or mismatch per column type  |
-| `components/DatasetSheet.vue`                                        | New: grid, header, footer, keyboard handling   |
-| `components/DatasetSheetCell.vue`                                    | New: display and editor per type               |
-| `components/DatasetSheetRowMenu.vue`                                 | New: row number, MCP marker, row menu          |
-| `components/DatasetSheetToolbar.vue`                                 | New: Filter, Sort, Display, export, columns    |
-| `components/DatasetSheetFilterPopover.vue`                           | New                                            |
-| `components/DatasetDetail.vue`                                       | Uses `DatasetSheet` instead of `DatasetGrid`   |
-| `pages/dataset/[datasetId]/index.vue`                                | Header keeps the breadcrumb only               |
-| `DatasetGrid.vue`, `DatasetGridRow.vue`, `DatasetGridSelectCell.vue` | Deleted                                        |
-| `i18n` locale files                                                  | New keys under `dataset.sheet`                 |
-| `apps/web/e2e/dataset-sheet.spec.ts`                                 | New                                            |
-| `apps/docs/.../content/datasets.mdx`                                 | "Edit rows in the grid" rewritten              |
+| File                                                                 | Role                                            |
+| -------------------------------------------------------------------- | ----------------------------------------------- |
+| `composables/useDatasetSheet.ts`                                     | Table, edit state, view persistence, kept rows  |
+| `composables/useDatasetSheetKeyboard.ts`                             | Keys, focus, commit and cancel                  |
+| `composables/useDatasetSheetPendingEdit.ts`                          | Add row, then edit; keystroke buffer            |
+| `utils/datasetSheetColumns.ts`                                       | Feature set, column defs, sort and filter fns   |
+| `utils/datasetSheetDataColumns.ts`                                   | Data columns without `__row`                    |
+| `utils/datasetSheetLayout.ts`                                        | Column width and pinning styles                 |
+| `utils/parseCellValue.ts`                                            | Empty, valid or mismatch per column type        |
+| `utils/sheetDraftSeed.ts`                                            | Editor draft from typed keys                    |
+| `utils/focusActiveSheetCell.ts`                                      | Focus without scroll jumps                      |
+| `utils/formatNumber.ts`                                              | Locale number display                           |
+| `components/DatasetSheet.vue`                                        | Card, grid, header, footer                      |
+| `components/DatasetSheetCell.vue`                                    | Display and editor per type                     |
+| `components/DatasetSheetAddRow.vue`                                  | Add-row row                                     |
+| `components/DatasetSheetRowMenu.vue`                                 | Row number, MCP marker, row menu                |
+| `components/DatasetSheetToolbar.vue`                                 | Heading bar                                     |
+| `components/DatasetSheet{Filter,Sort,Display}Popover.vue`            | View tools                                      |
+| `components/DatasetSheetAddColumnPopover.vue`                        | Add column                                      |
+| `components/DatasetDetail.vue`                                       | Mutations, row panel, asides; renders the sheet |
+| `pages/dataset/[datasetId]/index.vue`                                | Top bar: breadcrumb, Export, Columns, Settings  |
+| `DatasetGrid.vue`, `DatasetGridRow.vue`, `DatasetGridSelectCell.vue` | Deleted                                         |
+| `i18n` locale files                                                  | Keys under `dataset.sheet`                      |
+| `apps/web/e2e/dataset-sheet.spec.ts`                                 | One journey per story                           |
+| `apps/docs/.../content/datasets.mdx`                                 | Sheet, view tools, mismatched values            |
 
 All paths without a prefix are under `apps/web/app/features/dataset/`.
 
-## Risks
+## Performance
 
-- `cellSelectionFeature` is new in v9. If it fights the single-cell model, fall back to our own
-  `activeCell` ref with `table.getRowModel()` for neighbours. The rest of the design is unchanged.
-- First render of 20,000 text cells is unmeasured. Check with a seeded 1,000 by 20 dataset before
-  the PR, and cite the result there. Slow means #249.
+Measured before the PR (1,000 rows by 20 columns, production build, headless Chromium): first
+cell after 1.7 to 1.9 s, all rows after about 2.2 s, one long task of about 750 ms on load,
+scrolling without long tasks. Row virtualization (#249) waits until that load matters.

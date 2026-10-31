@@ -1,6 +1,10 @@
 # Dataset sheet view (slices)
 
 > Build plan for [prd.md](./prd.md) and [design.md](./design.md), issue #248.
+>
+> Build record. The design changed during review (heading bar, "+" last row and column, footer
+> counts). [design.md](./design.md) describes what was built; the contracts below are the
+> originals.
 
 Every slice follows AGENTS.md and loads the clean-code skill. Frontend only, so no tdd skill.
 All paths without a prefix are under `apps/web/app/features/dataset/`.
