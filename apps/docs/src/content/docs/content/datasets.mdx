@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-A dataset is a table with typed columns. Users edit it in a grid. Agents read and write the same rows with tools. Use datasets for task queues, plans, content calendars and any other state that should outlive a single chat.
+A dataset is a table with typed columns. Users edit it in a sheet. Agents read and write the same rows with tools. Use datasets for task queues, plans, content calendars and any other state that should outlive a single chat.
 
 Open **Datasets** in the sidebar to see all datasets in the active workspace. The list shows the origin, the row count and the workspace of each dataset.
 
@@ -30,19 +30,84 @@ Open **Columns** on the dataset page to manage the columns. Each column has a na
 
 Use the up and down buttons to reorder columns. Choose **Save columns** to apply the changes. A dataset can have up to 20 columns. Removing a column removes its values from all rows.
 
-## Edit rows in the grid
+## Edit rows in the sheet
 
-Choose **Add row** to append an empty row. Click a cell to edit it. Select columns offer a dropdown with their options.
+A dataset opens as a sheet. Each row has a number, each cell shows its value as plain text, and select values show as a pill. An icon in each column header shows the column type. The row numbers stay in place when the sheet scrolls sideways. The header stays in place when it scrolls down. A heading bar above the sheet shows the dataset name, and a line below it shows the number of rows and columns.
 
-- **Expand row** opens a side panel with one field per column. Use it for long text. The panel also shows when the row was created and last changed, and it has the delete action.
-- **Move row up** and **Move row down** appear on hover over a row. The new order is saved at once.
+Click a cell to make it active. The active cell has a ring. Nothing opens until the user starts to edit. Click anywhere outside the grid, including the heading bar or the footer, to clear the active cell.
+
+| Key                               | Action                                                                  |
+| --------------------------------- | ----------------------------------------------------------------------- |
+| Arrow keys                        | Move the active cell. The sheet scrolls to keep it visible.             |
+| **Tab** and **Shift+Tab**         | Move to the next or the previous cell.                                  |
+| **Enter**, **F2** or double-click | Open the editor for the column type with the current value.             |
+| Any character                     | Open the editor and start with that character, replacing the value.     |
+| **Enter** or **Tab** in editor    | Save the value and move down or right. Clicking elsewhere saves it too. |
+| **Shift+Enter** in a text cell    | Add a line break.                                                       |
+| **Escape** in editor              | Close the editor and keep the old value.                                |
+| **Delete** or **Backspace**       | Clear the value and save at once.                                       |
+| **Shift+F10** or **ContextMenu**  | Open the row menu of the active cell.                                   |
+
+Moving past the edge of the sheet keeps the active cell where it is. If the server rejects a save, the cell shows its old value again and an error message appears.
+
+### Row menu
+
+Hover the number of a row to open its menu.
+
+- **Expand row** opens a side panel with one field per column. Use it for long text. The panel also shows when the row was created and last changed.
+- **Move up** and **Move down** change the saved order of the rows. The first row has no **Move up**. The last row has no **Move down**.
 - **Delete row** asks for confirmation first.
+
+While a sort or a filter is active, the row menu shows the hint **Clear sort and filters to move rows**, and moving is not available.
+
+The last row of the sheet has a **+** in its number column. Choose it (**Add row**) to add an empty row above it. The first cell of the new row becomes active. The **Add row** button in the footer below the sheet does the same. A dataset with no columns shows **Add columns** instead, which opens the column manager.
+
+The last column header is a **+** button (**Add column**). It opens a small form with a name, a type and, for select columns, the options. An empty name is not saved. The button is disabled when the dataset has 20 columns.
 
 A dataset holds up to 1,000 rows. Rows keep their order. New rows go to the end.
 
+## Sort
+
+Choose **Sort** in the heading bar, pick a column and pick **Ascending** or **Descending**. The column header shows the direction. Clicking a column header cycles through ascending, descending and no sort.
+
+Empty values always sort last, in both directions. Choose **Clear sort** to show the rows in their saved order again. Sorting never changes the saved order.
+
+## Filter
+
+Choose **Filter** in the heading bar, then **Add filter**. Pick a column, a condition and a value. The conditions depend on the column type.
+
+| Type       | Conditions                                    |
+| ---------- | --------------------------------------------- |
+| **Text**   | **contains**, **is**                          |
+| **Number** | **is**, **is less than**, **is greater than** |
+| **Date**   | **is on**, **is before**, **is after**        |
+| **Select** | **is any of** (tick one or more options)      |
+
+A row shows only if it matches every filter. Below the sheet, a line such as "12 of 340 rows" shows how many rows match. If no row matches, the sheet says so and offers **Clear filters**.
+
+A row that the user edits or adds stays visible even if it no longer matches. It stays until the filters change.
+
+## Display
+
+Choose **Display** in the heading bar to hide or show columns with a switch per column. Drag the right edge of a column header to resize the column.
+
+Hidden columns are hidden in the sheet only. Their values stay, and agents and export still see them. A column added later shows by default.
+
+Sort, filters, hidden columns and column widths are kept per dataset in the browser. They survive a reload. They do not change what other users see, and they do not move to another browser.
+
+## Values that do not fit a column type
+
+Changing a column type does not convert the stored values. Cells follow the new type at once: they display and edit as the new type.
+
+A value that does not fit the new type shows as stored, with a warning marker. The tooltip says **Doesn't match the column type**. Examples are text in a number column and a select value that is no longer in the options.
+
+Editing such a cell opens the editor for the column type, empty. The old value shows as a hint. **Escape** keeps the old value.
+
+In a sort, values that do not fit come after fitting values and before empty values. A filter never matches them. A saved filter on a column whose type changed is dropped. The other filters stay.
+
 ## Who wrote a row
 
-Every row remembers who wrote it: a user, an agent, or a connected app. Rows written by a connected app show a plug badge in the grid with the tooltip **Written by a connected app via MCP**. See [MCP](/integrations/mcp).
+Every row remembers who wrote it: a user, an agent, or a connected app. Rows written by a connected app show a plug badge next to the row number with the tooltip **Written by a connected app via MCP**. See [MCP](/integrations/mcp).
 
 Agents can see this information too. A workflow can use it to tell its own rows from the rows of users.
 
@@ -54,11 +119,11 @@ Agent writes go through the same checks as edits by a user. A write fails with a
 - a number column gets text,
 - a select column gets a value that is not in its options.
 
-The agent sees the error and can correct itself. Bad data never lands silently in the grid.
+The agent sees the error and can correct itself. Bad data never lands silently in the sheet.
 
 ## Export
 
-Choose **Export** on the dataset page and pick a format: **CSV**, **Excel**, **PDF** or **Markdown**. The file downloads at once. It holds the columns and rows as shown in the grid, in grid order. Dates appear as `dd.mm.yyyy`.
+Choose **Export** on the dataset page and pick a format: **CSV**, **Excel**, **PDF** or **Markdown**. The file downloads at once. It holds every column and every row in saved order. Sort, filters and hidden columns do not apply to the export. Dates appear as `dd.mm.yyyy`.
 
 ## How agents use datasets
 
