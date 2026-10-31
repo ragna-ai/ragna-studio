@@ -53,15 +53,18 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "userMenu": {
-      "upgrade": "Upgrade to Pro",
-      "account": "Account",
       "settings": "Settings",
-      "mcp": "MCP",
       "signOut": "Sign out",
       "credits": "{count} credits",
-      "organization": "Organization",
-      "connections": "Connections"
-    }
+      "workspace": "Workspace"
+    },
+    "groups": {
+      "work": "Work",
+      "ai": "AI",
+      "create": "Create"
+    },
+    "title": "Main navigation",
+    "help": "Help"
   },
   "auth": {
     "login": {
@@ -826,18 +829,12 @@
     "tabs": {
       "profile": "Profile",
       "language": "Language",
-      "sidebar": "Sidebar",
       "credits": "Credits",
       "danger": "Delete account"
     },
     "language": {
       "title": "Language",
       "subtitle": "Choose the language used across the interface."
-    },
-    "sidebar": {
-      "title": "Sidebar",
-      "subtitle": "Choose how the navigation sidebar behaves when collapsed.",
-      "showLabelsWhenCollapsed": "Show labels when collapsed"
     },
     "profile": {
       "title": "Profile",
@@ -1022,7 +1019,8 @@
   },
   "workspace": {
     "switcher": {
-      "manage": "Manage workspaces"
+      "manage": "Manage workspaces",
+      "add": "Add workspace"
     },
     "manage": {
       "title": "Manage workspaces",
@@ -1837,6 +1835,55 @@
       "provider_error": "The provider reported an error. Try again.",
       "exchange_failed": "Could not finish the connection. Try again.",
       "email_mismatch": "Connect the account you sign in with."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "backToApp": "Back to app",
+    "groups": {
+      "account": "Account",
+      "organization": "Organization",
+      "integrations": "Integrations",
+      "email": "Email"
+    },
+    "nav": {
+      "profile": "Profile",
+      "language": "Language",
+      "credits": "Credits",
+      "general": "General",
+      "members": "Members",
+      "workspaces": "Workspaces",
+      "usage": "Usage",
+      "connections": "Connections",
+      "mcp": "MCP",
+      "categories": "Categories",
+      "senders": "Auto-draft senders"
+    },
+    "sections": {
+      "language": {
+        "title": "Language",
+        "subtitle": "Choose the language used across the interface."
+      },
+      "credits": {
+        "title": "Credits",
+        "subtitle": "Your credit balance and what it was spent on."
+      },
+      "general": {
+        "title": "General",
+        "subtitle": "Your organization name, ownership and deletion."
+      },
+      "members": {
+        "title": "Members",
+        "subtitle": "Manage who belongs to your organization and invite new people."
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "subtitle": "Restricted workspaces in your organization."
+      },
+      "usage": {
+        "title": "Usage",
+        "subtitle": "Credit usage by member."
+      }
     }
   }
 }

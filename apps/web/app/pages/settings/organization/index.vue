@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import OrganizationDangerZone from '~/features/organization/components/OrganizationDangerZone.vue';
-import OrganizationInvitationsCard from '~/features/organization/components/OrganizationInvitationsCard.vue';
-import OrganizationMembersCard from '~/features/organization/components/OrganizationMembersCard.vue';
 import OrganizationNameCard from '~/features/organization/components/OrganizationNameCard.vue';
 import OrganizationTransferCard from '~/features/organization/components/OrganizationTransferCard.vue';
-import OrganizationWorkspacesCard from '~/features/organization/components/OrganizationWorkspacesCard.vue';
-import OrganizationUsageCard from '~/features/organization/components/OrganizationUsageCard.vue';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 import {
   hasRole,
@@ -13,13 +9,13 @@ import {
   OWNER_ROLE,
 } from '~/features/organization/lib/roles';
 
-// Composables
+definePageMeta({ layout: 'settings' });
+
 const { t } = useI18n();
-useHead({ title: t('organization.title') });
+useHead({ title: t('settings.sections.general.title') });
 
 const { data: organization, isPending, error } = useGetOrganization();
 
-// Computed
 const canManage = computed(() =>
   isOwnerOrAdmin(organization.value?.role ?? ''),
 );
@@ -33,8 +29,8 @@ const isOwner = computed(() =>
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
-          :title="t('organization.title')"
-          :subtitle="t('organization.subtitle')"
+          :title="t('settings.sections.general.title')"
+          :subtitle="t('settings.sections.general.subtitle')"
         />
       </template>
       <template #bottom> </template>
@@ -54,12 +50,6 @@ const isOwner = computed(() =>
           :name="organization.name"
           :can-edit="canManage"
         />
-        <OrganizationMembersCard :can-manage="canManage" />
-        <template v-if="canManage">
-          <OrganizationInvitationsCard />
-          <OrganizationWorkspacesCard />
-          <OrganizationUsageCard />
-        </template>
         <template v-if="isOwner">
           <OrganizationTransferCard />
           <OrganizationDangerZone :organization-name="organization.name" />

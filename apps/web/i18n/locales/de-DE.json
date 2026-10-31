@@ -53,15 +53,18 @@
     "expandSidebar": "Seitenleiste ausklappen",
     "collapseSidebar": "Seitenleiste einklappen",
     "userMenu": {
-      "upgrade": "Auf Pro upgraden",
-      "account": "Konto",
       "settings": "Einstellungen",
-      "mcp": "MCP",
       "signOut": "Abmelden",
       "credits": "{count} Credits",
-      "organization": "Organisation",
-      "connections": "Verbindungen"
-    }
+      "workspace": "Workspace"
+    },
+    "groups": {
+      "work": "Arbeit",
+      "ai": "KI",
+      "create": "Erstellen"
+    },
+    "title": "Hauptnavigation",
+    "help": "Hilfe"
   },
   "notification": {
     "toast": {
@@ -829,18 +832,12 @@
     "tabs": {
       "profile": "Profil",
       "language": "Sprache",
-      "sidebar": "Seitenleiste",
       "credits": "Credits",
       "danger": "Konto löschen"
     },
     "language": {
       "title": "Sprache",
       "subtitle": "Wähle die Sprache für die Benutzeroberfläche."
-    },
-    "sidebar": {
-      "title": "Seitenleiste",
-      "subtitle": "Lege fest, wie sich die Navigationsleiste im eingeklappten Zustand verhält.",
-      "showLabelsWhenCollapsed": "Beschriftungen im eingeklappten Zustand anzeigen"
     },
     "profile": {
       "title": "Mein Profil",
@@ -1025,7 +1022,8 @@
   },
   "workspace": {
     "switcher": {
-      "manage": "Arbeitsbereiche verwalten"
+      "manage": "Arbeitsbereiche verwalten",
+      "add": "Workspace hinzufügen"
     },
     "manage": {
       "title": "Arbeitsbereiche verwalten",
@@ -1840,6 +1838,55 @@
       "provider_error": "Der Anbieter hat einen Fehler gemeldet. Versuche es erneut.",
       "exchange_failed": "Die Verbindung konnte nicht abgeschlossen werden. Versuche es erneut.",
       "email_mismatch": "Verbinde das Konto, mit dem du dich anmeldest."
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "backToApp": "Zurück zur App",
+    "groups": {
+      "account": "Konto",
+      "organization": "Organisation",
+      "integrations": "Integrationen",
+      "email": "E-Mail"
+    },
+    "nav": {
+      "profile": "Profil",
+      "language": "Sprache",
+      "credits": "Credits",
+      "general": "Allgemein",
+      "members": "Mitglieder",
+      "workspaces": "Arbeitsbereiche",
+      "usage": "Nutzung",
+      "connections": "Verbindungen",
+      "mcp": "MCP",
+      "categories": "Kategorien",
+      "senders": "Auto-Entwurf-Absender"
+    },
+    "sections": {
+      "language": {
+        "title": "Sprache",
+        "subtitle": "Wähle die Sprache der Benutzeroberfläche."
+      },
+      "credits": {
+        "title": "Credits",
+        "subtitle": "Dein Credit-Guthaben und wofür es ausgegeben wurde."
+      },
+      "general": {
+        "title": "Allgemein",
+        "subtitle": "Name, Eigentümerschaft und Löschung deiner Organisation."
+      },
+      "members": {
+        "title": "Mitglieder",
+        "subtitle": "Verwalte, wer zu deiner Organisation gehört, und lade neue Personen ein."
+      },
+      "workspaces": {
+        "title": "Arbeitsbereiche",
+        "subtitle": "Eingeschränkte Arbeitsbereiche deiner Organisation."
+      },
+      "usage": {
+        "title": "Nutzung",
+        "subtitle": "Credit-Nutzung pro Mitglied."
+      }
     }
   }
 }

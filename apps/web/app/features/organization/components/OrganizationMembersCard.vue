@@ -97,7 +97,7 @@ async function handleRestore(member: OrganizationMember) {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl">
+  <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader>
       <CardTitle>{{ t('organization.members.title') }}</CardTitle>
     </CardHeader>
@@ -180,5 +180,5 @@ async function handleRestore(member: OrganizationMember) {
         </li>
       </ul>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

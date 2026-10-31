@@ -269,7 +269,7 @@ function handleSyncNow() {
         </TooltipProvider>
       </div>
       <NuxtLinkLocale
-        to="/mail/settings"
+        to="/settings/mail"
         class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
       >
         <SettingsIcon class="size-4 text-muted-foreground" />

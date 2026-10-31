@@ -21,7 +21,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <Card>
+  <SettingsCard>
     <CardContent class="flex items-center justify-between gap-4 py-4">
       <div class="flex min-w-0 items-center gap-3">
         <Icon :name="PROVIDER_ICON[connection.provider]" class="size-6" />
@@ -69,5 +69,5 @@ const { t } = useI18n();
         </Button>
       </div>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

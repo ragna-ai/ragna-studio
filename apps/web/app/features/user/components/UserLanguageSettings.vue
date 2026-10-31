@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -24,7 +24,7 @@ function handleLocaleChange(value: any) {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-2xl">
+  <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ $t('user.language.title') }}</CardTitle>
     </CardHeader>
@@ -47,5 +47,5 @@ function handleLocaleChange(value: any) {
         </SelectContent>
       </Select>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

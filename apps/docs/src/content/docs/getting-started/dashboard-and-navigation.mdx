@@ -1,6 +1,6 @@
 ---
 title: Dashboard and navigation
-description: The sidebar, the dashboard, notifications and account settings.
+description: The sidebar, the dashboard, notifications and the settings area.
 sidebar:
   order: 2
 ---
@@ -29,6 +29,12 @@ Below it, the sidebar links to every area of RAGNA Studio:
 
 The bell and the account menu sit at the bottom of the sidebar.
 
+### Expand and collapse
+
+The sidebar shows icons only by default. Choose the toggle at the bottom to expand it. Every item then shows its name, and so do the workspace switcher, the bell and the account menu. Choose the toggle again to collapse it. In the collapsed sidebar, hover an item to see its name.
+
+RAGNA Studio remembers the choice after a reload.
+
 ## The dashboard
 
 The **Dashboard** greets the user and shows the latest activity of the current workspace in cards:
@@ -54,16 +60,26 @@ Choose a notification to open what it is about. If it belongs to another workspa
 
 Choose the user's initials at the bottom of the sidebar to open the account menu:
 
-- **Account** and **Settings** open the account page.
-- **Organization** opens the organization settings. See [Organizations](/workspaces/organizations).
-- **MCP** opens the MCP connector settings. It shows only when the connector is enabled. See [MCP connector](/integrations/mcp).
+- **Settings** opens the settings area.
 - **Sign out** ends the session.
 
-The account page has these tabs:
+## Settings
 
-| Tab                | What it sets                                                 |
-| ------------------ | ------------------------------------------------------------ |
-| **Profile**        | Name and avatar.                                             |
-| **Language**       | English or Deutsch.                                          |
-| **Sidebar**        | **Show labels when collapsed** keeps the item names visible. |
-| **Delete account** | Deletes the account.                                         |
+The settings area replaces the sidebar with its own navigation. Choose **Back to app** at the top to return to the page the user came from. When settings were opened directly, it goes to the dashboard.
+
+Each section has its own address, so a reload or a shared link opens the same section.
+
+| Group            | Section         | What it holds                                                                                                 |
+| ---------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Account**      | **Profile**     | Name and avatar. **Delete account** sits at the bottom.                                                       |
+| **Account**      | **Language**    | English or Deutsch.                                                                                           |
+| **Account**      | **Credits**     | The credit balance and what it was spent on.                                                                  |
+| **Organization** | **General**     | Organization name, ownership transfer and deletion. See [Organizations](/workspaces/organizations).           |
+| **Organization** | **Members**     | Members and invitations.                                                                                      |
+| **Organization** | **Workspaces**  | Restricted workspaces. Shown to organization owners and admins only.                                          |
+| **Organization** | **Usage**       | Credit usage by member. Shown to organization owners and admins only.                                         |
+| **Email**        | **General**     | Mailbox, default draft agent and disconnect. See [Email](/integrations/email).                                |
+| **Email**        | **Categories**  | Email categories.                                                                                             |
+| **Email**        | **Senders**     | Auto-draft senders.                                                                                           |
+| **Integrations** | **Connections** | Accounts RAGNA Studio acts with. See [Connections](/integrations/connections).                                |
+| **Integrations** | **MCP**         | The MCP connector settings. Shown only when the connector is enabled. See [MCP connector](/integrations/mcp). |

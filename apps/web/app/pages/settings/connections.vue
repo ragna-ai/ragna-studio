@@ -19,6 +19,8 @@ import type {
   IntegrationConnectionDto,
 } from '@repo/integrations/catalog';
 
+definePageMeta({ layout: 'settings' });
+
 // Composables
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
@@ -120,7 +122,7 @@ async function handleRemove(connection: IntegrationConnectionDto) {
           />
         </div>
 
-        <Card v-if="availableIntegrations.length > 0">
+        <SettingsCard v-if="availableIntegrations.length > 0">
           <CardHeader>
             <CardTitle>{{ t('integrations.page.available') }}</CardTitle>
           </CardHeader>
@@ -149,7 +151,7 @@ async function handleRemove(connection: IntegrationConnectionDto) {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </SettingsCard>
       </template>
     </div>
   </SectionWrapper>

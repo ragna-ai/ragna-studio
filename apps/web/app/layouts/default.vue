@@ -5,18 +5,12 @@ import { useGetOrganization } from '~/features/organization/composables/useOrgan
 import WorkspaceEmptyState from '~/features/workspace/components/WorkspaceEmptyState.vue';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
 
-// Account and organization settings work without a workspace.
-const ROUTES_WITHOUT_WORKSPACE = ['/settings', '/account'];
-
 const head = useLocaleHead();
-const route = useRoute();
 const { data: organization } = useGetOrganization();
 const { data: workspaceList } = useGetWorkspaces();
 
 const hasNoWorkspace = computed(
-  () =>
-    workspaceList.value?.workspaces.length === 0 &&
-    !ROUTES_WITHOUT_WORKSPACE.some((path) => route.path.startsWith(path)),
+  () => workspaceList.value?.workspaces.length === 0,
 );
 </script>
 

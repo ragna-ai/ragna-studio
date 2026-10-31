@@ -17,7 +17,14 @@ export function useIntegrationErrorToast() {
   const route = useRoute();
   const router = useRouter();
 
+  const isToasterMounted = ref(false);
+  onMounted(async () => {
+    await nextTick();
+    isToasterMounted.value = true;
+  });
+
   watchEffect(() => {
+    if (!isToasterMounted.value) return;
     const code = route.query[INTEGRATION_ERROR_QUERY_PARAM];
     if (typeof code !== 'string') return;
 
