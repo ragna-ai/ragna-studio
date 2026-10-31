@@ -1,59 +1,22 @@
-.nav-icon-text {
-  font-size: 0.6rem;
-  line-height: 1rem;
-  opacity: 75%;
-}
-
-/*
- * The collapsed rail is 3.5rem wide and made up of:
- *   .nav-item px-2 (0.5rem) + .nav-link px-0.5 (0.125rem) + wrapper (2.25rem)
- * The expanded row keeps the same px-0.5, so the icon wrapper starts at the
- * exact same 0.625rem offset instead of being pushed inwards.
- */
-.nav-link {
-  @apply flex flex-col items-center rounded-lg border border-transparent px-0.5 py-0 transition-colors;
-}
-
-.nav-link-expanded {
-  @apply w-full flex-row justify-start gap-2;
-}
-
-.nav-link-expanded .nav-icon-text {
-  padding: 0;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  opacity: 100%;
-}
-
-/* 2.25rem wide: 0.5rem + 1.25rem icon + 0.5rem. */
-.nav-icon-wrapper {
-  @apply rounded-lg px-2 py-1.5 transition-transform group-hover:scale-105 group-hover:bg-stone-200/60;
-}
-
-/* Same size in every sidebar state, so expanding never resizes the icons. */
-.nav-icon {
-  @apply size-5 shrink-0 stroke-1.25;
-}
-
-.nav-link-active {
-  @apply font-semibold;
-  .nav-icon-wrapper {
-    @apply bg-stone-200/60;
+@layer components {
+  .sidebar-row {
+    @apply flex h-8 w-full items-center gap-2.5 rounded-md border border-transparent px-2 text-sm text-stone-600 transition-colors hover:bg-stone-200/50 hover:text-foreground;
   }
-}
 
-.nav-item {
-  @apply flex min-h-8 flex-col justify-center border-0 px-2 py-0 text-sm;
-}
+  .sidebar-row-active {
+    @apply border-stone-200/80 bg-white text-foreground shadow-xs hover:bg-white;
+  }
 
-.nav-labels-hidden .nav-item {
-  @apply min-h-0;
-}
+  .sidebar-row-icon {
+    @apply size-4.5 shrink-0 stroke-1.5 text-stone-500;
+  }
 
-.nav-item-child {
-  @apply pt-0 pl-4;
-}
+  .sidebar-row:hover .sidebar-row-icon,
+  .sidebar-row-active .sidebar-row-icon {
+    @apply text-foreground;
+  }
 
-.nav-labels-hidden .nav-icon-text {
-  display: none;
+  [data-collapsed='true'] .sidebar-row {
+    @apply justify-center px-0;
+  }
 }

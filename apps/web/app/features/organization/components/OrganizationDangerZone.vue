@@ -42,7 +42,7 @@ watch(dialogOpen, (isOpen) => {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl border-destructive/50">
+  <SettingsCard class="mx-auto w-full max-w-3xl border-destructive/50">
     <CardHeader>
       <CardTitle class="text-destructive">{{
         t('organization.danger.title')
@@ -56,7 +56,7 @@ watch(dialogOpen, (isOpen) => {
         {{ t('organization.danger.action') }}
       </Button>
     </CardContent>
-  </Card>
+  </SettingsCard>
 
   <Dialog v-model:open="dialogOpen">
     <DialogContent>

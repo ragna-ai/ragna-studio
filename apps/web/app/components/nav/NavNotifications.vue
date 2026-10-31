@@ -13,6 +13,9 @@ import {
 import useNotificationParser from '~/features/notification/composables/useNotificationParser';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
+// Props
+withDefaults(defineProps<{ expanded?: boolean }>(), { expanded: false });
+
 // Refs
 const open = ref(false);
 
@@ -87,14 +90,27 @@ function handleClearAllClick() {
 <template>
   <DropdownMenu v-model:open="open">
     <DropdownMenuTrigger as-child>
-      <button class="relative">
-        <BellIcon class="size-5 stroke-1 hover:stroke-1.5" />
-        <span
-          v-if="unreadCount > 0"
-          class="absolute top-0 right-0.5 flex size-1.5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white"
-        >
-          &nbsp;
+      <button
+        type="button"
+        class="sidebar-row"
+        :aria-label="t('notification.panelTitle')"
+      >
+        <span class="relative flex shrink-0">
+          <BellIcon class="sidebar-row-icon" />
+          <span
+            v-if="unreadCount > 0 && !expanded"
+            class="absolute -top-px -right-px size-1.5 rounded-full bg-destructive"
+          />
         </span>
+        <template v-if="expanded">
+          <span class="truncate">{{ t('notification.panelTitle') }}</span>
+          <span
+            v-if="unreadCount > 0"
+            class="ml-auto rounded-full bg-stone-200 px-1.5 text-[10px] leading-4 font-medium text-foreground"
+          >
+            {{ unreadBadgeLabel }}
+          </span>
+        </template>
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent

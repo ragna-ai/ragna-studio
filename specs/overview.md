@@ -35,6 +35,15 @@ remove members in the org settings. The owner can delete the organization,
 which is restorable for 30 days.
 → [specs/organizations/prd.md](./organizations/prd.md), [v2](./organizations/v2-prd.md)
 
+### Navigation and settings
+
+The app sidebar expands to labelled groups (Work, AI, Create) or collapses
+to icons. The user menu holds the workspace switcher, the credit balance,
+Settings, Help and sign out. All settings live in one settings area with its
+own nav: account, organization, email and integrations, one address per
+section.
+→ [specs/settings/246-settings-area/prd.md](./settings/246-settings-area/prd.md)
+
 ### Auth
 
 better-auth with a Drizzle adapter, Google OAuth, and an admin plugin.

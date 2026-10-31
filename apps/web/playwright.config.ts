@@ -6,6 +6,7 @@ const WEB_URL = `http://localhost:${WEB_PORT}`;
 const API_URL = `http://localhost:${API_PORT}`;
 
 export const STORAGE_STATE_PATH = 'e2e/.auth/storage-state.json';
+export const MEMBER_STORAGE_STATE_PATH = 'e2e/.auth/member-storage-state.json';
 
 export default defineConfig({
   testDir: 'e2e',

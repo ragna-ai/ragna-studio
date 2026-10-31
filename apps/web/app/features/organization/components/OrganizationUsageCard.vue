@@ -6,7 +6,7 @@ const { data, isPending, error } = useGetOrganizationUsage(true);
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl">
+  <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader>
       <CardTitle>{{ t('organization.usage.title') }}</CardTitle>
     </CardHeader>
@@ -49,5 +49,5 @@ const { data, isPending, error } = useGetOrganizationUsage(true);
         </TableBody>
       </Table>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>
