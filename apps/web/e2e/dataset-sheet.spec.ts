@@ -277,6 +277,11 @@ test('US-2 moves between cells', async ({ page, request }) => {
   await expect(cellAt(page, 1, 2)).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Shift+Tab');
   await expect(cellAt(page, 1, 1)).toHaveAttribute('aria-selected', 'true');
+
+  await page.getByText('3 rows · 4 columns').click();
+  await expect(
+    page.getByRole('gridcell').and(page.locator('[aria-selected="true"]')),
+  ).toHaveCount(0);
 });
 
 test('US-3 edits a cell', async ({ page, request }) => {

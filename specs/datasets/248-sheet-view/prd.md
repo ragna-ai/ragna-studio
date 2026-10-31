@@ -69,6 +69,8 @@ dataset without the mouse.
   neighbouring cell becomes active, and the sheet scrolls to keep it visible.
 - **US-2.3** Given the active cell on the edge of the sheet, when the user moves past the edge,
   then the active cell stays where it is.
+- **US-2.4** Given an active cell, when the user clicks outside the grid (including the sheet's
+  heading bar and footer), then no cell is active.
 
 ### US-3 Edit a cell (P1)
 
@@ -179,7 +181,7 @@ criterion. Each journey walks the main path and one unhappy path.
 | Story | Journey covers           | Level            |
 | ----- | ------------------------ | ---------------- |
 | US-1  | US-1.1, US-1.3, US-1.4   | e2e (Playwright) |
-| US-2  | US-2.1, US-2.2           | e2e (Playwright) |
+| US-2  | US-2.1, US-2.2, US-2.4   | e2e (Playwright) |
 | US-3  | US-3.1 to US-3.3, US-3.5 | e2e (Playwright) |
 | US-4  | US-4.1, US-4.3, US-4.4   | e2e (Playwright) |
 | US-5  | US-5.1, US-5.3           | e2e (Playwright) |

@@ -86,6 +86,13 @@ const COLUMN_TYPE_ICONS = {
   select: CircleChevronDownIcon,
 } satisfies Record<DatasetColumnType, unknown>;
 
+// Teleported menus, dropdowns and dialogs render outside the grid but belong to it.
+const SHEET_OVERLAY_SELECTORS = [
+  '[data-reka-popper-content-wrapper]',
+  '[role="dialog"]',
+  '[role="alertdialog"]',
+];
+
 // Refs
 const gridRef = ref<HTMLElement | null>(null);
 const menuRowId = ref<string | null>(null);
@@ -140,6 +147,7 @@ const { isAddingRow, addRowAndEdit } = useDatasetSheetPendingEdit({
   editCellOfRow,
   commitEditAndMoveDown: () => handleCommit('down'),
 });
+onClickOutside(gridRef, clearActiveCell, { ignore: SHEET_OVERLAY_SELECTORS });
 
 // Computed
 const headers = computed(() => table.getHeaderGroups()[0]?.headers ?? []);
@@ -154,6 +162,11 @@ const scrollPaddingStyle = computed(() => ({
   scrollPaddingLeft: `${table.getStartTotalSize()}px`,
 }));
 // Functions
+/** Deselects the active cell; an open editor has already committed on blur. */
+function clearActiveCell() {
+  table.resetCellSelection(true);
+}
+
 function handleMenuOpenChange(rowId: string, isOpen: boolean) {
   if (isOpen) {
     menuRowId.value = rowId;
