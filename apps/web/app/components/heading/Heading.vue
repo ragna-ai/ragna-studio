@@ -8,9 +8,10 @@ const props = defineProps<{
 
 const img = useImage();
 
-// Default CSS gradient recreating the teal-to-navy verlauf.
-const gradientBackground =
-  'linear-gradient(105deg, #29b8b3 0%, #2f7fac 45%, #2f5aa0 70%, #2b3d94 100%)';
+const gradientBackground = [
+  'linear-gradient(to bottom, transparent 40%, #ffffff 100%)',
+  'linear-gradient(105deg, #dcf3f1 0%, #e1ecf7 50%, #e4e6f6 100%)',
+].join(', ');
 
 const backgroundStyles = computed(() => {
   if (props.imgUrl) {
@@ -37,7 +38,7 @@ const bgPositionClass = computed(() => {
 <template>
   <div class="overflow-hidden rounded-b-xl">
     <div
-      class="flex min-h-5 overflow-hidden rounded-lg bg-[#E9F0FB] bg-cover bg-no-repeat p-8 text-white"
+      class="flex min-h-5 overflow-hidden rounded-lg bg-[#E9F0FB] bg-cover bg-no-repeat p-8 text-foreground"
       :style="backgroundStyles"
     >
       <slot name="top" />

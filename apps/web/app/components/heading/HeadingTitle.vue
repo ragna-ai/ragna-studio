@@ -16,7 +16,7 @@ defineProps<{
           {{ title ?? '' }}
         </h1>
       </slot>
-      <p class="max-w-2xl truncate text-sm opacity-90">
+      <p class="max-w-2xl truncate text-sm text-muted-foreground">
         {{ subtitle ?? '' }}
       </p>
     </div>
