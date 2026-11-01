@@ -12,6 +12,8 @@ import {
 import { MCP_INTEGRATION_IDS } from '~/features/mcp/constants';
 import type { McpAccessLevel, McpIntegrationId } from '~/features/mcp/types';
 
+definePageMeta({ layout: 'settings' });
+
 // Composables
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
@@ -93,7 +95,7 @@ async function handleRevoke(connectionId: string) {
         <Skeleton class="h-24 w-full" />
       </div>
 
-      <Card v-else-if="isDisabled" class="mx-auto w-full max-w-2xl">
+      <SettingsCard v-else-if="isDisabled" class="mx-auto w-full max-w-2xl">
         <CardHeader>
           <CardTitle>{{ t('mcp.settings.notAvailable.title') }}</CardTitle>
         </CardHeader>
@@ -102,14 +104,14 @@ async function handleRevoke(connectionId: string) {
             {{ t('mcp.settings.notAvailable.message') }}
           </p>
         </CardContent>
-      </Card>
+      </SettingsCard>
 
       <div v-else-if="error">
         <p class="text-sm text-stone-500">{{ t('mcp.settings.loadError') }}</p>
       </div>
 
       <template v-else-if="data">
-        <Card class="mx-auto w-full max-w-2xl">
+        <SettingsCard class="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>{{ t('mcp.settings.masterToggle.title') }}</CardTitle>
           </CardHeader>
@@ -126,9 +128,9 @@ async function handleRevoke(connectionId: string) {
               </Label>
             </div>
           </CardContent>
-        </Card>
+        </SettingsCard>
 
-        <Card v-if="data.enabled" class="mx-auto w-full max-w-2xl">
+        <SettingsCard v-if="data.enabled" class="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>{{ t('mcp.settings.connectorUrl.title') }}</CardTitle>
           </CardHeader>
@@ -143,9 +145,9 @@ async function handleRevoke(connectionId: string) {
               {{ t('mcp.settings.connectorUrl.howTo') }}
             </p>
           </CardContent>
-        </Card>
+        </SettingsCard>
 
-        <Card class="mx-auto w-full max-w-2xl">
+        <SettingsCard class="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>{{ t('mcp.settings.access.title') }}</CardTitle>
           </CardHeader>
@@ -185,9 +187,9 @@ async function handleRevoke(connectionId: string) {
               </Select>
             </div>
           </CardContent>
-        </Card>
+        </SettingsCard>
 
-        <Card v-if="data.enabled" class="mx-auto w-full max-w-2xl">
+        <SettingsCard v-if="data.enabled" class="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>{{ t('mcp.settings.connections.title') }}</CardTitle>
           </CardHeader>
@@ -197,7 +199,7 @@ async function handleRevoke(connectionId: string) {
               @revoke="handleRevoke"
             />
           </CardContent>
-        </Card>
+        </SettingsCard>
       </template>
     </div>
   </SectionWrapper>

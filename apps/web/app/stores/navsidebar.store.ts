@@ -1,14 +1,13 @@
 import { defineStore } from 'pinia';
 
+const REMOVED_SHOW_LABELS_KEY = 'nav-sidebar:show-labels-when-collapsed';
+
 export const useNavSidebarStore = defineStore('nav-sidebar', () => {
-  // Persisted so the expand/collapse state survives reloads.
-  const expanded = useLocalStorage('nav-sidebar:expanded', false);
-  // Persisted account preference (set on the Account > Sidebar settings page):
-  // whether the collapsed sidebar still shows labels under each icon.
-  const showLabelsWhenCollapsed = useLocalStorage(
-    'nav-sidebar:show-labels-when-collapsed',
-    true,
-  );
+  const expanded = useLocalStorage('nav-sidebar:expanded', true);
+
+  if (import.meta.client) {
+    localStorage.removeItem(REMOVED_SHOW_LABELS_KEY);
+  }
 
   function toggleExpanded() {
     expanded.value = !expanded.value;
@@ -16,7 +15,6 @@ export const useNavSidebarStore = defineStore('nav-sidebar', () => {
 
   return {
     expanded,
-    showLabelsWhenCollapsed,
     toggleExpanded,
   };
 });

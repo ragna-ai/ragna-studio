@@ -8,7 +8,7 @@ const { data, isPending, error } = useGetRestrictedWorkspaces(true);
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl">
+  <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader>
       <CardTitle>{{ t('organization.workspaces.title') }}</CardTitle>
       <CardDescription>
@@ -34,5 +34,5 @@ const { data, isPending, error } = useGetRestrictedWorkspaces(true);
         />
       </ul>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

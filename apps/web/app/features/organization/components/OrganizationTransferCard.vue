@@ -51,7 +51,7 @@ async function handleTransfer() {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl">
+  <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader>
       <CardTitle>{{ t('organization.transfer.title') }}</CardTitle>
     </CardHeader>
@@ -88,5 +88,5 @@ async function handleTransfer() {
         </Button>
       </div>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

@@ -35,7 +35,7 @@ Older mail is not imported up front. When an older thread is opened, RAGNA loads
 
 ## Disconnect a mailbox
 
-Open **Email settings**, go to **General** and choose **Disconnect mailbox**. Disconnecting:
+Open **Settings** from the user menu, choose **General** under **Email** and choose **Disconnect mailbox**. Disconnecting:
 
 - removes the synced mail, categories and drafts.
 - revokes and deletes the connection of the mailbox.
@@ -58,7 +58,7 @@ RAGNA checks the mailbox for changes every 5 minutes by default. Use **Sync now*
 
 Sometimes the mail provider revokes access, for example after a password change. The status then reads **Reconnect needed**, and RAGNA shows a toast that the mailbox access expired. The connection shows **Needs reconnect** under [Connections](/integrations/connections). To fix it:
 
-1. Open **Email settings** and go to **General**.
+1. Open **Settings** from the user menu and choose **General** under **Email**.
 2. Choose **Reconnect Gmail** or **Reconnect Outlook**.
 3. Grant access again.
 
@@ -104,7 +104,7 @@ RAGNA sorts new incoming mail into categories with a small AI model. New account
 
 Only recent mail is classified. By default that means mail less than one day old, so a first sync does not label the whole inbox.
 
-To manage categories, open **Email settings** and go to **Categories**.
+To manage categories, open **Settings** from the user menu and choose **Categories** under **Email**.
 
 1. Give the category a name and a color.
 2. Write a description of what belongs in it. The AI reads this text as written, so be specific.
@@ -120,15 +120,15 @@ The agent drafts with its instructions, context and memory. It does not use its 
 
 ### Draft on demand
 
-Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from the draft agent set in **Email settings**. While it works, the thread shows **Drafting a reply...**.
+Open a thread, choose **Draft with AI**, pick an agent under **Choose an agent** and choose **Generate draft**. The agent is preselected from the draft agent set in the **Email** settings. While it works, the thread shows **Drafting a reply...**.
 
 ### Draft automatically
 
 RAGNA drafts a reply on its own in two cases:
 
 - The message falls into a category with **Auto-draft** on.
-- The sender is on the auto-draft list. Open **Email settings**, go to **Auto-draft senders** and add the address. Mail from these senders gets a draft regardless of its category.
+- The sender is on the auto-draft list. Open **Settings** from the user menu, choose **Senders** under **Email** and add the address. Mail from these senders gets a draft regardless of its category.
 
 ### Choose the draft agent
 
-In **Email settings** under **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of the private workspace. Automatic drafts need this agent. If none is picked, no draft is written, and the settings show "Pick an agent to enable auto-drafts". See [Agents](/agents) to create one.
+In **Settings**, under **Email** and **General**, set **Default draft agent**. It is used for automatic drafts and preselected for **Draft with AI**. The list shows agents of the private workspace. Automatic drafts need this agent. If none is picked, no draft is written, and the settings show "Pick an agent to enable auto-drafts". See [Agents](/agents) to create one.

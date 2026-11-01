@@ -55,7 +55,7 @@ async function handleCancel(invitation: OrganizationInvitationRecord) {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-3xl">
+  <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader class="flex flex-row items-center justify-between">
       <CardTitle>{{ t('organization.invitations.title') }}</CardTitle>
       <Button size="sm" @click="inviteDialogOpen = true">
@@ -108,6 +108,6 @@ async function handleCancel(invitation: OrganizationInvitationRecord) {
         </li>
       </ul>
     </CardContent>
-  </Card>
+  </SettingsCard>
   <OrganizationInviteDialog v-model:open="inviteDialogOpen" />
 </template>

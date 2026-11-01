@@ -1,39 +1,24 @@
 <script setup lang="ts">
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from '@lucide/vue';
 
-// Imports
-
-// Props
-// Emits
-
-// Refs
-
-// Composables
 const navSidebarStore = useNavSidebarStore();
-
-// Computed
-// Functions
-
-// Hooks
+const label = computed(() =>
+  navSidebarStore.expanded ? 'nav.collapseSidebar' : 'nav.expandSidebar',
+);
 </script>
 
 <template>
   <button
     type="button"
-    class="nav-item flex items-center justify-center"
-    :title="
-      navSidebarStore.expanded
-        ? $t('nav.collapseSidebar')
-        : $t('nav.expandSidebar')
-    "
+    class="sidebar-row"
+    :title="$t(label)"
+    :aria-label="$t(label)"
     @click="navSidebarStore.toggleExpanded()"
   >
-    <div class="nav-icon-wrapper opacity-50 hover:opacity-100">
-      <PanelLeftCloseIcon
-        v-if="navSidebarStore.expanded"
-        class="size-4 stroke-1.5"
-      />
-      <PanelLeftOpenIcon v-else class="size-4 stroke-1.5" />
-    </div>
+    <template v-if="navSidebarStore.expanded">
+      <PanelLeftCloseIcon class="sidebar-row-icon" />
+      <span class="truncate">{{ $t(label) }}</span>
+    </template>
+    <PanelLeftOpenIcon v-else class="sidebar-row-icon" />
   </button>
 </template>

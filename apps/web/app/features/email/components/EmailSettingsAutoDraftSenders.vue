@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PlusIcon, Trash2Icon } from '@lucide/vue';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import {
   useAddAutoDraftSender,
   useGetAutoDraftSenders,
@@ -30,7 +30,7 @@ function handleAdd() {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-2xl">
+  <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.senders.title') }}</CardTitle>
       <p class="text-sm text-muted-foreground">
@@ -73,5 +73,5 @@ function handleAdd() {
         {{ t('email.settings.senders.empty') }}
       </p>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

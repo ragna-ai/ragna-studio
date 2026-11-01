@@ -35,6 +35,15 @@ remove members in the org settings. The owner can delete the organization,
 which is restorable for 30 days.
 → [specs/organizations/prd.md](./organizations/prd.md), [v2](./organizations/v2-prd.md)
 
+### Navigation and settings
+
+The app sidebar expands to labelled groups (Work, AI, Create) or collapses
+to icons. The user menu holds the workspace switcher, the credit balance,
+Settings, Help and sign out. All settings live in one settings area with its
+own nav: account, organization, email and integrations, one address per
+section.
+→ [specs/settings/246-settings-area/prd.md](./settings/246-settings-area/prd.md)
+
 ### Auth
 
 better-auth with a Drizzle adapter, Google OAuth, and an admin plugin.
@@ -140,6 +149,10 @@ dropdown, table menu, `/` command menu.
 Structured, spreadsheet-like state shared between humans and agents,
 supporting concurrent agent writes, manual row reordering, and export.
 → [specs/datasets/datasets.md](./datasets/datasets.md)
+
+The grid is a spreadsheet-style sheet: one active cell with keyboard editing, sort, filter,
+show/hide and resize columns (per browser), and add row/column from the sheet's edges.
+→ [specs/datasets/248-sheet-view/prd.md](./datasets/248-sheet-view/prd.md)
 
 ### Media library
 

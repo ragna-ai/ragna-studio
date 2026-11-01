@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangleIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -73,7 +73,7 @@ function handleReconnect() {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-2xl">
+  <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.general.title') }}</CardTitle>
     </CardHeader>
@@ -157,5 +157,5 @@ function handleReconnect() {
         </Button>
       </div>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

@@ -3,11 +3,16 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
-import { STORAGE_STATE_PATH } from '../playwright.config';
+import {
+  MEMBER_STORAGE_STATE_PATH,
+  STORAGE_STATE_PATH,
+} from '../playwright.config';
 
 const seedResultSchema = z.object({
   cookieHeader: z.string(),
   workspaceId: z.string(),
+  memberCookieHeader: z.string(),
+  memberWorkspaceId: z.string(),
 });
 
 const API_DIR = resolve(import.meta.dirname, '../../api');
@@ -22,8 +27,12 @@ function runSeed(): z.infer<typeof seedResultSchema> {
   return seedResultSchema.parse(JSON.parse(stdout));
 }
 
-setup('seed a signed-in user', () => {
-  const { cookieHeader, workspaceId } = runSeed();
+/** Writes a Playwright storage state holding the session cookie and the active workspace. */
+function writeStorageState(
+  path: string,
+  cookieHeader: string,
+  workspaceId: string,
+): void {
   const separatorIndex = cookieHeader.indexOf('=');
   const name = cookieHeader.slice(0, separatorIndex);
   const value = cookieHeader.slice(separatorIndex + 1);
@@ -59,6 +68,16 @@ setup('seed a signed-in user', () => {
     ],
   };
 
-  mkdirSync(dirname(STORAGE_STATE_PATH), { recursive: true });
-  writeFileSync(STORAGE_STATE_PATH, JSON.stringify(storageState));
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(storageState));
+}
+
+setup('seed signed-in users', () => {
+  const seed = runSeed();
+  writeStorageState(STORAGE_STATE_PATH, seed.cookieHeader, seed.workspaceId);
+  writeStorageState(
+    MEMBER_STORAGE_STATE_PATH,
+    seed.memberCookieHeader,
+    seed.memberWorkspaceId,
+  );
 });

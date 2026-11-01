@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PlusIcon, Trash2Icon } from '@lucide/vue';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Switch } from '~/components/ui/switch';
 import { Textarea } from '~/components/ui/textarea';
 import {
@@ -72,7 +72,7 @@ async function handleDelete(categoryId: string, name: string) {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-2xl">
+  <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.categories.title') }}</CardTitle>
       <p class="text-sm text-muted-foreground">
@@ -153,5 +153,5 @@ async function handleDelete(categoryId: string, name: string) {
         {{ t('email.settings.categories.empty') }}
       </p>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>

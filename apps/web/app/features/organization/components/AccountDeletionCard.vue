@@ -42,7 +42,7 @@ async function handleDelete() {
 </script>
 
 <template>
-  <Card class="mx-auto w-full max-w-2xl border-destructive/50">
+  <SettingsCard class="mx-auto w-full max-w-2xl border-destructive/50">
     <CardHeader>
       <CardTitle class="text-destructive">{{
         t('organization.account.title')
@@ -72,5 +72,5 @@ async function handleDelete() {
         </Button>
       </template>
     </CardContent>
-  </Card>
+  </SettingsCard>
 </template>
