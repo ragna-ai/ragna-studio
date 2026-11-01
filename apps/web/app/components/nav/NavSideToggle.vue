@@ -11,15 +11,14 @@ const label = computed(() =>
   <button
     type="button"
     class="sidebar-row"
-    :class="{ 'w-fit': navSidebarStore.expanded }"
     :title="$t(label)"
     :aria-label="$t(label)"
     @click="navSidebarStore.toggleExpanded()"
   >
-    <PanelLeftCloseIcon
-      v-if="navSidebarStore.expanded"
-      class="sidebar-row-icon"
-    />
+    <template v-if="navSidebarStore.expanded">
+      <PanelLeftCloseIcon class="sidebar-row-icon" />
+      <span class="truncate">{{ $t(label) }}</span>
+    </template>
     <PanelLeftOpenIcon v-else class="sidebar-row-icon" />
   </button>
 </template>

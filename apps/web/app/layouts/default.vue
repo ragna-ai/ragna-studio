@@ -31,7 +31,7 @@ const hasNoWorkspace = computed(
         <SidePanelHost />
         <main
           id="main"
-          class="relative min-w-0 grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-sm"
+          class="relative min-w-0 grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-xs"
         >
           <WorkspaceEmptyState v-if="hasNoWorkspace" />
           <slot v-else />

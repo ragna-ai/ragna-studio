@@ -11,6 +11,8 @@ const props = withDefaults(defineProps<SidebarShellProps>(), {
   collapsed: false,
   class: undefined,
 });
+
+const paddingX = computed(() => (props.collapsed ? 'px-2' : 'px-3'));
 </script>
 
 <template>
@@ -24,13 +26,13 @@ const props = withDefaults(defineProps<SidebarShellProps>(), {
       )
     "
   >
-    <div class="shrink-0 px-2">
+    <div class="shrink-0" :class="paddingX">
       <slot name="header" />
     </div>
-    <div class="min-h-0 grow overflow-y-auto px-2">
+    <div class="min-h-0 grow overflow-y-auto" :class="paddingX">
       <slot />
     </div>
-    <div class="shrink-0 px-2">
+    <div class="shrink-0" :class="paddingX">
       <slot name="footer" />
     </div>
   </aside>

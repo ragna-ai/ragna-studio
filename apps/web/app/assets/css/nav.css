@@ -1,10 +1,10 @@
 @layer components {
   .sidebar-row {
-    @apply flex h-8 w-full items-center gap-2.5 rounded-md border border-transparent px-2 text-sm text-stone-600 transition-colors hover:bg-stone-200/50 hover:text-foreground;
+    @apply flex h-8 w-full items-center gap-2.5 rounded-md border border-transparent px-2 text-[0.8125rem] text-foreground transition-colors hover:bg-stone-200/50 hover:text-foreground;
   }
 
   .sidebar-row-active {
-    @apply border-stone-200/80 bg-white text-foreground shadow-xs hover:bg-white;
+    @apply bg-stone-200/60 text-foreground hover:bg-stone-200/60;
   }
 
   .sidebar-row-icon {
