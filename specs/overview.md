@@ -150,6 +150,10 @@ Structured, spreadsheet-like state shared between humans and agents,
 supporting concurrent agent writes, manual row reordering, and export.
 → [specs/datasets/datasets.md](./datasets/datasets.md)
 
+The grid is a spreadsheet-style sheet: one active cell with keyboard editing, sort, filter,
+show/hide and resize columns (per browser), and add row/column from the sheet's edges.
+→ [specs/datasets/248-sheet-view/prd.md](./datasets/248-sheet-view/prd.md)
+
 ### Media library
 
 Central store for generated and uploaded images, videos, and documents,

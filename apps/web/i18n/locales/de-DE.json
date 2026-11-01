@@ -984,19 +984,71 @@
         "markdown": "Markdown"
       }
     },
-    "grid": {
-      "empty": "Noch keine Zeilen. Füge unten eine hinzu.",
+    "sheet": {
+      "addColumn": {
+        "label": "Spalte hinzufügen",
+        "limit": "Ein Datensatz kann höchstens {max} Spalten haben.",
+        "nameRequired": "Name ist erforderlich",
+        "submit": "Spalte hinzufügen"
+      },
       "addRow": "Zeile hinzufügen",
+      "empty": {
+        "noColumns": "Dieser Datensatz hat noch keine Spalten.",
+        "openColumns": "Spalten hinzufügen"
+      },
+      "noMatches": "Keine Zeilen entsprechen den Filtern.",
+      "clearFilters": "Filter zurücksetzen",
+      "count": {
+        "all": "{rows} Zeilen · {columns} Spalten",
+        "filtered": "{visible} von {total} Zeilen"
+      },
+      "mismatch": "Passt nicht zum Spaltentyp",
+      "rowMenu": {
+        "open": "Zeilenaktionen",
+        "expand": "Zeile erweitern",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "delete": "Zeile löschen",
+        "moveDisabled": "Sortierung und Filter zurücksetzen, um Zeilen zu verschieben"
+      },
+      "toolbar": {
+        "filter": "Filtern",
+        "sort": "Sortieren",
+        "display": "Anzeige"
+      },
+      "sort": {
+        "column": "Spalte wählen",
+        "ascending": "Aufsteigend",
+        "descending": "Absteigend",
+        "clear": "Sortierung zurücksetzen"
+      },
+      "filter": {
+        "add": "Filter hinzufügen",
+        "remove": "Filter entfernen",
+        "value": "Wert",
+        "op": {
+          "contains": "enthält",
+          "eq": "ist",
+          "lt": "ist kleiner als",
+          "gt": "ist größer als",
+          "on": "ist am",
+          "before": "ist vor",
+          "after": "ist nach",
+          "anyOf": "ist eines von"
+        }
+      },
+      "display": {
+        "title": "Spalten anzeigen"
+      },
+      "resizeColumn": "{column} Größe ändern"
+    },
+    "grid": {
       "selectPlaceholder": "Auswählen...",
       "deleteRow": "Zeile löschen",
       "deleteRowConfirm": {
         "title": "Zeile löschen",
         "message": "Möchtest du diese Zeile wirklich löschen?"
       },
-      "expandRow": "Zeile erweitern",
-      "moveRowUp": "Zeile nach oben verschieben",
-      "moveRowDown": "Zeile nach unten verschieben",
-      "editCell": "{column} bearbeiten",
       "writtenByMcp": "Geschrieben von einer verbundenen App über MCP"
     },
     "columnManager": {

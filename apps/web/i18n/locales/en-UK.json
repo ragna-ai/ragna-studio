@@ -981,19 +981,71 @@
         "markdown": "Markdown"
       }
     },
-    "grid": {
-      "empty": "No rows yet. Add one below.",
+    "sheet": {
+      "addColumn": {
+        "label": "Add column",
+        "limit": "A dataset can have at most {max} columns.",
+        "nameRequired": "Name is required",
+        "submit": "Add column"
+      },
       "addRow": "Add row",
+      "empty": {
+        "noColumns": "This dataset has no columns yet.",
+        "openColumns": "Add columns"
+      },
+      "noMatches": "No rows match the filters.",
+      "clearFilters": "Clear filters",
+      "count": {
+        "all": "{rows} rows · {columns} columns",
+        "filtered": "{visible} of {total} rows"
+      },
+      "mismatch": "Doesn't match the column type",
+      "rowMenu": {
+        "open": "Row actions",
+        "expand": "Expand row",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "delete": "Delete row",
+        "moveDisabled": "Clear sort and filters to move rows"
+      },
+      "toolbar": {
+        "filter": "Filter",
+        "sort": "Sort",
+        "display": "Display"
+      },
+      "sort": {
+        "column": "Select column",
+        "ascending": "Ascending",
+        "descending": "Descending",
+        "clear": "Clear sort"
+      },
+      "filter": {
+        "add": "Add filter",
+        "remove": "Remove filter",
+        "value": "Value",
+        "op": {
+          "contains": "contains",
+          "eq": "is",
+          "lt": "is less than",
+          "gt": "is greater than",
+          "on": "is on",
+          "before": "is before",
+          "after": "is after",
+          "anyOf": "is any of"
+        }
+      },
+      "display": {
+        "title": "Show columns"
+      },
+      "resizeColumn": "Resize {column}"
+    },
+    "grid": {
       "selectPlaceholder": "Select...",
       "deleteRow": "Delete row",
       "deleteRowConfirm": {
         "title": "Delete row",
         "message": "Are you sure you want to delete this row?"
       },
-      "expandRow": "Expand row",
-      "moveRowUp": "Move row up",
-      "moveRowDown": "Move row down",
-      "editCell": "Edit {column}",
       "writtenByMcp": "Written by a connected app via MCP"
     },
     "columnManager": {

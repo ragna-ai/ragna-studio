@@ -55,6 +55,7 @@ work first, shipped reference and dead/historical docs last.
 | [Drizzle 1.0.0-rc.4 → rc.5 upgrade assessment](./database/drizzle-1.0-rc5-upgrade.md) | implemented (2026-10-28, PR #211) |
 | [Database migrations and seeding in production](./database/migrations-and-seed.md) | implemented (2026-09-19) |
 | [Batch per-item queries (N+1)](./database/n-plus-one-batching.md) | implemented (PR #92, 2026-10-08) |
+| [Dataset sheet view: a spreadsheet-style grid with sort, filter and display (PRD)](./datasets/248-sheet-view/prd.md) | implemented (2026-10-31, PR #252) |
 | [Datasets: shared structured state for humans and agents](./datasets/datasets.md) | implemented (2026-07-17) |
 | [Export (datasets and documents) and manual dataset row reorder](./datasets/export-and-row-reorder.md) | implemented (2026-07-22); user verification and commit pending |
 | [Per-service memory and CPU limits](./docker-deploy/resource-limits.md) | implemented (2026-09-23) |

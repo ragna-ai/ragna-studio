@@ -17,9 +17,6 @@ const route = useRoute();
 const datasetId = computed(() => route.params.datasetId as string);
 
 // Refs
-// Owned here, not inside DatasetDetail: the "Columns" and settings buttons
-// live in this page's header, which renders even before the dataset has
-// loaded.
 const isColumnManagerOpen = ref(false);
 const isSettingsOpen = ref(false);
 // The dataset name is renamed inline in the breadcrumb's current item
@@ -92,13 +89,14 @@ function handleExport(format: DatasetExportFormat) {
         </PageBreadcrumb>
         <PageBreadcrumb v-else :items="loadingItems" />
       </div>
-      <div class="flex shrink-0 items-center gap-2">
+      <div class="flex shrink-0 items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button
               variant="outline"
               size="sm"
               :disabled="!datasetData?.dataset || isExporting"
+              :aria-label="t('dataset.detail.export.button')"
             >
               <Spinner v-if="isExporting" class="mr-2" />
               <DownloadIcon v-else class="size-4 stroke-1.5" />
