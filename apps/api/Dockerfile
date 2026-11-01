@@ -43,7 +43,7 @@ FROM base AS builder
 
 # Install deps from the pruned lockfile (cached layer)
 COPY --from=pruner /app/out/json .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm pnpm install --frozen-lockfile --store-dir /var/cache/pnpm
 
 # Copy source and build
 COPY --from=pruner /app/out/full .
@@ -51,8 +51,8 @@ ENV NODE_ENV=production
 RUN pnpm turbo build --filter=@repo/api
 
 # Remove dev dependencies, keeping the built dist folders
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/api deploy --prod /prod/api
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+  pnpm --filter @repo/api deploy --prod /prod/api --store-dir /var/cache/pnpm
 
 # ============================================================
 # Runner — Bun on Debian (src/index.ts uses Bun.serve). The alpine tag
