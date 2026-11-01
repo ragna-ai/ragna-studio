@@ -48,7 +48,7 @@ FROM base AS builder
 
 # Install deps from the pruned lockfile (cached layer)
 COPY --from=pruner /app/out/json .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm pnpm install --frozen-lockfile --store-dir /var/cache/pnpm
 
 # Copy source and build
 COPY --from=pruner /app/out/full .
@@ -56,8 +56,8 @@ ENV NODE_ENV=production
 RUN pnpm turbo build --filter=@repo/database
 
 # Self-contained folder: compiled scripts + production node_modules
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/database deploy --prod /prod/database
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+  pnpm --filter @repo/database deploy --prod /prod/database --store-dir /var/cache/pnpm
 
 # ============================================================
 # Runner — minimal image for the migrate/seed one-shot commands

@@ -36,7 +36,7 @@ FROM base AS builder
 
 # Install deps from the pruned lockfile (cached layer)
 COPY --from=pruner /app/out/json .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm pnpm install --frozen-lockfile --store-dir /var/cache/pnpm
 
 # Copy source and build
 COPY --from=pruner /app/out/full .

@@ -44,15 +44,15 @@ RUN turbo prune @repo/webbrowser --docker
 FROM base AS builder
 
 COPY --from=pruner /app/out/json .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm pnpm install --frozen-lockfile --store-dir /var/cache/pnpm
 
 COPY --from=pruner /app/out/full .
 ENV NODE_ENV=production
 RUN pnpm turbo build --filter=@repo/webbrowser
 
 # Self-contained folder: webbrowser dist + production node_modules.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/webbrowser deploy --prod /prod/webbrowser
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+  pnpm --filter @repo/webbrowser deploy --prod /prod/webbrowser --store-dir /var/cache/pnpm
 
 # ============================================================
 # Runner — Bun on Debian + system Chromium. Bun's default/debian

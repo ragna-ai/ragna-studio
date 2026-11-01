@@ -37,7 +37,7 @@ FROM base AS builder
 
 # Install deps from the pruned lockfile (cached layer)
 COPY --from=pruner /app/out/json .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm pnpm install --frozen-lockfile --store-dir /var/cache/pnpm
 
 # Copy source and build
 COPY --from=pruner /app/out/full .
@@ -46,8 +46,8 @@ RUN pnpm turbo build --filter=@repo/worker
 
 # Self-contained folder: worker dist + production node_modules.
 # Deps stay unbundled (dynamic imports and native modules need real files).
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm --filter @repo/worker deploy --prod /prod/worker
+RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
+  pnpm --filter @repo/worker deploy --prod /prod/worker --store-dir /var/cache/pnpm
 
 # ============================================================
 # Runner — minimal image with the deployed worker
