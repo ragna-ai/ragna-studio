@@ -26,6 +26,19 @@ pmOnFail: ignore
 # security fix, add its exact version (never a name pattern) to minimumReleaseAgeExclude
 # and remove it once it's older than 3 days.
 minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - better-auth@1.7.16
+  - '@better-auth/cimd@1.7.16'
+  - '@better-auth/core@1.7.16'
+  - '@better-auth/drizzle-adapter@1.7.16'
+  - '@better-auth/kysely-adapter@1.7.16'
+  - '@better-auth/mcp@1.7.16'
+  - '@better-auth/memory-adapter@1.7.16'
+  - '@better-auth/mongo-adapter@1.7.16'
+  - '@better-auth/oauth-provider@1.7.16'
+  - '@better-auth/prisma-adapter@1.7.16'
+  - '@better-auth/telemetry@1.7.16'
+  - better-call@1.4.5
 
 allowBuilds:
   '@parcel/watcher': false
