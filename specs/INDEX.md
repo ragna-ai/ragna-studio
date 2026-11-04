@@ -28,6 +28,8 @@ work first, shipped reference and dead/historical docs last.
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
+| [Integrations: cloud drive (design)](./integrations/265-cloud-drive/design.md) | proposed (2026-11-04) |
+| [Integrations: cloud drive as a live source for agents (PRD)](./integrations/265-cloud-drive/prd.md) | proposed (2026-11-04) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
