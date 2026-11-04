@@ -11,8 +11,8 @@ Write code the next person can read and change without asking you. Assume that p
 2. **Small, single-purpose functions.** One job each. If you need "and" to describe it, split it.
 3. **Match the surrounding code.** Copy the file's existing naming, structure, and idioms. Consistency beats personal preference.
 4. **Same knowledge, one place (DRY).** Deduplicate real shared knowledge (a schema, a constant, a rule). Do NOT merge code that only _looks_ similar but changes for different reasons.
-5. **Prefer boring (KISS).** Pick the obvious solution over the clever one. No abstraction layer with a single user.
-6. **Don't build for "later" (YAGNI).** Solve the current requirement. Add flexibility when a second real case shows up.
+5. **Prefer boring (KISS).** Pick the obvious solution over the clever one. No abstraction layer with a single user, unless a second variant is already known (see rule 6).
+6. **Don't build for "later" (YAGNI).** Solve the current requirement. Speculative variants get no abstraction. A known next variant (named in an issue, PRD or by the user) does get a seam now, with only the first implementation built. Load the system-design skill for that.
 7. **Validate at the boundary.** Parse and check external input (request, env, third-party response) before using it.
 8. **Handle the unhappy path.** Loading, empty, and error states. Don't swallow errors silently.
 9. **Comment _why_, not _what_.** The code shows what. A comment explains a non-obvious reason or trade-off. Delete comments that just restate the line.

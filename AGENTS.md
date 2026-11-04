@@ -128,7 +128,9 @@ checklist in `specs/standards/README.md`.
 
 ### Coding
 
-Always load the clean-code skill. For `apps/api` changes, also load the tdd skill. For PRDs, design
+Always load the clean-code skill. For `apps/api` changes, also load the tdd skill. Before designing anything with
+variants or a new abstraction, load the system-design skill; for a vendor connector, also integration-connector.
+Before adding a dependency, load the dependency-choice skill. For PRDs, design
 docs and slices in `specs/`, load the spec-writing skill.
 
 **Skip self-verification of changes** unless explicitly asked, means:

@@ -28,6 +28,8 @@ When the change has a PRD, its acceptance criteria are the test list. Take the c
 - Assert behavior, not internals.
 - **Response schemas are strict.** Parse responses with `z.strictObject` and list every field the API returns, nested objects included. Plain `z.object` silently strips unknown keys, so a leaked or reintroduced field passes unnoticed. Never loosen with `.passthrough()` or `.catchall()`. Applies to every new or touched test.
 - Mock only external services (AI providers, storage, mail, LinkedIn) at the package boundary, never our own code. Pure helpers from a mocked package stay real.
+- **Fakes are typed against the contract they replace.** A contract change must break the fake at compile time, not drift silently.
+- **A package-level fake is not coverage of that package.** Code behind a faked boundary (parsing, retry, error mapping) needs a test that runs it, e.g. with the vendor's HTTP faked instead. New external adapters inject their deps through the factory options object (token getter, sleep for retry delays), so tests pass fakes without `mock.module`.
 - Make tests deterministic: values that come from env (e.g. `MEDIA_URL`) are pinned in `.env.testing`, not read from a developer's `.env`.
 - **Neutral names in security-relevant tests.** The repo is public and fixes land before their advisory. Name tests, variables and comments after the input's shape or size, not the threat: `LARGE_BODY_LENGTH`, "a body made of %s is classified in linear time". Never "hostile", "attack", "malicious", "adversarial", "exploit" or "ReDoS".
 - Conventions, fixtures and existing mocks: `apps/api/test/README.md` and `specs/testing/strategy.md`.
