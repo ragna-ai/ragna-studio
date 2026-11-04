@@ -1,6 +1,6 @@
 # Integrations: cloud drive (design)
 
-> **Status: proposed** (2026-11-04). Issue #265. Requirements: [prd.md](./prd.md).
+> **Status: implemented** (2026-11-04, PR #276). Issue #265. Requirements: [prd.md](./prd.md).
 
 How the cloud drive capability, its agent tools and the connection binding are built. Story IDs
 refer to the PRD.

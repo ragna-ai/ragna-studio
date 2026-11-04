@@ -1,6 +1,6 @@
 # Integrations: cloud drive as a live source for agents (PRD)
 
-> **Status: proposed** (2026-11-04). Issue #265. Extends #224, follows the run-user rule of #229.
+> **Status: implemented** (2026-11-04, PR #276). Issue #265. Extends #224, follows the run-user rule of #229.
 
 Agents can't see the files people keep in Google Drive or OneDrive. Users copy text into a chat or
 upload a file, and the copy goes stale. This PRD lets an agent search, read and, if allowed, write
