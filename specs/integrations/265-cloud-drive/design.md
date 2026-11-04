@@ -219,7 +219,8 @@ needed until workspace connections (#190) add an explicit connection id.
 - **Fakes:** vendor HTTP in `packages/testing`. No package-level mock of the provider.
 - **Packages considered:** `googleapis` and `@microsoft/microsoft-graph-client`. Rejected: the
   shared vendor client from #272 already covers auth, retries and errors, and both SDKs are
-  large. No new dependency, so no dependency-choice record.
+  large. No new dependency. Full record:
+  [google-client-decision.md](../reference/google-client-decision.md).
 - **Not abstracted:** vendor-native export formats and the search syntax stay in each adapter.
   The tool layer doesn't know which vendor runs.
 

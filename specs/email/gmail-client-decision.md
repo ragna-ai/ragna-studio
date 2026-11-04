@@ -1,6 +1,8 @@
 # Gmail client: hand-rolled fetch wrapper, not `@googleapis/gmail`
 
-Decision record, 2026-08-14. Reference material, no build lifecycle.
+Decision record, 2026-08-14. Reference material, no build lifecycle. Extended to every Google
+capability (Gmail and Drive) in
+[integrations/reference/google-client-decision.md](../integrations/reference/google-client-decision.md).
 
 `@repo/mail/provider`'s `GmailProvider` talks to the Gmail REST API v1
 through a small hand-written fetch wrapper
