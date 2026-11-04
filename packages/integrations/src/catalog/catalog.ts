@@ -27,6 +27,16 @@ const CATALOG_ENTRIES = [
     authType: 'oauth2',
     scopes: ['w_member_social'],
   },
+  {
+    id: 'google-drive',
+    provider: 'google',
+    category: 'cloud-drive',
+    authType: 'oauth2',
+    scopes: [
+      'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/drive.file',
+    ],
+  },
 ] satisfies IntegrationDefinition[];
 
 export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = CATALOG_ENTRIES;
@@ -39,6 +49,8 @@ export type IntegrationIdIn<C extends IntegrationCategory> = Extract<
   (typeof CATALOG_ENTRIES)[number],
   { category: C }
 >['id'];
+
+export type CloudDriveIntegrationId = IntegrationIdIn<'cloud-drive'>;
 
 export function findIntegration(id: string): IntegrationDefinition | null {
   return INTEGRATION_CATALOG.find((integration) => integration.id === id) ?? null;

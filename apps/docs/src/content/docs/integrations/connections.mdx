@@ -1,6 +1,6 @@
 ---
 title: Connections
-description: Connect Google, Microsoft or LinkedIn accounts for mail and social posts, reconnect them and remove them.
+description: Connect Google, Microsoft or LinkedIn accounts for mail, cloud drives and social posts, reconnect them and remove them.
 sidebar:
   order: 3
 ---
@@ -15,9 +15,10 @@ Each user connects their own accounts. A connection belongs to one user and no o
 | ---------------- | --------- | ------------------------------------------ |
 | Gmail            | Google    | The [email client](/integrations/email)    |
 | Outlook mail     | Microsoft | The [email client](/integrations/email)    |
+| Google Drive     | Google    | [Cloud drive](/integrations/cloud-drive)   |
 | LinkedIn posting | LinkedIn  | [Social posts](/integrations/social-posts) |
 
-A user has one connection per provider. Connecting a second integration of the same provider asks the provider for the added permissions and keeps the single connection. Removing one integration later does not narrow the permissions already granted on the account.
+A user has one connection per provider. Connecting a second integration of the same provider asks the provider for the added permissions and keeps the single connection. One connection can serve several integrations, for example Gmail and Google Drive. Removing one integration later does not narrow the permissions already granted on the account.
 
 ## Connect an account
 
@@ -40,11 +41,15 @@ The status reads **Active** or **Needs reconnect**. A connection needs a reconne
 
 Choose **Reconnect** and grant access again. Settings and synced mail stay.
 
+## Turn off one integration
+
+Choose **Turn off** next to an integration on the connection. RAGNA Studio stops using that integration on the account. The other integrations on the connection keep working. When the last one is turned off, the connection is revoked and removed.
+
 ## Remove a connection
 
 Choose **Remove** on the connection and confirm. RAGNA Studio first asks the provider to revoke the access, then deletes the connection.
 
-- **A connection used by a mailbox:** the mailbox and its synced mail, categories and drafts are removed too.
+- **A connection used by a mailbox:** the mailbox and its synced mail, categories and drafts are removed too. Disconnecting only the mailbox keeps the connection if it still serves Google Drive.
 - **Google:** RAGNA Studio no longer appears under third-party access in the Google account.
 - **Microsoft:** Microsoft offers apps no way to revoke access. Remove RAGNA Studio in the Microsoft account under **My apps**. For a personal account, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
 - **LinkedIn:** the access is revoked at LinkedIn. It can also be removed in the LinkedIn settings under permitted services.

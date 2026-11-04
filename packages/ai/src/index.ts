@@ -27,6 +27,7 @@ export {
   generateImage,
   // generateObject, // generateObject is deprecated in favor of generateText with a structured output schema
   generateText,
+  isToolUIPart,
   Output,
   safeValidateUIMessages,
   smoothStream,

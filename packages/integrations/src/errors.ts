@@ -26,3 +26,13 @@ export class ConnectionScopesMissingError extends Error {
     this.name = 'ConnectionScopesMissingError';
   }
 }
+
+export class ConnectionIntegrationDisabledError extends Error {
+  constructor(
+    public readonly connectionId: string,
+    public readonly integrationId: IntegrationId,
+  ) {
+    super(`Connection ${connectionId} has ${integrationId} turned off`);
+    this.name = 'ConnectionIntegrationDisabledError';
+  }
+}

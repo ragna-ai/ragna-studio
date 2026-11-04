@@ -1,8 +1,8 @@
+import type { IntegrationConnection } from '@repo/database';
 import {
   listIntegrationsForProvider,
   type IntegrationDefinition,
   type IntegrationId,
-  type ProviderId,
 } from '../catalog';
 
 // Providers report scopes as full URIs or short names, in any case.
@@ -23,12 +23,21 @@ export function coversIntegration(
   return integration.scopes.every((scope) => hasScope(grantedScopes, scope));
 }
 
-export function listCoveredIntegrationIds(
-  provider: ProviderId,
-  grantedScopes: string[],
+export function connectionServesIntegration(
+  connection: Pick<IntegrationConnection, 'enabledIntegrations' | 'scopes'>,
+  integration: IntegrationDefinition,
+): boolean {
+  return (
+    connection.enabledIntegrations.includes(integration.id) &&
+    coversIntegration(connection.scopes, integration)
+  );
+}
+
+export function listServedIntegrationIds(
+  connection: Pick<IntegrationConnection, 'provider' | 'enabledIntegrations' | 'scopes'>,
 ): IntegrationId[] {
-  return listIntegrationsForProvider(provider)
-    .filter((integration) => coversIntegration(grantedScopes, integration))
+  return listIntegrationsForProvider(connection.provider)
+    .filter((integration) => connectionServesIntegration(connection, integration))
     .map((integration) => integration.id);
 }
 

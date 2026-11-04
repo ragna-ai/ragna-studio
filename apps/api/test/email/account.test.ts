@@ -6,10 +6,11 @@ import {
   seedAuthenticatedUser,
   seedEmailThreadWithMessage,
   seedGmailConnection,
+  seedIntegrationConnection,
   seedOutlookConnection,
   truncateAllTables,
 } from '@repo/testing';
-import { db, getConnectionById, getEmailThreadById } from '@repo/database';
+import { createEmailAccount, db, getConnectionById, getEmailThreadById } from '@repo/database';
 import { account } from '@repo/database/schema';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -359,6 +360,33 @@ describe('POST /email/account/disconnect', () => {
 
     expect(providerHttp.revokeRequests).toHaveLength(1);
     expect(await getConnectionById({ id: connectionId })).toBeNull();
+  });
+
+  test('keeps a connection that still serves Google Drive', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedIntegrationConnection({
+      userId,
+      provider: 'google',
+      integrationIds: ['gmail', 'google-drive'],
+    });
+    const mailbox = await createEmailAccount({
+      userId,
+      connectionId: connection.id,
+      integrationId: 'gmail',
+      email: 'anna@example.com',
+    });
+
+    const response = await app.request('/email/account/disconnect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(providerHttp.revokeRequests).toHaveLength(0);
+    expect((await getConnectionById({ id: connection.id }))?.enabledIntegrations).toEqual([
+      'google-drive',
+    ]);
+    expect(await db.query.emailAccount.findFirst({ where: { id: mailbox.id } })).toBeUndefined();
   });
 
   test('404s when there is nothing to disconnect', async () => {

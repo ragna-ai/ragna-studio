@@ -6,6 +6,7 @@ const KEY_PREFIX = 'base64:';
 const KEY_BYTES = 32;
 // A new use of APP_KEY derives its own key with a new label, never the raw APP_KEY.
 const SECRETS_AT_REST_LABEL = 'ragna/secrets-at-rest/v1';
+const TOOL_APPROVAL_LABEL = 'ragna/tool-approval/v1';
 
 function parseKey(raw: string): Buffer {
   const trimmed = raw.trim();
@@ -17,8 +18,12 @@ function parseKey(raw: string): Buffer {
   return key;
 }
 
+function deriveKey(appKey: Buffer, label: string): Buffer {
+  return Buffer.from(hkdfSync('sha256', appKey, Buffer.alloc(0), label, KEY_BYTES));
+}
+
 function deriveSecretsAtRestKey(appKey: Buffer): Buffer {
-  return Buffer.from(hkdfSync('sha256', appKey, Buffer.alloc(0), SECRETS_AT_REST_LABEL, KEY_BYTES));
+  return deriveKey(appKey, SECRETS_AT_REST_LABEL);
 }
 
 /** A new random key in the format APP_KEY expects. */
@@ -46,4 +51,13 @@ export function getPreviousKeys(): Buffer[] {
     .split(',')
     .filter((raw) => raw.trim().length > 0)
     .map((raw) => deriveSecretsAtRestKey(parseKey(raw)));
+}
+
+/** Signs the tool approvals the server issues, so a client cannot forge one. */
+export function getToolApprovalSecret(): Buffer {
+  const raw = config.getSecret('APP_KEY');
+  if (!raw) {
+    throw new AppKeyMissingError();
+  }
+  return deriveKey(parseKey(raw), TOOL_APPROVAL_LABEL);
 }

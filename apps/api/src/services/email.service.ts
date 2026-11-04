@@ -54,7 +54,7 @@ import {
   upsertEmailMessagesByProviderMessageId,
   upsertEmailThreadByProviderThreadId,
 } from '@repo/database';
-import { removeConnection } from '@repo/integrations';
+import { unbindConnectionIntegration } from '@repo/integrations';
 import { logger } from '@repo/logger';
 // `email_message_bodies.textBody` is the LLM-facing canonical text (plain-
 // text part preferred, else markdown from HTML), same convention
@@ -293,17 +293,16 @@ export async function connectEmailAccount({
   return account;
 }
 
-// [POST] /email/account/disconnect. Removes the mailbox's connection (revoked at the provider), which cascades to threads, messages and the rest.
+// [POST] /email/account/disconnect. Deletes the mailbox (threads, messages and the rest cascade) and turns its integration off on the connection. The connection goes too when nothing else uses it.
 export async function disconnectEmailAccount({ userId }: { userId: string }): Promise<void> {
   const account = await loadEmailAccount({ userId });
-  const connection = await getConnectionById({ id: account.connectionId });
 
   const { error } = await tryCatch(async () => {
-    if (connection) {
-      await removeConnection(connection);
-      return;
-    }
     await deleteEmailAccountById({ id: account.id });
+    await unbindConnectionIntegration({
+      connectionId: account.connectionId,
+      integrationId: account.integrationId,
+    });
   });
 
   if (error !== null) {

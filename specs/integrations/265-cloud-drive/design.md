@@ -74,6 +74,7 @@ export interface CloudDrivePage {
 }
 
 export interface CloudDriveFileContent {
+  item: CloudDriveItem; // metadata loaded for the read, so callers need no second call
   mimeType: string; // after export for vendor-native files
   bytes: Buffer;
 }
@@ -99,7 +100,8 @@ One `CloudDriveError` with `kind`: `not_found`, `read_only`, `too_large`, `rate_
 Google answers a write to a file outside `drive.file` with `403` and the reasons
 `appNotAuthorizedToFile` or `insufficientFilePermissions`. The shared client classifies every
 `403` as `auth` and retries it. The Google adapter maps those two codes to `read_only` (US-5.3).
-Follow-up in the shared client: don't retry a `403` whose code says permission, not token.
+Follow-up in the shared client: don't retry a `403` whose code says permission, not token. Until
+then a `read_only` answer is retried 3 times before it fails.
 
 ### Registry and resolver
 
@@ -157,8 +159,9 @@ Each drive integration is its own tool on the agent, with its own access level (
 | `googleDriveCreateFile` | write  | `name`, `folderId?`, `format`, `content` |
 | `googleDriveUpdateFile` | write  | `fileId`, `content`                      |
 
-- `buildAgentToolset` takes the agent's `integrationTools` next to `enabledTools` and adds, per
-  drive, the definitions its level allows, like `getAllowedToolDefinitions` for MCP.
+- `AgentToolContext` gets `integrationTools`. `buildAgentToolset` adds, per drive, the
+  definitions its level allows, like `getAllowedToolDefinitions` for MCP. Its signature is
+  unchanged.
 - The description of each tool names the drive, so the model can tell two drives apart.
 - `format` is `markdown`, `text` or `csv`. Created files are plain files of that type. Native
   Google Docs or Word output is a later option.
@@ -178,10 +181,17 @@ needed until workspace connections (#190) add an explicit connection id.
 
 ### Approval in chat (US-5.1, US-5.2)
 
-- `chat.service.ts` passes `toolApproval` with `'user-approval'` for every write tool in the
-  toolset. `@repo/ai` exports a helper that builds that map from the toolset's write tools, so a
-  new write tool needs no change in the chat service.
-- `experimental_toolApprovalSecret` is set from the app key, so a client can't forge an approval.
+- `chat.service.ts` passes `toolApproval` with `'user-approval'` for every cloud drive write tool
+  in the toolset (`buildCloudDriveToolApproval`). Dataset and document writes keep running without
+  approval, as before. A new drive write tool needs no change in the chat service.
+- `experimental_toolApprovalSecret` is a key derived from `APP_KEY` (`getToolApprovalSecret` in
+  `@repo/crypto`, its own HKDF label). Rotating `APP_KEY` cancels pending approvals.
+- The client continues a paused turn by re-sending the stored assistant message. The server takes
+  only the approve or deny decision for approval ids it stored as pending
+  (`answerPendingApprovals`). Tool input and signature stay as stored. An unknown or already
+  answered id writes nothing.
+- A new user message while an approval is open marks it denied (`denyOpenApprovals`), so the
+  model sees a denial and the chat goes on.
 - The web chat renders the `approval-requested` part with name, folder and content, and answers
   with `addToolApprovalResponse`. `ToolStatusBadge` already knows the states.
 - Worker runs (`generateText`) pass no `toolApproval`, so writes run directly.

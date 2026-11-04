@@ -11,6 +11,7 @@ import {
   updateAgent,
   upsertMemory,
 } from '@repo/database';
+import type { IntegrationTools } from '@repo/integrations/catalog';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -107,6 +108,7 @@ export interface CreateAgentInput {
   systemPrompt: string;
   context?: string | null;
   tools?: AgentTools;
+  integrationTools?: IntegrationTools;
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -186,6 +188,7 @@ export interface UpdateAgentInput {
   systemPrompt?: string;
   context?: string | null;
   tools?: AgentTools;
+  integrationTools?: IntegrationTools;
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -208,6 +211,7 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
       systemPrompt: input.systemPrompt,
       context: input.context,
       tools: input.tools,
+      integrationTools: input.integrationTools,
       defaultDatasetId: input.defaultDatasetId,
       settings: input.settings,
     }),

@@ -1,0 +1,1 @@
+ALTER TABLE "integration_connections" ALTER COLUMN "enabled_integrations" SET NOT NULL;

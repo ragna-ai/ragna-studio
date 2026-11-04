@@ -50,3 +50,17 @@ kubectl create secret generic ragna-app-key --from-literal=APP_KEY="$APP_KEY"
 To rotate the key, set the new value as `APP_KEY` and move the old one to `APP_PREVIOUS_KEYS`. Existing connections keep working.
 
 Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`). Sign-in itself asks only for `openid`, `profile` and `email`. `LINKEDIN_SCOPES` is deprecated and ignored.
+
+### Google Drive
+
+The [cloud drive](/integrations/cloud-drive) integration needs two more steps in the Google Cloud project:
+
+1. Enable the **Google Drive API**.
+2. Add these scopes to the OAuth consent screen:
+
+   ```text
+   https://www.googleapis.com/auth/drive.readonly
+   https://www.googleapis.com/auth/drive.file
+   ```
+
+Google classes both as restricted scopes. A public app needs Google's app verification for them. An internal Workspace app or an app with a small list of test users does not.

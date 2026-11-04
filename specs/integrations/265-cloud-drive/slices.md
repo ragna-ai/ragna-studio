@@ -75,7 +75,7 @@ seedGoogleDriveConnection({ userId, organizationId, withGmail? }): Promise<Integ
 - `apps/web` connections page: one switch per integration on a connection.
 - Owns: `packages/integrations/src/{services,oauth}/`, `packages/integrations/src/errors.ts`,
   `apps/api/src/{controllers,services}/integration*`, the mailbox disconnect in the email
-  service, `apps/api/test/integrations/`, `apps/web/app/features/integrations/`.
+  service, `apps/api/test/integration/`, `apps/web/app/features/integrations/`.
 
 ## S2 Google adapter, fakes and contract suite (US-3.1 to US-3.4, US-4.3, US-4.4)
 
@@ -112,7 +112,7 @@ seedGoogleDriveConnection({ userId, organizationId, withGmail? }): Promise<Integ
   saved as `integrationTools`. Shows "connect Google Drive first" with the connect action when
   the editor has no Drive connection (the agent still works for other users).
 - Works against the S0 contract. No API changes.
-- Owns: the agent tools settings components in `apps/web/app/features/agents/`.
+- Owns: the agent tools settings components in `apps/web/app/features/agent/`.
 
 ## S5 Writes with approval (US-5.1 to US-5.5)
 

@@ -135,7 +135,10 @@ export function useGetAgentMemory(
     queryFn: ({ signal }) =>
       $api<AgentMemoryResponse>(
         `${agentBasePath(workspaceId)}/${toValue(agentId)}/memory`,
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     ...options,
@@ -152,7 +155,10 @@ export function useUpdateAgentMemory() {
     mutationFn: ({ agentId, content }) =>
       $api<AgentMemoryResponse>(
         `${agentBasePath(workspaceId)}/${agentId}/memory`,
-        { method: 'PUT', body: { content } },
+        {
+          method: 'PUT',
+          body: { content },
+        },
       ),
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({
@@ -212,7 +218,10 @@ export function useGetAgentContextDocuments(agentId: MaybeRefOrGetter<string>) {
     queryFn: ({ signal }) =>
       $api<AgentContextDocumentManyResponse>(
         contextDocumentBasePath(workspaceId, agentId),
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId) && !!toValue(agentId),
     refetchInterval: (query) => {

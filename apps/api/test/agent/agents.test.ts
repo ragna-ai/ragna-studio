@@ -19,6 +19,7 @@ const agentSchema = z.strictObject({
   systemPrompt: z.string(),
   context: z.string().nullable(),
   tools: z.array(z.string()),
+  integrationTools: z.strictObject({ 'google-drive': z.enum(['read', 'write']).optional() }),
   defaultDatasetId: z.string().nullable(),
   settings: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
@@ -42,6 +43,10 @@ const agentListResponseSchema = z.object({
   meta: z.object({ totalCount: z.number() }),
 });
 const agentResponseSchema = z.object({ agent: agentSchema });
+// GET returns the agent with its AI model relation attached.
+const agentWithModelResponseSchema = z.object({
+  agent: agentSchema.extend({ aiModel: z.record(z.string(), z.unknown()) }),
+});
 const agentMemoryResponseSchema = z.object({ memory: z.object({ content: z.string() }) });
 
 async function createAgent(
@@ -266,6 +271,113 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId', () => {
     });
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
+  });
+});
+
+describe('agent integration tools', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  async function patchAgent(
+    cookieHeader: string,
+    workspaceId: string,
+    agentId: string,
+    body: Record<string, unknown>,
+  ) {
+    return app.request(`/workspace/${workspaceId}/agent/${agentId}`, {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  test('defaults to no integration tools', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+
+    const { agent } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Plain',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+    });
+
+    expect(agent.integrationTools).toEqual({});
+  });
+
+  test('stores integration tools on create and returns them on get', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+
+    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Researcher',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+      integrationTools: { 'google-drive': 'read' },
+    });
+
+    expect(created.integrationTools).toEqual({ 'google-drive': 'read' });
+    const response = await app.request(`/workspace/${workspaceId}/agent/${created.id}`, {
+      headers: { cookie: cookieHeader },
+    });
+    expect(
+      agentWithModelResponseSchema.parse(await response.json()).agent.integrationTools,
+    ).toEqual({
+      'google-drive': 'read',
+    });
+  });
+
+  test('updates the integration level and clears it with an empty object', async () => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Researcher',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+      integrationTools: { 'google-drive': 'read' },
+    });
+
+    const upgraded = await patchAgent(cookieHeader, workspaceId, created.id, {
+      integrationTools: { 'google-drive': 'write' },
+    });
+    expect(agentResponseSchema.parse(await upgraded.json()).agent.integrationTools).toEqual({
+      'google-drive': 'write',
+    });
+
+    const cleared = await patchAgent(cookieHeader, workspaceId, created.id, {
+      integrationTools: {},
+    });
+    expect(agentResponseSchema.parse(await cleared.json()).agent.integrationTools).toEqual({});
+  });
+
+  test.each([
+    ['an unknown access level', { 'google-drive': 'admin' }],
+    ['an unknown integration key', { dropbox: 'read' }],
+  ])('rejects %s with 422 on create and update', async (_label, integrationTools) => {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+      name: 'Researcher',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+    });
+
+    const createResponse = await app.request(`/workspace/${workspaceId}/agent`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Other',
+        aiModelId,
+        systemPrompt: 'You are helpful.',
+        integrationTools,
+      }),
+    });
+    const updateResponse = await patchAgent(cookieHeader, workspaceId, created.id, {
+      integrationTools,
+    });
+
+    expect(createResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(updateResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
 });
 

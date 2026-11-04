@@ -40,7 +40,7 @@ scheduled run.
 As a user, I want to connect Google Drive, so that agents can use my files without uploads.
 
 - **US-1.1** Given a user whose Google connection serves Gmail, when they connect Google Drive,
-  then Google asks only for the Drive permissions and their mailbox keeps syncing.
+  then the connection serves Gmail and Google Drive and their mailbox keeps syncing.
 - **US-1.2** Given a user with no Google connection, when they connect Google Drive, then they
   have a Google connection that serves Google Drive only.
 - **US-1.3** Given a connection that serves Gmail and Google Drive, when the user turns off Google
@@ -62,7 +62,7 @@ that the agent only gets the drive rights its job needs.
 - **US-2.3** Given an agent with Google Drive set to read and write, when it runs, then it is also
   offered the create and update tools.
 - **US-2.4** Given an agent update with an access level other than read only or read and write,
-  when it is saved, then the API rejects it with `400`.
+  when it is saved, then the API rejects it with `422`.
 
 ### US-3 Agent searches and reads drive files (P1)
 
@@ -124,17 +124,17 @@ SharePoint, so that agents work with my files whichever suite we use.
 
 ## Testing
 
-| Criterion              | Level            | Folder                        |
-| ---------------------- | ---------------- | ----------------------------- |
-| US-1.1 to US-1.5       | API              | `apps/api/test/integrations/` |
-| US-2.1, US-2.4         | API              | `apps/api/test/agent/`        |
-| US-2.2, US-2.3         | API              | `apps/api/test/cloud-drive/`  |
-| US-3.1 to US-3.5       | API (contract)   | `apps/api/test/cloud-drive/`  |
-| US-4.1 to US-4.4       | API (contract)   | `apps/api/test/cloud-drive/`  |
-| US-5.1                 | e2e (Playwright) | `apps/web/e2e/`               |
-| US-5.2, US-5.3, US-5.5 | API (contract)   | `apps/api/test/cloud-drive/`  |
-| US-5.4                 | worker           | `apps/worker/test/workflow/`  |
-| US-6.1, US-6.2         | API (contract)   | `apps/api/test/cloud-drive/`  |
+| Criterion              | Level            | Folder                                                   |
+| ---------------------- | ---------------- | -------------------------------------------------------- |
+| US-1.1 to US-1.5       | API              | `apps/api/test/integration/`                             |
+| US-2.1, US-2.4         | API              | `apps/api/test/agent/`                                   |
+| US-2.2, US-2.3         | API              | `apps/api/test/cloud-drive/`                             |
+| US-3.1 to US-3.5       | API (contract)   | `apps/api/test/cloud-drive/`                             |
+| US-4.1 to US-4.4       | API (contract)   | `apps/api/test/cloud-drive/`                             |
+| US-5.1                 | e2e (Playwright) | `apps/web/e2e/` (open: harness cannot script tool calls) |
+| US-5.2, US-5.3, US-5.5 | API (contract)   | `apps/api/test/cloud-drive/`                             |
+| US-5.4                 | worker           | `apps/worker/test/workflow/`                             |
+| US-6.1, US-6.2         | API (contract)   | `apps/api/test/cloud-drive/`                             |
 
 ## Standards checklist
 

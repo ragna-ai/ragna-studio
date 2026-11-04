@@ -1,8 +1,13 @@
 import * as z from 'zod';
 
 export const providerIdSchema = z.enum(['google', 'microsoft', 'linkedin']);
-export const integrationIdSchema = z.enum(['gmail', 'outlook-mail', 'linkedin-posting']);
-export const integrationCategorySchema = z.enum(['mail', 'calendar', 'files', 'social']);
+export const integrationIdSchema = z.enum([
+  'gmail',
+  'outlook-mail',
+  'linkedin-posting',
+  'google-drive',
+]);
+export const integrationCategorySchema = z.enum(['mail', 'calendar', 'cloud-drive', 'social']);
 export const connectionStatusSchema = z.enum(['active', 'needs_reauth']);
 
 export const integrationDefinitionSchema = z.object({
@@ -48,6 +53,12 @@ export const connectIntegrationBodySchema = z.object({
 
 export const connectIntegrationResponseSchema = z.object({ url: z.url({ protocol: /^https$/ }) });
 
+export const integrationToolAccessLevelSchema = z.enum(['read', 'write']);
+
+export const integrationToolsSchema = z.strictObject({
+  'google-drive': integrationToolAccessLevelSchema.optional(),
+});
+
 export type ProviderId = z.infer<typeof providerIdSchema>;
 export type IntegrationId = z.infer<typeof integrationIdSchema>;
 export type IntegrationCategory = z.infer<typeof integrationCategorySchema>;
@@ -59,3 +70,5 @@ export type IntegrationCatalogResponse = z.infer<typeof integrationCatalogRespon
 export type IntegrationConnectionsResponse = z.infer<typeof integrationConnectionsResponseSchema>;
 export type ConnectIntegrationBody = z.infer<typeof connectIntegrationBodySchema>;
 export type ConnectIntegrationResponse = z.infer<typeof connectIntegrationResponseSchema>;
+export type IntegrationToolAccessLevel = z.infer<typeof integrationToolAccessLevelSchema>;
+export type IntegrationTools = z.infer<typeof integrationToolsSchema>;

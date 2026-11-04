@@ -1,6 +1,7 @@
 import { getConnectionById } from '@repo/database';
 import { getIntegration, type IntegrationId } from '../catalog';
 import {
+  ConnectionIntegrationDisabledError,
   ConnectionNeedsReauthError,
   ConnectionProviderMismatchError,
   ConnectionScopesMissingError,
@@ -28,6 +29,9 @@ async function assertConnectionServes({
   }
   if (connection.status === 'needs_reauth') {
     throw new ConnectionNeedsReauthError(connectionId);
+  }
+  if (!connection.enabledIntegrations.includes(integrationId)) {
+    throw new ConnectionIntegrationDisabledError(connectionId, integrationId);
   }
   if (!coversIntegration(connection.scopes, integration)) {
     throw new ConnectionScopesMissingError(connectionId, integrationId);

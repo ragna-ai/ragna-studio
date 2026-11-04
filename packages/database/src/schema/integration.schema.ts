@@ -6,6 +6,7 @@ import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 export type IntegrationProviderId = 'google' | 'microsoft' | 'linkedin';
+export type IntegrationId = 'gmail' | 'outlook-mail' | 'linkedin-posting' | 'google-drive';
 export type IntegrationConnectionStatus = 'active' | 'needs_reauth';
 
 // INTEGRATION CONNECTION
@@ -30,6 +31,7 @@ export const integrationConnection = pgTable(
       .array()
       .notNull()
       .default(sql`ARRAY[]::text[]`),
+    enabledIntegrations: text('enabled_integrations').$type<IntegrationId>().array().notNull(),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
     accessTokenExpiresAt: timestamp('access_token_expires_at', { precision: 3 }),

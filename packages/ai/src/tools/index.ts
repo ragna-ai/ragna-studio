@@ -1,5 +1,6 @@
 export * from './agent-context.tool';
 export * from './agent.tools';
+export * from './cloud-drive.tools';
 export * from './dataset.tools';
 export * from './document.tools';
 export * from './image-gen.tool';

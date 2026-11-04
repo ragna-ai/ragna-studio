@@ -1,4 +1,6 @@
 import * as z from 'zod';
+import { getIntegration, integrationIdSchema } from '@repo/integrations/catalog';
+import { recordAuthorizeRequest } from '@repo/testing';
 import { app } from '../../../src/app';
 
 const connectResponseSchema = z.strictObject({ url: z.string() });
@@ -33,7 +35,13 @@ export async function startConnect({
     throw new Error('The authorize URL has no state');
   }
 
+  recordAuthorizeRequest(getIntegration(parsedIntegrationId(integrationId)).provider, authorizeUrl);
+
   return { authorizeUrl, state };
+}
+
+function parsedIntegrationId(integrationId: string) {
+  return integrationIdSchema.parse(integrationId);
 }
 
 export async function callOauthCallback({
@@ -57,7 +65,7 @@ export const connectionSchema = z.strictObject({
   externalEmail: z.string().nullable(),
   displayName: z.string().nullable(),
   scopes: z.array(z.string()),
-  integrations: z.array(z.enum(['gmail', 'outlook-mail', 'linkedin-posting'])),
+  integrations: z.array(integrationIdSchema),
   status: z.enum(['active', 'needs_reauth']),
   createdAt: z.string(),
 });

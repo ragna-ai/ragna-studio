@@ -18,3 +18,6 @@ export * from './vendor-http/vendor-route';
 export * from './mail/vendors/mailbox.fixture';
 export * from './mail/vendors/gmail.routes';
 export * from './mail/vendors/graph.routes';
+export * from './cloud-drive/google-drive-connection';
+export * from './cloud-drive/vendors/drive.fixture';
+export * from './cloud-drive/vendors/google-drive.routes';

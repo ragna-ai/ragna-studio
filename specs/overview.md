@@ -213,6 +213,16 @@ workspace connections and agent tools are later phases.
 [design.md](./integrations/224-connections/design.md),
 [slices.md](./integrations/224-connections/slices.md)
 
+### Cloud drive
+
+Agents search, list and read the run user's own Google Drive files, and with read and
+write access create and update plain text files. Files stay in the drive. One connection serves
+several integrations, so Drive turns on and off without touching Gmail. Writes need approval in
+chat. OneDrive follows in its own PR.
+→ [prd.md](./integrations/265-cloud-drive/prd.md),
+[design.md](./integrations/265-cloud-drive/design.md),
+[slices.md](./integrations/265-cloud-drive/slices.md)
+
 ### MCP server
 
 Remote MCP server in `apps/api` that lets Claude Desktop read and write

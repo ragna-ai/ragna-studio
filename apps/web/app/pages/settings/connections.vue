@@ -6,17 +6,20 @@ import {
   useGetIntegrationConnections,
   useRemoveIntegrationConnection,
   useStartIntegrationConnect,
+  useTurnOffConnectionIntegration,
 } from '~/features/integrations/composables/useIntegrationApi';
 import { useIntegrationErrorToast } from '~/features/integrations/composables/useIntegrationErrorToast';
 import {
   CONNECTIONS_PAGE_PATH,
   connectionUsesMailbox,
+  isMailIntegration,
   PROVIDER_ICON,
   reconnectIntegrationId,
 } from '~/features/integrations/lib/integration-meta';
 import type {
   CatalogEntry,
   IntegrationConnectionDto,
+  IntegrationId,
 } from '@repo/integrations/catalog';
 
 definePageMeta({ layout: 'settings' });
@@ -36,6 +39,9 @@ const { mutate: startConnect, isPending: isStarting } =
 const { mutateAsync: removeConnection, isPending: isRemoving } =
   useRemoveIntegrationConnection();
 
+const { mutateAsync: turnOffIntegration, isPending: isTurningOff } =
+  useTurnOffConnectionIntegration();
+
 // Computed
 const connections = computed(() => connectionsData.value?.connections ?? []);
 const availableIntegrations = computed(() => {
@@ -46,7 +52,9 @@ const availableIntegrations = computed(() => {
     (integration) => !connectedIds.has(integration.id),
   );
 });
-const isBusy = computed(() => isStarting.value || isRemoving.value);
+const isBusy = computed(
+  () => isStarting.value || isRemoving.value || isTurningOff.value,
+);
 
 // Functions
 function connect(integration: CatalogEntry) {
@@ -84,6 +92,30 @@ async function handleRemove(connection: IntegrationConnectionDto) {
   if (!confirmed) return;
   await removeConnection(connection.id);
 }
+
+async function handleTurnOff(
+  connection: IntegrationConnectionDto,
+  integrationId: IntegrationId,
+) {
+  if (connection.integrations.length === 1) {
+    await handleRemove(connection);
+    return;
+  }
+  if (isMailIntegration(integrationId)) {
+    const confirmed = await confirm({
+      title: t('integrations.turnOff.title'),
+      message: [
+        t('integrations.turnOff.message'),
+        t('integrations.remove.mailboxWarning'),
+      ].join(' '),
+      confirmLabel: t('integrations.actions.turnOffConfirm'),
+      cancelLabel: t('common.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+  }
+  await turnOffIntegration({ connectionId: connection.id, integrationId });
+}
 </script>
 
 <template>
@@ -119,6 +151,7 @@ async function handleRemove(connection: IntegrationConnectionDto) {
             :is-busy="isBusy"
             @reconnect="reconnect"
             @remove="handleRemove"
+            @turn-off="handleTurnOff"
           />
         </div>
 

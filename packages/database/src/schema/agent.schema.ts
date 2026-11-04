@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { foreignKey, index, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
@@ -14,6 +15,11 @@ import { workspace } from './workspace.schema';
 // unset/null sends nothing and leaves the choice to the provider.
 export const agentReasoningEffortValues = ['none', 'low', 'medium', 'high'] as const;
 export type AgentReasoningEffort = (typeof agentReasoningEffortValues)[number];
+
+export type CloudDriveIntegrationId = 'google-drive';
+export const integrationToolAccessLevelValues = ['read', 'write'] as const;
+export type IntegrationToolAccessLevel = (typeof integrationToolAccessLevelValues)[number];
+export type IntegrationTools = Partial<Record<CloudDriveIntegrationId, IntegrationToolAccessLevel>>;
 
 export interface AgentSettings {
   temperature?: number | null;
@@ -78,6 +84,10 @@ export const agent = pgTable(
     // `systemPrompt` (behavior). Null/empty both mean "no context".
     context: text('context'),
     tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
+    integrationTools: jsonb('integration_tools')
+      .notNull()
+      .$type<IntegrationTools>()
+      .default(sql`'{}'::jsonb`),
     // Soft pin: when set, the dataset's id and
     // schema are injected into this agent's instructions so it can skip
     // `datasetFind` and go straight to row operations. Deleting the dataset

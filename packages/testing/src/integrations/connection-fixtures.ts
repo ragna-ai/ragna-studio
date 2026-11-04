@@ -1,4 +1,10 @@
-import { listIntegrationsForProvider, saveUserConnectionGrant } from '@repo/integrations';
+import {
+  getIntegration,
+  listIntegrationsForProvider,
+  saveUserConnectionGrant,
+  type IntegrationDefinition,
+  type IntegrationId,
+} from '@repo/integrations';
 import type { IntegrationConnectionStatus, IntegrationProviderId } from '@repo/database';
 import { db, getConnectionById, getOrganizationIdByUserId, sql } from '@repo/database';
 import { integrationConnection, type IntegrationConnection } from '@repo/database/schema';
@@ -11,6 +17,8 @@ export interface SeedIntegrationConnectionParams {
   userId: string;
   provider: IntegrationProviderId;
   scopes?: string[];
+  /** Exactly these integrations are enabled. Default scopes are the union of their catalog scopes. */
+  integrationIds?: IntegrationId[];
   externalEmail?: string | null;
   accessToken?: string;
   refreshToken?: string | null;
@@ -34,10 +42,16 @@ export async function seedIntegrationConnection(
   if (!organizationId) {
     throw new Error(`User ${params.userId} has no organization.`);
   }
-  const integration = listIntegrationsForProvider(params.provider)[0];
+  const selected: IntegrationDefinition[] = params.integrationIds
+    ? params.integrationIds.map(getIntegration)
+    : listIntegrationsForProvider(params.provider).slice(0, 1);
+  const integration = selected[0];
   if (!integration) {
     throw new Error(`No integration for provider ${params.provider}.`);
   }
+  const defaultScopes = params.integrationIds
+    ? Array.from(new Set(selected.flatMap((entry) => entry.scopes)))
+    : [];
 
   const accessToken = params.accessToken ?? `test-access-token-${crypto.randomUUID()}`;
   const refreshToken =
@@ -58,9 +72,16 @@ export async function seedIntegrationConnection(
       accessToken,
       refreshToken,
       expiresAt: params.accessTokenExpiresAt ?? new Date(Date.now() + 60 * 60 * 1000),
-      scopes: params.scopes ?? [],
+      scopes: params.scopes ?? defaultScopes,
     },
   });
+
+  if (params.integrationIds) {
+    await db
+      .update(integrationConnection)
+      .set({ enabledIntegrations: params.integrationIds })
+      .where(sql`${integrationConnection.id} = ${saved.id}`);
+  }
 
   if (params.status === 'needs_reauth') {
     await db

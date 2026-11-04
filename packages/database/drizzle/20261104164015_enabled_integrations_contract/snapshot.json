@@ -1,0 +1,29 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "146f712e-651e-4fa6-bf59-2c3f3c7ac614",
+  "prevIds": ["16e6e63f-48bc-44f0-8401-a2d147031615"],
+  "footprints": [
+    {
+      "statementType": "alter_column",
+      "statementTarget": ["column", "public", "integration_connections", "enabled_integrations"],
+      "writes": ["s|colprop|public.integration_connections.enabled_integrations.notNull"],
+      "reads": [
+        "n|tbl|public.integration_connections",
+        "n|sch|public",
+        "n|col|public.integration_connections.enabled_integrations"
+      ],
+      "sqlHash": "5aecbb44d2b011e5"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"integration_connections\",\"enabled_integrations\"]",
+      "set": {
+        "notNull": true
+      }
+    }
+  ]
+}

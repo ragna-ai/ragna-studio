@@ -4,6 +4,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
 import {
   isToolUIPart,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
   lastAssistantMessageIsCompleteWithToolCalls,
   type FileUIPart,
   type UIDataTypes,
@@ -23,7 +24,7 @@ import {
 import { useChatAgentSelection } from '~/features/chat/composables/useChatAgentSelection';
 import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
-import type { ChatAgent } from '~/features/chat/types';
+import type { ChatAgent, ToolApprovalDecision } from '~/features/chat/types';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { isOutOfCreditsError } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
@@ -102,51 +103,57 @@ const chatTransport = new WebSocketChatTransport(
   },
 );
 
-const { messages, sendMessage, status, error, stop } = useChat({
-  messages: initialMessages,
-  generateId: createPrimaryId,
-  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-  transport: chatTransport,
-  onData: (dataPart) => {
-    switch (dataPart.type) {
-      case 'data-imageGen':
-        lastGenerationEvent.value = {
-          kind: 'imageGen',
-          prompt: extractGenerationPrompt(dataPart.data),
-        };
-        break;
-      case 'data-videoGen':
-        lastGenerationEvent.value = {
-          kind: 'videoGen',
-          prompt: extractGenerationPrompt(dataPart.data),
-        };
-        break;
-      case 'data-chatTitle':
-        useHead({
-          title: (dataPart.data as { title: string }).title,
-        });
-        break;
-      default:
-        // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
-        return;
-    }
-  },
-  // A turn that wasn't aborted just settled a charge server-side,
-  // so the cached balance is stale.
-  // Aborted turns charge nothing (onEnd's early return on `isAborted`), so
-  // there's nothing new to fetch.
-  onFinish: ({ isAbort }) => {
-    if (!isAbort) invalidateCreditBalance();
-  },
-  // The WS transport carries `code: 402` on an out-of-credits refusal
-  // (WebSocketChatTransport.ts); everything else is left to the inline
-  // `error.message` rendering below.
-  onError: (streamError) => {
-    if (isOutOfCreditsError(streamError)) {
-      toast.error(t('credit.outOfCredits'));
-    }
-  },
-});
+const { messages, sendMessage, addToolApprovalResponse, status, error, stop } =
+  useChat({
+    messages: initialMessages,
+    generateId: createPrimaryId,
+    // Continue after tool results and after the user answered every approval.
+    sendAutomaticallyWhen: ({ messages: current }) =>
+      lastAssistantMessageIsCompleteWithToolCalls({ messages: current }) ||
+      lastAssistantMessageIsCompleteWithApprovalResponses({
+        messages: current,
+      }),
+    transport: chatTransport,
+    onData: (dataPart) => {
+      switch (dataPart.type) {
+        case 'data-imageGen':
+          lastGenerationEvent.value = {
+            kind: 'imageGen',
+            prompt: extractGenerationPrompt(dataPart.data),
+          };
+          break;
+        case 'data-videoGen':
+          lastGenerationEvent.value = {
+            kind: 'videoGen',
+            prompt: extractGenerationPrompt(dataPart.data),
+          };
+          break;
+        case 'data-chatTitle':
+          useHead({
+            title: (dataPart.data as { title: string }).title,
+          });
+          break;
+        default:
+          // TODO: check if we should clear lastGenerationEvent.value here when a non-gen data part arrives.
+          return;
+      }
+    },
+    // A turn that wasn't aborted just settled a charge server-side,
+    // so the cached balance is stale.
+    // Aborted turns charge nothing (onEnd's early return on `isAborted`), so
+    // there's nothing new to fetch.
+    onFinish: ({ isAbort }) => {
+      if (!isAbort) invalidateCreditBalance();
+    },
+    // The WS transport carries `code: 402` on an out-of-credits refusal
+    // (WebSocketChatTransport.ts); everything else is left to the inline
+    // `error.message` rendering below.
+    onError: (streamError) => {
+      if (isOutOfCreditsError(streamError)) {
+        toast.error(t('credit.outOfCredits'));
+      }
+    },
+  });
 
 const isBusy = computed(
   () => status.value === 'submitted' || status.value === 'streaming',
@@ -206,6 +213,10 @@ async function ensureChat(): Promise<string> {
   if (!chat) throw createError({ statusMessage: 'Failed to create chat' });
   chatId.value = chat.id;
   return chatId.value;
+}
+
+function answerApproval(decision: ToolApprovalDecision) {
+  addToolApprovalResponse({ id: decision.id, approved: decision.approved });
 }
 
 function toFilePart(attachment: ChatAttachment): FileUIPart {
@@ -276,6 +287,7 @@ async function handleSubmit(text: string) {
                 :key="message.id"
                 :message="message"
                 :chat-id="chatId"
+                @approval-response="answerApproval"
               />
               <!-- end chat message -->
             </MessageScrollerItem>

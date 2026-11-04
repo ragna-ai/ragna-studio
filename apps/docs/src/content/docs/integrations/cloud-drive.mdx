@@ -1,0 +1,89 @@
+---
+title: Cloud drive
+description: Let an agent search, read and write files in the user's own Google Drive, without importing them.
+sidebar:
+  order: 4
+---
+
+An agent can work with the files in a user's cloud drive. It searches, lists folders and reads files. With the right access level it also creates and updates files. The files stay in the drive. RAGNA Studio does not import, copy or sync them.
+
+| Drive        | Status                         |
+| ------------ | ------------------------------ |
+| Google Drive | Available                      |
+| OneDrive     | Coming later, no date planned. |
+
+## Connect Google Drive
+
+1. Open the user menu, choose **Settings**, then **Connections**.
+2. Under **Available integrations**, choose **Connect** next to **Google Drive**.
+3. Sign in at Google and grant the requested access.
+
+Google's consent screen asks to see and download the files in the drive, and to create and edit the files RAGNA Studio creates. It does not ask to edit other files.
+
+Google Drive shares the Google connection with Gmail. A user who already connected a mailbox keeps it. The mailbox keeps syncing. A user without a Google connection gets one that serves Google Drive only. See [Connections](/integrations/connections).
+
+To stop using Google Drive, choose **Turn off Google Drive** on the connection. Agents then answer "not connected" for that user. The mailbox is not affected.
+
+## Turn it on for an agent
+
+A workspace editor turns on **Google Drive** on the agent's **Tools** tab and picks the **Access**:
+
+- **Read only** (the default): the agent can search, list and read files.
+- **Read and write**: the agent can also create and update files.
+
+An agent without the tool never sees the drive.
+
+## Whose drive an agent uses
+
+An agent always uses the drive of the user the run belongs to:
+
+- **Chat:** the user who is chatting.
+- **Workflow run:** the user who starts the run.
+- **Scheduled run:** the author of the schedule.
+
+A shared agent never reads the author's drive for another user. A second user chatting with it searches their own drive. A user without a connected drive gets "not connected". The agent sees exactly what that user can open in Google Drive, including shared drives.
+
+## What the agent can read
+
+| File type                    | What the agent gets     |
+| ---------------------------- | ----------------------- |
+| Google Docs                  | The text as Markdown.   |
+| Google Sheets                | The first sheet as CSV. |
+| Google Slides                | The slide text.         |
+| PDF, Word, PowerPoint, Excel | The text of the file.   |
+| CSV, text, Markdown          | The file as it is.      |
+
+Limits:
+
+- A file over 20 MB is not downloaded.
+- Text over 100,000 characters is cut, and the agent is told it was cut.
+- Other file types are not read. The agent gets a message that says why.
+
+## What the agent can write
+
+Agents set to **Read and write** create and update plain text, Markdown or CSV files. They can only update files that RAGNA Studio created. Files made elsewhere stay read only. Native Google Docs and Sheets cannot be updated.
+
+- **In chat:** every write waits for the user's approval. The card reads **Create a file in Google Drive?** or **Update a file in Google Drive?**. It shows **File name** (or **File id** for an update), **Folder** (**My Drive (top level)** when none is set) and the content. The user chooses **Approve** or **Deny**.
+  - After **Approve**, the chat links to the file in Google Drive.
+  - After **Deny**, the chat shows "Denied. Nothing was changed in your drive."
+  - When the user ignores a pending approval and sends a new message, the write counts as denied.
+- **Scheduled and workflow runs:** writes run without asking. The run's step trace shows the tool call with the file name.
+- **Never:** deleting, moving, renaming or sharing files.
+
+## Access and revoking
+
+Only the user can connect their own drive. No other user can use that connection. The agent gets the drive rights of the run user and nothing more. Drive content the agent reads is kept only in the chat's tool results and goes with the chat.
+
+To revoke access, turn off **Google Drive** or remove the connection. See [Remove a connection](/integrations/connections#remove-a-connection).
+
+## Troubleshooting
+
+| What the agent reports                      | Meaning and fix                                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Google Drive is not connected for this user | The run user has not connected or has turned off Google Drive. Connect it under **Connections**.     |
+| The connection needs to be renewed          | The connection shows **Needs reconnect**. Choose **Reconnect** and grant access again.               |
+| The file is read-only for RAGNA Studio      | RAGNA Studio did not create the file. Only files it created can be updated.                          |
+| This kind of item cannot be read as text    | The file type is not supported for reading. Updates only work on plain text, Markdown and CSV files. |
+| This file is too large to read              | The file is over the 20 MB download limit.                                                           |
+| The item does not exist or is not visible   | The file is missing, or the run user cannot open it in Google Drive.                                 |
+| Google Drive is busy or failed unexpectedly | Google limited the requests or failed. Try again shortly.                                            |

@@ -1,6 +1,8 @@
 import type { AgentTool } from '@repo/database';
+import type { IntegrationTools } from '@repo/integrations';
 import type { ToolSet, UIMessageStreamWriter } from 'ai';
 import { getSearchContextDocumentsTool } from './agent-context.tool';
+import { getAgentCloudDriveTools } from './cloud-drive.tools';
 import {
   getDatasetAppendRowTool,
   getDatasetCreateTool,
@@ -48,6 +50,8 @@ export type AgentToolContext = {
   // Wired automatically when buildAgentInstructions decides the agent's
   // context needs retrieval, not part of the agent's own tool checklist.
   retrievalMode?: boolean;
+  // Per-drive access level the agent's editor granted. Missing means none.
+  integrationTools?: IntegrationTools;
 };
 
 type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
@@ -111,6 +115,15 @@ export function buildAgentToolset(
     return factory ? Object.entries(factory(writer, ctx)) : [];
   });
   const tools: ToolSet = Object.fromEntries(toolEntries);
+
+  Object.assign(
+    tools,
+    getAgentCloudDriveTools({
+      integrationTools: ctx.integrationTools ?? {},
+      userId: ctx.userId,
+      workspaceId: ctx.workspaceId,
+    }),
+  );
 
   if (ctx.retrievalMode) {
     tools.searchContextDocuments = getSearchContextDocumentsTool(writer, ctx.agentId);

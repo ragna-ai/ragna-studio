@@ -1,0 +1,63 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "18abcfd1-07ec-422a-89ad-12a2f7aca2d9",
+  "prevIds": ["22057373-1255-4ea2-8c63-8c9b7d26c9bb"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "integration_tools"],
+      "writes": [
+        "s|col|public.agents.integration_tools",
+        "n|col|public.agents.integration_tools",
+        "e|col|public.agents.integration_tools"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "integration_connections", "enabled_integrations"],
+      "writes": [
+        "s|col|public.integration_connections.enabled_integrations",
+        "n|col|public.integration_connections.enabled_integrations",
+        "e|col|public.integration_connections.enabled_integrations"
+      ],
+      "reads": ["n|tbl|public.integration_connections", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "integration_tools",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "integration_connections",
+        "name": "enabled_integrations",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 1,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}
