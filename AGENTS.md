@@ -133,6 +133,12 @@ variants or a new abstraction, load the system-design skill; for a vendor connec
 Before adding a dependency, load the dependency-choice skill. For PRDs, design
 docs and slices in `specs/`, load the spec-writing skill.
 
+**Branches and worktrees**: start every task on a new branch from `origin/main`. If the checkout has uncommitted
+changes or another agent works in it, create a worktree instead: `wt switch --create <branch> --base origin/main`
+([worktrunk](https://worktrunk.dev)). Its hooks in `.config/wt.toml` copy `.env` and the turbo cache, install
+and build the packages. If `wt` asks to approve hooks, stop and ask the user; never pass `-y`. Only one worktree can run `pnpm dev` at a time (fixed ports 3000/3010), and all share the
+local Postgres and Redis, so never `db:push` from two worktrees with different schemas.
+
 **Skip self-verification of changes** unless explicitly asked, means:
 
 - no visual confirmation,
