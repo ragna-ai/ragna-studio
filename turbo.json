@@ -7,6 +7,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"],
+      "env": ["VITE_APP_VERSION"],
       "outputs": [".nuxt/**", ".output/**", "dist/**"]
     },
     "lint": {
