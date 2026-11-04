@@ -1,6 +1,13 @@
-// Fakes the OAuth provider HTTP endpoints (token, profile, revoke) that @repo/integrations calls.
-// Installed once on import; any other URL falls through to the real fetch.
+// Fakes the OAuth provider HTTP endpoints (token, profile, revoke) that @repo/integrations calls,
+// and routes vendor API calls to vendor-http.mock.ts. Installed once on import; any other URL
+// falls through to the real fetch.
 import { INTEGRATION_CATALOG, type ProviderId } from '@repo/integrations';
+import {
+  answerVendorBaseRoute,
+  answerVendorOverride,
+  isVendorHost,
+  toVendorRequest,
+} from '../vendor-http/vendor-http.mock';
 
 export interface FakeProviderProfile {
   id: string;
@@ -48,7 +55,7 @@ const ENDPOINTS: Array<{ matches: (url: URL) => boolean } & ProviderEndpoint> = 
   {
     provider: 'microsoft',
     kind: 'profile',
-    matches: (url) => url.hostname === 'graph.microsoft.com',
+    matches: (url) => url.hostname === 'graph.microsoft.com' && url.pathname === '/v1.0/me',
   },
   {
     provider: 'linkedin',
@@ -285,10 +292,19 @@ const fakeFetchImpl = async (
   init?: Parameters<typeof fetch>[1],
 ): Promise<Response> => {
   const url = new URL(input instanceof Request ? input.url : input.toString());
-  const endpoint = ENDPOINTS.find((candidate) => candidate.matches(url));
-  if (!endpoint) return realFetch(input, init);
+  const vendorRequest = isVendorHost(url) ? toVendorRequest(url, init) : null;
 
-  return route(endpoint, init);
+  if (vendorRequest) {
+    const overridden = await answerVendorOverride(vendorRequest);
+    if (overridden) return overridden;
+  }
+
+  const endpoint = ENDPOINTS.find((candidate) => candidate.matches(url));
+  if (endpoint) return route(endpoint, init);
+
+  if (vendorRequest) return answerVendorBaseRoute(vendorRequest);
+
+  return realFetch(input, init);
 };
 
 globalThis.fetch = Object.assign(fakeFetchImpl, { preconnect: realFetch.preconnect });

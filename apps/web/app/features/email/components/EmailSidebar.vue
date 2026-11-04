@@ -84,7 +84,7 @@ const isSyncing = computed(
     isManualAccountSyncActive.value,
 );
 const searchHintKey = computed(
-  () => `email.sidebar.searchHint.${props.account.provider}`,
+  () => `email.sidebar.searchHint.${props.account.integrationId}`,
 );
 
 // Functions

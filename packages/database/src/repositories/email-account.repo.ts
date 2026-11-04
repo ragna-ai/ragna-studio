@@ -6,7 +6,7 @@ import { emailAccount } from '../schema';
 export type {
   EmailAccount,
   EmailAccountSyncState,
-  EmailProvider,
+  EmailIntegrationId,
   NewEmailAccount,
 } from '../schema';
 
@@ -59,7 +59,7 @@ export async function listEmailAccountsDueForSync(): Promise<EmailAccount[]> {
 }
 
 // Email settings page: default draft agent only. Other fields (email
-// address, provider) are set once at connect time and never edited here.
+// address, integration) are set once at connect time and never edited here.
 export async function updateEmailAccountSettings({
   id,
   defaultAgentId,

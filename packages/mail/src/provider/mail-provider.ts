@@ -206,6 +206,14 @@ export interface MailAttachmentContent {
   data: Buffer;
 }
 
+/** What every mail provider factory receives. Providers never refresh or cache tokens. */
+export interface MailProviderOptions {
+  /** Resolves a fresh, valid OAuth access token for the connection. */
+  getAccessToken: () => Promise<string>;
+  /** Waits between retries of a vendor call. Defaults to a timer; tests record instead. */
+  sleep?: (ms: number) => Promise<void>;
+}
+
 /**
  * Provider-agnostic mailbox contract. Implementations own token handling and
  * all vendor-specific wire formats; callers (services, worker jobs) speak

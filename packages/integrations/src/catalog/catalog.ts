@@ -1,6 +1,11 @@
-import type { IntegrationDefinition, IntegrationId, ProviderId } from './catalog.types';
+import type {
+  IntegrationCategory,
+  IntegrationDefinition,
+  IntegrationId,
+  ProviderId,
+} from './catalog.types';
 
-export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
+const CATALOG_ENTRIES = [
   {
     id: 'gmail',
     provider: 'google',
@@ -22,7 +27,18 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     authType: 'oauth2',
     scopes: ['w_member_social'],
   },
-];
+] satisfies IntegrationDefinition[];
+
+export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = CATALOG_ENTRIES;
+
+/**
+ * The integration ids of one category, read from the catalog. A capability registry typed as
+ * `Record<IntegrationIdIn<'mail'>, ...>` fails type-checking until every entry has an implementation.
+ */
+export type IntegrationIdIn<C extends IntegrationCategory> = Extract<
+  (typeof CATALOG_ENTRIES)[number],
+  { category: C }
+>['id'];
 
 export function findIntegration(id: string): IntegrationDefinition | null {
   return INTEGRATION_CATALOG.find((integration) => integration.id === id) ?? null;

@@ -28,7 +28,7 @@ async function seedMailboxOnExpiredConnection(userId: string) {
   await createEmailAccount({
     userId,
     connectionId: seeded.connection.id,
-    provider: 'gmail',
+    integrationId: 'gmail',
     email: 'anna@example.com',
   });
   return seeded;

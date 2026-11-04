@@ -43,12 +43,12 @@ const needsReconnect = computed(
   () => props.account.syncState === 'reauth_required',
 );
 const providerIcon = computed(() =>
-  props.account.provider === 'microsoft'
+  props.account.integrationId === 'outlook-mail'
     ? 'logos:microsoft-icon'
     : 'logos:google-icon',
 );
 const providerLabel = computed(() =>
-  t(`email.settings.general.provider.${props.account.provider}`),
+  t(`email.settings.general.provider.${props.account.integrationId}`),
 );
 
 // Functions
@@ -68,7 +68,7 @@ async function handleDisconnect() {
 
 // EmailClient.vue is the one place that finishes the reconnect on return (MAIL_RECONNECT_CALLBACK_PARAM).
 function handleReconnect() {
-  startReconnect(props.account.provider, '/mail');
+  startReconnect(props.account.integrationId, '/mail');
 }
 </script>
 

@@ -32,13 +32,6 @@ export interface GraphSyncCursor {
   folders: Partial<Record<GraphSyncedFolderName, string>>;
 }
 
-export interface GraphErrorBody {
-  error?: {
-    code?: string;
-    message?: string;
-  };
-}
-
 /** $select projection used for attachment metadata, deliberately excluding `contentBytes`. */
 export type GraphAttachmentMetadata = Pick<
   FileAttachment,

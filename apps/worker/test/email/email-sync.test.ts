@@ -5,7 +5,7 @@ import {
   getEmailThreadByProviderThreadId,
   listEmailMessagesByThreadId,
 } from '@repo/database';
-import { MailProviderError } from '@repo/mail/provider';
+import { VendorApiError } from '@repo/integrations/http';
 import { EMAIL_CLASSIFY_JOB, EMAIL_SYNC_JOB } from '@repo/queue';
 import {
   buildFakeMailDraft,
@@ -326,9 +326,11 @@ describe('processEmailSyncJob', () => {
   describe('failures', () => {
     test('a provider auth error flags reauth_required and rethrows', async () => {
       const { account } = await seedMailUser({ syncCursor: 'cursor-1' });
-      syncFromCursorMock.mockRejectedValueOnce(new MailProviderError('unauthorized', 401));
+      syncFromCursorMock.mockRejectedValueOnce(
+        new VendorApiError({ vendor: 'Gmail', status: 401 }),
+      );
 
-      await expect(processEmailSyncJob(syncJob(account.id))).rejects.toThrow('unauthorized');
+      await expect(processEmailSyncJob(syncJob(account.id))).rejects.toThrow('Gmail API error 401');
 
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncState).toBe('reauth_required');
@@ -337,9 +339,11 @@ describe('processEmailSyncJob', () => {
 
     test('any other provider error flags error and rethrows so BullMQ retries', async () => {
       const { account } = await seedMailUser({ syncCursor: 'cursor-1' });
-      syncFromCursorMock.mockRejectedValueOnce(new MailProviderError('upstream down', 503));
+      syncFromCursorMock.mockRejectedValueOnce(
+        new VendorApiError({ vendor: 'Gmail', status: 503 }),
+      );
 
-      await expect(processEmailSyncJob(syncJob(account.id))).rejects.toThrow('upstream down');
+      await expect(processEmailSyncJob(syncJob(account.id))).rejects.toThrow('Gmail API error 503');
 
       const synced = await getEmailAccountById({ id: account.id });
       expect(synced?.syncState).toBe('error');

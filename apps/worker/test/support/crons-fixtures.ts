@@ -156,7 +156,7 @@ export async function seedEmailAccount({
     .values({
       userId,
       connectionId: connection.id,
-      provider: 'gmail',
+      integrationId: 'gmail',
       email: `${crypto.randomUUID()}@example.com`,
       syncState,
     })

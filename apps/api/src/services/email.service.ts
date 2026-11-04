@@ -74,8 +74,8 @@ import type {
   MailAttachmentInput,
   MailAttachmentMeta,
   MailProvider,
+  MailIntegrationId,
   MailProviderId,
-  MailProviderKind,
   MailMessage as ProviderMailMessage,
   MailThread as ProviderMailThread,
   SendMailInput,
@@ -127,7 +127,7 @@ export interface EmailAccountStatusResponse {
   connected: boolean;
   account: {
     id: string;
-    provider: MailProviderKind;
+    integrationId: MailIntegrationId;
     email: string;
     defaultAgentId: string | null;
     syncState: EmailAccountSyncState;
@@ -144,7 +144,7 @@ function toAccountStatus(account: EmailAccount | null): EmailAccountStatusRespon
     connected: true,
     account: {
       id: account.id,
-      provider: account.provider,
+      integrationId: account.integrationId,
       email: account.email,
       defaultAgentId: account.defaultAgentId,
       syncState: account.syncState,
@@ -220,11 +220,11 @@ const DEFAULT_EMAIL_CATEGORIES: ReadonlyArray<{
 /** [POST] /email/account/connect */
 export async function connectEmailAccount({
   userId,
-  provider: providerKind,
+  integrationId,
   connectionId,
 }: {
   userId: string;
-  provider: MailProviderKind;
+  integrationId: MailIntegrationId;
   connectionId: string;
 }): Promise<EmailAccount> {
   const { data: existing } = await tryCatch(() => getEmailAccountByUserId({ userId }));
@@ -235,7 +235,7 @@ export async function connectEmailAccount({
 
   const provider = await getMailProviderForConnectRequest({
     userId,
-    provider: providerKind,
+    integrationId,
     connectionId,
   });
 
@@ -252,7 +252,7 @@ export async function connectEmailAccount({
     createEmailAccount({
       userId,
       connectionId,
-      provider: providerKind,
+      integrationId,
       email: profile.emailAddress,
     }),
   );

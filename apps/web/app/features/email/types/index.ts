@@ -2,6 +2,8 @@
 // for this feature, apps/api owns them).
 // Dates cross the wire as ISO strings (JSON has no Date type), never `Date`.
 
+import type { IntegrationIdIn } from '@repo/integrations/catalog';
+
 export type EmailAccountSyncState =
   | 'idle'
   | 'syncing'
@@ -11,11 +13,7 @@ export type EmailAccountSyncState =
 // Matches apps/api/src/validation/email.schema.ts's `emailFolderEnum`.
 export type EmailFolder = 'inbox' | 'archived' | 'trashed' | 'starred' | 'sent';
 
-export type EmailProviderKind = 'gmail' | 'microsoft';
-
-export function isEmailProviderKind(value: string): value is EmailProviderKind {
-  return value === 'gmail' || value === 'microsoft';
-}
+export type EmailIntegrationId = IntegrationIdIn<'mail'>;
 
 export type EmailDraftStatus = 'generating' | 'ready' | 'discarded' | 'sent';
 export type EmailDraftOrigin = 'ai' | 'user';
@@ -31,7 +29,7 @@ export interface EmailParticipant {
 export interface EmailAccount {
   id: string;
   email: string;
-  provider: EmailProviderKind;
+  integrationId: EmailIntegrationId;
   defaultAgentId: string | null;
   syncState: EmailAccountSyncState;
   lastSyncedAt: string | null;

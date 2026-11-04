@@ -16,7 +16,7 @@ import type {
   MailMessageMetadata,
   SendMailInput,
 } from '../mail-provider';
-import { GraphApiError } from './graph.client';
+import { graphResponseError } from './graph.client';
 import type {
   GraphAttachmentMetadata,
   GraphWellKnownFolderIds,
@@ -51,7 +51,7 @@ export function resolveMailFolder(
 
 export function requireField<T>(value: T | null | undefined, field: string): T {
   if (value === null || value === undefined) {
-    throw new GraphApiError(`Graph response is missing "${field}"`, 502);
+    throw graphResponseError(`response is missing "${field}"`);
   }
   return value;
 }

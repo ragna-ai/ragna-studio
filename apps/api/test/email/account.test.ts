@@ -26,7 +26,7 @@ import { emailSyncAddMock, resetEmailQueueMock } from './support/email-queue.moc
 
 const accountStatusSchema = z.strictObject({
   id: z.string(),
-  provider: z.enum(['gmail', 'microsoft']),
+  integrationId: z.enum(['gmail', 'outlook-mail']),
   email: z.string(),
   defaultAgentId: z.string().nullable(),
   syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
@@ -48,7 +48,7 @@ const fullAccountResponseSchema = z.strictObject({
     deletedAt: z.string().nullable(),
     userId: z.string(),
     connectionId: z.string(),
-    provider: z.enum(['gmail', 'microsoft']),
+    integrationId: z.enum(['gmail', 'outlook-mail']),
     email: z.string(),
     defaultAgentId: z.string().nullable(),
     syncState: z.enum(['idle', 'syncing', 'error', 'reauth_required']),
@@ -57,13 +57,13 @@ const fullAccountResponseSchema = z.strictObject({
 
 function connectRequest(
   cookieHeader: string,
-  provider: 'gmail' | 'microsoft',
+  integrationId: 'gmail' | 'outlook-mail',
   connectionId: string,
 ) {
   return app.request('/email/account/connect', {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ provider, connectionId }),
+    body: JSON.stringify({ integrationId, connectionId }),
   });
 }
 
@@ -99,20 +99,20 @@ describe('GET /email/account', () => {
     const body = statusResponseSchema.parse(await response.json());
     expect(body.connected).toBe(true);
     expect(body.account?.id).toBe(connected.accountId);
-    expect(body.account?.provider).toBe('gmail');
+    expect(body.account?.integrationId).toBe('gmail');
     expect(body.account?.email).toBe('me@gmail.test');
     expect(body.account?.syncState).toBe('idle');
     expect(body.account?.lastSyncedAt).toBeNull();
   });
 
-  test('reports provider: microsoft for a connected Outlook mailbox', async () => {
+  test('reports the Outlook integration for a connected Outlook mailbox', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     await seedConnectedMicrosoftAccount({ userId, cookieHeader, email: 'me@outlook.test' });
 
     const response = await app.request('/email/account', { headers: { cookie: cookieHeader } });
 
     const body = statusResponseSchema.parse(await response.json());
-    expect(body.account?.provider).toBe('microsoft');
+    expect(body.account?.integrationId).toBe('outlook-mail');
     expect(body.account?.email).toBe('me@outlook.test');
   });
 });
@@ -129,7 +129,7 @@ describe('POST /email/account/connect - gmail', () => {
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = fullAccountResponseSchema.parse(await response.json());
-    expect(body.account.provider).toBe('gmail');
+    expect(body.account.integrationId).toBe('gmail');
     expect(body.account.email).toBe('newly-connected@gmail.test');
     expect(body.account.userId).toBe(userId);
     expect(body.account.connectionId).toBe(connection.id);
@@ -156,7 +156,7 @@ describe('POST /email/account/connect - gmail', () => {
     const response = await app.request('/email/account/connect', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ provider: 'gmail' }),
+      body: JSON.stringify({ integrationId: 'gmail' }),
     });
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
@@ -225,13 +225,27 @@ describe('POST /email/account/connect - gmail', () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
   });
 
-  test('rejects an unknown provider value with a 422', async () => {
+  test('rejects an unknown integration with a 422', async () => {
     const { cookieHeader } = await seedAuthenticatedUser();
 
     const response = await app.request('/email/account/connect', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ provider: 'yahoo', connectionId: Bun.randomUUIDv7() }),
+      body: JSON.stringify({ integrationId: 'yahoo', connectionId: Bun.randomUUIDv7() }),
+    });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(emailSyncAddMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects an integration that is not a mailbox with a 422', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    const { connection } = await seedGmailConnection({ userId });
+
+    const response = await app.request('/email/account/connect', {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ integrationId: 'linkedin-posting', connectionId: connection.id }),
     });
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
@@ -239,19 +253,19 @@ describe('POST /email/account/connect - gmail', () => {
   });
 });
 
-describe('POST /email/account/connect - microsoft', () => {
-  test('creates the account row with provider: microsoft', async () => {
+describe('POST /email/account/connect - outlook-mail', () => {
+  test('creates the account row for the Outlook integration', async () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     const { connection } = await seedOutlookConnection({ userId });
     getProfileMock.mockImplementationOnce(() =>
       Promise.resolve({ emailAddress: 'newly-connected@outlook.test', cursor: 'delta-0' }),
     );
 
-    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
+    const response = await connectRequest(cookieHeader, 'outlook-mail', connection.id);
 
     expect(response.status).toBe(StatusCodes.CREATED);
     const body = fullAccountResponseSchema.parse(await response.json());
-    expect(body.account.provider).toBe('microsoft');
+    expect(body.account.integrationId).toBe('outlook-mail');
     expect(body.account.email).toBe('newly-connected@outlook.test');
     expect(emailSyncAddMock).toHaveBeenCalledTimes(1);
   });
@@ -263,7 +277,7 @@ describe('POST /email/account/connect - microsoft', () => {
       scopes: ['openid', 'Mail.ReadWrite', 'Mail.Send'],
     });
 
-    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
+    const response = await connectRequest(cookieHeader, 'outlook-mail', connection.id);
 
     expect(response.status).toBe(StatusCodes.CREATED);
   });
@@ -272,7 +286,7 @@ describe('POST /email/account/connect - microsoft', () => {
     const { userId, cookieHeader } = await seedAuthenticatedUser();
     const { connection } = await seedOutlookConnection({ userId, scopes: ['openid', 'User.Read'] });
 
-    const response = await connectRequest(cookieHeader, 'microsoft', connection.id);
+    const response = await connectRequest(cookieHeader, 'outlook-mail', connection.id);
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     expect(emailSyncAddMock).not.toHaveBeenCalled();
@@ -304,7 +318,7 @@ describe('mailbox after an upgrade from sign-in tokens', () => {
     const response = await app.request('/email/account/connect', {
       method: 'POST',
       headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({ provider: 'gmail' }),
+      body: JSON.stringify({ integrationId: 'gmail' }),
     });
 
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);

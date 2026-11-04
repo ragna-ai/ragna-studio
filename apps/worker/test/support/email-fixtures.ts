@@ -1,4 +1,4 @@
-import type { Agent, AgentTools, EmailAccount, EmailProvider } from '@repo/database';
+import type { Agent, AgentTools, EmailAccount, EmailIntegrationId } from '@repo/database';
 import { createAgent, createEmailAccount } from '@repo/database';
 import {
   seedAuthenticatedUser,
@@ -15,23 +15,33 @@ export interface SeededMailUser {
 }
 
 export interface SeedMailUserParams {
-  provider?: EmailProvider;
+  integrationId?: EmailIntegrationId;
   syncCursor?: string;
   accessToken?: string;
+  /** Scopes granted to the connection. Defaults to the mail scopes of the integration. */
+  scopes?: string[];
 }
 
 /** A user with an email account row. The mail provider itself is mocked. */
 export async function seedMailUser(params: SeedMailUserParams = {}): Promise<SeededMailUser> {
   const { userId, personalWorkspaceId, workspaceId } = await seedAuthenticatedUser();
-  const provider = params.provider ?? 'gmail';
+  const integrationId = params.integrationId ?? 'gmail';
   const { connection } =
-    provider === 'gmail'
-      ? await seedGmailConnection({ userId, accessToken: params.accessToken })
-      : await seedOutlookConnection({ userId, accessToken: params.accessToken });
+    integrationId === 'gmail'
+      ? await seedGmailConnection({
+          userId,
+          accessToken: params.accessToken,
+          scopes: params.scopes,
+        })
+      : await seedOutlookConnection({
+          userId,
+          accessToken: params.accessToken,
+          scopes: params.scopes,
+        });
   const account = await createEmailAccount({
     userId,
     connectionId: connection.id,
-    provider,
+    integrationId,
     email: `mailbox-${crypto.randomUUID()}@example.test`,
     syncCursor: params.syncCursor ?? null,
   });

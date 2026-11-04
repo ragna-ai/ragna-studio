@@ -1480,7 +1480,7 @@
       "searchHintLabel": "Hilfe zur Suchsyntax",
       "searchHint": {
         "gmail": "Nutze Gmail-Operatoren wie from:name, is:unread, has:attachment.",
-        "microsoft": "Nutze die Outlook-Suche wie from:name, hasattachments:true."
+        "outlook-mail": "Nutze die Outlook-Suche wie from:name, hasattachments:true."
       },
       "drafts": "Entwürfe",
       "categories": "Kategorien",
@@ -1596,7 +1596,7 @@
         "title": "Konto",
         "provider": {
           "gmail": "Gmail",
-          "microsoft": "Outlook"
+          "outlook-mail": "Outlook"
         },
         "defaultAgent": "Standard-Entwurfsagent",
         "defaultAgentHint": "Wird für Auto-Entwürfe genutzt und bei manuellen \"Mit KI entwerfen\"-Anfragen vorausgewählt.",

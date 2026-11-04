@@ -39,7 +39,7 @@ describe('removing a connection', () => {
     const mailbox = await createEmailAccount({
       userId,
       connectionId: connection.id,
-      provider: 'gmail',
+      integrationId: 'gmail',
       email: 'anna@example.com',
     });
 

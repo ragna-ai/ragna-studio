@@ -241,7 +241,7 @@ importers:
         version: link:../../packages/logger
       '@repo/mail':
         specifier: workspace:*
-        version: file:packages/mail(@astrojs/compiler-rs@0.5.2)(@noble/hashes@2.4.0)(@nuxt/kit@4.6.3(@nuxt/schema@4.6.3)(confbox@0.2.4)(dotenv@18.0.9)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.15)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.64.10)(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@oxc-project/types@0.155.0)(@types/node@26.6.3)(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(lightningcss@1.33.0)(oxc-parser@0.141.0)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.64.10)(shiki@4.5.0)(tailwind-merge@3.7.0)(terser@5.51.2)(vue@3.5.44(typescript@6.0.3))(yaml@2.9.1)
+        version: file:packages/mail(@astrojs/compiler-rs@0.5.2)(@noble/hashes@2.4.0)(@nuxt/kit@4.6.3(@nuxt/schema@4.6.3)(confbox@0.2.4)(dotenv@18.0.9)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.15)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.64.10)(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@oxc-project/types@0.155.0)(@types/node@26.6.3)(@types/pg@8.23.1)(@vue/compiler-sfc@3.5.44)(bun-types@1.4.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(lightningcss@1.33.0)(oxc-parser@0.141.0)(pg@8.23.1)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.64.10)(shiki@4.5.0)(tailwind-merge@3.7.0)(terser@5.51.2)(vue@3.5.44(typescript@6.0.3))(yaml@2.9.1)
       '@repo/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
@@ -872,6 +872,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../integrations
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
@@ -3927,8 +3930,14 @@ packages:
   '@repo/config@file:packages/config':
     resolution: {directory: packages/config, type: directory}
 
+  '@repo/crypto@file:packages/crypto':
+    resolution: {directory: packages/crypto, type: directory}
+
   '@repo/database@file:packages/database':
     resolution: {directory: packages/database, type: directory}
+
+  '@repo/integrations@file:packages/integrations':
+    resolution: {directory: packages/integrations, type: directory}
 
   '@repo/logger@file:packages/logger':
     resolution: {directory: packages/logger, type: directory}
@@ -13519,6 +13528,10 @@ snapshots:
       dotenv: 18.0.9
       zod: 4.6.7
 
+  '@repo/crypto@file:packages/crypto':
+    dependencies:
+      '@repo/config': file:packages/config
+
   '@repo/database@file:packages/database(@types/pg@8.23.1)(bun-types@1.4.4)':
     dependencies:
       '@repo/config': file:packages/config
@@ -13579,16 +13592,82 @@ snapshots:
       - typebox
       - valibot
 
+  '@repo/integrations@file:packages/integrations(@types/pg@8.23.1)(bun-types@1.4.4)(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)':
+    dependencies:
+      '@repo/config': file:packages/config
+      '@repo/crypto': file:packages/crypto
+      '@repo/database': file:packages/database(@types/pg@8.23.1)(bun-types@1.4.4)
+      '@repo/logger': file:packages/logger
+      '@repo/queue': file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)
+      '@repo/utils': file:packages/utils
+      oauth4webapi: 3.8.8
+      zod: 4.6.7
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@aws/aurora-dsql-node-postgres-connector'
+      - '@aws/aurora-dsql-postgresjs-connector'
+      - '@cloudflare/workers-types'
+      - '@drizzle-team/minipg'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - arktype
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
+      - effect
+      - expo-sqlite
+      - ioredis
+      - mssql
+      - mysql2
+      - pg
+      - pg-native
+      - postgres
+      - redis
+      - sql.js
+      - sqlite3
+      - typebox
+      - valibot
+
   '@repo/logger@file:packages/logger':
     dependencies:
       '@repo/config': file:packages/config
       consola: 3.4.2
 
-  '@repo/mail@file:packages/mail(@astrojs/compiler-rs@0.5.2)(@noble/hashes@2.4.0)(@nuxt/kit@4.6.3(@nuxt/schema@4.6.3)(confbox@0.2.4)(dotenv@18.0.9)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.15)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.64.10)(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@oxc-project/types@0.155.0)(@types/node@26.6.3)(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(lightningcss@1.33.0)(oxc-parser@0.141.0)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.64.10)(shiki@4.5.0)(tailwind-merge@3.7.0)(terser@5.51.2)(vue@3.5.44(typescript@6.0.3))(yaml@2.9.1)':
+  '@repo/mail@file:packages/mail(@astrojs/compiler-rs@0.5.2)(@noble/hashes@2.4.0)(@nuxt/kit@4.6.3(@nuxt/schema@4.6.3)(confbox@0.2.4)(dotenv@18.0.9)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.15)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.64.10)(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@oxc-project/types@0.155.0)(@types/node@26.6.3)(@types/pg@8.23.1)(@vue/compiler-sfc@3.5.44)(bun-types@1.4.4)(esbuild@0.28.2)(ioredis@5.11.1(supports-color@10.2.2))(lightningcss@1.33.0)(oxc-parser@0.141.0)(pg@8.23.1)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.64.10)(shiki@4.5.0)(tailwind-merge@3.7.0)(terser@5.51.2)(vue@3.5.44(typescript@6.0.3))(yaml@2.9.1)':
     dependencies:
       '@maizzle/framework': 6.3.0(@astrojs/compiler-rs@0.5.2)(@nuxt/kit@4.6.3(@nuxt/schema@4.6.3)(confbox@0.2.4)(dotenv@18.0.9)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.15)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.64.10)(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@oxc-project/types@0.155.0)(@types/node@26.6.3)(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(lightningcss@1.33.0)(oxc-parser@0.141.0)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.64.10)(shiki@4.5.0)(tailwind-merge@3.7.0)(terser@5.51.2)(vue@3.5.44(typescript@6.0.3))(yaml@2.9.1)
       '@maizzle/tailwindcss': 1.5.6
       '@repo/config': file:packages/config
+      '@repo/integrations': file:packages/integrations(@types/pg@8.23.1)(bun-types@1.4.4)(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)
       '@repo/logger': file:packages/logger
       '@repo/utils': file:packages/utils
       email-reply-parser: 2.3.9
@@ -13600,38 +13679,91 @@ snapshots:
       vue: 3.5.44(typescript@6.0.3)
     transitivePeerDependencies:
       - '@astrojs/compiler-rs'
+      - '@aws-sdk/client-rds-data'
+      - '@aws/aurora-dsql-node-postgres-connector'
+      - '@aws/aurora-dsql-postgresjs-connector'
+      - '@cloudflare/workers-types'
+      - '@drizzle-team/minipg'
+      - '@effect/sql-d1'
+      - '@effect/sql-libsql'
+      - '@effect/sql-mysql2'
+      - '@effect/sql-pg'
+      - '@effect/sql-pglite'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-do'
+      - '@effect/sql-sqlite-node'
+      - '@effect/sql-sqlite-wasm'
+      - '@electric-sql/pglite'
       - '@farmfe/core'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
       - '@noble/hashes'
       - '@nuxt/kit'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
       - '@oxc-project/types'
       - '@pinia/colada'
+      - '@planetscale/database'
       - '@rsbuild/core'
       - '@rspack/core'
+      - '@sinclair/typebox'
+      - '@sqlitecloud/drivers'
+      - '@tidbcloud/serverless'
+      - '@tursodatabase/database'
+      - '@tursodatabase/database-common'
+      - '@tursodatabase/database-wasm'
+      - '@tursodatabase/serverless'
+      - '@tursodatabase/sync'
+      - '@types/better-sqlite3'
+      - '@types/mssql'
       - '@types/node'
+      - '@types/pg'
+      - '@types/sql.js'
       - '@unhead/cli'
+      - '@upstash/redis'
+      - '@vercel/postgres'
       - '@vitejs/devtools'
       - '@vitejs/devtools-kit'
       - '@vue/compiler-sfc'
+      - '@xata.io/client'
+      - arktype
+      - better-sqlite3
+      - bullmq-otel
+      - bun-types
       - bun-types-no-globals
       - canvas
+      - effect
       - esbuild
+      - expo-sqlite
+      - ioredis
       - less
       - lightningcss
+      - mssql
+      - mysql2
       - oxc-parser
+      - pg
+      - pg-native
       - pinia
+      - postgres
       - re2
+      - redis
       - rolldown
       - rollup
       - sass
       - sass-embedded
       - shiki
+      - sql.js
+      - sqlite3
       - stylus
       - sugarss
       - svelte
       - tailwind-merge
       - terser
       - tsx
+      - typebox
       - unloader
+      - valibot
       - vite-plus
       - webpack
       - yaml
