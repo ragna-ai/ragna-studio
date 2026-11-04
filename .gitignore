@@ -38,6 +38,10 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+# Vim swap files
+*.swp
+*.swo
+
 # Playwright MCP output
 .playwright-mcp/
 
