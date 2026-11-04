@@ -15,6 +15,7 @@ import {
   validCreateDocumentBody,
   validDocumentExportQuery,
   validDocumentIdParam,
+  validDocumentListQuery,
   validUpdateDocumentBody,
 } from '../validation';
 
@@ -25,11 +26,13 @@ export const documentController = new Hono()
   /**
    * [GET] /workspace/:workspaceId/document
    * List a workspace's documents, most recently updated first.
+   * `?folderId=root` narrows to unfiled documents, `?folderId=<id>` to one folder.
    */
-  .get('/', async (c) => {
+  .get('/', validDocumentListQuery, async (c) => {
     const workspace = c.get('workspace');
+    const query = c.req.valid('query');
 
-    const documents = await listDocuments({ workspaceId: workspace.id });
+    const documents = await listDocuments({ workspaceId: workspace.id, folderId: query.folderId });
 
     return c.json({ documents });
   })

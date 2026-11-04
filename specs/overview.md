@@ -134,8 +134,10 @@ drag-and-drop; agents get CRUD tools and can be assigned to tasks
 ### Documents
 
 Markdown documents edited with the `@repo/editor` Tiptap kit, shared
-between humans and agents within a workspace.
-→ [specs/documents/prd.md](./documents/prd.md)
+between humans and agents within a workspace. Drive-style list with flat
+folders you open by URL, folder actions in each row.
+→ [specs/documents/prd.md](./documents/prd.md),
+[263-folder-navigation/prd.md](./documents/263-folder-navigation/prd.md)
 
 ### Rich text editor
 

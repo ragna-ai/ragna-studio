@@ -1165,7 +1165,6 @@
       "subtitle": "Notes you and your agents can create and edit.",
       "newDocument": "New document",
       "selectWorkspace": "Select a workspace above to view its documents.",
-      "empty": "No documents yet.",
       "loadError": "Failed to load documents.",
       "loading": "Loading documents...",
       "noFolder": "No folder",
@@ -1174,8 +1173,11 @@
       },
       "item": {
         "delete": "Delete document",
-        "moveSuccess": "Document moved."
-      }
+        "moveSuccess": "Document moved.",
+        "actions": "Actions for {title}",
+        "moveToFolder": "Move to folder"
+      },
+      "emptyWorkspace": "No documents or folders yet."
     },
     "deleteConfirm": {
       "title": "Delete document",
@@ -1214,15 +1216,25 @@
       "deleted": "Folder deleted",
       "deleteFailed": "Failed to delete folder"
     },
-    "manage": {
-      "title": "Folders",
-      "description": "Group documents into folders.",
-      "namePlaceholder": "Folder name",
-      "rename": "Rename folder",
-      "delete": "Delete folder",
-      "deleteTitle": "Delete folder",
-      "deleteMessage": "Delete \"{name}\"? Its documents move to the root level, they are not deleted.",
-      "empty": "No folders yet."
+    "newFolder": "New folder",
+    "rename": "Rename folder",
+    "delete": "Delete folder",
+    "actions": "Actions for folder {name}",
+    "emptyFolder": "This folder is empty.",
+    "createDialog": {
+      "title": "New folder",
+      "namePlaceholder": "Folder name"
+    },
+    "renameDialog": {
+      "title": "Rename folder"
+    },
+    "deleteConfirm": {
+      "title": "Delete folder",
+      "message": "Delete \"{name}\"? Its documents move to the top level, they are not deleted."
+    },
+    "notFound": {
+      "message": "Folder not found.",
+      "back": "Back to documents"
     }
   },
   "editor": {

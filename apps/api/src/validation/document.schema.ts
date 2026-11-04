@@ -10,6 +10,15 @@ export const validDocumentIdParam = myzValidator(
   }),
 );
 
+export const ROOT_FOLDER_FILTER = 'root';
+
+export const validDocumentListQuery = myzValidator(
+  'query',
+  z.object({
+    folderId: z.union([z.literal(ROOT_FOLDER_FILTER), primaryId]).optional(),
+  }),
+);
+
 export const validCreateDocumentBody = myzValidator(
   'json',
   z.object({

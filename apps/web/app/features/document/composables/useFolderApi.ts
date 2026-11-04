@@ -5,19 +5,15 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { documentKeys } from '~/features/document/composables/useDocumentApi';
+import {
+  documentKeys,
+  folderKeys,
+} from '~/features/document/composables/queryKeys';
 import type {
   FolderManyResponse,
   FolderResponse,
 } from '~/features/document/types';
 import { extractErrorMessage } from '~/lib/api-error';
-
-type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
-
-export const folderKeys = {
-  all: (workspaceId: WorkspaceId) => ['folders', workspaceId] as const,
-  list: (workspaceId: WorkspaceId) => ['folders', workspaceId, 'list'] as const,
-};
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
@@ -33,6 +29,24 @@ export function useGetFolders(options: QueryOpts = {}) {
       }),
     enabled: () => !!toValue(workspaceId),
     ...options,
+  });
+}
+
+export function useGetFolder(folderId: MaybeRefOrGetter<string | null>) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useQuery<FolderResponse>({
+    queryKey: folderKeys.detail(workspaceId, folderId),
+    queryFn: ({ signal }) =>
+      $api<FolderResponse>(
+        `/workspace/${toValue(workspaceId)}/folder/${toValue(folderId)}`,
+        {
+          method: 'GET',
+          signal,
+        },
+      ),
+    enabled: () => !!toValue(workspaceId) && !!toValue(folderId),
+    retry: false,
   });
 }
 
