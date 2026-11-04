@@ -1,40 +1,23 @@
-import { getCreateDocumentTool } from '@repo/ai';
+import { getCreateDocumentTool, getEditDocumentTool, getReadDocumentTool } from '@repo/ai';
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
+import {
+  createDocument,
+  createFolder,
+  foreignWorkspaceCases,
+  jsonRequest,
+  postDocument,
+} from './document-fixtures';
 
 // A document may only live in a folder of its own workspace.
 
 const idSchema = z.object({ id: z.string() });
 const documentSchema = z.object({ id: z.string(), folderId: z.string().nullable() });
 const documentResponseSchema = z.object({ document: documentSchema });
-
-function jsonRequest(cookieHeader: string, method: string, body: Record<string, unknown>) {
-  return {
-    method,
-    headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  };
-}
-
-async function createWorkspace(cookieHeader: string): Promise<string> {
-  const response = await app.request(
-    '/workspace',
-    jsonRequest(cookieHeader, 'POST', { name: 'Second', visibility: 'organization' }),
-  );
-  return z.object({ workspace: idSchema }).parse(await response.json()).workspace.id;
-}
-
-async function createFolder(cookieHeader: string, workspaceId: string): Promise<string> {
-  const response = await app.request(
-    `/workspace/${workspaceId}/folder`,
-    jsonRequest(cookieHeader, 'POST', { name: 'Folder' }),
-  );
-  return z.object({ folder: idSchema }).parse(await response.json()).folder.id;
-}
 
 async function createAgent(cookieHeader: string, workspaceId: string): Promise<string> {
   const { aiModelId } = await seedTokenPricedAiModel();
@@ -43,17 +26,6 @@ async function createAgent(cookieHeader: string, workspaceId: string): Promise<s
     jsonRequest(cookieHeader, 'POST', { name: 'Agent', aiModelId, systemPrompt: 'Help.' }),
   );
   return z.object({ agent: idSchema }).parse(await response.json()).agent.id;
-}
-
-async function postDocument(
-  cookieHeader: string,
-  workspaceId: string,
-  body: Record<string, unknown>,
-) {
-  return app.request(
-    `/workspace/${workspaceId}/document`,
-    jsonRequest(cookieHeader, 'POST', { title: 'A document', ...body }),
-  );
 }
 
 async function getDocument(cookieHeader: string, workspaceId: string, documentId: string) {
@@ -70,40 +42,15 @@ async function countDocuments(cookieHeader: string, workspaceId: string): Promis
   return z.object({ documents: z.array(idSchema) }).parse(await response.json()).documents.length;
 }
 
-interface ForeignFolderCase {
-  name: string;
-  setup: () => Promise<{ cookieHeader: string; workspaceId: string; foreignFolderId: string }>;
-}
-
-const foreignFolderCases: ForeignFolderCase[] = [
-  {
-    name: 'another user',
-    setup: async () => {
-      const userA = await seedAuthenticatedUser();
-      const userB = await seedAuthenticatedUser();
-      const foreignFolderId = await createFolder(userB.cookieHeader, userB.workspaceId);
-      return { ...userA, foreignFolderId };
-    },
-  },
-  {
-    name: 'another workspace of the same user',
-    setup: async () => {
-      const userA = await seedAuthenticatedUser();
-      const otherWorkspaceId = await createWorkspace(userA.cookieHeader);
-      const foreignFolderId = await createFolder(userA.cookieHeader, otherWorkspaceId);
-      return { ...userA, foreignFolderId };
-    },
-  },
-];
-
 describe('document folderId stays inside the workspace', () => {
   beforeEach(async () => {
     await truncateAllTables();
   });
 
-  for (const { name, setup } of foreignFolderCases) {
+  for (const { name, setup } of foreignWorkspaceCases) {
     test(`POST rejects a folder from ${name} and creates nothing`, async () => {
-      const { cookieHeader, workspaceId, foreignFolderId } = await setup();
+      const { cookieHeader, workspaceId, foreignCookieHeader, foreignWorkspaceId } = await setup();
+      const foreignFolderId = await createFolder(foreignCookieHeader, foreignWorkspaceId);
 
       const response = await postDocument(cookieHeader, workspaceId, { folderId: foreignFolderId });
 
@@ -112,7 +59,8 @@ describe('document folderId stays inside the workspace', () => {
     });
 
     test(`PATCH rejects a folder from ${name} and keeps the old folder`, async () => {
-      const { cookieHeader, workspaceId, foreignFolderId } = await setup();
+      const { cookieHeader, workspaceId, foreignCookieHeader, foreignWorkspaceId } = await setup();
+      const foreignFolderId = await createFolder(foreignCookieHeader, foreignWorkspaceId);
       const ownFolderId = await createFolder(cookieHeader, workspaceId);
       const created = await postDocument(cookieHeader, workspaceId, { folderId: ownFolderId });
       const { document } = documentResponseSchema.parse(await created.json());
@@ -165,5 +113,41 @@ describe('document tools', () => {
 
     expect(result).toEqual({ error: 'Folder not found.' });
     expect(await countDocuments(userA.cookieHeader, userA.workspaceId)).toBe(0);
+  });
+
+  test('readDocument returns "Document not found." for a document of another workspace', async () => {
+    const userA = await seedAuthenticatedUser();
+    const userB = await seedAuthenticatedUser();
+    const foreignDocumentId = await createDocument(userB.cookieHeader, userB.workspaceId);
+    const readDocumentTool = getReadDocumentTool(stubStreamWriter, userA.workspaceId);
+
+    const result = await readDocumentTool.execute?.(
+      { documentId: foreignDocumentId },
+      stubToolExecutionOptions,
+    );
+
+    expect(result).toEqual({ error: 'Document not found.' });
+  });
+
+  test('editDocument returns "Document not found." for a document of another workspace and changes nothing', async () => {
+    const userA = await seedAuthenticatedUser();
+    const userB = await seedAuthenticatedUser();
+    const foreignDocumentId = await createDocument(userB.cookieHeader, userB.workspaceId);
+    const editDocumentTool = getEditDocumentTool(stubStreamWriter, userA.workspaceId);
+
+    const result = await editDocumentTool.execute?.(
+      { documentId: foreignDocumentId, action: 'append', text: 'Injected' },
+      stubToolExecutionOptions,
+    );
+
+    expect(result).toEqual({ error: 'Document not found.' });
+    const unchanged = await app.request(
+      `/workspace/${userB.workspaceId}/document/${foreignDocumentId}`,
+      { headers: { cookie: userB.cookieHeader } },
+    );
+    const body = z
+      .object({ document: z.object({ content: z.string() }) })
+      .parse(await unchanged.json());
+    expect(body.document.content).toBe('');
   });
 });

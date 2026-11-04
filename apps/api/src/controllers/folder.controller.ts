@@ -5,6 +5,7 @@ import { workspaceGuard } from '../middlewares/workspaceGuard';
 import {
   createFolderForUser,
   deleteFolder,
+  getFolder,
   listFolders,
   renameFolderForUser,
 } from '../services/folder.service';
@@ -25,6 +26,20 @@ export const folderController = new Hono()
     const folders = await listFolders({ workspaceId: workspace.id });
 
     return c.json({ folders });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/folder/:folderId
+   */
+  .get('/:folderId', validFolderIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const folderRecord = await getFolder({
+      workspaceId: workspace.id,
+      folderId: param.folderId,
+    });
+
+    return c.json({ folder: folderRecord });
   })
   /**
    * [POST] /workspace/:workspaceId/folder

@@ -65,7 +65,7 @@ export const getListDocumentsTool = (
       writer.write({ type: 'data-document', data: { action: 'list' }, transient: true });
 
       const { error, data: documents } = await tryCatch(
-        () => getDocumentsByWorkspaceId({ workspaceId }),
+        () => getDocumentsByWorkspaceId({ workspaceId, folderFilter: { kind: 'all' } }),
         { retryOnFailure: false },
       );
 

@@ -12,22 +12,16 @@ import type {
   DocumentResponse,
   UpdateDocumentRequest,
 } from '~/features/document/types';
+import {
+  documentKeys,
+  folderKeys,
+} from '~/features/document/composables/queryKeys';
 import { extractErrorMessage } from '~/lib/api-error';
 import {
   buildExportFilename,
   downloadBlob,
   filenameFromContentDisposition,
 } from '~/lib/file-export';
-
-type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
-
-export const documentKeys = {
-  all: (workspaceId: WorkspaceId) => ['documents', workspaceId] as const,
-  list: (workspaceId: WorkspaceId) =>
-    ['documents', workspaceId, 'list'] as const,
-  detail: (workspaceId: WorkspaceId, documentId: MaybeRefOrGetter<string>) =>
-    ['documents', workspaceId, 'detail', documentId] as const,
-};
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
@@ -39,10 +33,34 @@ export function useGetDocuments(options: QueryOpts = {}) {
     queryFn: ({ signal }) =>
       $api<DocumentManyResponse>(
         `/workspace/${toValue(workspaceId)}/document`,
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId),
     ...options,
+  });
+}
+
+/** Lists the documents of one folder, or of the top level for `root`. */
+export function useGetDocumentsInFolder(
+  folderFilter: MaybeRefOrGetter<string>,
+) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useQuery<DocumentManyResponse>({
+    queryKey: documentKeys.listInFolder(workspaceId, folderFilter),
+    queryFn: ({ signal }) =>
+      $api<DocumentManyResponse>(
+        `/workspace/${toValue(workspaceId)}/document`,
+        {
+          method: 'GET',
+          query: { folderId: toValue(folderFilter) },
+          signal,
+        },
+      ),
+    enabled: () => !!toValue(workspaceId),
   });
 }
 
@@ -81,6 +99,7 @@ export function useCreateDocument() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.all(workspaceId),
       });
+      queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
     },
     onError: (error) => {
       toast.error(
@@ -117,6 +136,7 @@ export function useUpdateDocument() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.list(workspaceId),
       });
+      queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
       queryClient.setQueryData(
         documentKeys.detail(workspaceId, response.document.id),
         response,
@@ -143,6 +163,7 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.all(workspaceId),
       });
+      queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
       toast.success($i18n.t('document.toast.deleted'));
     },
     onError: (error) => {

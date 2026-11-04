@@ -7,7 +7,7 @@ sidebar:
 
 Documents are rich text notes that live in a workspace. Every user with access to the workspace can open them. Agents can read and edit them too.
 
-Open **Documents** in the sidebar. Choose **New document**, enter a title (or keep **Untitled document**) and optionally pick a folder.
+Open **Documents** in the sidebar. Choose **New document**, enter a title (or keep **Untitled document**) and optionally pick a folder. See [Folders](#folders).
 
 ## The editor
 
@@ -94,11 +94,39 @@ Documents are stored as Markdown. Formatting that Markdown cannot express is not
 
 ## Folders
 
-Choose **Folders** on the documents page to create, rename and delete folders. Folders are flat. They cannot contain other folders.
+The documents page works like a file browser. The top level lists all folders first. Below them are the documents that are in no folder. Each folder row shows how many documents it holds.
 
-Move a document to a folder from the list. The list also shows the **Author** of each document: the user or agent that created it.
+Folders are flat. They cannot contain other folders.
 
-Deleting a folder does not delete its documents. They move to the root level (**No folder**).
+### Open a folder
+
+Click a folder to open it. The page then lists only that folder's documents. A breadcrumb (**Documents** > folder name) shows where you are. Choose **Documents** in the breadcrumb, or use the browser's back button, to return to the top level.
+
+The address of an open folder can be shared. Other members of the workspace who open it see the same folder. If the folder was deleted, the page reads **Folder not found** and links back to the top level.
+
+### Create a folder
+
+Choose **New folder** in the page header, enter a name and choose **Create**. A name has 1 to 255 characters. Two folders can share a name.
+
+### Folder actions
+
+Open the actions menu on a folder row:
+
+- **Rename folder** changes the name in the list and in the breadcrumb.
+- **Delete folder** asks for confirmation. Deleting a folder does not delete its documents. They move to the top level.
+
+### Document actions
+
+Open the actions menu on a document row:
+
+- **Move to folder** lists all folders and **No folder**. The document leaves the current list and the folder counts update.
+- **Delete document** removes the document.
+
+The list also shows the **Author** of each document: the user or agent that created it.
+
+### New documents
+
+**New document** inside an open folder files the document in that folder. At the top level the document is in no folder. You can still pick another folder in the dialog.
 
 ## Sharing with agents
 

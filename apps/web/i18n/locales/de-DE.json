@@ -1168,7 +1168,6 @@
       "subtitle": "Notizen, die du und deine Agenten erstellen und bearbeiten könnt.",
       "newDocument": "Neues Dokument",
       "selectWorkspace": "Wähle oben einen Arbeitsbereich, um dessen Dokumente zu sehen.",
-      "empty": "Noch keine Dokumente.",
       "loadError": "Dokumente konnten nicht geladen werden.",
       "loading": "Dokumente werden geladen...",
       "noFolder": "Kein Ordner",
@@ -1177,8 +1176,11 @@
       },
       "item": {
         "delete": "Dokument löschen",
-        "moveSuccess": "Dokument verschoben."
-      }
+        "moveSuccess": "Dokument verschoben.",
+        "actions": "Aktionen für {title}",
+        "moveToFolder": "In Ordner verschieben"
+      },
+      "emptyWorkspace": "Noch keine Dokumente oder Ordner."
     },
     "deleteConfirm": {
       "title": "Dokument löschen",
@@ -1217,15 +1219,25 @@
       "deleted": "Ordner gelöscht",
       "deleteFailed": "Ordner konnte nicht gelöscht werden"
     },
-    "manage": {
-      "title": "Ordner",
-      "description": "Gruppiere Dokumente in Ordnern.",
-      "namePlaceholder": "Ordnername",
-      "rename": "Ordner umbenennen",
-      "delete": "Ordner löschen",
-      "deleteTitle": "Ordner löschen",
-      "deleteMessage": "„{name}“ löschen? Die enthaltenen Dokumente werden auf die oberste Ebene verschoben, nicht gelöscht.",
-      "empty": "Noch keine Ordner."
+    "newFolder": "Neuer Ordner",
+    "rename": "Ordner umbenennen",
+    "delete": "Ordner löschen",
+    "actions": "Aktionen für Ordner {name}",
+    "emptyFolder": "Dieser Ordner ist leer.",
+    "createDialog": {
+      "title": "Neuer Ordner",
+      "namePlaceholder": "Ordnername"
+    },
+    "renameDialog": {
+      "title": "Ordner umbenennen"
+    },
+    "deleteConfirm": {
+      "title": "Ordner löschen",
+      "message": "„{name}“ löschen? Die Dokumente wechseln auf die oberste Ebene und werden nicht gelöscht."
+    },
+    "notFound": {
+      "message": "Ordner nicht gefunden.",
+      "back": "Zurück zu Dokumenten"
     }
   },
   "editor": {

@@ -1,8 +1,9 @@
-import type { Folder } from '@repo/database';
+import type { Folder, FolderWithDocumentCount } from '@repo/database';
 import {
   createFolder,
   deleteFolderById,
-  getFoldersByWorkspaceId,
+  getFolderWithCountById,
+  getFoldersWithCountByWorkspaceId,
   renameFolder,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -12,8 +13,14 @@ import { InternalServerErrorException, NotFoundException } from '../exceptions';
 /**
  * [GET] /workspace/:workspaceId/folder
  */
-export async function listFolders({ workspaceId }: { workspaceId: string }): Promise<Folder[]> {
-  const { error, data: folders } = await tryCatch(() => getFoldersByWorkspaceId({ workspaceId }));
+export async function listFolders({
+  workspaceId,
+}: {
+  workspaceId: string;
+}): Promise<FolderWithDocumentCount[]> {
+  const { error, data: folders } = await tryCatch(() =>
+    getFoldersWithCountByWorkspaceId({ workspaceId }),
+  );
 
   if (error !== null || !folders) {
     logger.error('Failed to list folders', error);
@@ -21,6 +28,32 @@ export async function listFolders({ workspaceId }: { workspaceId: string }): Pro
   }
 
   return folders;
+}
+
+/**
+ * [GET] /workspace/:workspaceId/folder/:folderId
+ */
+export async function getFolder({
+  workspaceId,
+  folderId,
+}: {
+  workspaceId: string;
+  folderId: string;
+}): Promise<FolderWithDocumentCount> {
+  const { error, data: folderRecord } = await tryCatch(() =>
+    getFolderWithCountById({ folderId, workspaceId }),
+  );
+
+  if (error !== null) {
+    logger.error('Failed to load folder', error);
+    throw new InternalServerErrorException('Failed to load folder');
+  }
+
+  if (!folderRecord) {
+    throw new NotFoundException('Folder not found');
+  }
+
+  return folderRecord;
 }
 
 /**
@@ -83,5 +116,9 @@ export async function deleteFolder({
   workspaceId: string;
   folderId: string;
 }): Promise<void> {
-  await deleteFolderById({ folderId, workspaceId });
+  const wasDeleted = await deleteFolderById({ folderId, workspaceId });
+
+  if (!wasDeleted) {
+    throw new NotFoundException('Folder not found');
+  }
 }

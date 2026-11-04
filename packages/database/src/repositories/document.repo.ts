@@ -24,16 +24,39 @@ export async function getDocumentCountByWorkspaceId({
   return db.$count(document, eq(document.workspaceId, workspaceId));
 }
 
-// Workspace-scoped list, most recently updated first, with each document's
-// folder and author attached so the web UI can group/label without extra
-// round trips.
+export type DocumentFolderFilter =
+  | { kind: 'all' }
+  | { kind: 'unfiled' }
+  | { kind: 'folder'; folderId: string };
+
+interface DocumentListFilterInput {
+  workspaceId: string;
+  folderFilter: DocumentFolderFilter;
+}
+
+function toDocumentListFilter({ workspaceId, folderFilter }: DocumentListFilterInput) {
+  if (folderFilter.kind === 'all') {
+    return { workspaceId };
+  }
+  if (folderFilter.kind === 'unfiled') {
+    // Drizzle's filter type needs the literal `true`, not `boolean`.
+    return { workspaceId, folderId: { isNull: true as const } };
+  }
+  return { workspaceId, folderId: folderFilter.folderId };
+}
+
+/**
+ * Workspace-scoped list, most recently updated first, with each document's
+ * folder and author attached so the web UI can group/label without extra
+ * round trips. `folderFilter` narrows it to all documents, those in no
+ * folder, or those in one folder.
+ */
 export async function getDocumentsByWorkspaceId({
   workspaceId,
-}: {
-  workspaceId: string;
-}): Promise<DocumentWithRelations[]> {
+  folderFilter,
+}: DocumentListFilterInput): Promise<DocumentWithRelations[]> {
   return db.query.document.findMany({
-    where: { workspaceId },
+    where: toDocumentListFilter({ workspaceId, folderFilter }),
     with: {
       folder: true,
       createdByUser: documentAuthorColumns,
@@ -113,8 +136,10 @@ export async function deleteDocumentById({
 }: {
   documentId: string;
   workspaceId: string;
-}): Promise<void> {
-  await db
+}): Promise<boolean> {
+  const deleted = await db
     .delete(document)
-    .where(and(eq(document.id, documentId), eq(document.workspaceId, workspaceId)));
+    .where(and(eq(document.id, documentId), eq(document.workspaceId, workspaceId)))
+    .returning({ id: document.id });
+  return deleted.length > 0;
 }

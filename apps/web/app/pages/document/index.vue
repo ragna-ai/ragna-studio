@@ -1,33 +1,55 @@
 <script setup lang="ts">
-import { FolderCogIcon } from '@lucide/vue';
+import { FolderPlusIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import DocumentCreateDialog from '~/features/document/components/DocumentCreateDialog.vue';
-import DocumentTable from '~/features/document/components/DocumentTable.vue';
-import FolderManageDialog from '~/features/document/components/FolderManageDialog.vue';
+import DocumentTable, {
+  type MoveDocumentPayload,
+} from '~/features/document/components/DocumentTable.vue';
+import FolderNameDialog from '~/features/document/components/FolderNameDialog.vue';
+import { ROOT_FOLDER_FILTER } from '~/features/document/composables/queryKeys';
 import {
   useDeleteDocument,
-  useGetDocuments,
+  useGetDocumentsInFolder,
   useUpdateDocument,
 } from '~/features/document/composables/useDocumentApi';
-import { useGetFolders } from '~/features/document/composables/useFolderApi';
+import {
+  useDeleteFolder,
+  useGetFolder,
+  useGetFolders,
+} from '~/features/document/composables/useFolderApi';
+import type { Folder } from '~/features/document/types';
+import { isNotFoundError } from '~/lib/api-error';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
 // Refs
 const isCreateDialogOpen = ref(false);
-const isFolderManageOpen = ref(false);
+const isCreateFolderOpen = ref(false);
+const folderToRename = ref<Folder | null>(null);
+const isRenameFolderOpen = ref(false);
 
 // Composables
 // A workspace is always active: activeWorkspaceId
 // is only briefly '' on first load, before the workspace list resolves it.
 const { activeWorkspaceId } = storeToRefs(useWorkspaceScopeStore());
+const route = useRoute();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
-const { data: documentsData, error: documentsError } = useGetDocuments();
+const openFolderId = computed(() => {
+  const folder = route.query.folder;
+  return typeof folder === 'string' && folder !== '' ? folder : null;
+});
+const documentFilter = computed(() => openFolderId.value ?? ROOT_FOLDER_FILTER);
+
+const { data: documentsData, error: documentsError } =
+  useGetDocumentsInFolder(documentFilter);
 const { data: foldersData } = useGetFolders();
+const { data: openFolderData, error: openFolderError } =
+  useGetFolder(openFolderId);
 const { mutateAsync: deleteDocument } = useDeleteDocument();
 const { mutate: updateDocument } = useUpdateDocument();
+const { mutateAsync: deleteFolder } = useDeleteFolder();
 
 useHead({
   title: t('document.list.title'),
@@ -36,8 +58,42 @@ useHead({
 // Computed
 const documents = computed(() => documentsData.value?.documents ?? []);
 const folders = computed(() => foldersData.value?.folders ?? []);
+const folderRows = computed(() => (openFolderId.value ? [] : folders.value));
+const isFolderNotFound = computed(
+  () => !!openFolderId.value && isNotFoundError(openFolderError.value),
+);
+const isListEmpty = computed(
+  () => documents.value.length === 0 && folderRows.value.length === 0,
+);
+const breadcrumbItems = computed(() => [
+  { label: t('document.list.title'), to: '/document' },
+  { label: openFolderData.value?.folder.name ?? '' },
+]);
 
 // Functions
+function openFolder(folderId: string) {
+  navigateTo({ path: '/document', query: { folder: folderId } });
+}
+
+function startRenameFolder(folder: Folder) {
+  folderToRename.value = folder;
+  isRenameFolderOpen.value = true;
+}
+
+async function handleDeleteFolder(folder: Folder) {
+  const confirmed = await confirm({
+    title: t('folder.deleteConfirm.title'),
+    message: t('folder.deleteConfirm.message', { name: folder.name }),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) {
+    return;
+  }
+  await deleteFolder(folder.id);
+}
+
 async function handleDeleteDocument(documentId: string) {
   const confirmed = await confirm({
     title: t('document.deleteConfirm.title'),
@@ -52,10 +108,7 @@ async function handleDeleteDocument(documentId: string) {
   await deleteDocument(documentId);
 }
 
-function handleMoveDocument(payload: {
-  documentId: string;
-  folderId: string | null;
-}) {
+function handleMoveDocument(payload: MoveDocumentPayload) {
   updateDocument(payload, {
     onSuccess: () => toast.success(t('document.list.item.moveSuccess')),
   });
@@ -75,10 +128,10 @@ function handleMoveDocument(payload: {
               <Button
                 variant="secondary"
                 :disabled="!activeWorkspaceId"
-                @click="isFolderManageOpen = true"
+                @click="isCreateFolderOpen = true"
               >
-                <FolderCogIcon class="mr-2 size-4 stroke-1.5" />
-                {{ t('folder.manage.title') }}
+                <FolderPlusIcon class="mr-2 size-4 stroke-1.5" />
+                {{ t('folder.newFolder') }}
               </Button>
               <Button
                 variant="secondary"
@@ -94,21 +147,65 @@ function handleMoveDocument(payload: {
       <template #bottom> </template>
     </Heading>
 
-    <div class="px-5">
+    <div class="space-y-4 px-5">
       <div
         v-if="!activeWorkspaceId"
         class="rounded-lg border p-6 text-sm text-muted-foreground"
       >
         {{ t('document.list.loading') }}
       </div>
-      <div v-else-if="documentsData">
+
+      <div v-else-if="isFolderNotFound" class="space-y-3">
+        <p class="text-sm text-muted-foreground">
+          {{ t('folder.notFound.message') }}
+        </p>
+        <Button variant="secondary" as-child>
+          <NuxtLinkLocale to="/document">
+            {{ t('folder.notFound.back') }}
+          </NuxtLinkLocale>
+        </Button>
+      </div>
+
+      <template v-else-if="documentsData">
+        <PageBreadcrumb v-if="openFolderId" :items="breadcrumbItems" />
+
+        <div
+          v-if="isListEmpty"
+          class="space-y-3 rounded-lg border p-6 text-sm text-muted-foreground"
+        >
+          <p>
+            {{
+              openFolderId
+                ? t('folder.emptyFolder')
+                : t('document.list.emptyWorkspace')
+            }}
+          </p>
+          <div class="flex gap-2">
+            <Button variant="secondary" @click="isCreateDialogOpen = true">
+              {{ t('document.list.newDocument') }}
+            </Button>
+            <Button
+              v-if="!openFolderId"
+              variant="secondary"
+              @click="isCreateFolderOpen = true"
+            >
+              {{ t('folder.newFolder') }}
+            </Button>
+          </div>
+        </div>
         <DocumentTable
+          v-else
           :documents="documents"
-          :folders="folders"
+          :folder-rows="folderRows"
+          :move-targets="folders"
+          @open-folder="openFolder"
+          @rename-folder="startRenameFolder"
+          @delete-folder="handleDeleteFolder"
           @delete-document="handleDeleteDocument"
           @move-document="handleMoveDocument"
         />
-      </div>
+      </template>
+
       <div v-else-if="documentsError">
         <p class="text-sm text-stone-500">
           {{ documentsError.message || t('document.list.loadError') }}
@@ -120,10 +217,12 @@ function handleMoveDocument(payload: {
       <DocumentCreateDialog
         v-model:open="isCreateDialogOpen"
         :folders="folders"
+        :folder-id="openFolderId"
       />
-      <FolderManageDialog
-        v-model:open="isFolderManageOpen"
-        :folders="folders"
+      <FolderNameDialog v-model:open="isCreateFolderOpen" />
+      <FolderNameDialog
+        v-model:open="isRenameFolderOpen"
+        :folder="folderToRename ?? undefined"
       />
     </template>
   </SectionWrapper>

@@ -1,4 +1,4 @@
-import type { DocumentWithRelations } from '@repo/database';
+import type { DocumentFolderFilter, DocumentWithRelations } from '@repo/database';
 import {
   createDocument,
   deleteDocumentById,
@@ -11,6 +11,8 @@ import { toDocumentDocx, toDocumentMarkdown, toDocumentPdf, toDocumentText } fro
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import { ROOT_FOLDER_FILTER } from '../validation/document.schema';
+import { getFolder } from './folder.service';
 import { throwIfForeignReference } from '../utils/foreign-reference';
 
 export interface DocumentResponse {
@@ -77,16 +79,41 @@ async function loadDocumentResponse({
 }
 
 /**
+ * Maps the `folderId` query value to the repository filter. A folder of another workspace answers 404.
+ */
+async function resolveFolderFilter({
+  workspaceId,
+  folderId,
+}: {
+  workspaceId: string;
+  folderId?: string;
+}): Promise<DocumentFolderFilter> {
+  if (folderId === undefined) {
+    return { kind: 'all' };
+  }
+
+  if (folderId === ROOT_FOLDER_FILTER) {
+    return { kind: 'unfiled' };
+  }
+
+  const folderRecord = await getFolder({ workspaceId, folderId });
+  return { kind: 'folder', folderId: folderRecord.id };
+}
+
+/**
  * [GET] /workspace/:workspaceId/document
  * Lists a workspace's documents, most recently updated first.
  */
 export async function listDocuments({
   workspaceId,
+  folderId,
 }: {
   workspaceId: string;
+  folderId?: string;
 }): Promise<DocumentResponse[]> {
+  const folderFilter = await resolveFolderFilter({ workspaceId, folderId });
   const { error, data: documents } = await tryCatch(() =>
-    getDocumentsByWorkspaceId({ workspaceId }),
+    getDocumentsByWorkspaceId({ workspaceId, folderFilter }),
   );
 
   if (error !== null || !documents) {
@@ -265,5 +292,9 @@ export async function deleteDocument({
   workspaceId: string;
   documentId: string;
 }): Promise<void> {
-  await deleteDocumentById({ documentId, workspaceId });
+  const wasDeleted = await deleteDocumentById({ documentId, workspaceId });
+
+  if (!wasDeleted) {
+    throw new NotFoundException('Document not found');
+  }
 }

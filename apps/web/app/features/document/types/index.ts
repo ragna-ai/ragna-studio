@@ -42,6 +42,7 @@ export interface Folder {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  documentCount: number;
 }
 
 export interface FolderResponse {

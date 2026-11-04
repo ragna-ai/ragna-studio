@@ -1,19 +1,53 @@
-import { and, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import { db } from '../db';
 import type { Folder } from '../schema';
 import { document, folder } from '../schema';
 
 export type { Folder, NewFolder } from '../schema';
 
-export async function getFoldersByWorkspaceId({
+export interface FolderWithDocumentCount extends Folder {
+  documentCount: number;
+}
+
+const folderWithCountColumns = {
+  id: folder.id,
+  workspaceId: folder.workspaceId,
+  name: folder.name,
+  deletedAt: folder.deletedAt,
+  createdAt: folder.createdAt,
+  updatedAt: folder.updatedAt,
+  documentCount: count(document.id),
+};
+
+export async function getFoldersWithCountByWorkspaceId({
   workspaceId,
 }: {
   workspaceId: string;
-}): Promise<Folder[]> {
-  return db.query.folder.findMany({
-    where: { workspaceId },
-    orderBy: (t, { asc }) => asc(t.name),
-  });
+}): Promise<FolderWithDocumentCount[]> {
+  return db
+    .select(folderWithCountColumns)
+    .from(folder)
+    .leftJoin(document, eq(document.folderId, folder.id))
+    .where(eq(folder.workspaceId, workspaceId))
+    .groupBy(folder.id)
+    .orderBy(asc(folder.name));
+}
+
+export async function getFolderWithCountById({
+  folderId,
+  workspaceId,
+}: {
+  folderId: string;
+  workspaceId: string;
+}): Promise<FolderWithDocumentCount | null> {
+  const [found] = await db
+    .select(folderWithCountColumns)
+    .from(folder)
+    .leftJoin(document, eq(document.folderId, folder.id))
+    .where(and(eq(folder.id, folderId), eq(folder.workspaceId, workspaceId)))
+    .groupBy(folder.id);
+
+  return found ?? null;
 }
 
 export async function createFolder({
@@ -59,14 +93,16 @@ export async function deleteFolderById({
 }: {
   folderId: string;
   workspaceId: string;
-}): Promise<void> {
-  await db.transaction(async (tx) => {
+}): Promise<boolean> {
+  return db.transaction(async (tx) => {
     await tx
       .update(document)
       .set({ folderId: null })
       .where(and(eq(document.folderId, folderId), eq(document.workspaceId, workspaceId)));
-    await tx
+    const deleted = await tx
       .delete(folder)
-      .where(and(eq(folder.id, folderId), eq(folder.workspaceId, workspaceId)));
+      .where(and(eq(folder.id, folderId), eq(folder.workspaceId, workspaceId)))
+      .returning({ id: folder.id });
+    return deleted.length > 0;
   });
 }

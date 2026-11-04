@@ -11,7 +11,12 @@ import type { Folder } from '~/features/document/types';
 const NO_FOLDER = '__none__';
 
 // Props
-const props = defineProps<{ folders: Folder[] }>();
+interface Props {
+  folders: Folder[];
+  /** Folder pre-selected when the dialog opens. */
+  folderId: string | null;
+}
+const props = defineProps<Props>();
 
 // Refs
 const open = defineModel<boolean>('open', { default: false });
@@ -26,7 +31,7 @@ const createDocumentSchema = z.object({
 });
 
 const form = useForm({
-  defaultValues: { title: '', folderId: NO_FOLDER },
+  defaultValues: { title: '', folderId: props.folderId ?? NO_FOLDER },
   validators: { onChange: createDocumentSchema },
   onSubmit: async ({ value }) => {
     const response = await createDocument({
@@ -37,6 +42,14 @@ const form = useForm({
     form.reset();
     await navigateTo(`/document/${response.document.id}`);
   },
+});
+
+// Hooks
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    return;
+  }
+  form.reset({ title: '', folderId: props.folderId ?? NO_FOLDER });
 });
 </script>
 
