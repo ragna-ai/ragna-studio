@@ -163,6 +163,8 @@ In user-facing text and docs, write the brand as `RAGNA` (all caps) and the prod
 This repo is public. `specs/` holds only technical docs for features that are decided or being built.
 Business strategy, pricing, product lineup and undecided drafts live outside this repo; never write them into `specs/`.
 
+A PRD is written on its feature branch and opened as the first commit of that branch's draft PR; the code follows in
+the same PR. Never a separate spec-only PR. Review of the spec happens on that draft PR before the build starts.
 Spec bookkeeping ships in the same PR as the code, never as a separate docs-only PR: PRD `Status: implemented (date, PR #N)`,
 `Closes #N` for its issue in the PR body, `pnpm specs:index`, the `specs/overview.md` entry and the `apps/docs` page.
 Any user-visible change (UI, behaviour, config or env vars, self-hosting) updates its `apps/docs` page in the same PR.
