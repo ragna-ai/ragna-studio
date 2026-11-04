@@ -1,22 +1,30 @@
+import type { IntegrationIdIn } from '@repo/integrations/catalog';
 import { createGmailProvider } from './gmail/gmail.provider';
 import { createGraphProvider } from './graph/graph.provider';
-import type { MailProvider } from './mail-provider';
+import type { MailProvider, MailProviderOptions } from './mail-provider';
 
-export type MailProviderKind = 'gmail' | 'microsoft';
+/** Every catalog integration in the mail category. */
+export type MailIntegrationId = IntegrationIdIn<'mail'>;
 
-export interface CreateMailProviderOptions {
-  provider: MailProviderKind;
-  /** Resolves a fresh, valid OAuth access token; the provider does not refresh or cache tokens. */
-  getAccessToken: () => Promise<string>;
+type MailProviderFactory = (options: MailProviderOptions) => MailProvider;
+
+const MAIL_PROVIDERS: Record<MailIntegrationId, MailProviderFactory> = {
+  gmail: createGmailProvider,
+  'outlook-mail': createGraphProvider,
+};
+
+export function isMailIntegrationId(value: string): value is MailIntegrationId {
+  return Object.hasOwn(MAIL_PROVIDERS, value);
+}
+
+export interface CreateMailProviderOptions extends MailProviderOptions {
+  integrationId: MailIntegrationId;
 }
 
 export function createMailProvider({
-  provider,
+  integrationId,
   getAccessToken,
+  sleep,
 }: CreateMailProviderOptions): MailProvider {
-  if (provider === 'gmail') {
-    return createGmailProvider({ getAccessToken });
-  }
-
-  return createGraphProvider({ getAccessToken });
+  return MAIL_PROVIDERS[integrationId]({ getAccessToken, sleep });
 }

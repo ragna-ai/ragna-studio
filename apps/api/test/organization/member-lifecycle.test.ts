@@ -335,7 +335,7 @@ describe('email sync', () => {
       await createEmailAccount({
         userId,
         connectionId: connection.id,
-        provider: 'gmail',
+        integrationId: 'gmail',
         email: `${userId}@example.com`,
       });
     }

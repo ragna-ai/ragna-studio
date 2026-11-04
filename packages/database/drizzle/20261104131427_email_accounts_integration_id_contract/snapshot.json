@@ -1,0 +1,43 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "22057373-1255-4ea2-8c63-8c9b7d26c9bb",
+  "prevIds": ["9bba7ec6-e6cb-4164-b0a7-5a6bc230fdb3"],
+  "footprints": [
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "email_accounts", "provider"],
+      "writes": [
+        "s|col|public.email_accounts.provider",
+        "n|col|public.email_accounts.provider",
+        "e|col|public.email_accounts.provider"
+      ],
+      "reads": ["n|tbl|public.email_accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": ["column", "public", "email_accounts", "integration_id"],
+      "writes": ["s|colprop|public.email_accounts.integration_id.notNull"],
+      "reads": [
+        "n|tbl|public.email_accounts",
+        "n|sch|public",
+        "n|col|public.email_accounts.integration_id"
+      ],
+      "sqlHash": "a9fb4bf89143a75e"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"email_accounts\",\"provider\"]"
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"email_accounts\",\"integration_id\"]",
+      "set": {
+        "notNull": true
+      }
+    }
+  ]
+}

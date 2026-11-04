@@ -14,7 +14,7 @@ import {
   truncateAllTables,
   updateDraftMock,
 } from '@repo/testing';
-import { GmailApiError } from '@repo/mail/provider';
+import { VendorApiError } from '@repo/integrations/http';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
@@ -281,7 +281,7 @@ describe('POST /email/draft/:draftId/discard', () => {
       providerDraftId: 'gmail-draft-discard-2',
     });
     deleteDraftMock.mockImplementationOnce(() =>
-      Promise.reject(new GmailApiError('Not Found', 404)),
+      Promise.reject(new VendorApiError({ vendor: 'Gmail', status: 404 })),
     );
 
     const response = await app.request(`/email/draft/${draft.id}/discard`, {
@@ -305,7 +305,7 @@ describe('POST /email/draft/:draftId/discard', () => {
       providerDraftId: 'gmail-draft-discard-3',
     });
     deleteDraftMock.mockImplementationOnce(() =>
-      Promise.reject(new GmailApiError('Server error', 500)),
+      Promise.reject(new VendorApiError({ vendor: 'Gmail', status: 500 })),
     );
 
     const response = await app.request(`/email/draft/${draft.id}/discard`, {

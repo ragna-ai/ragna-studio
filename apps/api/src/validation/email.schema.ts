@@ -1,3 +1,4 @@
+import { isMailIntegrationId, type MailIntegrationId } from '@repo/mail/provider';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -13,7 +14,10 @@ const hexColor = z
 export const validConnectEmailAccountBody = myzValidator(
   'json',
   z.object({
-    provider: z.enum(['gmail', 'microsoft']),
+    integrationId: z.custom<MailIntegrationId>(
+      (value) => typeof value === 'string' && isMailIntegrationId(value),
+      'integrationId must be a mail integration',
+    ),
     connectionId: primaryId,
   }),
 );

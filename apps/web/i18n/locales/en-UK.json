@@ -1477,7 +1477,7 @@
       "searchHintLabel": "Search syntax help",
       "searchHint": {
         "gmail": "Try Gmail operators like from:name, is:unread, has:attachment.",
-        "microsoft": "Try Outlook search like from:name, hasattachments:true."
+        "outlook-mail": "Try Outlook search like from:name, hasattachments:true."
       },
       "drafts": "Drafts",
       "categories": "Categories",
@@ -1593,7 +1593,7 @@
         "title": "Account",
         "provider": {
           "gmail": "Gmail",
-          "microsoft": "Outlook"
+          "outlook-mail": "Outlook"
         },
         "defaultAgent": "Default draft agent",
         "defaultAgentHint": "Used for auto-drafts and preselected on manual \"Draft with AI\" requests.",

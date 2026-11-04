@@ -19,6 +19,7 @@ import type {
   MailMessageMetadata,
   MailProvider,
   MailProviderId,
+  MailProviderOptions,
   MailSearchResult,
   MailSyncChange,
   MailSyncOutcome,
@@ -26,12 +27,9 @@ import type {
   SendMailInput,
   SendMailResult,
 } from '../mail-provider';
-import {
-  GmailApiError,
-  gmailRequest,
-  gmailRequestVoid,
-  type GmailRequestOptions,
-} from './gmail.client';
+import type { VendorClient, VendorRequestOptions } from '@repo/integrations/http';
+import { isMailNotFoundError } from '../errors';
+import { createGmailClient } from './gmail.client';
 import {
   hasChatLabel,
   toMailDraft,
@@ -71,19 +69,12 @@ interface GmailRawMessageBody {
   threadId?: string;
 }
 
-export { GmailApiError } from './gmail.client';
-
-export interface GmailProviderOptions {
-  /** Resolves a fresh, valid Gmail OAuth access token; the provider does not refresh or cache tokens. */
-  getAccessToken: () => Promise<string>;
-}
-
 export class GmailProvider implements MailProvider {
-  private readonly getAccessToken: () => Promise<string>;
+  private readonly client: VendorClient;
   private cachedEmailAddress: string | undefined;
 
-  constructor(options: GmailProviderOptions) {
-    this.getAccessToken = options.getAccessToken;
+  constructor(options: MailProviderOptions) {
+    this.client = createGmailClient(options);
   }
 
   async getProfile(): Promise<MailAccountProfile> {
@@ -168,9 +159,8 @@ export class GmailProvider implements MailProvider {
     return this.getDraft(draftId);
   }
 
-  // Throws `GmailApiError` with `status: 404` if the draft no longer exists
-  // (already sent or discarded elsewhere); callers distinguish that from a
-  // transport failure by checking `error instanceof GmailApiError`.
+  // Throws a not-found vendor error if the draft no longer exists (already
+  // sent or discarded elsewhere); callers tell it apart with `isMailNotFoundError`.
   async getDraft(draftId: MailProviderId): Promise<MailDraft> {
     const raw = await this.request<GmailDraftResource>(`users/me/drafts/${draftId}?format=full`);
     return toMailDraft(raw);
@@ -209,7 +199,7 @@ export class GmailProvider implements MailProvider {
 
   // Same 404-on-already-gone semantics as `getDraft`; deleting a draft that
   // was already discarded (or just sent, which deletes it server-side) is
-  // surfaced as `GmailApiError` with `status: 404`, not a generic failure.
+  // surfaced as a not-found vendor error, not a generic failure.
   async deleteDraft(draftId: MailProviderId): Promise<void> {
     await this.requestVoid(`users/me/drafts/${draftId}`, { method: 'DELETE' });
   }
@@ -299,8 +289,7 @@ export class GmailProvider implements MailProvider {
     return { size: response.size, data: Buffer.from(response.data, 'base64url') };
   }
 
-  // Throws `GmailApiError` with `status: 404` if the draft no longer exists,
-  // same semantics as `getDraft`.
+  // Throws a not-found vendor error if the draft no longer exists, same as `getDraft`.
   async getDraftAttachment(
     draftId: MailProviderId,
     attachmentId: string,
@@ -311,12 +300,12 @@ export class GmailProvider implements MailProvider {
 
   // --- internals ---------------------------------------------------------
 
-  private request<T>(path: string, options?: GmailRequestOptions): Promise<T> {
-    return gmailRequest<T>(this.getAccessToken, path, options);
+  private request<T>(path: string, options?: VendorRequestOptions): Promise<T> {
+    return this.client.request<T>(path, options);
   }
 
-  private requestVoid(path: string, options?: GmailRequestOptions): Promise<void> {
-    return gmailRequestVoid(this.getAccessToken, path, options);
+  private requestVoid(path: string, options?: VendorRequestOptions): Promise<void> {
+    return this.client.requestVoid(path, options);
   }
 
   /** `drafts.list` only returns draft/message ids; fetch metadata for the folder listing. */
@@ -352,7 +341,7 @@ export class GmailProvider implements MailProvider {
     } catch (error) {
       // A 404 here means Gmail can no longer resolve startHistoryId (it
       // expires on long-idle accounts): the caller needs a full resync.
-      if (error instanceof GmailApiError && error.status === 404) {
+      if (isMailNotFoundError(error)) {
         return null;
       }
       throw error;
@@ -380,7 +369,7 @@ export class GmailProvider implements MailProvider {
         try {
           message = await this.fetchMessage(change.messageId, 'metadata');
         } catch (error) {
-          if (error instanceof GmailApiError && error.status === 404) {
+          if (isMailNotFoundError(error)) {
             continue;
           }
           throw error;
@@ -485,6 +474,6 @@ function toNodemailerAddress(address: MailAddress): { name?: string; address: st
   return { name: address.name, address: address.address };
 }
 
-export function createGmailProvider(options: GmailProviderOptions): GmailProvider {
+export function createGmailProvider(options: MailProviderOptions): GmailProvider {
   return new GmailProvider(options);
 }

@@ -14,6 +14,7 @@ import { useGetEmailCategories } from '~/features/email/composables/useEmailCate
 import {
   MAIL_CONNECT_CALLBACK_PARAM,
   MAIL_RECONNECT_CALLBACK_PARAM,
+  isEmailIntegrationId,
   useEmailConnectFlow,
 } from '~/features/email/composables/useEmailConnectFlow';
 import {
@@ -25,7 +26,6 @@ import { useSearchEmail } from '~/features/email/composables/useEmailSearchApi';
 import { useGetEmailThreads } from '~/features/email/composables/useEmailThreadApi';
 import { firstQueryValue } from '~/features/email/lib/route-query';
 import {
-  isEmailProviderKind,
   type EmailDraft,
   type EmailFolder,
   type EmailThreadListFilters,
@@ -71,12 +71,12 @@ onMounted(async () => {
     const reconnectProvider = firstQueryValue(
       route.query[MAIL_RECONNECT_CALLBACK_PARAM],
     );
-    if (connectProvider && isEmailProviderKind(connectProvider)) {
+    if (connectProvider && isEmailIntegrationId(connectProvider)) {
       const { [MAIL_CONNECT_CALLBACK_PARAM]: _discarded, ...rest } =
         route.query;
       await router.replace({ query: rest });
       await finishConnect(connectProvider);
-    } else if (reconnectProvider && isEmailProviderKind(reconnectProvider)) {
+    } else if (reconnectProvider && isEmailIntegrationId(reconnectProvider)) {
       const { [MAIL_RECONNECT_CALLBACK_PARAM]: _discarded, ...rest } =
         route.query;
       await router.replace({ query: rest });
@@ -227,7 +227,7 @@ const GMAIL_SYSTEM_LABEL_DENYLIST = new Set([
 ]);
 const availableLabels = computed(() => {
   const pages = threadsQuery.data.value?.pages ?? [];
-  const isGmail = account.value?.provider === 'gmail';
+  const isGmail = account.value?.integrationId === 'gmail';
   const labels = new Set<string>();
   for (const page of pages) {
     for (const thread of page.threads) {

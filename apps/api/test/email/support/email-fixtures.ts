@@ -23,12 +23,12 @@ interface ConnectEmailAccountResult {
 
 async function connectEmailAccountRequest({
   cookieHeader,
-  provider,
+  integrationId,
   connectionId,
   email,
 }: {
   cookieHeader: string;
-  provider: 'gmail' | 'microsoft';
+  integrationId: 'gmail' | 'outlook-mail';
   connectionId: string;
   email?: string;
 }): Promise<ConnectEmailAccountResult> {
@@ -41,7 +41,7 @@ async function connectEmailAccountRequest({
   const response = await app.request('/email/account/connect', {
     method: 'POST',
     headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-    body: JSON.stringify({ provider, connectionId }),
+    body: JSON.stringify({ integrationId, connectionId }),
   });
 
   if (response.status !== 201) {
@@ -67,7 +67,7 @@ export async function seedConnectedGmailAccount({
   const { connection } = await seedGmailConnection({ userId, externalEmail: email ?? null });
   const connected = await connectEmailAccountRequest({
     cookieHeader,
-    provider: 'gmail',
+    integrationId: 'gmail',
     connectionId: connection.id,
     email,
   });
@@ -92,7 +92,7 @@ export async function seedConnectedMicrosoftAccount({
   const { connection } = await seedOutlookConnection({ userId, externalEmail: email ?? null });
   const connected = await connectEmailAccountRequest({
     cookieHeader,
-    provider: 'microsoft',
+    integrationId: 'outlook-mail',
     connectionId: connection.id,
     email,
   });

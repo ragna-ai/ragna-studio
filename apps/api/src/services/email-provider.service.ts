@@ -1,20 +1,16 @@
 // apps/api/src/services/email-provider.service.ts
 
-import {
-  getEmailAccountByUserId,
-  getUserConnectionById,
-  type IntegrationConnection,
-} from '@repo/database';
+import { getEmailAccountByUserId, getUserConnectionById } from '@repo/database';
 import {
   ConnectionNeedsReauthError,
-  coversIntegration,
-  getConnectionAccessToken,
+  ConnectionProviderMismatchError,
+  ConnectionScopesMissingError,
+  createIntegrationTokenGetter,
   getIntegration,
-  type IntegrationId,
   type ProviderId,
 } from '@repo/integrations';
 import { logger } from '@repo/logger';
-import { createMailProvider, type MailProvider, type MailProviderKind } from '@repo/mail/provider';
+import { createMailProvider, type MailIntegrationId, type MailProvider } from '@repo/mail/provider';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -23,46 +19,46 @@ import {
   NotFoundException,
 } from '../exceptions';
 
-const MAIL_INTEGRATION_ID: Record<MailProviderKind, IntegrationId> = {
-  gmail: 'gmail',
-  microsoft: 'outlook-mail',
-};
-
-const CONNECTION_PROVIDER_ID: Record<MailProviderKind, ProviderId> = {
-  gmail: 'google',
-  microsoft: 'microsoft',
-};
-
-const PROVIDER_DISPLAY_NAME: Record<MailProviderKind, string> = {
-  gmail: 'Google',
+const PROVIDER_DISPLAY_NAME: Record<ProviderId, string> = {
+  google: 'Google',
   microsoft: 'Microsoft',
+  linkedin: 'LinkedIn',
 };
 
 export const RECONNECT_MAILBOX_MESSAGE = 'Reconnect your mailbox';
 
-/** The provider token is resolved once per request, so a rejected connection fails before any mail call. */
-async function buildMailProvider({
-  connectionId,
-  provider,
-}: {
-  connectionId: string;
-  provider: MailProviderKind;
-}): Promise<MailProvider> {
-  const { error, data: accessToken } = await tryCatch(() =>
-    getConnectionAccessToken({ connectionId }),
-  );
+function toMailboxConnectionException(error: unknown, integrationId: MailIntegrationId): Error {
+  const providerName = PROVIDER_DISPLAY_NAME[getIntegration(integrationId).provider];
 
   if (error instanceof ConnectionNeedsReauthError) {
-    throw new ConflictException(RECONNECT_MAILBOX_MESSAGE);
+    return new ConflictException(RECONNECT_MAILBOX_MESSAGE);
   }
-  if (error !== null || !accessToken) {
-    logger.error(`Failed to get a valid ${PROVIDER_DISPLAY_NAME[provider]} access token`, error);
-    throw new InternalServerErrorException(
-      `Failed to get a valid ${PROVIDER_DISPLAY_NAME[provider]} access token`,
+  if (error instanceof ConnectionProviderMismatchError) {
+    return new BadRequestException(`This connection is not a ${providerName} account`);
+  }
+  if (error instanceof ConnectionScopesMissingError) {
+    return new BadRequestException(
+      `Your ${providerName} account is missing mailbox access. Reconnect it and grant the required permissions`,
     );
   }
 
-  return createMailProvider({ provider, getAccessToken: () => Promise.resolve(accessToken) });
+  logger.error(`Failed to get a valid ${providerName} access token`, error);
+  return new InternalServerErrorException(`Failed to get a valid ${providerName} access token`);
+}
+
+/** The token is resolved once per request, so a rejected connection fails before any mail call. */
+async function buildMailProvider(
+  connectionId: string,
+  integrationId: MailIntegrationId,
+): Promise<MailProvider> {
+  const getAccessToken = createIntegrationTokenGetter({ connectionId, integrationId });
+  const { error, data: accessToken } = await tryCatch(getAccessToken);
+
+  if (error !== null || !accessToken) {
+    throw toMailboxConnectionException(error, integrationId);
+  }
+
+  return createMailProvider({ integrationId, getAccessToken: () => Promise.resolve(accessToken) });
 }
 
 export async function getMailProviderForUser({
@@ -81,40 +77,19 @@ export async function getMailProviderForUser({
     throw new NotFoundException('Mailbox is not connected');
   }
 
-  return buildMailProvider({ connectionId: account.connectionId, provider: account.provider });
+  return buildMailProvider(account.connectionId, account.integrationId);
 }
 
 export interface MailConnectionRequest {
   userId: string;
-  provider: MailProviderKind;
+  integrationId: MailIntegrationId;
   connectionId: string;
-}
-
-function assertConnectionFitsMailbox(
-  connection: IntegrationConnection,
-  provider: MailProviderKind,
-): void {
-  if (connection.provider !== CONNECTION_PROVIDER_ID[provider]) {
-    throw new BadRequestException(
-      `This connection is not a ${PROVIDER_DISPLAY_NAME[provider]} account`,
-    );
-  }
-
-  if (connection.status === 'needs_reauth') {
-    throw new ConflictException(RECONNECT_MAILBOX_MESSAGE);
-  }
-
-  if (!coversIntegration(connection.scopes, getIntegration(MAIL_INTEGRATION_ID[provider]))) {
-    throw new BadRequestException(
-      `Your ${PROVIDER_DISPLAY_NAME[provider]} account is missing mailbox access. Reconnect it and grant the required permissions`,
-    );
-  }
 }
 
 /** Connect path: no email_accounts row exists yet, so the connection comes from the request body. */
 export async function getMailProviderForConnectRequest({
   userId,
-  provider,
+  integrationId,
   connectionId,
 }: MailConnectionRequest): Promise<MailProvider> {
   const connection = await getUserConnectionById({ id: connectionId, userId });
@@ -122,6 +97,5 @@ export async function getMailProviderForConnectRequest({
     throw new NotFoundException('Connection not found');
   }
 
-  assertConnectionFitsMailbox(connection, provider);
-  return buildMailProvider({ connectionId: connection.id, provider });
+  return buildMailProvider(connection.id, integrationId);
 }

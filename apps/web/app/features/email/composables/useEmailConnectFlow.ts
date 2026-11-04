@@ -7,16 +7,15 @@ import { toast } from 'vue-sonner';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import { startAccountSyncForcePoll } from '~/features/email/lib/email-account-sync-poll';
-import { connectIntegrationResponseSchema } from '@repo/integrations/catalog';
-import type {
-  IntegrationConnectionsResponse,
-  IntegrationId,
-  ProviderId,
+import {
+  connectIntegrationResponseSchema,
+  getIntegration,
 } from '@repo/integrations/catalog';
+import type { IntegrationConnectionsResponse } from '@repo/integrations/catalog';
 import type {
   EmailAccount,
   EmailAccountStatusResponse,
-  EmailProviderKind,
+  EmailIntegrationId,
 } from '~/features/email/types';
 import { extractErrorMessage } from '~/lib/api-error';
 
@@ -24,27 +23,19 @@ import { extractErrorMessage } from '~/lib/api-error';
 export const MAIL_CONNECT_CALLBACK_PARAM = 'mailConnect';
 export const MAIL_RECONNECT_CALLBACK_PARAM = 'mailReconnect';
 
-interface ProviderAuthConfig {
-  connectionProvider: ProviderId;
-  integrationId: IntegrationId;
-  displayName: string;
-}
-
-const PROVIDER_AUTH_CONFIG: Record<EmailProviderKind, ProviderAuthConfig> = {
-  gmail: {
-    connectionProvider: 'google',
-    integrationId: 'gmail',
-    displayName: 'Gmail',
-  },
-  microsoft: {
-    connectionProvider: 'microsoft',
-    integrationId: 'outlook-mail',
-    displayName: 'Outlook',
-  },
+const MAILBOX_DISPLAY_NAME: Record<EmailIntegrationId, string> = {
+  gmail: 'Gmail',
+  'outlook-mail': 'Outlook',
 };
 
+export function isEmailIntegrationId(
+  value: string,
+): value is EmailIntegrationId {
+  return Object.hasOwn(MAILBOX_DISPLAY_NAME, value);
+}
+
 interface LinkVariables {
-  provider: EmailProviderKind;
+  integrationId: EmailIntegrationId;
   returnPath: string;
 }
 
@@ -72,7 +63,7 @@ export function useEmailConnectFlow() {
   });
 
   async function link(
-    { provider, returnPath }: LinkVariables,
+    { integrationId, returnPath }: LinkVariables,
     callbackParam: string,
   ) {
     const responseJson = await useNuxtApp().$api<unknown>(
@@ -80,8 +71,12 @@ export function useEmailConnectFlow() {
       {
         method: 'POST',
         body: {
-          integrationId: PROVIDER_AUTH_CONFIG[provider].integrationId,
-          returnPath: withCallbackParam(returnPath, callbackParam, provider),
+          integrationId,
+          returnPath: withCallbackParam(
+            returnPath,
+            callbackParam,
+            integrationId,
+          ),
         },
       },
     );
@@ -95,10 +90,10 @@ export function useEmailConnectFlow() {
     onSuccess: () => {
       isRedirecting.value = true;
     },
-    onError: (_error, { provider }) =>
+    onError: (_error, { integrationId }) =>
       toast.error(
         $i18n.t('email.toast.connectStartFailed', {
-          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+          provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       ),
   });
@@ -109,10 +104,10 @@ export function useEmailConnectFlow() {
     onSuccess: () => {
       isRedirecting.value = true;
     },
-    onError: (_error, { provider }) =>
+    onError: (_error, { integrationId }) =>
       toast.error(
         $i18n.t('email.toast.reconnectStartFailed', {
-          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+          provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       ),
   });
@@ -120,10 +115,10 @@ export function useEmailConnectFlow() {
   const connectAccountMutation = useMutation<
     ConnectEmailAccountResponse,
     unknown,
-    EmailProviderKind
+    EmailIntegrationId
   >({
     mutationKey: emailKeys.connect(),
-    mutationFn: async (provider) => {
+    mutationFn: async (integrationId) => {
       const { $api } = useNuxtApp();
       const { connections } = await $api<IntegrationConnectionsResponse>(
         '/integration/connection',
@@ -131,18 +126,17 @@ export function useEmailConnectFlow() {
       );
       const connection = connections.find(
         (candidate) =>
-          candidate.provider ===
-          PROVIDER_AUTH_CONFIG[provider].connectionProvider,
+          candidate.provider === getIntegration(integrationId).provider,
       );
       if (!connection) {
         throw new Error('No connection found for the provider');
       }
       return $api<ConnectEmailAccountResponse>('/email/account/connect', {
         method: 'POST',
-        body: { provider, connectionId: connection.id },
+        body: { integrationId, connectionId: connection.id },
       });
     },
-    onSuccess: ({ account }, provider) => {
+    onSuccess: ({ account }, integrationId) => {
       // The response predates the initial sync job, so poll until it settles (like "Sync now").
       // Opened before setQueryData, which re-evaluates the account query's refetchInterval.
       startAccountSyncForcePoll(account.lastSyncedAt);
@@ -152,18 +146,18 @@ export function useEmailConnectFlow() {
       );
       toast.success(
         $i18n.t('email.toast.connected', {
-          provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+          provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       );
     },
-    onError: (error, provider) => {
+    onError: (error, integrationId) => {
       // A 400 here almost always means the connection lacks the required scope;
       // the connect prompt stays visible either way.
       toast.error(
         extractErrorMessage(
           error,
           $i18n.t('email.toast.connectFailed', {
-            provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+            provider: MAILBOX_DISPLAY_NAME[integrationId],
           }),
         ),
       );
@@ -180,24 +174,24 @@ export function useEmailConnectFlow() {
   });
 
   return {
-    startConnect: (provider: EmailProviderKind, returnPath: string) =>
-      linkMutation.mutate({ provider, returnPath }),
+    startConnect: (integrationId: EmailIntegrationId, returnPath: string) =>
+      linkMutation.mutate({ integrationId, returnPath }),
     isLinking: computed(
       () => linkMutation.isPending.value || isRedirecting.value,
     ),
-    finishConnect: (provider: EmailProviderKind) =>
-      connectAccountMutation.mutateAsync(provider),
+    finishConnect: (integrationId: EmailIntegrationId) =>
+      connectAccountMutation.mutateAsync(integrationId),
     isFinishingConnect: computed(() => finishingConnectCount.value > 0),
-    startReconnect: (provider: EmailProviderKind, returnPath: string) =>
-      relinkMutation.mutate({ provider, returnPath }),
+    startReconnect: (integrationId: EmailIntegrationId, returnPath: string) =>
+      relinkMutation.mutate({ integrationId, returnPath }),
     isRelinking: computed(
       () => relinkMutation.isPending.value || isRedirecting.value,
     ),
-    finishReconnect: (provider: EmailProviderKind) =>
+    finishReconnect: (integrationId: EmailIntegrationId) =>
       syncAccount().then(() =>
         toast.success(
           $i18n.t('email.toast.reconnected', {
-            provider: PROVIDER_AUTH_CONFIG[provider].displayName,
+            provider: MAILBOX_DISPLAY_NAME[integrationId],
           }),
         ),
       ),

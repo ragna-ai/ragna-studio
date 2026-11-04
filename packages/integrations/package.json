@@ -18,6 +18,10 @@
       "types": "./dist/catalog/index.d.mts",
       "import": "./dist/catalog/index.mjs"
     },
+    "./http": {
+      "types": "./dist/http/index.d.mts",
+      "import": "./dist/http/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

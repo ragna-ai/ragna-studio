@@ -31,6 +31,7 @@
     "@maizzle/framework": "6.3.0",
     "@maizzle/tailwindcss": "1.5.6",
     "@repo/config": "workspace:*",
+    "@repo/integrations": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/utils": "workspace:*",
     "email-reply-parser": "^2.3.9",

@@ -4,7 +4,8 @@ import { primaryIdColumn, timestamps } from './common.schema';
 import { integrationConnection } from './integration.schema';
 import { user } from './user.schema';
 
-export type EmailProvider = 'gmail' | 'microsoft';
+/** Mirrors the mail integration ids of the integrations catalog, which this package can't import. */
+export type EmailIntegrationId = 'gmail' | 'outlook-mail';
 
 // Duplicated from @repo/mail's MailFolder to avoid a dependency on it.
 export type EmailMessageFolder = 'inbox' | 'sent' | 'archive' | 'trash' | 'spam' | 'draft';
@@ -55,7 +56,7 @@ export const emailAccount = pgTable(
     connectionId: text('connection_id')
       .notNull()
       .references(() => integrationConnection.id, { onDelete: 'cascade' }),
-    provider: text('provider').notNull().$type<EmailProvider>(),
+    integrationId: text('integration_id').notNull().$type<EmailIntegrationId>(),
     email: text('email').notNull(),
     // Opaque cursor: Gmail's historyId today, a Graph delta token later.
     // Null until the first successful sync.

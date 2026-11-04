@@ -1,0 +1,1 @@
+ALTER TABLE "email_accounts" ADD COLUMN "integration_id" text;

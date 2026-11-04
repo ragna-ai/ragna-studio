@@ -19,6 +19,7 @@ import type {
   MailMessageMetadata,
   MailProvider,
   MailProviderId,
+  MailProviderOptions,
   MailSearchResult,
   MailSyncChange,
   MailSyncOutcome,
@@ -26,13 +27,13 @@ import type {
   SendMailInput,
   SendMailResult,
 } from '../mail-provider';
+import type { VendorClient, VendorRequestOptions } from '@repo/integrations/http';
+import { isMailNotFoundError } from '../errors';
 import {
-  GraphApiError,
-  graphRequest,
-  graphRequestVoid,
+  createGraphMailClient,
+  graphResponseError,
   isGraphDeltaExpired,
   putUploadSessionChunk,
-  type GraphRequestOptions,
 } from './graph.client';
 import {
   buildGraphSearchQuery,
@@ -121,26 +122,19 @@ const SEARCH_PAGE_SIZE = '50';
 const INLINE_ATTACHMENT_MAX_BYTES = 3 * 1024 * 1024;
 const UPLOAD_CHUNK_SIZE_BYTES = 4 * 1024 * 1024;
 
-export { GraphApiError } from './graph.client';
-
-export interface GraphProviderOptions {
-  /** Resolves a fresh, valid Graph OAuth access token; the provider does not refresh or cache tokens. */
-  getAccessToken: () => Promise<string>;
-}
-
 export class GraphProvider implements MailProvider {
-  private readonly getAccessToken: () => Promise<string>;
+  private readonly client: VendorClient;
   private wellKnownFolderIdsPromise: Promise<GraphWellKnownFolderIds> | undefined;
 
-  constructor(options: GraphProviderOptions) {
-    this.getAccessToken = options.getAccessToken;
+  constructor(options: MailProviderOptions) {
+    this.client = createGraphMailClient(options);
   }
 
   async getProfile(): Promise<MailAccountProfile> {
     const me = await this.request<User>('me?$select=mail,userPrincipalName');
     const emailAddress = me.mail ?? me.userPrincipalName;
     if (!emailAddress) {
-      throw new GraphApiError('Graph /me response has neither mail nor userPrincipalName', 502);
+      throw graphResponseError('/me response has neither mail nor userPrincipalName');
     }
     const cursor: GraphSyncCursor = { v: 1, folders: await this.createCurrentDeltaLinks() };
     return { emailAddress, cursor: JSON.stringify(cursor) };
@@ -171,7 +165,7 @@ export class GraphProvider implements MailProvider {
       nextUrl = page['@odata.nextLink'];
     }
 
-    throw new GraphApiError('Graph delta response has neither nextLink nor deltaLink', 502);
+    throw graphResponseError('delta response has neither nextLink nor deltaLink');
   }
 
   async syncFromCursor(cursor: string): Promise<MailSyncOutcome> {
@@ -419,12 +413,12 @@ export class GraphProvider implements MailProvider {
 
   // --- internals ---------------------------------------------------------
 
-  private request<T>(path: string, options?: GraphRequestOptions): Promise<T> {
-    return graphRequest<T>(this.getAccessToken, path, options);
+  private request<T>(path: string, options?: VendorRequestOptions): Promise<T> {
+    return this.client.request<T>(path, options);
   }
 
-  private requestVoid(path: string, options?: GraphRequestOptions): Promise<void> {
-    return graphRequestVoid(this.getAccessToken, path, options);
+  private requestVoid(path: string, options?: VendorRequestOptions): Promise<void> {
+    return this.client.requestVoid(path, options);
   }
 
   private patchMessage(messageId: MailProviderId, patch: Partial<Message>): Promise<Message> {
@@ -526,11 +520,15 @@ export class GraphProvider implements MailProvider {
     for (let start = 0; start < total; start += UPLOAD_CHUNK_SIZE_BYTES) {
       const end = Math.min(start + UPLOAD_CHUNK_SIZE_BYTES, total) - 1;
       const chunk = attachment.content.subarray(start, end + 1);
-      const outcome = await putUploadSessionChunk(uploadUrl, chunk, { start, end, total });
+      const outcome = await putUploadSessionChunk(this.client, uploadUrl, chunk, {
+        start,
+        end,
+        total,
+      });
       if (outcome.status === 'completed') return;
     }
 
-    throw new GraphApiError('Upload session finished without a completed chunk response', 502);
+    throw graphResponseError('upload session finished without a completed chunk response');
   }
 
   private requireFolderId(
@@ -539,7 +537,7 @@ export class GraphProvider implements MailProvider {
   ): string {
     const id = wellKnownFolderIds[name];
     if (!id) {
-      throw new GraphApiError(`Mailbox has no well-known folder "${name}"`, 404);
+      throw graphResponseError(`mailbox has no well-known folder "${name}"`, 404);
     }
     return id;
   }
@@ -586,7 +584,7 @@ export class GraphProvider implements MailProvider {
           );
           return [name, requireField(folder.id, 'id')] as const;
         } catch (error) {
-          if (error instanceof GraphApiError && error.status === 404) return null;
+          if (isMailNotFoundError(error)) return null;
           throw error;
         }
       }),
@@ -629,7 +627,7 @@ export class GraphProvider implements MailProvider {
       nextUrl = deltaLink ? undefined : page['@odata.nextLink'];
 
       if (!deltaLink && !nextUrl) {
-        throw new GraphApiError('Graph delta response has neither nextLink nor deltaLink', 502);
+        throw graphResponseError('delta response has neither nextLink nor deltaLink');
       }
     }
 
@@ -667,7 +665,7 @@ export class GraphProvider implements MailProvider {
           starred: metadata.starred,
         });
       } catch (error) {
-        if (error instanceof GraphApiError && error.status === 404) {
+        if (isMailNotFoundError(error)) {
           // @removed only carries an id; conversationId is unrecoverable once the message is gone.
           changes.push({ type: 'deleted', messageId: change.messageId, threadId: '' });
           continue;
@@ -696,6 +694,6 @@ function parseGraphSyncCursor(cursor: string): GraphSyncCursor {
   return { v: 1, folders: {} };
 }
 
-export function createGraphProvider(options: GraphProviderOptions): GraphProvider {
+export function createGraphProvider(options: MailProviderOptions): GraphProvider {
   return new GraphProvider(options);
 }

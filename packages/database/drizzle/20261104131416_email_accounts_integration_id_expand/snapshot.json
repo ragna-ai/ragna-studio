@@ -1,0 +1,37 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "863d569a-4edb-4815-8c0c-0aa169a76a1e",
+  "prevIds": ["14bd1d3b-0b90-4a16-99f3-98783045d752"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "email_accounts", "integration_id"],
+      "writes": [
+        "s|col|public.email_accounts.integration_id",
+        "n|col|public.email_accounts.integration_id",
+        "e|col|public.email_accounts.integration_id"
+      ],
+      "reads": ["n|tbl|public.email_accounts", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "email_accounts",
+        "name": "integration_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 // packages/testing/src/mail/mail-provider.mock.ts
 import { mock } from 'bun:test';
+import { recordVendorSleep } from '../vendor-http/vendor-http.mock';
 import * as mailProviderPackage from '@repo/mail/provider';
 import type {
   CreateMailProviderOptions,
@@ -271,10 +272,29 @@ const fakeMailProvider: MailProvider = {
   getDraftAttachment: getDraftAttachmentMock,
 };
 
+// Captured before mock.module below replaces the package, so the real adapters stay reachable.
+const realCreateMailProvider = mailProviderPackage.createMailProvider;
+
 // Ignores which provider was requested - one fake MailProvider serves both.
-export const createMailProviderMock = mock(
-  (_options: CreateMailProviderOptions) => fakeMailProvider,
-);
+function defaultCreateMailProviderImpl(_options: CreateMailProviderOptions): MailProvider {
+  return fakeMailProvider;
+}
+
+export const createMailProviderMock = mock(defaultCreateMailProviderImpl);
+
+/**
+ * Runs the real Gmail and Graph adapters against the vendor HTTP fake until the next
+ * `resetMailProviderMock`. Call it in a test file's `beforeEach`, after the reset.
+ */
+export function useRealMailProviders(): void {
+  createMailProviderMock.mockImplementation((options) =>
+    realCreateMailProvider({
+      integrationId: options.integrationId,
+      getAccessToken: options.getAccessToken,
+      sleep: recordVendorSleep,
+    }),
+  );
+}
 
 export function resetMailProviderMock(): void {
   getProfileMock.mockClear();
@@ -318,6 +338,7 @@ export function resetMailProviderMock(): void {
   listRecentInboxThreadIdsMock.mockClear();
   listRecentInboxThreadIdsMock.mockImplementation(defaultListRecentInboxThreadIdsImpl);
   createMailProviderMock.mockClear();
+  createMailProviderMock.mockImplementation(defaultCreateMailProviderImpl);
 }
 
 export const mailProviderModuleMock = {

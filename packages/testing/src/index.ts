@@ -13,3 +13,8 @@ export * from './mail/email-seed-fixtures';
 export * from './mail/mail-provider.mock';
 export * from './integrations/connection-fixtures';
 export * from './integrations/provider-http.mock';
+export * from './vendor-http/vendor-http.mock';
+export * from './vendor-http/vendor-route';
+export * from './mail/vendors/mailbox.fixture';
+export * from './mail/vendors/gmail.routes';
+export * from './mail/vendors/graph.routes';

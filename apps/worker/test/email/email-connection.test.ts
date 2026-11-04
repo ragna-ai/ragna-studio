@@ -9,6 +9,8 @@ import {
   resetProviderMocks,
   syncFromCursorMock,
   truncateAllTables,
+  useRealMailProviders,
+  vendorHttp,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { processEmailSyncJob } from '../../src/processors/email-sync.processor';
@@ -73,5 +75,20 @@ describe('email sync with a connection', () => {
 
     expect(enqueuedJobs(NOTIFY_USER_JOB)).toHaveLength(1);
     expect(providerHttp.tokenRequests).toHaveLength(1);
+  });
+
+  test('asks to reconnect a mailbox whose connection lacks the mail scopes', async () => {
+    useRealMailProviders();
+    const { account } = await seedMailUser({
+      syncCursor: 'cursor-1',
+      scopes: ['openid', 'email', 'profile'],
+    });
+
+    const result = await processEmailSyncJob(syncJob(account.id));
+
+    expect(result).toEqual({ success: true });
+    expect(vendorHttp.requests).toHaveLength(0);
+    const synced = await getEmailAccountById({ id: account.id });
+    expect(synced?.syncState).toBe('reauth_required');
   });
 });

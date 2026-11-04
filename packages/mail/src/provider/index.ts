@@ -2,9 +2,7 @@
 
 export * from './mail-provider';
 export * from './errors';
-export { GmailApiError, GmailProvider, createGmailProvider } from './gmail/gmail.provider';
-export type { GmailProviderOptions } from './gmail/gmail.provider';
-export { GraphApiError, GraphProvider, createGraphProvider } from './graph/graph.provider';
-export type { GraphProviderOptions } from './graph/graph.provider';
-export { createMailProvider } from './create-mail-provider';
-export type { CreateMailProviderOptions, MailProviderKind } from './create-mail-provider';
+export { GmailProvider, createGmailProvider } from './gmail/gmail.provider';
+export { GraphProvider, createGraphProvider } from './graph/graph.provider';
+export { createMailProvider, isMailIntegrationId } from './create-mail-provider';
+export type { CreateMailProviderOptions, MailIntegrationId } from './create-mail-provider';

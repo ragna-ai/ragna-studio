@@ -5,7 +5,7 @@ import {
   getEmailMessageById,
 } from '@repo/database';
 import type { EmailCategory } from '@repo/database';
-import { MailProviderError } from '@repo/mail/provider';
+import { VendorApiError } from '@repo/integrations/http';
 import { EMAIL_CLASSIFY_JOB, EMAIL_DRAFT_JOB } from '@repo/queue';
 import {
   fetchMessageMock,
@@ -236,7 +236,7 @@ describe('processEmailClassifyJob', () => {
       accountId: account.id,
       withBody: false,
     });
-    fetchMessageMock.mockRejectedValueOnce(new MailProviderError('unauthorized', 401));
+    fetchMessageMock.mockRejectedValueOnce(new VendorApiError({ vendor: 'Gmail', status: 401 }));
 
     const result = await processEmailClassifyJob(classifyJob({ accountId: account.id, messageId }));
 
@@ -253,10 +253,10 @@ describe('processEmailClassifyJob', () => {
       accountId: account.id,
       withBody: false,
     });
-    fetchMessageMock.mockRejectedValueOnce(new MailProviderError('upstream down', 503));
+    fetchMessageMock.mockRejectedValueOnce(new VendorApiError({ vendor: 'Gmail', status: 503 }));
 
     await expect(
       processEmailClassifyJob(classifyJob({ accountId: account.id, messageId })),
-    ).rejects.toThrow('upstream down');
+    ).rejects.toThrow('Gmail API error 503');
   });
 });

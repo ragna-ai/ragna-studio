@@ -276,7 +276,7 @@ describe('while the organization is deleted', () => {
     await createEmailAccount({
       userId: owner.userId,
       connectionId: connection.id,
-      provider: 'gmail',
+      integrationId: 'gmail',
       email: 'owner@example.com',
     });
     expect(await listEmailAccountsDueForSync()).toHaveLength(1);

@@ -3,14 +3,14 @@ import { MailIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import { useEmailConnectFlow } from '~/features/email/composables/useEmailConnectFlow';
-import type { EmailProviderKind } from '~/features/email/types';
+import type { EmailIntegrationId } from '~/features/email/types';
 
 // The landing state for /mail before a mailbox is connected.
 const { t } = useI18n();
 const { startConnect, isLinking, isFinishingConnect } = useEmailConnectFlow();
 
-function handleConnect(provider: EmailProviderKind) {
-  startConnect(provider, '/mail');
+function handleConnect(integrationId: EmailIntegrationId) {
+  startConnect(integrationId, '/mail');
 }
 </script>
 
@@ -43,7 +43,7 @@ function handleConnect(provider: EmailProviderKind) {
       <Button
         variant="outline"
         :disabled="isLinking"
-        @click="handleConnect('microsoft')"
+        @click="handleConnect('outlook-mail')"
       >
         <Spinner v-if="isLinking" class="mr-2" />
         <Icon v-else name="logos:microsoft-icon" class="mr-2 size-4" />
