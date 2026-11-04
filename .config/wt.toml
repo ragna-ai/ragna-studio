@@ -1,0 +1,9 @@
+# Worktrunk project config (https://worktrunk.dev). Blocking so a new worktree is ready to test when `wt switch --create` returns.
+[[pre-start]]
+copy = "wt step copy-ignored"
+
+[[pre-start]]
+install = "pnpm install --frozen-lockfile"
+
+[[pre-start]]
+build = "pnpm turbo run build --filter='./packages/*'"
