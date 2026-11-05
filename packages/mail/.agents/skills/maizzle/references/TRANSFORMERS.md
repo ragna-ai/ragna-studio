@@ -1,17 +1,14 @@
 # Maizzle Transformers Reference
-
 After Vue SSR renders a template, Maizzle pipes the HTML through a fixed sequence of transformers before writing the file. Order matters: CSS is compiled, inlined, then purged; HTML formatting/minification runs last.
 
 Disable the whole pipeline with `useTransformers: false` (config or composable). Toggle individual transformers with `useTransformers: { inlineCss: false, minify: true }`. See `CONFIGURATION.md` for the full surface.
 
-## Defaults at a Glance
+## Defaults
+On by default: `css.inline`, `css.purge`, `css.shorthand`, `css.safe`, `css.preferUnitless`, `css.sixHex`, `html.decodeEntities`, `addAttributes` (table + img defaults).
 
-On by default: `css.inline`, `css.purge`, `css.shorthand`, `css.safe`, `css.preferUnitless`, `css.sixHex`, `html.decodeEntities`, `html.format`, `addAttributes` (table + img defaults).
-
-Off by default: `html.minify`, `attributeToStyle`, `url.base`, `url.query`, `replaceStrings`, custom `filters`, custom `removeAttributes`.
+Off by default: `html.minify`, `html.format`, `attributeToStyle`, `url.base`, `url.query`, `replaceStrings`, custom `filters`, custom `removeAttributes`.
 
 ## Pipeline Order
-
 The DOM is parsed once, walked by all DOM-based transformers, then serialized; string-only transformers run last.
 
 | # | Stage | Driven by | Default |
@@ -38,7 +35,6 @@ The DOM is parsed once, walked by all DOM-based transformers, then serialized; s
 | 16 | Minify | `html.minify` | off |
 
 ## Per-Transformer Notes
-
 **Inline `<link>`** — local `href` paths are always inlined; remote URLs only when the `<link>` carries an `inline` attribute. `<style>` tags marked `raw`, `embed`, or `data-embed` are skipped (raw drops the marker; embed/data-embed are preserved for the inliner).
 
 **Tailwind CSS** — compiles utilities found in the rendered DOM. Lowers modern CSS (nesting, `oklch`, `color-mix`, `@property`) via lightningcss with an IE 1 target so most clients render it. Merges duplicate `@media` queries. Honors `css.base` and `css.exclude`.
@@ -63,7 +59,7 @@ The DOM is parsed once, walked by all DOM-based transformers, then serialized; s
 
 **Filters** — bottom-up walk; multiple filters on one element run in attribute order. 31 built-ins across string, math, text, and URL categories (see `CONFIGURATION.md` for the full list). Pass `false` to disable all; user filters merge on top.
 
-**Base URL** — string form rewrites `a[href]`, `img[src,srcset]`, `video[src,poster]`, `source[src,srcset]`, `track[src]`, plus VML `v:image`/`v:fill` and URLs inside MSO conditional comments. Object form takes `url`, `tags`, `attributes`, `styleTag` (default `true`), `inlineCss` (default `true`).
+**Base URL** — string form rewrites `a[href]`, `img[src,srcset]`, `video[src,poster]`, `source[src,srcset]`, `track[src]`, plus VML `v:image`/`v:fill` and URLs inside MSO conditional comments. Object form takes `url`, `tags`, `attributes`, `styleTag` (default `true`), `inlineCss` (default `true`). Values starting with `{{`, `{%` or `<%` are never prefixed. A `no-base-url` attribute skips that element only (all its URL attrs, `srcset`, custom `attributes`, `url()` in its inline `style`; on `<style>` the whole block), including VML and tags inside MSO comments. The attribute is always removed from the output; it's typed for IDEs in `.maizzle/attributes.d.ts`.
 
 **URL query** — non-`_options` keys are appended as query params. `_options.tags` (default `['a']`), `_options.attributes` (default `['src','href','poster','srcset','background']`), `_options.strict` (default `true` — absolute URLs only), `_options.qs` (default `{ encode: false }`).
 

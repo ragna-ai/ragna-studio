@@ -12,6 +12,16 @@ Nuxt provides composables for SSR-friendly data fetching that prevent double-fet
 - `$fetch` - Basic fetch utility (use for client-side events)
 - `useFetch` - SSR-safe wrapper around $fetch (use for component data)
 - `useAsyncData` - SSR-safe wrapper for any async function
+- `createUseFetch` / `createUseAsyncData` - factories (support `addons`) to build typed custom composables with baked-in defaults
+
+### On `await`
+
+`await` does **not** change the server-rendered HTML — SSR always waits for the request and serializes the populated result. What it changes is client behavior:
+
+- **With `await`** (default): setup pauses until data is ready; client-side navigation is blocked until it resolves (user stays put, optionally with `<NuxtLoadingIndicator>`).
+- **Without `await`**: setup continues immediately, `data` starts at its default and fills in later; client navigation happens instantly and you handle `status`/`error` yourself.
+
+Prefer the explicit `lazy` option (or `useLazyFetch`/`useLazyAsyncData`) for non-blocking intent. Note: `await`-ing a `lazy` call does **not** block client navigation — drop `lazy` if you want the wait.
 
 ## useFetch
 
@@ -107,6 +117,129 @@ const { data } = await useAsyncData('cart', async () => {
 </script>
 ```
 
+## Custom Fetchers: createUseFetch / createUseAsyncData
+
+Factory macros that produce a fully typed custom composable with pre-defined options. Must be an **exported** declaration inside `app/composables/` (Nuxt injects dedup keys at build time).
+
+```ts
+// app/composables/useAPI.ts
+export const useAPI = createUseFetch({
+  baseURL: 'https://api.nuxt.com',
+  // shared interceptors, headers, etc.
+  onResponseError({ response }) {
+    if (response.status === 401) navigateTo('/login')
+  },
+})
+```
+
+```vue
+<script setup lang="ts">
+// Same signature/return as useFetch, with defaults applied
+const { data } = await useAPI('/modules')
+// Caller can still override any option
+const { data: other } = await useAPI('/modules', { baseURL: 'https://other.com' })
+</script>
+```
+
+**Default vs Override mode:**
+
+```ts
+// Plain object → options act as DEFAULTS (caller can override)
+export const useAPI = createUseFetch({ baseURL: '/api', lazy: true })
+
+// Function → options OVERRIDE caller's (enforce auth/baseURL)
+export const useAPI = createUseFetch(callerOptions => ({
+  baseURL: 'https://api.nuxt.com', // always enforced
+}))
+```
+
+Use the **function form** when you need `useNuxtApp()` (called in setup context, not module scope):
+
+```ts
+// app/composables/useAPI.ts
+export const useAPI = createUseFetch(callerOptions => ({
+  $fetch: useNuxtApp().$api as typeof $fetch,
+  ...callerOptions,
+}))
+```
+
+`createUseAsyncData` works identically for wrapping arbitrary async functions:
+
+```ts
+// app/composables/useCachedData.ts
+export const useCachedData = createUseAsyncData({
+  getCachedData(key, nuxtApp) {
+    return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+  },
+})
+```
+
+### Addons
+
+Both factories accept `addons: [...]` built with `defineUseFetchAddon` / `defineUseAsyncDataAddon` (v4.6+). `setup(options)` runs before the call (declare custom typed call-site options via `UseFetchAddonOptions<{ ... }>` / `UseAsyncDataAddonOptions<{ ... }>`, may push to `options.onRequest`), and may return `(asyncData) => ext | void` that runs after, to attach watchers/cleanup and extend the returned object. Addons run in array order (first is the outermost middleware); duplicates run once.
+
+```ts
+const polling = defineUseAsyncDataAddon({
+  setup: (options: UseAsyncDataAddonOptions<{ pollEvery?: number }>) => {
+    if (import.meta.server || !options.pollEvery) { return }
+    return (asyncData) => {
+      const id = setInterval(() => asyncData.refresh(), options.pollEvery)
+      onScopeDispose(() => clearInterval(id))
+    }
+  },
+})
+export const usePolledAsyncData = createUseAsyncData({ addons: [polling] })
+// await usePolledAsyncData('key', () => $fetch('/api/x'), { pollEvery: 30_000 })
+```
+
+`useAsyncData`/`useFetch` also take a `middleware: AsyncDataMiddleware[]` option (v4.6+): `(next, { signal }) => Promise` functions wrapping the handler; must be consistent across calls sharing a key.
+
+Related: `onNuxtReady(cb, { timeout, signal })` runs a client-only callback when the app is ready and the browser idle (`timeout` caps the idle wait, `signal` skips it if aborted).
+
+> Replaces the old "don't await your custom `useFetch` wrapper" caveat — use these factories instead of hand-rolled wrappers.
+
+## Typed Routes (Nuxt 5)
+
+`$fetch` and `useFetch` are typed from the routes your server builder reports (not nitro's `InternalApi`). The response is typed from the matching handler's return type, keyed by HTTP method:
+
+```ts
+// server/api/todos.get.ts
+export default defineEventHandler(() => [{ id: '1', title: 'Buy milk' }])
+```
+
+```ts
+const todos = await $fetch('/api/todos')
+//    ^? { id: string, title: string }[]
+```
+
+If a handler validates its request, the `body`/`query`/`headers` are enforced on the call, and a method the route doesn't handle is rejected:
+
+```ts
+await $fetch('/api/todos', { method: 'POST', body: { title: 42 } })
+//                                                  ^ not assignable to string
+```
+
+Key points:
+
+- The **`params` option is removed** from `$fetch`/`useFetch` (it was an alias for `query`) — move it to `query`.
+- A `baseURL` is resolved into the path before matching, so passing an already-prefixed path is an error.
+- A runtime path, absolute URL, or `Request` object resolves to `unknown`; provide an explicit type: `$fetch<{ id: string }>(\`/api/${x}\`)`.
+- A path Nuxt doesn't recognize is `unknown` by default; set `experimental.strictRouteTypes: true` (or `'isomorphic'`) to make it an error.
+- Declare routes Nuxt can't see (runtime-registered, external APIs) by augmenting `ServerRoutes`:
+
+```ts
+// shared/server-routes.d.ts
+import type { Endpoint } from 'nuxt/app'
+
+declare module '@nuxt/schema' {
+  interface ServerRoutes {
+    '/api/hello': {
+      [Endpoint]: { GET: { response: { message: string } } }
+    }
+  }
+}
+```
+
 ## $fetch
 
 For client-side events (form submissions, button clicks):
@@ -130,12 +263,15 @@ All composables return:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `data` | `Ref<T>` | Fetched data |
+| `data` | `Ref<T>` | Fetched data (`undefined` until resolved) |
 | `error` | `Ref<Error>` | Error if request failed |
 | `status` | `Ref<'idle' \| 'pending' \| 'success' \| 'error'>` | Request status |
+| `pending` | `Ref<boolean>` | Whether a request is in progress |
 | `refresh` | `() => Promise` | Refetch data |
 | `execute` | `() => Promise` | Alias for refresh |
-| `clear` | `() => void` | Reset data and error |
+| `clear` | `() => void` | Reset to default/idle and cancel pending requests |
+
+> Prefer `status` over `pending` for fine-grained state. `useFetch` no longer accepts a top-level `timeout` option (still available on `useAsyncData`); use a `cache` option (`'default'`, `'no-store'`, `false`, etc.) for Fetch cache control.
 
 ## Lazy Fetching
 
@@ -171,7 +307,7 @@ const refreshData = () => refresh()
 
 ## Caching
 
-Data is cached by key. Share data across components:
+`useFetch` generates its key from the URL **plus** the fetch options and the call's source location — so two `useFetch('/api/user')` calls in different components have **different** keys and each run their own request. To share data, pass the **same explicit `key`**:
 
 ```vue
 <script setup lang="ts">
@@ -233,4 +369,10 @@ Source references:
 - https://nuxt.com/docs/getting-started/data-fetching
 - https://nuxt.com/docs/api/composables/use-fetch
 - https://nuxt.com/docs/api/composables/use-async-data
+- https://nuxt.com/docs/api/composables/create-use-fetch
+- https://nuxt.com/docs/api/composables/create-use-async-data
+- https://nuxt.com/docs/guide/recipes/custom-usefetch
+- https://nuxt.com/docs/api/utils/define-use-fetch-addon
+- https://nuxt.com/docs/api/utils/define-use-async-data-addon
+- https://nuxt.com/docs/api/utils/on-nuxt-ready
 -->

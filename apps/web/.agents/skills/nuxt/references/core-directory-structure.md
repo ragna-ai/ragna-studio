@@ -5,31 +5,36 @@ description: Nuxt project folder structure, conventions, and file organization
 
 # Directory Structure
 
-Nuxt uses conventions-based directory structure. Understanding it is key to effective development.
+Nuxt uses a conventions-based directory structure. Understanding it is key to effective development.
+
+> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `server/`, `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root.
 
 ## Standard Project Structure
 
 ```
 my-nuxt-app/
-├── app/                    # Application source (can be at root level)
+├── app/                    # srcDir — all Vue app code (default in Nuxt 4)
 │   ├── app.vue             # Root component
 │   ├── app.config.ts       # App configuration (runtime)
 │   ├── error.vue           # Error page
+│   ├── assets/             # Build-processed assets (CSS, images)
 │   ├── components/         # Auto-imported Vue components
 │   ├── composables/        # Auto-imported composables
 │   ├── layouts/            # Layout components
 │   ├── middleware/         # Route middleware
 │   ├── pages/              # File-based routing
-│   ├── plugins/            # Vue plugins
+│   ├── plugins/            # Nuxt plugins
 │   └── utils/              # Auto-imported utilities
-├── assets/                 # Build-processed assets (CSS, images)
-├── public/                 # Static assets (served as-is)
-├── server/                 # Server-side code
+├── server/                 # Server-side code (root level)
 │   ├── api/                # API routes (/api/*)
 │   ├── routes/             # Server routes
 │   ├── middleware/         # Server middleware
 │   ├── plugins/            # Nitro plugins
 │   └── utils/              # Server utilities (auto-imported)
+├── shared/                 # Code shared between app and server
+│   ├── utils/              # Auto-imported in both app and server
+│   └── types/              # Auto-imported types
+├── public/                 # Static assets (served as-is)
 ├── content/                # Content files (@nuxt/content)
 ├── layers/                 # Local layers (auto-scanned)
 ├── modules/                # Local modules
@@ -42,14 +47,25 @@ my-nuxt-app/
 
 ### `app/` Directory
 
-Contains all application code. Can also be at root level (without `app/` folder).
+The `app/` directory is the default `srcDir` in Nuxt 4 and holds all Vue application code. Customize it if needed:
 
 ```ts
 // nuxt.config.ts - customize source directory
 export default defineNuxtConfig({
-  srcDir: 'src/', // Change from 'app/' to 'src/'
+  srcDir: 'src/', // Use 'src/' instead of the default 'app/'
 })
 ```
+
+**Aliases** (Nuxt 4 defaults):
+
+| Alias | Resolves to |
+|-------|-------------|
+| `~` / `@` | `<rootDir>/app` (the srcDir) |
+| `~~` / `@@` | `<rootDir>` (project root) |
+| `#shared` | `<rootDir>/shared` |
+| `#server` | `<rootDir>/server` |
+
+Because `~` now points at `app/`, reference root-level files (modules, server handlers) with `~~` or the dedicated aliases — e.g. `~~/server/handler.ts` or `#server/handler.ts`.
 
 ### `app/components/`
 
@@ -182,7 +198,7 @@ plugins/
 
 ### `server/` Directory
 
-Nitro server code:
+Nitro server code (stays at the project root, not under `app/`):
 
 ```
 server/
@@ -196,8 +212,35 @@ server/
 │   └── auth.ts          → Runs on every request
 ├── plugins/
 │   └── db.ts            → Server startup plugins
+├── types/
+│   └── todo.ts          → Auto-imported types (server context only)
 └── utils/
     └── db.ts            → Auto-imported server utilities
+```
+
+**Nuxt 5 server imports:** Nitro/h3 helpers (`defineEventHandler`, `getQuery`, `createError`…) are **no longer auto-imported by default** — import them from `nuxt/server`. Your own `server/utils/` and `server/types/` exports are still auto-imported, but only files directly in `server/utils/` (nested ones warn `NUXT_B9006`; re-export them from a top-level file). Handlers must default-export `defineEventHandler` from `nuxt/server` and can return JSON values, a `Response`, or a `ReadableStream` (no `sendStream`). Server KV storage is `useKV()` with `nitro.kv` (was `useStorage()`/`nitro.storage`). File names in `server/` cannot contain unknown dotted suffixes (`hello.world.ts` fails; add to `nitro.scanSuffixes`). Inside server code, import shared Nuxt composables from `#imports/server` (not `#imports`). Re-enable Nitro auto-imports with `experimental.nitroAutoImports: true`.
+
+### `app/spa-loading-template.html`
+
+Plain HTML (no Vue, no auto-imports; inline its own `<style>`) inserted into the server response for `ssr: false` pages, shown until the first page is ready, in a `<div id="__nuxt-loader">` sibling of `#__nuxt` (customize with `app.spaLoaderTag`/`app.spaLoaderAttrs`, keep the `id`). Config: `spaLoadingTemplate: 'my-loader.html'` (path relative to `srcDir`) | `true` (built-in screen) | `false`. `experimental.spaLoadingTemplateLocation: 'within'` renders it inside `#__nuxt`, removed as soon as Vue mounts. For route transitions use `<NuxtLoadingIndicator>`.
+
+### `shared/` Directory
+
+Code usable in **both** the Vue app and the Nitro server (Nuxt 3.14+). Cannot import any Vue or Nitro code.
+
+```
+shared/
+├── utils/
+│   └── format.ts        → Auto-imported in app AND server
+└── types/
+    └── api.ts           → Auto-imported types
+```
+
+Only top-level files in `shared/utils/` and `shared/types/` are auto-imported. Import anything else via the `#shared` alias:
+
+```ts
+import { capitalize } from '#shared/utils/format'
+import lower from '#shared/formatters/lower'
 ```
 
 ### `public/` Directory
@@ -212,12 +255,12 @@ public/
     └── logo.png         → /images/logo.png
 ```
 
-### `assets/` Directory
+### `app/assets/` Directory
 
-Build-processed assets:
+Build-processed assets (under `app/` in Nuxt 4):
 
 ```
-assets/
+app/assets/
 ├── css/
 │   └── main.css
 ├── images/
@@ -266,4 +309,8 @@ Source references:
 - https://nuxt.com/docs/directory-structure
 - https://nuxt.com/docs/directory-structure/app
 - https://nuxt.com/docs/directory-structure/server
+- https://nuxt.com/docs/directory-structure/shared
+- https://nuxt.com/docs/directory-structure/app/spa-loading-template
+- https://nuxt.com/docs/guide/going-further/server-imports
+- https://nuxt.com/docs/api/nuxt-config#alias
 -->

@@ -14,6 +14,7 @@ These are **NOT bundled** by default:
 
 - **`dependencies`** - Installed automatically with your package
 - **`peerDependencies`** - User must install manually
+- **`optionalDependencies`** - May or may not be installed depending on platform/config
 
 ### Conditionally Bundled
 
@@ -32,7 +33,8 @@ export default defineConfig({
     neverBundle: ['react', /^@myorg\//],
     alwaysBundle: ['some-package'],
     onlyBundle: ['cac', 'bumpp'],
-    skipNodeModulesBundle: true,
+    onlyImport: ['cac'],
+    resolveDepSubpath: true,
   },
 })
 ```
@@ -54,6 +56,19 @@ export default defineConfig({
   },
 })
 ```
+
+Set to `true` to externalize ALL dependencies:
+
+```ts
+export default defineConfig({
+  entry: ['src/index.ts'],
+  deps: {
+    neverBundle: true,
+  },
+})
+```
+
+**Result:** Every import that follows npm package naming conventions is externalized as written, without being resolved. This is fast and even works when dependencies are not installed. Subpaths like `my-dep/utils` are preserved exactly unless `resolveDepSubpath` is enabled. Other non-relative imports (`#` subpath imports, path aliases like `~/`) are resolved: they stay external if they resolve into node_modules, and are bundled if they map to local files. Combine with `alwaysBundle` to bundle selected dependencies.
 
 ### `deps.alwaysBundle`
 
@@ -95,22 +110,41 @@ export default defineConfig({
 
 **Note:** Include all sub-dependencies in the list, not just top-level imports.
 
-### `deps.skipNodeModulesBundle`
+### `deps.onlyImport`
 
-Skip resolving and bundling ALL node_modules:
+Whitelist of packages the emitted output is allowed to import at runtime. Throws an error (listing all violations) if any chunk imports an unlisted package:
 
 ```ts
 export default defineConfig({
   entry: ['src/index.ts'],
   deps: {
-    skipNodeModulesBundle: true,
+    onlyImport: [
+      'cac',               // Also covers subpath imports like cac/deno
+      /^my-utils/,         // Regex patterns match the package name
+    ],
   },
 })
 ```
 
-**Result:** No dependencies from node_modules are parsed or bundled.
+**Behavior:**
+- Matching is based on the package name; subpath imports (`cac/deno`) match `cac`.
+- Node.js built-in modules are always allowed when `platform` is `node`.
+- Relative imports between code-split chunks are always allowed.
+- Declaration output (`.d.ts`) is checked too.
 
-**Note:** Cannot be used together with `alwaysBundle`.
+**Limitation:** ES imports and dynamic `import()` expressions are checked. CJS `require()` calls are not detected.
+
+### `deps.resolveDepSubpath`
+
+By default, tsdown preserves external dependency subpath imports as written. Enable `resolveDepSubpath` to resolve subpath imports to their actual package-relative paths when a package has no `exports` field. For example, `my-dep/functions/lt` may become `my-dep/functions/lt.js`, and `my-dep/folder` may become `my-dep/folder/index.js`.
+
+```ts
+export default defineConfig({
+  deps: {
+    resolveDepSubpath: true,  // default: false
+  },
+})
+```
 
 ## Common Patterns
 
@@ -223,21 +257,12 @@ tsdown --deps.never-bundle react --deps.never-bundle react-dom
 tsdown --deps.never-bundle '/^@myorg\/.*/'
 ```
 
-### Skip Node Modules
-
-```bash
-tsdown --deps.skip-node-modules-bundle
-```
-
 ## Migration from Deprecated Options
 
 | Deprecated Option | New Option |
 |---|---|
 | `external` | `deps.neverBundle` |
 | `noExternal` | `deps.alwaysBundle` |
-| `inlineOnly` | `deps.onlyBundle` |
-| `deps.onlyAllowBundle` | `deps.onlyBundle` |
-| `skipNodeModulesBundle` | `deps.skipNodeModulesBundle` |
 
 ## Examples by Use Case
 
@@ -319,7 +344,7 @@ export default defineConfig({
 
 ### Missing Dependency at Runtime
 
-Ensure it's in `dependencies` or `peerDependencies`:
+Ensure it's in `dependencies`, `peerDependencies`, or `optionalDependencies`:
 
 ```json
 {
@@ -354,14 +379,16 @@ export default defineConfig({
 ## Summary
 
 **Default behavior:**
-- `dependencies` & `peerDependencies` → External
+- `dependencies`, `peerDependencies`, & `optionalDependencies` → External
 - `devDependencies` & phantom deps → Bundled if imported
 
 **Override (under `deps`):**
 - `neverBundle` → Force external
 - `alwaysBundle` → Force bundled
 - `onlyBundle` → Whitelist bundled deps
-- `skipNodeModulesBundle` → Skip all node_modules
+- `onlyImport` → Whitelist runtime imports in output
+- `neverBundle: true` → Externalize all dependencies
+- `resolveDepSubpath: true` → Resolve external dependency subpath imports to package-relative paths
 
 **Declaration files:**
 - Same bundling logic as JavaScript

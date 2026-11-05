@@ -66,12 +66,16 @@ export default defineNuxtModule({
 | `modules:done` | All modules installed |
 | `build:before` | Before build starts |
 | `build:done` | Build complete |
-| `pages:extend` | Pages routes resolved |
+| `pages:extend` | Add/modify routes (before meta scan) |
+| `pages:resolved` | After page meta is scanned (with `scanPageMeta`) |
 | `components:dirs` | Component dirs being resolved |
 | `imports:extend` | Auto-imports being resolved |
 | `nitro:config` | Before Nitro config finalized |
 | `vite:extend` | Vite context created |
 | `vite:extendConfig` | Before Vite config finalized |
+| `build:manifest` | Customize the manifest Nitro uses for `<script>`/`<link>` tags (entries have `prefetch`/`preload` flags) |
+| `rsbuild:config` | Rsbuild builder: before the instance is created (config has `client` and `ssr` environments); `rspack:config`/`rspack:configResolved` also fire |
+| `rsbuild:compile` / `rsbuild:compiled` | Before first compile / after an environment compiled |
 
 ## App Hooks (Runtime)
 
@@ -138,42 +142,44 @@ export function usePageTracking() {
 
 Used in server plugins:
 
+In Nitro v3 the plugin factory is `definePlugin` from `nitro`:
+
 ```ts
 // server/plugins/hooks.ts
-export default defineNitroPlugin((nitroApp) => {
+import { definePlugin } from 'nitro'
+
+export default definePlugin((nitroApp) => {
   // Modify HTML before sending
   nitroApp.hooks.hook('render:html', (html, { event }) => {
     html.head.push('<meta name="custom" content="value">')
     html.bodyAppend.push('<script>console.log("injected")</script>')
   })
 
-  // Modify response
-  nitroApp.hooks.hook('render:response', (response, { event }) => {
-    console.log('Sending response:', response.statusCode)
-  })
-
   // Before request
   nitroApp.hooks.hook('request', (event) => {
-    console.log('Request:', event.path)
+    console.log('Request:', event.url.pathname)
   })
 
-  // After response
-  nitroApp.hooks.hook('afterResponse', (event) => {
-    console.log('Response sent')
+  // Single response hook (replaces beforeResponse/afterResponse in v3)
+  nitroApp.hooks.hook('response', (response, { event }) => {
+    console.log('Sending response')
   })
 })
 ```
+
+> Inside a Nitro plugin, `useServerHooks()` from `nuxt/server` registers renderer hooks (`render:html`) and `NuxtServerHooks`; Nitro's own hooks (`request`, `response`, `error`) come from `useNitroHooks()` in `nitro/app`.
 
 ### Common Nitro Hooks
 
 | Hook | When |
 |------|------|
 | `request` | Request received |
-| `beforeResponse` | Before sending response |
-| `afterResponse` | After response sent |
+| `response` | Before/around sending response (replaces `beforeResponse`/`afterResponse`) |
 | `render:html` | Before HTML is sent |
 | `render:response` | Before response is finalized |
 | `error` | Error occurred |
+
+> **Nitro v3:** `beforeResponse`/`afterResponse` are merged into `response`. The compatibility layer re-emits them from `response` when active.
 
 ## Custom Hooks
 
@@ -195,12 +201,14 @@ declare module '@nuxt/schema' {
   }
 }
 
-declare module 'nitropack/types' {
+declare module 'nitro/types' {
   interface NitroRuntimeHooks {
     'my-server:event': (data: any) => void
   }
 }
 ```
+
+> **Nitro v3:** `nitropack` is renamed to `nitro` — augment `nitro/types` (not `nitropack/types`).
 
 ### Call Custom Hooks
 
@@ -218,6 +226,8 @@ export default defineNuxtModule({
   },
 })
 ```
+
+> **Nuxt 5:** `callHook` may now return `void` (not always a `Promise`), for performance. Always `await` it instead of chaining `.then()`/`.catch()`. Restore the always-Promise behavior with `experimental.asyncCallHook: true`.
 
 ## useRuntimeHook
 
@@ -271,7 +281,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 
 ```ts
 // server/plugins/inject.ts
-export default defineNitroPlugin((nitroApp) => {
+import { definePlugin } from 'nitro'
+
+export default definePlugin((nitroApp) => {
   nitroApp.hooks.hook('render:html', (html) => {
     html.head.push(`
       <script>
@@ -286,4 +298,5 @@ export default defineNitroPlugin((nitroApp) => {
 Source references:
 - https://nuxt.com/docs/guide/going-further/hooks
 - https://nuxt.com/docs/api/advanced/hooks
+- https://nuxt.com/docs/getting-started/upgrade#migration-to-nitro-v3
 -->

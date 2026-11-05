@@ -1,6 +1,6 @@
 ---
 name: system-design
-description: Apply before designing a feature with a seam: variants (providers, model types, storage backends, export formats), a shared client, a registry, or a new abstraction. Separates known from speculative variants, weighs two or three approaches, and decides functions vs classes and how dependencies are passed. Use when writing a design doc or planning anything that will get a second implementation.
+description: "Apply before designing a feature with a seam: variants (providers, model types, storage backends, export formats), a shared client, a registry, or a new abstraction. Separates known from speculative variants, weighs two or three approaches, and decides functions vs classes and how dependencies are passed. Use when writing a design doc or planning anything that will get a second implementation."
 ---
 
 Design the seam once, build only what is needed now. Adding the next variant should mean adding one new implementation and registering it, not refactoring existing code.

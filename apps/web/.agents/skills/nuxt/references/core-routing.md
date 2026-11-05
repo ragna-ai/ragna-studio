@@ -7,6 +7,17 @@ description: File-based routing, dynamic routes, navigation, and middleware in N
 
 Nuxt uses file-system routing based on vue-router. Files in `app/pages/` automatically create routes.
 
+## Nuxt 5 Routing Defaults
+
+- **Case-sensitive matching** (`router.options.sensitive: true`) — `/About` no longer matches `pages/about.vue`. Match link casing to file names, or set `router: { options: { sensitive: false } }`. `sensitive` can only be set in `nuxt.config` (the build fails if `app/router.options.ts` sets it). With `sensitive: false`, route rules match lower-cased paths, so regex constraints in rule patterns must be written for lower-case (`[a-z]`, not `[A-Z]`).
+- **Typed pages on by default** (`experimental.typedPages`) — `useRoute`, `navigateTo`, `<NuxtLink :to>`, and `router.push` are type-checked against your real routes. Referencing a route that doesn't exist is a type error. Opt out with `experimental.typedPages: false`.
+- **Normalized page component names** — a page is named after its route, not its filename (`pages/foo/index.vue` → `foo`, not `index`). Update any `<KeepAlive :include>` filters to route names, or set `experimental.normalizePageNames: false`.
+- **Serializable page meta extracted at build time** — every JSON-serializable `definePageMeta()` property is written into the generated route record; only non-serializable values (functions, refs, spreads) resolve at runtime.
+
+- **Route rule patterns use URLPattern** - `'/blog/*'` now matches nested paths (`/blog/2026/hello`); use `'/blog/:slug'` for one segment. Only one `*`/`**` per key (use `/:post/comments/**`). Regex constraints cannot match `%` or percent-encoded chars, or use `\b`. Rules also support `proxy: 'https://api.example.com/**'`.
+- **Unmatched client navigations load as a full document** (`experimental.serverPathFallback`) so `<NuxtLink to="/file.pdf">` reaches `public/` files or server routes.
+- **Build-time link check** - `experimental.templateDiagnostics` warns (`NUXT_B4025`) when a static `<NuxtLink to>` matches no page route.
+
 ## Basic Routing
 
 ```
@@ -202,6 +213,50 @@ function enableAdmin() {
 </script>
 ```
 
+### Passing Props to Layouts (Nuxt 4.4+)
+
+Use the object syntax for `layout` to pass typed props to the layout component:
+
+```vue
+<!-- app/pages/dashboard.vue -->
+<script setup lang="ts">
+definePageMeta({
+  layout: { name: 'panel', props: { sidebar: true, title: 'Dashboard' } },
+})
+</script>
+```
+
+```vue
+<!-- app/layouts/panel.vue -->
+<script setup lang="ts">
+const props = defineProps<{ sidebar?: boolean, title?: string }>()
+</script>
+```
+
+Props are fully typed from the layout's `defineProps`. Also works dynamically: `setPageLayout('panel', { sidebar: true })`.
+
+## Named Views
+
+A route can render into multiple `<NuxtPage>` outlets. Add named view files with the `name@view.vue` convention next to the default route file:
+
+```
+pages/
+├── parent.vue
+└── parent/
+    ├── child.vue           → default <NuxtPage />
+    └── child@sidebar.vue   → <NuxtPage name="sidebar" />
+```
+
+```vue
+<!-- pages/parent.vue -->
+<template>
+  <NuxtPage />
+  <aside><NuxtPage name="sidebar" /></aside>
+</template>
+```
+
+`definePageMeta` is read from the default route file only.
+
 ## Navigation Hooks
 
 ```vue
@@ -223,4 +278,8 @@ Source references:
 - https://nuxt.com/docs/getting-started/routing
 - https://nuxt.com/docs/directory-structure/app/pages
 - https://nuxt.com/docs/directory-structure/app/middleware
+- https://nuxt.com/docs/api/utils/define-page-meta
+- https://nuxt.com/docs/getting-started/upgrade
+- https://nuxt.com/docs/guide/recipes/custom-routing
+- https://nuxt.com/docs/guide/concepts/rendering
 -->
