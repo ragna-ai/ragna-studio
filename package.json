@@ -22,6 +22,7 @@
     "db:backup": "pnpm --filter @repo/database db:backup",
     "key:generate": "pnpm --silent --filter @repo/crypto key:generate",
     "specs:index": "node scripts/specs-index.mjs",
+    "check:web-type-graph": "node scripts/check-web-type-graph.mjs",
     "ci": "pnpm clean --lockfile && pnpm install"
   },
   "devDependencies": {

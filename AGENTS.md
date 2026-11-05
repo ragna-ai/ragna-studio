@@ -21,6 +21,9 @@ pnpm format:check
 # Type-check
 pnpm check-types
 
+# Fail if the web type-check loads a server-only package (drizzle, @repo/database, ...); run after check-types
+pnpm check:web-type-graph
+
 # Scaffold a new @repo/* package (interactive or non-interactive)
 pnpm gen package
 pnpm gen package --args my-pkg "short description"
