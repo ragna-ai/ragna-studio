@@ -1,4 +1,4 @@
-import { AGENT_CONTEXT_MAX_LENGTH, AGENT_INSTRUCTIONS_MAX_LENGTH } from '@repo/ai/client';
+import { AGENT_CONTEXT_MAX_LENGTH, AGENT_INSTRUCTIONS_MAX_LENGTH } from '@repo/ai';
 import { agentSettingsSchema, agentToolsSchema } from '@repo/database';
 import { integrationToolsSchema } from '@repo/integrations/catalog';
 import * as z from 'zod';
