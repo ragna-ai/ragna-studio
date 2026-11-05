@@ -120,7 +120,7 @@ export default defineNuxtModule({
 ### Composables and Auto-imports
 
 ```ts
-import { addImports, addImportsDir, createResolver } from '@nuxt/kit'
+import { addImports, addImportsDir, addImportsSources, createResolver } from '@nuxt/kit'
 
 export default defineNuxtModule({
   setup() {
@@ -134,9 +134,34 @@ export default defineNuxtModule({
 
     // Directory of composables
     addImportsDir(resolve('./runtime/composables'))
+
+    // Auto-import from packages (Nuxt 4: accepts an array + package presets)
+    addImportsSources([
+      { package: '@vueuse/core' }, // all of the package's documented exports
+      { from: 'my-lib', imports: ['useThing', 'useOther'] },
+    ])
   },
 })
 ```
+
+### Keyed Composables (SSR/client key injection)
+
+If your composable needs a stable key shared between server and client (like `useState`/`useAsyncData`), register it so Nuxt's compiler injects a unique key when called with fewer than `argumentLength` args:
+
+```ts
+export default defineNuxtModule({
+  setup(options, nuxt) {
+    const { resolve } = createResolver(import.meta.url)
+    nuxt.options.optimization.keyedComposables.push({
+      name: 'useMyState',
+      source: resolve('./runtime/composables/state'), // exact source file (no barrels)
+      argumentLength: 2,
+    })
+  },
+})
+```
+
+The call must be statically analyzable and imported directly from `source` (barrel re-exports, dynamic/indirect calls, and reassignments are not transformed).
 
 ### Plugins
 
@@ -229,15 +254,47 @@ export default defineNuxtModule({
 ```
 
 ```ts
-// runtime/server/plugin.ts
-import { defineNitroPlugin } from 'nitropack/runtime'
+// runtime/server/plugin.ts (Nitro v3)
+import { definePlugin } from 'nitro'
 
-export default defineNitroPlugin((nitroApp) => {
+export default definePlugin((nitroApp) => {
   nitroApp.hooks.hook('request', (event) => {
-    console.log('Request:', event.path)
+    console.log('Request:', event.url.pathname)
   })
 })
 ```
+
+## Nuxt 5 / Nitro v3 for Module Authors
+
+- **Portable server code:** import from **`nuxt/server`** (ships in Nuxt 4.6+) so one file runs under `nitropack` v2, Nitro v3, and other builders with no h3/Nitro peer dependency. Leave `nuxt/server` external when bundling.
+- **Type augmentation moved:** `nitropack/types` → `nitro/types`.
+- **Route rule types** are declared on `h3/rules` now (`RouteRuleConfig` for config, `RouteRules` for runtime), not `NitroRouteConfig`/`NitroRouteRules`:
+
+  ```ts
+  declare module 'h3/rules' {
+    interface RouteRuleConfig { myModule?: { enabled: boolean } }
+    interface RouteRules { myModule?: { enabled: boolean } }
+  }
+  ```
+
+- **Compatibility layer:** a module whose server files still import `h3`/`nitropack`/`#internal/nitro`/`#imports` keeps running via an automatic Nitro v2 compatibility layer (`NUXT_B9003` warning names it). To support Nuxt <4.6 and Nitro v3 at once, register both handler files:
+
+  ```ts
+  addServerHandler({
+    route: '/api/my-module/status',
+    handler: {
+      nuxt: resolve('./runtime/server/status'),        // nuxt/server only
+      nitro2: resolve('./runtime/server/status.legacy'), // h3 / nitropack
+    },
+  })
+  ```
+
+- **Dev server handlers:** `addDevServerHandler` takes the same variant keys (`handler: { nuxt, nitro2, nitro3 }`), plus `method`, `middleware`, `meta`. They run in the Nuxt process, so write `nuxt` as `event => fn(event.req)` against web `Request`/`Response` and never import `nuxt/server` there; `nitro2` uses h3 v1 with `toWebRequest(event)` (add `h3@^1` to dependencies). The object form needs `@nuxt/kit@^4.6` in `dependencies`. Routes: `nuxt`/`nitro3` match exactly, `nitro2` matches as a prefix; end the route in `/**` to match subpaths on all (`@nuxt/kit@^4.6.1`). A `nitro2` handler sees `event.path` relative to its route base.
+- **Other variants:** `resolveServerVariant({ nuxt, nitro2 })` resolves the right file for aliases/type templates (or `undefined`); `addServerImports({ from: { nuxt, nitro2 } })` accepts variants. `nitro3` files may import `nitro/*` alone or alongside `nuxt/server`.
+- **Detection:** Nuxt infers the API from imports of registered files and their imports (`import type` ignored); override with `meta.compatibility.server`. Undetectable code is treated as `nitro2`. With `nitropack` v2 or `nitro` v3 hosts the `nitro2`/`nitro3` variant is preferred over `nuxt`; to test the `nuxt` variant set `server.builder` to a non-Nitro builder (e.g. `@nuxt/vite-server`).
+- **Server utilities** taking the event should type it as `RequestEvent` from `nuxt/server` (or `Pick<RequestEvent, 'req' | 'context'>`), not `H3Event`. Type module runtime config by augmenting `RuntimeConfig`/`PublicRuntimeConfig` from `nuxt/schema`.
+- **Plugins, storage, caching, tasks** have no `nuxt` variant: register as `nitro2` now, add `nitro3` when porting (`useKV` from `nitro/kv`, `defineTask` from `nitro/task`). In Nitro v3, `globalThis.$fetch` is gone: use `serverFetch(event, path)` from `nuxt/server`.
+- Declare all real dependencies in `package.json` — Nitro v3 no longer hoists `nitropack` v2's own deps into the server bundle.
 
 ## Templates and Virtual Files
 
@@ -253,6 +310,7 @@ export default defineNuxtModule({
     // Client/build virtual file (accessible via #build/my-config.mjs)
     addTemplate({
       filename: 'my-config.mjs',
+      dependsOn: [], // optional: skip dev regeneration on file edits; only if output doesn't read watched file contents
       getContents: () => `export default ${JSON.stringify(options)}`,
     })
 
@@ -407,6 +465,11 @@ export default defineNuxtModule({
       apiUrl: options.apiUrl,
     }
 
+    // Or use kit utilities: extendViteConfig, extendWebpackConfig, extendRsbuildConfig(config => ...)
+    // Plugins: addVitePlugin, addWebpackPlugin, addRsbuildPlugin, or addBuildPlugin({ vite, webpack, rsbuild, rspack })
+    // addVitePlugin targets the app environments (client/ssr), never `nitro`; for the nitro Vite
+    // environment push to nuxt.options.vite.plugins with applyToEnvironment: e => e.name === 'nitro'
+
     // Extend Vite config
     nuxt.options.vite.optimizeDeps ||= {}
     nuxt.options.vite.optimizeDeps.include ||= []
@@ -497,11 +560,11 @@ export default defineNuxtModule({
     "prepare": "nuxt-module-build build --stub"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.0.0"
+    "@nuxt/kit": "^4.0.0"
   },
   "devDependencies": {
     "@nuxt/module-builder": "latest",
-    "nuxt": "^3.0.0"
+    "nuxt": "^4.0.0"
   }
 }
 ```
@@ -551,4 +614,9 @@ Source references:
 - https://nuxt.com/docs/api/kit/nitro
 - https://nuxt.com/docs/api/kit/pages
 - https://nuxt.com/docs/api/kit/resolving
+- https://nuxt.com/docs/guide/modules/recipes-basics
+- https://nuxt.com/docs/guide/modules/module-dependencies
+- https://nuxt.com/docs/guide/modules/server-compatibility
+- https://nuxt.com/docs/guide/modules/recipes-advanced
+- https://nuxt.com/docs/api/kit/builder
 -->
