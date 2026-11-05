@@ -144,7 +144,8 @@ export function useGetGenImages(
 }
 
 export function useGenerateImages() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<GenerateImagesResponse, unknown, GenerateImagesBody>({
@@ -171,15 +172,14 @@ export function useGenerateImages() {
       );
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('imagen.toast.generateFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('imagen.toast.generateFailed')));
     },
   });
 }
 
 export function useUploadImageReference() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   return useMutation<ReferenceUploadResponse, unknown, File>({
     mutationKey: genImageKeys.referenceUpload(),
@@ -193,17 +193,15 @@ export function useUploadImageReference() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(
-          error,
-          $i18n.t('imagen.toast.referenceUploadFailed'),
-        ),
+        extractErrorMessage(error, t('imagen.toast.referenceUploadFailed')),
       );
     },
   });
 }
 
 export function useDeleteGenImage() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -218,9 +216,7 @@ export function useDeleteGenImage() {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('imagen.toast.deleteFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('imagen.toast.deleteFailed')));
     },
   });
 }

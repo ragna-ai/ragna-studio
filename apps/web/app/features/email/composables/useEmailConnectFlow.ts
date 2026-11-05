@@ -52,7 +52,7 @@ function withCallbackParam(returnPath: string, param: string, value: string) {
 
 // Provider-aware two-step connect flow: POST /integration/connect redirects to the provider and back, then POST /email/account/connect binds the mailbox to the connection.
 export function useEmailConnectFlow() {
-  const { $i18n } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   // The redirect starts without unloading the page yet, so stay busy until it does.
   const isRedirecting = ref(false);
@@ -92,7 +92,7 @@ export function useEmailConnectFlow() {
     },
     onError: (_error, { integrationId }) =>
       toast.error(
-        $i18n.t('email.toast.connectStartFailed', {
+        t('email.toast.connectStartFailed', {
           provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       ),
@@ -106,7 +106,7 @@ export function useEmailConnectFlow() {
     },
     onError: (_error, { integrationId }) =>
       toast.error(
-        $i18n.t('email.toast.reconnectStartFailed', {
+        t('email.toast.reconnectStartFailed', {
           provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       ),
@@ -145,7 +145,7 @@ export function useEmailConnectFlow() {
         { connected: true, account },
       );
       toast.success(
-        $i18n.t('email.toast.connected', {
+        t('email.toast.connected', {
           provider: MAILBOX_DISPLAY_NAME[integrationId],
         }),
       );
@@ -156,7 +156,7 @@ export function useEmailConnectFlow() {
       toast.error(
         extractErrorMessage(
           error,
-          $i18n.t('email.toast.connectFailed', {
+          t('email.toast.connectFailed', {
             provider: MAILBOX_DISPLAY_NAME[integrationId],
           }),
         ),
@@ -190,7 +190,7 @@ export function useEmailConnectFlow() {
     finishReconnect: (integrationId: EmailIntegrationId) =>
       syncAccount().then(() =>
         toast.success(
-          $i18n.t('email.toast.reconnected', {
+          t('email.toast.reconnected', {
             provider: MAILBOX_DISPLAY_NAME[integrationId],
           }),
         ),

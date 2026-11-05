@@ -124,7 +124,8 @@ function applyThreadActionSuccess(
 export function useSetThreadArchived(
   filters: MaybeRefOrGetter<EmailThreadListFilters>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -147,7 +148,7 @@ export function useSetThreadArchived(
     },
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.threadArchiveFailed')),
+        extractErrorMessage(error, t('email.toast.threadArchiveFailed')),
       ),
     onSettled: (_data, _error, { threadId }) => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
@@ -164,7 +165,8 @@ export function useSetThreadArchived(
 export function useSetThreadTrashed(
   filters: MaybeRefOrGetter<EmailThreadListFilters>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -194,8 +196,8 @@ export function useSetThreadTrashed(
         extractErrorMessage(
           error,
           variables.trashed
-            ? $i18n.t('email.toast.threadTrashFailed')
-            : $i18n.t('email.toast.threadRestoreFailed'),
+            ? t('email.toast.threadTrashFailed')
+            : t('email.toast.threadRestoreFailed'),
         ),
       ),
     onSettled: (_data, _error, { threadId }) => {
@@ -218,7 +220,8 @@ export function useSetThreadTrashed(
 export function useBulkTrashThreads(
   filters: MaybeRefOrGetter<EmailThreadListFilters>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<EmailBulkTrashResponse, unknown, EmailBulkTrashRequest>({
@@ -235,7 +238,7 @@ export function useBulkTrashThreads(
     },
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.threadsTrashFailed')),
+        extractErrorMessage(error, t('email.toast.threadsTrashFailed')),
       ),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
@@ -252,7 +255,8 @@ export function useBulkTrashThreads(
 export function useSetThreadStarred(
   filters: MaybeRefOrGetter<EmailThreadListFilters>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -275,15 +279,14 @@ export function useSetThreadStarred(
       );
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.starFailed')),
-      ),
+      toast.error(extractErrorMessage(error, t('email.toast.starFailed'))),
   });
 }
 
 /** [POST] /email/thread/:threadId/read */
 export function useSetThreadRead() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -301,7 +304,7 @@ export function useSetThreadRead() {
     },
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.readStatusFailed')),
+        extractErrorMessage(error, t('email.toast.readStatusFailed')),
       ),
   });
 }

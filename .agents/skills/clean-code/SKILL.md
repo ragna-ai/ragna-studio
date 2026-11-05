@@ -54,6 +54,7 @@ Write code the next person can read and change without asking you. Assume that p
 11. **No `v-if` on the same element as `v-for`.** Wrap the `v-for` in a `<template>` or `<div>` and put the `v-if` on that wrapper.
 12. **No inline styles.** Use Tailwind classes or shadcn-vue variants. No `style="..."` attributes.
 13. **No scoped CSS.** Use Tailwind classes, shadcn-vue variants, or add custom classes. Pure utility classes with no `<style>` block or inline styles are preferred. If you must add a `<style>` block, use global styles and avoid `scoped`.
+14. **Translations.** In components and composables, take `const { t } = useI18n()` at the top level and use `t` in callbacks through the closure. Never call `useI18n()` inside a callback, a watcher, after an `await`, or in a plain function: it throws at runtime. Code without a setup context (lib functions, classes, plugins, middleware) uses `useNuxtApp().$i18n`, or better, takes `t` or the finished message as a parameter.
 
 ## shadcn-vue
 

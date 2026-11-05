@@ -85,7 +85,8 @@ export function useGetAllDatasetsForPicker() {
 }
 
 export function useCreateDataset() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetResponse, unknown, CreateDatasetRequest>({
@@ -96,18 +97,17 @@ export function useCreateDataset() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });
-      toast.success($i18n.t('dataset.toast.created'));
+      toast.success(t('dataset.toast.created'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('dataset.toast.createFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('dataset.toast.createFailed')));
     },
   });
 }
 
 export function useUpdateDataset() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetResponse, unknown, UpdateDatasetRequest>({
@@ -122,18 +122,17 @@ export function useUpdateDataset() {
         datasetKeys.detail(workspaceId, response.dataset.id),
         response,
       );
-      toast.success($i18n.t('dataset.toast.saved'));
+      toast.success(t('dataset.toast.saved'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('dataset.toast.saveFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('dataset.toast.saveFailed')));
     },
   });
 }
 
 export function useDeleteDataset() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -143,10 +142,10 @@ export function useDeleteDataset() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });
-      toast.success($i18n.t('dataset.toast.deleted'));
+      toast.success(t('dataset.toast.deleted'));
     },
     onError: () => {
-      toast.error($i18n.t('dataset.toast.deleteFailed'));
+      toast.error(t('dataset.toast.deleteFailed'));
     },
   });
 }
@@ -174,7 +173,8 @@ export function useGetDatasetRows(
 }
 
 export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, DatasetRowData>({
@@ -192,9 +192,7 @@ export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('dataset.toast.rowAddFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('dataset.toast.rowAddFailed')));
     },
   });
 }
@@ -205,7 +203,8 @@ interface UpdateDatasetRowVariables {
 }
 
 export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, UpdateDatasetRowVariables>({
@@ -224,14 +223,15 @@ export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('dataset.toast.rowUpdateFailed')),
+        extractErrorMessage(error, t('dataset.toast.rowUpdateFailed')),
       );
     },
   });
 }
 
 export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -248,7 +248,7 @@ export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       });
     },
     onError: () => {
-      toast.error($i18n.t('dataset.toast.rowDeleteFailed'));
+      toast.error(t('dataset.toast.rowDeleteFailed'));
     },
   });
 }
@@ -256,7 +256,8 @@ export function useDeleteDatasetRow(datasetId: MaybeRefOrGetter<string>) {
 // No optimistic reordering (PRD decision 7): a move just invalidates the
 // rows query, same as every other row mutation above.
 export function useMoveDatasetRow(datasetId: MaybeRefOrGetter<string>) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DatasetRowResponse, unknown, MoveDatasetRowRequest>({
@@ -277,7 +278,7 @@ export function useMoveDatasetRow(datasetId: MaybeRefOrGetter<string>) {
         queryKey: datasetKeys.rows(workspaceId, datasetId),
       }),
     onError: () => {
-      toast.error($i18n.t('dataset.toast.rowMoveFailed'));
+      toast.error(t('dataset.toast.rowMoveFailed'));
     },
   });
 }
@@ -296,7 +297,8 @@ export function useExportDataset(
   datasetId: MaybeRefOrGetter<string>,
   datasetName: MaybeRefOrGetter<string>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   return useMutation<void, unknown, ExportDatasetVariables>({
     mutationFn: async ({ format }) => {
@@ -318,7 +320,7 @@ export function useExportDataset(
       downloadBlob(response._data, filename);
     },
     onError: () => {
-      toast.error($i18n.t('dataset.toast.exportFailed'));
+      toast.error(t('dataset.toast.exportFailed'));
     },
   });
 }

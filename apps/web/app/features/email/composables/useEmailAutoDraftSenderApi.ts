@@ -21,7 +21,8 @@ export function useGetAutoDraftSenders() {
 }
 
 export function useAddAutoDraftSender() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<EmailAutoDraftSenderResponse, unknown, string>({
     mutationFn: (senderEmail) =>
@@ -31,29 +32,28 @@ export function useAddAutoDraftSender() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.autoDraftSenders() });
-      toast.success($i18n.t('email.toast.senderAdded'));
+      toast.success(t('email.toast.senderAdded'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.senderAddFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('email.toast.senderAddFailed')));
     },
   });
 }
 
 export function useRemoveAutoDraftSender() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (senderId) =>
       $api<void>(`/email/auto-draft-sender/${senderId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emailKeys.autoDraftSenders() });
-      toast.success($i18n.t('email.toast.senderRemoved'));
+      toast.success(t('email.toast.senderRemoved'));
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.senderRemoveFailed')),
+        extractErrorMessage(error, t('email.toast.senderRemoveFailed')),
       );
     },
   });
