@@ -1,3 +1,4 @@
+import { AGENT_CONTEXT_MAX_LENGTH, AGENT_INSTRUCTIONS_MAX_LENGTH } from '@repo/ai/client';
 import { agentSettingsSchema, agentToolsSchema } from '@repo/database';
 import { integrationToolsSchema } from '@repo/integrations/catalog';
 import * as z from 'zod';
@@ -34,8 +35,8 @@ export const validCreateAgentBody = myzValidator(
     name: z.string().min(1).max(255),
     description: z.string().optional(),
     aiModelId: primaryId,
-    systemPrompt: z.string(),
-    context: z.string().max(30_000).nullish(),
+    systemPrompt: z.string().max(AGENT_INSTRUCTIONS_MAX_LENGTH),
+    context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
     tools: agentToolsSchema,
     integrationTools: integrationToolsSchema.optional(),
     defaultDatasetId: primaryId.nullish(),
@@ -52,8 +53,8 @@ export const validUpdateAgentBody = myzValidator(
       name: z.string().min(1).max(255).optional(),
       description: z.string().optional(),
       aiModelId: primaryId.optional(),
-      systemPrompt: z.string().optional(),
-      context: z.string().max(30_000).nullish(),
+      systemPrompt: z.string().max(AGENT_INSTRUCTIONS_MAX_LENGTH).optional(),
+      context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
       tools: agentToolsSchema,
       integrationTools: integrationToolsSchema.optional(),
       defaultDatasetId: primaryId.nullish(),

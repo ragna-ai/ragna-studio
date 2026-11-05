@@ -26,6 +26,7 @@
     "status": "Status",
     "model": "Modell",
     "prompt": "Prompt",
+    "maxLength": "Höchstens {max} Zeichen.",
     "noTools": "Keine Werkzeuge",
     "publish": "Veröffentlichen",
     "saveRename": "Namen speichern",
@@ -1268,6 +1269,11 @@
     }
   },
   "editor": {
+    "view": {
+      "formatted": "Formatiert",
+      "raw": "Rohtext"
+    },
+    "charCount": "{count} / {max}",
     "blockType": {
       "paragraph": "Text",
       "h1": "Überschrift 1",

@@ -24,9 +24,11 @@ export const triggerConfigSchema = z.discriminatedUnion('kind', [
 ]);
 export type TriggerConfig = z.infer<typeof triggerConfigSchema>;
 
+export const WORKFLOW_PROMPT_MAX_LENGTH = 30_000;
+
 export const agentConfigSchema = z.object({
   agentId: z.string().min(1),
-  prompt: z.string().min(1),
+  prompt: z.string().min(1).max(WORKFLOW_PROMPT_MAX_LENGTH),
 });
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
 
@@ -71,7 +73,7 @@ const teamMemberSchema = z.object({
 const delegateTeamConfigSchema = z.object({
   mode: z.literal('delegate'),
   leadAgentId: z.string().min(1),
-  prompt: z.string().min(1), // template, {{input}} supported
+  prompt: z.string().min(1).max(WORKFLOW_PROMPT_MAX_LENGTH), // template, {{input}} supported
   members: z.array(teamMemberSchema).min(1).max(5),
 });
 

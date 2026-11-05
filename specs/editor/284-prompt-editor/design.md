@@ -1,6 +1,6 @@
 # Prompt editor: design
 
-Status: proposed (2026-11-05). Design for [prd.md](./prd.md). Build plan in [slices.md](./slices.md).
+Status: implemented (2026-11-05, PR #285). Design for [prd.md](./prd.md). Build plan in [slices.md](./slices.md).
 
 ## Today
 
@@ -40,6 +40,16 @@ It brings the raw view with it.
 
 **Packages considered:** a markdown source editor (CodeMirror 6) for the raw view. Not added:
 the raw view is a plain `Textarea`, which keeps every byte and needs no dependency.
+
+**Smart typography:** the `document` and `email` profiles keep Tiptap's `Typography` input
+rules (curly quotes, `--` to a dash, `->` to an arrow). `prompt` turns them off with
+`smartTypography: false`, because they rewrite what the user types.
+
+**Mark shortcuts:** `document` and `email` turn typed or pasted `*x*`, `**x**`, `~~x~~`,
+backticks and `[x](url)` into marks. `prompt` turns that off with `markShortcuts: false`:
+`2 * 3 * 4` would otherwise lose its asterisks. Tiptap's `enableInputRules` and
+`enablePasteRules` get every extension except the marks (`getEnabledRuleExtensions` in
+`src/typing-rules.ts`), so block shortcuts (`# `, `- `, `> `) and Mod-b/Mod-i stay.
 
 **Not abstracted:** the extension list stays the same for every profile. Profiles never remove
 nodes from the schema, so content a menu doesn't offer still parses and survives a save.
@@ -142,7 +152,27 @@ export interface MarkdownEditorFieldProps {
 - **Accessible name.** It accepts `aria-labelledby` and passes it to the editable element and
   to the raw textarea.
 
-**Raw view (US-4).** A `ViewSwitcher` in the field's header row, aligned right, switches between
+**Layout.** Three rows. Only the middle one has the border, radius and focus ring:
+
+```
+<label slot>                    [Formatted | Raw]
+┌──────────────────────────────────────────────┐
+│ editor or raw textarea                       │
+└──────────────────────────────────────────────┘
+                                  12,345 / 30,000
+```
+
+- A `label` slot sits left in the header row. Callers put their `<Label>` (and any hint) there.
+- The `class` prop applies to the bordered box, not the outer field. Callers pass a floor
+  (`min-h-60`), not a fixed height.
+- **Height: grow, then scroll.** The box grows with its content until it reaches the bottom of
+  the window, then scrolls inside. CSS only, no measuring: the field is `flex min-h-0 flex-col`,
+  and each parent from `<main>` (which has a fixed height) down to the field is a
+  `flex min-h-0 flex-col` column. The agent page's `SectionWrapper` gets `h-full`, and
+  `TabSidebar`'s active panel fills the rest and scrolls on its own, so long tabs still work.
+  The workflow config panel is already a fixed-height column.
+
+**Raw view (US-4).** The `ViewSwitcher` in the header row, aligned right, switches between
 `formatted` and `raw`.
 
 ```ts
@@ -158,8 +188,8 @@ export type MarkdownFieldView = 'formatted' | 'raw';
   'markdown-field:view', 'formatted')`. VueUse syncs it between fields on the same page.
 - The `invalid` style and `blur` apply to both views.
 
-**Character count (US-5.6, US-5.7).** With `maxLength` set, a footer row shows
-`12,345 / 30,000` in the bottom right corner, in both views.
+**Character count (US-5.6, US-5.7).** With `maxLength` set, the footer row below the box shows
+`12,345 / 30,000` aligned right, in both views.
 
 - It counts `model.length`: the stored markdown, the same value the API checks. In the
   formatted view that includes markup like `# ` and `**`.

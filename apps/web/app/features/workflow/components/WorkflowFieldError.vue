@@ -9,14 +9,24 @@ const props = defineProps<{
 }>();
 
 // Composables
-const { t } = useI18n();
+const { n, t } = useI18n();
 
 // Computed
 const issue = computed(() => findFieldIssue(props.issues, props.field));
+const message = computed(() => {
+  if (!issue.value) return '';
+  const params = Object.fromEntries(
+    Object.entries(issue.value.messageParams ?? {}).map(([key, value]) => [
+      key,
+      n(value),
+    ]),
+  );
+  return t(issue.value.messageKey, params);
+});
 </script>
 
 <template>
   <p v-if="issue" class="mt-1 text-xs text-destructive">
-    {{ t(issue.messageKey) }}
+    {{ message }}
   </p>
 </template>

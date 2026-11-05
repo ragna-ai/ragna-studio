@@ -1,4 +1,5 @@
 import {
+  WORKFLOW_PROMPT_MAX_LENGTH,
   getNodeAgentReferences,
   validateWorkflowDefinition,
   workflowDefinitionSchema,
@@ -19,6 +20,7 @@ const FIELD_MESSAGE_KEYS: Record<string, string> = {
 };
 const MEMBER_AGENT_FIELD = /^members\.\d+\.agentId$/;
 const MEMBER_AGENT_MESSAGE_KEY = 'workflow.validation.memberAgentRequired';
+const PROMPT_TOO_LONG_MESSAGE_KEY = 'common.maxLength';
 const AGENT_DELETED_MESSAGE_KEY = 'workflow.validation.agentDeleted';
 const NODE_INVALID_MESSAGE_KEY = 'workflow.validation.nodeInvalid';
 const DEFINITION_INVALID_MESSAGE_KEY = 'workflow.validation.definitionInvalid';
@@ -79,10 +81,18 @@ function collectShapeIssues(definition: WorkflowDefinition): ShapeIssues {
       data === 'data' && config === 'config'
         ? fieldPath.map(String).join('.')
         : '';
-    addNodeIssue(shapeIssues.nodeIssues, node.id, {
-      field,
-      messageKey: getShapeMessageKey(field),
-    });
+    const isPromptTooLong = field === 'prompt' && issue.code === 'too_big';
+    addNodeIssue(
+      shapeIssues.nodeIssues,
+      node.id,
+      isPromptTooLong
+        ? {
+            field,
+            messageKey: PROMPT_TOO_LONG_MESSAGE_KEY,
+            messageParams: { max: WORKFLOW_PROMPT_MAX_LENGTH },
+          }
+        : { field, messageKey: getShapeMessageKey(field) },
+    );
   }
   return shapeIssues;
 }

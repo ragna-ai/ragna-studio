@@ -16,6 +16,8 @@ import { SlashCommand, type SlashCommandHandlers } from './slash-command';
 export interface RichTextEditorKitOptions {
   placeholder?: string;
   hasMarkdown?: boolean;
+  /** Default true. Turn off to keep typed text as typed (no `--` to dash, `*` to `×`). */
+  smartTypography?: boolean;
   slashCommand?: SlashCommandHandlers;
   onLinkShortcut?: () => void;
 }
@@ -81,7 +83,7 @@ export function createRichTextEditorExtensions(
     }),
     Image,
     CodeBlockLowlight.configure({ lowlight }),
-    Typography,
+    ...((options.smartTypography ?? true) ? [Typography] : []),
     TaskList,
     TaskItem,
     TableKit.configure({

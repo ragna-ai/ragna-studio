@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { TagIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
+import ViewSwitcher from '~/components/ViewSwitcher.vue';
 import TaskBoard from '~/features/task/components/TaskBoard.vue';
 import TaskCreateDialog from '~/features/task/components/TaskCreateDialog.vue';
 import TaskFilterBar from '~/features/task/components/TaskFilterBar.vue';
 import TaskLabelManageDialog from '~/features/task/components/TaskLabelManageDialog.vue';
 import TaskListView from '~/features/task/components/TaskListView.vue';
-import TaskViewSwitcher, {
-  type TaskView,
-} from '~/features/task/components/TaskViewSwitcher.vue';
 import { useGetTasks } from '~/features/task/composables/useTaskApi';
 import { useGetTaskLabels } from '~/features/task/composables/useTaskLabelApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+import { TASK_VIEWS, type TaskView } from '~/features/task/lib/task-views';
 import type { TaskPriority, TaskStatus } from '~/features/task/types';
 
 // Refs
@@ -84,7 +83,7 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
       </div>
       <template v-else-if="tasksData">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <TaskViewSwitcher v-model="view" />
+          <ViewSwitcher v-model="view" :options="TASK_VIEWS" />
           <TaskFilterBar
             :status="statusFilter"
             :priority="priorityFilter"

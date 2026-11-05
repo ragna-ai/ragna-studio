@@ -23,7 +23,7 @@ const activeTab = computed({
 </script>
 
 <template>
-  <div class="grid grid-cols-12">
+  <div class="grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)]">
     <!-- Tab list -->
     <div role="tablist" class="col-span-3">
       <ul class="space-y-2">
@@ -48,16 +48,17 @@ const activeTab = computed({
       </ul>
     </div>
     <!-- Tab panels -->
-    <div class="col-span-9 pl-32">
+    <div class="col-span-9 flex min-h-0 flex-col pl-32">
       <template v-for="tab in tabs" :key="tab.id">
         <div
           :id="`panel-${tab.id}`"
           role="tabpanel"
           :aria-labelledby="tab.id"
-          :class="{
-            hidden: activeTab !== tab.id,
-            block: activeTab === tab.id,
-          }"
+          :class="
+            activeTab === tab.id
+              ? '-m-1 flex min-h-0 flex-1 flex-col overflow-y-auto p-1'
+              : 'hidden'
+          "
         >
           <slot :name="tab.id" />
         </div>

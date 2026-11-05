@@ -1,6 +1,6 @@
 # Prompt editor: implementation slices
 
-Status: proposed (2026-11-05). Build plan for [prd.md](./prd.md) and [design.md](./design.md).
+Status: implemented (2026-11-05, PR #285). Build plan for [prd.md](./prd.md) and [design.md](./design.md).
 
 Three waves, one PR. Each wave builds against the real types of the wave before it. S1 and S4
 run in parallel: they share no files.

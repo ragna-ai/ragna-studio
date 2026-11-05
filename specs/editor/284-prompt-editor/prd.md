@@ -1,6 +1,6 @@
 # Prompt editor: edit agent and workflow prompts as markdown (PRD)
 
-> **Status: proposed** (2026-11-05). Issue #284. Extends [the shared editor](../prd.md).
+> **Status: implemented** (2026-11-05, PR #285). Issue #284. Extends [the shared editor](../prd.md).
 
 Users write agent instructions, agent context and workflow prompts in plain textareas. This PRD
 moves those fields onto the shared rich text editor. The stored value stays markdown, and it
@@ -73,6 +73,8 @@ typed them, so that the agent behaves the way I wrote it.
 - **US-2.5** Given instructions holding an HTML image tag with an event attribute and a link to
   a `javascript:` URL, when the editor opens them in the formatted view, then no script runs
   and the link has no `javascript:` target.
+- **US-2.6** Given the formatted view, when the editor types straight quotes, `--`, `->`, `!=`,
+  `...`, `(c)` and `2 * 3`, then the saved text contains each of them unchanged.
 
 ### US-3 Format workflow prompts (P2)
 
@@ -112,7 +114,7 @@ oversized prompt can't freeze the agent or workflow page for everyone.
 - **US-5.2** Given a form, when a prompt field passes the limit, then the field shows an error
   naming the limit, and the form can't be saved.
 - **US-5.3** Given an API request, when it creates or updates an agent or workflow with a
-  prompt over the limit, then it is rejected with `400`.
+  prompt over the limit, then it is rejected with `422`.
 - **US-5.4** Given an agent or workflow saved with a longer prompt before this change, when a
   user opens it, chats with it or runs it, then it works as before.
 - **US-5.5** Given that agent, when an API request updates only its name, then the update
@@ -124,17 +126,17 @@ oversized prompt can't freeze the agent or workflow page for everyone.
 
 ## Testing
 
-| Criterion                      | Level            | Folder                                            |
-| ------------------------------ | ---------------- | ------------------------------------------------- |
-| US-1.2                         | unit (bun)       | `packages/editor/test/`                           |
-| US-2.1, US-2.3, US-2.4         | unit (bun)       | `packages/editor/test/`                           |
-| US-1.1, US-1.3                 | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-2.1, US-2.2                 | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-3.1, US-3.2                 | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-3.3                         | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-4.1 to US-4.5               | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-2.5, US-5.2, US-5.6, US-5.7 | e2e (Playwright) | `apps/web/e2e/`                                   |
-| US-5.1, US-5.3 to US-5.5       | API              | `apps/api/test/agent/`, `apps/api/test/workflow/` |
+| Criterion                              | Level            | Folder                                            |
+| -------------------------------------- | ---------------- | ------------------------------------------------- |
+| US-1.2                                 | unit (bun)       | `packages/editor/test/`                           |
+| US-2.1, US-2.3, US-2.4                 | unit (bun)       | `packages/editor/test/`                           |
+| US-1.1, US-1.3                         | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-2.1, US-2.2                         | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-3.1, US-3.2                         | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-3.3                                 | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-4.1 to US-4.5                       | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-2.5, US-2.6, US-5.2, US-5.6, US-5.7 | e2e (Playwright) | `apps/web/e2e/`                                   |
+| US-5.1, US-5.3 to US-5.5               | API              | `apps/api/test/agent/`, `apps/api/test/workflow/` |
 
 ## Standards checklist
 

@@ -15,7 +15,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit && tsc --noEmit -p test",
+    "test": "bun test"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
+    "@types/bun": "1.4.4",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

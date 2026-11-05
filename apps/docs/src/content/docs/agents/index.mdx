@@ -26,6 +26,14 @@ To change an agent later, open its row actions in the list and choose **Edit**. 
 
 Put behavior and rules here. Put background facts in [Knowledge](/agents/knowledge).
 
+The instructions field is a formatted editor. Headings, lists, quotes, code and tables are available through the `/` menu and the selection toolbar. The field stores the text as markdown.
+
+The text reaches the model exactly as written. Tags such as `<rules>`, placeholders such as `{{user_name}}` and symbols such as `*` or `_` are not changed or escaped. One effect: markdown that is typed as plain text, such as `*word*`, shows as italics when the agent is opened again.
+
+Choose **Raw** above the field to see and edit the stored text directly. Choose **Formatted** to go back. RAGNA Studio remembers the choice for every prompt field.
+
+The instructions are limited to 30,000 characters. A counter in the bottom right corner of the field shows the length, for example **12 / 30,000**. It turns red above the limit, and the agent cannot be saved until the text is shorter. Nothing is cut off while typing or pasting. Agents saved with longer instructions before the limit existed keep working in chat. Saving them in the editor needs the text to be shortened first.
+
 ## Intelligence
 
 Pick the model the agent uses. The selector lists text models only.
