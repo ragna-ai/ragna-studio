@@ -26,6 +26,7 @@
     "status": "Status",
     "model": "Model",
     "prompt": "Prompt",
+    "maxLength": "Use at most {max} characters.",
     "noTools": "No tools",
     "publish": "Publish",
     "saveRename": "Save name",
@@ -1265,6 +1266,11 @@
     }
   },
   "editor": {
+    "view": {
+      "formatted": "Formatted",
+      "raw": "Raw"
+    },
+    "charCount": "{count} / {max}",
     "blockType": {
       "paragraph": "Text",
       "h1": "Heading 1",

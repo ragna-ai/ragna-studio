@@ -8,9 +8,14 @@ import {
   UserIcon,
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
+import {
+  AGENT_CONTEXT_MAX_LENGTH,
+  AGENT_INSTRUCTIONS_MAX_LENGTH,
+} from '@repo/ai/client';
 import { integrationToolsSchema } from '@repo/integrations/catalog';
 import type { IntegrationTools } from '@repo/integrations/catalog';
 import { z } from 'zod';
+import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
@@ -57,7 +62,7 @@ const currentTab = ref('persona');
 const { isPending: isCreating, mutate: createAgent } = useCreateAgent();
 const { isPending: isUpdating, mutate: updateAgent } = useUpdateAgent();
 const isPending = computed(() => isCreating.value || isUpdating.value);
-const { t } = useI18n();
+const { n, t } = useI18n();
 
 const agentSettingsSchema = z.object({
   temperature: z.number().min(0).max(1).nullable(),
@@ -70,9 +75,13 @@ const agentUpsertSchema = z.object({
   name: z.string().min(4, {
     message: t('agent.upsert.nameRequired'),
   }),
-  systemPrompt: z.string(),
+  systemPrompt: z.string().max(AGENT_INSTRUCTIONS_MAX_LENGTH, {
+    message: t('common.maxLength', { max: n(AGENT_INSTRUCTIONS_MAX_LENGTH) }),
+  }),
   description: z.string(),
-  context: z.string().max(30_000),
+  context: z.string().max(AGENT_CONTEXT_MAX_LENGTH, {
+    message: t('common.maxLength', { max: n(AGENT_CONTEXT_MAX_LENGTH) }),
+  }),
   tools: z.array(z.string()),
   integrationTools: integrationToolsSchema,
   settings: agentSettingsSchema,
@@ -118,11 +127,6 @@ const tabsWithErrors = computed<string[]>(() => {
 
 const siderBarTabs = computed(() => [
   { id: 'persona', icon: UserIcon, label: t('agent.upsert.tabs.persona') },
-  // {
-  //   id: 'systemPrompt',
-  //   icon: CircleUserRoundIcon,
-  //   label: t('agent.upsert.systemPromptTitle'),
-  // },
   {
     id: 'aimodel',
     icon: BrainIcon,
@@ -144,8 +148,11 @@ const siderBarTabs = computed(() => [
 </script>
 
 <template>
-  <form @submit.prevent.stop="form.handleSubmit">
-    <div class="mb-4 flex w-full justify-end space-x-4">
+  <form
+    class="flex min-h-0 flex-1 flex-col"
+    @submit.prevent.stop="form.handleSubmit"
+  >
+    <div class="mb-4 flex w-full shrink-0 justify-end space-x-4">
       <Button as-child variant="secondary">
         <NuxtLinkLocale to="/agent">{{ t('common.cancel') }}</NuxtLinkLocale>
       </Button>
@@ -161,7 +168,7 @@ const siderBarTabs = computed(() => [
     >
       <!-- TAB 1: Persona -->
       <template #persona>
-        <div class="space-y-8">
+        <div class="flex min-h-0 flex-1 flex-col gap-8">
           <form.Field name="name">
             <template v-slot="{ field, state }">
               <div>
@@ -209,50 +216,30 @@ const siderBarTabs = computed(() => [
           </form.Field>
           <form.Field name="systemPrompt">
             <template v-slot="{ field, state }">
-              <div>
-                <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                  {{ t('agent.upsert.systemPromptLabel') }}
-                </Label>
-                <Textarea
-                  :id="field.name"
-                  rows="10"
+              <div class="flex min-h-80 flex-col">
+                <MarkdownEditorField
                   :model-value="state.value"
-                  @update:model-value="
-                    (v: string | number) => field.handleChange(String(v))
-                  "
+                  :aria-labelledby="`${field.name}-label`"
+                  :invalid="state.meta.errors.length > 0"
+                  :max-length="AGENT_INSTRUCTIONS_MAX_LENGTH"
+                  class="min-h-60"
+                  @update:model-value="field.handleChange"
                   @blur="field.handleBlur"
-                  class="max-h-130 min-h-60"
-                  autocomplete="off"
-                />
+                >
+                  <template #label>
+                    <Label
+                      :id="`${field.name}-label`"
+                      class="block text-sm font-medium"
+                    >
+                      {{ t('agent.upsert.systemPromptLabel') }}
+                    </Label>
+                  </template>
+                </MarkdownEditorField>
                 <FormFieldInfo :state="state" />
               </div>
             </template>
           </form.Field>
         </div>
-      </template>
-      <!-- TAB 2: Instructions -->
-      <template #instructions>
-        <form.Field name="systemPrompt">
-          <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('agent.upsert.systemPromptTitle') }}
-              </Label>
-              <Textarea
-                :id="field.name"
-                rows="10"
-                :model-value="state.value"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
-                @blur="field.handleBlur"
-                class="min-h-100"
-                autocomplete="off"
-              />
-              <FormFieldInfo :state="state" />
-            </div>
-          </template>
-        </form.Field>
       </template>
       <!-- TAB 3: AI Model -->
       <template #aimodel>
@@ -322,24 +309,28 @@ const siderBarTabs = computed(() => [
         </div>
         <form.Field name="context">
           <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('agent.upsert.contextLabel') }}
-              </Label>
-              <p class="mb-2 text-sm text-muted-foreground">
-                {{ t('agent.upsert.contextHint') }}
-              </p>
-              <Textarea
-                :id="field.name"
-                rows="10"
+            <div class="flex min-h-80 flex-col">
+              <MarkdownEditorField
                 :model-value="state.value"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
-                @blur="field.handleBlur"
+                :aria-labelledby="`${field.name}-label`"
+                :invalid="state.meta.errors.length > 0"
+                :max-length="AGENT_CONTEXT_MAX_LENGTH"
                 class="min-h-60"
-                autocomplete="off"
-              />
+                @update:model-value="field.handleChange"
+                @blur="field.handleBlur"
+              >
+                <template #label>
+                  <Label
+                    :id="`${field.name}-label`"
+                    class="block text-sm font-medium"
+                  >
+                    {{ t('agent.upsert.contextLabel') }}
+                  </Label>
+                  <p class="text-sm text-muted-foreground">
+                    {{ t('agent.upsert.contextHint') }}
+                  </p>
+                </template>
+              </MarkdownEditorField>
               <FormFieldInfo :state="state" />
             </div>
           </template>

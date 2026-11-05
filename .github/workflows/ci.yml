@@ -84,6 +84,10 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+
       - run: pnpm install --frozen-lockfile
 
       # No turbo cache: a cache hit restores packages/*/dist without running the build
@@ -93,6 +97,7 @@ jobs:
       - run: pnpm build --filter='!@repo/docs'
       - run: pnpm check-types
       - run: pnpm check:web-type-graph
+      - run: pnpm --filter @repo/editor test
       - run: pnpm lint
       - run: pnpm format:check
       # Comments state the reason themselves instead of pointing into specs/, which

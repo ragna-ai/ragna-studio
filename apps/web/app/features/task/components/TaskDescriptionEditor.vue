@@ -21,7 +21,7 @@ const { mutate: saveTask } = useUpdateTask();
 
 const controller = useRichTextEditor({
   content: props.description,
-  contentType: 'markdown',
+  profile: 'document',
   placeholder: t('task.detail.descriptionPlaceholder'),
   onUpdate: (markdown) => {
     latestContent.value = markdown;

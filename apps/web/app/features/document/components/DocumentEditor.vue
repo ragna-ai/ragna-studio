@@ -26,7 +26,7 @@ const { mutate: exportDocument, isPending: isExporting } = useExportDocument(
 
 const controller = useRichTextEditor({
   content: props.document.content,
-  contentType: 'markdown',
+  profile: 'document',
   autofocus: 'start',
   placeholder: t('document.editor.contentPlaceholder'),
   onUpdate: (markdown) => {
