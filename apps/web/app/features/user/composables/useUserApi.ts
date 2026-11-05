@@ -11,7 +11,8 @@ interface UpdateUserProfileResponse {
 }
 
 export default function useUserApi() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   function updateUserProfile() {
@@ -29,10 +30,10 @@ export default function useUserApi() {
         // Invalidate the user query to refetch the updated user data
         queryClient.invalidateQueries({ queryKey: ['user'] });
         await refreshAuthSession();
-        toast.success($i18n.t('user.toast.profileUpdated'));
+        toast.success(t('user.toast.profileUpdated'));
       },
       onError: () => {
-        toast.error($i18n.t('user.toast.profileUpdateFailed'));
+        toast.error(t('user.toast.profileUpdateFailed'));
       },
     });
   }

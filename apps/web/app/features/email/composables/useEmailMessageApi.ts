@@ -56,7 +56,8 @@ interface MessageActionVariables {
 
 /** [POST] /email/message/:messageId/archive */
 export function useSetMessageArchived() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<
     EmailMessageActionResponse,
@@ -77,14 +78,15 @@ export function useSetMessageArchived() {
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.messageArchiveFailed')),
+        extractErrorMessage(error, t('email.toast.messageArchiveFailed')),
       ),
   });
 }
 
 /** [POST] /email/message/:messageId/trash */
 export function useSetMessageTrashed() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<
     EmailMessageActionResponse,
@@ -105,14 +107,15 @@ export function useSetMessageTrashed() {
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.messageTrashFailed')),
+        extractErrorMessage(error, t('email.toast.messageTrashFailed')),
       ),
   });
 }
 
 /** [POST] /email/message/:messageId/star */
 export function useSetMessageStarred() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<
     EmailMessageActionResponse,
@@ -127,15 +130,14 @@ export function useSetMessageStarred() {
     onSuccess: ({ message }, { threadId }) =>
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.starFailed')),
-      ),
+      toast.error(extractErrorMessage(error, t('email.toast.starFailed'))),
   });
 }
 
 /** [POST] /email/message/:messageId/read */
 export function useSetMessageRead() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<
     EmailMessageActionResponse,
@@ -151,7 +153,7 @@ export function useSetMessageRead() {
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
       toast.error(
-        extractErrorMessage(error, $i18n.t('email.toast.readStatusFailed')),
+        extractErrorMessage(error, t('email.toast.readStatusFailed')),
       ),
   });
 }
@@ -189,7 +191,8 @@ export function useGetEmailMessageAttachments(
  * the web and API dev ports.
  */
 export function useDownloadEmailAttachment() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   return useMutation<
     void,
     unknown,
@@ -211,10 +214,7 @@ export function useDownloadEmailAttachment() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(
-          error,
-          $i18n.t('email.toast.attachmentDownloadFailed'),
-        ),
+        extractErrorMessage(error, t('email.toast.attachmentDownloadFailed')),
       );
     },
   });

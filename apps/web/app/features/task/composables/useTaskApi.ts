@@ -121,7 +121,8 @@ export function useGetTask(
 }
 
 export function useCreateTask() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<TaskResponse, unknown, CreateTaskRequest>({
@@ -136,9 +137,7 @@ export function useCreateTask() {
       return invalidateTaskLists(queryClient, workspaceId);
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('task.toast.createFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('task.toast.createFailed')));
     },
   });
 }
@@ -163,7 +162,8 @@ interface UpdateTaskVariables extends UpdateTaskRequest {
  * (not two) detail refetch.
  */
 export function useUpdateTask() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<TaskResponse, unknown, UpdateTaskVariables>({
@@ -194,7 +194,7 @@ export function useUpdateTask() {
       return invalidateTaskLists(queryClient, workspaceId);
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, $i18n.t('task.toast.saveFailed')));
+      toast.error(extractErrorMessage(error, t('task.toast.saveFailed')));
     },
   });
 }
@@ -212,7 +212,8 @@ interface MoveTaskVariables extends MoveTaskRequest {
  * on settle either way.
  */
 export function useMoveTask() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<TaskResponse, unknown, MoveTaskVariables>({
@@ -235,7 +236,7 @@ export function useMoveTask() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, $i18n.t('task.toast.moveFailed')));
+      toast.error(extractErrorMessage(error, t('task.toast.moveFailed')));
     },
     onSettled: () =>
       // Board/list reconciliation after both success and error/rollback:
@@ -250,7 +251,8 @@ export function useMoveTask() {
 }
 
 export function useDeleteTask() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -260,12 +262,10 @@ export function useDeleteTask() {
       }),
     onSuccess: async () => {
       await invalidateTaskLists(queryClient, workspaceId);
-      toast.success($i18n.t('task.toast.deleted'));
+      toast.success(t('task.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('task.toast.deleteFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('task.toast.deleteFailed')));
     },
   });
 }

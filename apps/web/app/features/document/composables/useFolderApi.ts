@@ -51,7 +51,8 @@ export function useGetFolder(folderId: MaybeRefOrGetter<string | null>) {
 }
 
 export function useCreateFolder() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, { name: string }>({
@@ -62,12 +63,10 @@ export function useCreateFolder() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
-      toast.success($i18n.t('folder.toast.created'));
+      toast.success(t('folder.toast.created'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('folder.toast.createFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('folder.toast.createFailed')));
     },
   });
 }
@@ -78,7 +77,8 @@ interface RenameFolderVariables {
 }
 
 export function useRenameFolder() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<FolderResponse, unknown, RenameFolderVariables>({
@@ -95,19 +95,18 @@ export function useRenameFolder() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.list(workspaceId),
       });
-      toast.success($i18n.t('folder.toast.renamed'));
+      toast.success(t('folder.toast.renamed'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('folder.toast.renameFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('folder.toast.renameFailed')));
     },
   });
 }
 
 /** Deleting a folder moves its documents to root; it never deletes them. */
 export function useDeleteFolder() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -120,12 +119,10 @@ export function useDeleteFolder() {
       queryClient.invalidateQueries({
         queryKey: documentKeys.list(workspaceId),
       });
-      toast.success($i18n.t('folder.toast.deleted'));
+      toast.success(t('folder.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('folder.toast.deleteFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('folder.toast.deleteFailed')));
     },
   });
 }

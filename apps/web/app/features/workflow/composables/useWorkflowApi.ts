@@ -59,7 +59,8 @@ export function useGetWorkflow(
 }
 
 export function useCreateWorkflow() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, CreateWorkflowRequest>({
@@ -72,10 +73,10 @@ export function useCreateWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.all(workspaceId),
       });
-      toast.success($i18n.t('workflow.toast.created'));
+      toast.success(t('workflow.toast.created'));
     },
     onError: () => {
-      toast.error($i18n.t('workflow.toast.createFailed'));
+      toast.error(t('workflow.toast.createFailed'));
     },
   });
 }
@@ -85,7 +86,8 @@ interface UpdateWorkflowVariables extends UpdateWorkflowRequest {
 }
 
 export function useUpdateWorkflow() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, UpdateWorkflowVariables>({
@@ -104,16 +106,17 @@ export function useUpdateWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
-      toast.success($i18n.t('workflow.toast.saved'));
+      toast.success(t('workflow.toast.saved'));
     },
     onError: () => {
-      toast.error($i18n.t('workflow.toast.saveFailed'));
+      toast.error(t('workflow.toast.saveFailed'));
     },
   });
 }
 
 export function useDeleteWorkflow() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -125,16 +128,17 @@ export function useDeleteWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.all(workspaceId),
       });
-      toast.success($i18n.t('workflow.toast.deleted'));
+      toast.success(t('workflow.toast.deleted'));
     },
     onError: () => {
-      toast.error($i18n.t('workflow.toast.deleteFailed'));
+      toast.error(t('workflow.toast.deleteFailed'));
     },
   });
 }
 
 export function usePublishWorkflow() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowResponse, unknown, string>({
@@ -149,18 +153,19 @@ export function usePublishWorkflow() {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.detail(workspaceId, response.workflow.id),
       });
-      toast.success($i18n.t('workflow.toast.published'));
+      toast.success(t('workflow.toast.published'));
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('workflow.toast.publishFailed')),
+        extractErrorMessage(error, t('workflow.toast.publishFailed')),
       );
     },
   });
 }
 
 export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, string | undefined>({
@@ -179,7 +184,7 @@ export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('workflow.toast.runStartFailed')),
+        extractErrorMessage(error, t('workflow.toast.runStartFailed')),
       );
     },
   });
@@ -189,7 +194,8 @@ export function useCancelWorkflowRun(
   workflowId: MaybeRefOrGetter<string>,
   runId: MaybeRefOrGetter<string>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<WorkflowRunResponse, unknown, void>({
@@ -205,11 +211,11 @@ export function useCancelWorkflowRun(
       queryClient.invalidateQueries({
         queryKey: workflowKeys.runs(workspaceId, workflowId),
       });
-      toast.success($i18n.t('workflow.toast.runCancelled'));
+      toast.success(t('workflow.toast.runCancelled'));
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('workflow.toast.runCancelFailed')),
+        extractErrorMessage(error, t('workflow.toast.runCancelFailed')),
       );
     },
   });

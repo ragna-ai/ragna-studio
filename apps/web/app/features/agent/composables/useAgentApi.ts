@@ -81,7 +81,8 @@ export function useGetAllAgents(
 }
 
 export function useCreateAgent() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, CreateAgentRequest>({
@@ -89,10 +90,10 @@ export function useCreateAgent() {
       $api<AgentResponse>(agentBasePath(workspaceId), { method: 'POST', body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
-      toast.success($i18n.t('agent.toast.created'));
+      toast.success(t('agent.toast.created'));
     },
     onError: () => {
-      toast.error($i18n.t('agent.toast.createFailed'));
+      toast.error(t('agent.toast.createFailed'));
     },
   });
 }
@@ -102,7 +103,8 @@ interface UpdateAgentVariables extends UpdateAgentRequest {
 }
 
 export function useUpdateAgent() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentResponse, unknown, UpdateAgentVariables>({
@@ -116,10 +118,10 @@ export function useUpdateAgent() {
       queryClient.invalidateQueries({
         queryKey: agentKeys.detail(workspaceId, agentId),
       });
-      toast.success($i18n.t('agent.toast.updated'));
+      toast.success(t('agent.toast.updated'));
     },
     onError: () => {
-      toast.error($i18n.t('agent.toast.updateFailed'));
+      toast.error(t('agent.toast.updateFailed'));
     },
   });
 }
@@ -148,7 +150,8 @@ export function useGetAgentMemory(
 type UpdateAgentMemoryVariables = { agentId: string; content: string };
 
 export function useUpdateAgentMemory() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<AgentMemoryResponse, unknown, UpdateAgentMemoryVariables>({
@@ -164,16 +167,17 @@ export function useUpdateAgentMemory() {
       queryClient.invalidateQueries({
         queryKey: agentKeys.memory(workspaceId, agentId),
       });
-      toast.success($i18n.t('agent.toast.memoryUpdated'));
+      toast.success(t('agent.toast.memoryUpdated'));
     },
     onError: () => {
-      toast.error($i18n.t('agent.toast.memoryUpdateFailed'));
+      toast.error(t('agent.toast.memoryUpdateFailed'));
     },
   });
 }
 
 export function useDeleteAgent() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -183,10 +187,10 @@ export function useDeleteAgent() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
-      toast.success($i18n.t('agent.toast.deleted'));
+      toast.success(t('agent.toast.deleted'));
     },
     onError: () => {
-      toast.error($i18n.t('agent.toast.deleteFailed'));
+      toast.error(t('agent.toast.deleteFailed'));
     },
   });
 }
@@ -241,7 +245,8 @@ export interface UploadAgentContextDocumentsVariables {
 }
 
 export function useUploadAgentContextDocuments() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<
@@ -267,10 +272,7 @@ export function useUploadAgentContextDocuments() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(
-          error,
-          $i18n.t('agent.toast.documentsUploadFailed'),
-        ),
+        extractErrorMessage(error, t('agent.toast.documentsUploadFailed')),
       );
     },
   });
@@ -283,7 +285,8 @@ export interface RenameAgentContextDocumentVariables {
 }
 
 export function useRenameAgentContextDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<
@@ -306,7 +309,7 @@ export function useRenameAgentContextDocument() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('agent.toast.documentRenameFailed')),
+        extractErrorMessage(error, t('agent.toast.documentRenameFailed')),
       );
     },
   });
@@ -319,7 +322,8 @@ export interface ReplaceAgentContextDocumentFileVariables {
 }
 
 export function useReplaceAgentContextDocumentFile() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<
@@ -345,10 +349,7 @@ export function useReplaceAgentContextDocumentFile() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(
-          error,
-          $i18n.t('agent.toast.documentReplaceFailed'),
-        ),
+        extractErrorMessage(error, t('agent.toast.documentReplaceFailed')),
       );
     },
   });
@@ -360,7 +361,8 @@ export interface AgentContextDocumentIdVariables {
 }
 
 export function useRetryAgentContextDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<
@@ -382,14 +384,15 @@ export function useRetryAgentContextDocument() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('agent.toast.documentRetryFailed')),
+        extractErrorMessage(error, t('agent.toast.documentRetryFailed')),
       );
     },
   });
 }
 
 export function useDeleteAgentContextDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, AgentContextDocumentIdVariables>({
@@ -407,7 +410,7 @@ export function useDeleteAgentContextDocument() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('agent.toast.documentDeleteFailed')),
+        extractErrorMessage(error, t('agent.toast.documentDeleteFailed')),
       );
     },
   });

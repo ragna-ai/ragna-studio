@@ -86,7 +86,8 @@ export function useGetDocument(
 }
 
 export function useCreateDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, CreateDocumentRequest>({
@@ -102,9 +103,7 @@ export function useCreateDocument() {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('document.toast.createFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('document.toast.createFailed')));
     },
   });
 }
@@ -120,7 +119,8 @@ interface UpdateDocumentVariables extends UpdateDocumentRequest {
  * pass their own `onSuccess` to `mutate()` to surface one.
  */
 export function useUpdateDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<DocumentResponse, unknown, UpdateDocumentVariables>({
@@ -143,15 +143,14 @@ export function useUpdateDocument() {
       );
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('document.toast.saveFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('document.toast.saveFailed')));
     },
   });
 }
 
 export function useDeleteDocument() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
@@ -164,12 +163,10 @@ export function useDeleteDocument() {
         queryKey: documentKeys.all(workspaceId),
       });
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
-      toast.success($i18n.t('document.toast.deleted'));
+      toast.success(t('document.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, $i18n.t('document.toast.deleteFailed')),
-      );
+      toast.error(extractErrorMessage(error, t('document.toast.deleteFailed')));
     },
   });
 }
@@ -188,7 +185,8 @@ export function useExportDocument(
   documentId: MaybeRefOrGetter<string>,
   documentTitle: MaybeRefOrGetter<string>,
 ) {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const workspaceId = useActiveWorkspaceId();
   return useMutation<void, unknown, ExportDocumentVariables>({
     mutationFn: async ({ format }) => {
@@ -210,7 +208,7 @@ export function useExportDocument(
       downloadBlob(response._data, filename);
     },
     onError: () => {
-      toast.error($i18n.t('document.toast.exportFailed'));
+      toast.error(t('document.toast.exportFailed'));
     },
   });
 }

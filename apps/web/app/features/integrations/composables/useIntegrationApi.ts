@@ -40,7 +40,8 @@ export function useGetIntegrationConnections() {
 }
 
 export function useStartIntegrationConnect() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   return useMutation<
     ConnectIntegrationResponse,
     unknown,
@@ -57,14 +58,15 @@ export function useStartIntegrationConnect() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('integrations.toast.connectFailed')),
+        extractErrorMessage(error, t('integrations.toast.connectFailed')),
       );
     },
   });
 }
 
 export function useRemoveIntegrationConnection() {
-  const { $api, $i18n } = useNuxtApp();
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return useMutation<unknown, unknown, string>({
     mutationFn: (connectionId) =>
@@ -73,11 +75,11 @@ export function useRemoveIntegrationConnection() {
       // The mailbox goes with its connection.
       queryClient.invalidateQueries({ queryKey: integrationKeys.connections });
       queryClient.invalidateQueries({ queryKey: ['email'] });
-      toast.success($i18n.t('integrations.toast.removed'));
+      toast.success(t('integrations.toast.removed'));
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('integrations.toast.removeFailed')),
+        extractErrorMessage(error, t('integrations.toast.removeFailed')),
       );
     },
   });
