@@ -25,13 +25,14 @@ specs/
 ```
 
 1. **Issue first.** Open the issue (`gh issue create`), then create the folder. No issue, no folder.
-2. **Area** = the existing feature folder (`email`, `organizations`, `workflow`). A new area only for a new product surface.
-3. **Slug** = 1 to 4 lowercase words, hyphenated, naming the change: `224-connections`, `231-drafts`. No `prd`, `v2` or dates in the slug.
-4. **Fixed file names inside:** `prd.md`, `design.md`, `slices.md`. Nothing else is needed. Never `<topic>-prd.md`.
-5. **Follow-ups get their own folder.** A version 2, a change request or a later phase is a new issue and a new folder. Its PRD links the older one in its header ("Extends #224" or "Supersedes #224"). Mark the old PRD `superseded` when it no longer holds.
-6. **Reference docs** without a build lifecycle (known issues, reviews, strategy notes) go in `specs/<area>/reference/`. Reviews carry their date: `review-2026-07-29.md`.
-7. **Cross-cutting decisions** go in `specs/decisions/NNNN-<slug>.md`, numbered in order, once that log exists.
-8. **Existing specs stay where they are.** The convention applies to new specs. Don't move old files: issues, PRs and `overview.md` link to their paths.
+2. **Same branch as the code.** Write the spec on the feature branch (`feat/<issue>-<slug>`) and open the draft PR with it. The code commits follow in that PR. Never a spec-only PR: the spec and code drift apart and need rebases.
+3. **Area** = the existing feature folder (`email`, `organizations`, `workflow`). A new area only for a new product surface.
+4. **Slug** = 1 to 4 lowercase words, hyphenated, naming the change: `224-connections`, `231-drafts`. No `prd`, `v2` or dates in the slug.
+5. **Fixed file names inside:** `prd.md`, `design.md`, `slices.md`. Nothing else is needed. Never `<topic>-prd.md`.
+6. **Follow-ups get their own folder.** A version 2, a change request or a later phase is a new issue and a new folder. Its PRD links the older one in its header ("Extends #224" or "Supersedes #224"). Mark the old PRD `superseded` when it no longer holds.
+7. **Reference docs** without a build lifecycle (known issues, reviews, strategy notes) go in `specs/<area>/reference/`. Reviews carry their date: `review-2026-07-29.md`.
+8. **Cross-cutting decisions** go in `specs/decisions/NNNN-<slug>.md`, numbered in order, once that log exists.
+9. **Existing specs stay where they are.** The convention applies to new specs. Don't move old files: issues, PRs and `overview.md` link to their paths.
 
 ## One feature, up to three files
 

@@ -14,3 +14,8 @@ export interface ChatAgentOption {
   description?: string;
   aiModel?: { displayName: string };
 }
+
+export interface ToolApprovalDecision {
+  id: string;
+  approved: boolean;
+}

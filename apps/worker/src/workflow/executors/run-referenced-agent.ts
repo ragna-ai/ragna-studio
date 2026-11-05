@@ -365,6 +365,7 @@ export async function runReferencedAgent({
     userId,
     agentId,
     workspaceId,
+    integrationTools: agent.integrationTools ?? {},
     // Workflows already run inside the worker process and need the
     // video/images to exist before downstream steps run, so the video-gen
     // tool awaits the render inline instead of the chat fire-and-forget path,

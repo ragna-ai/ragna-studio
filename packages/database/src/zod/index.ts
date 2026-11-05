@@ -3,6 +3,7 @@ import z from 'zod';
 import {
   agent,
   agentReasoningEffortValues,
+  integrationToolAccessLevelValues,
   agentToolValues,
   aiModel,
   chat,
@@ -35,7 +36,14 @@ export const agentSettingsSchema = z
     reasoning: z.enum(agentReasoningEffortValues).nullish(),
   })
   .optional();
-const agentRefine = { tools: agentToolsSchema, settings: agentSettingsSchema };
+export const agentIntegrationToolsSchema = z
+  .strictObject({ 'google-drive': z.enum(integrationToolAccessLevelValues).optional() })
+  .optional();
+const agentRefine = {
+  tools: agentToolsSchema,
+  integrationTools: agentIntegrationToolsSchema,
+  settings: agentSettingsSchema,
+};
 
 export const agentSelectSchema = createSelectSchema(agent, agentRefine);
 export type AgentSelectSchema = z.infer<typeof agentSelectSchema>;

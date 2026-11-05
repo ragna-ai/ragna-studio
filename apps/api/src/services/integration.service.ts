@@ -17,10 +17,12 @@ import {
   mergeScopes,
   removeConnection,
   saveUserConnectionGrant,
+  unbindConnectionIntegration,
   toIntegrationConnectionDto,
   type CatalogEntry,
   type IntegrationConnectionDto,
   type IntegrationDefinition,
+  type IntegrationId,
 } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
@@ -252,5 +254,29 @@ export async function removeConnectionForUser({
   if (error !== null) {
     logger.error('Failed to remove the integration connection', error);
     throw new InternalServerErrorException('Failed to remove the connection');
+  }
+}
+
+/** [DELETE] /integration/connection/:connectionId/integrations/:integrationId */
+export async function unbindIntegrationForUser({
+  userId,
+  connectionId,
+  integrationId,
+}: {
+  userId: string;
+  connectionId: string;
+  integrationId: IntegrationId;
+}): Promise<void> {
+  const connection = await getUserConnectionById({ id: connectionId, userId });
+  if (!connection) {
+    throw new NotFoundException('Connection not found');
+  }
+
+  const { error } = await tryCatch(() =>
+    unbindConnectionIntegration({ connectionId, integrationId }),
+  );
+  if (error !== null) {
+    logger.error('Failed to turn off the integration', error);
+    throw new InternalServerErrorException('Failed to turn off the integration');
   }
 }

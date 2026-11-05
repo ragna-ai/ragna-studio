@@ -33,6 +33,7 @@
     "@ai-sdk/provider": "^4.0.34",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/integrations": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/media": "workspace:*",
     "@repo/queue": "workspace:*",

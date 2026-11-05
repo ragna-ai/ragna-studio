@@ -1,4 +1,5 @@
 import { agentSettingsSchema, agentToolsSchema } from '@repo/database';
+import { integrationToolsSchema } from '@repo/integrations/catalog';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -36,6 +37,7 @@ export const validCreateAgentBody = myzValidator(
     systemPrompt: z.string(),
     context: z.string().max(30_000).nullish(),
     tools: agentToolsSchema,
+    integrationTools: integrationToolsSchema.optional(),
     defaultDatasetId: primaryId.nullish(),
     settings: agentSettingsSchema,
   }),
@@ -53,6 +55,7 @@ export const validUpdateAgentBody = myzValidator(
       systemPrompt: z.string().optional(),
       context: z.string().max(30_000).nullish(),
       tools: agentToolsSchema,
+      integrationTools: integrationToolsSchema.optional(),
       defaultDatasetId: primaryId.nullish(),
       settings: agentSettingsSchema,
     })

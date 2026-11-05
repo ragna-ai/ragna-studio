@@ -18,6 +18,7 @@ type UpdateAgentFields = Partial<
     | 'systemPrompt'
     | 'context'
     | 'tools'
+    | 'integrationTools'
     | 'settings'
     | 'defaultDatasetId'
   >
@@ -33,6 +34,7 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     systemPrompt,
     context,
     tools,
+    integrationTools,
     settings,
     defaultDatasetId,
   } = values;
@@ -48,6 +50,7 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
       systemPrompt,
       context,
       tools,
+      integrationTools,
       defaultDatasetId,
       // Omit when unset so the column's $defaultFn default applies.
       ...(settings !== undefined ? { settings } : {}),

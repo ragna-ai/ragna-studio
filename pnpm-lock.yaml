@@ -515,6 +515,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/integrations':
+        specifier: workspace:*
+        version: link:../integrations
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
@@ -13442,6 +13445,7 @@ snapshots:
       '@ai-sdk/provider': 4.0.34
       '@repo/config': file:packages/config
       '@repo/database': file:packages/database(@types/pg@8.23.1)(bun-types@1.4.4)
+      '@repo/integrations': file:packages/integrations(@types/pg@8.23.1)(bun-types@1.4.4)(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)
       '@repo/logger': file:packages/logger
       '@repo/media': file:packages/media(@types/node@26.6.3)(@types/pg@8.23.1)(bun-types@1.4.4)(db0@0.3.4(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(ioredis@5.11.1(supports-color@10.2.2))
       '@repo/queue': file:packages/queue(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)

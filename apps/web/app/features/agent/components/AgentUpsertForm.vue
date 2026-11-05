@@ -8,6 +8,8 @@ import {
   UserIcon,
 } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
+import { integrationToolsSchema } from '@repo/integrations/catalog';
+import type { IntegrationTools } from '@repo/integrations/catalog';
 import { z } from 'zod';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
@@ -28,6 +30,7 @@ type UpsertAgentProps = {
   description?: string;
   context?: string | null;
   tools?: string[];
+  integrationTools?: IntegrationTools;
   settings?: AgentSettings | null;
   defaultDatasetId?: string | null;
 };
@@ -71,6 +74,7 @@ const agentUpsertSchema = z.object({
   description: z.string(),
   context: z.string().max(30_000),
   tools: z.array(z.string()),
+  integrationTools: integrationToolsSchema,
   settings: agentSettingsSchema,
   defaultDatasetId: z.uuidv7().nullable(),
 });
@@ -83,6 +87,7 @@ const form = useForm({
     description: props.description ?? '',
     context: props.context ?? '',
     tools: props.tools ?? [],
+    integrationTools: props.integrationTools ?? {},
     settings: {
       temperature: props.settings?.temperature ?? null,
       maxOutputTokens: props.settings?.maxOutputTokens ?? null,
@@ -271,13 +276,26 @@ const siderBarTabs = computed(() => [
             <div class="space-y-6">
               <form.Field name="defaultDatasetId">
                 <template v-slot="{ field: datasetField, state: datasetState }">
-                  <AgentToolList
-                    :model-value="state.value"
-                    :invalid="state.meta.errors.length > 0"
-                    :default-dataset-id="datasetState.value"
-                    @update:model-value="field.handleChange"
-                    @update:default-dataset-id="datasetField.handleChange"
-                  />
+                  <form.Field name="integrationTools">
+                    <template
+                      v-slot="{
+                        field: integrationField,
+                        state: integrationState,
+                      }"
+                    >
+                      <AgentToolList
+                        :model-value="state.value"
+                        :invalid="state.meta.errors.length > 0"
+                        :default-dataset-id="datasetState.value"
+                        :integration-tools="integrationState.value"
+                        @update:model-value="field.handleChange"
+                        @update:default-dataset-id="datasetField.handleChange"
+                        @update:integration-tools="
+                          integrationField.handleChange
+                        "
+                      />
+                    </template>
+                  </form.Field>
                 </template>
               </form.Field>
               <FormFieldInfo :state="state" />

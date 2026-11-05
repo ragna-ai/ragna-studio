@@ -40,3 +40,7 @@ export function connectionUsesMailbox(
 ): boolean {
   return connection.integrations.some((id) => MAIL_INTEGRATIONS.has(id));
 }
+
+export function isMailIntegration(integrationId: IntegrationId): boolean {
+  return MAIL_INTEGRATIONS.has(integrationId);
+}

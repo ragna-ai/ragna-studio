@@ -77,6 +77,9 @@ const ENDPOINTS: Array<{ matches: (url: URL) => boolean } & ProviderEndpoint> = 
 const IDENTITY_SCOPES = ['openid', 'profile', 'email'];
 
 function defaultScopes(provider: ProviderId): string[] {
+  const requested = providerHttp.requestedScopes[provider];
+  if (requested) return IDENTITY_SCOPES.concat(requested);
+
   const featureScopes = INTEGRATION_CATALOG.filter(
     (integration) => integration.provider === provider,
   ).flatMap((integration) => integration.scopes);
@@ -91,6 +94,7 @@ function defaultProfile(provider: ProviderId): FakeProviderProfile {
 export interface ProviderHttpState {
   profiles: Partial<Record<ProviderId, FakeProviderProfile>>;
   grantedScopes: Partial<Record<ProviderId, string[]>>;
+  requestedScopes: Partial<Record<ProviderId, string[]>>;
   refreshRejected: Set<ProviderId>;
   profileFailing: Set<ProviderId>;
   tokenRequests: FakeTokenRequest[];
@@ -102,6 +106,7 @@ function emptyState(): ProviderHttpState {
   return {
     profiles: {},
     grantedScopes: {},
+    requestedScopes: {},
     refreshRejected: new Set(),
     profileFailing: new Set(),
     tokenRequests: [],
@@ -124,6 +129,13 @@ export function setProviderProfile(provider: ProviderId, profile: FakeProviderPr
 /** The scopes the provider reports as granted on the next code exchange. */
 export function setProviderGrantedScopes(provider: ProviderId, scopes: string[]): void {
   providerHttp.grantedScopes[provider] = scopes;
+}
+
+/** Records the scopes of an authorize URL: the provider then grants what was asked for. */
+export function recordAuthorizeRequest(provider: ProviderId, authorizeUrl: URL): void {
+  providerHttp.requestedScopes[provider] = (authorizeUrl.searchParams.get('scope') ?? '')
+    .split(/[ ,]/)
+    .filter((scope) => scope.length > 0);
 }
 
 /** Makes every refresh for the provider fail the way a revoked grant does. */

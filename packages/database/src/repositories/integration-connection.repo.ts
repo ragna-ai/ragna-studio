@@ -2,6 +2,7 @@ import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   IntegrationConnection,
+  IntegrationId,
   IntegrationOauthState,
   IntegrationProviderId,
   NewIntegrationOauthState,
@@ -23,6 +24,9 @@ export interface UpsertUserConnectionParams {
   externalEmail: string | null;
   displayName: string | null;
   scopes: string[];
+  enabledIntegrations: IntegrationId[];
+  /** True when the grant belongs to the account already stored: its enabled ids are kept. */
+  keepEnabledIntegrations: boolean;
   accessToken: string;
   refreshToken: string | null;
   accessTokenExpiresAt: Date | null;
@@ -33,6 +37,10 @@ export async function upsertUserConnection(
   params: UpsertUserConnectionParams,
 ): Promise<IntegrationConnection> {
   const lastRefreshedAt = new Date();
+  const enabledArray = sql`ARRAY[${sql.join(
+    params.enabledIntegrations.map((id) => sql`${id}`),
+    sql`, `,
+  )}]::text[]`;
 
   const [connection] = await db
     .insert(integrationConnection)
@@ -45,6 +53,7 @@ export async function upsertUserConnection(
       externalEmail: params.externalEmail,
       displayName: params.displayName,
       scopes: params.scopes,
+      enabledIntegrations: params.enabledIntegrations,
       accessToken: params.accessToken,
       refreshToken: params.refreshToken,
       accessTokenExpiresAt: params.accessTokenExpiresAt,
@@ -59,6 +68,9 @@ export async function upsertUserConnection(
         externalEmail: params.externalEmail,
         displayName: params.displayName,
         scopes: params.scopes,
+        enabledIntegrations: params.keepEnabledIntegrations
+          ? sql`ARRAY(SELECT DISTINCT unnest(${integrationConnection.enabledIntegrations} || ${enabledArray}))`
+          : sql`${enabledArray}`,
         accessToken: params.accessToken,
         refreshToken: params.refreshToken,
         accessTokenExpiresAt: params.accessTokenExpiresAt,
@@ -120,6 +132,25 @@ export async function listUserConnections({
     where: { userId },
     orderBy: (t, { asc }) => asc(t.createdAt),
   });
+}
+
+/** Removes one integration id from the connection and returns the row, or null if it is gone. */
+export async function removeEnabledIntegration({
+  id,
+  integrationId,
+}: {
+  id: string;
+  integrationId: IntegrationId;
+}): Promise<IntegrationConnection | null> {
+  const [updated] = await db
+    .update(integrationConnection)
+    .set({
+      enabledIntegrations: sql`array_remove(${integrationConnection.enabledIntegrations}, ${integrationId})`,
+    })
+    .where(eq(integrationConnection.id, id))
+    .returning();
+
+  return updated ?? null;
 }
 
 export async function deleteConnectionById({ id }: { id: string }): Promise<void> {

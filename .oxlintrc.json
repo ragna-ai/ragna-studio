@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "prefer-object-spread": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Object",
+        "property": "assign",
+        "message": "Object.assign skips type checks (returns T & U), runs setters and honours __proto__. Use spread with overrides or Object.fromEntries (clean-code rule 9)."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["packages/testing/**"],
+      "rules": {
+        "no-restricted-properties": "off"
+      }
+    }
+  ]
+}

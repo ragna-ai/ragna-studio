@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { PROVIDER_ICON } from '~/features/integrations/lib/integration-meta';
-import type { IntegrationConnectionDto } from '@repo/integrations/catalog';
+import type {
+  IntegrationConnectionDto,
+  IntegrationId,
+} from '@repo/integrations/catalog';
 
 // Props
 interface Props {
@@ -14,6 +17,11 @@ withDefaults(defineProps<Props>(), { isBusy: false });
 const emit = defineEmits<{
   (e: 'reconnect', connection: IntegrationConnectionDto): void;
   (e: 'remove', connection: IntegrationConnectionDto): void;
+  (
+    e: 'turn-off',
+    connection: IntegrationConnectionDto,
+    integrationId: IntegrationId,
+  ): void;
 }>();
 
 // Composables
@@ -37,8 +45,22 @@ const { t } = useI18n();
               v-for="integrationId in connection.integrations"
               :key="integrationId"
               variant="secondary"
+              class="gap-1 pr-1"
             >
               {{ t(`integrations.names.${integrationId}`) }}
+              <button
+                type="button"
+                class="rounded-sm p-0.5 hover:bg-foreground/10 disabled:opacity-50"
+                :disabled="isBusy"
+                :aria-label="
+                  t('integrations.actions.turnOff', {
+                    name: t(`integrations.names.${integrationId}`),
+                  })
+                "
+                @click="emit('turn-off', connection, integrationId)"
+              >
+                <Icon name="lucide:x" class="size-3" />
+              </button>
             </Badge>
             <Badge
               :variant="

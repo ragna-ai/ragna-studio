@@ -2,6 +2,7 @@
 import {
   AppWindowIcon,
   CheckIcon,
+  CloudIcon,
   DatabaseIcon,
   FileTextIcon,
   GlobeIcon,
@@ -13,17 +14,27 @@ import {
   VideoIcon,
   type LucideIcon,
 } from '@lucide/vue';
+import {
+  INTEGRATION_CATALOG,
+  type CloudDriveIntegrationId,
+  type IntegrationToolAccessLevel,
+  type IntegrationTools,
+} from '@repo/integrations/catalog';
+import { useGetIntegrationConnections } from '~/features/integrations/composables/useIntegrationApi';
+import { CONNECTIONS_PAGE_PATH } from '~/features/integrations/lib/integration-meta';
 import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDatasetApi';
 
 type AgentToolListProps = {
   modelValue: string[];
   invalid?: boolean;
   defaultDatasetId?: string | null;
+  integrationTools?: IntegrationTools;
 };
 
 type AgentToolListEmit = {
   'update:modelValue': [value: string[]];
   'update:defaultDatasetId': [value: string | null];
+  'update:integrationTools': [value: IntegrationTools];
 };
 
 // shadcn's Select can't use an empty string as an item value (it's the
@@ -36,6 +47,7 @@ const NO_DATASET = '__none__';
 const props = withDefaults(defineProps<AgentToolListProps>(), {
   invalid: false,
   defaultDatasetId: null,
+  integrationTools: () => ({}),
 });
 
 const emit = defineEmits<AgentToolListEmit>();
@@ -47,9 +59,21 @@ const emit = defineEmits<AgentToolListEmit>();
 
 // Composables
 const { data: datasetsData } = useGetAllDatasetsForPicker();
+const { data: connectionsData } = useGetIntegrationConnections();
 
 // Computed
 const pickerDatasets = computed(() => datasetsData.value?.datasets ?? []);
+const cloudDriveIds = INTEGRATION_CATALOG.filter(
+  (integration) => integration.category === 'cloud-drive',
+).map((integration) => integration.id as CloudDriveIntegrationId);
+const connectedIntegrationIds = computed(
+  () =>
+    new Set(
+      connectionsData.value?.connections.flatMap(
+        (connection) => connection.integrations,
+      ) ?? [],
+    ),
+);
 // Functions
 
 // Hooks
@@ -136,6 +160,18 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
 
   emit('update:modelValue', newValue);
 };
+
+const handleIntegrationToggle = (id: CloudDriveIntegrationId, on: boolean) => {
+  const { [id]: _removed, ...rest } = props.integrationTools;
+  emit('update:integrationTools', on ? { ...rest, [id]: 'read' } : rest);
+};
+
+const handleIntegrationLevel = (
+  id: CloudDriveIntegrationId,
+  level: IntegrationToolAccessLevel,
+) => {
+  emit('update:integrationTools', { ...props.integrationTools, [id]: level });
+};
 </script>
 
 <template>
@@ -171,6 +207,75 @@ const handleCheckedChange = (toolId: string, checked: boolean) => {
       </div>
     </Label>
   </div>
+
+  <template v-for="id in cloudDriveIds" :key="id">
+    <div class="flex flex-row items-center space-x-3">
+      <Checkbox
+        :id="`form-rhf-checkbox-${id}`"
+        :name="id"
+        :model-value="props.integrationTools[id] !== undefined"
+        class="border-stone-600"
+        @update:model-value="
+          (checked) => handleIntegrationToggle(id, Boolean(checked))
+        "
+      >
+        <CheckIcon class="size-3.5" />
+      </Checkbox>
+      <Label
+        :for="`form-rhf-checkbox-${id}`"
+        class="flex cursor-pointer space-x-3"
+      >
+        <div class="flex justify-center">
+          <CloudIcon class="size-5 stroke-1.5" />
+        </div>
+        <div class="space-y-1">
+          <p class="text-sm">{{ $t(`agent.tool.cloudDrive.${id}.label`) }}</p>
+          <p class="text-xs font-normal opacity-75">
+            {{ $t(`agent.tool.cloudDrive.${id}.description`) }}
+          </p>
+        </div>
+      </Label>
+    </div>
+    <div
+      v-if="props.integrationTools[id] !== undefined"
+      class="ml-8 max-w-xs space-y-2 border-l pl-4"
+    >
+      <Label class="text-xs text-muted-foreground">
+        {{ $t('agent.tool.cloudDrive.accessLevelLabel') }}
+      </Label>
+      <Select
+        :model-value="props.integrationTools[id]"
+        @update:model-value="
+          (v) => handleIntegrationLevel(id, v === 'write' ? 'write' : 'read')
+        "
+      >
+        <SelectTrigger class="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="read">
+            {{ $t('agent.tool.cloudDrive.accessLevel.read') }}
+          </SelectItem>
+          <SelectItem value="write">
+            {{ $t('agent.tool.cloudDrive.accessLevel.write') }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <p
+        v-if="connectionsData && !connectedIntegrationIds.has(id)"
+        class="text-xs text-muted-foreground"
+      >
+        {{
+          $t('agent.tool.cloudDrive.connectHint', {
+            name: $t(`agent.tool.cloudDrive.${id}.label`),
+          })
+        }}.
+        <NuxtLink :to="CONNECTIONS_PAGE_PATH" class="underline">
+          {{ $t('agent.tool.cloudDrive.connectLink') }}
+        </NuxtLink>
+      </p>
+    </div>
+  </template>
 
   <div
     v-if="selectedTools.includes('datasets')"

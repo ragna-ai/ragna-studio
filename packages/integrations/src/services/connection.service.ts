@@ -3,6 +3,7 @@ import {
   deleteUserConnections,
   getUserConnectionByProvider,
   listUserConnections,
+  removeEnabledIntegration,
   upsertUserConnection,
   type IntegrationConnection,
 } from '@repo/database';
@@ -11,9 +12,10 @@ import { tryCatch } from '@repo/utils';
 import {
   integrationConnectionDtoSchema,
   type IntegrationConnectionDto,
+  type IntegrationId,
   type IntegrationDefinition,
 } from '../catalog';
-import { mergeScopes, listCoveredIntegrationIds } from '../oauth/scopes';
+import { listServedIntegrationIds, mergeScopes } from '../oauth/scopes';
 import { getOAuthProvider } from '../providers';
 import type { ExternalAccountProfile, TokenSet } from '../providers/provider.types';
 import {
@@ -31,7 +33,7 @@ export function toIntegrationConnectionDto(
     externalEmail: connection.externalEmail,
     displayName: connection.displayName,
     scopes: connection.scopes,
-    integrations: listCoveredIntegrationIds(connection.provider, connection.scopes),
+    integrations: listServedIntegrationIds(connection),
     status: connection.status,
     createdAt: connection.createdAt.toISOString(),
   });
@@ -78,6 +80,8 @@ export async function saveUserConnectionGrant({
     externalEmail: profile.email,
     displayName: profile.name,
     scopes,
+    enabledIntegrations: [integration.id],
+    keepEnabledIntegrations: sameAccount,
     accessToken: encryptConnectionToken({
       owner,
       column: 'access_token',
@@ -130,4 +134,20 @@ export async function removeUserConnections({ userId }: { userId: string }): Pro
   const connections = await listUserConnections({ userId });
   await Promise.all(connections.map(revokeGrantAtProvider));
   await deleteUserConnections({ userId });
+}
+
+export interface UnbindConnectionIntegrationParams {
+  connectionId: string;
+  integrationId: IntegrationId;
+}
+
+/** Turns one integration off on a connection. Removes the connection when nothing is left. */
+export async function unbindConnectionIntegration({
+  connectionId,
+  integrationId,
+}: UnbindConnectionIntegrationParams): Promise<void> {
+  const connection = await removeEnabledIntegration({ id: connectionId, integrationId });
+  if (connection && connection.enabledIntegrations.length === 0) {
+    await removeConnection(connection);
+  }
 }

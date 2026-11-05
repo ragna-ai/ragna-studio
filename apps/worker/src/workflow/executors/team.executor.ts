@@ -221,6 +221,7 @@ async function resolveLead(
       userId: ctx.userId,
       agentId: leadAgentId,
       workspaceId: ctx.workspaceId,
+      integrationTools: lead.integrationTools ?? {},
       // Workflows already run inside the worker process and need the
       // video/images to exist before downstream steps run, so the video-gen
       // tool awaits the render inline instead of the chat fire-and-forget

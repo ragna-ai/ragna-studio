@@ -326,6 +326,19 @@
       "searchContextDocuments": {
         "label": "Search Context"
       },
+      "cloudDrive": {
+        "google-drive": {
+          "label": "Google Drive",
+          "description": "Find and read files in Google Drive, and create or edit them."
+        },
+        "accessLevelLabel": "Access",
+        "accessLevel": {
+          "read": "Read only",
+          "write": "Read and write"
+        },
+        "connectHint": "Connect {name} in settings to use it yourself",
+        "connectLink": "Open connections"
+      },
       "datasets": {
         "label": "Datasets",
         "description": "Read and write structured data tables: task queues, plans, and other durable state.",
@@ -390,6 +403,20 @@
     },
     "toolCall": {
       "generatedImage": "Generated image"
+    },
+    "toolApproval": {
+      "createTitle": "Create a file in Google Drive?",
+      "updateTitle": "Update a file in Google Drive?",
+      "fileName": "File name",
+      "fileId": "File id",
+      "folder": "Folder",
+      "rootFolder": "My Drive (top level)",
+      "content": "Content",
+      "newContent": "New content",
+      "approve": "Approve",
+      "deny": "Deny",
+      "denied": "Denied. Nothing was changed in your drive.",
+      "openFile": "Open {name} in Google Drive"
     },
     "conversation": {
       "title": "Chat",
@@ -1865,7 +1892,8 @@
     "names": {
       "gmail": "Gmail",
       "outlook-mail": "Outlook mail",
-      "linkedin-posting": "LinkedIn posting"
+      "linkedin-posting": "LinkedIn posting",
+      "google-drive": "Google Drive"
     },
     "status": {
       "active": "Active",
@@ -1874,7 +1902,13 @@
     "actions": {
       "connect": "Connect",
       "reconnect": "Reconnect",
-      "remove": "Remove"
+      "remove": "Remove",
+      "turnOff": "Turn off {name}",
+      "turnOffConfirm": "Turn off"
+    },
+    "turnOff": {
+      "title": "Turn off this integration?",
+      "message": "RAGNA Studio stops using it on this account."
     },
     "remove": {
       "title": "Remove this connection?",
@@ -1890,7 +1924,9 @@
     "toast": {
       "connectFailed": "Failed to start the connection",
       "removed": "Connection removed",
-      "removeFailed": "Failed to remove the connection"
+      "removeFailed": "Failed to remove the connection",
+      "turnedOff": "Integration turned off",
+      "turnOffFailed": "Failed to turn off the integration"
     },
     "errors": {
       "invalid_state": "The connection attempt expired. Try again.",

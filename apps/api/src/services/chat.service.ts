@@ -2,6 +2,7 @@ import type { UIMessage } from '@repo/ai';
 import {
   buildAgentInstructions,
   buildAgentToolset,
+  buildCloudDriveToolApproval,
   convertToModelMessages,
   createUIMessageStream,
   generateChatTitle,
@@ -33,6 +34,7 @@ import {
   updateChatTitle,
   upsertChatMessages,
 } from '@repo/database';
+import { getToolApprovalSecret } from '@repo/crypto';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
 import { downloadObjectBuffer } from '@repo/storage';
@@ -43,6 +45,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { answerPendingApprovals, denyOpenApprovals } from './chat-approval.service';
 import { assertCanSpend } from './credit.service';
 
 // CHAT CRUD
@@ -696,10 +699,9 @@ export async function runChatStream(
 
     // Rebuild the full conversation from persisted history plus the one new
     // message the client sent, rather than trusting a client-sent history.
+    const isEcho = isEchoOfLastPersistedMessage(message, userChat.messages.at(-1));
     const validated = await safeValidateUIMessages({
-      messages: isEchoOfLastPersistedMessage(message, userChat.messages.at(-1))
-        ? userChat.messages
-        : [...userChat.messages, message],
+      messages: isEcho ? userChat.messages : [...userChat.messages, message],
     });
 
     if (!validated.success) {
@@ -708,6 +710,8 @@ export async function runChatStream(
     }
 
     const validUiMessages = validated.data;
+    if (isEcho) answerPendingApprovals(validUiMessages, message);
+    const deniedMessages = isEcho ? [] : denyOpenApprovals(validUiMessages);
 
     const { error: attachmentsError, data: chatAttachments } = await tryCatch(() =>
       getChatAttachmentsByChatId({ chatId: userChat.id }),
@@ -743,9 +747,10 @@ export async function runChatStream(
     // DB alone, so saving it only on success would silently drop the message
     // from the conversation.
     if (lastUiMessage?.role === 'user') {
-      const { error: persistError } = await tryCatch(() =>
-        upsertChatMessages([toChatMessageRow(lastUiMessage, userChat.id)]),
-      );
+      const rows = deniedMessages
+        .concat(lastUiMessage)
+        .map((entry) => toChatMessageRow(entry, userChat.id));
+      const { error: persistError } = await tryCatch(() => upsertChatMessages(rows));
 
       if (persistError !== null) {
         logger.error(`Failed to persist user message for chat ${userChat.id}`, persistError);
@@ -795,7 +800,11 @@ export async function runChatStream(
           agentId: agent.id,
           workspaceId: userChat.workspaceId,
           retrievalMode,
+          integrationTools: agent.integrationTools ?? {},
         });
+
+        const toolApproval = buildCloudDriveToolApproval(tools);
+        const needsApproval = Object.keys(toolApproval).length > 0;
 
         // Stream the response from the language model
         const result = streamText({
@@ -815,6 +824,8 @@ export async function runChatStream(
           maxOutputTokens: modelSettings.maxOutputTokens,
           reasoning: modelSettings.reasoning,
           tools,
+          toolApproval,
+          experimental_toolApprovalSecret: needsApproval ? getToolApprovalSecret() : undefined,
           // Matches the workflow/team-node agent step caps.
           stopWhen: stepCountIs(15),
           onStart(st) {
@@ -891,6 +902,7 @@ export async function runChatStream(
         dataStream.merge(
           toUIMessageStream({
             stream: result.stream,
+            originalMessages: validUiMessages,
             generateMessageId: createPrimaryId,
             sendReasoning: true,
           }),

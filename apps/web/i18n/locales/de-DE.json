@@ -275,6 +275,19 @@
         "label": "Erinnerungen",
         "description": "Merkt sich Infos über dich und deine Arbeit für zukünftige Unterhaltungen."
       },
+      "cloudDrive": {
+        "google-drive": {
+          "label": "Google Drive",
+          "description": "Findet und liest Dateien in Google Drive und erstellt oder bearbeitet sie."
+        },
+        "accessLevelLabel": "Zugriff",
+        "accessLevel": {
+          "read": "Nur lesen",
+          "write": "Lesen und schreiben"
+        },
+        "connectHint": "Verbinde {name} in den Einstellungen, um es selbst zu nutzen",
+        "connectLink": "Verbindungen öffnen"
+      },
       "datasets": {
         "label": "Datensätze",
         "description": "Liest und schreibt strukturierte Datentabellen: Aufgabenlisten, Pläne und anderen dauerhaften Zustand.",
@@ -390,6 +403,20 @@
     },
     "toolCall": {
       "generatedImage": "Generiertes Bild"
+    },
+    "toolApproval": {
+      "createTitle": "Datei in Google Drive erstellen?",
+      "updateTitle": "Datei in Google Drive ändern?",
+      "fileName": "Dateiname",
+      "fileId": "Datei-ID",
+      "folder": "Ordner",
+      "rootFolder": "Meine Ablage (oberste Ebene)",
+      "content": "Inhalt",
+      "newContent": "Neuer Inhalt",
+      "approve": "Genehmigen",
+      "deny": "Ablehnen",
+      "denied": "Abgelehnt. In deinem Drive wurde nichts geändert.",
+      "openFile": "{name} in Google Drive öffnen"
     },
     "new": {
       "title": "Chat"
@@ -1868,7 +1895,8 @@
     "names": {
       "gmail": "Gmail",
       "outlook-mail": "Outlook-Mail",
-      "linkedin-posting": "LinkedIn-Posts"
+      "linkedin-posting": "LinkedIn-Posts",
+      "google-drive": "Google Drive"
     },
     "status": {
       "active": "Aktiv",
@@ -1877,7 +1905,13 @@
     "actions": {
       "connect": "Verbinden",
       "reconnect": "Neu verbinden",
-      "remove": "Entfernen"
+      "remove": "Entfernen",
+      "turnOff": "{name} ausschalten",
+      "turnOffConfirm": "Ausschalten"
+    },
+    "turnOff": {
+      "title": "Diese Integration ausschalten?",
+      "message": "RAGNA Studio nutzt sie für dieses Konto nicht mehr."
     },
     "remove": {
       "title": "Verbindung entfernen?",
@@ -1893,7 +1927,9 @@
     "toast": {
       "connectFailed": "Verbindung konnte nicht gestartet werden",
       "removed": "Verbindung entfernt",
-      "removeFailed": "Verbindung konnte nicht entfernt werden"
+      "removeFailed": "Verbindung konnte nicht entfernt werden",
+      "turnedOff": "Integration ausgeschaltet",
+      "turnOffFailed": "Integration konnte nicht ausgeschaltet werden"
     },
     "errors": {
       "invalid_state": "Der Verbindungsversuch ist abgelaufen. Versuche es erneut.",

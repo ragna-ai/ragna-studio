@@ -1,6 +1,10 @@
 // packages/testing/src/vendor-http/vendor-route.ts
 
-export const VENDOR_HOSTS = ['gmail.googleapis.com', 'graph.microsoft.com'] as const;
+export const VENDOR_HOSTS = [
+  'gmail.googleapis.com',
+  'graph.microsoft.com',
+  'www.googleapis.com',
+] as const;
 
 export type VendorHost = (typeof VENDOR_HOSTS)[number];
 

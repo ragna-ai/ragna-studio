@@ -13,12 +13,14 @@ import {
   MessageContent,
   MessageResponse,
 } from '~/components/ai-elements/message';
+import ToolApprovalCard from '~/features/chat/components/ToolApprovalCard.vue';
 import ToolGroup from '~/features/chat/components/ToolGroup.vue';
 import { useBranchChatAndNavigate } from '~/features/chat/composables/useChatApi';
 import {
   getFileTypeIconName,
   isImageMediaType,
 } from '~/features/chat/lib/attachment-mime';
+import type { ToolApprovalDecision } from '~/features/chat/types';
 
 interface Props {
   message: UIMessage;
@@ -26,6 +28,11 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// Emits
+const emit = defineEmits<{
+  approvalResponse: [decision: ToolApprovalDecision];
+}>();
 
 // Composables
 const { t } = useI18n();
@@ -67,7 +74,13 @@ interface ToolGroupItem {
   members: GroupMember[];
 }
 
-type RenderItem = UIMessage['parts'][number] | ToolGroupItem;
+// A tool call that asks the user first stays visible; a collapsed group would hide it.
+interface ToolApprovalItem {
+  type: 'toolApproval';
+  part: ToolUIPart;
+}
+
+type RenderItem = UIMessage['parts'][number] | ToolGroupItem | ToolApprovalItem;
 
 // Empty, non-streaming reasoning renders nothing, so it shouldn't end a run either.
 function isVisibleReasoning(
@@ -85,6 +98,11 @@ const renderItems = computed<RenderItem[]>(() => {
   for (const part of props.message.parts) {
     if (part.type === 'step-start') continue;
     if (isReasoningUIPart(part) && !isVisibleReasoning(part)) continue;
+
+    if (isStaticToolUIPart(part) && part.approval !== undefined) {
+      items.push({ type: 'toolApproval', part });
+      continue;
+    }
 
     if (isStaticToolUIPart(part) || isVisibleReasoning(part)) {
       const last = items.at(-1);
@@ -109,6 +127,12 @@ const renderItems = computed<RenderItem[]>(() => {
     <MessageContent>
       <template v-for="(item, index) in renderItems" :key="index">
         <ToolGroup v-if="item.type === 'toolGroup'" :members="item.members" />
+
+        <ToolApprovalCard
+          v-else-if="item.type === 'toolApproval'"
+          :part="item.part"
+          @respond="emit('approvalResponse', $event)"
+        />
 
         <MessageResponse
           v-else-if="item.type === 'text'"

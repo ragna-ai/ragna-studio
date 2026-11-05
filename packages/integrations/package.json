@@ -18,6 +18,10 @@
       "types": "./dist/catalog/index.d.mts",
       "import": "./dist/catalog/index.mjs"
     },
+    "./cloud-drive": {
+      "types": "./dist/cloud-drive/index.d.mts",
+      "import": "./dist/cloud-drive/index.mjs"
+    },
     "./http": {
       "types": "./dist/http/index.d.mts",
       "import": "./dist/http/index.mjs"

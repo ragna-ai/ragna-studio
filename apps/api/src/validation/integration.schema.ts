@@ -1,4 +1,5 @@
 import { connectIntegrationBodySchema } from '@repo/integrations';
+import { integrationIdSchema } from '@repo/integrations/catalog';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -16,4 +17,9 @@ export const validOauthCallbackQuery = myzValidator(
 export const validIntegrationConnectionIdParam = myzValidator(
   'param',
   z.object({ connectionId: z.uuidv7() }),
+);
+
+export const validIntegrationBindingParam = myzValidator(
+  'param',
+  z.object({ connectionId: z.uuidv7(), integrationId: integrationIdSchema }),
 );

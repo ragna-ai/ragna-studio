@@ -3,6 +3,7 @@ import { toast } from 'vue-sonner';
 import { connectIntegrationResponseSchema } from '@repo/integrations/catalog';
 import type {
   ConnectIntegrationBody,
+  IntegrationId,
   ConnectIntegrationResponse,
   IntegrationCatalogResponse,
   IntegrationConnectionsResponse,
@@ -77,6 +78,33 @@ export function useRemoveIntegrationConnection() {
     onError: (error) => {
       toast.error(
         extractErrorMessage(error, $i18n.t('integrations.toast.removeFailed')),
+      );
+    },
+  });
+}
+
+interface TurnOffIntegrationParams {
+  connectionId: string;
+  integrationId: IntegrationId;
+}
+
+export function useTurnOffConnectionIntegration() {
+  const { $api, $i18n } = useNuxtApp();
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, TurnOffIntegrationParams>({
+    mutationFn: ({ connectionId, integrationId }) =>
+      $api(
+        `/integration/connection/${connectionId}/integrations/${integrationId}`,
+        { method: 'DELETE' },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.connections });
+      queryClient.invalidateQueries({ queryKey: ['email'] });
+      toast.success($i18n.t('integrations.toast.turnedOff'));
+    },
+    onError: (error) => {
+      toast.error(
+        extractErrorMessage(error, $i18n.t('integrations.toast.turnOffFailed')),
       );
     },
   });

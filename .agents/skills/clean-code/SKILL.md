@@ -31,11 +31,12 @@ Write code the next person can read and change without asking you. Assume that p
 6. **Make illegal states unrepresentable.** Use unions/optional fields so bad combinations don't typecheck, instead of guarding at runtime.
 7. **`readonly` and `const` by default.** Mutate only when needed.
 8. **No non-null `!`.** Narrow with a check or early return instead.
-9. **No spread or rest syntax (`...`).** Name every field instead. TS's excess property check covers only literal keys, never spread properties, so a spread silently forwards extra fields into a payload, a DB write or an API call. An explicit key is compile-checked and shows exactly what an object carries.
-   - Objects: `{ id: grant.id, scopes: grant.scopes }`, not `{ ...grant }`. Conditional fields are assigned conditionally, not with `...(cond ? { a } : {})`.
-   - Dropping a key: build the new object from the fields you keep, not `const { secret: _s, ...rest } = obj`. For a dynamic record, `Object.fromEntries(Object.entries(obj).filter(...))`.
-   - Arrays: `a.concat(b)` and `Array.from(new Set(list))`, not `[...a, ...b]` or `[...new Set(list)]`.
-   - Applies to new and changed code. Rewrite existing spreads when you touch those lines.
+9. **Name fields at trust boundaries; never merge with `Object.assign`.**
+   - Boundaries (DB writes, API responses, external API calls, tool results): build the object from named fields or from a Zod-parsed value. Never `{ ...body }`, `{ ...row }` or `{ ...user }` into a narrower shape. TS doesn't check fields that come from a spread source, so extra fields get through.
+   - Same-type copies and state transitions: use spread with overrides, `{ ...part, state: 'approval-responded' }`. Written keys are still type-checked, and fields you didn't mention are kept.
+   - No `Object.assign` and no direct mutation to get past a type error. `Object.assign` checks nothing (it returns `T & U`), runs setters and honours a `__proto__` key. If a direct assignment doesn't compile, the type is telling you something: build a new value of the target type. Exception: decorating functions or objects in test mocks. oxlint enforces this (`no-restricted-properties` in `.oxlintrc.json`, off for `packages/testing`).
+   - Dynamic records: combine entries, `Object.fromEntries(a.concat(b))`. To drop keys, filter the entries.
+   - Array spread and rest parameters are fine.
 10. **No `await` nested in a return or call argument.** Assign the awaited value to a named `const` first, then return or pass it: `const members = await listMembers(...); return c.json(members);`, not `return c.json(await listMembers(...))`. The name says what came back, and the async step reads as its own line. Applies to `fn(await x)`, `[].push(await x)`, `{ key: await x }` and `(await x) as T`.
     - Exception in tests: `expect(await x)` and `schema.parse(await response.json())` may stay inline. The assertion or schema already says what came back.
 

@@ -28,8 +28,6 @@ work first, shipped reference and dead/historical docs last.
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
-| [Integrations: cloud drive (design)](./integrations/265-cloud-drive/design.md) | proposed (2026-11-04) |
-| [Integrations: cloud drive as a live source for agents (PRD)](./integrations/265-cloud-drive/prd.md) | proposed (2026-11-04) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
@@ -80,6 +78,8 @@ work first, shipped reference and dead/historical docs last.
 | [Image generation: advanced inputs (PRD)](./imagegen/prd.md) | implemented (2026-07-25) |
 | [Imagegen worker execution (PRD)](./imagegen/worker-execution-prd.md) | implemented (2026-08-06, approved) |
 | [Integrations: connections separate from sign-in (PRD)](./integrations/224-connections/prd.md) | implemented (2026-10-29, PR #226) |
+| [Integrations: cloud drive (design)](./integrations/265-cloud-drive/design.md) | implemented (2026-11-04, PR #276) |
+| [Integrations: cloud drive as a live source for agents (PRD)](./integrations/265-cloud-drive/prd.md) | implemented (2026-11-04, PR #276) |
 | [LinkedIn Integration Strategy](./linkedin-strategy.md) | implemented (2026-07-14) |
 | [MCP server: Ragna as a connector for Claude Desktop](./mcp/prd.md) | implemented (2026-09-25, PR #26; see [slices.md](./slices.md)) |
 | [MCP server: implementation slices](./mcp/slices.md) | implemented (2026-09-25, PR #26) |

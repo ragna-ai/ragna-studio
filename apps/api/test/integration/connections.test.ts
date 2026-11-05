@@ -16,7 +16,7 @@ const catalogSchema = z.strictObject({
     z.strictObject({
       id: z.string(),
       provider: z.enum(['google', 'microsoft', 'linkedin']),
-      category: z.enum(['mail', 'calendar', 'files', 'social']),
+      category: z.enum(['mail', 'calendar', 'cloud-drive', 'social']),
       authType: z.literal('oauth2'),
     }),
   ),
@@ -47,6 +47,7 @@ describe('listing connections', () => {
     const { integrations } = catalogSchema.parse(await response.json());
     expect(integrations.map((integration) => integration.id).sort()).toEqual([
       'gmail',
+      'google-drive',
       'linkedin-posting',
       'outlook-mail',
     ]);

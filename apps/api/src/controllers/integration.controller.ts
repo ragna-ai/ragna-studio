@@ -7,9 +7,11 @@ import {
   listConnectionsForUser,
   removeConnectionForUser,
   startIntegrationConnect,
+  unbindIntegrationForUser,
 } from '../services/integration.service';
 import {
   validConnectIntegrationBody,
+  validIntegrationBindingParam,
   validIntegrationConnectionIdParam,
   validOauthCallbackQuery,
 } from '../validation';
@@ -62,4 +64,17 @@ export const integrationController = new Hono()
     const { connectionId } = c.req.valid('param');
     await removeConnectionForUser({ userId: user.id, connectionId });
     return c.json({ message: 'Connection removed successfully' });
-  });
+  })
+  /**
+   * [DELETE] /integration/connection/:connectionId/integrations/:integrationId
+   */
+  .delete(
+    '/connection/:connectionId/integrations/:integrationId',
+    validIntegrationBindingParam,
+    async (c) => {
+      const user = c.get('user');
+      const { connectionId, integrationId } = c.req.valid('param');
+      await unbindIntegrationForUser({ userId: user.id, connectionId, integrationId });
+      return c.body(null, StatusCodes.NO_CONTENT);
+    },
+  );
