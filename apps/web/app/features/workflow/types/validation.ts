@@ -4,6 +4,7 @@ export interface WorkflowFieldIssue {
   /** Dot path inside the node config, e.g. `members.1.agentId`. Empty for the node as a whole. */
   field: string;
   messageKey: string;
+  messageParams?: Readonly<Record<string, number>>;
 }
 
 export interface WorkflowDraftValidation {

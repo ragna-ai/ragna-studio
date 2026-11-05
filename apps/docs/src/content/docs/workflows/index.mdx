@@ -42,7 +42,7 @@ Each node gets an input. This is the output of the previous node. The first node
 
 Write `{{input}}` in a prompt, template or condition field to insert that input. An unknown placeholder becomes empty text.
 
-- **Agent**: the **Prompt** can use `{{input}}`.
+- **Agent**: the **Prompt** can use `{{input}}`. The prompt field is a formatted editor, and the text reaches the model exactly as written, so `{{input}}` and tags such as `<rules>` stay unchanged. Choose **Raw** to edit the stored markdown directly. The prompt is limited to 30,000 characters, and a counter in the bottom right corner of the field shows the length.
 - **Transform**: the **Template** can use `{{input}}`, for example `Summary:\n{{input}}`.
 - **Condition**: **Left** and **Right** can use `{{input}}`.
 

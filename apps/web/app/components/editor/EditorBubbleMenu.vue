@@ -77,6 +77,11 @@ const displayedBlockType = computed<BlockType | 'mixed'>(() => {
 const displayedBlockTypeLabel = computed(() =>
   t(`editor.blockType.${displayedBlockType.value}`),
 );
+const blockToggleItems = computed(() =>
+  BLOCK_TOGGLE_ITEMS.filter((item) =>
+    props.controller.profile.blockToggles.includes(item.type),
+  ),
+);
 const isInCodeBlock = computed(
   () => editor.value?.isActive('codeBlock') ?? false,
 );
@@ -218,7 +223,7 @@ watch(isLinkFormOpen, (isOpen) => {
 
         <Separator orientation="vertical" class="mx-0.5 h-5" />
 
-        <Tooltip v-for="item in BLOCK_TOGGLE_ITEMS" :key="item.type">
+        <Tooltip v-for="item in blockToggleItems" :key="item.type">
           <TooltipTrigger as-child>
             <ToolbarButton as-child>
               <Button

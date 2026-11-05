@@ -11,6 +11,7 @@ import {
   formatText as formatTextCommand,
   getActiveBlockType,
   getEditorContent,
+  getEditorProfile,
   getEditorText,
   getLinkUrl,
   insertImage as insertImageCommand,
@@ -44,6 +45,7 @@ import type {
 export function useRichTextEditor(
   options: UseRichTextEditorOptions,
 ): RichTextEditorController {
+  const profile = getEditorProfile(options.profile);
   const editor = shallowRef<Editor>();
   const isLinkFormOpen = ref(false);
   const isImageFormOpen = ref(false);
@@ -62,9 +64,10 @@ export function useRichTextEditor(
   onMounted(() => {
     editor.value = createRichTextEditor({
       content: options.content,
-      contentType: options.contentType,
+      profile: options.profile,
       placeholder: options.placeholder,
       autofocus: options.autofocus,
+      attributes: options.attributes,
       onUpdate: options.onUpdate,
       slashCommand,
       onLinkShortcut: openLinkFormIfApplicable,
@@ -112,11 +115,11 @@ export function useRichTextEditor(
   }
 
   function getContent(): string {
-    return getEditorContent(requireEditor(), options.contentType);
+    return getEditorContent(requireEditor(), profile.contentType);
   }
 
   function setContent(content: string) {
-    setEditorContent(requireEditor(), content, options.contentType);
+    setEditorContent(requireEditor(), content, profile.contentType);
   }
 
   function getText(): string {
@@ -197,7 +200,7 @@ export function useRichTextEditor(
 
   return {
     editor,
-    contentType: options.contentType,
+    profile,
     getContent,
     setContent,
     getText,

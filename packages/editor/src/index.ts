@@ -6,5 +6,7 @@ export { BubbleMenu } from '@tiptap/vue-3/menus';
 
 export * from './commands';
 export * from './kit';
+export * from './profiles';
 export * from './rich-text-editor';
 export * from './slash-command';
+export * from './verbatim-markdown';

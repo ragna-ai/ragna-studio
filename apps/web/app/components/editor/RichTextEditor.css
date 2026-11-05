@@ -2,7 +2,8 @@
    scoping. Tailwind's preflight strips heading/list styles and Tiptap ships
    no CSS of its own, so the document typography, the editable area's fill
    height, and the Placeholder pseudo-element all live here, namespaced
-   under .document-sheet. */
+   under .document-sheet. .document-sheet-compact (form fields) must stay
+   after the base rules: same specificity, so order decides. */
 
 .document-sheet .ProseMirror {
   flex: 1;
@@ -42,9 +43,16 @@
   margin-top: 1em;
 }
 
+.document-sheet .ProseMirror h4 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-top: 1em;
+}
+
 .document-sheet .ProseMirror h1:first-child,
 .document-sheet .ProseMirror h2:first-child,
-.document-sheet .ProseMirror h3:first-child {
+.document-sheet .ProseMirror h3:first-child,
+.document-sheet .ProseMirror h4:first-child {
   margin-top: 0;
 }
 
@@ -184,4 +192,32 @@
 
 .document-sheet .ProseMirror .hljs-number {
   color: #005cc5;
+}
+
+.document-sheet-compact .ProseMirror {
+  font-size: inherit;
+}
+
+.document-sheet-compact .ProseMirror > * + * {
+  margin-top: 0.5em;
+}
+
+.document-sheet-compact .ProseMirror h1 {
+  font-size: 1.25rem;
+  margin-top: 0.75em;
+}
+
+.document-sheet-compact .ProseMirror h2 {
+  font-size: 1.125rem;
+  margin-top: 0.75em;
+}
+
+.document-sheet-compact .ProseMirror h3 {
+  font-size: 1rem;
+  margin-top: 0.75em;
+}
+
+.document-sheet-compact .ProseMirror h4 {
+  font-size: 0.875rem;
+  margin-top: 0.75em;
 }

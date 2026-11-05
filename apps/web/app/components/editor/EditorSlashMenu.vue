@@ -22,8 +22,13 @@ const isImageFormOpen = computed(() => props.controller.isImageFormOpen.value);
 const isOpen = computed(
   () => slashMenu.value !== null || isImageFormOpen.value,
 );
+const profileSlashItems = computed(() =>
+  SLASH_ITEMS.filter((item) =>
+    props.controller.profile.slashCommands.includes(item.id),
+  ),
+);
 const items = computed(() =>
-  filterSlashItems(SLASH_ITEMS, slashMenu.value?.query ?? '', t),
+  filterSlashItems(profileSlashItems.value, slashMenu.value?.query ?? '', t),
 );
 const activeOptionId = computed(() => {
   const item = items.value[highlightedIndex.value];

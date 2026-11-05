@@ -1,7 +1,8 @@
 import type {
   BlockType,
-  ContentType,
   Editor,
+  EditorProfile,
+  EditorProfileId,
   SlashCommandId,
   TextFormat,
 } from '@repo/editor';
@@ -17,7 +18,7 @@ export type SlashKeyHandler = (event: KeyboardEvent) => boolean;
 
 export interface RichTextEditorController {
   editor: ShallowRef<Editor | undefined>;
-  contentType: ContentType;
+  profile: EditorProfile;
   getContent: () => string;
   setContent: (content: string) => void;
   getText: () => string;
@@ -55,8 +56,9 @@ export interface RichTextEditorController {
 
 export interface UseRichTextEditorOptions {
   content: string;
-  contentType: ContentType;
+  profile: EditorProfileId;
   placeholder?: string;
   autofocus?: 'start' | 'end';
+  attributes?: Record<string, string>;
   onUpdate?: (value: string) => void;
 }

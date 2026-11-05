@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { WORKFLOW_PROMPT_MAX_LENGTH } from '@repo/workflow';
 import type { WorkflowNode } from '@repo/workflow';
 import { PlusIcon, Trash2Icon } from '@lucide/vue';
+import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowFieldError from '~/features/workflow/components/WorkflowFieldError.vue';
 import WorkflowTemplateHint from '~/features/workflow/components/WorkflowTemplateHint.vue';
@@ -51,8 +53,8 @@ function removeMember(index: number) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section class="space-y-4">
+  <div class="flex min-h-0 flex-1 flex-col gap-6">
+    <section class="flex min-h-0 flex-col gap-4">
       <div>
         <h3 class="text-sm font-semibold">
           {{ t('workflow.teamConfig.lead') }}
@@ -89,11 +91,22 @@ function removeMember(index: number) {
         <WorkflowFieldError :issues="issues" field="leadAgentId" />
       </div>
 
-      <div>
-        <Label class="mb-2 block text-sm font-medium">{{
-          t('common.prompt')
-        }}</Label>
-        <Textarea v-model="node.data.config.prompt" rows="6" />
+      <div class="flex min-h-80 flex-col">
+        <MarkdownEditorField
+          v-model="node.data.config.prompt"
+          aria-labelledby="workflow-prompt-label"
+          :invalid="!!findFieldIssue(issues, 'prompt')"
+          :max-length="WORKFLOW_PROMPT_MAX_LENGTH"
+          class="min-h-60"
+        >
+          <template #label>
+            <Label
+              id="workflow-prompt-label"
+              class="block text-sm font-medium"
+              >{{ t('common.prompt') }}</Label
+            >
+          </template>
+        </MarkdownEditorField>
         <WorkflowFieldError :issues="issues" field="prompt" />
         <WorkflowTemplateHint class="mt-1" />
       </div>

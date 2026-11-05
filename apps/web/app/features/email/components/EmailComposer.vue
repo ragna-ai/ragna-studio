@@ -81,7 +81,7 @@ const isDraftGone = ref(false);
 
 const controller = useRichTextEditor({
   content: props.draft.content,
-  contentType: 'html',
+  profile: 'email',
   placeholder: t('email.compose.bodyPlaceholder'),
   autofocus: props.autofocus,
   onUpdate: () => emitChange(),

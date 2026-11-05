@@ -746,6 +746,9 @@ importers:
       '@repo/ts-config':
         specifier: workspace:*
         version: link:../ts-config
+      '@types/bun':
+        specifier: 1.4.4
+        version: 1.4.4
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2

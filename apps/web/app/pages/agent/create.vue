@@ -27,7 +27,7 @@ const breadcrumbItems = computed(() => [
 </script>
 
 <template>
-  <SectionWrapper>
+  <SectionWrapper class="h-full">
     <Heading bg-position="bottom">
       <template #top>
         <HeadingTitle
@@ -41,7 +41,7 @@ const breadcrumbItems = computed(() => [
       </template>
       <template #bottom> </template>
     </Heading>
-    <div class="px-10">
+    <div class="flex min-h-0 flex-1 flex-col px-10 pb-8">
       <AgentUpsertForm />
     </div>
   </SectionWrapper>

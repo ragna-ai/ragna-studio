@@ -146,6 +146,12 @@ feature set (CommonMark + GFM), Linear-style inline controls: bubble menu with a
 dropdown, table menu, `/` command menu.
 → [specs/editor/prd.md](./editor/prd.md)
 
+Agent instructions, agent context and the workflow agent and team node prompts use the same
+editor with a prompt profile. Text is saved exactly as typed (tags, `{{input}}`, `*` and quotes
+stay unchanged), a Formatted/Raw switch shows the stored markdown, and a live counter shows
+the 30,000 character limit.
+→ [specs/editor/284-prompt-editor/prd.md](./editor/284-prompt-editor/prd.md)
+
 ### Datasets
 
 Structured, spreadsheet-like state shared between humans and agents,
