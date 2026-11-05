@@ -114,16 +114,14 @@ export function buildAgentToolset(
     const factory = toolsets[toolId];
     return factory ? Object.entries(factory(writer, ctx)) : [];
   });
-  const tools: ToolSet = Object.fromEntries(toolEntries);
-
-  Object.assign(
-    tools,
+  const cloudDriveEntries = Object.entries(
     getAgentCloudDriveTools({
       integrationTools: ctx.integrationTools ?? {},
       userId: ctx.userId,
       workspaceId: ctx.workspaceId,
     }),
   );
+  const tools: ToolSet = Object.fromEntries(toolEntries.concat(cloudDriveEntries));
 
   if (ctx.retrievalMode) {
     tools.searchContextDocuments = getSearchContextDocumentsTool(writer, ctx.agentId);

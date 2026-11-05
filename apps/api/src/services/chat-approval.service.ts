@@ -41,12 +41,15 @@ export function answerPendingApprovals(history: UIMessage[], clientMessage: unkn
   if (last?.role !== 'assistant') return;
 
   const decisions = readClientDecisions(clientMessage);
-  for (const part of last.parts) {
+  for (const [index, part] of last.parts.entries()) {
     if (!isToolUIPart(part) || part.state !== 'approval-requested') continue;
     const approved = decisions.get(part.approval.id);
     if (approved === undefined) continue;
-    Object.assign(part.approval, { approved });
-    Object.assign(part, { state: 'approval-responded' });
+    last.parts[index] = {
+      ...part,
+      state: 'approval-responded',
+      approval: { ...part.approval, approved },
+    };
   }
 
   if (hasPendingApproval(last)) {
@@ -63,10 +66,13 @@ export function denyOpenApprovals(history: UIMessage[]): UIMessage[] {
   const changed: UIMessage[] = [];
   for (const message of history) {
     let touched = false;
-    for (const part of message.parts) {
+    for (const [index, part] of message.parts.entries()) {
       if (!isToolUIPart(part) || part.state !== 'approval-requested') continue;
-      Object.assign(part.approval, { approved: false });
-      Object.assign(part, { state: 'output-denied' });
+      message.parts[index] = {
+        ...part,
+        state: 'output-denied',
+        approval: { ...part.approval, approved: false },
+      };
       touched = true;
     }
     if (touched) changed.push(message);

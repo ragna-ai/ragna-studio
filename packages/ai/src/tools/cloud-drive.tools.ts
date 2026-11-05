@@ -413,10 +413,9 @@ export function getAgentCloudDriveTools({
   userId,
   workspaceId,
 }: GetAgentCloudDriveToolsParams): ToolSet {
-  const tools: ToolSet = {};
-  for (const [integrationId, level] of Object.entries(integrationTools)) {
-    if (!level || !isCloudDriveIntegrationId(integrationId)) continue;
-    Object.assign(tools, getCloudDriveTools({ integrationId, level, userId, workspaceId }));
-  }
-  return tools;
+  const entries = Object.entries(integrationTools).flatMap(([integrationId, level]) => {
+    if (!level || !isCloudDriveIntegrationId(integrationId)) return [];
+    return Object.entries(getCloudDriveTools({ integrationId, level, userId, workspaceId }));
+  });
+  return Object.fromEntries(entries);
 }

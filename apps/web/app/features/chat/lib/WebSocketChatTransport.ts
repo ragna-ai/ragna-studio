@@ -14,8 +14,13 @@ interface ChatErrorFramePayload {
 // credits" from any other stream error without parsing
 // `error.message`. `isOutOfCreditsError` (~/lib/api-error) reads `code`
 // directly off the error for this reason.
-export interface ChatStreamError extends Error {
-  code?: number;
+export class ChatStreamError extends Error {
+  readonly code?: number;
+
+  constructor(message: string, code?: number) {
+    super(message);
+    this.code = code;
+  }
 }
 
 type SendMessagesOptions = Parameters<
@@ -109,12 +114,10 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
           break;
         case 'error': {
           const payload = frame.payload as ChatErrorFramePayload | undefined;
-          const error: ChatStreamError = Object.assign(
-            new Error(
-              payload?.message ??
-                useNuxtApp().$i18n.t('chat.conversation.errors.generic'),
-            ),
-            { code: payload?.code },
+          const error = new ChatStreamError(
+            payload?.message ??
+              useNuxtApp().$i18n.t('chat.conversation.errors.generic'),
+            payload?.code,
           );
           settleAck?.(error);
           settleAck = null;
