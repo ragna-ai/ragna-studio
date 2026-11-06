@@ -96,6 +96,7 @@ jobs:
       # Docs are built and previewed by Cloudflare Workers Builds, not here.
       - run: pnpm build --filter='!@repo/docs'
       - run: pnpm check-types
+      - run: pnpm check:web-type-graph
       - run: pnpm --filter @repo/editor test
       - run: pnpm lint
       - run: pnpm format:check

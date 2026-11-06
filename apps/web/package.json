@@ -26,7 +26,6 @@
     "@repo/auth": "workspace:*",
     "@repo/editor": "workspace:*",
     "@repo/integrations": "workspace:*",
-    "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",
     "@repo/workflow": "workspace:*",
     "@tanstack/vue-form": "^1.33.5",
