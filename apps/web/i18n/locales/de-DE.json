@@ -433,6 +433,13 @@
         "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
       }
     },
+    "welcome": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend",
+      "withName": "{greeting}, {name}! Wie kann ich dir helfen?",
+      "withoutName": "{greeting}! Wie kann ich dir helfen?"
+    },
     "input": {
       "placeholder": "Wie kann ich dir helfen?",
       "menu": "Hinzufügen",
