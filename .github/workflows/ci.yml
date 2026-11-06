@@ -212,7 +212,15 @@ jobs:
       # Same no-turbo-cache reasoning as the build-and-check job. Playwright builds the web
       # app itself, so only its dependencies are built here.
       - run: pnpm turbo run build --filter=@repo/api... --filter='@repo/web^...'
-      - run: pnpm --filter @repo/web exec playwright install --with-deps chromium
+      - id: playwright
+        run: echo "version=$(pnpm --filter @repo/web exec playwright --version | awk '/^Version/ {print $2}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # No --with-deps: the runner image already ships Chromium's libraries, and the extra
+      # fonts apt would add can stall for 15 minutes on a slow Ubuntu mirror.
+      - run: pnpm --filter @repo/web exec playwright install --only-shell chromium
       - run: pnpm test:setup
       # Not via turbo: its strict env mode strips the DB_* vars from its tasks.
       - run: pnpm --filter @repo/web test:e2e
