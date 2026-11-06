@@ -5,7 +5,7 @@ import type {
   AgentResponse,
   AgentTemplateManyResponse,
 } from '~/features/agent/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 export const agentTemplateKeys = {
   all: ['agent-templates'] as const,
@@ -42,7 +42,7 @@ export function useCreateAgentFromTemplate() {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('agent.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('agent.toast.createFailed')));
     },
   });
 }

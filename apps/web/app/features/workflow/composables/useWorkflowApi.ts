@@ -12,7 +12,7 @@ import type {
   WorkflowRunManyResponse,
   WorkflowRunResponse,
 } from '~/features/workflow/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string>;
 
@@ -156,9 +156,7 @@ export function usePublishWorkflow() {
       toast.success(t('workflow.toast.published'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('workflow.toast.publishFailed')),
-      );
+      toast.error(toErrorMessage(error, t('workflow.toast.publishFailed')));
     },
   });
 }
@@ -183,9 +181,7 @@ export function useCreateWorkflowRun(workflowId: MaybeRefOrGetter<string>) {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('workflow.toast.runStartFailed')),
-      );
+      toast.error(toErrorMessage(error, t('workflow.toast.runStartFailed')));
     },
   });
 }
@@ -214,9 +210,7 @@ export function useCancelWorkflowRun(
       toast.success(t('workflow.toast.runCancelled'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('workflow.toast.runCancelFailed')),
-      );
+      toast.error(toErrorMessage(error, t('workflow.toast.runCancelFailed')));
     },
   });
 }

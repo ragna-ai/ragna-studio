@@ -1,3 +1,4 @@
+import { problemDetailsSchema, problemTypeUri } from '@repo/api-errors';
 import { getLinkedinDraft } from '@repo/ai';
 import { createGenImageRecords, createMedia, db } from '@repo/database';
 import { account } from '@repo/database/schema';
@@ -182,7 +183,7 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     resetProviderMocks();
   });
 
-  test('returns a LINKEDIN_NOT_CONNECTED sentinel when no LinkedIn account is linked', async () => {
+  test('answers a linkedin-not-connected problem when no LinkedIn account is linked', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
 
@@ -192,8 +193,8 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    const body = z.object({ errorCode: z.string() }).parse(await response.json());
-    expect(body.errorCode).toBe('LINKEDIN_NOT_CONNECTED');
+    const body = problemDetailsSchema.parse(await response.json());
+    expect(body.type).toBe(problemTypeUri('linkedin-not-connected'));
     expect(createPostMock).not.toHaveBeenCalled();
   });
 
@@ -274,8 +275,8 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    const body = z.object({ errorCode: z.string() }).parse(await response.json());
-    expect(body.errorCode).toBe('LINKEDIN_NOT_CONNECTED');
+    const body = problemDetailsSchema.parse(await response.json());
+    expect(body.type).toBe(problemTypeUri('linkedin-not-connected'));
     expect(createPostMock).not.toHaveBeenCalled();
     const getResponse = await app.request(`/workspace/${workspaceId}/social-post/${created.id}`, {
       headers: { cookie: cookieHeader },

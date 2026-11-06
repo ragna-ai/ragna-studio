@@ -1,0 +1,87 @@
+---
+title: API errors
+description: The format of RAGNA Studio API error responses and how clients react to them.
+sidebar:
+  order: 0
+---
+
+Every error response of the RAGNA Studio API follows [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) (problem details). This page describes the format for clients of the API.
+
+## Format
+
+Every error response has these headers:
+
+- `Content-Type: application/problem+json`
+- `Content-Language: en`
+
+The body is a JSON object:
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/out-of-credits",
+  "title": "Out of credits",
+  "status": 402,
+  "detail": "Out of credits"
+}
+```
+
+| Member   | Meaning                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| `type`   | Identifies the kind of error. Either `about:blank` or a URL of this site, such as the one above. |
+| `title`  | A short English summary of the type.                                                             |
+| `status` | The HTTP status code, repeated in the body.                                                      |
+| `detail` | An English explanation of this occurrence. Meant for logs and developers.                        |
+
+### Extension members
+
+Some types add members. They appear only on their own type and are listed on its page.
+
+| Member   | Meaning                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------- |
+| `errors` | A list of single problems. Each entry has `rule`, and optionally `pointer` and `detail`. |
+| `draft`  | The existing email draft, on [`email-draft-exists`](/errors/email-draft-exists).         |
+
+Each entry in `errors` has these members:
+
+| Member    | Meaning                                                                                 |
+| --------- | --------------------------------------------------------------------------------------- |
+| `rule`    | A machine-readable identifier of the broken rule. The valid values depend on the type.  |
+| `pointer` | A JSON Pointer to the offending value in the request, such as `#/name`. Not always set. |
+| `detail`  | An English explanation of this single problem. Not always set.                          |
+
+## Problem types
+
+`type` is `about:blank` when nothing beyond the HTTP status is known. The `title` is then the standard HTTP reason phrase. Otherwise `type` is `https://docs.ragna.io/errors/<slug>`, and that URL opens the page for the type.
+
+| Type                                                       | Status | Meaning                                            |
+| ---------------------------------------------------------- | ------ | -------------------------------------------------- |
+| [`validation`](/errors/validation)                         | 422    | The request body, query or parameters are invalid. |
+| [`out-of-credits`](/errors/out-of-credits)                 | 402    | The organization has no credits left.              |
+| [`organization-deleted`](/errors/organization-deleted)     | 403    | The organization is scheduled for deletion.        |
+| [`linkedin-not-connected`](/errors/linkedin-not-connected) | 400    | The user has no LinkedIn connection.               |
+| [`workflow-invalid`](/errors/workflow-invalid)             | 400    | The workflow graph breaks a structural rule.       |
+| [`email-draft-exists`](/errors/email-draft-exists)         | 409    | The email thread already has a draft.              |
+
+New types can be added in any release.
+
+## How clients react
+
+1. Identify the error by `type`, and by `rule` inside `errors`. Never match on `title` or `detail`. Their text can change.
+2. Treat the HTTP `status` as the fallback. A client that does not know a `type` handles it like any other error with that status.
+3. Ignore unknown types and unknown members. New ones can appear without a version change.
+4. Show the user text that the client owns. RAGNA Studio does not localize `title` or `detail`, and ignores `Accept-Language`.
+
+## Migration from `code` and `error`
+
+This release still sends the old fields next to the new ones:
+
+| Old field | Value                                                         | Replace with                   |
+| --------- | ------------------------------------------------------------- | ------------------------------ |
+| `code`    | The HTTP status, or `ORGANIZATION_DELETED` for that one case. | `status` and `type`            |
+| `error`   | A message.                                                    | `type` (and `detail` for logs) |
+
+Both fields are removed in the next minor release. Clients should switch to `type` and `status` now.
+
+WebSocket error frames follow the same rule. They carry `type`, `status` and `title`, plus the deprecated `code` and `message`.
+
+Self-hosting operators find the same note on [Upgrades and backups](/self-hosting/upgrades-and-backups#api-error-format).

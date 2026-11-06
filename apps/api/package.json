@@ -26,6 +26,7 @@
     "@hono/zod-validator": "^0.9.1",
     "@modelcontextprotocol/server": "^2.4.0",
     "@repo/ai": "workspace:*",
+    "@repo/api-errors": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",

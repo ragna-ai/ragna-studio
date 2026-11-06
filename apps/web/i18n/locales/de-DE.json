@@ -2000,5 +2000,19 @@
         "subtitle": "Credit-Nutzung pro Mitglied."
       }
     }
+  },
+  "problem": {
+    "type": {
+      "validation": "Bitte prüfe deine Eingabe und versuche es erneut.",
+      "organizationDeleted": "Deine Organisation ist zur Löschung vorgemerkt. Stelle sie wieder her, um fortzufahren.",
+      "workflowInvalid": "Der Workflow ist ungültig. Bitte prüfe ihn und versuche es erneut.",
+      "emailDraftExists": "Für diese Unterhaltung gibt es bereits einen Entwurf."
+    },
+    "workflowRule": {
+      "triggerCount": "Ein Workflow braucht genau einen Trigger.",
+      "unknownEdgeNode": "Eine Verbindung zeigt auf einen Schritt, den es nicht gibt.",
+      "conditionHandle": "Eine Bedingung hat eine Verbindung, die keiner ihrer Ausgänge ist.",
+      "cycle": "Der Workflow enthält eine Schleife. Entferne sie, um fortzufahren."
+    }
   }
 }

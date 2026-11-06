@@ -1,0 +1,31 @@
+---
+title: linkedin-not-connected
+description: A LinkedIn action was requested but the user has no LinkedIn connection.
+---
+
+`https://docs.ragna.io/errors/linkedin-not-connected`
+
+## When it happens
+
+A request needs the LinkedIn account of the user, for example to publish a social post. The user has not connected LinkedIn.
+
+## Response
+
+| Member   | Value                  |
+| -------- | ---------------------- |
+| `status` | 400                    |
+| `title`  | LinkedIn not connected |
+
+No extension members.
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/linkedin-not-connected",
+  "title": "LinkedIn not connected",
+  "status": 400
+}
+```
+
+## What the client can do
+
+Send the user to the connection settings to connect LinkedIn. See [Connections](/integrations/connections). Then send the request again.

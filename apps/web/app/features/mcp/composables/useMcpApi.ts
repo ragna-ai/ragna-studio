@@ -12,7 +12,7 @@ import type {
   McpSettingsResponse,
   UpdateMcpSettingsRequest,
 } from '~/features/mcp/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 export const mcpKeys = {
   settings: ['mcp', 'settings'] as const,
@@ -53,9 +53,7 @@ export function useUpdateMcpSettings() {
       queryClient.invalidateQueries({ queryKey: mcpKeys.connections });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('mcp.toast.settingsSaveFailed')),
-      );
+      toast.error(toErrorMessage(error, t('mcp.toast.settingsSaveFailed')));
     },
   });
 }

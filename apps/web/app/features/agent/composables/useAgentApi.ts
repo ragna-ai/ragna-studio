@@ -14,7 +14,7 @@ import type {
   CreateAgentRequest,
   UpdateAgentRequest,
 } from '~/features/agent/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string>;
 
@@ -272,7 +272,7 @@ export function useUploadAgentContextDocuments() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('agent.toast.documentsUploadFailed')),
+        toErrorMessage(error, t('agent.toast.documentsUploadFailed')),
       );
     },
   });
@@ -308,9 +308,7 @@ export function useRenameAgentContextDocument() {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('agent.toast.documentRenameFailed')),
-      );
+      toast.error(toErrorMessage(error, t('agent.toast.documentRenameFailed')));
     },
   });
 }
@@ -349,7 +347,7 @@ export function useReplaceAgentContextDocumentFile() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('agent.toast.documentReplaceFailed')),
+        toErrorMessage(error, t('agent.toast.documentReplaceFailed')),
       );
     },
   });
@@ -383,9 +381,7 @@ export function useRetryAgentContextDocument() {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('agent.toast.documentRetryFailed')),
-      );
+      toast.error(toErrorMessage(error, t('agent.toast.documentRetryFailed')));
     },
   });
 }
@@ -409,9 +405,7 @@ export function useDeleteAgentContextDocument() {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('agent.toast.documentDeleteFailed')),
-      );
+      toast.error(toErrorMessage(error, t('agent.toast.documentDeleteFailed')));
     },
   });
 }

@@ -15,7 +15,7 @@ import type {
   EmailAccountStatusResponse,
   UpdateEmailAccountSettingsRequest,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type QueryOpts = Partial<UseQueryOptions<EmailAccountStatusResponse>>;
 
@@ -75,9 +75,7 @@ export function useUpdateEmailAccountSettings() {
       toast.success(t('email.toast.settingsUpdated'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('email.toast.settingsUpdateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.settingsUpdateFailed')));
     },
   });
 }
@@ -117,7 +115,7 @@ export function useSyncEmailAccount() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('email.toast.syncStartFailed')));
+      toast.error(toErrorMessage(error, t('email.toast.syncStartFailed')));
     },
   });
 }
@@ -135,7 +133,7 @@ export function useDisconnectEmailAccount() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('email.toast.mailboxDisconnectFailed')),
+        toErrorMessage(error, t('email.toast.mailboxDisconnectFailed')),
       );
     },
   });

@@ -30,7 +30,7 @@ import {
   workflowScheduleTickJobSchema,
 } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
-import type { WorkflowDefinition } from '@repo/workflow';
+import type { WorkflowDefinition, WorkflowGraphIssue } from '@repo/workflow';
 import { getScheduleFromDefinition, validateWorkflowDefinition } from '@repo/workflow';
 import {
   BadRequestException,
@@ -248,18 +248,15 @@ export async function deleteWorkflowForWorkspace({
 
 export type PublishWorkflowResult =
   | { published: true; workflow: Workflow }
-  | { published: false; errors: string[] };
+  | { published: false; issues: WorkflowGraphIssue[] };
 
 /**
  * [POST] /workspace/:workspaceId/workflow/:workflowId/publish
  * Validates the current draft definition and, if valid, snapshots it as the
  * published definition and syncs the BullMQ schedule to match.
  *
- * Returns a `published: false` sentinel instead of throwing on an invalid
- * definition: apps/api/src/app.ts's onError only forwards `{ code, error }`
- * for thrown exceptions, and the web app needs the full `errors` list
- * (same reasoning as LINKEDIN_NOT_CONNECTED_ERROR_CODE in
- * social-post.service.ts).
+ * Returns a `published: false` sentinel with the graph issues for an invalid
+ * definition; the controller turns it into a `WorkflowInvalidException`.
  */
 export async function publishWorkflowForWorkspace({
   workspaceId,
@@ -273,7 +270,7 @@ export async function publishWorkflowForWorkspace({
   const validation = validateWorkflowDefinition(workflowRecord.definition);
 
   if (!validation.valid) {
-    return { published: false, errors: validation.issues.map((issue) => issue.message) };
+    return { published: false, issues: validation.issues };
   }
 
   const schedule = getScheduleFromDefinition(workflowRecord.definition);
@@ -328,7 +325,7 @@ export async function publishWorkflowForWorkspace({
 
 export type StartWorkflowRunResult =
   | { started: true; run: WorkflowRun }
-  | { started: false; errors: string[] };
+  | { started: false; issues: WorkflowGraphIssue[] };
 
 /**
  * [POST] /workspace/:workspaceId/workflow/:workflowId/run
@@ -356,7 +353,7 @@ export async function startWorkflowRun({
   const validation = validateWorkflowDefinition(workflowRecord.publishedDefinition);
 
   if (!validation.valid) {
-    return { started: false, errors: validation.issues.map((issue) => issue.message) };
+    return { started: false, issues: validation.issues };
   }
 
   const { error, data: run } = await tryCatch(() =>

@@ -5,7 +5,7 @@ import type {
   NotificationResponse,
   NotificationUnreadResponse,
 } from '~/features/notification/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 const LIST_LIMIT = 10;
 
@@ -59,7 +59,7 @@ export function useMarkReadNotification() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('notification.toast.markReadFailed')),
+        toErrorMessage(error, t('notification.toast.markReadFailed')),
       );
     },
   });
@@ -80,7 +80,7 @@ export function useMarkAllReadNotification() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('notification.toast.markAllReadFailed')),
+        toErrorMessage(error, t('notification.toast.markAllReadFailed')),
       );
     },
   });
@@ -102,9 +102,7 @@ export function useDeleteNotification() {
       queryClient.invalidateQueries({ queryKey: notificationKeys.list() });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('notification.toast.deleteFailed')),
-      );
+      toast.error(toErrorMessage(error, t('notification.toast.deleteFailed')));
     },
   });
 }
@@ -124,7 +122,7 @@ export function useDeleteAllNotifications() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('notification.toast.deleteAllFailed')),
+        toErrorMessage(error, t('notification.toast.deleteAllFailed')),
       );
     },
   });

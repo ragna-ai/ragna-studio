@@ -1,0 +1,57 @@
+---
+title: validation
+description: The request is well-formed JSON but breaks a validation rule.
+---
+
+`https://docs.ragna.io/errors/validation`
+
+## When it happens
+
+The API rejects the request body, query or path parameters because a value breaks a rule. Examples are a missing field, a wrong type or a text that is too long.
+
+## Response
+
+| Member   | Value                     |
+| -------- | ------------------------- |
+| `status` | 422                       |
+| `title`  | Validation failed         |
+| `errors` | One entry per broken rule |
+
+Each entry in `errors` has a `rule`, and usually a `pointer` and a `detail`:
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/validation",
+  "title": "Validation failed",
+  "status": 422,
+  "errors": [
+    {
+      "rule": "too_small",
+      "pointer": "#/name",
+      "detail": "Too small: expected string to have >=1 characters"
+    }
+  ]
+}
+```
+
+`pointer` is a JSON Pointer into the request, such as `#/name`. The `detail` text is English and can change.
+
+### Rules
+
+| Rule                | Meaning                                          |
+| ------------------- | ------------------------------------------------ |
+| `invalid_type`      | The value has the wrong type, or is missing.     |
+| `too_big`           | A number, text or list is above its maximum.     |
+| `too_small`         | A number, text or list is below its minimum.     |
+| `invalid_format`    | A text does not match the expected format.       |
+| `not_multiple_of`   | A number is not a multiple of the required step. |
+| `unrecognized_keys` | An object has members that are not allowed.      |
+| `invalid_union`     | The value matches none of the allowed shapes.    |
+| `invalid_key`       | A key of a record is invalid.                    |
+| `invalid_element`   | An element of a map or set is invalid.           |
+| `invalid_value`     | The value is not one of the allowed values.      |
+| `custom`            | A rule specific to the endpoint.                 |
+
+## What the client can do
+
+Fix the value at `pointer` and send the request again. Show the user a message that the client owns, chosen by `rule`. Retrying the same request does not help.

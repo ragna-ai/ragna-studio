@@ -45,6 +45,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '../exceptions';
+import { toProblemDetails } from '../exceptions/problem-details';
 import { answerPendingApprovals, denyOpenApprovals } from './chat-approval.service';
 import { assertCanSpend } from './credit.service';
 
@@ -645,6 +646,11 @@ export function abortChatRun(chatId: string): boolean {
   return true;
 }
 
+// The client maps the problem type URI to its own text; never server prose.
+function toStreamErrorText(error: unknown): string {
+  return toProblemDetails(error).type;
+}
+
 /**
  * Runs the full chat streaming pipeline for one turn: validates the
  * incoming messages, builds agent instructions, generates a title for new
@@ -687,8 +693,7 @@ export async function runChatStream(
 
     // Refuse before any model call happens if the workspace owner is out of
     // credits, or if the chat's model has no chargeable pricing.
-    // Throws
-    // PaymentRequiredException or InternalServerErrorException, which
+    // Throws OutOfCreditsException or InternalServerErrorException, which
     // ws.controller.ts already maps to an error frame. `null` means
     // CREDITS_ENABLED is off; settlement in streamText's onEnd below is
     // skipped together with this gate.
@@ -770,9 +775,7 @@ export async function runChatStream(
       generateId: createPrimaryId,
       onError(error) {
         logger.error(`Error in chat stream for chat ${chatId}`, error);
-        // An i18n key, not display text: the frontend translates it
-        // (ChatConversation.vue renders `error.message` through `$t`).
-        return 'chat.conversation.errors.generic';
+        return toStreamErrorText(error);
       },
       execute: ({ writer: dataStream }) => {
         // Handle title generation in parallel
@@ -905,6 +908,7 @@ export async function runChatStream(
             originalMessages: validUiMessages,
             generateMessageId: createPrimaryId,
             sendReasoning: true,
+            onError: toStreamErrorText,
           }),
         );
       },

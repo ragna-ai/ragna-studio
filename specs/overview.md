@@ -58,6 +58,16 @@ videogen). Implemented but inert in practice: waiting on pricing data to
 be seeded and the `CREDITS_ENABLED` flag.
 → [specs/credits/prd.md](./credits/prd.md)
 
+### API errors
+
+Every API error is an RFC 9457 `application/problem+json` body with a
+stable problem `type` (`about:blank` or `https://docs.ragna.io/errors/<slug>`).
+The web maps each type to its own translation and never shows server text,
+so error messages appear in the user's UI language. WebSocket and chat
+stream errors use the same types. The old `code` and `error` fields stay
+for one release (#297).
+→ [specs/standards/api-errors/prd.md](./standards/api-errors/prd.md)
+
 ## Chat & agents
 
 ### Chat

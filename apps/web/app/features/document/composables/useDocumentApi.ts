@@ -16,7 +16,7 @@ import {
   documentKeys,
   folderKeys,
 } from '~/features/document/composables/queryKeys';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 import {
   buildExportFilename,
   downloadBlob,
@@ -103,7 +103,7 @@ export function useCreateDocument() {
       queryClient.invalidateQueries({ queryKey: folderKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('document.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('document.toast.createFailed')));
     },
   });
 }
@@ -143,7 +143,7 @@ export function useUpdateDocument() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('document.toast.saveFailed')));
+      toast.error(toErrorMessage(error, t('document.toast.saveFailed')));
     },
   });
 }
@@ -166,7 +166,7 @@ export function useDeleteDocument() {
       toast.success(t('document.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('document.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('document.toast.deleteFailed')));
     },
   });
 }

@@ -29,7 +29,6 @@ work first, shipped reference and dead/historical docs last.
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
-| [API errors standard: RFC 9457 problem details (PRD)](./standards/api-errors/prd.md) | proposed (2026-11-06) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
 | [Workflows: human in the loop (approval node)](./workflow/workflows-human-in-the-loop.md) | proposed |
@@ -98,6 +97,7 @@ work first, shipped reference and dead/historical docs last.
 | [OAuth and MCP hardening](./security/oauth-mcp-hardening-prd.md) | implemented (2026-10-16, PR #110, released in v0.6.2) |
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Settings area and expandable sidebar: one settings section with its own nav (PRD)](./settings/246-settings-area/prd.md) | implemented (2026-10-31, PR #247) |
+| [API errors standard: RFC 9457 problem details (PRD)](./standards/api-errors/prd.md) | implemented (2026-11-06, PR #296) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |
 | [Tasks / Kanban Board (PRD)](./tasks/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Live Team Chat over WebSocket (PRD)](./team-chat/prd.md) | implemented (phase 1 only, merged via PR #5, 2026-07-19) |

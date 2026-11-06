@@ -23,6 +23,7 @@
     "@nuxtjs/i18n": "10.6.0",
     "@pinia/nuxt": "1.0.3",
     "@repo/ai": "workspace:*",
+    "@repo/api-errors": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/editor": "workspace:*",
     "@repo/integrations": "workspace:*",

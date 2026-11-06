@@ -10,7 +10,7 @@ import type {
   WorkspaceManyResponse,
   WorkspaceResponse,
 } from '~/features/workspace/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 export const workspaceKeys = {
   all: ['workspaces'] as const,
@@ -87,7 +87,7 @@ export function useDeleteWorkspace() {
     },
     onError: (error) => {
       // The API answers with a readable message (e.g. a personal workspace can't be deleted).
-      toast.error(extractErrorMessage(error, t('workspace.toast.deleteError')));
+      toast.error(toErrorMessage(error, t('workspace.toast.deleteError')));
     },
   });
 }

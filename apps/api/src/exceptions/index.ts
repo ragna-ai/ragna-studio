@@ -1,5 +1,8 @@
+import type { ProblemError } from '@repo/api-errors';
+import type { WorkflowGraphIssue } from '@repo/workflow';
 import { HTTPException } from 'hono/http-exception';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { ProblemException } from './problem-details';
 
 export { HTTPException };
 
@@ -21,12 +24,10 @@ export class BadRequestException extends HTTPException {
   }
 }
 
-// Payment Required (402) Exception
-export class PaymentRequiredException extends HTTPException {
+// Payment Required (402) while the caller's organization has no credits left
+export class OutOfCreditsException extends ProblemException {
   constructor(message?: string) {
-    super(StatusCodes.PAYMENT_REQUIRED, {
-      message: message || ReasonPhrases.PAYMENT_REQUIRED,
-    });
+    super(StatusCodes.PAYMENT_REQUIRED, { type: 'out-of-credits', message });
   }
 }
 
@@ -39,13 +40,11 @@ export class ForbiddenException extends HTTPException {
   }
 }
 
-// Forbidden (403) while the caller's organization is soft-deleted. The error body carries
-// ORGANIZATION_DELETED as `code` so clients can show the restore page.
-export const ORGANIZATION_DELETED_CODE = 'ORGANIZATION_DELETED';
-
-export class OrganizationDeletedException extends HTTPException {
+// Forbidden (403) while the caller's organization is soft-deleted
+export class OrganizationDeletedException extends ProblemException {
   constructor() {
     super(StatusCodes.FORBIDDEN, {
+      type: 'organization-deleted',
       message: 'This organization is scheduled for deletion.',
     });
   }
@@ -92,6 +91,45 @@ export class InternalServerErrorException extends HTTPException {
   constructor(message?: string) {
     super(StatusCodes.INTERNAL_SERVER_ERROR, {
       message: message || ReasonPhrases.INTERNAL_SERVER_ERROR,
+    });
+  }
+}
+
+// Unprocessable Entity (422) for request input that fails schema validation
+export class ValidationException extends ProblemException {
+  constructor(message: string, errors: ProblemError[]) {
+    super(StatusCodes.UNPROCESSABLE_ENTITY, { type: 'validation', message, errors });
+  }
+}
+
+// Bad Request (400) for a workflow definition that fails graph validation
+export class WorkflowInvalidException extends ProblemException {
+  constructor(issues: WorkflowGraphIssue[]) {
+    super(StatusCodes.BAD_REQUEST, {
+      type: 'workflow-invalid',
+      message: 'Workflow definition is invalid',
+      errors: issues.map((issue) => ({ rule: issue.code, detail: issue.message })),
+    });
+  }
+}
+
+// Conflict (409) carrying the thread's existing draft
+export class EmailDraftExistsException extends ProblemException {
+  constructor(draft: unknown) {
+    super(StatusCodes.CONFLICT, {
+      type: 'email-draft-exists',
+      message: 'Thread already has an active draft',
+      draft,
+    });
+  }
+}
+
+// Bad Request (400) when publishing without a connected LinkedIn account
+export class LinkedinNotConnectedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.BAD_REQUEST, {
+      type: 'linkedin-not-connected',
+      message: 'No LinkedIn account connected',
     });
   }
 }

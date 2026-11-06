@@ -3,9 +3,9 @@ import { logger } from '@repo/logger';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
-import { ORGANIZATION_DELETED_CODE, OrganizationDeletedException } from './exceptions';
+import { NotFoundException } from './exceptions';
+import { toProblemResponse } from './exceptions/problem-details';
 import { logger as honoLogger } from 'hono/logger';
-import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { agentContextDocumentController } from './controllers/agent-context-document.controller';
 import { agentTemplateController } from './controllers/agent-template.controller';
 import { agentController } from './controllers/agent.controller';
@@ -87,28 +87,11 @@ export const app = new Hono()
   .route('/', mcpSettingsController)
   .route('/', wsController)
   // Error
-  .onError((err, c) => {
-    if (err instanceof HTTPException) {
-      return c.json(
-        {
-          code:
-            err instanceof OrganizationDeletedException ? ORGANIZATION_DELETED_CODE : err.status,
-          error: err.message,
-        },
-        err.status,
-      );
-    }
-
-    logger.error('Unhandled error in API', err);
-
-    return c.json(
-      {
-        code: StatusCodes.INTERNAL_SERVER_ERROR,
-        error: ReasonPhrases.INTERNAL_SERVER_ERROR,
-      },
-      StatusCodes.INTERNAL_SERVER_ERROR,
-    );
-  });
+  .onError((err) => {
+    if (!(err instanceof HTTPException)) logger.error('Unhandled error in API', err);
+    return toProblemResponse(err);
+  })
+  .notFound(() => toProblemResponse(new NotFoundException()));
 
 // showRoutes(app, {
 //   verbose: true,

@@ -323,20 +323,6 @@ export type UpdateEmailDraftRequest = Partial<EmailDraftEditableFields> & {
   flush?: boolean;
 };
 
-/**
- * Body of the 409 `POST /email/draft` returns when the thread already has a
- * non-terminal draft ("refuses a second non-terminal draft on the same
- * thread ... with a 409 carrying the existing draft's id"). The wire
- * contract only specifies the id is included; modeled as the same `{ draft }`
- * envelope as a normal create response so the client can also read the
- * existing draft's `kind` (needed to decide whether to prompt a
- * discard-first flow) - JUDGEMENT CALL, flagged for the API agent to confirm
- * or correct the actual shape.
- */
-export interface EmailDraftConflictResponse {
-  draft: EmailDraft;
-}
-
 export interface TriggerEmailDraftRequest {
   threadId: string;
   replyToMessageId: string;

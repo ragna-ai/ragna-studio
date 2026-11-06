@@ -9,7 +9,7 @@ import {
   useDeleteTaskAttachment,
   useUploadTaskAttachments,
 } from '~/features/task/composables/useTaskApi';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 export type PendingTaskAttachmentStatus = 'uploading' | 'done' | 'error';
@@ -78,9 +78,7 @@ export function useTaskAttachments(taskId: MaybeRefOrGetter<string>) {
     try {
       await deleteAttachment({ taskId: toValue(taskId), attachmentId });
     } catch (error) {
-      toast.error(
-        extractErrorMessage(error, t('task.attachment.removeFailed')),
-      );
+      toast.error(toErrorMessage(error, t('task.attachment.removeFailed')));
     }
   }
 
@@ -111,7 +109,7 @@ export function useTaskAttachments(taskId: MaybeRefOrGetter<string>) {
     } catch (error) {
       removedWhileUploading.delete(item.id);
       item.status = 'error';
-      item.errorMessage = extractErrorMessage(
+      item.errorMessage = toErrorMessage(
         error,
         t('task.attachment.uploadFailed'),
       );

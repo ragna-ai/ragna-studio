@@ -17,7 +17,7 @@ import { tryCatch } from '@repo/utils';
 import {
   InternalServerErrorException,
   OrganizationDeletedException,
-  PaymentRequiredException,
+  OutOfCreditsException,
 } from '../exceptions';
 
 // 1 credit = 1,000,000 micro-credits.
@@ -56,7 +56,7 @@ export interface CreditUsageListResponse {
  * the three entry points; all three answer to this one policy.
  *
  * Returns `null` immediately, without querying, when `CREDITS_ENABLED` is
- * off, so the system can ship dark. Otherwise throws `PaymentRequiredException`
+ * off, so the system can ship dark. Otherwise throws `OutOfCreditsException`
  * when the workspace's organization has no credit account, or its balance is not
  * positive (the gate is `balance > 0`).
  *
@@ -67,7 +67,7 @@ export interface CreditUsageListResponse {
  * settlement after the model call already ran.
  * That's a platform configuration problem, not the user being
  * out of credits, hence `InternalServerErrorException` rather than
- * `PaymentRequiredException`. `pricing === undefined` means the caller
+ * `OutOfCreditsException`. `pricing === undefined` means the caller
  * cannot know the model yet (`creditGuard` at workflow-run enqueue, before
  * any node's model is resolved), so this check is skipped and only the
  * balance is checked; the worker's per-node gate covers pricing once the
@@ -101,7 +101,7 @@ export async function assertCanSpend({
   }
 
   if (!spendState || !spendState.allowed) {
-    throw new PaymentRequiredException('Out of credits');
+    throw new OutOfCreditsException('Out of credits');
   }
 
   return spendState;

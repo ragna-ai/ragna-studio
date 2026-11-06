@@ -1,3 +1,4 @@
+import { problemDetailsSchema } from '@repo/api-errors';
 import { seedAuthenticatedUser, seedCreditAccount, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -61,10 +62,6 @@ const workflowResponseSchema = z.object({ workflow: workflowSchema });
 const workflowListResponseSchema = z.object({
   workflows: z.array(workflowListItemSchema),
   meta: z.object({ totalCount: z.number() }),
-});
-
-const publishFailureResponseSchema = z.object({
-  errors: z.array(z.string()),
 });
 
 const workflowRunSchema = z.object({
@@ -332,8 +329,10 @@ describe('POST /workspace/:workspaceId/workflow/:workflowId/publish', () => {
     const { status, body } = await publishWorkflow(cookieHeader, workspaceId, workflow.id);
 
     expect(status).toBe(StatusCodes.BAD_REQUEST);
-    const parsed = publishFailureResponseSchema.parse(body);
-    expect(parsed.errors).toEqual(['Expected exactly one trigger node, found 0']);
+    const parsed = problemDetailsSchema.parse(body);
+    expect(parsed.errors).toEqual([
+      { rule: 'triggerCount', detail: 'Expected exactly one trigger node, found 0' },
+    ]);
   });
 });
 

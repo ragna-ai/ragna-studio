@@ -1,0 +1,32 @@
+---
+title: out-of-credits
+description: The organization has no credits left for the requested action.
+---
+
+`https://docs.ragna.io/errors/out-of-credits`
+
+## When it happens
+
+An action costs credits and the organization balance is too low. Credits are enforced only when the operator has turned them on.
+
+## Response
+
+| Member   | Value          |
+| -------- | -------------- |
+| `status` | 402            |
+| `title`  | Out of credits |
+
+No extension members.
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/out-of-credits",
+  "title": "Out of credits",
+  "status": 402,
+  "detail": "Out of credits"
+}
+```
+
+## What the client can do
+
+Tell the user that the organization is out of credits. Retrying does not help until credits are added.

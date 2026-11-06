@@ -5,7 +5,7 @@ import {
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
-import { InternalServerErrorException, PaymentRequiredException } from '../../src/exceptions';
+import { InternalServerErrorException, OutOfCreditsException } from '../../src/exceptions';
 import { assertCanSpend } from '../../src/services/credit.service';
 
 // assertCanSpend (apps/api/src/services/credit.service.ts) is the single
@@ -22,7 +22,7 @@ describe('assertCanSpend', () => {
   test('refuses a workspace whose owner has no credit account', async () => {
     const { workspaceId } = await seedAuthenticatedUser();
 
-    await expect(assertCanSpend({ workspaceId })).rejects.toBeInstanceOf(PaymentRequiredException);
+    await expect(assertCanSpend({ workspaceId })).rejects.toBeInstanceOf(OutOfCreditsException);
     await expect(assertCanSpend({ workspaceId })).rejects.toMatchObject({ status: 402 });
   });
 
@@ -30,7 +30,7 @@ describe('assertCanSpend', () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();
     await seedCreditAccount({ userId });
 
-    await expect(assertCanSpend({ workspaceId })).rejects.toBeInstanceOf(PaymentRequiredException);
+    await expect(assertCanSpend({ workspaceId })).rejects.toBeInstanceOf(OutOfCreditsException);
   });
 
   test('allows a workspace whose account has a positive balance, pricing unknown', async () => {
@@ -62,7 +62,7 @@ describe('assertCanSpend', () => {
       // Refused before the balance is even relevant: a platform
       // configuration problem (500), not "out of credits" (402).
       await expect(promise).rejects.toBeInstanceOf(InternalServerErrorException);
-      await expect(promise).rejects.not.toBeInstanceOf(PaymentRequiredException);
+      await expect(promise).rejects.not.toBeInstanceOf(OutOfCreditsException);
     });
 
     test('refuses pricing: null (an unpriced model), even with a positive balance', async () => {

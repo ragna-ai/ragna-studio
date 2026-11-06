@@ -5,7 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -251,9 +251,7 @@ export function useGenerateVideo() {
       );
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('videogen.toast.generateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('videogen.toast.generateFailed')));
     },
   });
 }
@@ -294,9 +292,7 @@ export function useEnhanceGenVideo() {
       );
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('videogen.toast.enhanceFailed')),
-      );
+      toast.error(toErrorMessage(error, t('videogen.toast.enhanceFailed')));
       queryClient.invalidateQueries({
         queryKey: videoGenKeys.all(workspaceId),
       });
@@ -319,9 +315,7 @@ export function useUploadVideoFrame() {
       );
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('videogen.toast.frameUploadFailed')),
-      );
+      toast.error(toErrorMessage(error, t('videogen.toast.frameUploadFailed')));
     },
   });
 }
@@ -343,7 +337,7 @@ export function useDeleteGenVideo() {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('videogen.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('videogen.toast.deleteFailed')));
     },
   });
 }

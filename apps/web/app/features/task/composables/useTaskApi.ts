@@ -16,7 +16,7 @@ import type {
   TaskStatus,
   UpdateTaskRequest,
 } from '~/features/task/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -137,7 +137,7 @@ export function useCreateTask() {
       return invalidateTaskLists(queryClient, workspaceId);
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('task.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('task.toast.createFailed')));
     },
   });
 }
@@ -194,7 +194,7 @@ export function useUpdateTask() {
       return invalidateTaskLists(queryClient, workspaceId);
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('task.toast.saveFailed')));
+      toast.error(toErrorMessage(error, t('task.toast.saveFailed')));
     },
   });
 }
@@ -236,7 +236,7 @@ export function useMoveTask() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('task.toast.moveFailed')));
+      toast.error(toErrorMessage(error, t('task.toast.moveFailed')));
     },
     onSettled: () =>
       // Board/list reconciliation after both success and error/rollback:
@@ -265,7 +265,7 @@ export function useDeleteTask() {
       toast.success(t('task.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('task.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('task.toast.deleteFailed')));
     },
   });
 }

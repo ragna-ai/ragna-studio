@@ -5,7 +5,6 @@ import { buildSendDraftFormData } from '~/features/email/lib/email-send-form-dat
 import type {
   CreateEmailDraftRequest,
   EmailDraft,
-  EmailDraftConflictResponse,
   EmailDraftListResponse,
   EmailDraftResponse,
   SendEmailDraftVariables,
@@ -13,7 +12,7 @@ import type {
   TriggerEmailDraftRequest,
   UpdateEmailDraftRequest,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage, getProblemType, parseProblem } from '~/lib/api-error';
 
 // Draft generation runs as an async worker job;
 // polling is the only way the UI learns a `generating`
@@ -196,29 +195,25 @@ function invalidateDraftQueries(
   queryClient.invalidateQueries({ queryKey: emailKeys.allDrafts() });
 }
 
-interface FetchErrorWithStatus {
-  status?: number;
-  data?: unknown;
-}
-
-function hasConflictingDraft(
-  data: unknown,
-): data is EmailDraftConflictResponse {
-  return typeof data === 'object' && data !== null && 'draft' in data;
+function isEmailDraft(value: unknown): value is EmailDraft {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'string'
+  );
 }
 
 /**
- * Reads the existing draft off a 409 from `POST /email/draft` (one active
- * draft per thread), so
- * a caller can focus/scroll to it instead of surfacing the error as a toast.
- * Returns `null` for any other error, including a 409 whose body doesn't
- * match the assumed shape (see EmailDraftConflictResponse's doc comment).
+ * Reads the existing draft off the `email-draft-exists` error of
+ * `POST /email/draft` (one active draft per thread), so a caller can
+ * focus it instead of surfacing the error as a toast. Returns `null` for
+ * any other error.
  */
 export function extractConflictingDraft(error: unknown): EmailDraft | null {
-  const fetchError = error as FetchErrorWithStatus | undefined;
-  if (fetchError?.status !== 409 || !hasConflictingDraft(fetchError.data))
-    return null;
-  return fetchError.data.draft;
+  if (getProblemType(error) !== 'email-draft-exists') return null;
+  const draft = parseProblem(error)?.draft;
+  return isEmailDraft(draft) ? draft : null;
 }
 
 /**
@@ -242,9 +237,7 @@ export function useCreateEmailDraft() {
       }),
     onError: (error) => {
       if (extractConflictingDraft(error)) return;
-      toast.error(
-        extractErrorMessage(error, t('email.toast.draftCreateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.draftCreateFailed')));
     },
   });
 }
@@ -277,7 +270,7 @@ export function useUpdateEmailDraft() {
     onSuccess: (_, { draftId, threadId }) =>
       invalidateDraftQueries(queryClient, { draftId, threadId }),
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('email.toast.draftSaveFailed'))),
+      toast.error(toErrorMessage(error, t('email.toast.draftSaveFailed'))),
   });
 }
 
@@ -312,9 +305,7 @@ export function useDiscardEmailDraft() {
       );
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.draftDiscardFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.draftDiscardFailed'))),
     onSettled: (_, __, { draftId, threadId }) =>
       invalidateDraftQueries(queryClient, { draftId, threadId }),
   });
@@ -357,7 +348,7 @@ export function useSendEmailDraft() {
       toast.success(t('email.toast.sent'));
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('email.toast.sendFailed'))),
+      toast.error(toErrorMessage(error, t('email.toast.sendFailed'))),
   });
 }
 
@@ -386,9 +377,7 @@ export function useTriggerEmailDraft() {
       invalidateDraftQueries(queryClient, { threadId }),
     onError: (error, { threadId }) => {
       clearDraftTriggerPending(threadId);
-      toast.error(
-        extractErrorMessage(error, t('email.toast.replyDraftFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.replyDraftFailed')));
     },
   });
 }

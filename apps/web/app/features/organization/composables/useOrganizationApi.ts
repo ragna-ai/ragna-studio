@@ -11,7 +11,7 @@ import type {
   OrganizationUsageResponse,
 } from '~/features/organization/types';
 import type { RestrictedWorkspacesResponse } from '~/features/workspace/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 export const organizationKeys = {
   all: ['organization'] as const,
@@ -38,7 +38,7 @@ export function organizationErrorMessage(
   fallback: string,
 ): string {
   if (error instanceof Error && error.message) return error.message;
-  return extractErrorMessage(error, fallback);
+  return toErrorMessage(error, fallback);
 }
 
 export function useGetOrganization() {

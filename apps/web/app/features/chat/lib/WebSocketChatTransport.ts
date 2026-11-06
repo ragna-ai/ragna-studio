@@ -5,21 +5,16 @@ interface ChatMessageFramePayload {
   message: UIMessage;
 }
 
-interface ChatErrorFramePayload {
-  code: number;
-  message: string;
-}
-
-// Thrown for a `code: 402` frame so call sites can distinguish "out of
-// credits" from any other stream error without parsing
-// `error.message`. `isOutOfCreditsError` (~/lib/api-error) reads `code`
-// directly off the error for this reason.
+/**
+ * Thrown for an `error` frame. The whole frame payload sits on `data`, the
+ * same place ofetch puts a response body, so `parseProblem` reads both.
+ */
 export class ChatStreamError extends Error {
-  readonly code?: number;
+  readonly data: unknown;
 
-  constructor(message: string, code?: number) {
+  constructor(message: string, data?: unknown) {
     super(message);
-    this.code = code;
+    this.data = data;
   }
 }
 
@@ -113,11 +108,9 @@ export class WebSocketChatTransport implements ChatTransport<UIMessage> {
           finish();
           break;
         case 'error': {
-          const payload = frame.payload as ChatErrorFramePayload | undefined;
           const error = new ChatStreamError(
-            payload?.message ??
-              useNuxtApp().$i18n.t('chat.conversation.errors.generic'),
-            payload?.code,
+            useNuxtApp().$i18n.t('chat.conversation.errors.generic'),
+            frame.payload,
           );
           settleAck?.(error);
           settleAck = null;

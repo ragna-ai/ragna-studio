@@ -1,6 +1,6 @@
 # API errors standard: RFC 9457 problem details (PRD)
 
-> **Status: proposed** (2026-11-06). Issue #172. Fixes #293.
+> **Status: implemented** (2026-11-06, PR #296). Issue #172. Fixes #293.
 
 Every API error response becomes an RFC 9457 `application/problem+json` body with a stable
 problem `type`. The web owns all text the user sees: it maps each type to its own i18n key and

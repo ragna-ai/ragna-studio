@@ -1,0 +1,33 @@
+---
+title: email-draft-exists
+description: A draft already exists for the email thread.
+---
+
+`https://docs.ragna.io/errors/email-draft-exists`
+
+## When it happens
+
+A request asks to create a draft for an email thread that already has one.
+
+## Response
+
+| Member   | Value                      |
+| -------- | -------------------------- |
+| `status` | 409                        |
+| `title`  | Email draft already exists |
+| `draft`  | The existing draft         |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/email-draft-exists",
+  "title": "Email draft already exists",
+  "status": 409,
+  "draft": { "id": "..." }
+}
+```
+
+`draft` has the same shape as a draft returned by the email endpoints.
+
+## What the client can do
+
+Use the draft from the response instead of creating a new one. See [Email](/integrations/email).

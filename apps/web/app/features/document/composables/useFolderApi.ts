@@ -13,7 +13,7 @@ import type {
   FolderManyResponse,
   FolderResponse,
 } from '~/features/document/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
@@ -66,7 +66,7 @@ export function useCreateFolder() {
       toast.success(t('folder.toast.created'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('folder.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('folder.toast.createFailed')));
     },
   });
 }
@@ -98,7 +98,7 @@ export function useRenameFolder() {
       toast.success(t('folder.toast.renamed'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('folder.toast.renameFailed')));
+      toast.error(toErrorMessage(error, t('folder.toast.renameFailed')));
     },
   });
 }
@@ -122,7 +122,7 @@ export function useDeleteFolder() {
       toast.success(t('folder.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('folder.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('folder.toast.deleteFailed')));
     },
   });
 }

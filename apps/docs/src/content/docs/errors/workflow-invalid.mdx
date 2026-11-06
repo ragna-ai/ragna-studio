@@ -1,0 +1,42 @@
+---
+title: workflow-invalid
+description: The workflow graph breaks a structural rule and cannot be saved or run.
+---
+
+`https://docs.ragna.io/errors/workflow-invalid`
+
+## When it happens
+
+A workflow definition has a structural problem. The API checks the graph before it saves or runs the workflow.
+
+## Response
+
+| Member   | Value                       |
+| -------- | --------------------------- |
+| `status` | 400                         |
+| `title`  | Workflow is invalid         |
+| `errors` | One entry per graph problem |
+
+Each entry has a `rule` and usually a `detail`:
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/workflow-invalid",
+  "title": "Workflow is invalid",
+  "status": 400,
+  "errors": [{ "rule": "triggerCount", "detail": "Expected exactly one trigger node, found 0" }]
+}
+```
+
+### Rules
+
+| Rule              | Meaning                                                                  |
+| ----------------- | ------------------------------------------------------------------------ |
+| `triggerCount`    | The workflow does not have exactly one trigger node.                     |
+| `unknownEdgeNode` | An edge points to a node that does not exist.                            |
+| `conditionHandle` | An edge sets a condition handle, but its source is not a condition node. |
+| `cycle`           | The graph contains a cycle.                                              |
+
+## What the client can do
+
+Fix the graph and save again. Show the user a message that the client owns, chosen by `rule`. See [Workflows](/workflows).

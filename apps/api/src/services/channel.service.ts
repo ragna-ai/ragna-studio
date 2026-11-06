@@ -4,7 +4,7 @@ import { auth } from '@repo/auth/server';
 import { getChatByIdForUser, getWorkspaceAccess } from '@repo/database';
 import { StatusCodes } from 'http-status-codes';
 import type { ChatServerWebSocket } from '../ws/socket';
-import type { OutgoingWsFrame } from '../ws/protocol';
+import { aboutBlankErrorPayload, type OutgoingWsFrame } from '../ws/protocol';
 
 type ChannelResourceType = 'chat';
 
@@ -102,7 +102,7 @@ export function closeExpiredSocket(ws: ChatServerWebSocket, channel: string): vo
   sendFrame(ws, {
     channel,
     type: 'error',
-    payload: { code: StatusCodes.UNAUTHORIZED, message },
+    payload: aboutBlankErrorPayload(StatusCodes.UNAUTHORIZED, message),
   });
   ws.close(WS_POLICY_VIOLATION_CODE, message);
 }

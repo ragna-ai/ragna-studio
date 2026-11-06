@@ -1,3 +1,4 @@
+import { problemDetailsSchema } from '@repo/api-errors';
 import {
   createEmailAccount,
   db,
@@ -27,10 +28,9 @@ const organizationBodySchema = z.strictObject({
   role: z.string(),
   deletedAt: z.string().nullable(),
 });
-const organizationDeletedBodySchema = z.strictObject({
-  code: z.literal('ORGANIZATION_DELETED'),
-  error: z.string(),
-});
+const organizationDeletedBodySchema = problemDetailsSchema
+  .extend({ code: z.literal('ORGANIZATION_DELETED'), error: z.string() })
+  .strict();
 const successBodySchema = z.strictObject({ success: z.literal(true) });
 const signInErrorSchema = z.object({ message: z.string() });
 

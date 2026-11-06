@@ -27,7 +27,7 @@ import { useChatAttachments } from '~/features/chat/composables/useChatAttachmen
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import type { ChatAgent, ToolApprovalDecision } from '~/features/chat/types';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
-import { isOutOfCreditsError } from '~/lib/api-error';
+import { toErrorMessage, getProblemType } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -146,11 +146,10 @@ const { messages, sendMessage, addToolApprovalResponse, status, error, stop } =
     onFinish: ({ isAbort }) => {
       if (!isAbort) invalidateCreditBalance();
     },
-    // The WS transport carries `code: 402` on an out-of-credits refusal
-    // (WebSocketChatTransport.ts); everything else is left to the inline
-    // `error.message` rendering below.
+    // Out of credits also gets a toast; every other error is rendered
+    // inline below.
     onError: (streamError) => {
-      if (isOutOfCreditsError(streamError)) {
+      if (getProblemType(streamError) === 'out-of-credits') {
         toast.error(t('credit.outOfCredits'));
       }
     },
@@ -310,7 +309,7 @@ async function handleSubmit(text: string) {
               <Loader />
             </div>
             <p v-if="error" class="text-sm text-destructive">
-              {{ $t(error.message) }}
+              {{ toErrorMessage(error, t('chat.conversation.errors.generic')) }}
             </p>
           </MessageScrollerContent>
         </MessageScrollerViewport>
