@@ -60,6 +60,7 @@ export interface ChatSummaryResponse {
   title: string;
   createdAt: Date;
   updatedAt: Date;
+  lastMessageAt: Date;
   agent: {
     id: string;
     name: string;
@@ -81,7 +82,7 @@ export interface ChatListResponse {
 
 /**
  * [GET] /workspace/:workspaceId/chat
- * Lists the caller's chats in a workspace, paginated and sorted by createdAt.
+ * Lists the caller's chats in a workspace, paginated, most recently active first.
  */
 export async function listChatsForWorkspace({
   userId,
@@ -122,6 +123,7 @@ export async function listChatsForWorkspace({
       title: chatRecord.title,
       createdAt: chatRecord.createdAt,
       updatedAt: chatRecord.updatedAt,
+      lastMessageAt: chatRecord.lastMessageAt,
       agent: {
         id: chatRecord.agent.id,
         name: chatRecord.agent.name,

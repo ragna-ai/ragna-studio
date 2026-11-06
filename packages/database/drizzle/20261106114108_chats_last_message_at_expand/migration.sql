@@ -1,0 +1,2 @@
+ALTER TABLE "chats" ADD COLUMN "last_message_at" timestamp(3) DEFAULT now() NOT NULL;--> statement-breakpoint
+CREATE INDEX "chat_user_workspace_last_message_idx" ON "chats" ("user_id","workspace_id","last_message_at");

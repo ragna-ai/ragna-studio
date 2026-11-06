@@ -1,4 +1,12 @@
-import { type AnyPgColumn, index, jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core';
+import {
+  type AnyPgColumn,
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 import { agent, type Agent } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
@@ -31,12 +39,19 @@ export const chat = pgTable(
       (): AnyPgColumn => chatMessage.id,
       { onDelete: 'set null' },
     ),
+    // Bumped only when a message is saved, so renames never reorder chat lists.
+    lastMessageAt: timestamp('last_message_at', { precision: 3 }).defaultNow().notNull(),
     ...timestamps,
   },
   (table) => [
     index('chat_userId_idx').on(table.userId),
     index('chat_agentId_idx').on(table.agentId),
     index('chat_workspaceId_idx').on(table.workspaceId),
+    index('chat_user_workspace_last_message_idx').on(
+      table.userId,
+      table.workspaceId,
+      table.lastMessageAt,
+    ),
     // Trigram GIN index backing substring ILIKE search on chat titles.
     // Requires the pg_trgm extension.
     index('chat_title_trgm_idx').using('gin', table.title.op('gin_trgm_ops')),

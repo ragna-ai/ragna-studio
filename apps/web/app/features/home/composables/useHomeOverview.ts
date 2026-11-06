@@ -1,5 +1,11 @@
 import type { HomeOverviewResponse } from '~/features/home/types';
 
+export function homeOverviewKey(
+  workspaceId: string | null | undefined,
+): string {
+  return `home-overview-${workspaceId}`;
+}
+
 /**
  * Single aggregated fetch backing all four home overview cards:
  * one round trip, one loading state instead of
@@ -13,7 +19,7 @@ export function useHomeOverview() {
   return useApiFetch<HomeOverviewResponse>(
     () => `/workspace/${workspaceId.value}/overview`,
     {
-      key: () => `home-overview-${workspaceId.value}`,
+      key: () => homeOverviewKey(workspaceId.value),
       watch: [workspaceId],
       // No workspace selected yet (store still hydrating): skip the request
       // instead of firing one against ".../workspace/undefined/overview".

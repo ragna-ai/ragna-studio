@@ -71,6 +71,7 @@ export interface OverviewChatItem {
   title: string;
   agentName: string;
   updatedAt: Date;
+  lastMessageAt: Date;
 }
 
 export interface OverviewWorkflowItem {
@@ -172,6 +173,7 @@ export async function getWorkspaceOverview({
         title: chatRecord.title,
         agentName: chatRecord.agent.name,
         updatedAt: chatRecord.updatedAt,
+        lastMessageAt: chatRecord.lastMessageAt,
       })),
       total: chatTotal,
     },

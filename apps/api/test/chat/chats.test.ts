@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { seedOlderAndNewerChat, sendChatMessage } from './chat-fixtures';
 
 // Metadata CRUD for /workspace/:workspaceId/chat.
 // Streaming/WebSocket chat (runChatStream, ws.controller.ts)
@@ -20,28 +21,31 @@ const chatSchema = z.strictObject({
   forkedFromMessageId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  lastMessageAt: z.string(),
   deletedAt: z.string().nullable(),
 });
 
-const chatAgentSchema = z.object({
+const chatAgentSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
-  aiModel: z.object({
+  aiModel: z.strictObject({
     id: z.string(),
     provider: z.string(),
     displayName: z.string(),
   }),
 });
 
-const chatSummarySchema = z.object({
+const chatSummarySchema = z.strictObject({
   id: z.string(),
   title: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  lastMessageAt: z.string(),
   agent: chatAgentSchema,
+  forkedFrom: z.strictObject({ chatId: z.string(), title: z.string() }).nullable(),
 });
 
-const chatDetailSchema = z.object({
+const chatDetailSchema = z.strictObject({
   id: z.string(),
   agent: chatAgentSchema,
   title: z.string(),
@@ -50,12 +54,12 @@ const chatDetailSchema = z.object({
   messages: z.array(z.unknown()).nullable(),
 });
 
-const chatListResponseSchema = z.object({
+const chatListResponseSchema = z.strictObject({
   chats: z.array(chatSummarySchema),
-  meta: z.object({ totalCount: z.number() }),
+  meta: z.strictObject({ totalCount: z.number() }),
 });
-const chatResponseSchema = z.object({ chat: chatSchema });
-const chatDetailResponseSchema = z.object({ chat: chatDetailSchema });
+const chatResponseSchema = z.strictObject({ chat: chatSchema });
+const chatDetailResponseSchema = z.strictObject({ chat: chatDetailSchema });
 
 async function createAgent(cookieHeader: string, workspaceId: string, name = 'Assistant') {
   const { aiModelId } = await seedTokenPricedAiModel();
@@ -130,6 +134,38 @@ describe('GET /workspace/:workspaceId/chat', () => {
 
     expect(body.meta.totalCount).toBe(3);
     expect(body.chats).toHaveLength(2);
+  });
+
+  test('lists a chat first once it gets a new message', async () => {
+    const user = await seedAuthenticatedUser();
+    const { workspaceId, cookieHeader, userId, olderChatId, newerChatId } =
+      await seedOlderAndNewerChat(user);
+
+    await sendChatMessage(olderChatId, userId);
+
+    const response = await app.request(`/workspace/${workspaceId}/chat`, {
+      headers: { cookie: cookieHeader },
+    });
+    const body = chatListResponseSchema.parse(await response.json());
+    expect(body.chats.map((c) => c.id)).toEqual([olderChatId, newerChatId]);
+  });
+
+  test('keeps the order when a chat is renamed', async () => {
+    const user = await seedAuthenticatedUser();
+    const { workspaceId, cookieHeader, olderChatId, newerChatId } =
+      await seedOlderAndNewerChat(user);
+
+    await app.request(`/workspace/${workspaceId}/chat/${olderChatId}`, {
+      method: 'PATCH',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Renamed' }),
+    });
+
+    const response = await app.request(`/workspace/${workspaceId}/chat`, {
+      headers: { cookie: cookieHeader },
+    });
+    const body = chatListResponseSchema.parse(await response.json());
+    expect(body.chats.map((c) => c.id)).toEqual([newerChatId, olderChatId]);
   });
 
   test('rejects an unauthenticated request', async () => {

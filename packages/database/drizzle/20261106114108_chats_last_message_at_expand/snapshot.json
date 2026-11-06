@@ -1,0 +1,92 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e27c5126-5e11-4d9a-ae0d-1f53bb711a7f",
+  "prevIds": ["146f712e-651e-4fa6-bf59-2c3f3c7ac614"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "chats", "last_message_at"],
+      "writes": [
+        "s|col|public.chats.last_message_at",
+        "n|col|public.chats.last_message_at",
+        "e|col|public.chats.last_message_at"
+      ],
+      "reads": ["n|tbl|public.chats", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "chats", "chat_user_workspace_last_message_idx"],
+      "writes": [
+        "s|idx|public.chat_user_workspace_last_message_idx",
+        "n|idx|public.chat_user_workspace_last_message_idx",
+        "e|idx|public.chat_user_workspace_last_message_idx",
+        "n|rel|public.chat_user_workspace_last_message_idx"
+      ],
+      "reads": [
+        "n|tbl|public.chats",
+        "n|sch|public",
+        "n|col|public.chats.user_id",
+        "n|col|public.chats.workspace_id",
+        "n|col|public.chats.last_message_at"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "chats",
+        "name": "last_message_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "chats",
+        "name": "chat_user_workspace_last_message_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "workspace_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "last_message_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { createPrimaryId } from '@repo/utils';
-import { and, eq, lte, sql } from 'drizzle-orm';
+import { and, eq, inArray, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Chat, ChatMessage } from '../schema';
 import { agent, chat, chatAttachment, chatMessage } from '../schema';
@@ -140,6 +140,7 @@ export async function getChats({
       forkedFromChatId: true,
       createdAt: true,
       updatedAt: true,
+      lastMessageAt: true,
     },
     with: {
       agent: {
@@ -161,8 +162,9 @@ export async function getChats({
     where: { userId, workspaceId },
     limit,
     offset,
-    // Pagination contract: sort by createdAt.
-    orderBy: (t, { desc, asc }) => (sort === 'asc' ? asc(t.createdAt) : desc(t.createdAt)),
+    // Pagination contract: sort by last message, id as tiebreak.
+    orderBy: (t, { desc, asc }) =>
+      sort === 'asc' ? [asc(t.lastMessageAt), asc(t.id)] : [desc(t.lastMessageAt), desc(t.id)],
   });
 
   return chatRecords || [];
@@ -226,19 +228,31 @@ export async function createChatMessages(payload: ICreateChatMessage[]): Promise
   return createdChatMessages;
 }
 
+/** Saves the messages and marks their chats as active now, atomically. */
 export async function upsertChatMessages(payload: IUpsertChatMessage[]): Promise<ChatMessage[]> {
-  const upsertedChatMessages = await db
-    .insert(chatMessage)
-    .values(payload)
-    .onConflictDoUpdate({
-      target: chatMessage.id,
-      set: {
-        parts: sql`excluded.parts`,
-        metadata: sql`excluded.metadata`,
-        updatedAt: sql`(CURRENT_TIMESTAMP)`,
-      },
-    })
-    .returning();
+  const chatIds = [...new Set(payload.map((message) => message.chatId))];
+
+  const upsertedChatMessages = await db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(chatMessage)
+      .values(payload)
+      .onConflictDoUpdate({
+        target: chatMessage.id,
+        set: {
+          parts: sql`excluded.parts`,
+          metadata: sql`excluded.metadata`,
+          updatedAt: sql`(CURRENT_TIMESTAMP)`,
+        },
+      })
+      .returning();
+
+    await tx
+      .update(chat)
+      .set({ lastMessageAt: sql`now()` })
+      .where(inArray(chat.id, chatIds));
+
+    return rows;
+  });
 
   if (!upsertedChatMessages || upsertedChatMessages.length === 0) {
     throw new Error('Failed to upsert chat messages');

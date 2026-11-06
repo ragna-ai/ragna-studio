@@ -115,11 +115,12 @@ export type RecentChat = {
   id: string;
   title: string;
   updatedAt: Date;
+  lastMessageAt: Date;
   agent: { name: string };
 };
 
 /**
- * The author's latest chats for the chats card, newest first, with the agent name for
+ * The author's most recently active chats for the chats card, latest message first, with the agent name for
  * display.
  */
 export async function getRecentChats({
@@ -132,10 +133,10 @@ export async function getRecentChats({
   limit: number;
 }): Promise<RecentChat[]> {
   return db.query.chat.findMany({
-    columns: { id: true, title: true, updatedAt: true },
+    columns: { id: true, title: true, updatedAt: true, lastMessageAt: true },
     with: { agent: { columns: { name: true } } },
     where: { userId, workspaceId },
-    orderBy: (t, { desc }) => desc(t.updatedAt),
+    orderBy: (t, { desc }) => [desc(t.lastMessageAt), desc(t.id)],
     limit,
   });
 }

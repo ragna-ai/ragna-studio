@@ -26,7 +26,7 @@ const { locale } = useI18n();
         </p>
       </div>
       <NuxtTime
-        :datetime="chat.updatedAt"
+        :datetime="chat.lastMessageAt"
         :locale="locale"
         relative
         class="shrink-0 text-xs whitespace-nowrap text-muted-foreground"

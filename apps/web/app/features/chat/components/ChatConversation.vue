@@ -2,6 +2,7 @@
 import { Loader } from '@/components/ai-elements/loader';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useChat } from '@ai-sdk/vue';
+import { useQueryClient } from '@tanstack/vue-query';
 import {
   isToolUIPart,
   lastAssistantMessageIsCompleteWithApprovalResponses,
@@ -19,6 +20,7 @@ import ChatMessage from '~/features/chat/components/ChatMessage.vue';
 import ChatRecentChats from '~/features/chat/components/ChatRecentChats.vue';
 import ChatNoAgentState from '~/features/chat/components/ChatNoAgentState.vue';
 import {
+  chatKeys,
   useCreateChat,
   type ChatAttachment,
 } from '~/features/chat/composables/useChatApi';
@@ -26,6 +28,7 @@ import { useChatAgentSelection } from '~/features/chat/composables/useChatAgentS
 import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import type { ChatAgent, ToolApprovalDecision } from '~/features/chat/types';
+import { homeOverviewKey } from '~/features/home/composables/useHomeOverview';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { isOutOfCreditsError } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
@@ -50,6 +53,8 @@ const inputText = ref('');
 const { t } = useI18n();
 const { mutateAsync: createNewChat } = useCreateChat();
 const invalidateCreditBalance = useInvalidateCreditBalance();
+const queryClient = useQueryClient();
+const workspaceId = useActiveWorkspaceId();
 const chatAttachments = useChatAttachments(ensureChat);
 const newChatAgent = useChatAgentSelection();
 const { isOverDropZone } = useDropZone(conversationRef, {
@@ -140,11 +145,15 @@ const { messages, sendMessage, addToolApprovalResponse, status, error, stop } =
       }
     },
     // A turn that wasn't aborted just settled a charge server-side,
-    // so the cached balance is stale.
+    // so the cached balance is stale, and the chat is now the most recently
+    // active one in the chat lists.
     // Aborted turns charge nothing (onEnd's early return on `isAborted`), so
     // there's nothing new to fetch.
     onFinish: ({ isAbort }) => {
-      if (!isAbort) invalidateCreditBalance();
+      if (isAbort) return;
+      invalidateCreditBalance();
+      queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
+      refreshNuxtData(homeOverviewKey(workspaceId.value));
     },
     // The WS transport carries `code: 402` on an out-of-credits refusal
     // (WebSocketChatTransport.ts); everything else is left to the inline
