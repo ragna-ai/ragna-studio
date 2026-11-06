@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { seedOlderAndNewerChat, sendChatMessage } from '../chat/chat-fixtures';
 
 // Aggregated read for /workspace/:workspaceId/overview: five capped
 // sections (tasks, chats, workflows, agents, documents) plus a workspace
@@ -11,10 +12,10 @@ import { app } from '../../src/app';
 // own aggregation, cap, and total-count behavior.
 
 function sectionSchema<T extends z.ZodType>(itemSchema: T) {
-  return z.object({ items: z.array(itemSchema), total: z.number() });
+  return z.strictObject({ items: z.array(itemSchema), total: z.number() });
 }
 
-const taskItemSchema = z.object({
+const taskItemSchema = z.strictObject({
   id: z.string(),
   number: z.number(),
   title: z.string(),
@@ -24,21 +25,32 @@ const taskItemSchema = z.object({
   updatedAt: z.string(),
 });
 
-const chatItemSchema = z.object({
+const calendarTaskItemSchema = z.strictObject({
+  id: z.string(),
+  number: z.number(),
+  title: z.string(),
+  status: z.string(),
+  priority: z.string(),
+  dueDate: z.string().nullable(),
+  assignedAgent: z.strictObject({ id: z.string(), name: z.string() }).nullable(),
+});
+
+const chatItemSchema = z.strictObject({
   id: z.string(),
   title: z.string(),
   agentName: z.string(),
   updatedAt: z.string(),
+  lastMessageAt: z.string(),
 });
 
-const workflowItemSchema = z.object({
+const workflowItemSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   lastRunStatus: z.string().nullable(),
   updatedAt: z.string(),
 });
 
-const agentItemSchema = z.object({
+const agentItemSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -46,18 +58,19 @@ const agentItemSchema = z.object({
   updatedAt: z.string(),
 });
 
-const documentItemSchema = z.object({
+const documentItemSchema = z.strictObject({
   id: z.string(),
   title: z.string(),
   updatedAt: z.string(),
 });
 
-const overviewResponseSchema = z.object({
+const overviewResponseSchema = z.strictObject({
   tasks: sectionSchema(taskItemSchema),
   chats: sectionSchema(chatItemSchema),
   workflows: sectionSchema(workflowItemSchema),
   agents: sectionSchema(agentItemSchema),
   documents: sectionSchema(documentItemSchema),
+  calendarTasks: z.array(calendarTaskItemSchema),
 });
 
 async function createTask(cookieHeader: string, workspaceId: string, title: string) {
@@ -120,6 +133,17 @@ describe('GET /workspace/:workspaceId/overview', () => {
     expect(body.tasks.items.map((task) => task.title)).toEqual(['Ship the release']);
     expect(body.documents.total).toBe(1);
     expect(body.documents.items.map((document) => document.title)).toEqual(['Launch notes']);
+  });
+
+  test('lists the chat with the latest message first', async () => {
+    const user = await seedAuthenticatedUser();
+    const { workspaceId, cookieHeader, userId, olderChatId, newerChatId } =
+      await seedOlderAndNewerChat(user);
+
+    await sendChatMessage(olderChatId, userId);
+
+    const { body } = await getOverview(cookieHeader, workspaceId);
+    expect(body.chats.items.map((chatItem) => chatItem.id)).toEqual([olderChatId, newerChatId]);
   });
 
   test('caps items at 5 but reports the full total', async () => {

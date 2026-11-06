@@ -24,7 +24,7 @@ const recentChats = computed<ChatRecentItem[]>(() =>
     id: chat.id,
     title: chat.title,
     agentName: chat.agent.name,
-    updatedAt: chat.updatedAt,
+    lastMessageAt: chat.lastMessageAt,
   })),
 );
 const toggleLabel = computed(() =>

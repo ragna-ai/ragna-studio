@@ -29,7 +29,7 @@ export const chatController = new Hono()
   .use(workspaceGuard)
   /**
    * [GET] /workspace/:workspaceId/chat
-   * List a workspace's chats, paginated and sorted by createdAt.
+   * List a workspace's chats, paginated, most recently active first.
    */
   .get('/', validPaginationQuery, async (c) => {
     const user = c.get('user');

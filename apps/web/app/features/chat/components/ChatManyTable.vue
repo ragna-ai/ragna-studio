@@ -75,7 +75,7 @@ const { t } = useI18n();
           {{ chat.agent.aiModel.displayName }}
         </TableCell>
         <TableCell class="whitespace-nowrap">
-          {{ formatDateTime(chat.updatedAt) }}
+          {{ formatDateTime(chat.lastMessageAt) }}
         </TableCell>
         <!-- Actions -->
         <TableCell

@@ -25,5 +25,5 @@ export interface ChatRecentItem {
   id: string;
   title: string;
   agentName: string;
-  updatedAt: string;
+  lastMessageAt: string;
 }

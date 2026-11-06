@@ -67,6 +67,7 @@ export interface ChatHistoryItem {
   title: string;
   createdAt: string;
   updatedAt: string;
+  lastMessageAt: string;
   agent: {
     id: string;
     name: string;

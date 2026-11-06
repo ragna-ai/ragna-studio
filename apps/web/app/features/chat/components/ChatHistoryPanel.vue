@@ -51,10 +51,10 @@ function cycleGroupBy() {
   groupBy.value = GROUP_BY_CYCLE[nextIndex]!;
 }
 
-function groupKeyFor(updatedAt: string): string {
-  if (groupBy.value === 'day') return updatedAt.slice(0, 10);
-  if (groupBy.value === 'month') return updatedAt.slice(0, 7);
-  return updatedAt.slice(0, 4);
+function groupKeyFor(lastMessageAt: string): string {
+  if (groupBy.value === 'day') return lastMessageAt.slice(0, 10);
+  if (groupBy.value === 'month') return lastMessageAt.slice(0, 7);
+  return lastMessageAt.slice(0, 4);
 }
 
 // Group keys are partial ISO dates ('2026', '2026-07', or '2026-07-16').
@@ -84,7 +84,7 @@ const groups = computed<ChatGroup[]>(() => {
   // created on first sight of each key.
   const chatsByKey = new Map<string, ChatHistoryItem[]>();
   for (const chat of chats) {
-    const key = groupKeyFor(chat.updatedAt);
+    const key = groupKeyFor(chat.lastMessageAt);
     const group = chatsByKey.get(key);
     if (group) {
       group.push(chat);
