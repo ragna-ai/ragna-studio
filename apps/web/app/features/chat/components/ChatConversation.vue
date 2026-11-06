@@ -15,22 +15,24 @@ import {
 } from 'ai';
 import { toast } from 'vue-sonner';
 import ChatAgentSelect from '~/features/chat/components/ChatAgentSelect.vue';
+import ChatAgentTools from '~/features/chat/components/ChatAgentTools.vue';
 import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
-import ChatRecentChats from '~/features/chat/components/ChatRecentChats.vue';
 import ChatNoAgentState from '~/features/chat/components/ChatNoAgentState.vue';
+import ChatRecentChats from '~/features/chat/components/ChatRecentChats.vue';
+import ChatWelcome from '~/features/chat/components/ChatWelcome.vue';
+import { useChatAgentSelection } from '~/features/chat/composables/useChatAgentSelection';
 import {
   chatKeys,
   useCreateChat,
   type ChatAttachment,
 } from '~/features/chat/composables/useChatApi';
-import { useChatAgentSelection } from '~/features/chat/composables/useChatAgentSelection';
 import { useChatAttachments } from '~/features/chat/composables/useChatAttachments';
 import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTransport';
 import type { ChatAgent, ToolApprovalDecision } from '~/features/chat/types';
-import { homeOverviewKey } from '~/features/home/composables/useHomeOverview';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
-import { toErrorMessage, getProblemType } from '~/lib/api-error';
+import { homeOverviewKey } from '~/features/home/composables/useHomeOverview';
+import { getProblemType, toErrorMessage } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -82,6 +84,12 @@ const showNoAgentState = computed(
   () => !props.agent && newChatAgent.hasNoAgents.value,
 );
 const isSendDisabled = computed(() => selectedAgentId.value === null);
+const selectedAgentToolIds = computed(
+  () =>
+    newChatAgent.agents.value.find(
+      (agent) => agent.id === selectedAgentId.value,
+    )?.tools ?? [],
+);
 
 // The imageGen/videoGen tools write a transient `data-imageGen` /
 // `data-videoGen` chunk the moment generation starts. Transient chunks never
@@ -277,7 +285,9 @@ async function handleSubmit(text: string) {
     >
       <ChatNoAgentState @created="newChatAgent.addAndSelectAgent" />
     </div>
-    <div v-else-if="isNewChatEmpty" class="flex-1" />
+    <div v-else-if="isNewChatEmpty" class="flex flex-1 items-end pb-8">
+      <ChatWelcome class="w-full" />
+    </div>
     <MessageScrollerProvider
       v-else
       auto-scroll
@@ -334,12 +344,16 @@ async function handleSubmit(text: string) {
         :status="status"
         :is-busy="isBusy"
         :is-send-disabled="isSendDisabled"
+        :is-empty="isNewChatEmpty"
         @submit="handleSubmit"
         @stop="stop"
         @files="chatAttachments.handleFiles"
         @retry="chatAttachments.retry"
         @remove="chatAttachments.remove"
       >
+        <template #toolbar-start>
+          <ChatAgentTools :tool-ids="selectedAgentToolIds" />
+        </template>
         <template #toolbar-end>
           <ChatAgentSelect
             :agents="agentOptions"

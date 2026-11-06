@@ -1,19 +1,6 @@
 <script setup lang="ts">
-import {
-  AppWindowIcon,
-  CheckIcon,
-  CloudIcon,
-  DatabaseIcon,
-  FileTextIcon,
-  GlobeIcon,
-  ImageIcon,
-  ListTodoIcon,
-  NotebookPenIcon,
-  RepeatIcon,
-  Share2Icon,
-  VideoIcon,
-  type LucideIcon,
-} from '@lucide/vue';
+import { CheckIcon, CloudIcon, type LucideIcon } from '@lucide/vue';
+import { AGENT_TOOL_VISUALS } from '~/features/agent/lib/agent-tool-icons';
 import {
   INTEGRATION_CATALOG,
   type CloudDriveIntegrationId,
@@ -88,61 +75,61 @@ interface UiAgentTool {
 const availableTools: UiAgentTool[] = [
   {
     id: 'think',
-    icon: RepeatIcon,
+    icon: AGENT_TOOL_VISUALS.think.icon,
     titleKey: 'agent.tool.think.label',
     descriptionKey: 'agent.tool.think.description',
   },
   {
     id: 'memory',
-    icon: NotebookPenIcon,
+    icon: AGENT_TOOL_VISUALS.memory.icon,
     titleKey: 'agent.tool.memory.label',
     descriptionKey: 'agent.tool.memory.description',
   },
   {
     id: 'webSearch',
-    icon: GlobeIcon,
+    icon: AGENT_TOOL_VISUALS.webSearch.icon,
     titleKey: 'agent.tool.webSearch.label',
     descriptionKey: 'agent.tool.webSearch.description',
   },
   {
     id: 'webBrowser',
-    icon: AppWindowIcon,
+    icon: AGENT_TOOL_VISUALS.webBrowser.icon,
     titleKey: 'agent.tool.webBrowser.label',
     descriptionKey: 'agent.tool.webBrowser.description',
   },
   {
     id: 'imageGen',
-    icon: ImageIcon,
+    icon: AGENT_TOOL_VISUALS.imageGen.icon,
     titleKey: 'agent.tool.imageGen.label',
     descriptionKey: 'agent.tool.imageGen.description',
   },
   {
     id: 'videoGen',
-    icon: VideoIcon,
+    icon: AGENT_TOOL_VISUALS.videoGen.icon,
     titleKey: 'agent.tool.videoGen.label',
     descriptionKey: 'agent.tool.videoGen.description',
   },
   {
     id: 'linkedinDraft',
-    icon: Share2Icon,
+    icon: AGENT_TOOL_VISUALS.linkedinDraft.icon,
     titleKey: 'agent.tool.linkedinDraft.label',
     descriptionKey: 'agent.tool.linkedinDraft.description',
   },
   {
     id: 'documents',
-    icon: FileTextIcon,
+    icon: AGENT_TOOL_VISUALS.documents.icon,
     titleKey: 'agent.tool.documents.label',
     descriptionKey: 'agent.tool.documents.description',
   },
   {
     id: 'tasks',
-    icon: ListTodoIcon,
+    icon: AGENT_TOOL_VISUALS.tasks.icon,
     titleKey: 'agent.tool.tasks.label',
     descriptionKey: 'agent.tool.tasks.description',
   },
   {
     id: 'datasets',
-    icon: DatabaseIcon,
+    icon: AGENT_TOOL_VISUALS.datasets.icon,
     titleKey: 'agent.tool.datasets.label',
     descriptionKey: 'agent.tool.datasets.description',
   },

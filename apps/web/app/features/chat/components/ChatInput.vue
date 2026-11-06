@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { Textarea } from '~/components/ui/textarea';
+import { cn } from '~/lib/utils';
 import ChatPendingAttachment from '~/features/chat/components/ChatPendingAttachment.vue';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
 import { CHAT_ATTACHMENT_ACCEPT } from '~/features/chat/lib/attachment-mime';
@@ -21,6 +22,7 @@ interface Props {
   status: ChatStatus;
   isBusy: boolean;
   isSendDisabled?: boolean;
+  isEmpty?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -108,7 +110,12 @@ onMounted(() => {
         v-model="text"
         :placeholder="t('chat.input.placeholder')"
         name="message"
-        class="max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-14 shadow-inner!"
+        :class="
+          cn(
+            'max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-14 shadow-inner!',
+            isEmpty && 'min-h-32',
+          )
+        "
         @keydown.enter.exact.prevent="onSubmit"
         @paste="onPaste"
       />
@@ -137,6 +144,7 @@ onMounted(() => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <slot name="toolbar-start" />
       <p
         class="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground/75"
       >

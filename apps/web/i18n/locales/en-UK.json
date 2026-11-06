@@ -427,6 +427,13 @@
         "generic": "Something went wrong. Please try again."
       }
     },
+    "welcome": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "withName": "{greeting}, {name}! What can I help you with?",
+      "withoutName": "{greeting}! What can I help you with?"
+    },
     "input": {
       "placeholder": "How can I help you?",
       "menu": "Add",
