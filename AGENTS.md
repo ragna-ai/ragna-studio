@@ -129,6 +129,9 @@ Repo-wide standards (deletion, retention, and more to come) live in `specs/stand
 every standard there whose status is `decided` or `implemented`. Every feature PRD answers the
 checklist in `specs/standards/README.md`.
 
+Domain terms (roles, integrations, connections, agent tools, ...) follow `specs/glossary.md`. Use the
+term it names, never a word from its _Avoid_ list, and add new terms in the same PR.
+
 ### Coding
 
 Always load the clean-code skill. For `apps/api` changes, also load the tdd skill. Before designing anything with

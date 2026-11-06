@@ -61,7 +61,7 @@ users only connect what the company has approved.
 ```
 
 1. **"As a [role], I want [capability], so that [benefit]."** The "so that" is required. A story with no clear benefit gets cut.
-2. **Qualified role names.** Platform admin, organization owner or admin, workspace manager or editor. Never a bare "admin" or "member". "User" means any signed-in user.
+2. **Qualified role names.** Platform admin, organization owner or admin, workspace manager or editor. Never a bare "admin" or "member". "User" means any signed-in user. All domain terms follow [`specs/glossary.md`](../../../specs/glossary.md). A spec that introduces a term adds it there.
 3. **ID and priority.** `US-1`, `US-2` in order. P1 is the smallest slice worth shipping. P2 and P3 can follow later.
 4. **INVEST.** Each story is independent, negotiable, valuable, estimable, small and testable. A story that needs another story's code first is a slice of that story, not its own.
 5. **Split by behavior, not by layer.** "Admin can disable an integration" is a story. "Add the database column" is a task in `slices.md`.

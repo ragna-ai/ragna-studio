@@ -7,7 +7,7 @@ Write code the next person can read and change without asking you. Assume that p
 
 ## Rules
 
-1. **Name for intent.** Variables, functions, files say what they do. No `data`, `tmp`, `handle2`. A good name removes the need for a comment.
+1. **Name for intent.** Variables, functions, files say what they do. No `data`, `tmp`, `handle2`. A good name removes the need for a comment. For exported names, packages and columns, follow [Naming](#naming).
 2. **Small, single-purpose functions.** One job each. If you need "and" to describe it, split it.
 3. **Match the surrounding code.** Copy the file's existing naming, structure, and idioms. Consistency beats personal preference.
 4. **Same knowledge, one place (DRY).** Deduplicate real shared knowledge (a schema, a constant, a rule). Do NOT merge code that only _looks_ similar but changes for different reasons.
@@ -20,6 +20,17 @@ Write code the next person can read and change without asking you. Assume that p
 11. **Prefer early returns.** Guard invalid cases up front and return. Avoid deep `if/else` nesting or `state ? :` chains; keep the happy path at the left margin.
 12. **Comment only if otherwise unclear.** If the code is clear, no comment is needed. Barely use `//` comments; prefer a docstring for functions and types. If you must comment, explain _why_, not _what_. Prefer to not comment at all and feel free to cleanup (delete) no longer needed comments.
 13. **No spec references in code.** Never cite `specs/...` files, PRD section names or decision numbers in comments, test names or strings. Write the reason itself; specs are snapshots that drift, and the commit or PR is where code links to its spec. CI fails on `specs/` in code files (see the allowlist in `.github/workflows/ci.yml`).
+
+## Naming
+
+Applies to every name another file or person sees: exported functions, types and constants, files, packages and subpaths, DB tables and columns, API fields, i18n keys.
+
+1. **Use the glossary.** Domain terms come from [`specs/glossary.md`](../../../specs/glossary.md). Never use a word from a term's _Avoid_ list for that concept. A new domain term goes into the glossary in the same PR.
+2. **Read it at the import site.** Check the name where it's used, with no other context: `import { X } from '@repo/ai/catalog'`. If a reader could take it for something else, rename it.
+3. **Name the role, not the origin.** Say what the thing is to its consumer, not where it comes from or how it's built. `agentToolGrants` tells the reader what it is. `integrationTools` only says where the tools come from.
+4. **Search before reusing a word.** `grep` the repo for it. If it already means something else, pick another word or qualify it.
+5. **Qualify the overloaded words.** `catalog`, `meta`, `config`, `service`, `manager`, `helpers`, `utils`, `common`, `core`, `types`, `model`, `account`, `member`, `admin` and `role` never stand alone in an exported name: write `integrationCatalog`, `organizationRole`.
+6. **One concept, one name.** Don't add a synonym for something that already has a name, in the code or in the glossary.
 
 ## TypeScript
 
