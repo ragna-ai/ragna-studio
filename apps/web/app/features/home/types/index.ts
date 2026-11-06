@@ -1,4 +1,5 @@
 import type { WorkflowRunStatus } from '@repo/workflow';
+import type { ChatRecentItem } from '~/features/chat/types';
 import type { TaskPriority, TaskStatus } from '~/features/task/types';
 
 // Slim projections for the home overview cards:
@@ -30,12 +31,7 @@ export interface HomeOverviewCalendarTaskItem {
   assignedAgent: { id: string; name: string } | null;
 }
 
-export interface HomeOverviewChatItem {
-  id: string;
-  title: string;
-  agentName: string;
-  updatedAt: string;
-}
+export type HomeOverviewChatItem = ChatRecentItem;
 
 export interface HomeOverviewWorkflowItem {
   id: string;

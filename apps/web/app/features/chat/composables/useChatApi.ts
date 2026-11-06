@@ -23,6 +23,8 @@ export const chatKeys = {
     ['chats', workspaceId, 'detail', chatId] as const,
   history: (workspaceId: WorkspaceId) =>
     ['chats', workspaceId, 'history'] as const,
+  recent: (workspaceId: WorkspaceId) =>
+    ['chats', workspaceId, 'recent'] as const,
   search: (
     workspaceId: WorkspaceId,
     query: MaybeRefOrGetter<string>,
@@ -128,6 +130,22 @@ export function useGetChatHistory(options: QueryOpts = {}) {
       }),
     enabled: () => !!toValue(workspaceId),
     placeholderData: (prev: ChatHistoryResponse | undefined) => prev, // keep previous results while refetching
+    ...options,
+  });
+}
+
+export function useGetRecentChats(options: QueryOpts = {}) {
+  const { $api } = useNuxtApp();
+  const workspaceId = useActiveWorkspaceId();
+  return useQuery<ChatHistoryResponse>({
+    queryKey: chatKeys.recent(workspaceId),
+    queryFn: ({ signal }) =>
+      $api<ChatHistoryResponse>(`/workspace/${toValue(workspaceId)}/chat`, {
+        method: 'GET',
+        query: { page: 1, limit: 5 },
+        signal,
+      }),
+    enabled: () => !!toValue(workspaceId),
     ...options,
   });
 }

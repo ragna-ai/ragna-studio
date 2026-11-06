@@ -9,7 +9,7 @@ import {
 import HomeOverviewAgentTiles from '~/features/home/components/HomeOverviewAgentTiles.vue';
 import HomeOverviewCalendar from '~/features/home/components/HomeOverviewCalendar.vue';
 import HomeOverviewCard from '~/features/home/components/HomeOverviewCard.vue';
-import HomeOverviewChatRows from '~/features/home/components/HomeOverviewChatRows.vue';
+import ChatRecentRows from '~/features/chat/components/ChatRecentRows.vue';
 import HomeOverviewDocumentRows from '~/features/home/components/HomeOverviewDocumentRows.vue';
 import HomeOverviewTaskRows from '~/features/home/components/HomeOverviewTaskRows.vue';
 import HomeOverviewWorkflowRows from '~/features/home/components/HomeOverviewWorkflowRows.vue';
@@ -120,7 +120,7 @@ const calendarTasks = computed(() => data.value?.calendarTasks ?? []);
         :quick-create-label="t('home.overview.chats.quickCreate')"
         quick-create-to="/chat"
       >
-        <HomeOverviewChatRows :chats="chats" />
+        <ChatRecentRows :chats="chats" row-class="px-6" />
       </HomeOverviewCard>
     </div>
   </div>

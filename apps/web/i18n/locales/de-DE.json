@@ -471,6 +471,12 @@
         "summary": "Werkzeuge verwendet | {count} Werkzeug verwendet | {count} Werkzeuge verwendet"
       }
     },
+    "recent": {
+      "title": "Letzte Chats",
+      "hide": "Ausblenden",
+      "show": "Einblenden",
+      "viewAll": "Alle anzeigen"
+    },
     "history": {
       "title": "Chat-Verlauf",
       "subtitle": "Verlauf deiner Unterhaltungen.",
