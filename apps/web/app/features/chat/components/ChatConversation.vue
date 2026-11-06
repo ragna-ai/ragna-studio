@@ -16,6 +16,7 @@ import { toast } from 'vue-sonner';
 import ChatAgentSelect from '~/features/chat/components/ChatAgentSelect.vue';
 import ChatInput from '~/features/chat/components/ChatInput.vue';
 import ChatMessage from '~/features/chat/components/ChatMessage.vue';
+import ChatRecentChats from '~/features/chat/components/ChatRecentChats.vue';
 import ChatNoAgentState from '~/features/chat/components/ChatNoAgentState.vue';
 import {
   useCreateChat,
@@ -155,6 +156,10 @@ const { messages, sendMessage, addToolApprovalResponse, status, error, stop } =
     },
   });
 
+const isNewChatEmpty = computed(
+  () => !props.chatId && messages.value.length === 0 && !showNoAgentState.value,
+);
+
 const isBusy = computed(
   () => status.value === 'submitted' || status.value === 'streaming',
 );
@@ -264,6 +269,7 @@ async function handleSubmit(text: string) {
     >
       <ChatNoAgentState @created="newChatAgent.addAndSelectAgent" />
     </div>
+    <div v-else-if="isNewChatEmpty" class="flex-1" />
     <MessageScrollerProvider
       v-else
       auto-scroll
@@ -335,6 +341,12 @@ async function handleSubmit(text: string) {
           />
         </template>
       </ChatInput>
+    </div>
+    <div
+      v-if="isNewChatEmpty"
+      class="mx-auto min-h-0 w-full max-w-4xl flex-1 overflow-y-auto"
+    >
+      <ChatRecentChats />
     </div>
   </div>
 </template>

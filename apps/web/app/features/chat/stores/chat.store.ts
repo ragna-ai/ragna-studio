@@ -15,10 +15,13 @@ export const useChatStore = defineStore('chat', () => {
     agent.value = chat?.agent;
   };
 
+  const recentChatsHidden = useLocalStorage('chat:recent-hidden', false);
+
   return {
     id,
     title,
     agent,
     setChat,
+    recentChatsHidden,
   };
 });

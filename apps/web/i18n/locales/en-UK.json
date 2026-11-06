@@ -465,6 +465,12 @@
         "summary": "Used tools | Used {count} tool | Used {count} tools"
       }
     },
+    "recent": {
+      "title": "Recent chats",
+      "hide": "Hide",
+      "show": "Show",
+      "viewAll": "View all"
+    },
     "history": {
       "title": "Chat history",
       "subtitle": "Your past conversations.",

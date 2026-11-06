@@ -19,3 +19,11 @@ export interface ToolApprovalDecision {
   id: string;
   approved: boolean;
 }
+
+/** Slim chat row shown in recent-chat lists. */
+export interface ChatRecentItem {
+  id: string;
+  title: string;
+  agentName: string;
+  updatedAt: string;
+}
