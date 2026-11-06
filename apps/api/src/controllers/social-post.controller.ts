@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
-import { BadRequestException } from '../exceptions';
+import { BadRequestException, LinkedinNotConnectedException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { singleUploadBodyLimit } from '../middlewares/bodyLimit';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -9,7 +9,6 @@ import {
   createSocialPostForUser,
   deleteSocialPost,
   getSocialPost,
-  LINKEDIN_NOT_CONNECTED_ERROR_CODE,
   listSocialPosts,
   publishSocialPost,
   removeSocialPostMedia,
@@ -189,18 +188,7 @@ export const socialPostController = new Hono()
       userId: user.id,
     });
 
-    if (result.linkedinNotConnected) {
-      // Returned instead of a generic 400 so the web app can show a
-      // "connect LinkedIn" hint rather than a plain error toast.
-      return c.json(
-        {
-          code: 400,
-          error: 'No LinkedIn account connected',
-          errorCode: LINKEDIN_NOT_CONNECTED_ERROR_CODE,
-        },
-        400,
-      );
-    }
+    if (result.linkedinNotConnected) throw new LinkedinNotConnectedException();
 
     return c.json({ post: result.post });
   });

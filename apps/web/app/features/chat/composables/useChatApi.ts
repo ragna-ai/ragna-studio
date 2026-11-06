@@ -7,7 +7,7 @@ import {
 import type { UIMessage } from 'ai';
 import { toast } from 'vue-sonner';
 import type { ChatAgent } from '~/features/chat/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -166,7 +166,7 @@ export function useCreateChat() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('chat.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('chat.toast.createFailed')));
     },
   });
 }
@@ -208,7 +208,7 @@ export function useBranchChatAndNavigate() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('chat.toast.branchFailed')));
+      toast.error(toErrorMessage(error, t('chat.toast.branchFailed')));
     },
   });
 
@@ -240,7 +240,7 @@ export function useUpdateChatTitle() {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('chat.toast.renameFailed')));
+      toast.error(toErrorMessage(error, t('chat.toast.renameFailed')));
     },
   });
 }
@@ -260,7 +260,7 @@ export function useDeleteChat() {
       toast.success(t('chat.toast.deleted'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('chat.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('chat.toast.deleteFailed')));
     },
   });
 }

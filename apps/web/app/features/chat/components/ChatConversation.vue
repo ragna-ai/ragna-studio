@@ -30,7 +30,7 @@ import { WebSocketChatTransport } from '~/features/chat/lib/WebSocketChatTranspo
 import type { ChatAgent, ToolApprovalDecision } from '~/features/chat/types';
 import { homeOverviewKey } from '~/features/home/composables/useHomeOverview';
 import { useInvalidateCreditBalance } from '~/features/credit/composables/useCreditApi';
-import { isOutOfCreditsError } from '~/lib/api-error';
+import { toErrorMessage, getProblemType } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 // Props
@@ -155,11 +155,10 @@ const { messages, sendMessage, addToolApprovalResponse, status, error, stop } =
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
       refreshNuxtData(homeOverviewKey(workspaceId.value));
     },
-    // The WS transport carries `code: 402` on an out-of-credits refusal
-    // (WebSocketChatTransport.ts); everything else is left to the inline
-    // `error.message` rendering below.
+    // Out of credits also gets a toast; every other error is rendered
+    // inline below.
     onError: (streamError) => {
-      if (isOutOfCreditsError(streamError)) {
+      if (getProblemType(streamError) === 'out-of-credits') {
         toast.error(t('credit.outOfCredits'));
       }
     },
@@ -319,7 +318,7 @@ async function handleSubmit(text: string) {
               <Loader />
             </div>
             <p v-if="error" class="text-sm text-destructive">
-              {{ $t(error.message) }}
+              {{ toErrorMessage(error, t('chat.conversation.errors.generic')) }}
             </p>
           </MessageScrollerContent>
         </MessageScrollerViewport>

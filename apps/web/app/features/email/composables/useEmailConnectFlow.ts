@@ -17,7 +17,7 @@ import type {
   EmailAccountStatusResponse,
   EmailIntegrationId,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 // Round-trips through the query string so the mail page knows which flow to finish on return from the provider.
 export const MAIL_CONNECT_CALLBACK_PARAM = 'mailConnect';
@@ -154,7 +154,7 @@ export function useEmailConnectFlow() {
       // A 400 here almost always means the connection lacks the required scope;
       // the connect prompt stays visible either way.
       toast.error(
-        extractErrorMessage(
+        toErrorMessage(
           error,
           t('email.toast.connectFailed', {
             provider: MAILBOX_DISPLAY_NAME[integrationId],

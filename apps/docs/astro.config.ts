@@ -27,6 +27,7 @@ const nimbusConfig = defineNimbusConfig({
       { label: 'Integrations', autogenerate: { directory: 'integrations' } },
       { label: 'Self-hosting', autogenerate: { directory: 'self-hosting' } },
       { label: 'Reference', autogenerate: { directory: 'reference' } },
+      { label: 'API errors', autogenerate: { directory: 'errors' } },
       {
         label: 'Contributing',
         link: 'https://github.com/ragna-ai/ragna-studio/blob/main/CONTRIBUTING.md',

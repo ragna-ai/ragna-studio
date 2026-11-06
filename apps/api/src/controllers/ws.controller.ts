@@ -17,18 +17,19 @@ import {
   sendFrame,
 } from '../services/channel.service';
 import { abortChatRun, runChatStream } from '../services/chat.service';
-import type { MessageFramePayload } from '../ws/protocol';
-import { messageFramePayloadSchema, parseWsEnvelope } from '../ws/protocol';
+import { toProblemDetails } from '../exceptions/problem-details';
+import type { MessageFramePayload, WsErrorPayload } from '../ws/protocol';
+import { aboutBlankErrorPayload, messageFramePayloadSchema, parseWsEnvelope } from '../ws/protocol';
 import type { ChatServerWebSocket } from '../ws/socket';
 import { upgradeWebSocket } from '../ws/socket';
 
-function toErrorPayload(error: unknown): { code: number; message: string } {
-  if (error instanceof HTTPException) {
-    return { code: error.status, message: error.message };
+function toErrorPayload(error: unknown): WsErrorPayload {
+  if (!(error instanceof HTTPException)) {
+    logger.error('Unhandled error in chat WS stream', error);
   }
 
-  logger.error('Unhandled error in chat WS stream', error);
-  return { code: StatusCodes.INTERNAL_SERVER_ERROR, message: 'Internal Server Error' };
+  const { type, status, title, detail } = toProblemDetails(error);
+  return { type, status, title, code: status, message: detail ?? title };
 }
 
 function parseMessagePayload(payload: unknown): MessageFramePayload | null {
@@ -90,7 +91,7 @@ export const wsController = new Hono()
             sendFrame(raw, {
               channel: '',
               type: 'error',
-              payload: { code: StatusCodes.BAD_REQUEST, message: 'Invalid frame' },
+              payload: aboutBlankErrorPayload(StatusCodes.BAD_REQUEST, 'Invalid frame'),
             });
             return;
           }
@@ -111,10 +112,10 @@ export const wsController = new Hono()
                   sendFrame(raw, {
                     channel,
                     type: 'error',
-                    payload: {
-                      code: StatusCodes.FORBIDDEN,
-                      message: 'Not authorized for this channel',
-                    },
+                    payload: aboutBlankErrorPayload(
+                      StatusCodes.FORBIDDEN,
+                      'Not authorized for this channel',
+                    ),
                   });
                   return;
                 }
@@ -142,10 +143,10 @@ export const wsController = new Hono()
                   sendFrame(raw, {
                     channel,
                     type: 'error',
-                    payload: {
-                      code: StatusCodes.FORBIDDEN,
-                      message: 'Not subscribed to this channel',
-                    },
+                    payload: aboutBlankErrorPayload(
+                      StatusCodes.FORBIDDEN,
+                      'Not subscribed to this channel',
+                    ),
                   });
                   return;
                 }
@@ -157,7 +158,10 @@ export const wsController = new Hono()
                   sendFrame(raw, {
                     channel,
                     type: 'error',
-                    payload: { code: StatusCodes.BAD_REQUEST, message: 'Invalid message payload' },
+                    payload: aboutBlankErrorPayload(
+                      StatusCodes.BAD_REQUEST,
+                      'Invalid message payload',
+                    ),
                   });
                   return;
                 }
@@ -169,10 +173,10 @@ export const wsController = new Hono()
                   sendFrame(raw, {
                     channel,
                     type: 'error',
-                    payload: {
-                      code: StatusCodes.FORBIDDEN,
-                      message: 'Not authorized for this channel',
-                    },
+                    payload: aboutBlankErrorPayload(
+                      StatusCodes.FORBIDDEN,
+                      'Not authorized for this channel',
+                    ),
                   });
                   return;
                 }

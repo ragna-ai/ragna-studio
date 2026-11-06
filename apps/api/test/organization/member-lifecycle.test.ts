@@ -1,3 +1,4 @@
+import { problemDetailsSchema } from '@repo/api-errors';
 import { createEmailAccount, db, listEmailAccountsDueForSync } from '@repo/database';
 import { oauthConsent, oauthRefreshToken, organizationMember } from '@repo/database/schema';
 import {
@@ -30,7 +31,9 @@ const organizationBodySchema = z.strictObject({
 });
 
 const errorBodySchema = z.object({ message: z.string() });
-const apiErrorBodySchema = z.strictObject({ code: z.number(), error: z.string() });
+const apiErrorBodySchema = problemDetailsSchema
+  .extend({ code: z.number(), error: z.string() })
+  .strict();
 
 beforeEach(async () => {
   await truncateAllTables();

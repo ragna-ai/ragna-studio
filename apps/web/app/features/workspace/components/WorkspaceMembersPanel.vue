@@ -18,7 +18,7 @@ import type {
   WorkspaceMember,
   WorkspaceRole,
 } from '~/features/workspace/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 interface WorkspaceMembersPanelProps {
   workspace: Workspace;
@@ -80,7 +80,7 @@ async function handleAdd() {
     selectedUserIds.value = [];
     toast.success(t('workspace.members.added'));
   } catch (err) {
-    toast.error(extractErrorMessage(err, t('workspace.members.addError')));
+    toast.error(toErrorMessage(err, t('workspace.members.addError')));
   } finally {
     isAdding.value = false;
   }
@@ -92,7 +92,7 @@ async function handleChangeRole(member: WorkspaceMember, role: unknown) {
     await changeRole({ userId: member.userId, workspaceRole: role });
     toast.success(t('workspace.members.roleChanged'));
   } catch (err) {
-    toast.error(extractErrorMessage(err, t('workspace.members.roleError')));
+    toast.error(toErrorMessage(err, t('workspace.members.roleError')));
   }
 }
 
@@ -109,7 +109,7 @@ async function handleRemove(member: WorkspaceMember) {
     await removeMember(member.userId);
     toast.success(t('workspace.members.removed'));
   } catch (err) {
-    toast.error(extractErrorMessage(err, t('workspace.members.removeError')));
+    toast.error(toErrorMessage(err, t('workspace.members.removeError')));
   }
 }
 
@@ -131,7 +131,7 @@ async function handleLeave() {
     toast.success(t('workspace.members.left'));
     emit('left');
   } catch (err) {
-    toast.error(extractErrorMessage(err, t('workspace.members.leaveError')));
+    toast.error(toErrorMessage(err, t('workspace.members.leaveError')));
   }
 }
 </script>

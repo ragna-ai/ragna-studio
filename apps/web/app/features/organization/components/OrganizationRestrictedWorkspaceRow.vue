@@ -4,7 +4,7 @@ import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVi
 import { useAddWorkspaceMember } from '~/features/workspace/composables/useWorkspaceMemberApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import type { RestrictedWorkspace } from '~/features/workspace/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 interface OrganizationRestrictedWorkspaceRowProps {
   workspace: RestrictedWorkspace;
@@ -36,9 +36,7 @@ async function joinAsManager() {
     await addMember({ userId, workspaceRole: 'manager' });
     toast.success(t('organization.workspaces.joined'));
   } catch (err) {
-    toast.error(
-      extractErrorMessage(err, t('organization.workspaces.joinError')),
-    );
+    toast.error(toErrorMessage(err, t('organization.workspaces.joinError')));
   }
 }
 </script>

@@ -8,7 +8,7 @@ import type {
   IntegrationCatalogResponse,
   IntegrationConnectionsResponse,
 } from '@repo/integrations/catalog';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 export const integrationKeys = {
   catalog: ['integration', 'catalog'] as const,
@@ -57,9 +57,7 @@ export function useStartIntegrationConnect() {
       return response;
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('integrations.toast.connectFailed')),
-      );
+      toast.error(toErrorMessage(error, t('integrations.toast.connectFailed')));
     },
   });
 }
@@ -78,9 +76,7 @@ export function useRemoveIntegrationConnection() {
       toast.success(t('integrations.toast.removed'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('integrations.toast.removeFailed')),
-      );
+      toast.error(toErrorMessage(error, t('integrations.toast.removeFailed')));
     },
   });
 }
@@ -106,7 +102,7 @@ export function useTurnOffConnectionIntegration() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, $i18n.t('integrations.toast.turnOffFailed')),
+        toErrorMessage(error, $i18n.t('integrations.toast.turnOffFailed')),
       );
     },
   });

@@ -13,7 +13,7 @@ re-decide them. It answers the checklist below and links the standard.
 | [Workspace container model](../api-standards/prd.md)      | Routes, scope, access boundary                            | implemented        |
 | [Resource guard](../api-standards/resource-guard.md)      | Scope checks at repository writes                         | implemented        |
 | Audit log                                                 | Actor, tenant, action, target, before/after               | not written (#171) |
-| API errors                                                | RFC 9457 `application/problem+json`                       | not written (#172) |
+| [API errors](./api-errors/prd.md)                         | RFC 9457 `application/problem+json`                       | implemented        |
 | Pagination                                                | Cursor pagination for growing lists                       | not written (#173) |
 | Idempotency                                               | `Idempotency-Key` on state-changing POSTs                 | not written (#174) |
 | Rate limiting                                             | Per user and per tenant, `429` + `Retry-After`            | not written (#175) |

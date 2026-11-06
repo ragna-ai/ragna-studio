@@ -11,7 +11,7 @@ import {
   useGetTaskAttachments,
 } from '~/features/task/composables/useTaskApi';
 import { useTaskAttachments } from '~/features/task/composables/useTaskAttachments';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 // Props
 interface Props {
@@ -64,7 +64,7 @@ async function removePersisted(attachmentId: string) {
   try {
     await deletePersistedAttachment({ taskId: props.taskId, attachmentId });
   } catch (error) {
-    toast.error(extractErrorMessage(error, t('task.attachment.removeFailed')));
+    toast.error(toErrorMessage(error, t('task.attachment.removeFailed')));
   }
 }
 

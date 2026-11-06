@@ -1,8 +1,5 @@
+import { getProblemType } from '~/lib/api-error';
 import { organizationKeys } from '~/features/organization/composables/useOrganizationApi';
-
-interface ErrorBody {
-  code?: unknown;
-}
 
 export default defineNuxtPlugin({
   setup() {
@@ -10,8 +7,9 @@ export default defineNuxtPlugin({
       baseURL: useRuntimeConfig().public.apiBaseUrl,
       credentials: 'include',
       onResponseError({ response }) {
-        const body: ErrorBody | undefined = response._data;
-        if (body?.code !== 'ORGANIZATION_DELETED') return;
+        const isOrganizationDeleted =
+          getProblemType({ data: response._data }) === 'organization-deleted';
+        if (!isOrganizationDeleted) return;
         // Refetching GET /organization makes the layout show the restore screen.
         useNuxtApp().$queryClient.invalidateQueries({
           queryKey: organizationKeys.detail,

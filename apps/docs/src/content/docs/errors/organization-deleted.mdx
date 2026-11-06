@@ -1,0 +1,31 @@
+---
+title: organization-deleted
+description: The organization is scheduled for deletion and the action is blocked.
+---
+
+`https://docs.ragna.io/errors/organization-deleted`
+
+## When it happens
+
+The organization of the request is scheduled for deletion. Actions that need an active organization are blocked until it is restored.
+
+## Response
+
+| Member   | Value                               |
+| -------- | ----------------------------------- |
+| `status` | 403                                 |
+| `title`  | Organization scheduled for deletion |
+
+No extension members.
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/organization-deleted",
+  "title": "Organization scheduled for deletion",
+  "status": 403
+}
+```
+
+## What the client can do
+
+Tell the user that the organization is scheduled for deletion. Only the organization owner can restore it, within 30 days. See [Organizations](/workspaces/organizations). Retrying does not help while it is scheduled.

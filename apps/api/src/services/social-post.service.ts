@@ -37,13 +37,6 @@ import {
 import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MB } from '../utils/upload-limits';
 import { uploadPostMediaToLinkedIn } from './social-post-media.service';
 
-// Returned instead of a generic 400 so the web app can show a "connect
-// LinkedIn" hint rather than a plain error toast. Bypasses the normal
-// exception -> { code, error } envelope on purpose (apps/api/src/app.ts
-// onError doesn't forward extra fields), so publishSocialPost returns this
-// as a sentinel result instead of throwing.
-export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
-
 // Same bucket packages/ai's imagen.service.ts uploads generated images to
 // (config.s3ImagesBucketName). User uploads live under a `social/{userId}/`
 // prefix so they don't collide with generated-image keys.

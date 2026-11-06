@@ -5,7 +5,7 @@ import type {
   EmailAutoDraftSenderListResponse,
   EmailAutoDraftSenderResponse,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 /** [GET] /email/auto-draft-sender */
 export function useGetAutoDraftSenders() {
@@ -35,7 +35,7 @@ export function useAddAutoDraftSender() {
       toast.success(t('email.toast.senderAdded'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('email.toast.senderAddFailed')));
+      toast.error(toErrorMessage(error, t('email.toast.senderAddFailed')));
     },
   });
 }
@@ -52,9 +52,7 @@ export function useRemoveAutoDraftSender() {
       toast.success(t('email.toast.senderRemoved'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('email.toast.senderRemoveFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.senderRemoveFailed')));
     },
   });
 }

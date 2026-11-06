@@ -1,3 +1,4 @@
+import { problemDetailsSchema } from '@repo/api-errors';
 import { seedAuthenticatedUser, seedOrganizationMember, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -21,10 +22,9 @@ const membersBodySchema = z.strictObject({
     }),
   ),
 });
-const organizationDeletedBodySchema = z.strictObject({
-  code: z.literal('ORGANIZATION_DELETED'),
-  error: z.string(),
-});
+const organizationDeletedBodySchema = problemDetailsSchema
+  .extend({ code: z.literal('ORGANIZATION_DELETED'), error: z.string() })
+  .strict();
 
 beforeEach(async () => {
   await truncateAllTables();

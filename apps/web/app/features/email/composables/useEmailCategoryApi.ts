@@ -7,7 +7,7 @@ import type {
   EmailCategoryResponse,
   UpdateEmailCategoryRequest,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 /** [GET] /email/category */
 export function useGetEmailCategories() {
@@ -38,9 +38,7 @@ export function useCreateEmailCategory() {
       toast.success(t('email.toast.categoryCreated'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('email.toast.categoryCreateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.categoryCreateFailed')));
     },
   });
 }
@@ -71,9 +69,7 @@ export function useUpdateEmailCategory() {
       queryClient.invalidateQueries({ queryKey: ['email', 'thread'] });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('email.toast.categoryUpdateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.categoryUpdateFailed')));
     },
   });
 }
@@ -91,9 +87,7 @@ export function useDeleteEmailCategory() {
       toast.success(t('email.toast.categoryDeleted'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('email.toast.categoryDeleteFailed')),
-      );
+      toast.error(toErrorMessage(error, t('email.toast.categoryDeleteFailed')));
     },
   });
 }

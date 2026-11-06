@@ -27,6 +27,12 @@ For a setup [installed by hand](/self-hosting/install-options/docker-compose), d
 
 Or switch to the installer. It recognizes the folder because `.env` has `RAGNA_VERSION`.
 
+### API error format
+
+API error responses now follow RFC 9457 (`application/problem+json`) with a `type` and a `status`. This release still sends the old `code` and `error` fields next to the new ones. Both are removed in the next minor release.
+
+Operators with their own API clients should switch to `type` and `status` before then. See [API errors](/errors#migration-from-code-and-error).
+
 ## Backups
 
 The state to protect is Postgres, Redis and both buckets. Backups are the operator's job.

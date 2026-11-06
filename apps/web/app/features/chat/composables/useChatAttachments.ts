@@ -9,7 +9,7 @@ import {
   isAcceptedChatAttachment,
   isImageFilename,
 } from '~/features/chat/lib/attachment-mime';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 import { createPrimaryId } from '~/lib/utils';
 
 export type PendingAttachmentStatus = 'uploading' | 'done' | 'error';
@@ -73,9 +73,7 @@ export function useChatAttachments(ensureChat: () => Promise<string>) {
       const chatId = await ensureChat();
       await deleteAttachment({ chatId, attachmentId });
     } catch (error) {
-      toast.error(
-        extractErrorMessage(error, t('chat.attachment.removeFailed')),
-      );
+      toast.error(toErrorMessage(error, t('chat.attachment.removeFailed')));
     }
   }
 
@@ -106,7 +104,7 @@ export function useChatAttachments(ensureChat: () => Promise<string>) {
     } catch (error) {
       removedWhileUploading.delete(item.id);
       item.status = 'error';
-      item.errorMessage = extractErrorMessage(
+      item.errorMessage = toErrorMessage(
         error,
         t('chat.attachment.uploadFailed'),
       );

@@ -12,7 +12,7 @@ import type {
   TaskLabelResponse,
   UpdateTaskLabelRequest,
 } from '~/features/task/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 type QueryOpts = Partial<UseQueryOptions<any>>;
@@ -61,9 +61,7 @@ export function useCreateTaskLabel() {
     },
     onError: (error) => {
       // Surfaces the API's duplicate-name 400.
-      toast.error(
-        extractErrorMessage(error, t('task.toast.labelCreateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('task.toast.labelCreateFailed')));
     },
   });
 }
@@ -96,9 +94,7 @@ export function useUpdateTaskLabel() {
       toast.success(t('task.toast.labelUpdated'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('task.toast.labelUpdateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('task.toast.labelUpdateFailed')));
     },
   });
 }
@@ -122,9 +118,7 @@ export function useDeleteTaskLabel() {
       toast.success(t('task.toast.labelDeleted'));
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('task.toast.labelDeleteFailed')),
-      );
+      toast.error(toErrorMessage(error, t('task.toast.labelDeleteFailed')));
     },
   });
 }

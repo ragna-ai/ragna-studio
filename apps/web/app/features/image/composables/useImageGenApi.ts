@@ -5,7 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string | null | undefined>;
 
@@ -172,7 +172,7 @@ export function useGenerateImages() {
       );
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('imagen.toast.generateFailed')));
+      toast.error(toErrorMessage(error, t('imagen.toast.generateFailed')));
     },
   });
 }
@@ -193,7 +193,7 @@ export function useUploadImageReference() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('imagen.toast.referenceUploadFailed')),
+        toErrorMessage(error, t('imagen.toast.referenceUploadFailed')),
       );
     },
   });
@@ -216,7 +216,7 @@ export function useDeleteGenImage() {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('imagen.toast.deleteFailed')));
+      toast.error(toErrorMessage(error, t('imagen.toast.deleteFailed')));
     },
   });
 }

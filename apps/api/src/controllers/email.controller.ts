@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
+import { EmailDraftExistsException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { emailSendBodyLimit } from '../middlewares/bodyLimit';
 import {
@@ -246,7 +247,7 @@ export const emailController = new Hono()
       return c.json({ draft }, StatusCodes.CREATED);
     } catch (error) {
       if (error instanceof ActiveDraftConflictError) {
-        return c.json({ draft: error.draft }, StatusCodes.CONFLICT);
+        throw new EmailDraftExistsException(error.draft);
       }
       throw error;
     }

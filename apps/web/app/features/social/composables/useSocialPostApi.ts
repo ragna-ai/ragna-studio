@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 type WorkspaceId = MaybeRefOrGetter<string>;
 
@@ -83,21 +83,6 @@ export interface SocialPostMediaResponse {
   media: SocialPostMedia;
 }
 
-/** Body ofetch attaches to a thrown error for a non-2xx JSON response. */
-type FetchErrorWithErrorCode = { data?: { errorCode?: string } };
-
-// Returned by POST .../social-post/:socialPostId/publish when the user has
-// no LinkedIn account linked, so the UI can show a "connect LinkedIn" hint
-// instead of a generic error toast.
-export const LINKEDIN_NOT_CONNECTED_ERROR_CODE = 'LINKEDIN_NOT_CONNECTED';
-
-export function isLinkedInNotConnectedError(error: unknown): boolean {
-  return (
-    (error as FetchErrorWithErrorCode | undefined)?.data?.errorCode ===
-    LINKEDIN_NOT_CONNECTED_ERROR_CODE
-  );
-}
-
 /**
  * A single post, fetched from its own detail endpoint. Its query key sits
  * under the same `social-posts` root as the list query (see
@@ -143,7 +128,7 @@ export function useCreateSocialPost() {
       });
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.createError'))),
+      toast.error(toErrorMessage(error, t('social.toast.createError'))),
   });
 }
 
@@ -170,7 +155,7 @@ export function useUpdateSocialPost() {
       toast.success(t('social.toast.updateSuccess'));
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.updateError'))),
+      toast.error(toErrorMessage(error, t('social.toast.updateError'))),
   });
 }
 
@@ -190,7 +175,7 @@ export function useDeleteSocialPost() {
       toast.success(t('social.toast.deleteSuccess'));
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('social.toast.deleteError'))),
+      toast.error(toErrorMessage(error, t('social.toast.deleteError'))),
   });
 }
 
@@ -218,11 +203,7 @@ export function usePublishSocialPost() {
         queryKey: socialPostKeys.all(workspaceId),
       });
 
-      if (isLinkedInNotConnectedError(error)) {
-        toast.error(t('social.toast.linkedinNotConnected'));
-        return;
-      }
-      toast.error(extractErrorMessage(error, t('social.toast.publishError')));
+      toast.error(toErrorMessage(error, t('social.toast.publishError')));
     },
   });
 }
@@ -261,9 +242,7 @@ export function useUploadSocialPostMedia() {
       });
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('social.toast.mediaUploadError')),
-      ),
+      toast.error(toErrorMessage(error, t('social.toast.mediaUploadError'))),
   });
 }
 
@@ -309,9 +288,7 @@ export function useUpdateSocialPostMediaAltText() {
       });
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('social.toast.mediaAltTextError')),
-      ),
+      toast.error(toErrorMessage(error, t('social.toast.mediaAltTextError'))),
   });
 }
 
@@ -332,8 +309,6 @@ export function useDeleteSocialPostMedia() {
       });
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('social.toast.mediaDeleteError')),
-      ),
+      toast.error(toErrorMessage(error, t('social.toast.mediaDeleteError'))),
   });
 }

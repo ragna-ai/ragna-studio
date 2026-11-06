@@ -16,7 +16,7 @@ import type {
   MoveDatasetRowRequest,
   UpdateDatasetRequest,
 } from '~/features/dataset/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 import {
   buildExportFilename,
   downloadBlob,
@@ -100,7 +100,7 @@ export function useCreateDataset() {
       toast.success(t('dataset.toast.created'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('dataset.toast.createFailed')));
+      toast.error(toErrorMessage(error, t('dataset.toast.createFailed')));
     },
   });
 }
@@ -125,7 +125,7 @@ export function useUpdateDataset() {
       toast.success(t('dataset.toast.saved'));
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('dataset.toast.saveFailed')));
+      toast.error(toErrorMessage(error, t('dataset.toast.saveFailed')));
     },
   });
 }
@@ -192,7 +192,7 @@ export function useCreateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       });
     },
     onError: (error) => {
-      toast.error(extractErrorMessage(error, t('dataset.toast.rowAddFailed')));
+      toast.error(toErrorMessage(error, t('dataset.toast.rowAddFailed')));
     },
   });
 }
@@ -222,9 +222,7 @@ export function useUpdateDatasetRow(datasetId: MaybeRefOrGetter<string>) {
       });
     },
     onError: (error) => {
-      toast.error(
-        extractErrorMessage(error, t('dataset.toast.rowUpdateFailed')),
-      );
+      toast.error(toErrorMessage(error, t('dataset.toast.rowUpdateFailed')));
     },
   });
 }

@@ -11,7 +11,7 @@ import {
   parseRedirectTarget,
 } from '~/features/mcp/lib/oauth-client';
 import { useGetWorkspaces } from '~/features/workspace/composables/useWorkspaceApi';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 definePageMeta({ layout: 'auth' });
 
@@ -92,10 +92,7 @@ async function approve() {
     }
     await navigateTo(data.url, { external: true });
   } catch (err) {
-    errorMessage.value = extractErrorMessage(
-      err,
-      t('mcp.consent.genericError'),
-    );
+    errorMessage.value = toErrorMessage(err, t('mcp.consent.genericError'));
   } finally {
     isSubmitting.value = false;
   }

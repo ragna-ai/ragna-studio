@@ -72,6 +72,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@repo/api-errors':
+        specifier: workspace:*
+        version: link:../../packages/api-errors
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -227,6 +230,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: file:packages/ai(@types/node@26.6.3)(@types/pg@8.23.1)(bun-types@1.4.4)(db0@0.3.4(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)(supports-color@10.2.2)
+      '@repo/api-errors':
+        specifier: workspace:*
+        version: link:../../packages/api-errors
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -536,6 +542,25 @@ importers:
       serpapi:
         specifier: ^2.2.1
         version: 2.2.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+    devDependencies:
+      '@repo/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.4(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/api-errors:
+    dependencies:
       zod:
         specifier: 'catalog:'
         version: 4.6.7

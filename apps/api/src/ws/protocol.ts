@@ -1,5 +1,7 @@
 // file: protocol.ts
 
+import { ABOUT_BLANK } from '@repo/api-errors';
+import { getReasonPhrase } from 'http-status-codes';
 import * as z from 'zod';
 
 // JSON envelope for every frame on the socket: { channel, type, payload }.
@@ -27,13 +29,28 @@ export const messageFramePayloadSchema = z.object({
 
 export type MessageFramePayload = z.infer<typeof messageFramePayloadSchema>;
 
+export interface WsErrorPayload {
+  type: string;
+  status: number;
+  title: string;
+  /** Deprecated: same value as `status`. */
+  code: number;
+  /** Deprecated: read `title` or map `type` instead. */
+  message: string;
+}
+
+/** Error payload for a protocol-level failure with no specific problem type. */
+export function aboutBlankErrorPayload(status: number, message: string): WsErrorPayload {
+  return { type: ABOUT_BLANK, status, title: getReasonPhrase(status), code: status, message };
+}
+
 // Frames the server sends. A discriminated union so a `chunk` frame can't be
-// built without a payload, an `error` frame can't be built without a code, etc.
+// built without a payload, an `error` frame can't be built without a problem type, etc.
 export type OutgoingWsFrame =
   | { channel: string; type: 'subscribed' }
   | { channel: string; type: 'chunk'; payload: unknown }
   | { channel: string; type: 'done' }
-  | { channel: string; type: 'error'; payload: { code: number; message: string } };
+  | { channel: string; type: 'error'; payload: WsErrorPayload };
 
 // Parses raw WS message data (always text for this JSON protocol) into an
 // envelope, without throwing on malformed input.

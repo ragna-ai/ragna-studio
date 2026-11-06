@@ -1997,5 +1997,19 @@
         "subtitle": "Credit usage by member."
       }
     }
+  },
+  "problem": {
+    "type": {
+      "validation": "Please check your input and try again.",
+      "organizationDeleted": "Your organization is scheduled for deletion. Restore it to continue.",
+      "workflowInvalid": "The workflow is invalid. Please check it and try again.",
+      "emailDraftExists": "This thread already has a draft."
+    },
+    "workflowRule": {
+      "triggerCount": "A workflow needs exactly one trigger.",
+      "unknownEdgeNode": "A connection points to a step that does not exist.",
+      "conditionHandle": "A condition has a connection that is not one of its outputs.",
+      "cycle": "The workflow contains a loop. Remove it to continue."
+    }
   }
 }

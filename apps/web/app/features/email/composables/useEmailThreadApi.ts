@@ -19,7 +19,7 @@ import type {
   EmailThreadListFilters,
   EmailThreadListResponse,
 } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 
 const THREADS_PAGE_SIZE = 25;
 
@@ -147,9 +147,7 @@ export function useSetThreadArchived(
       }
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.threadArchiveFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.threadArchiveFailed'))),
     onSettled: (_data, _error, { threadId }) => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
       queryClient.invalidateQueries({ queryKey: emailKeys.thread(threadId) });
@@ -193,7 +191,7 @@ export function useSetThreadTrashed(
     },
     onError: (error, variables) =>
       toast.error(
-        extractErrorMessage(
+        toErrorMessage(
           error,
           variables.trashed
             ? t('email.toast.threadTrashFailed')
@@ -237,9 +235,7 @@ export function useBulkTrashThreads(
       }
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.threadsTrashFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.threadsTrashFailed'))),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['email', 'threads'] });
     },
@@ -279,7 +275,7 @@ export function useSetThreadStarred(
       );
     },
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('email.toast.starFailed'))),
+      toast.error(toErrorMessage(error, t('email.toast.starFailed'))),
   });
 }
 
@@ -303,8 +299,6 @@ export function useSetThreadRead() {
       applyThreadActionSuccess(queryClient, threadId, messages, false);
     },
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.readStatusFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.readStatusFailed'))),
   });
 }

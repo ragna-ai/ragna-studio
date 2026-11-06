@@ -8,7 +8,7 @@ import {
   patchThreadInLists,
 } from '~/features/email/lib/email-thread-cache';
 import type { EmailMessageActionResponse } from '~/features/email/types';
-import { extractErrorMessage } from '~/lib/api-error';
+import { toErrorMessage } from '~/lib/api-error';
 import {
   downloadBlob,
   filenameFromContentDisposition,
@@ -77,9 +77,7 @@ export function useSetMessageArchived() {
     onSuccess: ({ message }, { threadId }) =>
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.messageArchiveFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.messageArchiveFailed'))),
   });
 }
 
@@ -106,9 +104,7 @@ export function useSetMessageTrashed() {
     onSuccess: ({ message }, { threadId }) =>
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.messageTrashFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.messageTrashFailed'))),
   });
 }
 
@@ -130,7 +126,7 @@ export function useSetMessageStarred() {
     onSuccess: ({ message }, { threadId }) =>
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
-      toast.error(extractErrorMessage(error, t('email.toast.starFailed'))),
+      toast.error(toErrorMessage(error, t('email.toast.starFailed'))),
   });
 }
 
@@ -152,9 +148,7 @@ export function useSetMessageRead() {
     onSuccess: ({ message }, { threadId }) =>
       applyMessageActionSuccess(queryClient, threadId, message),
     onError: (error) =>
-      toast.error(
-        extractErrorMessage(error, t('email.toast.readStatusFailed')),
-      ),
+      toast.error(toErrorMessage(error, t('email.toast.readStatusFailed'))),
   });
 }
 
@@ -214,7 +208,7 @@ export function useDownloadEmailAttachment() {
     },
     onError: (error) => {
       toast.error(
-        extractErrorMessage(error, t('email.toast.attachmentDownloadFailed')),
+        toErrorMessage(error, t('email.toast.attachmentDownloadFailed')),
       );
     },
   });

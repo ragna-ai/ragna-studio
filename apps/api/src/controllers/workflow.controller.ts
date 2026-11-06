@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
+import { WorkflowInvalidException } from '../exceptions';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { creditGuard } from '../middlewares/creditGuard';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
@@ -121,15 +122,7 @@ export const workflowController = new Hono()
       workflowId: param.workflowId,
     });
 
-    if (!result.published) {
-      // Bypasses the normal exception -> { code, error } envelope on
-      // purpose: the web app needs the full validation `errors` list (see
-      // workflow.service.ts's publishWorkflowForWorkspace doc comment).
-      return c.json(
-        { code: 400, error: 'Workflow definition is invalid', errors: result.errors },
-        400,
-      );
-    }
+    if (!result.published) throw new WorkflowInvalidException(result.issues);
 
     return c.json({ workflow: result.workflow });
   })
@@ -169,13 +162,7 @@ export const workflowController = new Hono()
       input: body.input,
     });
 
-    if (!result.started) {
-      // Same bypass as the publish endpoint above.
-      return c.json(
-        { code: 400, error: 'Workflow definition is invalid', errors: result.errors },
-        400,
-      );
-    }
+    if (!result.started) throw new WorkflowInvalidException(result.issues);
 
     return c.json({ run: result.run });
   })
