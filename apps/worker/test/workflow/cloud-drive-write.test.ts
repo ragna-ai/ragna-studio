@@ -43,7 +43,7 @@ describe('cloud drive writes in an unattended run', () => {
     const agentId = await seedPricedAgent({
       userId: user.userId,
       workspaceId: user.workspaceId,
-      integrationTools: { 'google-drive': 'write' },
+      toolGrants: [{ id: 'google-drive', access: 'write' }],
     });
     const definition: WorkflowDefinition = {
       nodes: [triggerNode(), agentNode('writer', agentId, 'Write the report')],
@@ -78,5 +78,35 @@ describe('cloud drive writes in an unattended run', () => {
       id: DRIVE_CREATED_FILE_ID,
       name: FILE_INPUT.name,
     });
+  });
+
+  test('a read agent is not offered the write tool, so nothing is uploaded', async () => {
+    const user = await seedAuthenticatedUser();
+    await seedGoogleDriveConnection({ userId: user.userId });
+    const agentId = await seedPricedAgent({
+      userId: user.userId,
+      workspaceId: user.workspaceId,
+      toolGrants: [{ id: 'google-drive', access: 'read' }],
+    });
+    const definition: WorkflowDefinition = {
+      nodes: [triggerNode(), agentNode('writer', agentId, 'Write the report')],
+      edges: [edge('trigger', 'writer')],
+    };
+    const workflowId = await seedWorkflow({
+      userId: user.userId,
+      workspaceId: user.workspaceId,
+      definition,
+    });
+    const run = await seedWorkflowRun({
+      workflowId,
+      triggeredByUserId: user.userId,
+      definition,
+    });
+    scriptModelOutput({ toolCalls: [{ toolName: 'googleDriveCreateFile', input: FILE_INPUT }] });
+    scriptModelOutput({ text: 'Could not save.' });
+
+    await processWorkflowJob(buildJob({ name: WORKFLOW_RUN_JOB, data: { runId: run.id } }));
+
+    expect(vendorRequestsTo(GOOGLE_DRIVE_ENDPOINTS.create)).toHaveLength(0);
   });
 });

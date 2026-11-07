@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { CheckIcon, CloudIcon, type LucideIcon } from '@lucide/vue';
-import { AGENT_TOOL_VISUALS } from '~/features/agent/lib/agent-tool-icons';
+import { CheckIcon } from '@lucide/vue';
 import {
-  INTEGRATION_CATALOG,
-  type CloudDriveIntegrationId,
-  type IntegrationToolAccessLevel,
-  type IntegrationTools,
-} from '@repo/integrations/catalog';
+  AGENT_TOOL_CATALOG,
+  agentToolGrantSchema,
+  type AgentToolCatalogEntry,
+  type AgentToolGrant,
+  type AgentToolId,
+  type ToolAccess,
+} from '@repo/ai/client';
+import { AGENT_TOOL_VISUALS } from '~/features/agent/lib/agent-tool-icons';
 import { useGetIntegrationConnections } from '~/features/integrations/composables/useIntegrationApi';
 import { CONNECTIONS_PAGE_PATH } from '~/features/integrations/lib/integration-meta';
 import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDatasetApi';
 
 type AgentToolListProps = {
-  modelValue: string[];
+  modelValue: AgentToolGrant[];
   invalid?: boolean;
   defaultDatasetId?: string | null;
-  integrationTools?: IntegrationTools;
 };
 
 type AgentToolListEmit = {
-  'update:modelValue': [value: string[]];
+  'update:modelValue': [value: AgentToolGrant[]];
   'update:defaultDatasetId': [value: string | null];
-  'update:integrationTools': [value: IntegrationTools];
 };
 
 // shadcn's Select can't use an empty string as an item value (it's the
@@ -30,19 +30,16 @@ type AgentToolListEmit = {
 // WorkflowAgentConfigForm's NO_AGENT.
 const NO_DATASET = '__none__';
 
-// Imports
+const DEFAULT_ACCESS: ToolAccess = 'read';
+
+// Props
 const props = withDefaults(defineProps<AgentToolListProps>(), {
   invalid: false,
   defaultDatasetId: null,
-  integrationTools: () => ({}),
 });
 
-const emit = defineEmits<AgentToolListEmit>();
-
-// Props
 // Emits
-
-// Refs
+const emit = defineEmits<AgentToolListEmit>();
 
 // Composables
 const { data: datasetsData } = useGetAllDatasetsForPicker();
@@ -50,190 +47,109 @@ const { data: connectionsData } = useGetIntegrationConnections();
 
 // Computed
 const pickerDatasets = computed(() => datasetsData.value?.datasets ?? []);
-const cloudDriveIds = INTEGRATION_CATALOG.filter(
-  (integration) => integration.category === 'cloud-drive',
-).map((integration) => integration.id as CloudDriveIntegrationId);
 const connectedIntegrationIds = computed(
   () =>
-    new Set(
+    new Set<string>(
       connectionsData.value?.connections.flatMap(
         (connection) => connection.integrations,
       ) ?? [],
     ),
 );
+const isDatasetsGranted = computed(() => isGranted('datasets'));
+
 // Functions
-
-// Hooks
-
-interface UiAgentTool {
-  id: string;
-  icon: LucideIcon;
-  titleKey: string;
-  descriptionKey: string;
+function isGranted(toolId: AgentToolId): boolean {
+  return props.modelValue.some((grant) => grant.id === toolId);
 }
 
-const availableTools: UiAgentTool[] = [
-  {
-    id: 'think',
-    icon: AGENT_TOOL_VISUALS.think.icon,
-    titleKey: 'agent.tool.think.label',
-    descriptionKey: 'agent.tool.think.description',
-  },
-  {
-    id: 'memory',
-    icon: AGENT_TOOL_VISUALS.memory.icon,
-    titleKey: 'agent.tool.memory.label',
-    descriptionKey: 'agent.tool.memory.description',
-  },
-  {
-    id: 'webSearch',
-    icon: AGENT_TOOL_VISUALS.webSearch.icon,
-    titleKey: 'agent.tool.webSearch.label',
-    descriptionKey: 'agent.tool.webSearch.description',
-  },
-  {
-    id: 'webBrowser',
-    icon: AGENT_TOOL_VISUALS.webBrowser.icon,
-    titleKey: 'agent.tool.webBrowser.label',
-    descriptionKey: 'agent.tool.webBrowser.description',
-  },
-  {
-    id: 'imageGen',
-    icon: AGENT_TOOL_VISUALS.imageGen.icon,
-    titleKey: 'agent.tool.imageGen.label',
-    descriptionKey: 'agent.tool.imageGen.description',
-  },
-  {
-    id: 'videoGen',
-    icon: AGENT_TOOL_VISUALS.videoGen.icon,
-    titleKey: 'agent.tool.videoGen.label',
-    descriptionKey: 'agent.tool.videoGen.description',
-  },
-  {
-    id: 'linkedinDraft',
-    icon: AGENT_TOOL_VISUALS.linkedinDraft.icon,
-    titleKey: 'agent.tool.linkedinDraft.label',
-    descriptionKey: 'agent.tool.linkedinDraft.description',
-  },
-  {
-    id: 'documents',
-    icon: AGENT_TOOL_VISUALS.documents.icon,
-    titleKey: 'agent.tool.documents.label',
-    descriptionKey: 'agent.tool.documents.description',
-  },
-  {
-    id: 'tasks',
-    icon: AGENT_TOOL_VISUALS.tasks.icon,
-    titleKey: 'agent.tool.tasks.label',
-    descriptionKey: 'agent.tool.tasks.description',
-  },
-  {
-    id: 'datasets',
-    icon: AGENT_TOOL_VISUALS.datasets.icon,
-    titleKey: 'agent.tool.datasets.label',
-    descriptionKey: 'agent.tool.datasets.description',
-  },
-];
+function grantedAccess(toolId: AgentToolId): ToolAccess | undefined {
+  for (const grant of props.modelValue) {
+    if (grant.id === toolId && 'access' in grant) return grant.access;
+  }
+  return undefined;
+}
 
-// Computed
-const selectedTools = computed(() => props.modelValue);
+function toGrant(
+  entry: AgentToolCatalogEntry,
+  access: ToolAccess,
+): AgentToolGrant | undefined {
+  const candidate = entry.hasAccessLevels
+    ? { id: entry.id, access }
+    : { id: entry.id };
+  const parsed = agentToolGrantSchema.safeParse(candidate);
+  return parsed.success ? parsed.data : undefined;
+}
 
-// Functions
-const handleCheckedChange = (toolId: string, checked: boolean) => {
-  const isChecked = checked === true;
-  const newValue = isChecked
-    ? [...selectedTools.value, toolId]
-    : selectedTools.value.filter((id) => id !== toolId);
+/** Replaces only this entry's grant. Every other grant passes through unchanged. */
+function emitGrantFor(
+  entry: AgentToolCatalogEntry,
+  grant: AgentToolGrant | undefined,
+) {
+  const others = props.modelValue.filter(({ id }) => id !== entry.id);
+  emit('update:modelValue', grant ? [...others, grant] : others);
+}
 
-  emit('update:modelValue', newValue);
-};
+function handleToggle(entry: AgentToolCatalogEntry, checked: boolean) {
+  emitGrantFor(entry, checked ? toGrant(entry, DEFAULT_ACCESS) : undefined);
+}
 
-const handleIntegrationToggle = (id: CloudDriveIntegrationId, on: boolean) => {
-  const { [id]: _removed, ...rest } = props.integrationTools;
-  emit('update:integrationTools', on ? { ...rest, [id]: 'read' } : rest);
-};
+function handleAccessChange(entry: AgentToolCatalogEntry, access: ToolAccess) {
+  emitGrantFor(entry, toGrant(entry, access));
+}
 
-const handleIntegrationLevel = (
-  id: CloudDriveIntegrationId,
-  level: IntegrationToolAccessLevel,
-) => {
-  emit('update:integrationTools', { ...props.integrationTools, [id]: level });
-};
+function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
+  return (
+    entry.category !== 'builtin' &&
+    connectionsData.value !== undefined &&
+    !connectedIntegrationIds.value.has(entry.id)
+  );
+}
 </script>
 
 <template>
-  <div
-    v-for="tool in availableTools"
-    :key="tool.id"
-    :data-invalid="props.invalid"
-    class="flex flex-row items-center space-x-3"
-  >
-    <Checkbox
-      :id="`form-rhf-checkbox-${tool.id}`"
-      :name="tool.id"
-      :model-value="selectedTools.includes(tool.id)"
-      class="border-stone-600"
-      @update:model-value="
-        (checked) => handleCheckedChange(tool.id, Boolean(checked))
-      "
+  <template v-for="entry in AGENT_TOOL_CATALOG" :key="entry.id">
+    <div
+      :data-invalid="props.invalid"
+      class="flex flex-row items-center space-x-3"
     >
-      <CheckIcon class="size-3.5" />
-    </Checkbox>
-    <Label
-      :for="`form-rhf-checkbox-${tool.id}`"
-      class="flex cursor-pointer space-x-3"
-    >
-      <div class="flex justify-center">
-        <component :is="tool.icon" class="size-5 stroke-1.5" />
-      </div>
-      <div class="space-y-1">
-        <p class="text-sm">{{ $t(tool.titleKey) }}</p>
-        <p class="text-xs font-normal opacity-75">
-          {{ $t(tool.descriptionKey) }}
-        </p>
-      </div>
-    </Label>
-  </div>
-
-  <template v-for="id in cloudDriveIds" :key="id">
-    <div class="flex flex-row items-center space-x-3">
       <Checkbox
-        :id="`form-rhf-checkbox-${id}`"
-        :name="id"
-        :model-value="props.integrationTools[id] !== undefined"
+        :id="`form-rhf-checkbox-${entry.id}`"
+        :name="entry.id"
+        :model-value="isGranted(entry.id)"
         class="border-stone-600"
-        @update:model-value="
-          (checked) => handleIntegrationToggle(id, Boolean(checked))
-        "
+        @update:model-value="(checked) => handleToggle(entry, Boolean(checked))"
       >
         <CheckIcon class="size-3.5" />
       </Checkbox>
       <Label
-        :for="`form-rhf-checkbox-${id}`"
+        :for="`form-rhf-checkbox-${entry.id}`"
         class="flex cursor-pointer space-x-3"
       >
         <div class="flex justify-center">
-          <CloudIcon class="size-5 stroke-1.5" />
+          <component
+            :is="AGENT_TOOL_VISUALS[entry.id].icon"
+            class="size-5 stroke-1.5"
+          />
         </div>
         <div class="space-y-1">
-          <p class="text-sm">{{ $t(`agent.tool.cloudDrive.${id}.label`) }}</p>
+          <p class="text-sm">{{ $t(`agent.tool.${entry.id}.label`) }}</p>
           <p class="text-xs font-normal opacity-75">
-            {{ $t(`agent.tool.cloudDrive.${id}.description`) }}
+            {{ $t(`agent.tool.${entry.id}.description`) }}
           </p>
         </div>
       </Label>
     </div>
     <div
-      v-if="props.integrationTools[id] !== undefined"
+      v-if="entry.hasAccessLevels && isGranted(entry.id)"
       class="ml-8 max-w-xs space-y-2 border-l pl-4"
     >
       <Label class="text-xs text-muted-foreground">
-        {{ $t('agent.tool.cloudDrive.accessLevelLabel') }}
+        {{ $t('agent.tool.accessLevelLabel') }}
       </Label>
       <Select
-        :model-value="props.integrationTools[id]"
+        :model-value="grantedAccess(entry.id)"
         @update:model-value="
-          (v) => handleIntegrationLevel(id, v === 'write' ? 'write' : 'read')
+          (v) => handleAccessChange(entry, v === 'write' ? 'write' : 'read')
         "
       >
         <SelectTrigger class="w-full">
@@ -241,33 +157,27 @@ const handleIntegrationLevel = (
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="read">
-            {{ $t('agent.tool.cloudDrive.accessLevel.read') }}
+            {{ $t('agent.tool.accessLevel.read') }}
           </SelectItem>
           <SelectItem value="write">
-            {{ $t('agent.tool.cloudDrive.accessLevel.write') }}
+            {{ $t('agent.tool.accessLevel.write') }}
           </SelectItem>
         </SelectContent>
       </Select>
-      <p
-        v-if="connectionsData && !connectedIntegrationIds.has(id)"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="isConnectMissing(entry)" class="text-xs text-muted-foreground">
         {{
-          $t('agent.tool.cloudDrive.connectHint', {
-            name: $t(`agent.tool.cloudDrive.${id}.label`),
+          $t('agent.tool.connectHint', {
+            name: $t(`agent.tool.${entry.id}.label`),
           })
         }}.
         <NuxtLink :to="CONNECTIONS_PAGE_PATH" class="underline">
-          {{ $t('agent.tool.cloudDrive.connectLink') }}
+          {{ $t('agent.tool.connectLink') }}
         </NuxtLink>
       </p>
     </div>
   </template>
 
-  <div
-    v-if="selectedTools.includes('datasets')"
-    class="ml-8 max-w-xs space-y-2 border-l pl-4"
-  >
+  <div v-if="isDatasetsGranted" class="ml-8 max-w-xs space-y-2 border-l pl-4">
     <Label class="text-xs text-muted-foreground">
       {{ $t('agent.tool.datasets.defaultDatasetLabel') }}
     </Label>

@@ -741,7 +741,7 @@ export async function runChatStream(
     const { instructions, retrievalMode } = await buildAgentInstructions({
       agentId: agent.id,
       workspaceId: agent.workspaceId,
-      tools: agent.tools,
+      toolIds: agent.toolGrants.map((grant) => grant.id),
       systemPrompt: agent.systemPrompt,
       context: agent.context,
       defaultDatasetId: agent.defaultDatasetId,
@@ -800,12 +800,11 @@ export async function runChatStream(
         const streamStartedAt = Date.now();
         const modelSettings = toModelSettings(agent.settings);
 
-        const tools = buildAgentToolset(agent.tools, dataStream, {
+        const tools = buildAgentToolset(agent.toolGrants, dataStream, {
           userId,
           agentId: agent.id,
           workspaceId: userChat.workspaceId,
           retrievalMode,
-          integrationTools: agent.integrationTools ?? {},
         });
 
         const toolApproval = buildCloudDriveToolApproval(tools);

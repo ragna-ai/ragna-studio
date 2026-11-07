@@ -59,8 +59,7 @@ export const agentController = new Hono()
       aiModelId: body.aiModelId,
       systemPrompt: body.systemPrompt,
       context: body.context,
-      tools: body.tools,
-      integrationTools: body.integrationTools,
+      toolGrants: body.toolGrants,
       defaultDatasetId: body.defaultDatasetId,
       settings: body.settings,
     });
@@ -115,8 +114,7 @@ export const agentController = new Hono()
       aiModelId: body.aiModelId,
       systemPrompt: body.systemPrompt,
       context: body.context,
-      tools: body.tools,
-      integrationTools: body.integrationTools,
+      toolGrants: body.toolGrants,
       defaultDatasetId: body.defaultDatasetId,
       settings: body.settings,
     });

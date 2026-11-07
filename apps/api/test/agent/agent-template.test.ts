@@ -27,7 +27,7 @@ const createdAgentSchema = z.object({
     name: z.string(),
     description: z.string().nullable(),
     systemPrompt: z.string(),
-    tools: z.array(z.string()),
+    toolGrants: z.array(z.strictObject({ id: z.string() })),
     settings: z.record(z.string(), z.unknown()),
   }),
 });
@@ -41,7 +41,7 @@ async function seedTemplate() {
       name: 'Starter',
       description: 'A starter agent.',
       systemPrompt: 'Be concise.',
-      tools: ['think', 'memory'],
+      toolGrants: [{ id: 'think' }, { id: 'memory' }],
       settings: { maxOutputTokens: 512 },
     })
     .returning();
@@ -114,7 +114,7 @@ describe('POST /workspace/:workspaceId/agent/from-template', () => {
       name: 'Starter',
       description: 'A starter agent.',
       systemPrompt: 'Be concise.',
-      tools: ['think', 'memory'],
+      toolGrants: [{ id: 'think' }, { id: 'memory' }],
       settings: { maxOutputTokens: 512 },
     });
     const stored = await db.query.agent.findFirst({ where: { id: agent.id } });

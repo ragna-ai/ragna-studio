@@ -23,7 +23,7 @@ export const AGENT_CONTEXT_INJECTION_THRESHOLD = 30_000;
 type BuildInstructionsInput = {
   agentId: string;
   workspaceId: string;
-  tools: string[];
+  toolIds: readonly string[];
   systemPrompt: string;
   context: string | null;
   /** Soft pin, null/undefined = no pin. */
@@ -35,14 +35,14 @@ type BuildInstructionsInput = {
 /**
  * Loads the agent's memory content if the 'memory' tool is enabled.
  * @param agentId The ID of the agent.
- * @param tools The list of tools enabled for the agent.
+ * @param toolIds The ids of the tools enabled for the agent.
  * @returns The memory content as a string, or undefined if not applicable.
  */
 async function loadAgentMemoryContent(
   agentId: string,
-  tools: string[],
+  toolIds: readonly string[],
 ): Promise<string | undefined> {
-  if (!tools.includes('memory')) {
+  if (!toolIds.includes('memory')) {
     return undefined;
   }
 
@@ -62,16 +62,16 @@ async function loadAgentMemoryContent(
  * lookup failure or a dataset that no longer belongs to this user logs a
  * warning and the prompt continues without it.
  * @param workspaceId The agent's workspace id; the dataset must live in it.
- * @param tools The list of tools enabled for the agent.
+ * @param toolIds The ids of the tools enabled for the agent.
  * @param defaultDatasetId The agent's pinned dataset id, if any.
  * @returns The pinned dataset, or undefined if there is none to inject.
  */
 async function loadPinnedDataset(
   workspaceId: string,
-  tools: string[],
+  toolIds: readonly string[],
   defaultDatasetId: string | null | undefined,
 ): Promise<Dataset | undefined> {
-  if (!tools.includes('datasets') || !defaultDatasetId) {
+  if (!toolIds.includes('datasets') || !defaultDatasetId) {
     return undefined;
   }
 
@@ -268,22 +268,22 @@ export interface AgentInstructionsResult {
 
 /**
  * Builds the agent's instructions by combining the system prompt, context, documents (or document index), memory content, and pinned dataset.
- * @param payload The input object containing agentId, workspaceId, tools, systemPrompt, context, and defaultDatasetId.
+ * @param payload The input object containing agentId, workspaceId, toolIds, systemPrompt, context, and defaultDatasetId.
  * @returns The combined instructions, and whether retrieval mode applies.
  */
 export async function buildAgentInstructions({
   agentId,
   workspaceId,
-  tools,
+  toolIds,
   systemPrompt,
   context,
   defaultDatasetId,
   toolCalling = true,
 }: BuildInstructionsInput): Promise<AgentInstructionsResult> {
   const [memoryContent, loadedContext, pinnedDataset] = await Promise.all([
-    loadAgentMemoryContent(agentId, tools),
+    loadAgentMemoryContent(agentId, toolIds),
     loadAgentContext(agentId),
-    toolCalling ? loadPinnedDataset(workspaceId, tools, defaultDatasetId) : undefined,
+    toolCalling ? loadPinnedDataset(workspaceId, toolIds, defaultDatasetId) : undefined,
   ]);
   const agentContext = toolCalling
     ? loadedContext

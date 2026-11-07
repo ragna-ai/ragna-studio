@@ -1,4 +1,4 @@
-import type { IntegrationTools } from '@repo/integrations/catalog';
+import type { AgentToolGrant } from '@repo/ai/client';
 
 export interface AgentAiModelRef {
   provider: string;
@@ -24,8 +24,7 @@ export interface Agent {
   systemPrompt: string;
   description?: string;
   context?: string | null;
-  tools?: string[];
-  integrationTools?: IntegrationTools;
+  toolGrants?: AgentToolGrant[];
   settings?: AgentSettings | null;
   aiModel?: AgentAiModelRef;
   // Soft pin: the dataset injected into this

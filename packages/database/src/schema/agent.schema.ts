@@ -1,4 +1,3 @@
-import { sql } from 'drizzle-orm';
 import { foreignKey, index, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
@@ -16,11 +15,6 @@ import { workspace } from './workspace.schema';
 export const agentReasoningEffortValues = ['none', 'low', 'medium', 'high'] as const;
 export type AgentReasoningEffort = (typeof agentReasoningEffortValues)[number];
 
-export type CloudDriveIntegrationId = 'google-drive';
-export const integrationToolAccessLevelValues = ['read', 'write'] as const;
-export type IntegrationToolAccessLevel = (typeof integrationToolAccessLevelValues)[number];
-export type IntegrationTools = Partial<Record<CloudDriveIntegrationId, IntegrationToolAccessLevel>>;
-
 export interface AgentSettings {
   temperature?: number | null;
   maxOutputTokens?: number | null;
@@ -29,24 +23,11 @@ export interface AgentSettings {
   reasoning?: AgentReasoningEffort | null;
 }
 
-// Single source of truth for the enum: drizzle-orm/zod can't derive a
-// column's `.$type<T>()` for jsonb columns (it only knows the storage is
-// JSON), so `packages/database/src/zod/index.ts` refines the `tools` field
-// with a zod schema built from this array.
-export const agentToolValues = [
-  'think',
-  'webSearch',
-  'webBrowser',
-  'imageGen',
-  'videoGen',
-  'linkedinDraft',
-  'memory',
-  'datasets',
-  'documents',
-  'tasks',
-] as const;
-export type AgentTool = (typeof agentToolValues)[number];
-export type AgentTools = AgentTool[];
+/** Shape only. Ids and access are validated in @repo/ai (agentToolGrantsSchema). */
+export interface StoredAgentToolGrant {
+  id: string;
+  access?: string;
+}
 
 // No default temperature: Anthropic is deprecating the parameter, so new
 // agents send nothing to the provider unless a user explicitly sets one via
@@ -83,11 +64,7 @@ export const agent = pgTable(
     // Background knowledge the agent should always have, kept separate from
     // `systemPrompt` (behavior). Null/empty both mean "no context".
     context: text('context'),
-    tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
-    integrationTools: jsonb('integration_tools')
-      .notNull()
-      .$type<IntegrationTools>()
-      .default(sql`'{}'::jsonb`),
+    toolGrants: jsonb('tool_grants').notNull().$type<StoredAgentToolGrant[]>().default([]),
     // Soft pin: when set, the dataset's id and
     // schema are injected into this agent's instructions so it can skip
     // `datasetFind` and go straight to row operations. Deleting the dataset
@@ -128,7 +105,7 @@ export const agentTemplate = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     systemPrompt: text('system_prompt').notNull(),
-    tools: jsonb('tools').notNull().$type<AgentTools>().default([]),
+    toolGrants: jsonb('tool_grants').notNull().$type<StoredAgentToolGrant[]>().default([]),
     settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()

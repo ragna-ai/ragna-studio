@@ -4,7 +4,7 @@ import type { Agent } from '../schema';
 import { agent, task } from '../schema';
 import type { ICreateAgent } from '../zod';
 
-export type { Agent, AgentReasoningEffort, AgentSettings, AgentTool, AgentTools } from '../schema';
+export type { Agent, AgentReasoningEffort, AgentSettings, StoredAgentToolGrant } from '../schema';
 
 // Every agent now lives in exactly one workspace (workspaceId is NOT NULL),
 // so "scope" is always a concrete (userId, workspaceId) pair; there is no
@@ -17,8 +17,7 @@ type UpdateAgentFields = Partial<
     | 'aiModelId'
     | 'systemPrompt'
     | 'context'
-    | 'tools'
-    | 'integrationTools'
+    | 'toolGrants'
     | 'settings'
     | 'defaultDatasetId'
   >
@@ -33,8 +32,7 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     aiModelId,
     systemPrompt,
     context,
-    tools,
-    integrationTools,
+    toolGrants,
     settings,
     defaultDatasetId,
   } = values;
@@ -49,8 +47,7 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
       description,
       systemPrompt,
       context,
-      tools,
-      integrationTools,
+      toolGrants,
       defaultDatasetId,
       // Omit when unset so the column's $defaultFn default applies.
       ...(settings !== undefined ? { settings } : {}),
@@ -159,7 +156,7 @@ export async function getAgentsByWorkspaceId({
       id: true,
       name: true,
       description: true,
-      tools: true,
+      toolGrants: true,
       createdAt: true,
       updatedAt: true,
     },

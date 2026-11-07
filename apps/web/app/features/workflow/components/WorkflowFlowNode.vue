@@ -172,14 +172,14 @@ const statusStyles: Record<WorkflowStepStatus, string> = {
         </span>
         <span class="flex flex-wrap gap-1">
           <Badge
-            v-for="tool in selectedAgent.tools"
-            :key="tool"
+            v-for="grant in selectedAgent.toolGrants"
+            :key="grant.id"
             variant="secondary"
             class="px-1.5 py-0 text-[10px] font-normal"
           >
-            {{ tool }}
+            {{ t(`agent.tool.${grant.id}.label`) }}
           </Badge>
-          <span v-if="!selectedAgent.tools?.length">{{
+          <span v-if="!selectedAgent.toolGrants?.length">{{
             t('common.noTools')
           }}</span>
         </span>

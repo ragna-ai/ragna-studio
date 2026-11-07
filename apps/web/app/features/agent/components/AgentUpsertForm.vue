@@ -11,9 +11,9 @@ import { useForm } from '@tanstack/vue-form';
 import {
   AGENT_CONTEXT_MAX_LENGTH,
   AGENT_INSTRUCTIONS_MAX_LENGTH,
+  agentToolGrantsSchema,
+  type AgentToolGrant,
 } from '@repo/ai/client';
-import { integrationToolsSchema } from '@repo/integrations/catalog';
-import type { IntegrationTools } from '@repo/integrations/catalog';
 import { z } from 'zod';
 import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
@@ -34,8 +34,7 @@ type UpsertAgentProps = {
   systemPrompt?: string;
   description?: string;
   context?: string | null;
-  tools?: string[];
-  integrationTools?: IntegrationTools;
+  toolGrants?: AgentToolGrant[];
   settings?: AgentSettings | null;
   defaultDatasetId?: string | null;
 };
@@ -82,8 +81,7 @@ const agentUpsertSchema = z.object({
   context: z.string().max(AGENT_CONTEXT_MAX_LENGTH, {
     message: t('common.maxLength', { max: n(AGENT_CONTEXT_MAX_LENGTH) }),
   }),
-  tools: z.array(z.string()),
-  integrationTools: integrationToolsSchema,
+  toolGrants: agentToolGrantsSchema,
   settings: agentSettingsSchema,
   defaultDatasetId: z.uuidv7().nullable(),
 });
@@ -95,8 +93,7 @@ const form = useForm({
     systemPrompt: props.systemPrompt ?? 'You are a helpful assistant.',
     description: props.description ?? '',
     context: props.context ?? '',
-    tools: props.tools ?? [],
-    integrationTools: props.integrationTools ?? {},
+    toolGrants: props.toolGrants ?? [],
     settings: {
       temperature: props.settings?.temperature ?? null,
       maxOutputTokens: props.settings?.maxOutputTokens ?? null,
@@ -258,31 +255,18 @@ const siderBarTabs = computed(() => [
       </template>
       <!-- TAB 4: Tools -->
       <template #tools>
-        <form.Field name="tools">
+        <form.Field name="toolGrants">
           <template v-slot="{ field, state }">
             <div class="space-y-6">
               <form.Field name="defaultDatasetId">
                 <template v-slot="{ field: datasetField, state: datasetState }">
-                  <form.Field name="integrationTools">
-                    <template
-                      v-slot="{
-                        field: integrationField,
-                        state: integrationState,
-                      }"
-                    >
-                      <AgentToolList
-                        :model-value="state.value"
-                        :invalid="state.meta.errors.length > 0"
-                        :default-dataset-id="datasetState.value"
-                        :integration-tools="integrationState.value"
-                        @update:model-value="field.handleChange"
-                        @update:default-dataset-id="datasetField.handleChange"
-                        @update:integration-tools="
-                          integrationField.handleChange
-                        "
-                      />
-                    </template>
-                  </form.Field>
+                  <AgentToolList
+                    :model-value="state.value"
+                    :invalid="state.meta.errors.length > 0"
+                    :default-dataset-id="datasetState.value"
+                    @update:model-value="field.handleChange"
+                    @update:default-dataset-id="datasetField.handleChange"
+                  />
                 </template>
               </form.Field>
               <FormFieldInfo :state="state" />

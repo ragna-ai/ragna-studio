@@ -194,7 +194,7 @@ describe('workflow engine', () => {
       name: 'Unpriced',
       description: null,
       systemPrompt: 'Write.',
-      tools: [],
+      toolGrants: [],
     });
     const run = await seedAgentRun(user, agent.id);
 

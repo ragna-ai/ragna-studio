@@ -1,7 +1,7 @@
 import { createAgent, createWorkflowRun, db } from '@repo/database';
 import { workflow } from '@repo/database/schema';
 import type { WorkflowRun } from '@repo/database';
-import type { IntegrationTools } from '@repo/integrations/catalog';
+import type { AgentToolGrant } from '@repo/ai';
 import { seedCreditAccount, seedTokenPricedAiModel } from '@repo/testing';
 import type { WorkflowDefinition, WorkflowEdge, WorkflowNode } from '@repo/workflow';
 
@@ -110,7 +110,7 @@ export interface SeedPricedAgentParams {
   workspaceId: string;
   /** Fund the user's organization so the credit gate lets agent nodes run. */
   funded?: boolean;
-  integrationTools?: IntegrationTools;
+  toolGrants?: AgentToolGrant[];
 }
 
 /** Seeds an agent on a token-priced model, and by default funds the organization. */
@@ -126,8 +126,7 @@ export async function seedPricedAgent(params: SeedPricedAgentParams): Promise<st
     name: 'Writer',
     description: 'Seeded for worker tests',
     systemPrompt: 'Write.',
-    tools: [],
-    integrationTools: params.integrationTools,
+    toolGrants: params.toolGrants ?? [],
   });
   return agent.id;
 }

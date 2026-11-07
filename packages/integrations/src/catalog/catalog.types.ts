@@ -53,12 +53,6 @@ export const connectIntegrationBodySchema = z.object({
 
 export const connectIntegrationResponseSchema = z.object({ url: z.url({ protocol: /^https$/ }) });
 
-export const integrationToolAccessLevelSchema = z.enum(['read', 'write']);
-
-export const integrationToolsSchema = z.strictObject({
-  'google-drive': integrationToolAccessLevelSchema.optional(),
-});
-
 export type ProviderId = z.infer<typeof providerIdSchema>;
 export type IntegrationId = z.infer<typeof integrationIdSchema>;
 export type IntegrationCategory = z.infer<typeof integrationCategorySchema>;
@@ -70,5 +64,3 @@ export type IntegrationCatalogResponse = z.infer<typeof integrationCatalogRespon
 export type IntegrationConnectionsResponse = z.infer<typeof integrationConnectionsResponseSchema>;
 export type ConnectIntegrationBody = z.infer<typeof connectIntegrationBodySchema>;
 export type ConnectIntegrationResponse = z.infer<typeof connectIntegrationResponseSchema>;
-export type IntegrationToolAccessLevel = z.infer<typeof integrationToolAccessLevelSchema>;
-export type IntegrationTools = z.infer<typeof integrationToolsSchema>;

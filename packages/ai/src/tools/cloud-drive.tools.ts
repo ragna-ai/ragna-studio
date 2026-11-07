@@ -1,8 +1,4 @@
-import type {
-  CloudDriveIntegrationId,
-  IntegrationToolAccessLevel,
-  IntegrationTools,
-} from '@repo/integrations/catalog';
+import type { CloudDriveIntegrationId } from '@repo/integrations/catalog';
 import {
   CloudDriveError,
   resolveUserCloudDrive,
@@ -14,10 +10,9 @@ import {
 import { ConnectionIntegrationDisabledError, ConnectionNeedsReauthError } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
-import type { Tool, ToolSet } from 'ai';
-import { tool } from 'ai';
+import type { ToolSet } from 'ai';
 import * as z from 'zod';
-import type { ToolDefinition } from './tool-definition';
+import { toAgentTools, type ToolAccess, type ToolDefinition } from './tool-definition';
 
 export const CLOUD_DRIVE_READ_MAX_BYTES = 20 * 1024 * 1024;
 export const CLOUD_DRIVE_READ_MAX_CHARACTERS = 100_000;
@@ -355,30 +350,23 @@ export function cloudDriveToolDefinitions(
 
 export interface GetCloudDriveToolsParams {
   integrationId: CloudDriveIntegrationId;
-  level: IntegrationToolAccessLevel;
+  access: ToolAccess;
   userId: string;
   workspaceId: string;
 }
 
-/** AI SDK tools for one drive. A `read` level gets read tools only, `write` gets all. */
+/** AI SDK tools for one drive, limited to what the grant's access allows. */
 export function getCloudDriveTools({
   integrationId,
-  level,
+  access,
   userId,
   workspaceId,
 }: GetCloudDriveToolsParams): ToolSet {
-  const allowed = cloudDriveToolDefinitions(integrationId).filter(
-    (definition) => level === 'write' || definition.access === 'read',
-  );
-  const entries = allowed.map((definition): [string, Tool] => [
-    definition.name,
-    tool({
-      description: definition.description,
-      inputSchema: definition.inputSchema,
-      execute: (input) => definition.execute(input, { userId, workspaceId, origin: 'agent' }),
-    }),
-  ]);
-  return Object.fromEntries(entries);
+  return toAgentTools(cloudDriveToolDefinitions(integrationId), access, {
+    userId,
+    workspaceId,
+    origin: 'agent',
+  });
 }
 
 const CLOUD_DRIVE_INTEGRATION_IDS =
@@ -397,25 +385,6 @@ export function buildCloudDriveToolApproval(tools: ToolSet): Record<string, 'use
   return approval;
 }
 
-export interface GetAgentCloudDriveToolsParams {
-  integrationTools: IntegrationTools;
-  userId: string;
-  workspaceId: string;
-}
-
 function isCloudDriveIntegrationId(id: string): id is CloudDriveIntegrationId {
   return id in DRIVE_DISPLAY_NAMES;
-}
-
-/** The tools of every drive the agent's editor switched on, at the level they chose. */
-export function getAgentCloudDriveTools({
-  integrationTools,
-  userId,
-  workspaceId,
-}: GetAgentCloudDriveToolsParams): ToolSet {
-  const entries = Object.entries(integrationTools).flatMap(([integrationId, level]) => {
-    if (!level || !isCloudDriveIntegrationId(integrationId)) return [];
-    return Object.entries(getCloudDriveTools({ integrationId, level, userId, workspaceId }));
-  });
-  return Object.fromEntries(entries);
 }

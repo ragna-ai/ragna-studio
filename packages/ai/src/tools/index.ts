@@ -1,3 +1,4 @@
+export * from './agent-tool-catalog';
 export * from './agent-context.tool';
 export * from './agent.tools';
 export * from './cloud-drive.tools';

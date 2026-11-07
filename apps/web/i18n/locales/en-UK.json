@@ -327,19 +327,17 @@
       "searchContextDocuments": {
         "label": "Search Context"
       },
-      "cloudDrive": {
-        "google-drive": {
-          "label": "Google Drive",
-          "description": "Find and read files in Google Drive, and create or edit them."
-        },
-        "accessLevelLabel": "Access",
-        "accessLevel": {
-          "read": "Read only",
-          "write": "Read and write"
-        },
-        "connectHint": "Connect {name} in settings to use it yourself",
-        "connectLink": "Open connections"
+      "google-drive": {
+        "label": "Google Drive",
+        "description": "Find and read files in Google Drive, and create or edit them."
       },
+      "accessLevelLabel": "Access",
+      "accessLevel": {
+        "read": "Read only",
+        "write": "Read and write"
+      },
+      "connectHint": "Connect {name} in settings to use it yourself",
+      "connectLink": "Open connections",
       "datasets": {
         "label": "Datasets",
         "description": "Read and write structured data tables: task queues, plans, and other durable state.",

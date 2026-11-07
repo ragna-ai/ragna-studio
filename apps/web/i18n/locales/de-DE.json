@@ -276,19 +276,17 @@
         "label": "Erinnerungen",
         "description": "Merkt sich Infos über dich und deine Arbeit für zukünftige Unterhaltungen."
       },
-      "cloudDrive": {
-        "google-drive": {
-          "label": "Google Drive",
-          "description": "Findet und liest Dateien in Google Drive und erstellt oder bearbeitet sie."
-        },
-        "accessLevelLabel": "Zugriff",
-        "accessLevel": {
-          "read": "Nur lesen",
-          "write": "Lesen und schreiben"
-        },
-        "connectHint": "Verbinde {name} in den Einstellungen, um es selbst zu nutzen",
-        "connectLink": "Verbindungen öffnen"
+      "google-drive": {
+        "label": "Google Drive",
+        "description": "Findet und liest Dateien in Google Drive und erstellt oder bearbeitet sie."
       },
+      "accessLevelLabel": "Zugriff",
+      "accessLevel": {
+        "read": "Nur lesen",
+        "write": "Lesen und schreiben"
+      },
+      "connectHint": "Verbinde {name} in den Einstellungen, um es selbst zu nutzen",
+      "connectLink": "Verbindungen öffnen",
       "datasets": {
         "label": "Datensätze",
         "description": "Liest und schreibt strukturierte Datentabellen: Aufgabenlisten, Pläne und anderen dauerhaften Zustand.",

@@ -21,7 +21,7 @@ function respondWith(response: Response) {
 
 async function visit(url: string) {
   const toolContext = { userId: 'user-1', agentId: 'agent-1', workspaceId: 'workspace-1' };
-  const tools = buildAgentToolset(['webBrowser'], stubStreamWriter, toolContext);
+  const tools = buildAgentToolset([{ id: 'webBrowser' }], stubStreamWriter, toolContext);
   const execute = tools.webBrowser?.execute;
   if (!execute) {
     throw new Error('webBrowser tool has no execute');

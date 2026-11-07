@@ -12,7 +12,6 @@ import {
 import { config } from '@repo/config';
 import type {
   AgentSettings,
-  AgentTools,
   AiModelPricing,
   CreditSpendState,
   CreditUsageFeature,
@@ -75,11 +74,11 @@ export function withAiModel<T>(record: T): T & { aiModel: AiModelRef } {
 }
 
 // Same narrowing as withAiModel, widened for the agentId path, which also
-// needs the agent's own `tools`/`settings` columns to run it like chat does.
+// needs the agent's own `settings` column to run it like chat does.
 export function withAgentConfig<T>(
   record: T,
-): T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef } {
-  return record as T & { aiModel: AiModelRef; tools: AgentTools; settings: AgentSettingsRef };
+): T & { aiModel: AiModelRef; settings: AgentSettingsRef } {
+  return record as T & { aiModel: AiModelRef; settings: AgentSettingsRef };
 }
 
 type GenerateTextResult = Awaited<ReturnType<typeof generateText>>;
@@ -355,17 +354,16 @@ export async function runReferencedAgent({
   const { instructions, retrievalMode } = await buildAgentInstructions({
     agentId,
     workspaceId,
-    tools: agent.tools,
+    toolIds: agent.toolGrants.map((grant) => grant.id),
     systemPrompt: agent.systemPrompt,
     context: agent.context,
     defaultDatasetId: agentRecord.defaultDatasetId,
   });
 
-  const tools = buildAgentToolset(agent.tools, noopWriter, {
+  const tools = buildAgentToolset(agent.toolGrants, noopWriter, {
     userId,
     agentId,
     workspaceId,
-    integrationTools: agent.integrationTools ?? {},
     // Workflows already run inside the worker process and need the
     // video/images to exist before downstream steps run, so the video-gen
     // tool awaits the render inline instead of the chat fire-and-forget path,

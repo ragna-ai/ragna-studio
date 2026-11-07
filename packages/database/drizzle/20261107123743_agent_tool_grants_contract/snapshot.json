@@ -1,0 +1,53 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "aad69a3c-83b5-4d22-ad69-9b1dbfab54b8",
+  "prevIds": ["1d9dbe62-2787-44fc-b3f9-ab0c169857ec"],
+  "footprints": [
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "agents", "tools"],
+      "writes": [
+        "s|col|public.agents.tools",
+        "n|col|public.agents.tools",
+        "e|col|public.agents.tools"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "agents", "integration_tools"],
+      "writes": [
+        "s|col|public.agents.integration_tools",
+        "n|col|public.agents.integration_tools",
+        "e|col|public.agents.integration_tools"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "agent_templates", "tools"],
+      "writes": [
+        "s|col|public.agent_templates.tools",
+        "n|col|public.agent_templates.tools",
+        "e|col|public.agent_templates.tools"
+      ],
+      "reads": ["n|tbl|public.agent_templates", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"agents\",\"tools\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"agent_templates\",\"tools\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"agents\",\"integration_tools\"]"
+    }
+  ]
+}

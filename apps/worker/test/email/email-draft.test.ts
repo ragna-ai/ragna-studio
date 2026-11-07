@@ -372,7 +372,7 @@ describe('processEmailDraftJob', () => {
       const agent = await seedAgent({
         userId: scenario.mailUser.userId,
         workspaceId: scenario.mailUser.personalWorkspaceId,
-        tools: ['webBrowser', 'datasets', 'memory', 'think'],
+        toolGrants: [{ id: 'webBrowser' }, { id: 'datasets' }, { id: 'memory' }, { id: 'think' }],
       });
 
       await runDraftWithAgent(scenario, agent.id);
@@ -390,7 +390,7 @@ describe('processEmailDraftJob', () => {
       const agent = await seedAgent({
         userId: scenario.mailUser.userId,
         workspaceId: scenario.mailUser.personalWorkspaceId,
-        tools: ['datasets', 'memory'],
+        toolGrants: [{ id: 'datasets' }, { id: 'memory' }],
         defaultDatasetId: dataset.id,
       });
       await upsertMemory({ agentId: agent.id, content: 'Sven prefers short replies.' });
@@ -409,7 +409,7 @@ describe('processEmailDraftJob', () => {
       const agent = await seedAgent({
         userId: scenario.mailUser.userId,
         workspaceId: scenario.mailUser.personalWorkspaceId,
-        tools: ['documents'],
+        toolGrants: [{ id: 'documents' }],
       });
       await seedReadyDocument({ agentId: agent.id, extractedTextLength: 40_000 });
 

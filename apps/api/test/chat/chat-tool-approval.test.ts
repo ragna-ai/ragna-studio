@@ -81,7 +81,7 @@ async function seedWriterChat(): Promise<ChatFixture> {
     name: 'Writer',
     aiModelId,
     systemPrompt: 'You write files.',
-    integrationTools: { 'google-drive': 'write' },
+    toolGrants: [{ id: 'google-drive', access: 'write' }],
   });
   const agentId = idResponseSchema('agent').parse(agentBody).agent.id;
   const chatBody = await postJson(`/workspace/${workspaceId}/chat`, cookieHeader, { agentId });
