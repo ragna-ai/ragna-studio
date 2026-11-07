@@ -32,6 +32,8 @@ If unsure whether a skill applies, load it. Say which skills you loaded.
 ## 3. Assess and present options
 
 - Investigate with your own tools. Don't spawn agents for the assessment.
+- Asked to assess a whole implementation or feature ("is X production-ready?")? Follow the production-review
+  skill.
 - Present two or three options with honest trade-offs and a recommendation. Use the question tool when the
   choice is clear-cut.
 - A question from the developer ("could we use X?") is not a decision. Don't edit a PRD or code until they pick.
