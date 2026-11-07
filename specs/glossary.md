@@ -31,10 +31,11 @@ Role names are always qualified. The full table, with storage and code identifie
 
 ## Agents and AI
 
-| Term        | Meaning                                                                                                                      | _Avoid_                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| agent       | A configured assistant in a workspace: model, system prompt, context and tools.                                              | assistant, bot                     |
-| agent tool  | A capability an agent's editor switches on. One agent tool can give the model several AI SDK tools (`datasets` gives seven). | tool (where AI SDK tools are near) |
-| AI SDK tool | One function the model can call, an entry in the AI SDK `ToolSet`.                                                           | agent tool                         |
-| AI model    | A row in `ai_models`: provider, model id and capabilities.                                                                   | model (where data models are near) |
-| template    | A predefined agent a user can create an agent from (`agent_templates`).                                                      | preset                             |
+| Term             | Meaning                                                                                                                               | _Avoid_                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| agent            | A configured assistant in a workspace: model, system prompt, context and tools.                                                       | assistant, bot                     |
+| agent tool       | A capability an agent's editor switches on. One agent tool can give the model several AI SDK tools (`datasets` gives seven).          | tool (where AI SDK tools are near) |
+| agent tool grant | One agent tool switched on for an agent, with its access level (`read` or `write`) when the tool has levels. Stored in `tool_grants`. | integration tool, enabled tool     |
+| AI SDK tool      | One function the model can call, an entry in the AI SDK `ToolSet`.                                                                    | agent tool                         |
+| AI model         | A row in `ai_models`: provider, model id and capabilities.                                                                            | model (where data models are near) |
+| template         | A predefined agent a user can create an agent from (`agent_templates`).                                                               | preset                             |
