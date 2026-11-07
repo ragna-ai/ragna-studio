@@ -1,6 +1,6 @@
 # Agents: agent tool grants (design)
 
-> **Status: proposed** (2026-11-07). Issue #301. Build plan: [slices.md](./slices.md).
+> **Status: implemented** (2026-11-07, PR #304). Issue #301. Build plan: [slices.md](./slices.md).
 
 A refactor with no PRD: the only user-visible change is AC-1. The problem statement lives in
 #301. This doc holds the decisions, the contract and every file that changes.

@@ -108,6 +108,14 @@ agents have persistent memory and configurable default settings.
 [agent-memory.md](./agent/agent-memory.md),
 [agent-default-and-settings.md](./agent/agent-default-and-settings.md)
 
+### Agent tools
+
+An agent's editor switches agent tools on per agent: built-in tools and
+integration tools such as Google Drive. Each switched-on tool is a grant.
+Integration tools carry an access level (`read` or `write`) that limits
+which AI SDK tools the model gets. The chat input shows every granted tool.
+→ [specs/agent/301-tool-grants/design.md](./agent/301-tool-grants/design.md)
+
 ### Live team chat
 
 Realtime, WebSocket-based chat between human team members (distinct from
