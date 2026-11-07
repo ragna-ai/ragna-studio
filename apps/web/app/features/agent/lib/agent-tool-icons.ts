@@ -1,5 +1,7 @@
+import type { AgentToolId } from '@repo/ai/client';
 import {
   AppWindowIcon,
+  CloudIcon,
   DatabaseIcon,
   FileTextIcon,
   GlobeIcon,
@@ -29,7 +31,8 @@ export const AGENT_TOOL_VISUALS = {
   documents: { icon: FileTextIcon, colorClass: 'text-amber-600' },
   tasks: { icon: ListTodoIcon, colorClass: 'text-orange-600' },
   datasets: { icon: DatabaseIcon, colorClass: 'text-emerald-600' },
-} as const satisfies Record<string, AgentToolVisual>;
+  'google-drive': { icon: CloudIcon, colorClass: 'text-teal-600' },
+} as const satisfies Record<AgentToolId, AgentToolVisual>;
 
 const visualsById: Record<string, AgentToolVisual> = AGENT_TOOL_VISUALS;
 

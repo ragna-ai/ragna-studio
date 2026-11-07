@@ -1,4 +1,9 @@
-import type { Agent, AgentSettings, AgentTemplateListItem, AgentTools } from '@repo/database';
+import type {
+  Agent,
+  AgentSettings,
+  AgentTemplateListItem,
+  StoredAgentToolGrant,
+} from '@repo/database';
 import {
   createAgent,
   createAgentFromTemplate,
@@ -11,7 +16,6 @@ import {
   updateAgent,
   upsertMemory,
 } from '@repo/database';
-import type { IntegrationTools } from '@repo/integrations/catalog';
 import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
@@ -107,8 +111,7 @@ export interface CreateAgentInput {
   aiModelId: string;
   systemPrompt: string;
   context?: string | null;
-  tools?: AgentTools;
-  integrationTools?: IntegrationTools;
+  toolGrants?: StoredAgentToolGrant[];
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -187,8 +190,7 @@ export interface UpdateAgentInput {
   aiModelId?: string;
   systemPrompt?: string;
   context?: string | null;
-  tools?: AgentTools;
-  integrationTools?: IntegrationTools;
+  toolGrants?: StoredAgentToolGrant[];
   defaultDatasetId?: string | null;
   settings?: AgentSettings;
 }
@@ -210,8 +212,7 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
       aiModelId: input.aiModelId,
       systemPrompt: input.systemPrompt,
       context: input.context,
-      tools: input.tools,
-      integrationTools: input.integrationTools,
+      toolGrants: input.toolGrants,
       defaultDatasetId: input.defaultDatasetId,
       settings: input.settings,
     }),

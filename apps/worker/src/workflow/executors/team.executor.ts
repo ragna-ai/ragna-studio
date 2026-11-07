@@ -205,7 +205,7 @@ async function resolveLead(
   const { instructions, retrievalMode } = await buildAgentInstructions({
     agentId: leadAgentId,
     workspaceId: ctx.workspaceId,
-    tools: lead.tools,
+    toolIds: lead.toolGrants.map((grant) => grant.id),
     systemPrompt: lead.systemPrompt,
     context: lead.context,
     defaultDatasetId: lead.defaultDatasetId,
@@ -217,11 +217,10 @@ async function resolveLead(
     // The lead keeps its own configured toolset next to the delegate tools,
     // so it can e.g. read its pinned dataset to plan and route work instead
     // of delegating reads to members that lack access.
-    ownTools: buildAgentToolset(lead.tools, noopWriter, {
+    ownTools: buildAgentToolset(lead.toolGrants, noopWriter, {
       userId: ctx.userId,
       agentId: leadAgentId,
       workspaceId: ctx.workspaceId,
-      integrationTools: lead.integrationTools ?? {},
       // Workflows already run inside the worker process and need the
       // video/images to exist before downstream steps run, so the video-gen
       // tool awaits the render inline instead of the chat fire-and-forget

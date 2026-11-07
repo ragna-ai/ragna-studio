@@ -2,3 +2,4 @@
 export { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 export type { GeneratedAgentImage, getGeneratedImagesOutput } from './tools/image-gen.tool';
 export * from './agent-limits';
+export * from './tools/agent-tool-catalog';

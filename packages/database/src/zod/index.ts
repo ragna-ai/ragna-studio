@@ -1,14 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod';
 import z from 'zod';
-import {
-  agent,
-  agentReasoningEffortValues,
-  integrationToolAccessLevelValues,
-  agentToolValues,
-  aiModel,
-  chat,
-  chatMessage,
-} from '../schema';
+import { agent, agentReasoningEffortValues, aiModel, chat, chatMessage } from '../schema';
 import { user } from '../schema/user.schema';
 
 // USER
@@ -25,10 +17,9 @@ export type IUpdateUser = Partial<UserUpdateSchema>;
 
 // AGENT
 // jsonb columns lose their `.$type<T>()` generic in drizzle-orm/zod (it only
-// sees "json" and falls back to a generic Json schema), so `tools` and
-// `settings` need explicit refinements to come out as `AgentTool[]` /
+// sees "json" and falls back to a generic Json schema), so `toolGrants` and
+// `settings` need explicit refinements to come out as `StoredAgentToolGrant[]` /
 // `AgentSettings` instead of `Json`.
-export const agentToolsSchema = z.array(z.enum(agentToolValues)).optional();
 export const agentSettingsSchema = z
   .object({
     temperature: z.number().nullish(),
@@ -36,12 +27,11 @@ export const agentSettingsSchema = z
     reasoning: z.enum(agentReasoningEffortValues).nullish(),
   })
   .optional();
-export const agentIntegrationToolsSchema = z
-  .strictObject({ 'google-drive': z.enum(integrationToolAccessLevelValues).optional() })
+const storedAgentToolGrantsSchema = z
+  .array(z.object({ id: z.string(), access: z.string().optional() }))
   .optional();
 const agentRefine = {
-  tools: agentToolsSchema,
-  integrationTools: agentIntegrationToolsSchema,
+  toolGrants: storedAgentToolGrantsSchema,
   settings: agentSettingsSchema,
 };
 

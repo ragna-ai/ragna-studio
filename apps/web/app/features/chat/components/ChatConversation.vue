@@ -86,9 +86,9 @@ const showNoAgentState = computed(
 const isSendDisabled = computed(() => selectedAgentId.value === null);
 const selectedAgentToolIds = computed(
   () =>
-    newChatAgent.agents.value.find(
-      (agent) => agent.id === selectedAgentId.value,
-    )?.tools ?? [],
+    newChatAgent.agents.value
+      .find((agent) => agent.id === selectedAgentId.value)
+      ?.toolGrants?.map((grant) => grant.id) ?? [],
 );
 
 // The imageGen/videoGen tools write a transient `data-imageGen` /

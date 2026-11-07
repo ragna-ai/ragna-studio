@@ -88,7 +88,7 @@ async function seedAgent(
       aiModelId: model?.id,
       systemPrompt,
       context,
-      tools: [],
+      toolGrants: [],
     },
   });
   expect(response.ok()).toBe(true);

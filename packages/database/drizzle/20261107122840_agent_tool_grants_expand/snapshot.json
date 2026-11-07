@@ -1,0 +1,63 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "79576d14-89f9-473d-b993-6d6ddc4d514f",
+  "prevIds": ["d2a8cc27-d989-4cd8-ae2f-18ccb1d36d15"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "tool_grants"],
+      "writes": [
+        "s|col|public.agents.tool_grants",
+        "n|col|public.agents.tool_grants",
+        "e|col|public.agents.tool_grants"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agent_templates", "tool_grants"],
+      "writes": [
+        "s|col|public.agent_templates.tool_grants",
+        "n|col|public.agent_templates.tool_grants",
+        "e|col|public.agent_templates.tool_grants"
+      ],
+      "reads": ["n|tbl|public.agent_templates", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "tool_grants",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'[]'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_templates",
+        "name": "tool_grants",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'[]'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

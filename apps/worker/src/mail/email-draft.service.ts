@@ -163,7 +163,7 @@ async function runDraftAgent({
   const { instructions } = await buildAgentInstructions({
     agentId,
     workspaceId: agentRecord.workspaceId,
-    tools: agent.tools,
+    toolIds: agent.toolGrants.map((grant) => grant.id),
     systemPrompt: agent.systemPrompt,
     context: agent.context,
     defaultDatasetId: agentRecord.defaultDatasetId,

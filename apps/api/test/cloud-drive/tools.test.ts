@@ -1,5 +1,5 @@
-import { buildAgentToolset, type ToolSet } from '@repo/ai';
-import type { IntegrationTools } from '@repo/integrations/catalog';
+import type { Agent } from '@repo/database';
+import { buildAgentToolset, type AgentToolGrant, type ToolSet } from '@repo/ai';
 import {
   DRIVE_CREATED_FILE_ID,
   DRIVE_DOC,
@@ -39,14 +39,15 @@ const READ_TOOL_NAMES = ['googleDriveListFolder', 'googleDriveReadFile', 'google
 const WRITE_TOOL_NAMES = ['googleDriveCreateFile', 'googleDriveUpdateFile'];
 const cursorSchema = z.object({ nextCursor: z.string() });
 const textSchema = z.object({ text: z.string() });
+const DRIVE_READ_GRANT: AgentToolGrant = { id: 'google-drive', access: 'read' };
+const DRIVE_WRITE_GRANT: AgentToolGrant = { id: 'google-drive', access: 'write' };
 const NO_WAIT_HEADERS = { 'Retry-After': '0' };
 
-function toolsFor(userId: string, integrationTools: IntegrationTools): ToolSet {
-  return buildAgentToolset([], stubStreamWriter, {
+function toolsFor(userId: string, toolGrants: Agent['toolGrants']): ToolSet {
+  return buildAgentToolset(toolGrants, stubStreamWriter, {
     userId,
     agentId: 'agent-1',
     workspaceId: 'workspace-1',
-    integrationTools,
   });
 }
 
@@ -59,7 +60,7 @@ async function callTool(tools: ToolSet, name: string, input: Record<string, unkn
 async function connectedReader() {
   const { userId } = await seedAuthenticatedUser();
   await seedGoogleDriveConnection({ userId });
-  return toolsFor(userId, { 'google-drive': 'read' });
+  return toolsFor(userId, [DRIVE_READ_GRANT]);
 }
 
 beforeEach(async () => {
@@ -71,13 +72,13 @@ describe('cloud drive tools: what an agent is offered', () => {
   test('offers nothing when the agent has no drive switched on', async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    expect(Object.keys(toolsFor(userId, {}))).toEqual([]);
+    expect(Object.keys(toolsFor(userId, []))).toEqual([]);
   });
 
   test('offers exactly the read tools at the read level', async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    const names = Object.keys(toolsFor(userId, { 'google-drive': 'read' })).sort();
+    const names = Object.keys(toolsFor(userId, [DRIVE_READ_GRANT])).sort();
 
     expect(names).toEqual(READ_TOOL_NAMES);
   });
@@ -85,7 +86,7 @@ describe('cloud drive tools: what an agent is offered', () => {
   test('offers the read and write tools at the write level', async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    const names = Object.keys(toolsFor(userId, { 'google-drive': 'write' })).sort();
+    const names = Object.keys(toolsFor(userId, [DRIVE_WRITE_GRANT])).sort();
 
     expect(names).toEqual(READ_TOOL_NAMES.concat(WRITE_TOOL_NAMES).sort());
   });
@@ -93,9 +94,22 @@ describe('cloud drive tools: what an agent is offered', () => {
   test('offers no write tool at the read level', async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    const names = Object.keys(toolsFor(userId, { 'google-drive': 'read' }));
+    const names = Object.keys(toolsFor(userId, [DRIVE_READ_GRANT]));
 
     for (const writeTool of WRITE_TOOL_NAMES) expect(names).not.toContain(writeTool);
+  });
+
+  test('skips stored grants that are invalid and still builds the valid ones', async () => {
+    const { userId } = await seedAuthenticatedUser();
+
+    const tools = toolsFor(userId, [
+      { id: 'removed-tool' },
+      { id: 'google-drive' },
+      { id: 'google-drive', access: 'read' },
+      { id: 'think' },
+    ]);
+
+    expect(Object.keys(tools).sort()).toEqual([...READ_TOOL_NAMES, 'think'].sort());
   });
 });
 
@@ -223,7 +237,7 @@ describe('cloud drive tools: writing', () => {
   async function connectedWriter() {
     const { userId } = await seedAuthenticatedUser();
     await seedGoogleDriveConnection({ userId });
-    return toolsFor(userId, { 'google-drive': 'write' });
+    return toolsFor(userId, [DRIVE_WRITE_GRANT]);
   }
 
   test('creates a file and names it with a link', async () => {
@@ -331,12 +345,12 @@ describe('cloud drive tools: whose drive is read', () => {
       integrationIds: ['google-drive'],
       accessToken: 'token-of-second-user',
     });
-    const integrationTools: IntegrationTools = { 'google-drive': 'read' };
+    const toolGrants = [DRIVE_READ_GRANT];
 
-    await callTool(toolsFor(first.userId, integrationTools), 'googleDriveSearch', {
+    await callTool(toolsFor(first.userId, toolGrants), 'googleDriveSearch', {
       query: 'plan',
     });
-    await callTool(toolsFor(second.userId, integrationTools), 'googleDriveSearch', {
+    await callTool(toolsFor(second.userId, toolGrants), 'googleDriveSearch', {
       query: 'plan',
     });
 
@@ -351,13 +365,9 @@ describe('cloud drive tools: when the drive cannot be used', () => {
   test('says not_connected when the user never connected a drive', async () => {
     const { userId } = await seedAuthenticatedUser();
 
-    const result = await callTool(
-      toolsFor(userId, { 'google-drive': 'read' }),
-      'googleDriveSearch',
-      {
-        query: 'plan',
-      },
-    );
+    const result = await callTool(toolsFor(userId, [DRIVE_READ_GRANT]), 'googleDriveSearch', {
+      query: 'plan',
+    });
 
     expect(result).toMatchObject({ status: 'not_connected' });
     expect(vendorHttp.requests).toHaveLength(0);
@@ -367,13 +377,9 @@ describe('cloud drive tools: when the drive cannot be used', () => {
     const { userId } = await seedAuthenticatedUser();
     await seedIntegrationConnection({ userId, provider: 'google', integrationIds: ['gmail'] });
 
-    const result = await callTool(
-      toolsFor(userId, { 'google-drive': 'read' }),
-      'googleDriveSearch',
-      {
-        query: 'plan',
-      },
-    );
+    const result = await callTool(toolsFor(userId, [DRIVE_READ_GRANT]), 'googleDriveSearch', {
+      query: 'plan',
+    });
 
     expect(result).toMatchObject({ status: 'not_connected' });
   });
@@ -382,13 +388,9 @@ describe('cloud drive tools: when the drive cannot be used', () => {
     const { userId } = await seedAuthenticatedUser();
     await seedGoogleDriveConnection({ userId, status: 'needs_reauth' });
 
-    const result = await callTool(
-      toolsFor(userId, { 'google-drive': 'read' }),
-      'googleDriveSearch',
-      {
-        query: 'plan',
-      },
-    );
+    const result = await callTool(toolsFor(userId, [DRIVE_READ_GRANT]), 'googleDriveSearch', {
+      query: 'plan',
+    });
 
     expect(result).toMatchObject({ status: 'reconnect' });
   });
@@ -399,13 +401,9 @@ describe('cloud drive tools: when the drive cannot be used', () => {
     await expireConnectionAccessToken({ connectionId: connection.id });
     failVendorEndpoint(GOOGLE_DRIVE_ENDPOINTS.list, { status: 401, headers: NO_WAIT_HEADERS });
 
-    const result = await callTool(
-      toolsFor(userId, { 'google-drive': 'read' }),
-      'googleDriveSearch',
-      {
-        query: 'plan',
-      },
-    );
+    const result = await callTool(toolsFor(userId, [DRIVE_READ_GRANT]), 'googleDriveSearch', {
+      query: 'plan',
+    });
 
     expect(result).toMatchObject({ status: 'reconnect' });
   });
@@ -425,13 +423,9 @@ describe('cloud drive tools: when the drive cannot be used', () => {
       headers: NO_WAIT_HEADERS,
     });
 
-    const result = await callTool(
-      toolsFor(userId, { 'google-drive': 'read' }),
-      'googleDriveSearch',
-      {
-        query: 'plan',
-      },
-    );
+    const result = await callTool(toolsFor(userId, [DRIVE_READ_GRANT]), 'googleDriveSearch', {
+      query: 'plan',
+    });
 
     expect(result).toMatchObject({ status: 'busy' });
     expect(JSON.stringify(result)).not.toContain('secret-');

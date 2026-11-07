@@ -1,3 +1,4 @@
+import { db } from '@repo/database';
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -9,7 +10,14 @@ import { app } from '../../src/app';
 // exhaustively in test/auth/ and test/workspace/workspace-authorization.test.ts;
 // this file only checks the agent feature's own behavior.
 
-const agentSchema = z.strictObject({
+const toolGrantsSchema = z.array(
+  z.union([
+    z.strictObject({ id: z.string() }),
+    z.strictObject({ id: z.string(), access: z.enum(['read', 'write']) }),
+  ]),
+);
+
+const agentSchema = z.object({
   id: z.string(),
   userId: z.string(),
   workspaceId: z.string(),
@@ -18,8 +26,7 @@ const agentSchema = z.strictObject({
   description: z.string().nullable(),
   systemPrompt: z.string(),
   context: z.string().nullable(),
-  tools: z.array(z.string()),
-  integrationTools: z.strictObject({ 'google-drive': z.enum(['read', 'write']).optional() }),
+  toolGrants: toolGrantsSchema,
   defaultDatasetId: z.string().nullable(),
   settings: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
@@ -32,7 +39,7 @@ const agentListItemSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  tools: z.array(z.string()),
+  toolGrants: toolGrantsSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
   aiModel: z.strictObject({ provider: z.string(), model: z.string(), displayName: z.string() }),
@@ -129,19 +136,22 @@ describe('POST /workspace/:workspaceId/agent', () => {
     expect(agent.workspaceId).toBe(workspaceId);
   });
 
-  test('ignores an isDefault flag in the body', async () => {
+  test('rejects an unknown isDefault flag in the body', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const { aiModelId } = await seedTokenPricedAiModel();
 
-    const { status, agent } = await createAgent(cookieHeader, workspaceId, {
-      name: 'Support bot',
-      aiModelId,
-      systemPrompt: 'You are helpful.',
-      isDefault: true,
+    const response = await app.request(`/workspace/${workspaceId}/agent`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Support bot',
+        aiModelId,
+        systemPrompt: 'You are helpful.',
+        isDefault: true,
+      }),
     });
 
-    expect(status).toBe(StatusCodes.CREATED);
-    expect(agent).not.toHaveProperty('isDefault');
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
 
   test('rejects an empty name', async () => {
@@ -231,7 +241,7 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId', () => {
     expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
 
-  test('ignores an isDefault flag in the body', async () => {
+  test('rejects an unknown isDefault flag in the body', async () => {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const { aiModelId } = await seedTokenPricedAiModel();
     const { agent: created } = await createAgent(cookieHeader, workspaceId, {
@@ -246,9 +256,7 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId', () => {
       body: JSON.stringify({ name: 'Renamed', isDefault: true }),
     });
 
-    expect(response.status).toBe(StatusCodes.OK);
-    const body = agentResponseSchema.parse(await response.json());
-    expect(body.agent).not.toHaveProperty('isDefault');
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
   });
 
   test('404s for an agent id that does not exist', async () => {
@@ -274,7 +282,7 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId', () => {
   });
 });
 
-describe('agent integration tools', () => {
+describe('agent tool grants', () => {
   beforeEach(async () => {
     await truncateAllTables();
   });
@@ -292,92 +300,124 @@ describe('agent integration tools', () => {
     });
   }
 
-  test('defaults to no integration tools', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const { aiModelId } = await seedTokenPricedAiModel();
-
-    const { agent } = await createAgent(cookieHeader, workspaceId, {
-      name: 'Plain',
-      aiModelId,
-      systemPrompt: 'You are helpful.',
+  function postAgent(cookieHeader: string, workspaceId: string, body: Record<string, unknown>) {
+    return app.request(`/workspace/${workspaceId}/agent`, {
+      method: 'POST',
+      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
     });
+  }
 
-    expect(agent.integrationTools).toEqual({});
-  });
-
-  test('stores integration tools on create and returns them on get', async () => {
+  async function seedAgent(toolGrants?: Record<string, unknown>[]) {
     const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
     const { aiModelId } = await seedTokenPricedAiModel();
-
-    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
+    const { agent } = await createAgent(cookieHeader, workspaceId, {
       name: 'Researcher',
       aiModelId,
       systemPrompt: 'You are helpful.',
-      integrationTools: { 'google-drive': 'read' },
+      toolGrants,
     });
+    return { workspaceId, cookieHeader, aiModelId, agent };
+  }
 
-    expect(created.integrationTools).toEqual({ 'google-drive': 'read' });
+  async function storedToolGrants(agentId: string) {
+    const stored = await db.query.agent.findFirst({ where: { id: agentId } });
+    return stored?.toolGrants;
+  }
+
+  test('defaults to no tool grants', async () => {
+    const { agent } = await seedAgent();
+
+    expect(agent.toolGrants).toEqual([]);
+  });
+
+  test('stores tool grants on create and returns them on get', async () => {
+    const grants = [{ id: 'webSearch' }, { id: 'google-drive', access: 'read' }];
+    const { workspaceId, cookieHeader, agent: created } = await seedAgent(grants);
+
+    expect(created.toolGrants).toEqual(grants);
     const response = await app.request(`/workspace/${workspaceId}/agent/${created.id}`, {
       headers: { cookie: cookieHeader },
     });
-    expect(
-      agentWithModelResponseSchema.parse(await response.json()).agent.integrationTools,
-    ).toEqual({
-      'google-drive': 'read',
-    });
+    expect(agentWithModelResponseSchema.parse(await response.json()).agent.toolGrants).toEqual(
+      grants,
+    );
   });
 
-  test('updates the integration level and clears it with an empty object', async () => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const { aiModelId } = await seedTokenPricedAiModel();
-    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
-      name: 'Researcher',
-      aiModelId,
-      systemPrompt: 'You are helpful.',
-      integrationTools: { 'google-drive': 'read' },
-    });
+  test('updates the access level and clears the grants with an empty list', async () => {
+    const {
+      workspaceId,
+      cookieHeader,
+      agent: created,
+    } = await seedAgent([{ id: 'google-drive', access: 'read' }]);
 
     const upgraded = await patchAgent(cookieHeader, workspaceId, created.id, {
-      integrationTools: { 'google-drive': 'write' },
+      toolGrants: [{ id: 'google-drive', access: 'write' }],
     });
-    expect(agentResponseSchema.parse(await upgraded.json()).agent.integrationTools).toEqual({
-      'google-drive': 'write',
+    expect(agentResponseSchema.parse(await upgraded.json()).agent.toolGrants).toEqual([
+      { id: 'google-drive', access: 'write' },
+    ]);
+
+    const cleared = await patchAgent(cookieHeader, workspaceId, created.id, { toolGrants: [] });
+    expect(agentResponseSchema.parse(await cleared.json()).agent.toolGrants).toEqual([]);
+  });
+
+  test('the workspace agent list returns the tool grants', async () => {
+    const grants = [{ id: 'think' }, { id: 'google-drive', access: 'write' }];
+    const { workspaceId, cookieHeader } = await seedAgent(grants);
+
+    const response = await app.request(`/workspace/${workspaceId}/agent`, {
+      headers: { cookie: cookieHeader },
     });
 
-    const cleared = await patchAgent(cookieHeader, workspaceId, created.id, {
-      integrationTools: {},
-    });
-    expect(agentResponseSchema.parse(await cleared.json()).agent.integrationTools).toEqual({});
+    expect(response.status).toBe(StatusCodes.OK);
+    const { agents } = agentListResponseSchema.parse(await response.json());
+    expect(agents.map((agent) => agent.toolGrants)).toEqual([grants]);
   });
 
   test.each([
-    ['an unknown access level', { 'google-drive': 'admin' }],
-    ['an unknown integration key', { dropbox: 'read' }],
-  ])('rejects %s with 422 on create and update', async (_label, integrationTools) => {
-    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
-    const { aiModelId } = await seedTokenPricedAiModel();
-    const { agent: created } = await createAgent(cookieHeader, workspaceId, {
-      name: 'Researcher',
+    ['a duplicate tool id', [{ id: 'webSearch' }, { id: 'webSearch' }]],
+    ['an integration grant without access', [{ id: 'google-drive' }]],
+    ['a built-in grant with access', [{ id: 'webSearch', access: 'read' }]],
+    ['an unknown access level', [{ id: 'google-drive', access: 'admin' }]],
+    ['an unknown tool id', [{ id: 'dropbox', access: 'read' }]],
+  ])('rejects %s with 422 and changes nothing', async (_label, toolGrants) => {
+    const original = [{ id: 'think' }];
+    const { workspaceId, cookieHeader, aiModelId, agent: created } = await seedAgent(original);
+
+    const createResponse = await postAgent(cookieHeader, workspaceId, {
+      name: 'Other',
       aiModelId,
       systemPrompt: 'You are helpful.',
+      toolGrants,
     });
-
-    const createResponse = await app.request(`/workspace/${workspaceId}/agent`, {
-      method: 'POST',
-      headers: { cookie: cookieHeader, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Other',
-        aiModelId,
-        systemPrompt: 'You are helpful.',
-        integrationTools,
-      }),
-    });
-    const updateResponse = await patchAgent(cookieHeader, workspaceId, created.id, {
-      integrationTools,
-    });
+    const updateResponse = await patchAgent(cookieHeader, workspaceId, created.id, { toolGrants });
 
     expect(createResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
     expect(updateResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await storedToolGrants(created.id)).toEqual(original);
+    expect((await db.query.agent.findMany({ where: { workspaceId } })).length).toBe(1);
+  });
+
+  test.each([
+    ['tools', { tools: ['webSearch'] }],
+    ['integrationTools', { integrationTools: { 'google-drive': 'read' } }],
+  ])('rejects the old %s body with 422 and changes nothing', async (_label, oldFields) => {
+    const original = [{ id: 'think' }];
+    const { workspaceId, cookieHeader, aiModelId, agent: created } = await seedAgent(original);
+
+    const createResponse = await postAgent(cookieHeader, workspaceId, {
+      name: 'Other',
+      aiModelId,
+      systemPrompt: 'You are helpful.',
+      ...oldFields,
+    });
+    const updateResponse = await patchAgent(cookieHeader, workspaceId, created.id, oldFields);
+
+    expect(createResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(updateResponse.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await storedToolGrants(created.id)).toEqual(original);
+    expect((await db.query.agent.findMany({ where: { workspaceId } })).length).toBe(1);
   });
 });
 

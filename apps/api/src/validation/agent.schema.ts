@@ -1,6 +1,9 @@
-import { AGENT_CONTEXT_MAX_LENGTH, AGENT_INSTRUCTIONS_MAX_LENGTH } from '@repo/ai';
-import { agentSettingsSchema, agentToolsSchema } from '@repo/database';
-import { integrationToolsSchema } from '@repo/integrations/catalog';
+import {
+  AGENT_CONTEXT_MAX_LENGTH,
+  AGENT_INSTRUCTIONS_MAX_LENGTH,
+  agentToolGrantsSchema,
+} from '@repo/ai';
+import { agentSettingsSchema } from '@repo/database';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -31,14 +34,13 @@ export const validAgentMemoryBody = myzValidator(
 // the body: a create can only ever land in the workspace it was posted to.
 export const validCreateAgentBody = myzValidator(
   'json',
-  z.object({
+  z.strictObject({
     name: z.string().min(1).max(255),
     description: z.string().optional(),
     aiModelId: primaryId,
     systemPrompt: z.string().max(AGENT_INSTRUCTIONS_MAX_LENGTH),
     context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
-    tools: agentToolsSchema,
-    integrationTools: integrationToolsSchema.optional(),
+    toolGrants: agentToolGrantsSchema.optional(),
     defaultDatasetId: primaryId.nullish(),
     settings: agentSettingsSchema,
   }),
@@ -49,14 +51,13 @@ export const validCreateAgentBody = myzValidator(
 export const validUpdateAgentBody = myzValidator(
   'json',
   z
-    .object({
+    .strictObject({
       name: z.string().min(1).max(255).optional(),
       description: z.string().optional(),
       aiModelId: primaryId.optional(),
       systemPrompt: z.string().max(AGENT_INSTRUCTIONS_MAX_LENGTH).optional(),
       context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
-      tools: agentToolsSchema,
-      integrationTools: integrationToolsSchema.optional(),
+      toolGrants: agentToolGrantsSchema.optional(),
       defaultDatasetId: primaryId.nullish(),
       settings: agentSettingsSchema,
     })

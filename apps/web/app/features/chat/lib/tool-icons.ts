@@ -21,7 +21,7 @@ import type { Component } from 'vue';
 
 // Keyed by the bare tool id (a tool-* UIMessage part's `type` minus the
 // `tool-` prefix), one entry per id in agent.tool.* (i18n locales) /
-// agentToolValues (packages/database/src/schema/agent.schema.ts).
+// AGENT_TOOL_CATALOG (@repo/ai/client).
 export const TOOL_ICONS: Record<string, Component> = {
   think: PencilLineIcon,
   linkedinDraft: FileTextIcon,

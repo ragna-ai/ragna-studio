@@ -50,7 +50,7 @@ export async function createAgentFromTemplate({
           name: agentTemplate.name,
           description: agentTemplate.description,
           systemPrompt: agentTemplate.systemPrompt,
-          tools: agentTemplate.tools,
+          toolGrants: agentTemplate.toolGrants,
           settings: agentTemplate.settings,
           updatedAt: sql<Date>`${new Date().toISOString()}::timestamp`.as('updated_at'),
         })

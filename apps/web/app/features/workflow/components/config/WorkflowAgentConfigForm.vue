@@ -96,14 +96,14 @@ const selectedAgent = computed(() =>
           t('workflow.agentConfig.tools')
         }}</span>
         <Badge
-          v-for="tool in selectedAgent.tools"
-          :key="tool"
+          v-for="grant in selectedAgent.toolGrants"
+          :key="grant.id"
           variant="secondary"
         >
-          {{ tool }}
+          {{ t(`agent.tool.${grant.id}.label`) }}
         </Badge>
         <span
-          v-if="!selectedAgent.tools?.length"
+          v-if="!selectedAgent.toolGrants?.length"
           class="text-xs text-muted-foreground"
         >
           {{ t('common.noTools') }}
