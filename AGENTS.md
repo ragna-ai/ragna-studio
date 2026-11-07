@@ -134,6 +134,10 @@ term it names, never a word from its _Avoid_ list, and add new terms in the same
 
 ### Coding
 
+For the end-to-end loop from issue to merged PR (assess, options, PRD approval, delegating to worker agents,
+integration pass), follow the issue-workflow skill. Load the skills below **before** recommending anything on an
+issue or design, not only when writing code.
+
 Always load the clean-code skill. For `apps/api` changes, also load the tdd skill. Before designing anything with
 variants or a new abstraction, load the system-design skill; for a vendor connector, also integration-connector.
 Before adding a dependency, load the dependency-choice skill. For PRDs, design
