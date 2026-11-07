@@ -99,6 +99,14 @@ Whichever you pick, callers only see the interface type, never the concrete clas
 - **Contract types are variant-neutral.** No vendor names in contract types or field names. A field that only makes sense for one variant belongs in that implementation.
 - **No `any`.** Options get named types per variant, or a discriminated union keyed by the variant id.
 
+## Public names are decisions
+
+New packages, subpaths, exported contract types, registries, DB tables and columns, and API fields are hard to rename once other code depends on them. Treat each one like a seam:
+
+- Follow the Naming rules of the clean-code skill and the terms in [`specs/glossary.md`](../../../specs/glossary.md).
+- Propose two or three candidates with one line each: what a reader takes it for at the import site, and which existing names it could be mistaken for.
+- Recommend one, and let the user pick before building. Names inside a single file stay your call.
+
 ## In the design doc
 
 Every design with variants has an `## Extension points` section:
@@ -116,3 +124,4 @@ Every design with variants has an `## Extension points` section:
 - Is any abstraction there only for a speculative variant? Remove it.
 - Does type-checking fail if a variant id has no implementation?
 - Were two or three approaches weighed, and did the user pick for a new seam?
+- Did the user pick every new public name, and is each new domain term in the glossary?
