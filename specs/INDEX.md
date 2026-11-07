@@ -25,6 +25,7 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
+| [Agents: one tool definition per tool, one runner (design)](./agent/305-tool-runner/design.md) | proposed (2026-11-07) |
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
