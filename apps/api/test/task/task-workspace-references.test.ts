@@ -1,10 +1,9 @@
-import { getUpdateTaskTool } from '@repo/ai';
+import { taskToolDefinitions } from '@repo/ai';
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
 
 // A task may only reference an agent or labels of its own workspace.
 
@@ -276,20 +275,25 @@ describe('task tools', () => {
     await truncateAllTables();
   });
 
-  test('updateTask returns "Agent not found." for an agent of another workspace', async () => {
+  test('updateTask fails with not_found for an agent of another workspace', async () => {
     const userA = await seedAuthenticatedUser();
     const userB = await seedAuthenticatedUser();
     const foreignAgentId = await createAgent(userB.cookieHeader, userB.workspaceId);
     const created = await postTask(userA.cookieHeader, userA.workspaceId, {});
     const { task } = taskResponseSchema.parse(await created.json());
-    const updateTaskTool = getUpdateTaskTool(stubStreamWriter, userA.workspaceId);
+    const updateTaskTool = taskToolDefinitions({ agentId: 'agent-1' }).find(
+      (definition) => definition.name === 'updateTask',
+    );
+    if (!updateTaskTool) {
+      throw new Error('Missing updateTask tool');
+    }
 
-    const result = await updateTaskTool.execute?.(
+    const result = await updateTaskTool.execute(
       { id: task.id, assignedAgentId: foreignAgentId },
-      stubToolExecutionOptions,
+      { userId: 'user-1', workspaceId: userA.workspaceId, origin: 'agent' },
     );
 
-    expect(result).toEqual({ error: 'Agent not found.' });
+    expect(result).toEqual({ status: 'not_found', message: 'Agent not found.' });
     expect(
       (await getTask(userA.cookieHeader, userA.workspaceId, task.id)).assignedAgentId,
     ).toBeNull();

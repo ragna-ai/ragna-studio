@@ -800,7 +800,8 @@ export async function runChatStream(
         const streamStartedAt = Date.now();
         const modelSettings = toModelSettings(agent.settings);
 
-        const tools = buildAgentToolset(agent.toolGrants, dataStream, {
+        const tools = buildAgentToolset(agent.toolGrants, {
+          writer: dataStream,
           userId,
           agentId: agent.id,
           workspaceId: userChat.workspaceId,

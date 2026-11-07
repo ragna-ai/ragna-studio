@@ -23,7 +23,6 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { WorkflowAgentTraceStep, WorkflowTokenUsage, WorkflowToolCall } from '@repo/workflow';
-import { noopWriter } from './noop-writer';
 
 // Thrown when the pre-run gate refuses a run for lack of credits. A distinct
 // class (rather than a plain Error) so the step's recorded error message
@@ -360,7 +359,7 @@ export async function runReferencedAgent({
     defaultDatasetId: agentRecord.defaultDatasetId,
   });
 
-  const tools = buildAgentToolset(agent.toolGrants, noopWriter, {
+  const tools = buildAgentToolset(agent.toolGrants, {
     userId,
     agentId,
     workspaceId,

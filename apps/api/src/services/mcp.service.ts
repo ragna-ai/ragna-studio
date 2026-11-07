@@ -64,10 +64,9 @@ async function resolveMcpConnectionScope({
   };
 }
 
-const toolErrorOutputSchema = z.object({ error: z.string() });
 const jsonObjectOutputSchema = z.record(z.string(), z.unknown());
 
-// A `ToolFailure` (or a legacy `{ error }`) output becomes
+// A `ToolFailure` output becomes
 // `isError: true` with the message as text; anything else becomes
 // `structuredContent` plus the same JSON as text. Returns the SDK's own
 // CallToolResult type directly rather than a hand-rolled shape, so it's
@@ -76,11 +75,6 @@ function toMcpToolCallResult(output: unknown): CallToolResult {
   const failure = toolFailureSchema.safeParse(output);
   if (failure.success) {
     return { isError: true, content: [{ type: 'text', text: failure.data.message }] };
-  }
-
-  const errorOutput = toolErrorOutputSchema.safeParse(output);
-  if (errorOutput.success) {
-    return { isError: true, content: [{ type: 'text', text: errorOutput.data.error }] };
   }
 
   const objectOutput = jsonObjectOutputSchema.safeParse(output);

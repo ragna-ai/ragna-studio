@@ -89,7 +89,7 @@ export function validateRowData(
   return { valid: true };
 }
 
-function validateColumns(columns: DatasetColumn[]): RowValidationResult {
+export function validateColumns(columns: DatasetColumn[]): RowValidationResult {
   if (columns.length > MAX_COLUMNS_PER_DATASET) {
     return {
       valid: false,

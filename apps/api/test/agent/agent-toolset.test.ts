@@ -1,11 +1,10 @@
 import { buildAgentToolset, type AgentToolGrant } from '@repo/ai';
 import { describe, expect, test } from 'bun:test';
-import { stubStreamWriter } from '../stub-stream-writer';
 
 const toolContext = { userId: 'user-1', agentId: 'agent-1', workspaceId: 'workspace-1' };
 
 function toolNamesFor(grants: AgentToolGrant[], retrievalMode = false): string[] {
-  const tools = buildAgentToolset(grants, stubStreamWriter, { ...toolContext, retrievalMode });
+  const tools = buildAgentToolset(grants, { ...toolContext, retrievalMode });
   return Object.keys(tools).sort();
 }
 

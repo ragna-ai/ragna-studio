@@ -114,7 +114,11 @@ An agent's editor switches agent tools on per agent: built-in tools and
 integration tools such as Google Drive. Each switched-on tool is a grant.
 Integration tools carry an access level (`read` or `write`) that limits
 which AI SDK tools the model gets. The chat input shows every granted tool.
-→ [specs/agent/301-tool-grants/design.md](./agent/301-tool-grants/design.md)
+Every AI SDK tool is a tool definition shared by chat, workflows and MCP, and
+runs through one runner that logs failures and keeps internal error text out
+of the model and the client.
+→ [specs/agent/301-tool-grants/design.md](./agent/301-tool-grants/design.md),
+[specs/agent/305-tool-runner/design.md](./agent/305-tool-runner/design.md)
 
 ### Live team chat
 

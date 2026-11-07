@@ -1,21 +1,12 @@
 import { getGenImageRowsByIds } from '@repo/database';
 import { toPublicMediaUrl } from '@repo/storage';
-import { tryCatch } from '@repo/utils';
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import * as z from 'zod';
 import {
   createGenImagesWithDefaultModel,
   imageGenAspectRatios,
   requestGenImagesWithDefaultModel,
 } from '../services/imagen.service';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 const imageGenInputSchema = z.object({
   prompt: z
@@ -66,7 +57,7 @@ export type GeneratedAgentImage = {
 type ImageGenOutput =
   | { images: GeneratedAgentImage[] }
   | { pending: { ids: string[] } }
-  | { error: string };
+  | ToolFailure<'generation_failed'>;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -148,7 +139,10 @@ async function generateAgentImages({
 
   const failed = settled.find((row) => row.status === 'failed');
   if (failed) {
-    return { error: failed.error ?? 'Image generation failed.' };
+    return {
+      status: 'generation_failed',
+      message: 'Image generation failed. Tell the user and try a different prompt.',
+    };
   }
 
   if (settled.every((row) => row.status === 'completed')) {
@@ -172,41 +166,26 @@ const asyncDescription =
   "image ids instead and the images appear in the user's image library shortly after. Tell the " +
   "user the images are still being generated in that case, don't claim they're ready.";
 
-export const getGeneratedImages = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  userId: string,
-  workspaceId: string,
-  runsInWorker: boolean,
-): Tool<ImageGenInput, ImageGenOutput> =>
-  tool({
+export interface ImageGenToolOptions {
+  runsInWorker: boolean;
+}
+
+export function imageGenToolDefinition({
+  runsInWorker,
+}: ImageGenToolOptions): ToolDefinition<typeof imageGenInputSchema, ImageGenOutput> {
+  return {
+    name: 'imageGen',
     description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: imageGenInputSchema,
-    execute: async (input) => {
-      // emit tool usage message
-      writer.write({
-        type: 'data-imageGen',
-        data: { prompt: input.prompt },
-        transient: true,
-      });
+    access: 'write',
+    uiEvent: (input) => ({ type: 'data-imageGen', data: { prompt: input.prompt } }),
+    // seed/negativePrompt pass straight through: this tool never sees ai_models.capabilities,
+    // so the underlying calls drop either field for a model that doesn't support it.
+    execute: (input, { userId, workspaceId }) =>
+      generateAgentImages({ input, userId, workspaceId, runsInWorker }),
+  };
+}
 
-      // seed/negativePrompt pass straight through: this tool resolves its
-      // model via getDefaultAiModelByModality and never sees
-      // ai_models.capabilities, so generateAgentImages' underlying calls are
-      // what drop either field for a model that doesn't support it (fail
-      // closed) rather than erroring.
-      const { error, data: output } = await tryCatch(
-        () => generateAgentImages({ input, userId, workspaceId, runsInWorker }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || output === null) {
-        return { error: 'Image generation failed. Service currently unavailable.' };
-      }
-
-      return output;
-    },
-  });
-
-export type getGeneratedImagesInput = InferToolInput<ReturnType<typeof getGeneratedImages>>;
-export type getGeneratedImagesOutput = InferToolOutput<ReturnType<typeof getGeneratedImages>>;
-export type ImageGenUiTool = InferUITool<ReturnType<typeof getGeneratedImages>>;
+export type getGeneratedImagesOutput = Awaited<
+  ReturnType<ReturnType<typeof imageGenToolDefinition>['execute']>
+>;

@@ -6,7 +6,7 @@ import {
 } from '@repo/ai';
 import { describe, expect, test } from 'bun:test';
 import * as z from 'zod';
-import { stubToolExecutionOptions } from '../stub-stream-writer';
+import { stubToolExecutionOptions } from '../stub-tool-execution-options';
 
 type UIMessageChunk = Parameters<UIMessageStreamWriter['write']>[0];
 

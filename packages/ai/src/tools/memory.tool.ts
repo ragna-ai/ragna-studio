@@ -1,15 +1,6 @@
 import { getMemoryByAgentId, upsertMemory } from '@repo/database';
-import { tryCatch } from '@repo/utils';
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import * as z from 'zod';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 // A flat object schema (not a discriminated union): Anthropic's tool
 // `input_schema` must have a top-level `type: "object"`, but a zod union
@@ -40,35 +31,24 @@ const memoryInputSchema = z.object({
 });
 
 type MemoryInput = z.infer<typeof memoryInputSchema>;
-type MemoryOutput = { ok: true } | { error: string };
+type MemoryFailure = ToolFailure<'invalid_input' | 'not_found' | 'ambiguous'>;
+type MemoryOutput = { ok: true } | MemoryFailure;
+type Edit = { content: string } | MemoryFailure;
 
-export const getMemoryTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  agentId: string,
-): Tool<MemoryInput, MemoryOutput> =>
-  tool({
-    description:
-      'Use this tool to save or update durable, long-term facts about the user or their work in your persistent memory. The whole document is shown to you again at the start of every future conversation. `append` adds a new fact; `replace` edits or removes one you saved earlier.',
-    inputSchema: memoryInputSchema,
-    execute: async (input) => {
-      // emit tool usage message
-      writer.write({
-        type: 'data-memory',
-        data: input,
-        transient: true,
-      });
+export interface MemoryToolOptions {
+  agentId: string;
+}
 
-      const { error, data: result } = await tryCatch(() => applyMemoryEdit(agentId, input), {
-        retryOnFailure: false,
-      });
-
-      if (error !== null || result === null) {
-        return { error: 'Failed to update memory. Please try again.' };
-      }
-
-      return result;
-    },
-  });
+export const memoryToolDefinition = ({
+  agentId,
+}: MemoryToolOptions): ToolDefinition<typeof memoryInputSchema, MemoryOutput> => ({
+  name: 'memory',
+  description:
+    'Use this tool to save or update durable, long-term facts about the user or their work in your persistent memory. The whole document is shown to you again at the start of every future conversation. `append` adds a new fact; `replace` edits or removes one you saved earlier.',
+  inputSchema: memoryInputSchema,
+  access: 'write',
+  execute: (input) => applyMemoryEdit(agentId, input),
+});
 
 // Read-modify-write. Safe because tool calls within a turn run sequentially,
 // so the unique-agentId upsert is the only last-writer-wins boundary.
@@ -80,17 +60,17 @@ async function applyMemoryEdit(agentId: string, input: MemoryInput): Promise<Mem
 
   if (input.action === 'append') {
     if (!input.text) {
-      return { error: '`append` requires `text`.' };
+      return { status: 'invalid_input', message: '`append` requires `text`.' };
     }
     edit = appendText(content, input.text);
   } else {
     if (!input.old) {
-      return { error: '`replace` requires `old`.' };
+      return { status: 'invalid_input', message: '`replace` requires `old`.' };
     }
     edit = replaceText(content, input.old, input.new ?? '');
   }
 
-  if ('error' in edit) {
+  if ('status' in edit) {
     return edit;
   }
 
@@ -98,8 +78,6 @@ async function applyMemoryEdit(agentId: string, input: MemoryInput): Promise<Mem
 
   return { ok: true };
 }
-
-type Edit = { content: string } | { error: string };
 
 function appendText(content: string, text: string): Edit {
   return { content: content.length === 0 ? text : `${content}\n\n${text}` };
@@ -111,12 +89,13 @@ function replaceText(content: string, oldText: string, newText: string): Edit {
   const occurrences = countOccurrences(content, oldText);
 
   if (occurrences === 0) {
-    return { error: 'Text not found in memory document.' };
+    return { status: 'not_found', message: 'Text not found in memory document.' };
   }
 
   if (occurrences > 1) {
     return {
-      error: `Text appears ${occurrences} times in memory document. Include more surrounding context so it matches only one place.`,
+      status: 'ambiguous',
+      message: `Text appears ${occurrences} times in memory document. Include more surrounding context so it matches only one place.`,
     };
   }
 
@@ -134,7 +113,3 @@ function countOccurrences(content: string, needle: string): number {
 
   return count;
 }
-
-export type getMemoryToolInput = InferToolInput<ReturnType<typeof getMemoryTool>>;
-export type getMemoryToolOutput = InferToolOutput<ReturnType<typeof getMemoryTool>>;
-export type MemoryUiTool = InferUITool<ReturnType<typeof getMemoryTool>>;

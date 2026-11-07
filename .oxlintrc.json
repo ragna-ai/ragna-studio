@@ -36,18 +36,7 @@
       }
     },
     {
-      "files": [
-        "packages/ai/src/tools/tool-definition.ts",
-        "packages/ai/src/tools/agent-context.tool.ts",
-        "packages/ai/src/tools/dataset.tools.ts",
-        "packages/ai/src/tools/document.tools.ts",
-        "packages/ai/src/tools/image-gen.tool.ts",
-        "packages/ai/src/tools/linkedin-draft.tool.ts",
-        "packages/ai/src/tools/memory.tool.ts",
-        "packages/ai/src/tools/task.tools.ts",
-        "packages/ai/src/tools/video-gen.tool.ts",
-        "packages/ai/src/tools/web-browser.tool.ts"
-      ],
+      "files": ["packages/ai/src/tools/tool-definition.ts"],
       "rules": {
         "no-restricted-imports": "off"
       }

@@ -1,6 +1,6 @@
 # Agents: one tool definition per tool, one runner (design)
 
-> **Status: proposed** (2026-11-07). Issue #305. Builds on #301 (PR #304). Build plan:
+> **Status: implemented** (2026-11-07, PR #306). Issue #305. Builds on #301 (PR #304). Build plan:
 > [slices.md](./slices.md).
 
 A refactor with no PRD: users see no change. The problem statement lives in #305. This doc holds
@@ -101,12 +101,7 @@ export interface ToolDefinition<Schema extends z.ZodObject, Output> {
 export function filterByAccess(definitions, access: ToolAccess): ToolDefinition[];
 
 /** Runs one call: logs and cleans a throw. Used by the AI SDK and the MCP adapter. */
-export function executeTool(
-  definition,
-  input,
-  ctx: ToolContext,
-  log: ToolRunLog,
-): Promise<unknown>;
+export function executeTool(definition, input, ctx: ToolContext, log: ToolRunLog): Promise<unknown>;
 
 export class ToolExecutionError extends Error {} // generic message naming the tool
 
@@ -161,7 +156,8 @@ rest). Built-in grants have no level, so they are not filtered yet. #281 reads `
 - `.oxlintrc.json`: `no-restricted-imports` for `tool` from `ai` in `packages/ai/src/tools/`,
   off for `tool-definition.ts` (AC-7).
 - Removed exports with no reader outside `@repo/ai`: every `getXTool`, `XUiTool`, `XToolInput`,
-  `XToolOutput` type, `getCloudDriveTools`. `apps/api/test/stub-stream-writer.ts` goes too.
+  `XToolOutput` type, `getCloudDriveTools`. `apps/api/test/stub-stream-writer.ts` becomes `stub-tool-execution-options.ts`, without the
+  writer stub.
 - `specs/glossary.md`: add **tool definition** and **tool failure**.
 
 ## Testing

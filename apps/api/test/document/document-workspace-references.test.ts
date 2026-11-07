@@ -1,10 +1,9 @@
-import { getCreateDocumentTool, getEditDocumentTool, getReadDocumentTool } from '@repo/ai';
+import { documentToolDefinitions, type ToolContext } from '@repo/ai';
 import { seedAuthenticatedUser, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
 import {
   createDocument,
   createFolder,
@@ -18,6 +17,20 @@ import {
 const idSchema = z.object({ id: z.string() });
 const documentSchema = z.object({ id: z.string(), folderId: z.string().nullable() });
 const documentResponseSchema = z.object({ document: documentSchema });
+
+function toolContext(workspaceId: string): ToolContext {
+  return { userId: 'user-1', workspaceId, origin: 'agent' };
+}
+
+function findDocumentDefinition(agentId: string, name: string) {
+  const definition = documentToolDefinitions({ agentId }).find(
+    (candidate) => candidate.name === name,
+  );
+  if (!definition) {
+    throw new Error(`Missing document tool ${name}`);
+  }
+  return definition;
+}
 
 async function createAgent(cookieHeader: string, workspaceId: string): Promise<string> {
   const { aiModelId } = await seedTokenPricedAiModel();
@@ -99,48 +112,48 @@ describe('document tools', () => {
     await truncateAllTables();
   });
 
-  test('createDocument returns "Folder not found." for a folder of another workspace', async () => {
+  test('createDocument fails with not_found for a folder of another workspace', async () => {
     const userA = await seedAuthenticatedUser();
     const userB = await seedAuthenticatedUser();
     const foreignFolderId = await createFolder(userB.cookieHeader, userB.workspaceId);
     const agentId = await createAgent(userA.cookieHeader, userA.workspaceId);
-    const createDocumentTool = getCreateDocumentTool(stubStreamWriter, userA.workspaceId, agentId);
+    const createDocumentTool = findDocumentDefinition(agentId, 'createDocument');
 
-    const result = await createDocumentTool.execute?.(
+    const result = await createDocumentTool.execute(
       { title: 'Notes', content: 'Hello', folderId: foreignFolderId },
-      stubToolExecutionOptions,
+      toolContext(userA.workspaceId),
     );
 
-    expect(result).toEqual({ error: 'Folder not found.' });
+    expect(result).toEqual({ status: 'not_found', message: 'Folder not found.' });
     expect(await countDocuments(userA.cookieHeader, userA.workspaceId)).toBe(0);
   });
 
-  test('readDocument returns "Document not found." for a document of another workspace', async () => {
+  test('readDocument fails with not_found for a document of another workspace', async () => {
     const userA = await seedAuthenticatedUser();
     const userB = await seedAuthenticatedUser();
     const foreignDocumentId = await createDocument(userB.cookieHeader, userB.workspaceId);
-    const readDocumentTool = getReadDocumentTool(stubStreamWriter, userA.workspaceId);
+    const readDocumentTool = findDocumentDefinition('agent-1', 'readDocument');
 
-    const result = await readDocumentTool.execute?.(
+    const result = await readDocumentTool.execute(
       { documentId: foreignDocumentId },
-      stubToolExecutionOptions,
+      toolContext(userA.workspaceId),
     );
 
-    expect(result).toEqual({ error: 'Document not found.' });
+    expect(result).toEqual({ status: 'not_found', message: 'Document not found.' });
   });
 
-  test('editDocument returns "Document not found." for a document of another workspace and changes nothing', async () => {
+  test('editDocument fails with not_found for a document of another workspace and changes nothing', async () => {
     const userA = await seedAuthenticatedUser();
     const userB = await seedAuthenticatedUser();
     const foreignDocumentId = await createDocument(userB.cookieHeader, userB.workspaceId);
-    const editDocumentTool = getEditDocumentTool(stubStreamWriter, userA.workspaceId);
+    const editDocumentTool = findDocumentDefinition('agent-1', 'editDocument');
 
-    const result = await editDocumentTool.execute?.(
+    const result = await editDocumentTool.execute(
       { documentId: foreignDocumentId, action: 'append', text: 'Injected' },
-      stubToolExecutionOptions,
+      toolContext(userA.workspaceId),
     );
 
-    expect(result).toEqual({ error: 'Document not found.' });
+    expect(result).toEqual({ status: 'not_found', message: 'Document not found.' });
     const unchanged = await app.request(
       `/workspace/${userB.workspaceId}/document/${foreignDocumentId}`,
       { headers: { cookie: userB.cookieHeader } },

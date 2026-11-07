@@ -1,14 +1,6 @@
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import * as z from 'zod';
-import { draftLinkedInPost, type DraftLinkedInPostResult } from '../services/social-post.service';
+import { draftLinkedInPost } from '../services/social-post.service';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 const linkedinDraftInputSchema = z.object({
   text: z
@@ -31,31 +23,28 @@ const linkedinDraftInputSchema = z.object({
     ),
 });
 
-type LinkedinDraftInput = z.infer<typeof linkedinDraftInputSchema>;
-type LinkedinDraftOutput = DraftLinkedInPostResult;
+interface LinkedinDraftSaved {
+  id: string;
+  status: string;
+}
 
-export const getLinkedinDraft = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  userId: string,
-  workspaceId: string,
-): Tool<LinkedinDraftInput, LinkedinDraftOutput> =>
-  tool({
-    description:
-      'Use this tool to create or revise a LinkedIn post draft for the user. It only saves the draft; it never publishes to LinkedIn. The user reviews and publishes drafts themselves. Pass imageIds to attach up to 9 images that were generated earlier with the imageGen tool.',
-    inputSchema: linkedinDraftInputSchema,
-    execute: async ({ text, draftId, imageIds }) => {
-      // emit tool usage message
-      writer.write({
-        type: 'data-linkedinDraft',
-        data: { text, draftId, imageIds },
-        transient: true,
-      });
+type LinkedinDraftOutput = LinkedinDraftSaved | ToolFailure<'rejected'>;
 
-      // only id and status go back into the model context; the full record stays in the DB
-      return draftLinkedInPost({ userId, text, draftId, imageIds, workspaceId });
-    },
-  });
-
-export type getLinkedinDraftInput = InferToolInput<ReturnType<typeof getLinkedinDraft>>;
-export type getLinkedinDraftOutput = InferToolOutput<ReturnType<typeof getLinkedinDraft>>;
-export type LinkedinDraftUiTool = InferUITool<ReturnType<typeof getLinkedinDraft>>;
+export const linkedinDraftToolDefinition: ToolDefinition<
+  typeof linkedinDraftInputSchema,
+  LinkedinDraftOutput
+> = {
+  name: 'linkedinDraft',
+  description:
+    'Use this tool to create or revise a LinkedIn post draft for the user. It only saves the draft; it never publishes to LinkedIn. The user reviews and publishes drafts themselves. Pass imageIds to attach up to 9 images that were generated earlier with the imageGen tool.',
+  inputSchema: linkedinDraftInputSchema,
+  access: 'write',
+  execute: async ({ text, draftId, imageIds }, { userId, workspaceId }) => {
+    const result = await draftLinkedInPost({ userId, text, draftId, imageIds, workspaceId });
+    // The service words its errors for the model and logs the internal cause itself.
+    if ('error' in result) {
+      return { status: 'rejected', message: result.error };
+    }
+    return { id: result.id, status: result.status };
+  },
+};
