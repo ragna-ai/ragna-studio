@@ -17,6 +17,29 @@
       "rules": {
         "no-restricted-properties": "off"
       }
+    },
+    {
+      "files": ["packages/ai/src/tools/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "ai",
+                "importNames": ["tool"],
+                "message": "Write a ToolDefinition. Only tool-definition.ts turns definitions into AI SDK tools."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/ai/src/tools/tool-definition.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
     }
   ]
 }

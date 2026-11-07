@@ -31,7 +31,7 @@ import {
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import * as z from 'zod';
-import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
+import { stubToolExecutionOptions } from '../stub-tool-execution-options';
 
 // The Google Drive HTTP API is faked, so the real adapter, parsing and error mapping run.
 
@@ -44,7 +44,7 @@ const DRIVE_WRITE_GRANT: AgentToolGrant = { id: 'google-drive', access: 'write' 
 const NO_WAIT_HEADERS = { 'Retry-After': '0' };
 
 function toolsFor(userId: string, toolGrants: Agent['toolGrants']): ToolSet {
-  return buildAgentToolset(toolGrants, stubStreamWriter, {
+  return buildAgentToolset(toolGrants, {
     userId,
     agentId: 'agent-1',
     workspaceId: 'workspace-1',

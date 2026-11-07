@@ -12,7 +12,7 @@ import { logger } from '@repo/logger';
 import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
 import type { ToolSet } from 'ai';
 import * as z from 'zod';
-import { toAgentTools, type ToolAccess, type ToolDefinition } from './tool-definition';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 export const CLOUD_DRIVE_READ_MAX_BYTES = 20 * 1024 * 1024;
 export const CLOUD_DRIVE_READ_MAX_CHARACTERS = 100_000;
@@ -44,11 +44,7 @@ export type CloudDriveToolStatus =
   | 'too_large'
   | 'busy';
 
-export interface CloudDriveToolFailure {
-  status: Exclude<CloudDriveToolStatus, 'ok'>;
-  /** Short, model-facing explanation. Never contains a token. */
-  message: string;
-}
+export type CloudDriveToolFailure = ToolFailure<Exclude<CloudDriveToolStatus, 'ok'>>;
 
 export interface CloudDriveItemOutput {
   id: string;
@@ -346,27 +342,6 @@ export function cloudDriveToolDefinitions(
     createFileDefinition,
     updateFileDefinition,
   ];
-}
-
-export interface GetCloudDriveToolsParams {
-  integrationId: CloudDriveIntegrationId;
-  access: ToolAccess;
-  userId: string;
-  workspaceId: string;
-}
-
-/** AI SDK tools for one drive, limited to what the grant's access allows. */
-export function getCloudDriveTools({
-  integrationId,
-  access,
-  userId,
-  workspaceId,
-}: GetCloudDriveToolsParams): ToolSet {
-  return toAgentTools(cloudDriveToolDefinitions(integrationId), access, {
-    userId,
-    workspaceId,
-    origin: 'agent',
-  });
 }
 
 const CLOUD_DRIVE_INTEGRATION_IDS =

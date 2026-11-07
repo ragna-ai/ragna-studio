@@ -1,46 +1,23 @@
 import type { StoredAgentToolGrant } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import type { ToolSet, UIMessageStreamWriter } from 'ai';
-import { getSearchContextDocumentsTool } from './agent-context.tool';
-import {
-  agentToolGrantSchema,
-  type AgentToolGrant,
-  type BuiltinAgentToolId,
-  type IntegrationAgentToolId,
-} from './agent-tool-catalog';
-import { getCloudDriveTools } from './cloud-drive.tools';
-import {
-  getDatasetAppendRowTool,
-  getDatasetCreateTool,
-  getDatasetFindTool,
-  getDatasetGetRowTool,
-  getDatasetListRowsTool,
-  getDatasetMoveRowTool,
-  getDatasetUpdateRowTool,
-} from './dataset.tools';
-import {
-  getCreateDocumentTool,
-  getEditDocumentTool,
-  getListDocumentsTool,
-  getReadDocumentTool,
-} from './document.tools';
-import { getGeneratedImages } from './image-gen.tool';
-import { getLinkedinDraft } from './linkedin-draft.tool';
-import { getMemoryTool } from './memory.tool';
-import {
-  getCreateTaskTool,
-  getListTasksTool,
-  getMoveTaskTool,
-  getReadTaskTool,
-  getUpdateTaskTool,
-} from './task.tools';
-import { getThoughts } from './think.tool';
-import { getGeneratedVideo } from './video-gen.tool';
-import { getWebBrowserResults } from './web-browser.tool';
-import { getWebSearchResults } from './web-search.tool';
-import type { ToolAccess } from './tool-definition';
+import { searchContextDocumentsToolDefinition } from './agent-context.tool';
+import type * as z from 'zod';
+import { agentToolGrantSchema, type AgentToolGrant, type AgentToolId } from './agent-tool-catalog';
+import { cloudDriveToolDefinitions } from './cloud-drive.tools';
+import { datasetToolDefinitions } from './dataset.tools';
+import { documentToolDefinitions } from './document.tools';
+import { imageGenToolDefinition } from './image-gen.tool';
+import { linkedinDraftToolDefinition } from './linkedin-draft.tool';
+import { memoryToolDefinition } from './memory.tool';
+import { taskToolDefinitions } from './task.tools';
+import { thinkToolDefinition } from './think.tool';
+import { videoGenToolDefinition } from './video-gen.tool';
+import { webBrowserToolDefinition } from './web-browser.tool';
+import { filterByAccess, toAgentTools, type ToolDefinition } from './tool-definition';
+import { webSearchToolDefinition } from './web-search.tool';
 
-export type AgentToolContext = {
+export interface AgentToolContext {
   userId: string;
   agentId: string;
   workspaceId: string;
@@ -50,64 +27,28 @@ export type AgentToolContext = {
   // Set when buildAgentInstructions decides the context needs retrieval.
   // Not part of the agent's own tool grants.
   retrievalMode?: boolean;
-};
+  /** The chat stream. Absent in workflows, which have no chat UI. */
+  writer?: UIMessageStreamWriter;
+}
 
-type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
-type AccessToolsetFactory = (
-  writer: UIMessageStreamWriter,
+type AgentToolDefinitions = (
   ctx: AgentToolContext,
-  access: ToolAccess,
-) => ToolSet;
+) => readonly ToolDefinition<z.ZodObject, unknown>[];
 
-// A ToolSet is just a record, so tools are grouped here and only granted
-// ones are ever constructed or sent to the model.
-const toolsets = {
-  think: (writer) => ({ think: getThoughts(writer) }),
-  webSearch: (writer) => ({ webSearch: getWebSearchResults(writer) }),
-  webBrowser: (writer) => ({ webBrowser: getWebBrowserResults(writer) }),
-  imageGen: (writer, ctx) => ({
-    imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId, ctx.runsInWorker ?? false),
-  }),
-  videoGen: (writer, ctx) => ({
-    videoGen: getGeneratedVideo(writer, ctx.userId, ctx.workspaceId, ctx.runsInWorker ?? false),
-  }),
-  linkedinDraft: (writer, ctx) => ({
-    linkedinDraft: getLinkedinDraft(writer, ctx.userId, ctx.workspaceId),
-  }),
-  memory: (writer, ctx) => ({ memory: getMemoryTool(writer, ctx.agentId) }),
-  datasets: (writer, ctx) => ({
-    datasetCreate: getDatasetCreateTool(writer, ctx.userId, ctx.workspaceId),
-    datasetFind: getDatasetFindTool(writer, ctx.userId, ctx.workspaceId),
-    datasetListRows: getDatasetListRowsTool(writer, ctx.userId, ctx.workspaceId),
-    datasetGetRow: getDatasetGetRowTool(writer, ctx.userId, ctx.workspaceId),
-    datasetAppendRow: getDatasetAppendRowTool(writer, ctx.userId, ctx.workspaceId),
-    datasetUpdateRow: getDatasetUpdateRowTool(writer, ctx.userId, ctx.workspaceId),
-    datasetMoveRow: getDatasetMoveRowTool(writer, ctx.userId, ctx.workspaceId),
-  }),
-  documents: (writer, ctx) => ({
-    listDocuments: getListDocumentsTool(writer, ctx.workspaceId),
-    readDocument: getReadDocumentTool(writer, ctx.workspaceId),
-    createDocument: getCreateDocumentTool(writer, ctx.workspaceId, ctx.agentId),
-    editDocument: getEditDocumentTool(writer, ctx.workspaceId),
-  }),
-  tasks: (writer, ctx) => ({
-    listTasks: getListTasksTool(writer, ctx.workspaceId),
-    readTask: getReadTaskTool(writer, ctx.workspaceId),
-    createTask: getCreateTaskTool(writer, ctx.workspaceId, ctx.agentId),
-    updateTask: getUpdateTaskTool(writer, ctx.workspaceId),
-    moveTask: getMoveTaskTool(writer, ctx.workspaceId),
-  }),
-} satisfies Record<BuiltinAgentToolId, ToolsetFactory>;
-
-const accessToolsets = {
-  'google-drive': (_writer, ctx, access) =>
-    getCloudDriveTools({
-      integrationId: 'google-drive',
-      access,
-      userId: ctx.userId,
-      workspaceId: ctx.workspaceId,
-    }),
-} satisfies Record<IntegrationAgentToolId, AccessToolsetFactory>;
+/** The tool definitions behind each agent tool id. Only granted ones are built. */
+const agentToolDefinitions = {
+  think: () => [thinkToolDefinition],
+  datasets: () => datasetToolDefinitions,
+  webSearch: () => [webSearchToolDefinition],
+  webBrowser: () => [webBrowserToolDefinition],
+  memory: (ctx) => [memoryToolDefinition({ agentId: ctx.agentId })],
+  linkedinDraft: () => [linkedinDraftToolDefinition],
+  'google-drive': () => cloudDriveToolDefinitions('google-drive'),
+  documents: (ctx) => documentToolDefinitions({ agentId: ctx.agentId }),
+  tasks: (ctx) => taskToolDefinitions({ agentId: ctx.agentId }),
+  imageGen: (ctx) => [imageGenToolDefinition({ runsInWorker: ctx.runsInWorker ?? false })],
+  videoGen: (ctx) => [videoGenToolDefinition({ runsInWorker: ctx.runsInWorker ?? false })],
+} satisfies Record<AgentToolId, AgentToolDefinitions>;
 
 function parseStoredGrants(storedGrants: readonly StoredAgentToolGrant[]): AgentToolGrant[] {
   const grants: AgentToolGrant[] = [];
@@ -121,27 +62,34 @@ function parseStoredGrants(storedGrants: readonly StoredAgentToolGrant[]): Agent
   return grants;
 }
 
+/** The definitions a grant gives, limited to its access level when the tool has levels. */
+function grantedDefinitions(
+  grant: AgentToolGrant,
+  ctx: AgentToolContext,
+): readonly ToolDefinition<z.ZodObject, unknown>[] {
+  const buildDefinitions: AgentToolDefinitions = agentToolDefinitions[grant.id];
+  const definitions = buildDefinitions(ctx);
+  return 'access' in grant ? filterByAccess(definitions, grant.access) : definitions;
+}
+
 /**
  * Builds the `tools` record for an agent from its stored grants. Only granted
  * tools are built. Invalid stored grants are skipped and logged once.
  */
 export function buildAgentToolset(
   storedGrants: readonly StoredAgentToolGrant[],
-  writer: UIMessageStreamWriter,
   ctx: AgentToolContext,
 ): ToolSet {
-  const entries = parseStoredGrants(storedGrants).flatMap((grant) => {
-    const toolset =
-      'access' in grant
-        ? accessToolsets[grant.id](writer, ctx, grant.access)
-        : toolsets[grant.id](writer, ctx);
-    return Object.entries(toolset);
+  const definitions = parseStoredGrants(storedGrants).flatMap((grant) =>
+    grantedDefinitions(grant, ctx),
+  );
+  const retrievalDefinitions = ctx.retrievalMode
+    ? [searchContextDocumentsToolDefinition({ agentId: ctx.agentId })]
+    : [];
+
+  return toAgentTools([...definitions, ...retrievalDefinitions], {
+    toolContext: { userId: ctx.userId, workspaceId: ctx.workspaceId, origin: 'agent' },
+    writer: ctx.writer,
+    logFields: { agentId: ctx.agentId },
   });
-  const tools: ToolSet = Object.fromEntries(entries);
-
-  if (ctx.retrievalMode) {
-    tools.searchContextDocuments = getSearchContextDocumentsTool(writer, ctx.agentId);
-  }
-
-  return tools;
 }

@@ -1,6 +1,6 @@
 import type { McpAccess, McpIntegrationId } from '@repo/database';
 import type { ToolDefinition } from '@repo/ai';
-import { datasetToolDefinitions } from '@repo/ai';
+import { datasetToolDefinitions, filterByAccess } from '@repo/ai';
 import type * as z from 'zod';
 
 // The integration registry: datasets
@@ -25,13 +25,8 @@ export function getAllowedToolDefinitions(
 
   for (const integrationId of Object.keys(mcpIntegrationDefinitions) as McpIntegrationId[]) {
     const level = access[integrationId] ?? 'off';
-    const definitions = mcpIntegrationDefinitions[integrationId];
-
-    if (level === 'write') {
-      allowed.push(...definitions);
-    } else if (level === 'read') {
-      allowed.push(...definitions.filter((definition) => definition.access === 'read'));
-    }
+    if (level === 'off') continue;
+    allowed.push(...filterByAccess(mcpIntegrationDefinitions[integrationId], level));
   }
 
   return allowed;

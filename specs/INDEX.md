@@ -38,6 +38,7 @@ work first, shipped reference and dead/historical docs last.
 | Doc | Status |
 | --- | --- |
 | [Agents: agent tool grants (design)](./agent/301-tool-grants/design.md) | implemented (2026-11-07, PR #304) |
+| [Agents: one tool definition per tool, one runner (design)](./agent/305-tool-runner/design.md) | implemented (2026-11-07, PR #306) |
 | [Agent Context — Phase 2: Documents](./agent/agent-context-documents.md) | implemented (2026-07-17) |
 | [Agent Context — Phase 3: Retrieval](./agent/agent-context-retrieval.md) | implemented (merged via PR #14, 2026-08-02) |
 | [Agent Context — Phase 1: Free-text context](./agent/agent-context.md) | implemented, verified |

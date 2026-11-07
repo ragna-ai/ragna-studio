@@ -1,15 +1,5 @@
 import { getGenImageByIdAndWorkspaceId } from '@repo/database';
 import { toPublicMediaUrl } from '@repo/storage';
-import { tryCatch } from '@repo/utils';
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import * as z from 'zod';
 import {
   createGenVideoRecord,
@@ -17,6 +7,7 @@ import {
   runGenVideo,
   videoGenAspectRatios,
 } from '../services/videogen.service';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 const videoGenInputSchema = z.object({
   prompt: z
@@ -46,15 +37,15 @@ const videoGenInputSchema = z.object({
     ),
 });
 
-type VideoGenInput = z.infer<typeof videoGenInputSchema>;
-
 type GeneratedAgentVideo = {
   id: string;
   status: 'pending' | 'completed';
   videoUrl?: string;
 };
 
-type VideoGenOutput = { video: GeneratedAgentVideo } | { error: string };
+type VideoGenOutput =
+  | { video: GeneratedAgentVideo }
+  | ToolFailure<'image_not_found' | 'generation_failed'>;
 
 // Chat (runsInWorker: false/undefined) enqueues and returns immediately: the
 // multi-minute render never blocks the stream, and a dropped stream can't
@@ -73,39 +64,51 @@ const awaitedDescription =
   'generated image as its first frame. This call waits for the render to finish and returns ' +
   'the finished video URL.';
 
-export const getGeneratedVideo = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  userId: string,
+export interface VideoGenToolOptions {
+  runsInWorker: boolean;
+}
+
+interface VideoFrame {
+  frameOrigin: 'genImage';
+  frameMediaId: string;
+}
+
+/** The first frame of an image-to-video call, or undefined when the image can't be animated. */
+async function findImageFrame(
+  genImageId: string,
   workspaceId: string,
-  runsInWorker: boolean,
-): Tool<VideoGenInput, VideoGenOutput> =>
-  tool({
+): Promise<VideoFrame | undefined> {
+  const genImage = await getGenImageByIdAndWorkspaceId({ id: genImageId, workspaceId });
+  // mediaId is null for a pending/processing/failed row: it has no frame to animate yet.
+  if (!genImage?.mediaId) return undefined;
+  return { frameOrigin: 'genImage', frameMediaId: genImage.mediaId };
+}
+
+const imageNotFoundFailure: ToolFailure<'image_not_found'> = {
+  status: 'image_not_found',
+  message: 'The referenced image was not found in this workspace or has not finished generating.',
+};
+
+const generationFailedFailure: ToolFailure<'generation_failed'> = {
+  status: 'generation_failed',
+  message: 'Video generation failed to start. Tell the user and try again later.',
+};
+
+export function videoGenToolDefinition({
+  runsInWorker,
+}: VideoGenToolOptions): ToolDefinition<typeof videoGenInputSchema, VideoGenOutput> {
+  return {
+    name: 'videoGen',
     description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: videoGenInputSchema,
-    execute: async (input): Promise<VideoGenOutput> => {
-      // emit tool usage message
-      writer.write({
-        type: 'data-videoGen',
-        data: { prompt: input.prompt },
-        transient: true,
-      });
-
-      let frame: { frameOrigin: 'genImage'; frameMediaId: string } | undefined;
+    access: 'write',
+    uiEvent: (input) => ({ type: 'data-videoGen', data: { prompt: input.prompt } }),
+    execute: async (input, { userId, workspaceId }) => {
+      let frame: VideoFrame | undefined;
 
       if (input.genImageId) {
-        const { error, data: genImage } = await tryCatch(
-          () => getGenImageByIdAndWorkspaceId({ id: input.genImageId as string, workspaceId }),
-          { retryOnFailure: false },
-        );
-
-        // mediaId is null for a pending/processing/failed row:
-        // a generation
-        // that hasn't produced an object yet has no frame to animate.
-        if (error !== null || !genImage || !genImage.mediaId) {
-          return { error: 'The referenced image was not found in this workspace.' };
-        }
-
-        frame = { frameOrigin: 'genImage', frameMediaId: genImage.mediaId };
+        frame = await findImageFrame(input.genImageId, workspaceId);
+        if (!frame) return imageNotFoundFailure;
       }
 
       const params = {
@@ -120,41 +123,15 @@ export const getGeneratedVideo = (
       };
 
       if (runsInWorker) {
-        const { error: createError, data: record } = await tryCatch(
-          () => createGenVideoRecord(params),
-          { retryOnFailure: false },
-        );
-
-        if (createError !== null || !record) {
-          return { error: 'Video generation failed to start.' };
-        }
-
-        const { error: runError, data: completed } = await tryCatch(
-          () => runGenVideo({ genVideoId: record.id }),
-          { retryOnFailure: false },
-        );
-
-        if (runError !== null || !completed) {
-          return { error: 'Video generation failed. Service currently unavailable.' };
-        }
-
+        const record = await createGenVideoRecord(params);
+        const completed = await runGenVideo({ genVideoId: record.id });
         const videoUrl = completed.media ? toPublicMediaUrl(completed.media.storageKey) : undefined;
-
         return { video: { id: completed.id, status: 'completed', videoUrl } };
       }
 
-      const { error, data: requested } = await tryCatch(() => requestGenVideo(params), {
-        retryOnFailure: false,
-      });
-
-      if (error !== null || !requested || requested.status === 'failed') {
-        return { error: 'Video generation failed to start.' };
-      }
-
+      const requested = await requestGenVideo(params);
+      if (requested.status === 'failed') return generationFailedFailure;
       return { video: { id: requested.id, status: 'pending' } };
     },
-  });
-
-export type getGeneratedVideoInput = InferToolInput<ReturnType<typeof getGeneratedVideo>>;
-export type getGeneratedVideoOutput = InferToolOutput<ReturnType<typeof getGeneratedVideo>>;
-export type VideoGenUiTool = InferUITool<ReturnType<typeof getGeneratedVideo>>;
+  };
+}

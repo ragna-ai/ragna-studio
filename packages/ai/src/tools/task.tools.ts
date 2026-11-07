@@ -6,26 +6,16 @@ import type {
   TaskWithDetails,
 } from '@repo/database';
 import {
-  FOREIGN_REFERENCE_RESOURCE_LABEL,
   createTask,
-  getForeignReferenceResource,
   getTaskById,
   listTasks,
   listTaskLabels,
   moveTask,
   updateTask,
 } from '@repo/database';
-import { tryCatch } from '@repo/utils';
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import * as z from 'zod';
+import { failOnForeignReference } from './foreign-reference-failure';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a task always belongs to a workspace (the workspace is
@@ -62,13 +52,15 @@ function toTaskDisplayId(taskNumber: number): string {
   return `TSK-${taskNumber}`;
 }
 
-function toErrorMessage(error: unknown, fallback: string): string {
-  const foreignResource = getForeignReferenceResource(error);
-  if (foreignResource !== null) {
-    return `${FOREIGN_REFERENCE_RESOURCE_LABEL[foreignResource]} not found.`;
-  }
-  return error instanceof Error ? error.message : fallback;
+export interface TaskToolDefinitionsOptions {
+  /** Marks the tasks the create tool makes as agent-created. */
+  agentId: string;
 }
+
+const TASK_NOT_FOUND: ToolFailure<'not_found'> = {
+  status: 'not_found',
+  message: 'Task not found.',
+};
 
 function toTaskSummary(taskRecord: TaskWithBoardInfo) {
   return {
@@ -122,10 +114,10 @@ function toTaskBrief(taskRecord: Task) {
   };
 }
 
-type LabelResolution = { labelIds: string[] } | { error: string };
+type LabelResolution = { labelIds: string[] } | ToolFailure<'invalid_input'>;
 
 // Agents attach existing labels only, never create them.
-// Unknown names come back as a tool error listing what's
+// Unknown names come back as a tool failure listing what's
 // actually available, so the model can retry with a valid name.
 async function resolveLabelIds({
   workspaceId,
@@ -141,7 +133,8 @@ async function resolveLabelIds({
   if (unknownNames.length > 0) {
     const available = labels.map((label) => label.name).join(', ') || 'none';
     return {
-      error: `Unknown label name(s): ${unknownNames.join(', ')}. Available labels: ${available}.`,
+      status: 'invalid_input',
+      message: `Unknown label name(s): ${unknownNames.join(', ')}. Available labels: ${available}.`,
     };
   }
 
@@ -156,12 +149,12 @@ async function resolveLabelIds({
   return { labelIds };
 }
 
-type ParentValidation = { ok: true } | { error: string };
+type ParentFailure = ToolFailure<'not_found' | 'invalid_input'>;
 
 // One-level subtask rule: a task with a
 // `parentTaskId` of its own is rejected as a parent. Shared by createTask
-// and updateTask.
-async function validateParentTask({
+// and updateTask. Returns null when the parent is valid.
+async function findParentTaskFailure({
   parentTaskId,
   workspaceId,
   taskIdBeingUpdated,
@@ -169,21 +162,24 @@ async function validateParentTask({
   parentTaskId: string;
   workspaceId: string;
   taskIdBeingUpdated?: string;
-}): Promise<ParentValidation> {
+}): Promise<ParentFailure | null> {
   if (taskIdBeingUpdated && parentTaskId === taskIdBeingUpdated) {
-    return { error: 'A task cannot be its own parent.' };
+    return { status: 'invalid_input', message: 'A task cannot be its own parent.' };
   }
 
   const parentTask = await getTaskById({ id: parentTaskId, workspaceId });
   if (!parentTask) {
-    return { error: 'Parent task not found.' };
+    return { status: 'not_found', message: 'Parent task not found.' };
   }
 
   if (parentTask.parentTaskId !== null) {
-    return { error: 'Cannot nest under a subtask; subtasks are one level deep.' };
+    return {
+      status: 'invalid_input',
+      message: 'Cannot nest under a subtask; subtasks are one level deep.',
+    };
   }
 
-  return { ok: true };
+  return null;
 }
 
 // listTasks
@@ -195,32 +191,21 @@ const listTasksInputSchema = z.object({
     .describe('Only return tasks in this status column. Omit to return every status.'),
 });
 
-type ListTasksInput = z.infer<typeof listTasksInputSchema>;
-type ListTasksOutput = { tasks: ReturnType<typeof toTaskSummary>[] } | { error: string };
+interface ListTasksOutput {
+  tasks: ReturnType<typeof toTaskSummary>[];
+}
 
-export const getListTasksTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string,
-): Tool<ListTasksInput, ListTasksOutput> =>
-  tool({
-    description:
-      "List the tasks on the current workspace's board: display id (TSK-<number>), id, title, status, priority, due date, reminder offset, labels, parent task, assigned agent, and subtask count. Optionally filter by status.",
-    inputSchema: listTasksInputSchema,
-    execute: async (input) => {
-      writer.write({ type: 'data-task', data: { action: 'list' }, transient: true });
-
-      const { error, data: tasks } = await tryCatch(
-        () => listTasks({ workspaceId, status: input.status }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !tasks) {
-        return { error: toErrorMessage(error, 'Failed to list tasks.') };
-      }
-
-      return { tasks: tasks.map(toTaskSummary) };
-    },
-  });
+const listTasksDefinition: ToolDefinition<typeof listTasksInputSchema, ListTasksOutput> = {
+  name: 'listTasks',
+  description:
+    "List the tasks on the current workspace's board: display id (TSK-<number>), id, title, status, priority, due date, reminder offset, labels, parent task, assigned agent, and subtask count. Optionally filter by status.",
+  inputSchema: listTasksInputSchema,
+  access: 'read',
+  execute: async ({ status }, { workspaceId }) => {
+    const tasks = await listTasks({ workspaceId, status });
+    return { tasks: tasks.map(toTaskSummary) };
+  },
+};
 
 // readTask
 
@@ -228,40 +213,27 @@ const readTaskInputSchema = z.object({
   id: z.string().describe('The id of the task to read.'),
 });
 
-type ReadTaskInput = z.infer<typeof readTaskInputSchema>;
-type ReadTaskOutput = { task: ReturnType<typeof toTaskDetail> } | { error: string };
+interface ReadTaskOutput {
+  task: ReturnType<typeof toTaskDetail>;
+}
 
-export const getReadTaskTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string,
-): Tool<ReadTaskInput, ReadTaskOutput> =>
-  tool({
-    description:
-      'Read a single task in full by its id, including its markdown description and its subtasks.',
-    inputSchema: readTaskInputSchema,
-    execute: async (input) => {
-      writer.write({
-        type: 'data-task',
-        data: { action: 'read', taskId: input.id },
-        transient: true,
-      });
-
-      const { error, data: taskRecord } = await tryCatch(
-        () => getTaskById({ id: input.id, workspaceId }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null) {
-        return { error: toErrorMessage(error, 'Failed to read task.') };
-      }
-
-      if (!taskRecord) {
-        return { error: 'Task not found.' };
-      }
-
-      return { task: toTaskDetail(taskRecord) };
-    },
-  });
+const readTaskDefinition: ToolDefinition<
+  typeof readTaskInputSchema,
+  ReadTaskOutput | ToolFailure<'not_found'>
+> = {
+  name: 'readTask',
+  description:
+    'Read a single task in full by its id, including its markdown description and its subtasks.',
+  inputSchema: readTaskInputSchema,
+  access: 'read',
+  execute: async ({ id }, { workspaceId }) => {
+    const taskRecord = await getTaskById({ id, workspaceId });
+    if (!taskRecord) {
+      return TASK_NOT_FOUND;
+    }
+    return { task: toTaskDetail(taskRecord) };
+  },
+};
 
 // createTask
 
@@ -290,74 +262,75 @@ const createTaskInputSchema = z.object({
     ),
 });
 
-type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
-type CreateTaskOutput = { task: ReturnType<typeof toTaskBrief> } | { error: string };
+interface TaskBriefOutput {
+  task: ReturnType<typeof toTaskBrief>;
+}
 
-export const getCreateTaskTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string,
-  agentId: string,
-): Tool<CreateTaskInput, CreateTaskOutput> =>
-  tool({
+type TaskWriteFailure = ToolFailure<'not_found' | 'invalid_input'>;
+
+function createTaskDefinition({
+  agentId,
+}: TaskToolDefinitionsOptions): ToolDefinition<
+  typeof createTaskInputSchema,
+  TaskBriefOutput | TaskWriteFailure
+> {
+  return {
+    name: 'createTask',
     description:
       "Create a new task on the current workspace's board. Tasks you create are marked as agent-created.",
     inputSchema: createTaskInputSchema,
-    execute: async (input) => {
-      writer.write({ type: 'data-task', data: { action: 'create' }, transient: true });
+    access: 'write',
+    execute: (input, { workspaceId }) =>
+      failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
+        // Ignore a reminder offset without a real due date instead of erroring.
+        const remindDaysBeforeDue = input.dueDate ? input.remindDaysBeforeDue : undefined;
 
-      // Ignore a reminder offset without a real due date instead of erroring.
-      const remindDaysBeforeDue = input.dueDate ? input.remindDaysBeforeDue : undefined;
-
-      if (input.parentTaskId) {
-        const parentValidation = await validateParentTask({
-          parentTaskId: input.parentTaskId,
-          workspaceId,
-        });
-        if ('error' in parentValidation) {
-          return parentValidation;
-        }
-      }
-
-      let labelIds: string[] | undefined;
-      if (input.labelNames && input.labelNames.length > 0) {
-        const resolvedLabels = await resolveLabelIds({ workspaceId, labelNames: input.labelNames });
-        if ('error' in resolvedLabels) {
-          return resolvedLabels;
-        }
-        labelIds = resolvedLabels.labelIds;
-      }
-
-      const { error, data: createdTask } = await tryCatch(
-        () =>
-          createTask({
-            workspaceId,
-            title: input.title,
-            description: input.description,
-            status: input.status,
-            priority: input.priority,
-            dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
-            remindDaysBeforeDue,
+        if (input.parentTaskId) {
+          const parentFailure = await findParentTaskFailure({
             parentTaskId: input.parentTaskId,
-            createdByAgentId: agentId,
-            labelIds,
-          }),
-        { retryOnFailure: false },
-      );
+            workspaceId,
+          });
+          if (parentFailure) {
+            return parentFailure;
+          }
+        }
 
-      if (error !== null || !createdTask) {
-        return { error: toErrorMessage(error, 'Failed to create task.') };
-      }
+        let labelIds: string[] | undefined;
+        if (input.labelNames && input.labelNames.length > 0) {
+          const resolvedLabels = await resolveLabelIds({
+            workspaceId,
+            labelNames: input.labelNames,
+          });
+          if ('status' in resolvedLabels) {
+            return resolvedLabels;
+          }
+          labelIds = resolvedLabels.labelIds;
+        }
 
-      return { task: toTaskBrief(createdTask) };
-    },
-  });
+        const createdTask = await createTask({
+          workspaceId,
+          title: input.title,
+          description: input.description,
+          status: input.status,
+          priority: input.priority,
+          dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+          remindDaysBeforeDue,
+          parentTaskId: input.parentTaskId,
+          createdByAgentId: agentId,
+          labelIds,
+        });
+
+        return { task: toTaskBrief(createdTask) };
+      }),
+  };
+}
 
 // updateTask
 
 // Mirrors the repo's own `UpdateTaskFields` shape (task.repo.ts), which isn't
 // exported. `status`/`sortOrder` are deliberately absent: the repo excludes
 // them too, moving a task is `moveTask`'s job, not this tool's.
-type TaskUpdateFields = {
+interface TaskUpdateFields {
   title?: string;
   description?: string;
   priority?: TaskPriority;
@@ -365,7 +338,7 @@ type TaskUpdateFields = {
   remindDaysBeforeDue?: number | null;
   parentTaskId?: string | null;
   assignedAgentId?: string | null;
-};
+}
 
 const updateTaskInputSchema = z.object({
   id: z.string().describe('The id of the task to update.'),
@@ -407,34 +380,20 @@ const updateTaskInputSchema = z.object({
   unassign: z.boolean().optional().describe('Set true to remove the current agent assignment.'),
 });
 
-type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
-type UpdateTaskOutput = { task: ReturnType<typeof toTaskBrief> } | { error: string };
-
-export const getUpdateTaskTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string,
-): Tool<UpdateTaskInput, UpdateTaskOutput> =>
-  tool({
-    description:
-      'Partially update a task: only the given fields change. Changing the due date or reminder offset re-arms the reminder. Does not change status; use moveTask for that.',
-    inputSchema: updateTaskInputSchema,
-    execute: async (input) => {
-      writer.write({
-        type: 'data-task',
-        data: { action: 'update', taskId: input.id },
-        transient: true,
-      });
-
-      const { error: loadError, data: currentTask } = await tryCatch(
-        () => getTaskById({ id: input.id, workspaceId }),
-        { retryOnFailure: false },
-      );
-
-      if (loadError !== null) {
-        return { error: toErrorMessage(loadError, 'Failed to load task.') };
-      }
+const updateTaskDefinition: ToolDefinition<
+  typeof updateTaskInputSchema,
+  TaskBriefOutput | TaskWriteFailure
+> = {
+  name: 'updateTask',
+  description:
+    'Partially update a task: only the given fields change. Changing the due date or reminder offset re-arms the reminder. Does not change status; use moveTask for that.',
+  inputSchema: updateTaskInputSchema,
+  access: 'write',
+  execute: (input, { workspaceId }) =>
+    failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
+      const currentTask = await getTaskById({ id: input.id, workspaceId });
       if (!currentTask) {
-        return { error: 'Task not found.' };
+        return TASK_NOT_FOUND;
       }
 
       const fields: TaskUpdateFields = {};
@@ -460,45 +419,46 @@ export const getUpdateTaskTool = (
         fields.remindDaysBeforeDue !== undefined &&
         resolvedDueDate === null
       ) {
-        return { error: '`remindDaysBeforeDue` requires a due date.' };
+        return {
+          status: 'invalid_input',
+          message: '`remindDaysBeforeDue` requires a due date.',
+        };
       }
 
       if ('parentTaskId' in fields && fields.parentTaskId) {
         if (currentTask.subtasks.length > 0) {
-          return { error: 'Cannot set a parent on a task that already has subtasks.' };
+          return {
+            status: 'invalid_input',
+            message: 'Cannot set a parent on a task that already has subtasks.',
+          };
         }
 
-        const parentValidation = await validateParentTask({
+        const parentFailure = await findParentTaskFailure({
           parentTaskId: fields.parentTaskId,
           workspaceId,
           taskIdBeingUpdated: input.id,
         });
-        if ('error' in parentValidation) {
-          return parentValidation;
+        if (parentFailure) {
+          return parentFailure;
         }
       }
 
       let labelIds: string[] | undefined;
       if (input.labelNames) {
         const resolvedLabels = await resolveLabelIds({ workspaceId, labelNames: input.labelNames });
-        if ('error' in resolvedLabels) {
+        if ('status' in resolvedLabels) {
           return resolvedLabels;
         }
         labelIds = resolvedLabels.labelIds;
       }
 
-      const { error, data: updatedTask } = await tryCatch(
-        () => updateTask({ id: input.id, workspaceId, labelIds, ...fields }),
-        { retryOnFailure: false },
-      );
-
-      if (error !== null || !updatedTask) {
-        return { error: toErrorMessage(error, 'Failed to update task.') };
+      const updatedTask = await updateTask({ id: input.id, workspaceId, labelIds, ...fields });
+      if (!updatedTask) {
+        return TASK_NOT_FOUND;
       }
-
       return { task: toTaskBrief(updatedTask) };
-    },
-  });
+    }),
+};
 
 // moveTask
 
@@ -510,9 +470,6 @@ const moveTaskInputSchema = z.object({
     .default('bottom')
     .describe('Where to place the task within the destination column.'),
 });
-
-type MoveTaskInput = z.infer<typeof moveTaskInputSchema>;
-type MoveTaskOutput = { task: ReturnType<typeof toTaskBrief> } | { error: string };
 
 // Bottom is "after the column's current last card"; top is "no afterTaskId",
 // matching moveTask's own convention (task.repo.ts). The moving task itself
@@ -539,60 +496,33 @@ async function resolveAfterTaskId({
   return columnTasks.filter((columnTask) => columnTask.id !== taskId).at(-1)?.id;
 }
 
-export const getMoveTaskTool = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-  workspaceId: string,
-): Tool<MoveTaskInput, MoveTaskOutput> =>
-  tool({
-    description: 'Move a task to a different status column, at the top or bottom of it.',
-    inputSchema: moveTaskInputSchema,
-    execute: async (input) => {
-      writer.write({
-        type: 'data-task',
-        data: { action: 'move', taskId: input.id },
-        transient: true,
-      });
+const moveTaskDefinition: ToolDefinition<
+  typeof moveTaskInputSchema,
+  TaskBriefOutput | ToolFailure<'not_found'>
+> = {
+  name: 'moveTask',
+  description: 'Move a task to a different status column, at the top or bottom of it.',
+  inputSchema: moveTaskInputSchema,
+  access: 'write',
+  execute: async ({ id, status, position }, { workspaceId }) => {
+    const afterTaskId = await resolveAfterTaskId({ taskId: id, workspaceId, status, position });
+    const movedTask = await moveTask({ id, workspaceId, status, afterTaskId });
+    if (!movedTask) {
+      return TASK_NOT_FOUND;
+    }
+    return { task: toTaskBrief(movedTask) };
+  },
+};
 
-      const { error, data: movedTask } = await tryCatch(
-        async () => {
-          const afterTaskId = await resolveAfterTaskId({
-            taskId: input.id,
-            workspaceId,
-            status: input.status,
-            position: input.position,
-          });
-          return moveTask({ id: input.id, workspaceId, status: input.status, afterTaskId });
-        },
-        { retryOnFailure: false },
-      );
-
-      if (error !== null) {
-        return { error: toErrorMessage(error, 'Failed to move task.') };
-      }
-      if (!movedTask) {
-        return { error: 'Task not found.' };
-      }
-
-      return { task: toTaskBrief(movedTask) };
-    },
-  });
-
-export type ListTasksToolInput = InferToolInput<ReturnType<typeof getListTasksTool>>;
-export type ListTasksToolOutput = InferToolOutput<ReturnType<typeof getListTasksTool>>;
-export type ListTasksUiTool = InferUITool<ReturnType<typeof getListTasksTool>>;
-
-export type ReadTaskToolInput = InferToolInput<ReturnType<typeof getReadTaskTool>>;
-export type ReadTaskToolOutput = InferToolOutput<ReturnType<typeof getReadTaskTool>>;
-export type ReadTaskUiTool = InferUITool<ReturnType<typeof getReadTaskTool>>;
-
-export type CreateTaskToolInput = InferToolInput<ReturnType<typeof getCreateTaskTool>>;
-export type CreateTaskToolOutput = InferToolOutput<ReturnType<typeof getCreateTaskTool>>;
-export type CreateTaskUiTool = InferUITool<ReturnType<typeof getCreateTaskTool>>;
-
-export type UpdateTaskToolInput = InferToolInput<ReturnType<typeof getUpdateTaskTool>>;
-export type UpdateTaskToolOutput = InferToolOutput<ReturnType<typeof getUpdateTaskTool>>;
-export type UpdateTaskUiTool = InferUITool<ReturnType<typeof getUpdateTaskTool>>;
-
-export type MoveTaskToolInput = InferToolInput<ReturnType<typeof getMoveTaskTool>>;
-export type MoveTaskToolOutput = InferToolOutput<ReturnType<typeof getMoveTaskTool>>;
-export type MoveTaskUiTool = InferUITool<ReturnType<typeof getMoveTaskTool>>;
+/** The task tools of one agent. */
+export function taskToolDefinitions(
+  options: TaskToolDefinitionsOptions,
+): ToolDefinition<z.ZodObject, unknown>[] {
+  return [
+    listTasksDefinition,
+    readTaskDefinition,
+    createTaskDefinition(options),
+    updateTaskDefinition,
+    moveTaskDefinition,
+  ];
+}

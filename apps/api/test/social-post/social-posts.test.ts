@@ -1,5 +1,5 @@
 import { problemDetailsSchema, problemTypeUri } from '@repo/api-errors';
-import { getLinkedinDraft } from '@repo/ai';
+import { buildAgentToolset } from '@repo/ai';
 import { createGenImageRecords, createMedia, db } from '@repo/database';
 import { account } from '@repo/database/schema';
 import {
@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
-import { stubStreamWriter, stubToolExecutionOptions } from '../stub-stream-writer';
+import { stubToolExecutionOptions } from '../stub-tool-execution-options';
 
 // social-post.
 // Auth/authorization are covered exhaustively in test/auth/
@@ -374,9 +374,16 @@ describe('linkedinDraft tool image attachments', () => {
     if (!genImage) {
       throw new Error('Gen image was not created');
     }
-    const tool = getLinkedinDraft(stubStreamWriter, userId, workspaceId);
+    const tools = buildAgentToolset([{ id: 'linkedinDraft' }], {
+      userId,
+      agentId: 'agent-1',
+      workspaceId,
+    });
 
-    await tool.execute?.({ text: 'Hello', imageIds: [genImage.id] }, stubToolExecutionOptions);
+    await tools.linkedinDraft?.execute?.(
+      { text: 'Hello', imageIds: [genImage.id] },
+      stubToolExecutionOptions,
+    );
 
     const attached = await db.query.socialPostMedia.findMany();
     expect(attached.map((item) => item.mimeType)).toEqual(['image/jpeg']);

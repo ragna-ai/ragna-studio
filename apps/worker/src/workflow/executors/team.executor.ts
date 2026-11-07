@@ -15,7 +15,6 @@ import type { AiModelPricing } from '@repo/database';
 import { getAgentByIdAndWorkspaceId } from '@repo/database';
 import type { TeamConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
-import { noopWriter } from './noop-writer';
 import type { DelegateCallMeta } from './run-referenced-agent';
 import {
   collectTrace,
@@ -217,7 +216,7 @@ async function resolveLead(
     // The lead keeps its own configured toolset next to the delegate tools,
     // so it can e.g. read its pinned dataset to plan and route work instead
     // of delegating reads to members that lack access.
-    ownTools: buildAgentToolset(lead.toolGrants, noopWriter, {
+    ownTools: buildAgentToolset(lead.toolGrants, {
       userId: ctx.userId,
       agentId: leadAgentId,
       workspaceId: ctx.workspaceId,
