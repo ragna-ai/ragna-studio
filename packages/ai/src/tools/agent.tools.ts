@@ -2,13 +2,14 @@ import type { StoredAgentToolGrant } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import type { ToolSet, UIMessageStreamWriter } from 'ai';
 import { getSearchContextDocumentsTool } from './agent-context.tool';
+import type * as z from 'zod';
 import {
   agentToolGrantSchema,
   type AgentToolGrant,
+  type AgentToolId,
   type BuiltinAgentToolId,
-  type IntegrationAgentToolId,
 } from './agent-tool-catalog';
-import { getCloudDriveTools } from './cloud-drive.tools';
+import { cloudDriveToolDefinitions } from './cloud-drive.tools';
 import {
   getDatasetAppendRowTool,
   getDatasetCreateTool,
@@ -34,11 +35,16 @@ import {
   getReadTaskTool,
   getUpdateTaskTool,
 } from './task.tools';
-import { getThoughts } from './think.tool';
+import { thinkToolDefinition } from './think.tool';
 import { getGeneratedVideo } from './video-gen.tool';
 import { getWebBrowserResults } from './web-browser.tool';
-import { getWebSearchResults } from './web-search.tool';
-import type { ToolAccess } from './tool-definition';
+import {
+  filterByAccess,
+  toAgentTools,
+  type ToolAccess,
+  type ToolDefinition,
+} from './tool-definition';
+import { webSearchToolDefinition } from './web-search.tool';
 
 export type AgentToolContext = {
   userId: string;
@@ -52,18 +58,27 @@ export type AgentToolContext = {
   retrievalMode?: boolean;
 };
 
-type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
-type AccessToolsetFactory = (
-  writer: UIMessageStreamWriter,
+type AgentToolDefinitions = (
   ctx: AgentToolContext,
-  access: ToolAccess,
-) => ToolSet;
+) => readonly ToolDefinition<z.ZodObject, unknown>[];
 
-// A ToolSet is just a record, so tools are grouped here and only granted
-// ones are ever constructed or sent to the model.
+/** The tool definitions behind each agent tool id. Only granted ones are built. */
+const agentToolDefinitions = {
+  think: () => [thinkToolDefinition],
+  webSearch: () => [webSearchToolDefinition],
+  'google-drive': () => cloudDriveToolDefinitions('google-drive'),
+} satisfies Partial<Record<AgentToolId, AgentToolDefinitions>>;
+
+type DefinedAgentToolId = keyof typeof agentToolDefinitions;
+
+function hasDefinitions(id: AgentToolId): id is DefinedAgentToolId {
+  return Object.hasOwn(agentToolDefinitions, id);
+}
+
+// Migration: tools not yet converted to ToolDefinition. Each id lives in exactly one of the two records.
+type ToolsetFactory = (writer: UIMessageStreamWriter, ctx: AgentToolContext) => ToolSet;
+
 const toolsets = {
-  think: (writer) => ({ think: getThoughts(writer) }),
-  webSearch: (writer) => ({ webSearch: getWebSearchResults(writer) }),
   webBrowser: (writer) => ({ webBrowser: getWebBrowserResults(writer) }),
   imageGen: (writer, ctx) => ({
     imageGen: getGeneratedImages(writer, ctx.userId, ctx.workspaceId, ctx.runsInWorker ?? false),
@@ -97,17 +112,24 @@ const toolsets = {
     updateTask: getUpdateTaskTool(writer, ctx.workspaceId),
     moveTask: getMoveTaskTool(writer, ctx.workspaceId),
   }),
-} satisfies Record<BuiltinAgentToolId, ToolsetFactory>;
+} satisfies Record<Exclude<BuiltinAgentToolId, DefinedAgentToolId>, ToolsetFactory>;
 
-const accessToolsets = {
-  'google-drive': (_writer, ctx, access) =>
-    getCloudDriveTools({
-      integrationId: 'google-drive',
-      access,
-      userId: ctx.userId,
-      workspaceId: ctx.workspaceId,
-    }),
-} satisfies Record<IntegrationAgentToolId, AccessToolsetFactory>;
+/** `access` is set for grants of tools with access levels. */
+function buildDefinedToolset(
+  id: DefinedAgentToolId,
+  access: ToolAccess | undefined,
+  writer: UIMessageStreamWriter,
+  ctx: AgentToolContext,
+): ToolSet {
+  const buildDefinitions: AgentToolDefinitions = agentToolDefinitions[id];
+  const definitions = buildDefinitions(ctx);
+  const allowed = access ? filterByAccess(definitions, access) : definitions;
+  return toAgentTools(allowed, {
+    toolContext: { userId: ctx.userId, workspaceId: ctx.workspaceId, origin: 'agent' },
+    writer,
+    logFields: { agentId: ctx.agentId },
+  });
+}
 
 function parseStoredGrants(storedGrants: readonly StoredAgentToolGrant[]): AgentToolGrant[] {
   const grants: AgentToolGrant[] = [];
@@ -131,10 +153,9 @@ export function buildAgentToolset(
   ctx: AgentToolContext,
 ): ToolSet {
   const entries = parseStoredGrants(storedGrants).flatMap((grant) => {
-    const toolset =
-      'access' in grant
-        ? accessToolsets[grant.id](writer, ctx, grant.access)
-        : toolsets[grant.id](writer, ctx);
+    const toolset = hasDefinitions(grant.id)
+      ? buildDefinedToolset(grant.id, 'access' in grant ? grant.access : undefined, writer, ctx)
+      : toolsets[grant.id](writer, ctx);
     return Object.entries(toolset);
   });
   const tools: ToolSet = Object.fromEntries(entries);

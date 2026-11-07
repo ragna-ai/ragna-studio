@@ -17,6 +17,40 @@
       "rules": {
         "no-restricted-properties": "off"
       }
+    },
+    {
+      "files": ["packages/ai/src/tools/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "ai",
+                "importNames": ["tool"],
+                "message": "Write a ToolDefinition. Only tool-definition.ts turns definitions into AI SDK tools."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "packages/ai/src/tools/tool-definition.ts",
+        "packages/ai/src/tools/agent-context.tool.ts",
+        "packages/ai/src/tools/dataset.tools.ts",
+        "packages/ai/src/tools/document.tools.ts",
+        "packages/ai/src/tools/image-gen.tool.ts",
+        "packages/ai/src/tools/linkedin-draft.tool.ts",
+        "packages/ai/src/tools/memory.tool.ts",
+        "packages/ai/src/tools/task.tools.ts",
+        "packages/ai/src/tools/video-gen.tool.ts",
+        "packages/ai/src/tools/web-browser.tool.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
     }
   ]
 }

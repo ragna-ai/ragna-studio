@@ -1,24 +1,16 @@
 import { config } from '@repo/config';
+import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
-import type {
-  InferToolInput,
-  InferToolOutput,
-  InferUITool,
-  Tool,
-  UIMessage,
-  UIMessageStreamWriter,
-} from 'ai';
-import { tool } from 'ai';
 import type { BaseResponse } from 'serpapi';
 import { getJson } from 'serpapi';
 import * as z from 'zod';
+import type { ToolDefinition, ToolFailure } from './tool-definition';
 
 const webSearchInputSchema = z.object({
   query: z.string().min(3).max(1000).describe('The query to search the web for'),
 });
 
-type WebSearchInput = z.infer<typeof webSearchInputSchema>;
-type WebSearchOutput = BaseResponse | { error: string };
+type WebSearchOutput = BaseResponse | ToolFailure<'unavailable'>;
 
 async function getSearchResults(query: string): Promise<BaseResponse> {
   const response = await getJson({
@@ -39,33 +31,26 @@ async function getSearchResults(query: string): Promise<BaseResponse> {
   return response;
 }
 
-export const getWebSearchResults = (
-  writer: UIMessageStreamWriter<UIMessage<never, any>>,
-): Tool<WebSearchInput, WebSearchOutput> =>
-  tool({
+export const webSearchToolDefinition: ToolDefinition<typeof webSearchInputSchema, WebSearchOutput> =
+  {
+    name: 'webSearch',
     description:
       'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need.',
     inputSchema: webSearchInputSchema,
+    access: 'read',
     execute: async ({ query }) => {
-      // emit tool usage message
-      writer.write({
-        type: 'data-webSearch',
-        data: { query },
-        transient: true,
-      });
-
-      const { error, data: responseObject } = await tryCatch(async () => getSearchResults(query), {
+      const { error, data: searchResults } = await tryCatch(async () => getSearchResults(query), {
         retryOnFailure: false,
       });
 
-      if (error !== null || responseObject === null) {
-        return { error: 'Web search failed. Service currently unavailable.' };
+      if (error !== null || searchResults === null) {
+        logger.warn('Web search failed', error);
+        return {
+          status: 'unavailable',
+          message: 'Web search is currently unavailable. Continue without it.',
+        };
       }
 
-      return responseObject;
+      return searchResults;
     },
-  });
-
-export type getWebSearchResultsInput = InferToolInput<ReturnType<typeof getWebSearchResults>>;
-export type getWebSearchResultsOutput = InferToolOutput<ReturnType<typeof getWebSearchResults>>;
-export type WebSearchUiTool = InferUITool<ReturnType<typeof getWebSearchResults>>;
+  };

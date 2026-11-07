@@ -56,7 +56,9 @@ helper replaces the filter in `apps/api/src/services/mcp-integrations.ts`.
 found, too large, busy, unavailable. Anything thrown is caught by the runner, logged with the
 tool name and context, and rethrown as a `ToolExecutionError` with a generic message. The AI SDK
 and MCP still show it as a failed call. Rejected: catching and returning a failure, which turns a
-red error state in the chat into a normal result.
+red error state in the chat into a normal result. The API errors standard (RFC 9457) covers HTTP
+responses and leaves model-read errors out. Its rule that unhandled error text never reaches the
+client applies here too. `ToolFailure` keeps the shape cloud drive tools already return.
 
 **D5. No classes, no AI SDK `contextSchema`.** Tools are stateless operations with per-call
 context. The AI SDK, the OpenAI Agents SDK and Mastra all use definition objects or functions.
@@ -99,7 +101,7 @@ export interface ToolDefinition<Schema extends z.ZodObject, Output> {
 export function filterByAccess(definitions, access: ToolAccess): ToolDefinition[];
 
 /** Runs one call: logs and cleans a throw. Used by the AI SDK and the MCP adapter. */
-export function runToolDefinition(
+export function executeTool(
   definition,
   input,
   ctx: ToolContext,
@@ -150,7 +152,7 @@ rest). Built-in grants have no level, so they are not filtered yet. #281 reads `
 ## Changes outside `@repo/ai`
 
 - `apps/api/src/services/mcp-integrations.ts`: `getAllowedToolDefinitions` uses `filterByAccess`.
-- `apps/api/src/services/mcp.service.ts`: `registerMcpTool` calls `runToolDefinition`.
+- `apps/api/src/services/mcp.service.ts`: `registerMcpTool` calls `executeTool`.
 - `apps/api/src/services/chat.service.ts`: passes `writer` in the context.
 - `apps/worker/src/workflow/executors/noop-writer.ts`: deleted, with its `as unknown as` cast.
   `team.executor.ts` and `run-referenced-agent.ts` pass no writer.
@@ -185,7 +187,7 @@ call `definition.execute(input, ctx)` instead.
 - **Giving a built-in access levels:** move its id to the access branch of the grant schema and
   backfill a level. Its definitions already carry `access`.
 - **Known next users of the runner:** approval policy from `access` and `annotations` (#281),
-  audit rows for agent tool calls, output size caps. Each adds to `runToolDefinition` or
+  audit rows for agent tool calls, output size caps. Each adds to `executeTool` or
   `toAgentTools`, not to every tool.
 - **Fakes:** none new. The stream writer fake for AC-2 is typed against `UIMessageStreamWriter`.
 - **Packages considered:** none. The AI SDK's `contextSchema` was weighed and rejected (D5).

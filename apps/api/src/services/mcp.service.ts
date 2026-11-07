@@ -6,7 +6,7 @@ import {
   recordMcpToolCall,
   touchMcpConnection,
 } from '@repo/database';
-import type { ToolDefinition } from '@repo/ai';
+import { executeTool, type ToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import type { CallToolResult } from '@modelcontextprotocol/server';
@@ -135,11 +135,12 @@ function registerMcpTool(
       annotations: definition.annotations,
     },
     async (input) => {
-      const output = await definition.execute(input, {
-        userId: scope.userId,
-        workspaceId: scope.workspaceId,
-        origin: 'mcp',
-      });
+      const output = await executeTool(
+        definition,
+        input,
+        { userId: scope.userId, workspaceId: scope.workspaceId, origin: 'mcp' },
+        { connectionId: scope.connectionId },
+      );
       const result = toMcpToolCallResult(output);
 
       await recordMcpToolCallOutcome(scope, definition, input, result);

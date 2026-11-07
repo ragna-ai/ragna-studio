@@ -12,9 +12,11 @@
 | 1    | S1, S2, S3, S4                  | S0 on the branch |
 | 2    | S5 Integration pass (lead)      | all              |
 
-During wave 1, `agentToolDefinitions` and the old `toolsets` record live side by side: S0 adds
-the new record with the reference entries, and each wave 1 slice moves its own entries over.
-S5 deletes what is left of the old record.
+During wave 1, `agentToolDefinitions` and the old `toolsets` record live side by side in
+`agent.tools.ts`. The old record is typed for the ids the new one lacks, so an id in both or in
+neither fails `check-types`. Each wave 1 slice moves its own ids over and removes its own files
+from the temporary `no-restricted-imports` exception in `.oxlintrc.json`. Those are the only
+lines a slice edits in shared files. S5 deletes the old record and the transition helpers.
 
 ## Contracts shared by all slices
 
@@ -25,7 +27,7 @@ Frozen by S0. A slice that needs a change asks the lead. It doesn't edit another
 interface ToolDefinition<Schema, Output> { name; description; inputSchema; access; annotations?;
   uiEvent?(input): ToolUiEvent; execute(input, ctx: ToolContext): Promise<Output> }
 interface ToolFailure<Status extends string = string> { status: Status; message: string }
-filterByAccess(definitions, access); runToolDefinition(...); toAgentTools(definitions, options);
+filterByAccess(definitions, access); executeTool(...); toAgentTools(definitions, options);
 class ToolExecutionError
 
 // packages/ai/src/tools/agent.tools.ts
@@ -51,7 +53,7 @@ Owns `tool-definition.ts`, `agent.tools.ts`, `think.tool.ts`, `web-search.tool.t
 - First, on the unchanged code: the AC-1 test listing AI SDK tool names per grant. It must pass
   before anything moves. Break one name on purpose once, watch it fail, revert.
 - Contract and runner as in the design. AC-3 test with a definition that throws.
-- `filterByAccess` in both adapters. MCP calls `runToolDefinition`. AC-5 stays green.
+- `filterByAccess` in both adapters. MCP calls `executeTool`. AC-5 stays green.
 - Convert `think` and `webSearch` as the reference for wave 1.
 - `agentToolDefinitions` record with `think`, `webSearch` and `google-drive`.
 - AC-7 lint rule, with the not-yet-converted files listed as temporary exceptions that wave 1
