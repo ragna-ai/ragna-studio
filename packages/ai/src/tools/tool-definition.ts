@@ -26,6 +26,9 @@ export interface ToolFailure<Status extends string = string> {
   message: string;
 }
 
+/** Recognizes a `ToolFailure` in a tool's output, for adapters that report failures differently. */
+export const toolFailureSchema = z.object({ status: z.string(), message: z.string() });
+
 /** A transient chat data part announcing a tool call, for UI that reacts before the result. */
 export interface ToolUiEvent {
   type: `data-${string}`;

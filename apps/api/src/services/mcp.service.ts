@@ -6,7 +6,7 @@ import {
   recordMcpToolCall,
   touchMcpConnection,
 } from '@repo/database';
-import { executeTool, type ToolDefinition } from '@repo/ai';
+import { executeTool, toolFailureSchema, type ToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import type { CallToolResult } from '@modelcontextprotocol/server';
@@ -67,12 +67,17 @@ async function resolveMcpConnectionScope({
 const toolErrorOutputSchema = z.object({ error: z.string() });
 const jsonObjectOutputSchema = z.record(z.string(), z.unknown());
 
-// PRD mapping: an `{ error }` output becomes
+// A `ToolFailure` (or a legacy `{ error }`) output becomes
 // `isError: true` with the message as text; anything else becomes
 // `structuredContent` plus the same JSON as text. Returns the SDK's own
 // CallToolResult type directly rather than a hand-rolled shape, so it's
 // assignable to registerTool's callback without a cast.
 function toMcpToolCallResult(output: unknown): CallToolResult {
+  const failure = toolFailureSchema.safeParse(output);
+  if (failure.success) {
+    return { isError: true, content: [{ type: 'text', text: failure.data.message }] };
+  }
+
   const errorOutput = toolErrorOutputSchema.safeParse(output);
   if (errorOutput.success) {
     return { isError: true, content: [{ type: 'text', text: errorOutput.data.error }] };
