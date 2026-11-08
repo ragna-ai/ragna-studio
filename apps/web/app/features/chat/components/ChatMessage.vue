@@ -48,7 +48,7 @@ const MARKDOWN_CLASS = [
   '[&_table_tbody]:bg-transparent [&_table_tbody]:font-normal',
   '[&_table_th]:h-9 [&_table_th]:px-3.5 [&_table_th]:py-0 [&_table_th]:text-caption [&_table_th]:font-medium [&_table_th]:text-muted-foreground',
   '[&_table_td]:h-10 [&_table_td]:px-3.5 [&_table_td]:py-0 [&_table_td]:text-body',
-  '[&_table_thead]:bg-surface-subtle [&_table]:rounded-[10px]',
+  '[&_table_thead]:bg-surface-subtle [&_table]:rounded-lg',
   '[&_table_tbody_tr:last-child]:border-b-0',
   "[&_table_:is(th,td)[style*='right']]:font-mono [&_table_:is(th,td)[style*='right']]:text-mono [&_table_:is(th,td)[style*='right']]:tabular-nums",
 ];
