@@ -40,11 +40,11 @@ const { navGroups } = useSettingsNavItems();
           </nav>
         </SidebarShell>
         <div
-          class="@container box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
+          class="box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs max-xl:[--page-x:2rem]"
         >
           <main
             id="main"
-            class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto @max-[1280px]:[--page-x:2rem]"
+            class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
           >
             <slot />
           </main>

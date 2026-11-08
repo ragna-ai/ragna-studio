@@ -76,19 +76,6 @@ test.describe('as organization owner', () => {
     ).toHaveCount(0);
   });
 
-  test('styles the settings sidebar like the main sidebar', async ({
-    page,
-  }) => {
-    await page.goto('/settings/profile');
-    const profile = settingsNav(page).getByRole('link', { name: 'Profile' });
-    const language = settingsNav(page).getByRole('link', { name: 'Language' });
-
-    await expect(profile).toHaveCSS('border-top-width', '1px');
-    await expect(profile).not.toHaveCSS('box-shadow', 'none');
-    await expect(language).toHaveCSS('box-shadow', 'none');
-    await expect(profile.locator('.iconify, svg')).toHaveCount(1);
-  });
-
   test('redirects the old account address to the profile', async ({ page }) => {
     await page.goto('/account');
 

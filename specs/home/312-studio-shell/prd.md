@@ -123,21 +123,9 @@ work by mouse, keyboard and on smaller screens.
 
 ## Testing
 
-| Criterion                           | Level            | Folder                               |
-| ----------------------------------- | ---------------- | ------------------------------------ |
-| US-1.1, US-1.2, US-1.3              | e2e (Playwright) | `apps/web/e2e/shell.spec.ts`         |
-| US-2.1 to US-2.4                    | e2e (Playwright) | `apps/web/e2e/breadcrumb.spec.ts`    |
-| US-3.1 to US-3.5, US-3.7 to US-3.10 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
-| US-3.6                              | e2e (Playwright) | `apps/web/e2e/settings-area.spec.ts` |
-| US-4.1 to US-4.6                    | e2e (Playwright) | `apps/web/e2e/dashboard.spec.ts`     |
-
-The failed-workflow half of US-4.1 has no e2e test: a failed run can't be produced through the
-API without the worker.
-| US-5.1, US-5.2 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts` |
-| US-5.3 | manual | n/a |
-
-The web app has no unit test runner, so the dashboard's sorting and summary rules are covered
-through seeded e2e data.
+This is a design change, so it adds no e2e tests. The existing e2e specs are adapted to the new
+shell where they touch it (`nav-sidebar.spec.ts`, `settings-area.spec.ts`). All criteria are
+checked in a visual and manual review against the design.
 
 ## Standards checklist
 

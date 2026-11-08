@@ -97,10 +97,7 @@ async function signOut() {
         <NuxtLink to="/settings/credits">
           <Icon name="hugeicons:coins-01" class="size-4 text-foreground" />
           {{ $t('nav.userMenu.credits') }}
-          <span
-            class="ml-auto font-mono text-mono text-muted-foreground"
-            data-testid="credit-balance"
-          >
+          <span class="ml-auto font-mono text-mono text-muted-foreground">
             {{ n(displayedCredits) }}
           </span>
         </NuxtLink>

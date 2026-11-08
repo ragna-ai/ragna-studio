@@ -11,7 +11,7 @@ const collapsed = computed(() => !navSidebarStore.expanded);
 <template>
   <SidebarShell :collapsed="collapsed">
     <template #header>
-      <div class="space-y-1.5 pb-1.5">
+      <div class="space-y-2.5 pb-2.5">
         <WorkspaceSwitcher :collapsed="collapsed" />
         <NavSearch :collapsed="collapsed" />
       </div>

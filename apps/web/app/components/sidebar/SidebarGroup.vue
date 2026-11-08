@@ -15,14 +15,14 @@ const props = withDefaults(defineProps<SidebarGroupProps>(), {
     <template v-if="props.label">
       <p
         v-if="!props.collapsed"
-        class="flex h-9 items-end pb-1.5 pl-3 font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
+        class="my-0.5 flex h-9 items-end pb-1.5 pl-3 font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
       >
         {{ props.label }}
       </p>
       <div
         v-else
         aria-hidden="true"
-        class="flex h-9 items-end justify-center pb-2"
+        class="my-0.5 flex h-9 items-end justify-center pb-2"
       >
         <span class="h-px w-4 bg-border-strong" />
       </div>

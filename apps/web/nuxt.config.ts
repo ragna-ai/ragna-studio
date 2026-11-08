@@ -93,6 +93,8 @@ export default defineNuxtConfig({
   // ICONS
   icon: {
     provider: 'none',
+    // Icon CSS sits below Tailwind utilities, so `size-*` classes win over its 1em default.
+    cssLayer: 'base',
     clientBundle: {
       scan: true,
       // Attachment file-type icons are resolved from a filename at runtime

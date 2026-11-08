@@ -123,15 +123,13 @@ function handleClearAllClick() {
           <Icon name="hugeicons:notification-01" class="sidebar-row-icon" />
           <span
             v-if="unreadCount > 0 && !expanded"
-            data-testid="notification-dot"
             class="absolute top-1.5 left-6 size-[7px] rounded-full bg-alert ring-[1.5px] ring-canvas"
           />
           <template v-if="expanded">
             <span class="truncate">{{ t('notification.panelTitle') }}</span>
             <span
               v-if="unreadCount > 0"
-              data-testid="notification-count"
-              class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-alert px-1.5 font-mono text-caption text-alert-foreground"
+              class="-mr-px ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-alert px-1.5 font-mono text-caption text-alert-foreground"
             >
               {{ unreadBadgeLabel }}
             </span>
@@ -145,15 +143,11 @@ function handleClearAllClick() {
         @open-auto-focus="focusPanel"
         :class="`${MENU_CONTENT_CLASS} flex max-h-130 w-90 flex-col overflow-hidden`"
       >
-        <div class="flex h-11 shrink-0 items-center gap-2 pr-1.5 pl-2.5">
+        <div class="flex h-11 shrink-0 items-center gap-3 pr-1.5 pl-2.5">
           <p class="text-body font-medium">
             {{ t('notification.panelTitle') }}
           </p>
-          <p
-            v-if="unreadCount > 0"
-            class="text-caption text-muted-foreground"
-            data-testid="notification-new-count"
-          >
+          <p v-if="unreadCount > 0" class="text-caption text-muted-foreground">
             {{ t('notification.newCount', { count: unreadCount }) }}
           </p>
           <div
@@ -197,10 +191,9 @@ function handleClearAllClick() {
           </div>
           <div
             v-else-if="notifications.length === 0"
-            data-testid="notification-empty"
-            class="flex h-42 flex-col items-center justify-center gap-1 px-6 text-center"
+            class="flex h-42 flex-col items-center justify-center gap-2 px-6 text-center"
           >
-            <Icon name="hugeicons:inbox" class="mb-1 size-6 text-icon" />
+            <Icon name="hugeicons:inbox" class="size-6 text-icon" />
             <p class="text-body font-medium">{{ t('notification.empty') }}</p>
             <p class="text-small text-muted-foreground">
               {{ t('notification.emptyHint') }}

@@ -48,8 +48,7 @@ function dueLabel(task: HomeOverviewTaskItem): string {
     }}</span>
     <span class="min-w-0 grow truncate text-body">{{ task.title }}</span>
     <span
-      data-testid="task-due"
-      class="w-24 shrink-0 text-right text-small whitespace-nowrap"
+      class="w-19 shrink-0 text-right text-small whitespace-nowrap"
       :class="isDueToday(task) ? 'text-foreground' : 'text-muted-foreground'"
       >{{ dueLabel(task) }}</span
     >

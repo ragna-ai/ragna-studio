@@ -64,7 +64,6 @@ const timeLabel = computed(() => {
           </span>
           <span
             v-if="isUnread"
-            data-testid="notification-unread"
             class="size-1.5 shrink-0 rounded-full bg-foreground"
           />
           <span
@@ -73,7 +72,7 @@ const timeLabel = computed(() => {
             {{ timeLabel }}
           </span>
         </span>
-        <span class="line-clamp-3 text-small text-muted-foreground">
+        <span class="mt-0.5 line-clamp-3 text-small text-muted-foreground">
           {{ props.message }}
         </span>
       </span>

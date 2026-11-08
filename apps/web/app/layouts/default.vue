@@ -27,21 +27,16 @@ const hasNoWorkspace = computed(
         <NavSidebar />
         <SidePanelHost />
         <div
-          data-testid="shell-panel"
-          class="@container box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
+          class="box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs max-xl:[--page-x:2rem]"
         >
-          <div
-            class="flex min-h-0 flex-1 flex-col @max-[1280px]:[--page-x:2rem]"
+          <NavTopBar />
+          <main
+            id="main"
+            class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
           >
-            <NavTopBar />
-            <main
-              id="main"
-              class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
-            >
-              <WorkspaceEmptyState v-if="hasNoWorkspace" />
-              <slot v-else />
-            </main>
-          </div>
+            <WorkspaceEmptyState v-if="hasNoWorkspace" />
+            <slot v-else />
+          </main>
         </div>
       </div>
       <Toaster position="top-center" rich-colors />

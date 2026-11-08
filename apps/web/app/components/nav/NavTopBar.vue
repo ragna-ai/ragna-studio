@@ -5,7 +5,7 @@
   >
     <NavSideToggle />
     <div class="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
-    <NavBreadcrumb class="-ml-1" />
+    <NavBreadcrumb class="ml-3" />
     <div class="ml-auto flex shrink-0 items-center gap-2">
       <button
         type="button"

@@ -101,7 +101,7 @@ The PRD maps each criterion to where its test lives. This is the input for the t
 | US-1.3    | worker           | `apps/worker/test/<area>/` |
 ```
 
-Default to the API level (`app.request()`). Use e2e only for a journey that needs the browser.
+Default to the API level (`app.request()`). Use e2e only for a journey that needs the browser. e2e tests check behaviour only, never design: no positions, sizes, spacing, colours or classes. Map purely visual criteria to `visual review`.
 
 ## Unknowns
 
