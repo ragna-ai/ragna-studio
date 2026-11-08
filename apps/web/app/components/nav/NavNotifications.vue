@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import { BellIcon, CheckCheckIcon, InboxIcon, Trash2Icon } from '@lucide/vue';
 import NotificationListItem from '~/features/notification/components/NotificationListItem.vue';
 import {
   useDeleteAllNotifications,
@@ -95,18 +94,18 @@ function handleClearAllClick() {
         class="sidebar-row"
         :aria-label="t('notification.panelTitle')"
       >
-        <span class="relative flex shrink-0">
-          <BellIcon class="sidebar-row-icon" />
-          <span
-            v-if="unreadCount > 0 && !expanded"
-            class="absolute -top-px -right-px size-1.5 rounded-full bg-destructive"
-          />
-        </span>
+        <Icon name="hugeicons:notification-01" class="sidebar-row-icon" />
+        <span
+          v-if="unreadCount > 0 && !expanded"
+          data-testid="notification-dot"
+          class="absolute top-1.5 left-6 size-[7px] rounded-full bg-alert ring-[1.5px] ring-canvas"
+        />
         <template v-if="expanded">
           <span class="truncate">{{ t('notification.panelTitle') }}</span>
           <span
             v-if="unreadCount > 0"
-            class="ml-auto rounded-full bg-stone-200 px-1.5 text-[10px] leading-4 font-medium text-foreground"
+            data-testid="notification-count"
+            class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-alert px-1.5 font-mono text-caption text-alert-foreground"
           >
             {{ unreadBadgeLabel }}
           </span>
@@ -127,7 +126,7 @@ function handleClearAllClick() {
             class="h-auto gap-1 p-0 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
             @click="handleMarkAllReadClick"
           >
-            <CheckCheckIcon class="size-3.5" />
+            <Icon name="hugeicons:tick-double-02" class="size-3.5" />
           </Button>
           <Button
             variant="ghost"
@@ -135,7 +134,7 @@ function handleClearAllClick() {
             class="h-auto gap-1 p-0 text-xs text-muted-foreground hover:bg-transparent hover:text-destructive"
             @click="handleClearAllClick"
           >
-            <Trash2Icon class="size-3.5" />
+            <Icon name="hugeicons:delete-02" class="size-3.5" />
           </Button>
         </div>
       </div>
@@ -148,7 +147,7 @@ function handleClearAllClick() {
           v-else-if="notifications.length === 0"
           class="flex flex-col items-center gap-2 py-8 text-muted-foreground"
         >
-          <InboxIcon class="size-6 stroke-1" />
+          <Icon name="hugeicons:inbox" class="size-6" />
           <p class="text-sm">{{ t('notification.empty') }}</p>
         </div>
         <NotificationListItem

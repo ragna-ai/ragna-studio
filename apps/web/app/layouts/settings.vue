@@ -10,14 +10,14 @@ const { navGroups } = useSettingsNavItems();
 
 <template>
   <Html :lang="head.htmlAttrs.lang" :dir="head.htmlAttrs.dir" class="light">
-    <Body class="bg-stone-50">
+    <Body class="bg-canvas">
       <OrganizationDeletedScreen
         v-if="organization?.deletedAt"
         :organization-name="organization.name"
         :role="organization.role"
         :deleted-at="organization.deletedAt"
       />
-      <div v-else class="flex h-screen overflow-hidden">
+      <div v-else class="flex h-screen overflow-hidden p-(--shell-inset) pl-0">
         <SidebarShell>
           <template #header>
             <SettingsBackLink />
@@ -39,12 +39,16 @@ const { navGroups } = useSettingsNavItems();
             </SidebarGroup>
           </nav>
         </SidebarShell>
-        <main
-          id="main"
-          class="relative min-w-0 grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-sm"
+        <div
+          class="@container box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
         >
-          <slot />
-        </main>
+          <main
+            id="main"
+            class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto @max-[1280px]:[--page-x:2rem]"
+          >
+            <slot />
+          </main>
+        </div>
       </div>
       <Toaster position="top-center" rich-colors />
     </Body>

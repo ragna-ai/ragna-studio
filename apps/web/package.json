@@ -63,6 +63,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@iconify-json/hugeicons": "^1.2.35",
     "@iconify-json/logos": "^1.2.18",
     "@iconify-json/vscode-icons": "^1.2.94",
     "@playwright/test": "^1.64.1",

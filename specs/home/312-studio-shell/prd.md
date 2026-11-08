@@ -1,6 +1,6 @@
 # Studio shell: new app shell, sidebar and dashboard (PRD)
 
-> **Status: proposed** (2026-11-08). Issue #312. Extends the home overview PRD (`specs/home/prd.md`).
+> **Status: implemented** (2026-11-08, PR #313). Issue #312. Extends the home overview PRD (`specs/home/prd.md`).
 
 RAGNA Studio gets a new visual design. This PRD covers the first part: the app shell (window, main
 panel, top bar), the main and settings sidebars, and the dashboard. Other screens follow later and
@@ -39,8 +39,9 @@ Roles: user (any signed-in person).
 As a user, I want every page in one framed panel with a top bar, so that I always know where I am
 and where the controls are.
 
-- **US-1.1** Given any page, when it loads, then it shows in a panel inset from the window edge,
-  with a top bar holding the sidebar toggle on the left.
+- **US-1.1** Given any page outside the settings area, when it loads, then it shows in a panel
+  inset from the window edge, with a top bar holding the sidebar toggle on the left. Settings
+  pages use the same panel without a top bar, because their sidebar doesn't collapse.
 - **US-1.2** Given the sidebar is expanded or collapsed, when the user uses the toggle, then the
   sidebar switches state, the toggle stays in place and the state survives a reload.
 - **US-1.3** Given the top bar's favourite and more actions, when the user activates them, then
@@ -68,16 +69,20 @@ without losing track.
 - **US-3.1** Given the expanded sidebar, when it shows, then it lists from top to bottom: the
   workspace row, a search field, the navigation in today's order and groups, notifications and the
   user row.
-- **US-3.2** Given the workspace row, when the user opens it, then today's workspace menu opens.
-  The row shows the workspace's initial and name.
-- **US-3.3** Given the user row, when the user opens it, then today's user menu opens. The row
-  shows the user's name and organization role.
+- **US-3.2** Given the workspace row, when the user opens it, then a menu lists the workspaces
+  grouped by visibility, marks the active one, and offers adding and managing workspaces. The row
+  shows the active workspace's initial and name over the organization's name.
+- **US-3.3** Given the user row, when the user clicks it, then a menu opens with the account, the
+  credit balance, Settings, Sign out and the app version. The row shows the user's name and
+  organization role.
 - **US-3.4** Given the collapsed sidebar, when the user hovers a navigation icon, then a tooltip
   shows its name, and unread notifications show as a dot instead of a count.
 - **US-3.5** Given the search field, when the user activates it, then nothing happens and it is
   reported as disabled.
 - **US-3.6** Given the settings area, when it loads, then its sidebar uses the same look and icons
   as the main sidebar.
+- **US-3.7** Rule: workspaces are switched in the workspace row only; the user menu holds no
+  workspace switching. Both menus open on click or keyboard, not on hover.
 
 ### US-4 Dashboard (P1)
 
@@ -85,6 +90,7 @@ As a user, I want the dashboard to lead with what is due today, so that I know w
 
 - **US-4.1** Given tasks due today and failed workflows, when the dashboard loads, then a summary
   line names both counts. A count of zero is left out; with both zero it says nothing is due today.
+  Failed workflows are counted among the five the overview returns.
 - **US-4.2** Given open tasks, when the Tasks card shows, then its rows are sorted by due date
   (tasks without one last) and show "Today", "Tomorrow" or a short date.
 - **US-4.3** Given workflows, when the Workflows card shows, then each row shows the last run's
@@ -110,15 +116,18 @@ work by mouse, keyboard and on smaller screens.
 
 ## Testing
 
-| Criterion              | Level            | Folder                               |
-| ---------------------- | ---------------- | ------------------------------------ |
-| US-1.1, US-1.2, US-1.3 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
-| US-2.1 to US-2.4       | e2e (Playwright) | `apps/web/e2e/breadcrumb.spec.ts`    |
-| US-3.1 to US-3.5       | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
-| US-3.6                 | e2e (Playwright) | `apps/web/e2e/settings-area.spec.ts` |
-| US-4.1 to US-4.6       | e2e (Playwright) | `apps/web/e2e/dashboard.spec.ts`     |
-| US-5.1, US-5.2         | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
-| US-5.3                 | manual           | n/a                                  |
+| Criterion                | Level            | Folder                               |
+| ------------------------ | ---------------- | ------------------------------------ |
+| US-1.1, US-1.2, US-1.3   | e2e (Playwright) | `apps/web/e2e/shell.spec.ts`         |
+| US-2.1 to US-2.4         | e2e (Playwright) | `apps/web/e2e/breadcrumb.spec.ts`    |
+| US-3.1 to US-3.5, US-3.7 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
+| US-3.6                   | e2e (Playwright) | `apps/web/e2e/settings-area.spec.ts` |
+| US-4.1 to US-4.6         | e2e (Playwright) | `apps/web/e2e/dashboard.spec.ts`     |
+
+The failed-workflow half of US-4.1 has no e2e test: a failed run can't be produced through the
+API without the worker.
+| US-5.1, US-5.2 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts` |
+| US-5.3 | manual | n/a |
 
 The web app has no unit test runner, so the dashboard's sorting and summary rules are covered
 through seeded e2e data.

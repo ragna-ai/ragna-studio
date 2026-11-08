@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import HomeOverview from '~/features/home/components/HomeOverview.vue';
-import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
+import { useHomeDashboard } from '~/features/home/composables/useHomeDashboard';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 useHead({ title: t('home.title') });
 
 const session = useAuthSession();
-const { locale } = useI18n();
+const { pending, summary } = useHomeDashboard();
 
-// greeting the user with their first name if they are logged in
 const headingTitle = computed(() => {
   if (session.value?.user?.name) {
     const firstName = session.value.user.name.split(' ')[0];
@@ -16,42 +15,58 @@ const headingTitle = computed(() => {
   }
   return t('home.title');
 });
+
+const buttonFocus =
+  'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-transparent';
 </script>
 
 <template>
-  <SectionWrapper class="relative">
-    <div class="grid-background absolute inset-0 size-full opacity-20"></div>
-    <div class="relative z-10 mx-auto flex w-full flex-col gap-6 px-20 py-10">
-      <div class="flex flex-col gap-6">
-        <!-- workspace switcher -->
-        <div>
-          <WorkspaceSwitcher size="lg" />
-        </div>
-        <!-- datetime -->
-        <div class="text-sm font-medium text-foreground/75">
-          <NuxtTime
-            :datetime="Date.now()"
-            :locale="locale"
-            weekday="long"
-            year="numeric"
-            month="long"
-            day="numeric"
-          />
-        </div>
-        <div class="flex flex-col gap-1">
-          <h1 class="text-4xl font-semibold text-foreground">
-            {{ headingTitle }}
-          </h1>
-          <p
-            class="bg-linear-to-r from-teal-500 to-blue-700 bg-clip-text text-4xl font-medium text-transparent opacity-85"
-          >
-            {{ $t('home.subtitle') }}
-          </p>
-        </div>
+  <div class="w-full">
+    <header
+      class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 px-(--page-x) pt-3"
+    >
+      <div class="flex flex-col gap-1.5">
+        <NuxtTime
+          :datetime="Date.now()"
+          :locale="locale"
+          weekday="long"
+          day="numeric"
+          month="long"
+          class="font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
+        />
+        <h1 class="text-title-lg font-semibold">{{ headingTitle }}</h1>
+        <p class="min-h-5 text-body text-muted-foreground">
+          <template v-if="!pending">{{ summary }}</template>
+        </p>
       </div>
-      <div>
-        <HomeOverview />
+      <div class="flex gap-2">
+        <Button
+          as-child
+          variant="outline"
+          size="sm"
+          class="h-8 gap-1.5 rounded-md border bg-card pr-3 pl-2.5 text-body font-medium shadow-xs hover:bg-surface-subtle"
+          :class="buttonFocus"
+        >
+          <NuxtLinkLocale to="/chat">
+            <Icon name="hugeicons:bubble-chat" class="size-4" />
+            {{ t('home.dashboard.newChat') }}
+          </NuxtLinkLocale>
+        </Button>
+        <Button
+          as-child
+          size="sm"
+          class="h-8 gap-1.5 rounded-md pr-3 pl-2.5 text-body font-medium hover:bg-primary/90"
+          :class="buttonFocus"
+        >
+          <NuxtLinkLocale to="/tasks">
+            <Icon name="hugeicons:plus-sign" class="size-4" />
+            {{ t('home.dashboard.newTask') }}
+          </NuxtLinkLocale>
+        </Button>
       </div>
+    </header>
+    <div class="px-(--page-x) pt-6 pb-(--page-bottom)">
+      <HomeOverview />
     </div>
-  </SectionWrapper>
+  </div>
 </template>

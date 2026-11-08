@@ -16,26 +16,33 @@ const hasNoWorkspace = computed(
 
 <template>
   <Html :lang="head.htmlAttrs.lang" :dir="head.htmlAttrs.dir" class="light">
-    <Body class="bg-stone-50">
-      <!-- 
-      <NavTopBar />
-      -->
+    <Body class="bg-canvas">
       <OrganizationDeletedScreen
         v-if="organization?.deletedAt"
         :organization-name="organization.name"
         :role="organization.role"
         :deleted-at="organization.deletedAt"
       />
-      <div v-else class="flex h-screen overflow-hidden">
+      <div v-else class="flex h-screen overflow-hidden p-(--shell-inset) pl-0">
         <NavSidebar />
         <SidePanelHost />
-        <main
-          id="main"
-          class="relative min-w-0 grow overflow-x-hidden overflow-y-auto rounded-xl border bg-white shadow-xs"
+        <div
+          data-testid="shell-panel"
+          class="@container box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
         >
-          <WorkspaceEmptyState v-if="hasNoWorkspace" />
-          <slot v-else />
-        </main>
+          <div
+            class="flex min-h-0 flex-1 flex-col @max-[1280px]:[--page-x:2rem]"
+          >
+            <NavTopBar />
+            <main
+              id="main"
+              class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+            >
+              <WorkspaceEmptyState v-if="hasNoWorkspace" />
+              <slot v-else />
+            </main>
+          </div>
+        </div>
       </div>
       <Toaster position="top-center" rich-colors />
     </Body>

@@ -1,7 +1,29 @@
 import type { ClassValue } from 'clsx';
 import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
 import { uuidv7 } from 'uuidv7';
+
+// Custom font sizes from main.css; without them `text-body` reads as a colour and drops `text-primary-foreground`.
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: [
+        'xxs',
+        'title-lg',
+        'title',
+        'title-sm',
+        'body-lg',
+        'chat',
+        'body',
+        'small',
+        'caption',
+        'mono',
+        'mono-sm',
+      ],
+      shadow: ['popover'],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

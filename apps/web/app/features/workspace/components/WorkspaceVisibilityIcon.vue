@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { LockIcon, UserLockIcon } from '@lucide/vue';
 import type { WorkspaceVisibility } from '~/features/workspace/types';
 
 interface WorkspaceVisibilityIconProps {
@@ -14,13 +13,15 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <UserLockIcon
+  <Icon
     v-if="visibility === 'personal'"
+    name="hugeicons:user-lock-01"
     :title="t('workspace.visibilityHint.personal')"
     :aria-label="t('workspace.visibilityHint.personal')"
   />
-  <LockIcon
+  <Icon
     v-else-if="visibility === 'restricted'"
+    name="hugeicons:lock"
     :title="t('workspace.visibilityHint.restricted')"
     :aria-label="t('workspace.visibilityHint.restricted')"
   />

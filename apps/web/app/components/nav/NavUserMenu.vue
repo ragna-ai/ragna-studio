@@ -1,18 +1,12 @@
 <script setup lang="ts">
-import {
-  ChevronsUpDownIcon,
-  CoinsIcon,
-  EllipsisIcon,
-  HelpCircleIcon,
-  LogOutIcon,
-  SettingsIcon,
-} from '@lucide/vue';
 import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
-import WorkspaceCreateDialog from '~/features/workspace/components/WorkspaceCreateDialog.vue';
-import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
-import WorkspaceMenuItems from '~/features/workspace/components/WorkspaceMenuItems.vue';
-import { useWorkspaceSwitcher } from '~/features/workspace/composables/useWorkspaceSwitcher';
+import { highestRole } from '~/features/organization/lib/roles';
+import {
+  MENU_CONTENT_CLASS,
+  MENU_ROW_CLASS,
+  MENU_SEPARATOR_CLASS,
+} from '~/lib/menu-row';
 import { createInitials } from '~/lib/utils';
 
 defineProps<{
@@ -21,27 +15,9 @@ defineProps<{
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
 
-const isCreateDialogOpen = ref(false);
-const isManageDialogOpen = ref(false);
-
+const { t, n } = useI18n();
 const session = useAuthSession();
-const {
-  open: isMenuOpen,
-  setOpen: setMenuOpen,
-  onTriggerEnter,
-  onTriggerLeave,
-  onContentEnter,
-  onContentLeave,
-} = useHoverMenu();
 const { data: organization } = useGetOrganization();
-const {
-  workspaces,
-  groups,
-  activeLabel,
-  initials: workspaceInitials,
-  isActive,
-  selectWorkspace,
-} = useWorkspaceSwitcher();
 
 // Fetched once per session (staleTime: Infinity in the composable) and
 // refetched by ChatConversation.vue after a chat turn ends.
@@ -54,6 +30,11 @@ const displayedCredits = computed(() => {
 });
 
 const initials = computed(() => createInitials(session.value?.user?.name));
+const roleLabel = computed(() =>
+  organization.value
+    ? t(`organization.roles.${highestRole(organization.value.role)}`)
+    : '',
+);
 
 async function signOut() {
   await useAuth().signOut();
@@ -64,141 +45,82 @@ async function signOut() {
 </script>
 
 <template>
-  <DropdownMenu :open="isMenuOpen" :modal="false" @update:open="setMenuOpen">
+  <DropdownMenu>
     <DropdownMenuTrigger as-child>
       <button
         type="button"
-        class="sidebar-row h-11"
+        class="sidebar-menu-row"
         :aria-label="session?.user?.name"
-        @pointerenter="onTriggerEnter"
-        @pointerleave="onTriggerLeave"
       >
         <span
-          class="flex size-7 shrink-0 items-center justify-center rounded-full bg-stone-200 text-xs font-medium text-foreground"
+          class="flex size-6 shrink-0 items-center justify-center rounded-full bg-border-strong text-caption font-medium text-foreground"
         >
           {{ initials }}
         </span>
         <span v-if="sizeFull" class="flex min-w-0 flex-col text-left">
-          <span class="truncate text-sm leading-tight text-foreground">
+          <span class="truncate text-body font-medium text-foreground">
             {{ session?.user?.name }}
           </span>
-          <span class="truncate text-xs leading-tight text-muted-foreground">
-            {{ activeLabel }}
+          <span class="truncate text-caption text-muted-foreground">
+            {{ roleLabel }}
           </span>
         </span>
-        <EllipsisIcon
-          v-if="sizeFull"
-          class="ml-auto size-4 shrink-0 text-stone-500"
-        />
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent
-      class="w-[15.6rem] rounded-2xl p-0"
-      side="right"
-      align="end"
-      @pointerenter="onContentEnter"
-      @pointerleave="onContentLeave"
+      side="top"
+      align="start"
+      :side-offset="6"
+      :class="MENU_CONTENT_CLASS"
     >
-      <div class="flex items-center gap-3 p-4">
-        <div
-          class="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted"
+      <div class="flex h-13 items-center gap-2.5 px-2.5">
+        <span
+          class="flex size-8 shrink-0 items-center justify-center rounded-full bg-border-strong text-caption font-medium text-foreground"
         >
-          <span class="text-sm font-medium">{{ initials }}</span>
-        </div>
-        <div class="flex min-w-0 flex-col">
-          <p class="truncate text-sm leading-none font-medium">
+          {{ initials }}
+        </span>
+        <span class="flex min-w-0 flex-col">
+          <span class="truncate text-body font-medium">
             {{ session?.user?.name }}
-          </p>
-          <p class="mt-1 truncate text-xs text-muted-foreground">
+          </span>
+          <span class="truncate text-caption text-muted-foreground">
             {{ session?.user?.email }}
-          </p>
-        </div>
+          </span>
+        </span>
       </div>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup class="p-1">
-        <DropdownMenuLabel class="text-xs text-muted-foreground">
-          {{ $t('nav.userMenu.workspace') }}
-        </DropdownMenuLabel>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger class="gap-2 py-1.5">
-            <span
-              class="flex size-7 shrink-0 items-center justify-center rounded-md bg-stone-800 text-xs font-medium text-white"
-            >
-              {{ workspaceInitials }}
-            </span>
-            <span class="flex min-w-0 flex-1 flex-col">
-              <span class="truncate text-sm leading-tight font-medium">
-                {{ activeLabel }}
-              </span>
-              <span
-                v-if="organization?.name"
-                class="truncate text-xs leading-tight text-muted-foreground"
-              >
-                {{ organization.name }}
-              </span>
-            </span>
-            <ChevronsUpDownIcon class="size-4 shrink-0" />
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent
-            class="w-56"
-            @pointerenter="onContentEnter"
-            @pointerleave="onContentLeave"
+      <DropdownMenuSeparator :class="MENU_SEPARATOR_CLASS" />
+      <DropdownMenuItem
+        v-if="displayedCredits !== null"
+        as-child
+        :class="MENU_ROW_CLASS"
+      >
+        <NuxtLink to="/settings/credits">
+          <Icon name="hugeicons:coins-01" class="size-4 text-foreground" />
+          {{ $t('nav.userMenu.credits') }}
+          <span
+            class="ml-auto font-mono text-mono text-muted-foreground"
+            data-testid="credit-balance"
           >
-            <WorkspaceMenuItems
-              :groups="groups"
-              :is-active="isActive"
-              show-add
-              @select="selectWorkspace"
-              @add="isCreateDialogOpen = true"
-              @manage="isManageDialogOpen = true"
-            />
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenuGroup>
-      <template v-if="displayedCredits !== null">
-        <DropdownMenuSeparator />
-        <div
-          class="flex items-center gap-2 px-4 py-2 text-xs text-muted-foreground"
-        >
-          <CoinsIcon class="size-4 stroke-1.5" />
-          {{ $t('nav.userMenu.credits', { count: displayedCredits }) }}
-        </div>
-      </template>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup class="p-1">
-        <DropdownMenuItem as-child class="cursor-pointer px-3 py-2">
-          <NuxtLink to="/settings/profile">
-            <SettingsIcon class="mr-2 size-4 stroke-1.5" />
-            {{ $t('nav.userMenu.settings') }}
-          </NuxtLink>
-        </DropdownMenuItem>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger class="px-3 py-2">
-            <HelpCircleIcon class="mr-2 size-4 stroke-1.5" />
-            {{ $t('nav.help') }}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent
-            @pointerenter="onContentEnter"
-            @pointerleave="onContentLeave"
-          >
-            <p class="px-3 py-2 text-xs text-muted-foreground">
-              {{ $t('nav.helpMenu.version', { version: appVersion }) }}
-            </p>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup class="p-1">
-        <DropdownMenuItem class="cursor-pointer px-3 py-2" @click="signOut">
-          <LogOutIcon class="mr-2 size-4 stroke-1.5" />
-          {{ $t('nav.userMenu.signOut') }}
-        </DropdownMenuItem>
-      </DropdownMenuGroup>
+            {{ n(displayedCredits) }}
+          </span>
+        </NuxtLink>
+      </DropdownMenuItem>
+      <DropdownMenuItem as-child :class="MENU_ROW_CLASS">
+        <NuxtLink to="/settings/profile">
+          <Icon name="hugeicons:settings-01" class="size-4 text-foreground" />
+          {{ $t('nav.userMenu.settings') }}
+        </NuxtLink>
+      </DropdownMenuItem>
+      <DropdownMenuSeparator :class="MENU_SEPARATOR_CLASS" />
+      <DropdownMenuItem :class="MENU_ROW_CLASS" @click="signOut">
+        <Icon name="hugeicons:logout-01" class="size-4 text-foreground" />
+        {{ $t('nav.userMenu.signOut') }}
+      </DropdownMenuItem>
+      <p
+        class="flex h-7 items-center px-2.5 text-caption text-muted-foreground"
+      >
+        {{ $t('nav.userMenu.version', { version: appVersion }) }}
+      </p>
     </DropdownMenuContent>
   </DropdownMenu>
-  <WorkspaceCreateDialog v-model:open="isCreateDialogOpen" />
-  <WorkspaceManageDialog
-    v-model:open="isManageDialogOpen"
-    :workspaces="workspaces"
-  />
 </template>

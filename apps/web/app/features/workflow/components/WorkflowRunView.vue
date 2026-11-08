@@ -85,7 +85,7 @@ const isCancellable = computed(
   () => !!run.value && ACTIVE_STATUSES.has(run.value.status),
 );
 
-const breadcrumbItems = computed(() => [
+usePageBreadcrumb(() => [
   { label: t('workflow.list.title'), to: '/workflow' },
   {
     label: workflowData.value?.workflow.name ?? '…',
@@ -113,7 +113,9 @@ function countTraceToolCalls(
     <header class="flex flex-col gap-2 border-b px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="min-w-0">
-          <PageBreadcrumb :items="breadcrumbItems" />
+          <h1 class="truncate text-sm font-semibold">
+            {{ t('workflow.run.breadcrumbLabel') }}
+          </h1>
           <p class="text-xs text-muted-foreground">
             {{ formatDateTime(run.createdAt) }}
           </p>

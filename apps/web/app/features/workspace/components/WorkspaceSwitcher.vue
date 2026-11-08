@@ -1,48 +1,25 @@
 <script setup lang="ts">
-import { ChevronsUpDownIcon } from '@lucide/vue';
+import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
+import WorkspaceCreateDialog from '~/features/workspace/components/WorkspaceCreateDialog.vue';
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import WorkspaceMenuItems from '~/features/workspace/components/WorkspaceMenuItems.vue';
-import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVisibilityIcon.vue';
 import { useWorkspaceSwitcher } from '~/features/workspace/composables/useWorkspaceSwitcher';
-import { cn } from '~/lib/utils';
+import { MENU_CONTENT_CLASS } from '~/lib/menu-row';
 
 interface WorkspaceSwitcherProps {
-  size?: 'sm' | 'md' | 'lg';
+  collapsed?: boolean;
 }
 
-// Props
-const props = defineProps<WorkspaceSwitcherProps>();
+withDefaults(defineProps<WorkspaceSwitcherProps>(), { collapsed: false });
 
-// Refs
+const isCreateDialogOpen = ref(false);
 const isManageDialogOpen = ref(false);
 
-// Composables
-const {
-  workspaces,
-  groups,
-  activeWorkspace,
-  activeLabel,
-  isActive,
-  selectWorkspace,
-} = useWorkspaceSwitcher();
+const { data: organization } = useGetOrganization();
+const { workspaces, groups, activeLabel, initials, isActive, selectWorkspace } =
+  useWorkspaceSwitcher();
 
-// Computed
-const sizeClass = computed(() => {
-  switch (props.size) {
-    case 'sm':
-      return { button: 'h-7 text-xs', label: 'max-w-28' };
-    case 'md':
-      return { button: 'h-8 text-sm', label: 'max-w-28' };
-    case 'lg':
-      return {
-        button:
-          'h-9 text-2xl border-0 text-foreground/90 font-medium hover:bg-transparent hover:text-foreground/90 bg-transparent p-0 hover:shadow-none',
-        label: 'max-w-38',
-      };
-    default:
-      return { button: 'h-7 text-xs', label: 'max-w-28' };
-  }
-});
+const mark = computed(() => initials.value.charAt(0).toUpperCase());
 </script>
 
 <template>
@@ -50,33 +27,49 @@ const sizeClass = computed(() => {
     <DropdownMenuTrigger as-child>
       <button
         type="button"
-        :class="
-          cn(
-            'flex h-7 items-center gap-1 rounded-full border bg-white p-4',
-            sizeClass.button,
-          )
-        "
+        class="sidebar-menu-row"
+        :aria-label="activeLabel || undefined"
       >
-        <WorkspaceVisibilityIcon
-          v-if="activeWorkspace"
-          :visibility="activeWorkspace.visibility"
-          class="size-3 shrink-0 text-muted-foreground"
-        />
-        <span :class="cn('max-w-28 truncate', sizeClass.label)">{{
-          activeLabel
-        }}</span>
-        <ChevronsUpDownIcon class="size-3 shrink-0 opacity-50" />
+        <span
+          class="flex size-6 shrink-0 items-center justify-center rounded-sm bg-sidebar-primary text-caption font-medium text-sidebar-primary-foreground"
+        >
+          {{ mark }}
+        </span>
+        <template v-if="!collapsed">
+          <span class="flex min-w-0 flex-col text-left">
+            <span class="truncate text-body font-medium text-foreground">
+              {{ activeLabel }}
+            </span>
+            <span
+              v-if="organization?.name"
+              class="truncate text-caption text-muted-foreground"
+            >
+              {{ organization.name }}
+            </span>
+          </span>
+          <Icon
+            name="hugeicons:unfold-more"
+            class="ml-auto size-4 shrink-0 text-icon"
+          />
+        </template>
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="start" class="w-56">
+    <DropdownMenuContent
+      side="bottom"
+      align="start"
+      :side-offset="6"
+      :class="MENU_CONTENT_CLASS"
+    >
       <WorkspaceMenuItems
         :groups="groups"
         :is-active="isActive"
         @select="selectWorkspace"
+        @add="isCreateDialogOpen = true"
         @manage="isManageDialogOpen = true"
       />
     </DropdownMenuContent>
   </DropdownMenu>
+  <WorkspaceCreateDialog v-model:open="isCreateDialogOpen" />
   <WorkspaceManageDialog
     v-model:open="isManageDialogOpen"
     :workspaces="workspaces"

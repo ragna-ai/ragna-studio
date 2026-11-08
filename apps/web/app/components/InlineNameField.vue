@@ -2,8 +2,8 @@
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
 
-// Inline click-to-edit name, used as the current item of a PageBreadcrumb
-// trail (workflow editor, dataset detail). Emits `save` only when the
+// Inline click-to-edit name, used as the editable page title (workflow
+// editor, dataset detail, document editor). Emits `save` only when the
 // submitted name actually changed.
 
 // Props

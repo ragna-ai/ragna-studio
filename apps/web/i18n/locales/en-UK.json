@@ -34,9 +34,6 @@
     "generating": "Generating…"
   },
   "nav": {
-    "helpMenu": {
-      "version": "App version: {version}"
-    },
     "home": "Dashboard",
     "workflows": "Workflows",
     "agents": "Agents",
@@ -53,19 +50,24 @@
     "history": "History",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
+    "search": "Search",
+    "topBar": {
+      "label": "Top bar",
+      "favorite": "Add to favourites",
+      "moreActions": "More actions"
+    },
     "userMenu": {
       "settings": "Settings",
       "signOut": "Sign out",
-      "credits": "{count} credits",
-      "workspace": "Workspace"
+      "credits": "Credits",
+      "version": "Version {version}"
     },
     "groups": {
       "work": "Work",
       "ai": "AI",
       "create": "Create"
     },
-    "title": "Main navigation",
-    "help": "Help"
+    "title": "Main navigation"
   },
   "auth": {
     "login": {
@@ -96,41 +98,47 @@
     },
     "title": "Dashboard",
     "titleWithName": "Welcome, {name}",
-    "subtitle": "How can I help you today?",
-    "overview": {
+    "dashboard": {
+      "newChat": "New chat",
+      "newTask": "New task",
       "viewAll": "View all",
+      "summary": {
+        "dueToday": "One task is due today. | {count} tasks are due today.",
+        "failed": "One workflow failed on its last run. | {count} workflows failed on their last run.",
+        "nothingDue": "Nothing due today."
+      },
       "tasks": {
         "title": "Tasks",
         "empty": "No tasks yet.",
-        "quickCreate": "New task"
-      },
-      "chats": {
-        "title": "Chats",
-        "empty": "No chats yet.",
-        "quickCreate": "New chat"
+        "quickCreate": "New task",
+        "dueToday": "Today",
+        "dueTomorrow": "Tomorrow"
       },
       "workflows": {
         "title": "Workflows",
+        "viewAll": "All workflows",
         "empty": "No workflows yet.",
         "quickCreate": "New workflow",
-        "neverRun": "Never run"
+        "neverRun": "Never run",
+        "status": {
+          "completed": "Completed",
+          "running": "Running",
+          "pending": "Queued",
+          "suspended": "Waiting",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        }
       },
       "agents": {
         "title": "Agents",
-        "createTile": "New agent"
+        "manage": "Manage",
+        "empty": "No agents yet.",
+        "quickCreate": "New agent"
       },
-      "documents": {
-        "title": "Documents",
-        "empty": "No documents yet.",
-        "quickCreate": "New document"
-      },
-      "calendar": {
-        "title": "Calendar",
-        "today": "Today",
-        "empty": "No tasks due.",
-        "previousWeek": "Previous week",
-        "nextWeek": "Next week",
-        "resetToToday": "Reset to today"
+      "today": {
+        "title": "Today",
+        "empty": "No tasks due today.",
+        "quickCreate": "New task"
       }
     }
   },

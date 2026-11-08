@@ -11,13 +11,22 @@ const props = withDefaults(defineProps<SidebarGroupProps>(), {
 </script>
 
 <template>
-  <div :class="props.collapsed ? 'mt-3 first:mt-0' : 'mt-5 first:mt-0'">
-    <p
-      v-if="props.label && !props.collapsed"
-      class="px-2 pb-1.5 text-xs text-muted-foreground"
-    >
-      {{ props.label }}
-    </p>
+  <div>
+    <template v-if="props.label">
+      <p
+        v-if="!props.collapsed"
+        class="flex h-9 items-end pb-1.5 pl-3 font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
+      >
+        {{ props.label }}
+      </p>
+      <div
+        v-else
+        aria-hidden="true"
+        class="flex h-9 items-end justify-center pb-2"
+      >
+        <span class="h-px w-4 bg-border-strong" />
+      </div>
+    </template>
     <ul class="space-y-0.5">
       <slot />
     </ul>

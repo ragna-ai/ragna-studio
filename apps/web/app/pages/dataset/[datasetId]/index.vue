@@ -19,8 +19,7 @@ const datasetId = computed(() => route.params.datasetId as string);
 // Refs
 const isColumnManagerOpen = ref(false);
 const isSettingsOpen = ref(false);
-// The dataset name is renamed inline in the breadcrumb's current item
-// (InlineNameField), same pattern as the workflow editor.
+// The dataset name is renamed inline in the page header (InlineNameField).
 const name = ref('');
 
 // Composables
@@ -51,15 +50,9 @@ watch(
 );
 
 // Computed
-// The breadcrumb replaces the page title in-place, so it has to render
-// immediately, before the dataset name is known. While loading, a static
-// trail with the "loading" copy stands in for the editable current item.
-const ancestorItems = computed(() => [
+usePageBreadcrumb(() => [
   { label: t('dataset.list.title'), to: '/dataset' },
-]);
-const loadingItems = computed(() => [
-  ...ancestorItems.value,
-  { label: t('dataset.detail.loading') },
+  { label: datasetName.value || t('dataset.detail.loading') },
 ]);
 
 // Functions
@@ -78,16 +71,15 @@ function handleExport(format: DatasetExportFormat) {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <PageBreadcrumb v-if="datasetData?.dataset" :items="ancestorItems">
-          <template #current>
-            <InlineNameField
-              v-model:name="name"
-              :label="t('dataset.detail.rename')"
-              @save="handleRename"
-            />
-          </template>
-        </PageBreadcrumb>
-        <PageBreadcrumb v-else :items="loadingItems" />
+        <InlineNameField
+          v-if="datasetData?.dataset"
+          v-model:name="name"
+          :label="t('dataset.detail.rename')"
+          @save="handleRename"
+        />
+        <h1 v-else class="truncate text-sm font-semibold">
+          {{ t('dataset.detail.loading') }}
+        </h1>
       </div>
       <div class="flex shrink-0 items-center gap-3">
         <DropdownMenu>

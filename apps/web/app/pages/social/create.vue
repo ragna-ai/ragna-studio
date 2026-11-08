@@ -16,7 +16,7 @@ useHead({
 });
 
 // Computed
-const breadcrumbItems = computed(() => [
+usePageBreadcrumb(() => [
   { label: t('social.list.title'), to: '/social' },
   { label: t('social.create.title') },
 ]);
@@ -43,11 +43,7 @@ onMounted(() => {
         <HeadingTitle
           :title="t('social.create.title')"
           :subtitle="t('social.create.subtitle')"
-        >
-          <template #title>
-            <PageBreadcrumb :items="breadcrumbItems" />
-          </template>
-        </HeadingTitle>
+        />
       </template>
       <template #bottom> </template>
     </Heading>

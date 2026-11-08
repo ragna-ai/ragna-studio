@@ -1,24 +1,10 @@
-import {
-  BotIcon,
-  FileTextIcon,
-  HomeIcon,
-  ImageIcon,
-  ListTodoIcon,
-  MailIcon,
-  MessagesSquareIcon,
-  Share2Icon,
-  TableIcon,
-  VideoIcon,
-  WorkflowIcon,
-} from '@lucide/vue';
-import type { Component } from 'vue';
 import { computed } from 'vue';
 import { usePersonalWorkspace } from '~/features/workspace/composables/usePersonalWorkspace';
 
 interface NavItem {
   id: string;
   path: string;
-  icon: Component;
+  icon: string;
   labelKey: string;
 }
 
@@ -31,7 +17,7 @@ interface NavGroupConfig {
 export interface TranslatedNavItem {
   id: string;
   path: string;
-  icon: Component;
+  icon: string;
   label: string;
 }
 
@@ -44,14 +30,14 @@ export interface NavGroup {
 const mailItem: NavItem = {
   id: 'mail',
   path: '/mail',
-  icon: MailIcon,
+  icon: 'mail-01',
   labelKey: 'nav.mail',
 };
 
 const homeItem: NavItem = {
   id: 'home',
   path: '/',
-  icon: HomeIcon,
+  icon: 'home-01',
   labelKey: 'nav.home',
 };
 
@@ -63,19 +49,19 @@ const labelledGroups: NavGroupConfig[] = [
       {
         id: 'tasks',
         path: '/tasks',
-        icon: ListTodoIcon,
+        icon: 'check-list',
         labelKey: 'nav.tasks',
       },
       {
         id: 'document',
         path: '/document',
-        icon: FileTextIcon,
+        icon: 'file-02',
         labelKey: 'nav.docs',
       },
       {
         id: 'dataset',
         path: '/dataset',
-        icon: TableIcon,
+        icon: 'grid-table',
         labelKey: 'nav.datasets',
       },
     ],
@@ -87,14 +73,14 @@ const labelledGroups: NavGroupConfig[] = [
       {
         id: 'chat',
         path: '/chat',
-        icon: MessagesSquareIcon,
+        icon: 'bubble-chat',
         labelKey: 'nav.chat',
       },
-      { id: 'agent', path: '/agent', icon: BotIcon, labelKey: 'nav.agents' },
+      { id: 'agent', path: '/agent', icon: 'robotic', labelKey: 'nav.agents' },
       {
         id: 'workflow',
         path: '/workflow',
-        icon: WorkflowIcon,
+        icon: 'flow-connection',
         labelKey: 'nav.workflows',
       },
     ],
@@ -106,19 +92,19 @@ const labelledGroups: NavGroupConfig[] = [
       {
         id: 'text-to-image',
         path: '/text-to-image',
-        icon: ImageIcon,
+        icon: 'image-01',
         labelKey: 'nav.image',
       },
       {
         id: 'text-to-video',
         path: '/text-to-video',
-        icon: VideoIcon,
+        icon: 'video-replay',
         labelKey: 'nav.video',
       },
       {
         id: 'social',
         path: '/social',
-        icon: Share2Icon,
+        icon: 'share-08',
         labelKey: 'nav.social',
       },
     ],

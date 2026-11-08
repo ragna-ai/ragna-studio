@@ -34,9 +34,6 @@
     "generating": "Wird generiert…"
   },
   "nav": {
-    "helpMenu": {
-      "version": "App-Version: {version}"
-    },
     "home": "Dashboard",
     "workflows": "Workflows",
     "agents": "Agenten",
@@ -53,19 +50,24 @@
     "history": "Verlauf",
     "expandSidebar": "Seitenleiste ausklappen",
     "collapseSidebar": "Seitenleiste einklappen",
+    "search": "Suchen",
+    "topBar": {
+      "label": "Kopfleiste",
+      "favorite": "Zu Favoriten hinzufügen",
+      "moreActions": "Weitere Aktionen"
+    },
     "userMenu": {
       "settings": "Einstellungen",
       "signOut": "Abmelden",
-      "credits": "{count} Credits",
-      "workspace": "Workspace"
+      "credits": "Credits",
+      "version": "Version {version}"
     },
     "groups": {
       "work": "Arbeit",
       "ai": "KI",
       "create": "Erstellen"
     },
-    "title": "Hauptnavigation",
-    "help": "Hilfe"
+    "title": "Hauptnavigation"
   },
   "notification": {
     "toast": {
@@ -144,41 +146,47 @@
     },
     "title": "Dashboard",
     "titleWithName": "Willkommen, {name}",
-    "subtitle": "Wie kann ich dir heute helfen?",
-    "overview": {
+    "dashboard": {
+      "newChat": "Neuer Chat",
+      "newTask": "Neue Aufgabe",
       "viewAll": "Alle anzeigen",
+      "summary": {
+        "dueToday": "Eine Aufgabe ist heute fällig. | {count} Aufgaben sind heute fällig.",
+        "failed": "Ein Workflow ist beim letzten Lauf fehlgeschlagen. | {count} Workflows sind beim letzten Lauf fehlgeschlagen.",
+        "nothingDue": "Heute ist nichts fällig."
+      },
       "tasks": {
         "title": "Aufgaben",
         "empty": "Noch keine Aufgaben.",
-        "quickCreate": "Neue Aufgabe"
-      },
-      "chats": {
-        "title": "Chats",
-        "empty": "Noch keine Chats.",
-        "quickCreate": "Neuer Chat"
+        "quickCreate": "Neue Aufgabe",
+        "dueToday": "Heute",
+        "dueTomorrow": "Morgen"
       },
       "workflows": {
         "title": "Workflows",
+        "viewAll": "Alle Workflows",
         "empty": "Noch keine Workflows.",
         "quickCreate": "Neuer Workflow",
-        "neverRun": "Nie ausgeführt"
+        "neverRun": "Noch nie gelaufen",
+        "status": {
+          "completed": "Abgeschlossen",
+          "running": "Läuft",
+          "pending": "In Warteschlange",
+          "suspended": "Wartet",
+          "failed": "Fehlgeschlagen",
+          "cancelled": "Abgebrochen"
+        }
       },
       "agents": {
         "title": "Agenten",
-        "createTile": "Neuer Agent"
+        "manage": "Verwalten",
+        "empty": "Noch keine Agenten.",
+        "quickCreate": "Neuer Agent"
       },
-      "documents": {
-        "title": "Dokumente",
-        "empty": "Noch keine Dokumente.",
-        "quickCreate": "Neues Dokument"
-      },
-      "calendar": {
-        "title": "Kalender",
-        "today": "Heute",
-        "empty": "Keine Aufgaben fällig.",
-        "previousWeek": "Vorherige Woche",
-        "nextWeek": "Nächste Woche",
-        "resetToToday": "Auf heute zurücksetzen"
+      "today": {
+        "title": "Heute",
+        "empty": "Heute ist keine Aufgabe fällig.",
+        "quickCreate": "Neue Aufgabe"
       }
     }
   },
