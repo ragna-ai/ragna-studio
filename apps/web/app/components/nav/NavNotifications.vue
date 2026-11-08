@@ -123,7 +123,7 @@ function handleClearAllClick() {
           <Icon name="hugeicons:notification-01" class="sidebar-row-icon" />
           <span
             v-if="unreadCount > 0 && !expanded"
-            class="absolute top-1.5 left-6 size-[7px] rounded-full bg-alert ring-[1.5px] ring-canvas"
+            class="absolute top-1.5 left-6 size-1.75 rounded-full bg-alert ring-[1.5px] ring-canvas"
           />
           <template v-if="expanded">
             <span class="truncate">{{ t('notification.panelTitle') }}</span>
@@ -158,7 +158,7 @@ function handleClearAllClick() {
               <TooltipTrigger as-child>
                 <button
                   type="button"
-                  class="flex size-7 items-center justify-center rounded-md text-icon outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                  class="flex size-7 items-center justify-center rounded-md text-icon outline-hidden hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
                   :aria-label="t('notification.markAllRead')"
                   @click="handleMarkAllReadClick"
                 >
@@ -173,7 +173,7 @@ function handleClearAllClick() {
               <TooltipTrigger as-child>
                 <button
                   type="button"
-                  class="flex size-7 items-center justify-center rounded-md text-icon outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                  class="flex size-7 items-center justify-center rounded-md text-icon outline-hidden hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
                   :aria-label="t('notification.clearAll')"
                   @click="handleClearAllClick"
                 >

@@ -21,7 +21,7 @@ const buttonFocus =
 </script>
 
 <template>
-  <div class="w-full">
+  <div>
     <header
       class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 px-(--page-x) pt-3"
     >
@@ -44,7 +44,7 @@ const buttonFocus =
           as-child
           variant="outline"
           size="sm"
-          class="h-8 gap-1.5 rounded-md border bg-card pr-3 pl-2.5 text-body font-medium shadow-xs hover:bg-surface-subtle"
+          class="bg-card pr-3 pl-2.5 text-body font-medium shadow-xs hover:bg-surface-subtle"
           :class="buttonFocus"
         >
           <NuxtLinkLocale to="/chat">
@@ -55,7 +55,7 @@ const buttonFocus =
         <Button
           as-child
           size="sm"
-          class="h-8 gap-1.5 rounded-md pr-3 pl-2.5 text-body font-medium hover:bg-primary/90"
+          class="pr-3 pl-2.5 text-body font-medium hover:bg-primary/90"
           :class="buttonFocus"
         >
           <NuxtLinkLocale to="/tasks">

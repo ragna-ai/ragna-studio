@@ -45,7 +45,7 @@ const timeLabel = computed(() => {
   >
     <button
       type="button"
-      class="flex w-full items-start gap-2.5 rounded-md p-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+      class="flex w-full items-start gap-2.5 rounded-md p-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       @click="emit('select', props.notification.id)"
     >
       <span
@@ -79,7 +79,7 @@ const timeLabel = computed(() => {
     </button>
     <button
       type="button"
-      class="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-sm text-icon opacity-0 outline-none group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-border focus-visible:ring-2 focus-visible:ring-ring"
+      class="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-sm text-icon opacity-0 outline-hidden group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-border focus-visible:ring-2 focus-visible:ring-ring"
       :aria-label="t('notification.delete')"
       @click="emit('delete', props.notification.id)"
     >

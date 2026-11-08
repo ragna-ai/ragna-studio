@@ -8,7 +8,7 @@ const label = computed(() =>
 <template>
   <button
     type="button"
-    class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+    class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden"
     :title="$t(label)"
     :aria-label="$t(label)"
     @click="navSidebarStore.toggleExpanded()"

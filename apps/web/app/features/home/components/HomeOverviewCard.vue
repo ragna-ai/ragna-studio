@@ -34,11 +34,10 @@ withDefaults(defineProps<HomeOverviewCardProps>(), {
       <span class="font-mono text-caption text-muted-foreground">{{
         total
       }}</span>
-      <span class="grow" />
       <NuxtLinkLocale
         v-if="viewAllTo && actionLabel"
         :to="viewAllTo"
-        class="-mr-2 flex shrink-0 items-center gap-0.5 rounded-md px-2 py-1 text-body font-medium text-muted-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        class="-mr-2 ml-auto flex shrink-0 items-center gap-0.5 rounded-md px-2 py-1 text-body font-medium text-muted-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
         {{ actionLabel }}
         <Icon name="hugeicons:arrow-right-01" class="size-3.5" />
@@ -55,7 +54,7 @@ withDefaults(defineProps<HomeOverviewCardProps>(), {
       <NuxtLinkLocale
         v-if="quickCreateLabel && quickCreateTo"
         :to="quickCreateTo"
-        class="mt-2 -ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-body font-medium text-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        class="mt-2 -ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-body font-medium text-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
         <Icon name="hugeicons:add-01" class="size-4 text-icon" />
         {{ quickCreateLabel }}

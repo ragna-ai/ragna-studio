@@ -18,7 +18,7 @@ const NuxtLinkLocale = resolveComponent('NuxtLinkLocale');
   <component
     :is="to ? NuxtLinkLocale : 'button'"
     v-bind="to ? { to } : { type: 'button' }"
-    class="-mx-(--inset-card) block w-[calc(100%+2*var(--inset-card))] px-(--inset-card) text-left transition-colors outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+    class="-mx-(--inset-card) block w-[calc(100%+var(--inset-card)*2)] px-(--inset-card) text-left outline-hidden transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
     @click="emit('select')"
   >
     <div

@@ -19,6 +19,18 @@
       "skillPath": "skills/pinia/SKILL.md",
       "computedHash": "b02c9f6c2e1ec051be0ca5025804d8262815221fd7f5020734b5a9ad87f15617"
     },
+    "tailwind-v4": {
+      "source": "mastra-ai/mastra",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/tailwind-v4/SKILL.md",
+      "computedHash": "5a9f44a4151a8020309435f6f7d36e7b8ef1e66b00e0ad962cad677cd5c3155a"
+    },
+    "tailwindcss-advanced-layouts": {
+      "source": "josiahsiegel/claude-plugin-marketplace",
+      "sourceType": "github",
+      "skillPath": "plugins/tailwindcss-master/skills/tailwindcss-advanced-layouts/SKILL.md",
+      "computedHash": "159d8a8f9eb20136492a9971633fd8658be1e34d5f8dc3bcf1afe7bbb4511bdf"
+    },
     "vite": {
       "source": "antfu/skills",
       "sourceType": "github",

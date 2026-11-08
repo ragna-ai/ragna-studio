@@ -30,13 +30,13 @@ const dotClass = computed(() =>
 
 <template>
   <span
-    class="inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-full px-2 text-caption font-medium whitespace-nowrap"
-    :class="[TONE_CLASS[tone], tone === 'agent' && 'pl-[7px]']"
+    class="inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full px-2 text-caption font-medium whitespace-nowrap"
+    :class="[TONE_CLASS[tone], tone === 'agent' && 'pl-1.75']"
   >
     <Icon
       v-if="tone === 'agent'"
       name="hugeicons:loading-03"
-      class="size-3 animate-[spin_1s_linear_infinite] text-agent motion-reduce:animate-none"
+      class="size-3 text-agent motion-safe:animate-spin"
     />
     <span v-else class="size-1.5 rounded-full" :class="dotClass" />
     {{ label }}

@@ -20,10 +20,7 @@ const crumbs = computed<PageCrumb[]>(() => {
   <Breadcrumb class="min-w-0">
     <BreadcrumbList class="flex-nowrap gap-1 text-body sm:gap-1">
       <template v-for="(crumb, index) in crumbs" :key="index">
-        <BreadcrumbItem
-          class="min-w-0"
-          :class="index === crumbs.length - 1 ? '' : 'shrink-0'"
-        >
+        <BreadcrumbItem class="min-w-0 not-last:shrink-0">
           <BreadcrumbPage
             v-if="index === crumbs.length - 1"
             class="truncate font-medium text-foreground"
