@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import './tokens.css';
 @import './nav.css';
-@import './background.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -78,138 +78,43 @@
   --color-id-clay-bg: var(--id-clay-bg);
   --color-id-clay-fg: var(--id-clay-fg);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 14px;
-
-  --shadow-xs: 0 1px 2px #1c19170f;
-  --shadow-popover: 0 8px 24px #1c19171f;
-
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;
   --font-display: 'Bricolage Grotesque', var(--font-sans);
-
-  /* Weight is set separately: 400 regular, 500 strong, 600 titles. */
-  --text-display: 32px;
-  --text-display--line-height: 40px;
-  --text-display--letter-spacing: -0.015em;
-  --text-title-lg: 24px;
-  --text-title-lg--line-height: 32px;
-  --text-title-lg--letter-spacing: -0.01em;
-  --text-title: 20px;
-  --text-title--line-height: 28px;
-  --text-title--letter-spacing: -0.005em;
-  --text-title-sm: 16px;
-  --text-title-sm--line-height: 24px;
-  --text-body-lg: 16px;
-  --text-body-lg--line-height: 24px;
-  --text-chat: 15px;
-  --text-chat--line-height: 24px;
-  --text-body: 14px;
-  --text-body--line-height: 20px;
-  --text-small: 13px;
-  --text-small--line-height: 20px;
-  --text-caption: 12px;
-  --text-caption--line-height: 16px;
-  --text-mono: 13px;
-  --text-mono--line-height: 20px;
-  --text-mono-sm: 12px;
-  --text-mono-sm--line-height: 16px;
 }
 
+/* Design values come from tokens.css (generated). Here: shadcn names mapped onto them, and code-only tokens. */
 :root {
-  --radius: 0.75rem;
-  --background: #ffffff;
-  --foreground: #1c1917;
-  --card: #ffffff;
-  --card-foreground: #1c1917;
-  --popover: #ffffff;
-  --popover-foreground: #1c1917;
-  --primary: #1c1917;
-  --primary-foreground: #ffffff;
-  --secondary: #ffffff;
-  --secondary-foreground: #1c1917;
-  --muted: #f8f7f5;
-  --muted-foreground: #6f6a64;
-  --accent: #f8f7f5;
-  --accent-foreground: #1c1917;
-  --destructive: #c4321f;
-  --border: #e6e4e0;
-  --input: #e6e4e0;
+  --radius: var(--radius-lg);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--background);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-subtle);
+  --accent: var(--surface-subtle);
+  --accent-foreground: var(--foreground);
+  --destructive: var(--status-danger);
+  --input: var(--border);
   /* Ink, not teal: teal is reserved for a working agent. */
-  --ring: #1c1917;
+  --ring: var(--foreground);
+  --sidebar: var(--canvas);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--background);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--foreground);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --wash-sea: #d3e6e8;
-  --wash-sand: #eee2cb;
-  --wash-sage: #dce4d2;
-  --wash-ochre: #f2ddb6;
-  --sidebar: #f2f1ee;
-  --sidebar-foreground: #1c1917;
-  --sidebar-primary: #17707f;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: #1c1917;
-  --sidebar-border: #e6e4e0;
-  --sidebar-ring: #1c1917;
-
-  --canvas: #f2f1ee;
-  --surface-subtle: #f8f7f5;
-  --tray: #f4f3f0;
-  --border-strong: #dad7d2;
-  --icon: #78716c;
-
-  /* Teal means an agent is working right now. Never decoration, links or focus. */
-  --agent: #17707f;
-  --agent-subtle: #eaf4f4;
-  --agent-text: #12606d;
-
-  --chip: #efeeeb;
-  --chip-foreground: #44403c;
-  --alert: #d92d20;
-  --alert-foreground: #ffffff;
-
-  --status-ok: #3f7a4a;
-  --status-ok-bg: #e8f2ea;
-  --status-ok-fg: #2f6b3a;
-  --status-warn: #c27a12;
-  --status-warn-bg: #fbf1de;
-  --status-warn-fg: #8f560c;
-  --status-danger: #c4321f;
-  --status-danger-bg: #fbeae7;
-  --status-danger-fg: #a8281a;
-  --status-neutral: #a8a29e;
-  --status-neutral-bg: #efeeeb;
-  --status-neutral-fg: #57534e;
-
-  --seg-done: #44403c;
-  --seg-todo: #dedbd6;
-
-  --id-sea-bg: #dcebec;
-  --id-sea-fg: #17707f;
-  --id-sage-bg: #e3eadb;
-  --id-sage-fg: #3f6b47;
-  --id-ochre-bg: #f5e6cc;
-  --id-ochre-fg: #9a5b0f;
-  --id-clay-bg: #f1e1d8;
-  --id-clay-fg: #9c4a2a;
 }
 
-/* Layout constants as spacing tokens: p-shell, w-sidebar, w-rail, h-topbar, px-topbar-x, px-page, pb-page-bottom, gap-gutter, px-card. */
-@theme {
-  --spacing-shell: 8px;
-  --spacing-sidebar: 240px;
-  --spacing-rail: 56px;
-  --spacing-topbar: 52px;
-  --spacing-page: 40px;
-  --spacing-topbar-x: calc(var(--spacing-page) - 0.5rem);
-  --spacing-page-bottom: 40px;
-  --spacing-gutter: 20px;
-  --spacing-card: 20px;
+/* Layout spacing (p-shell, w-sidebar, w-rail, h-topbar, px-page, ...) is in tokens.css; px-topbar-x derives from it. */
+@theme inline {
+  --spacing-topbar-x: calc(var(--spacing-page) - --spacing(2));
 }
 
 @layer base {
@@ -244,10 +149,10 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --wash-sea: #24495a;
-  --wash-sand: #3d3a2c;
-  --wash-sage: #2f4038;
-  --wash-ochre: #4a3a1e;
+  --wash-sea: oklch(0.386 0.051 229.868);
+  --wash-sand: oklch(0.347 0.024 97.349);
+  --wash-sage: oklch(0.354 0.026 164.526);
+  --wash-ochre: oklch(0.359 0.048 80.27);
   --sidebar: oklch(0.216 0.006 56.043);
   --sidebar-foreground: oklch(0.985 0.001 106.423);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -266,34 +171,31 @@
   stroke-width: 1.25;
 }
 
-@keyframes loader-dot-bounce {
-  0%,
-  80%,
-  100% {
-    opacity: 0.3;
-    transform: scale(0.75);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+@theme {
+  --animate-loader-dot: loader-dot-bounce 1.4s ease-in-out infinite;
+  --animate-wash-drift: wash-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 
-@utility animate-loader-dot {
-  animation: loader-dot-bounce 1.4s ease-in-out infinite;
-}
-
-@keyframes wash-drift {
-  from {
-    transform: translate(-6px, -4px) scale(1);
+  @keyframes loader-dot-bounce {
+    0%,
+    80%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.75);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
-  to {
-    transform: translate(6px, 4px) scale(1.12);
-  }
-}
 
-@utility animate-wash-drift {
-  animation: wash-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+  @keyframes wash-drift {
+    from {
+      transform: translate(-6px, -4px) scale(1);
+    }
+    to {
+      transform: translate(6px, 4px) scale(1.12);
+    }
+  }
 }
 
 @layer base {
@@ -309,6 +211,6 @@
   }
 }
 
-.is-active-button {
+@utility is-active-button {
   @apply bg-accent text-accent-foreground;
 }
