@@ -1,5 +1,11 @@
 <script setup lang="ts">
 // Imports
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 import NotificationListItem from '~/features/notification/components/NotificationListItem.vue';
 import {
   useDeleteAllNotifications,
@@ -9,11 +15,15 @@ import {
   useMarkAllReadNotification,
   useMarkReadNotification,
 } from '~/features/notification/composables/useNotificationApi';
+import { groupNotifications } from '~/features/notification/lib/group-notifications';
 import useNotificationParser from '~/features/notification/composables/useNotificationParser';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
+import { MENU_CONTENT_CLASS } from '~/lib/menu-row';
 
 // Props
-withDefaults(defineProps<{ expanded?: boolean }>(), { expanded: false });
+withDefaults(defineProps<{ expanded?: boolean }>(), {
+  expanded: false,
+});
 
 // Refs
 const open = ref(false);
@@ -22,7 +32,7 @@ const open = ref(false);
 const { t } = useI18n();
 const { formatNotificationForUi } = useNotificationParser();
 const { data: unreadCountData } = useGetUnreadNotificationCount();
-const { data: listData, isLoading } = useGetNotificationList(open);
+const { data: listData, isPending } = useGetNotificationList(open);
 const markRead = useMarkReadNotification();
 const markAllRead = useMarkAllReadNotification();
 const deleteNotification = useDeleteNotification();
@@ -50,7 +60,22 @@ const notificationItems = computed(() =>
   }),
 );
 
+const notificationGroups = computed(() =>
+  groupNotifications(
+    notificationItems.value.map((entry) => ({
+      ...entry,
+      createdAt: entry.notification.createdAt,
+    })),
+  ),
+);
+
 // Functions
+// Focusing the first header button would open its tooltip, and Escape would close that first.
+function focusPanel(event: Event) {
+  event.preventDefault();
+  if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus();
+}
+
 async function handleNotificationSelect(notificationId: string) {
   open.value = false;
   const item = notificationItems.value.find(
@@ -87,79 +112,121 @@ function handleClearAllClick() {
 </script>
 
 <template>
-  <DropdownMenu v-model:open="open">
-    <DropdownMenuTrigger as-child>
-      <button
-        type="button"
-        class="sidebar-row"
-        :aria-label="t('notification.panelTitle')"
-      >
-        <Icon name="hugeicons:notification-01" class="sidebar-row-icon" />
-        <span
-          v-if="unreadCount > 0 && !expanded"
-          data-testid="notification-dot"
-          class="absolute top-1.5 left-6 size-[7px] rounded-full bg-alert ring-[1.5px] ring-canvas"
-        />
-        <template v-if="expanded">
-          <span class="truncate">{{ t('notification.panelTitle') }}</span>
-          <span
-            v-if="unreadCount > 0"
-            data-testid="notification-count"
-            class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-alert px-1.5 font-mono text-caption text-alert-foreground"
-          >
-            {{ unreadBadgeLabel }}
-          </span>
-        </template>
-      </button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent
-      class="w-88 overflow-hidden rounded-2xl p-0"
-      side="right"
-      align="end"
-    >
-      <div class="flex items-center justify-between p-4">
-        <p class="text-sm font-medium">{{ t('notification.panelTitle') }}</p>
-        <div v-if="notifications.length > 0" class="flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-auto gap-1 p-0 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
-            @click="handleMarkAllReadClick"
-          >
-            <Icon name="hugeicons:tick-double-02" class="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-auto gap-1 p-0 text-xs text-muted-foreground hover:bg-transparent hover:text-destructive"
-            @click="handleClearAllClick"
-          >
-            <Icon name="hugeicons:delete-02" class="size-3.5" />
-          </Button>
-        </div>
-      </div>
-      <DropdownMenuSeparator />
-      <div class="max-h-96 overflow-y-auto">
-        <div v-if="isLoading" class="flex justify-center py-8">
-          <Spinner />
-        </div>
-        <div
-          v-else-if="notifications.length === 0"
-          class="flex flex-col items-center gap-2 py-8 text-muted-foreground"
+  <TooltipProvider :delay-duration="300">
+    <Popover v-model:open="open">
+      <PopoverTrigger as-child>
+        <button
+          type="button"
+          class="sidebar-row"
+          :aria-label="t('notification.panelTitle')"
         >
-          <Icon name="hugeicons:inbox" class="size-6" />
-          <p class="text-sm">{{ t('notification.empty') }}</p>
+          <Icon name="hugeicons:notification-01" class="sidebar-row-icon" />
+          <span
+            v-if="unreadCount > 0 && !expanded"
+            data-testid="notification-dot"
+            class="absolute top-1.5 left-6 size-[7px] rounded-full bg-alert ring-[1.5px] ring-canvas"
+          />
+          <template v-if="expanded">
+            <span class="truncate">{{ t('notification.panelTitle') }}</span>
+            <span
+              v-if="unreadCount > 0"
+              data-testid="notification-count"
+              class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-alert px-1.5 font-mono text-caption text-alert-foreground"
+            >
+              {{ unreadBadgeLabel }}
+            </span>
+          </template>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="start"
+        :side-offset="6"
+        @open-auto-focus="focusPanel"
+        :class="`${MENU_CONTENT_CLASS} flex max-h-130 w-90 flex-col overflow-hidden`"
+      >
+        <div class="flex h-11 shrink-0 items-center gap-2 pr-1.5 pl-2.5">
+          <p class="text-body font-medium">
+            {{ t('notification.panelTitle') }}
+          </p>
+          <p
+            v-if="unreadCount > 0"
+            class="text-caption text-muted-foreground"
+            data-testid="notification-new-count"
+          >
+            {{ t('notification.newCount', { count: unreadCount }) }}
+          </p>
+          <div
+            v-if="notifications.length > 0"
+            class="ml-auto flex items-center gap-1"
+          >
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button
+                  type="button"
+                  class="flex size-7 items-center justify-center rounded-md text-icon outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                  :aria-label="t('notification.markAllRead')"
+                  @click="handleMarkAllReadClick"
+                >
+                  <Icon name="hugeicons:tick-double-02" class="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{{
+                t('notification.markAllRead')
+              }}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button
+                  type="button"
+                  class="flex size-7 items-center justify-center rounded-md text-icon outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                  :aria-label="t('notification.clearAll')"
+                  @click="handleClearAllClick"
+                >
+                  <Icon name="hugeicons:delete-02" class="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{{ t('notification.clearAll') }}</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <NotificationListItem
-          v-for="item in notificationItems"
-          :key="item.notification.id"
-          :notification="item.notification"
-          :title="item.title"
-          :message="item.message"
-          @select="handleNotificationSelect"
-          @delete="handleNotificationDelete"
-        />
-      </div>
-    </DropdownMenuContent>
-  </DropdownMenu>
+        <div class="my-1 h-px shrink-0 bg-border" />
+        <div class="min-h-0 flex-1 overflow-y-auto">
+          <div v-if="isPending" class="flex h-42 items-center justify-center">
+            <Spinner />
+          </div>
+          <div
+            v-else-if="notifications.length === 0"
+            data-testid="notification-empty"
+            class="flex h-42 flex-col items-center justify-center gap-1 px-6 text-center"
+          >
+            <Icon name="hugeicons:inbox" class="mb-1 size-6 text-icon" />
+            <p class="text-body font-medium">{{ t('notification.empty') }}</p>
+            <p class="text-small text-muted-foreground">
+              {{ t('notification.emptyHint') }}
+            </p>
+          </div>
+          <template v-else>
+            <section v-for="group in notificationGroups" :key="group.key">
+              <p
+                class="flex h-7 items-center px-2.5 text-caption text-muted-foreground"
+              >
+                {{ t(`notification.groups.${group.key}`) }}
+              </p>
+              <NotificationListItem
+                v-for="item in group.items"
+                :key="item.notification.id"
+                :notification="item.notification"
+                :title="item.title"
+                :message="item.message"
+                :group-key="group.key"
+                @select="handleNotificationSelect"
+                @delete="handleNotificationDelete"
+              />
+            </section>
+          </template>
+        </div>
+      </PopoverContent>
+    </Popover>
+  </TooltipProvider>
 </template>

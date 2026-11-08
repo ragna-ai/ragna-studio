@@ -29,7 +29,7 @@ const isActive = computed(() => {
 <template>
   <li>
     <TooltipProvider :delay-duration="300">
-      <Tooltip>
+      <Tooltip :disabled="!props.collapsed">
         <TooltipTrigger as-child>
           <NuxtLinkLocale
             :to="props.to"
@@ -44,7 +44,6 @@ const isActive = computed(() => {
           </NuxtLinkLocale>
         </TooltipTrigger>
         <TooltipContent
-          v-if="props.collapsed"
           side="right"
           class="flex h-7 items-center rounded-sm px-2.5 py-0 text-caption font-medium text-primary-foreground"
         >

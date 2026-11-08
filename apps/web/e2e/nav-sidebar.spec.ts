@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const REMOVED_SHOW_LABELS_KEY = 'nav-sidebar:show-labels-when-collapsed';
 const EXPANDED_KEY = 'nav-sidebar:expanded';
@@ -21,6 +21,88 @@ function workspaceRow(page: Page, name?: string) {
   return sidebar(page).getByRole('button').first().filter({
     hasText: name,
   });
+}
+
+interface MockNotification {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  readAt: string | null;
+  createdAt: string;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function mockNotification(
+  id: string,
+  type: string,
+  data: Record<string, unknown>,
+  ageMs: number,
+  isRead: boolean,
+): MockNotification {
+  const createdAt = new Date(Date.now() - ageMs).toISOString();
+  return { id, type, data, readAt: isRead ? createdAt : null, createdAt };
+}
+
+async function mockNotifications(page: Page, items: MockNotification[]) {
+  const withUser = (item: MockNotification) => ({ ...item, userId: 'u1' });
+  await page.route(/\/notification\?/, (route) =>
+    route.fulfill({
+      json: { notifications: items.map(withUser), count: items.length },
+    }),
+  );
+  await page.route('**/notification/unread-count', (route) =>
+    route.fulfill({
+      json: { count: items.filter((item) => item.readAt === null).length },
+    }),
+  );
+  await page.route(/\/notification\/[\w-]+$/, async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    const id = route.request().url().split('/').pop();
+    const index = items.findIndex((item) => item.id === id);
+    if (index >= 0) items.splice(index, 1);
+    return route.fulfill({ json: { success: true } });
+  });
+}
+
+function notificationsPanel(page: Page) {
+  return page.getByRole('dialog').filter({ hasText: 'Notifications' });
+}
+
+function mixedNotifications(): MockNotification[] {
+  return [
+    mockNotification(
+      'n-failed',
+      'workflow_run_failed',
+      {
+        workflowId: 'w1',
+        runId: 'r1',
+        workflowName: 'Weekly report',
+        workspaceId: 'x',
+      },
+      60 * 1000,
+      false,
+    ),
+    mockNotification(
+      'n-task',
+      'task_reminder_due',
+      {
+        taskId: 't1',
+        workspaceId: 'x',
+        taskNumber: 4,
+        taskTitle: 'Send invoice',
+      },
+      DAY_MS + 60 * 1000,
+      true,
+    ),
+    mockNotification(
+      'n-old',
+      'image_generation_succeeded',
+      { genImageIds: ['i1'], workspaceId: 'x', prompt: 'A red bike' },
+      5 * DAY_MS,
+      true,
+    ),
+  ];
 }
 
 function searchField(page: Page) {
@@ -88,6 +170,24 @@ test.describe('app sidebar', () => {
     await collapseSidebar(page);
     await sidebar(page).getByRole('link', { name: 'Agents' }).hover();
 
+    await expect(page.getByRole('tooltip', { name: 'Agents' })).toBeVisible();
+  });
+
+  test('shows no stale tooltip after collapsing and still shows one when hovering collapsed', async ({
+    page,
+  }) => {
+    const tooltipDelayMs = 300;
+    await page.goto('/');
+    const agents = sidebar(page).getByRole('link', { name: 'Agents' });
+    await agents.hover();
+    await page.waitForTimeout(tooltipDelayMs + 200);
+    await page.getByRole('button', { name: 'Collapse sidebar' }).click();
+    await expect(agentsLabel(page)).toBeHidden();
+
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+
+    await page.mouse.move(600, 400);
+    await agents.hover();
     await expect(page.getByRole('tooltip', { name: 'Agents' })).toBeVisible();
   });
 
@@ -291,5 +391,137 @@ test.describe('app sidebar in a narrow window', () => {
     await page.goto('/');
 
     await expect(agentsLabel(page)).toBeVisible();
+  });
+});
+
+const MENU_GAP = 6;
+const POSITION_TOLERANCE = 2;
+
+async function expectMenuAtRow(
+  menu: Locator,
+  rowBox: { x: number; y: number; width: number; height: number },
+  direction: 'above' | 'below',
+) {
+  await expect
+    .poll(async () => {
+      const menuBox = await menu.boundingBox();
+      if (!menuBox) return 'missing box';
+      const gap =
+        direction === 'below'
+          ? menuBox.y - (rowBox.y + rowBox.height)
+          : rowBox.y - (menuBox.y + menuBox.height);
+      const dx = menuBox.x - rowBox.x;
+      const isPlaced =
+        Math.abs(dx) <= POSITION_TOLERANCE &&
+        Math.abs(gap - MENU_GAP) <= POSITION_TOLERANCE;
+      return isPlaced ? 'placed' : `dx=${dx} gap=${gap}`;
+    })
+    .toBe('placed');
+}
+
+test.describe('notifications panel', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('groups entries, marks unread ones and sets failures apart', async ({
+    page,
+  }) => {
+    await mockNotifications(page, mixedNotifications());
+    await page.goto('/');
+    await sidebar(page).getByRole('button', { name: 'Notifications' }).click();
+    const panel = notificationsPanel(page);
+
+    for (const label of ['Today', 'Yesterday', 'Earlier']) {
+      await expect(panel.getByText(label, { exact: true })).toBeVisible();
+    }
+    await expect(panel.getByTestId('notification-unread')).toHaveCount(1);
+    await expect(panel.getByText('1 new')).toBeVisible();
+    await expect(panel.locator('.bg-status-danger-bg')).toHaveCount(1);
+  });
+
+  test('deletes a single entry', async ({ page }) => {
+    await mockNotifications(page, mixedNotifications());
+    await page.goto('/');
+    await sidebar(page).getByRole('button', { name: 'Notifications' }).click();
+    const panel = notificationsPanel(page);
+    await expect(panel.getByText('Workflow failed')).toBeVisible();
+
+    await panel.getByText('Workflow failed').hover();
+    await panel
+      .getByRole('button', { name: 'Delete notification' })
+      .first()
+      .click();
+
+    await expect(panel.getByText('Workflow failed')).toHaveCount(0);
+  });
+
+  test('shows no empty state while the list is still loading', async ({
+    page,
+  }) => {
+    const items = mixedNotifications();
+    await mockNotifications(page, items);
+    await page.route(/\/notification\?/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await route.fallback();
+    });
+    await page.goto('/');
+    await sidebar(page).getByRole('button', { name: 'Notifications' }).click();
+    const panel = notificationsPanel(page);
+
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText('No notifications.')).toHaveCount(0);
+    await expect(panel.getByText('Workflow failed')).toBeVisible();
+  });
+
+  test('explains what shows up when there are no notifications', async ({
+    page,
+  }) => {
+    await mockNotifications(page, []);
+    await page.goto('/');
+    await sidebar(page).getByRole('button', { name: 'Notifications' }).click();
+    const panel = notificationsPanel(page);
+
+    await expect(panel.getByText('No notifications.')).toBeVisible();
+    await expect(
+      panel.getByText(/Workflow results, task reminders/),
+    ).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Clear all' })).toHaveCount(
+      0,
+    );
+  });
+
+  test('opens each menu in the same place relative to its row in both sidebar states', async ({
+    page,
+  }) => {
+    await mockNotifications(page, mixedNotifications());
+    await page.goto('/');
+    const menus = [
+      {
+        row: workspaceRow(page),
+        menu: page.getByRole('menu'),
+        direction: 'below' as const,
+      },
+      {
+        row: sidebar(page).getByRole('button', { name: 'Notifications' }),
+        menu: notificationsPanel(page),
+        direction: 'above' as const,
+      },
+      {
+        row: userRow(page),
+        menu: page.getByRole('menu'),
+        direction: 'above' as const,
+      },
+    ];
+
+    for (const collapsed of [false, true]) {
+      if (collapsed) await collapseSidebar(page);
+      for (const { row, menu, direction } of menus) {
+        const rowBox = await row.boundingBox();
+        if (!rowBox) throw new Error('row not found');
+        await row.click();
+        await expectMenuAtRow(menu, rowBox, direction);
+        await page.keyboard.press('Escape');
+        await expect(menu).toBeHidden();
+      }
+    }
   });
 });

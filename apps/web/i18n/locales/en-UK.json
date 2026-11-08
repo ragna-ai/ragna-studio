@@ -185,6 +185,14 @@
     "empty": "No notifications.",
     "delete": "Delete notification",
     "clearAll": "Clear all",
+    "markAllRead": "Mark all as read",
+    "newCount": "{count} new",
+    "emptyHint": "Workflow results, task reminders and finished images show up here.",
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "earlier": "Earlier"
+    },
     "integrationNeedsReauth": {
       "title": "Connection needs a reconnect",
       "message": "RAGNA Studio can no longer use your {provider} connection. Reconnect it under Connections."

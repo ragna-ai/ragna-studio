@@ -112,6 +112,14 @@
     "empty": "Keine Benachrichtigungen.",
     "delete": "Benachrichtigung löschen",
     "clearAll": "Alle löschen",
+    "markAllRead": "Alle als gelesen markieren",
+    "newCount": "{count} neu",
+    "emptyHint": "Ergebnisse von Workflows, Aufgabenerinnerungen und fertige Bilder erscheinen hier.",
+    "groups": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "earlier": "Früher"
+    },
     "integrationNeedsReauth": {
       "title": "Verbindung neu verbinden",
       "message": "RAGNA Studio kann deine {provider}-Verbindung nicht mehr nutzen. Verbinde sie unter Verbindungen neu."

@@ -83,6 +83,13 @@ without losing track.
   as the main sidebar.
 - **US-3.7** Rule: workspaces are switched in the workspace row only; the user menu holds no
   workspace switching. Both menus open on click or keyboard, not on hover.
+- **US-3.8** Given unread and read notifications, when the user opens the notifications panel,
+  then entries are grouped into Today, Yesterday and Earlier, unread ones are marked, and a failed
+  result is set apart from a successful one.
+- **US-3.9** Given an entry in the panel, when the user deletes it, then it disappears from the
+  list. Given no notifications, when the panel opens, then it explains what will show up there.
+- **US-3.10** Rule: the workspace menu opens below its row, the notifications and user menus open
+  above theirs, the same whether the sidebar is expanded or collapsed.
 
 ### US-4 Dashboard (P1)
 
@@ -116,13 +123,13 @@ work by mouse, keyboard and on smaller screens.
 
 ## Testing
 
-| Criterion                | Level            | Folder                               |
-| ------------------------ | ---------------- | ------------------------------------ |
-| US-1.1, US-1.2, US-1.3   | e2e (Playwright) | `apps/web/e2e/shell.spec.ts`         |
-| US-2.1 to US-2.4         | e2e (Playwright) | `apps/web/e2e/breadcrumb.spec.ts`    |
-| US-3.1 to US-3.5, US-3.7 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
-| US-3.6                   | e2e (Playwright) | `apps/web/e2e/settings-area.spec.ts` |
-| US-4.1 to US-4.6         | e2e (Playwright) | `apps/web/e2e/dashboard.spec.ts`     |
+| Criterion                           | Level            | Folder                               |
+| ----------------------------------- | ---------------- | ------------------------------------ |
+| US-1.1, US-1.2, US-1.3              | e2e (Playwright) | `apps/web/e2e/shell.spec.ts`         |
+| US-2.1 to US-2.4                    | e2e (Playwright) | `apps/web/e2e/breadcrumb.spec.ts`    |
+| US-3.1 to US-3.5, US-3.7 to US-3.10 | e2e (Playwright) | `apps/web/e2e/nav-sidebar.spec.ts`   |
+| US-3.6                              | e2e (Playwright) | `apps/web/e2e/settings-area.spec.ts` |
+| US-4.1 to US-4.6                    | e2e (Playwright) | `apps/web/e2e/dashboard.spec.ts`     |
 
 The failed-workflow half of US-4.1 has no e2e test: a failed run can't be produced through the
 API without the worker.

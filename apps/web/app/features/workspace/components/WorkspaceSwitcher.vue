@@ -10,7 +10,9 @@ interface WorkspaceSwitcherProps {
   collapsed?: boolean;
 }
 
-withDefaults(defineProps<WorkspaceSwitcherProps>(), { collapsed: false });
+withDefaults(defineProps<WorkspaceSwitcherProps>(), {
+  collapsed: false,
+});
 
 const isCreateDialogOpen = ref(false);
 const isManageDialogOpen = ref(false);

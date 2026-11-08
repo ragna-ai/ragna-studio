@@ -132,6 +132,9 @@ export default defineNuxtConfig({
         'hugeicons:user',
         'hugeicons:translate',
         'hugeicons:coins-01',
+        // Notification kind marks live in `types/kind.ts`.
+        'hugeicons:unplug',
+        'hugeicons:notification-01',
       ],
     },
     customCollections: [
