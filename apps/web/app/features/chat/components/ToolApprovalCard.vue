@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import { CloudUploadIcon } from '@lucide/vue';
 import type { ToolUIPart } from 'ai';
 import * as z from 'zod';
-import { ToolStatusBadge } from '~/components/ai-elements/tool';
+import StatusPill from '~/components/StatusPill.vue';
 import { Button } from '~/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card';
+import { TOOL_STATE_TONE } from '~/features/chat/lib/tool-status';
 import type { ToolApprovalDecision } from '~/features/chat/types';
 
 // Props
@@ -66,6 +59,18 @@ const failureMessage = computed(() => {
   return undefined;
 });
 
+const pill = computed(() => {
+  if (failureMessage.value) {
+    return { tone: TOOL_STATE_TONE['output-error'], key: 'output-error' };
+  }
+  return { tone: TOOL_STATE_TONE[props.part.state], key: props.part.state };
+});
+const pillLabel = computed(() =>
+  pill.value.key === 'output-available'
+    ? t('chat.toolApproval.saved')
+    : t(`chat.toolStatus.${pill.value.key}`),
+);
+
 // Functions
 function respond(approved: boolean) {
   if (!approvalId.value) return;
@@ -74,20 +79,24 @@ function respond(approved: boolean) {
 </script>
 
 <template>
-  <Card class="not-prose w-full gap-3 py-4">
-    <CardHeader class="flex items-center justify-between gap-2 px-4">
-      <CardTitle class="flex items-center gap-2 text-sm">
-        <CloudUploadIcon class="size-4 stroke-1.5" />
+  <div
+    class="not-prose w-full overflow-hidden rounded-lg border bg-card text-card-foreground shadow-xs"
+  >
+    <div
+      class="flex h-11 items-center gap-2 border-b bg-surface-subtle pr-3 pl-3.5"
+    >
+      <Icon name="hugeicons:cloud-upload" class="size-4 shrink-0 text-icon" />
+      <h3 class="min-w-0 flex-1 truncate text-body font-medium">
         {{
           isUpdate
             ? t('chat.toolApproval.updateTitle')
             : t('chat.toolApproval.createTitle')
         }}
-      </CardTitle>
-      <ToolStatusBadge :state="part.state" />
-    </CardHeader>
-    <CardContent class="space-y-3 px-4 text-sm">
-      <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+      </h3>
+      <StatusPill :tone="pill.tone" :label="pillLabel" />
+    </div>
+    <div class="flex flex-col gap-2.5 px-4 py-3.5 text-small">
+      <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
         <template v-if="isUpdate">
           <dt class="text-muted-foreground">
             {{ t('chat.toolApproval.fileId') }}
@@ -116,14 +125,14 @@ function respond(approved: boolean) {
           }}
         </p>
         <pre
-          class="max-h-64 overflow-auto rounded-md border bg-muted/40 p-3 text-xs whitespace-pre-wrap"
+          class="max-h-64 overflow-auto text-body whitespace-pre-wrap"
           :class="{ 'font-mono': isCsv }"
           >{{ input?.content }}</pre>
       </div>
       <p v-if="part.state === 'output-denied'" class="text-muted-foreground">
         {{ t('chat.toolApproval.denied') }}
       </p>
-      <p v-else-if="failureMessage" class="text-destructive">
+      <p v-else-if="failureMessage" class="text-status-danger-fg">
         {{ failureMessage }}
       </p>
       <a
@@ -135,14 +144,20 @@ function respond(approved: boolean) {
       >
         {{ t('chat.toolApproval.openFile', { name: output?.name }) }}
       </a>
-    </CardContent>
-    <CardFooter v-if="isPending" class="gap-2 px-4">
+    </div>
+    <div
+      v-if="isPending"
+      class="flex h-13 items-center gap-2 border-t pr-3 pl-4"
+    >
+      <p class="min-w-0 flex-1 text-small text-muted-foreground">
+        {{ t('chat.toolApproval.hint') }}
+      </p>
+      <Button size="sm" variant="secondary" @click="respond(false)">
+        {{ t('chat.toolApproval.deny') }}
+      </Button>
       <Button size="sm" @click="respond(true)">
         {{ t('chat.toolApproval.approve') }}
       </Button>
-      <Button size="sm" variant="outline" @click="respond(false)">
-        {{ t('chat.toolApproval.deny') }}
-      </Button>
-    </CardFooter>
-  </Card>
+    </div>
+  </div>
 </template>

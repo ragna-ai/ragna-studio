@@ -46,8 +46,11 @@ watch(
 
 <template>
   <Transition name="side-panel">
-    <div v-if="activeEntry" class="w-68 shrink-0 overflow-hidden">
-      <div class="h-full overflow-y-auto p-2">
+    <div
+      v-if="activeEntry"
+      class="w-72 shrink-0 overflow-hidden border-r bg-surface-subtle"
+    >
+      <div class="h-full overflow-y-auto">
         <component :is="activeEntry.component" />
       </div>
     </div>

@@ -1,186 +1,114 @@
 <script setup lang="ts">
-import { CalendarIcon, HistoryIcon, XIcon } from '@lucide/vue';
-import { Button } from '~/components/ui/button';
-import { Separator } from '~/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '~/components/ui/tooltip';
 import ChatHistoryItemRow from '~/features/chat/components/ChatHistoryItem.vue';
 import {
   useGetChatHistory,
   type ChatHistoryItem,
 } from '~/features/chat/composables/useChatApi';
+import {
+  groupChatsByRecency,
+  type ChatHistoryGroup,
+} from '~/features/chat/lib/chat-history-groups';
 import { useSidePanelStore } from '~/stores/sidepanel.store';
 
-// Imports
-
-// Props
-// Emits
+// Composables
+const { t } = useI18n();
+const route = useRoute();
+const localePath = useLocalePath();
+const sidePanel = useSidePanelStore();
+const { data, isPending: isLoading } = useGetChatHistory();
 
 // Refs
-type GroupBy = 'day' | 'month' | 'year';
+const search = ref('');
 
-interface ChatGroup {
-  key: string;
-  label: string;
-  chats: ChatHistoryItem[];
-}
-
-const GROUP_BY_CYCLE: GroupBy[] = ['day', 'month', 'year'];
-
-const GROUP_LABEL_FORMATS: Record<GroupBy, Intl.DateTimeFormatOptions> = {
-  day: { day: 'numeric', month: 'long' },
-  month: { month: 'long', year: 'numeric' },
-  year: { year: 'numeric' },
-};
-
-// Composables
-const sidePanel = useSidePanelStore();
-const route = useRoute();
-const { t, locale } = useI18n();
-const { data, isPending: isLoading } = useGetChatHistory();
-const groupBy = useLocalStorage<GroupBy>('chat-history:group-by', 'day');
+// Computed
+const filteredChats = computed<ChatHistoryItem[]>(() => {
+  const needle = search.value.trim().toLowerCase();
+  const chats = data.value?.chats ?? [];
+  if (!needle) return chats;
+  return chats.filter((chat) => chat.title.toLowerCase().includes(needle));
+});
+const groups = computed<ChatHistoryGroup<ChatHistoryItem>[]>(() =>
+  groupChatsByRecency(filteredChats.value),
+);
 
 // Functions
-function cycleGroupBy() {
-  const nextIndex =
-    (GROUP_BY_CYCLE.indexOf(groupBy.value) + 1) % GROUP_BY_CYCLE.length;
-  groupBy.value = GROUP_BY_CYCLE[nextIndex]!;
-}
-
-function groupKeyFor(lastMessageAt: string): string {
-  if (groupBy.value === 'day') return lastMessageAt.slice(0, 10);
-  if (groupBy.value === 'month') return lastMessageAt.slice(0, 7);
-  return lastMessageAt.slice(0, 4);
-}
-
-// Group keys are partial ISO dates ('2026', '2026-07', or '2026-07-16').
-// Pad the missing parts so `Date` always parses a full date, regardless of
-// the active grouping.
-function dateForGroupKey(key: string): Date {
-  const [year, month = '01', day = '01'] = key.split('-');
-  return new Date(`${year}-${month}-${day}`);
-}
-
-function labelForGroupKey(key: string): string {
-  return new Intl.DateTimeFormat(
-    locale.value,
-    GROUP_LABEL_FORMATS[groupBy.value],
-  ).format(dateForGroupKey(key));
-}
-
 function isActiveChat(chatId: string): boolean {
   return route.params.chatId === chatId;
 }
 
-// Computed
-const groups = computed<ChatGroup[]>(() => {
-  const chats = data.value?.chats ?? [];
-
-  // Chats arrive newest-first; a Map preserves that order as groups are
-  // created on first sight of each key.
-  const chatsByKey = new Map<string, ChatHistoryItem[]>();
-  for (const chat of chats) {
-    const key = groupKeyFor(chat.lastMessageAt);
-    const group = chatsByKey.get(key);
-    if (group) {
-      group.push(chat);
-    } else {
-      chatsByKey.set(key, [chat]);
-    }
-  }
-
-  return Array.from(chatsByKey.entries()).map(([key, groupChats]) => ({
-    key,
-    label: labelForGroupKey(key),
-    chats: groupChats,
-  }));
-});
+function openFullSearch() {
+  const q = search.value.trim();
+  navigateTo({ path: localePath('/chat/search'), query: q ? { q } : {} });
+}
 </script>
 
 <template>
   <div class="flex h-full flex-col">
-    <div class="flex items-center justify-between gap-1 px-1 pb-2">
-      <h2 class="truncate text-sm font-semibold">
-        {{ t('chat.history.title') }}
+    <div class="flex h-13 shrink-0 items-center gap-2 px-2">
+      <NavSideToggle />
+      <div class="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+      <h2 class="ml-3 min-w-0 flex-1 truncate text-body font-medium">
+        {{ t('chat.history.paneTitle') }}
       </h2>
-      <TooltipProvider :delay-duration="300">
-        <div class="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                as-child
-                variant="ghost"
-                size="icon"
-                :aria-label="t('chat.history.openAll')"
-              >
-                <NuxtLinkLocale to="/chat/history">
-                  <HistoryIcon class="size-4 stroke-1.5" />
-                </NuxtLinkLocale>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {{ t('chat.history.openAll') }}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                :aria-label="t('chat.history.groupBy')"
-                @click="cycleGroupBy"
-              >
-                <CalendarIcon class="size-4 stroke-1.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {{ t('chat.history.groupBy') }}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                :aria-label="t('chat.history.close')"
-                @click="sidePanel.close()"
-              >
-                <XIcon class="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {{ t('chat.history.close') }}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </TooltipProvider>
+      <NuxtLinkLocale
+        to="/chat"
+        class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon hover:bg-border"
+        :title="t('chat.history.newChat')"
+        :aria-label="t('chat.history.newChat')"
+      >
+        <Icon name="hugeicons:bubble-chat-add" class="size-4" />
+      </NuxtLinkLocale>
+      <button
+        type="button"
+        class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon hover:bg-border"
+        :title="t('chat.history.collapse')"
+        :aria-label="t('chat.history.collapse')"
+        @click="sidePanel.close()"
+      >
+        <Icon name="hugeicons:sidebar-left" class="size-4" />
+      </button>
     </div>
-    <Separator />
 
-    <div v-if="isLoading" class="flex flex-col gap-3 px-2 py-3">
+    <div class="px-3 pb-2">
+      <label
+        class="flex h-8 items-center gap-2 rounded-md border bg-background px-2.5 focus-within:ring-2 focus-within:ring-ring"
+      >
+        <Icon name="hugeicons:search-01" class="size-4 shrink-0 text-icon" />
+        <input
+          v-model="search"
+          type="search"
+          class="min-w-0 flex-1 bg-transparent text-body outline-hidden placeholder:text-muted-foreground"
+          :placeholder="t('chat.history.search')"
+          :aria-label="t('chat.history.search')"
+          @keydown.enter.prevent="openFullSearch"
+        />
+      </label>
+    </div>
+
+    <div v-if="isLoading" class="flex flex-col gap-3 px-4 py-3">
       <div
         v-for="n in 6"
         :key="n"
-        class="h-4 w-full animate-pulse rounded bg-stone-200"
+        class="h-4 w-full animate-pulse rounded bg-border"
       />
     </div>
 
-    <p v-else-if="groups.length === 0" class="px-2 py-3 text-sm text-stone-500">
+    <p
+      v-else-if="groups.length === 0"
+      class="px-4 py-3 text-small text-muted-foreground"
+    >
       {{ t('chat.history.empty') }}
     </p>
 
-    <div v-else class="flex-1 overflow-y-auto">
-      <div v-for="group in groups" :key="group.key">
+    <div
+      v-else
+      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2"
+    >
+      <template v-for="group in groups" :key="group.key">
         <div
-          class="sticky top-0 truncate bg-stone-50 px-2 py-1 text-xs font-medium text-stone-500"
+          class="flex h-8 shrink-0 items-end px-2 pb-1.5 text-caption font-medium text-muted-foreground"
         >
-          {{ group.label }}
+          {{ t(`chat.history.groups.${group.key}`) }}
         </div>
         <ChatHistoryItemRow
           v-for="chat in group.chats"
@@ -188,7 +116,7 @@ const groups = computed<ChatGroup[]>(() => {
           :chat="chat"
           :active="isActiveChat(chat.id)"
         />
-      </div>
+      </template>
     </div>
   </div>
 </template>

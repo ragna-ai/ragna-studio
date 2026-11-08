@@ -137,6 +137,13 @@ export default defineNuxtConfig({
         // Notification kind marks live in `types/kind.ts`.
         'hugeicons:unplug',
         'hugeicons:notification-01',
+        // Agent tool icons live in `agent-tool-icons.ts`.
+        'hugeicons:ai-brain-01',
+        'hugeicons:notebook-02',
+        'hugeicons:globe-02',
+        'hugeicons:web-design-01',
+        'hugeicons:linkedin-01',
+        'hugeicons:google-drive',
       ],
     },
     customCollections: [
@@ -162,6 +169,11 @@ export default defineNuxtConfig({
         name: 'Geist Mono',
         provider: 'google',
         weights: [400, 500],
+      },
+      {
+        name: 'Bricolage Grotesque',
+        provider: 'google',
+        weights: [600],
       },
     ],
   },

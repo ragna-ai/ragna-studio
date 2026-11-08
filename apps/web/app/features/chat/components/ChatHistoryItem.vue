@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { PencilIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
+import AgentMark from '~/features/agent/components/AgentMark.vue';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
 import { useUpdateChatTitle } from '~/features/chat/composables/useChatApi';
 
@@ -79,7 +79,7 @@ onKeyStroke('Escape', (event) => {
           autofocus
           :aria-label="t('chat.history.rename')"
           autocomplete="off"
-          class="h-7 px-2 py-0 text-sm"
+          class="h-7 rounded-md px-2 py-0 text-body"
           :model-value="state.value"
           @update:model-value="(v) => field.handleChange(String(v))"
           @blur="
@@ -95,18 +95,25 @@ onKeyStroke('Escape', (event) => {
   </form>
   <div
     v-else
-    class="group flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-stone-100"
-    :class="{ 'bg-stone-100 font-medium': active }"
+    class="group flex items-center gap-2.5 rounded-md border px-2"
+    :class="[
+      chat.forkedFrom ? 'min-h-13 py-1.5' : 'h-9',
+      active
+        ? 'border-border bg-sidebar-accent shadow-xs'
+        : 'border-transparent hover:bg-border',
+    ]"
   >
+    <AgentMark :agent-id="chat.agent.id" :size="20" />
     <NuxtLinkLocale
       :to="`/chat/${chat.id}`"
       :title="chat.title"
-      class="block flex-1 truncate text-sm"
+      class="block min-w-0 flex-1 truncate text-body"
+      :class="{ 'font-medium': active }"
     >
       {{ chat.title }}
       <span
         v-if="chat.forkedFrom"
-        class="block truncate text-xs text-muted-foreground"
+        class="block truncate text-caption font-normal text-muted-foreground"
       >
         {{ t('chat.history.forkedFrom', { title: chat.forkedFrom.title }) }}
       </span>
@@ -115,11 +122,11 @@ onKeyStroke('Escape', (event) => {
       type="button"
       variant="ghost"
       size="icon"
-      class="size-6 shrink-0 opacity-0 group-hover:opacity-100"
+      class="size-6 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       :aria-label="t('chat.history.rename')"
       @click.prevent.stop="startEditing"
     >
-      <PencilIcon class="size-3.5 stroke-1.5 text-foreground/75" />
+      <Icon name="hugeicons:pencil-edit-02" class="size-3.5 text-icon" />
     </Button>
   </div>
 </template>

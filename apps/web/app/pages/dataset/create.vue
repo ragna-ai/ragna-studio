@@ -33,7 +33,7 @@ useHead({
   title: t('dataset.create.title'),
 });
 
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('dataset.list.title'), to: '/dataset' },
   { label: t('dataset.create.title') },
 ]);
@@ -59,109 +59,114 @@ const form = useForm({
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('dataset.create.title')"
-          :subtitle="t('dataset.create.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div class="px-10">
-      <form class="max-w-lg space-y-6" @submit.prevent.stop="form.handleSubmit">
-        <div>
-          <Label class="mb-2 block text-sm font-medium">
-            {{ t('dataset.create.presetLabel') }}
-          </Label>
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              class="rounded-lg border p-4 text-left transition-colors"
-              :class="
-                preset === 'empty'
-                  ? 'border-primary bg-accent'
-                  : 'hover:bg-accent/50'
-              "
-              @click="preset = 'empty'"
-            >
-              <p class="text-sm font-semibold">
-                {{ t('dataset.create.preset.empty.title') }}
-              </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t('dataset.create.preset.empty.description') }}
-              </p>
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border p-4 text-left transition-colors"
-              :class="
-                preset === 'taskTracker'
-                  ? 'border-primary bg-accent'
-                  : 'hover:bg-accent/50'
-              "
-              @click="preset = 'taskTracker'"
-            >
-              <p class="text-sm font-semibold">
-                {{ t('dataset.create.preset.taskTracker.title') }}
-              </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t('dataset.create.preset.taskTracker.description') }}
-              </p>
-            </button>
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('dataset.create.title')"
+            :subtitle="t('dataset.create.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div class="px-10">
+        <form
+          class="max-w-lg space-y-6"
+          @submit.prevent.stop="form.handleSubmit"
+        >
+          <div>
+            <Label class="mb-2 block text-sm font-medium">
+              {{ t('dataset.create.presetLabel') }}
+            </Label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                class="rounded-lg border p-4 text-left transition-colors"
+                :class="
+                  preset === 'empty'
+                    ? 'border-primary bg-accent'
+                    : 'hover:bg-accent/50'
+                "
+                @click="preset = 'empty'"
+              >
+                <p class="text-sm font-semibold">
+                  {{ t('dataset.create.preset.empty.title') }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  {{ t('dataset.create.preset.empty.description') }}
+                </p>
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border p-4 text-left transition-colors"
+                :class="
+                  preset === 'taskTracker'
+                    ? 'border-primary bg-accent'
+                    : 'hover:bg-accent/50'
+                "
+                @click="preset = 'taskTracker'"
+              >
+                <p class="text-sm font-semibold">
+                  {{ t('dataset.create.preset.taskTracker.title') }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  {{ t('dataset.create.preset.taskTracker.description') }}
+                </p>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <form.Field name="name">
-          <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('common.name') }}
-              </Label>
-              <Input
-                :id="field.name"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="(v) => field.handleChange(String(v))"
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :state="state" />
-            </div>
-          </template>
-        </form.Field>
+          <form.Field name="name">
+            <template v-slot="{ field, state }">
+              <div>
+                <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  {{ t('common.name') }}
+                </Label>
+                <Input
+                  :id="field.name"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="(v) => field.handleChange(String(v))"
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo :state="state" />
+              </div>
+            </template>
+          </form.Field>
 
-        <form.Field name="description">
-          <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('common.description') }}
-              </Label>
-              <Textarea
-                :id="field.name"
-                rows="3"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="(v) => field.handleChange(String(v))"
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :state="state" />
-            </div>
-          </template>
-        </form.Field>
+          <form.Field name="description">
+            <template v-slot="{ field, state }">
+              <div>
+                <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  {{ t('common.description') }}
+                </Label>
+                <Textarea
+                  :id="field.name"
+                  rows="3"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="(v) => field.handleChange(String(v))"
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo :state="state" />
+              </div>
+            </template>
+          </form.Field>
 
-        <div class="flex justify-end gap-4">
-          <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/dataset">{{
-              t('common.cancel')
-            }}</NuxtLinkLocale>
-          </Button>
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" class="mr-2" />
-            {{ t('common.create') }}
-          </Button>
-        </div>
-      </form>
-    </div>
-  </SectionWrapper>
+          <div class="flex justify-end gap-4">
+            <Button as-child variant="secondary">
+              <NuxtLinkLocale to="/dataset">{{
+                t('common.cancel')
+              }}</NuxtLinkLocale>
+            </Button>
+            <Button type="submit" :disabled="isPending">
+              <Spinner v-if="isPending" class="mr-2" />
+              {{ t('common.create') }}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

@@ -1,6 +1,6 @@
 # Chat redesign: start page, conversation, composer and history (PRD)
 
-> **Status: proposed** (2026-11-08). Issue #315. Builds on the studio shell (#312, PR #313).
+> **Status: implemented** (2026-11-08, PR #316). Issue #315. Builds on the studio shell (#312, PR #313).
 
 The chat page moves to the new RAGNA Studio design. The shell from #312 gives the frame; this PRD
 covers what happens inside it: the start page, the conversation, the composer with its popovers,
@@ -23,7 +23,7 @@ and the chat history. Frontend only: the API and database stay as they are.
 
 - Starter cards, dictation, adding Docs or datasets to a chat, per-chat tool switches, a live
   "working" state and stored agent icons. Each needs an API change and its own issue.
-- Moving the history into the main panel. It stays in today's side panel, restyled.
+- Moving the history into the main panel. It stays in today's side panel, with the design's look.
 - The chat search page, the full history page and generated media results get the new tokens only,
   no new layout.
 
@@ -81,9 +81,11 @@ As a user, I want to read and act on answers easily, so that I can keep working 
 
 As a user, I want the history to show where I am, so that I can switch chats quickly.
 
-- **US-5.1** Given the history panel, when it is open, then chats are grouped as today and the
-  current chat is highlighted.
-- **US-5.2** Given a chat in the history, when the user renames it, then the new title shows in the
+- **US-5.1** Given the history panel, when it is open, then chats are grouped into Today, Yesterday,
+  This week and Earlier, and the current chat is highlighted.
+- **US-5.2** Given the history panel, when the user types in its search field, then the list shows
+  only chats whose title matches. When they confirm, the full chat search opens with that text.
+- **US-5.3** Given a chat in the history, when the user renames it, then the new title shows in the
   history and the top bar.
 
 ## Testing

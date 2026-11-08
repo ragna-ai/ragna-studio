@@ -15,7 +15,7 @@ defineProps<Props>();
     <li
       v-for="snippet in snippets"
       :key="snippet.messageId"
-      class="truncate text-sm text-muted-foreground"
+      class="truncate text-small text-muted-foreground"
     >
       <ChatSearchHighlightedText :text="snippet.snippet" :query="query" />
     </li>

@@ -10,10 +10,12 @@ useHead({
 </script>
 
 <template>
-  <div class="h-full w-full overflow-y-auto">
-    <div class="mx-auto flex w-full max-w-4xl flex-col gap-8 p-4">
-      <VideoGenForm />
-      <VideoGenGrid />
+  <PagePanel>
+    <div class="h-full w-full overflow-y-auto">
+      <div class="mx-auto flex w-full max-w-4xl flex-col gap-8 p-4">
+        <VideoGenForm />
+        <VideoGenGrid />
+      </div>
     </div>
-  </div>
+  </PagePanel>
 </template>

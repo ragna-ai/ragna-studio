@@ -16,7 +16,7 @@ useHead({
 });
 
 // Computed
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('social.list.title'), to: '/social' },
   { label: t('social.create.title') },
 ]);
@@ -37,23 +37,25 @@ onMounted(() => {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('social.create.title')"
-          :subtitle="t('social.create.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div class="flex justify-center py-12">
-      <p v-if="isError" class="text-sm text-destructive">
-        {{ t('social.toast.createError') }}
-      </p>
-      <Shimmer v-else class="h-6 w-48">
-        {{ t('social.create.creating') }}
-      </Shimmer>
-    </div>
-  </SectionWrapper>
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('social.create.title')"
+            :subtitle="t('social.create.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div class="flex justify-center py-12">
+        <p v-if="isError" class="text-sm text-destructive">
+          {{ t('social.toast.createError') }}
+        </p>
+        <Shimmer v-else class="h-6 w-48">
+          {{ t('social.create.creating') }}
+        </Shimmer>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

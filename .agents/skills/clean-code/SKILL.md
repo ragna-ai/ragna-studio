@@ -74,7 +74,8 @@ Applies to every name another file or person sees: exported functions, types and
 2. **Missing component? Add it, don't rebuild it.** Run `npx shadcn-vue@latest add <component>` from `apps/web/`, then use it. Don't copy markup from another component to fake it.
 3. **Use variants, not custom styles.** Reach for the component's props (`variant`, `size`, etc.) before adding classes. Extend variants in the component's `cva` config rather than overriding with one-off Tailwind.
 4. **Compose, don't fork.** Build app-specific components by wrapping shadcn primitives. Don't edit the generated `ui/` files except to add shared variants.
-5. **Style with `cn()` + Tailwind tokens.** Merge classes via the `cn()` helper and use the theme tokens (stone base), not hard-coded colors.
+5. **Style with `cn()` + Tailwind tokens.** Merge classes via the `cn()` helper and use the theme tokens, not hard-coded colors.
+6. **Design tokens are utilities.** A design value (colour, size, spacing) lives in `@theme` in `main.css` and is used as its generated utility (`px-page`, `w-sidebar`, `bg-canvas`). Never `p-(--token)` or `[var(--token)]` for our tokens; `(--var)` is only for values set at runtime.
 
 ## Looking up library details
 

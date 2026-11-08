@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { CopyIcon, EllipsisVerticalIcon, GitBranchIcon } from '@lucide/vue';
 import type { ReasoningUIPart, ToolUIPart, UIMessage } from 'ai';
 import {
   isFileUIPart,
@@ -8,11 +7,9 @@ import {
   isTextUIPart,
 } from 'ai';
 import { toast } from 'vue-sonner';
-import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from '~/components/ai-elements/message';
+import { Message, MessageResponse } from '~/components/ai-elements/message';
+import AgentMark from '~/features/agent/components/AgentMark.vue';
+import ChatMessageActions from '~/features/chat/components/ChatMessageActions.vue';
 import ToolApprovalCard from '~/features/chat/components/ToolApprovalCard.vue';
 import ToolGroup from '~/features/chat/components/ToolGroup.vue';
 import { useBranchChatAndNavigate } from '~/features/chat/composables/useChatApi';
@@ -25,6 +22,9 @@ import type { ToolApprovalDecision } from '~/features/chat/types';
 interface Props {
   message: UIMessage;
   chatId: string;
+  agentId?: string;
+  agentName?: string;
+  isLast?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -39,6 +39,21 @@ const { t } = useI18n();
 const apiBaseUrl = useRuntimeConfig().public.apiBaseUrl;
 const { branchChatAndNavigate } = useBranchChatAndNavigate();
 const { copy } = useClipboard();
+
+const isUser = computed(() => props.message.role === 'user');
+
+const MARKDOWN_CLASS = [
+  'text-chat',
+  // the renderer sets an inline line-height of 1.75 on plain paragraphs
+  '[&_p]:leading-6!',
+  '[&_a]:text-foreground [&_a]:underline-offset-4',
+  '[&_table_tbody]:bg-transparent [&_table_tbody]:font-normal',
+  '[&_table_th]:h-9 [&_table_th]:px-3.5 [&_table_th]:py-0 [&_table_th]:text-caption [&_table_th]:font-medium [&_table_th]:text-muted-foreground',
+  '[&_table_td]:h-10 [&_table_td]:px-3.5 [&_table_td]:py-0 [&_table_td]:text-body',
+  '[&_table_thead]:bg-surface-subtle [&_table]:rounded-[10px]',
+  '[&_table_tbody_tr:last-child]:border-b-0',
+  "[&_table_:is(th,td)[style*='right']]:font-mono [&_table_:is(th,td)[style*='right']]:text-mono [&_table_:is(th,td)[style*='right']]:tabular-nums",
+];
 
 // Functions
 function branchFromHere() {
@@ -118,13 +133,28 @@ const renderItems = computed<RenderItem[]>(() => {
   }
   return items;
 });
-
-// group-[.is-assistant]:w-full
 </script>
 
 <template>
-  <Message :from="message.role" class="max-w-full">
-    <MessageContent>
+  <Message
+    :from="message.role"
+    :class="isUser ? 'max-w-full' : 'max-w-full flex-col gap-4'"
+  >
+    <div v-if="!isUser" class="flex h-6 items-center gap-2">
+      <AgentMark v-if="agentId" :agent-id="agentId" :size="24" />
+      <span v-if="agentName" class="text-body font-medium">
+        {{ agentName }}
+      </span>
+    </div>
+
+    <div
+      class="flex flex-col gap-2"
+      :class="
+        isUser
+          ? 'ml-auto w-fit max-w-4/5 rounded-xl bg-chip px-3.5 py-2.5 text-chat leading-6'
+          : 'w-full'
+      "
+    >
       <template v-for="(item, index) in renderItems" :key="index">
         <ToolGroup v-if="item.type === 'toolGroup'" :members="item.members" />
 
@@ -137,11 +167,12 @@ const renderItems = computed<RenderItem[]>(() => {
         <MessageResponse
           v-else-if="item.type === 'text'"
           :content="item.text"
+          :class="MARKDOWN_CLASS"
         />
 
         <!-- User-attached files.
              Assistant-side file rendering is out of scope for v1. -->
-        <template v-else-if="isFileUIPart(item) && message.role === 'user'">
+        <template v-else-if="isFileUIPart(item) && isUser">
           <img
             v-if="isImageMediaType(item.mediaType)"
             :src="item.url"
@@ -153,7 +184,7 @@ const renderItems = computed<RenderItem[]>(() => {
             :href="resolveAttachmentHref(item.url)"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm hover:bg-accent"
+            class="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-body hover:bg-accent"
           >
             <Icon
               :name="getFileTypeIconName(item.filename || item.url)"
@@ -163,30 +194,13 @@ const renderItems = computed<RenderItem[]>(() => {
           </a>
         </template>
       </template>
-    </MessageContent>
+    </div>
 
-    <DropdownMenu>
-      <DropdownMenuTrigger as-child>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          class="size-6 shrink-0 self-end opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-          :aria-label="t('chat.message.actions')"
-        >
-          <EllipsisVerticalIcon class="size-3.5 stroke-1.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem @click="copyText">
-          <CopyIcon class="size-3.5 stroke-1.5" />
-          {{ t('chat.message.copy') }}
-        </DropdownMenuItem>
-        <DropdownMenuItem @click="branchFromHere">
-          <GitBranchIcon class="size-3.5 stroke-1.5" />
-          {{ t('chat.message.branch') }}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <ChatMessageActions
+      v-if="!isUser"
+      :always-visible="isLast"
+      @copy="copyText"
+      @branch="branchFromHere"
+    />
   </Message>
 </template>

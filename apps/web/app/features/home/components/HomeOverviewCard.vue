@@ -26,7 +26,7 @@ withDefaults(defineProps<HomeOverviewCardProps>(), {
 <template>
   <section
     :aria-label="title"
-    class="rounded-lg border bg-card px-(--inset-card) pt-4 pb-2"
+    class="rounded-lg border bg-card px-card pt-4 pb-2"
   >
     <header class="mb-1 flex h-8 items-center gap-2">
       <Icon :name="icon" class="size-4 shrink-0 text-icon" />
@@ -60,6 +60,8 @@ withDefaults(defineProps<HomeOverviewCardProps>(), {
         {{ quickCreateLabel }}
       </NuxtLinkLocale>
     </div>
-    <slot v-else />
+    <div v-else class="flex flex-col">
+      <slot />
+    </div>
   </section>
 </template>

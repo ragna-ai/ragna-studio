@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import AgentMark from '~/features/agent/components/AgentMark.vue';
 import { useCreateChatAndNavigate } from '~/features/chat/composables/useChatApi';
 import HomeOverviewRow from '~/features/home/components/HomeOverviewRow.vue';
-import { AGENT_TONE_CLASS, agentTone } from '~/features/home/lib/dashboard';
 import type { HomeOverviewAgentItem } from '~/features/home/types';
 
 interface HomeOverviewAgentRowsProps {
@@ -20,12 +20,7 @@ const { createChatAndNavigate } = useCreateChatAndNavigate();
     tall
     @select="createChatAndNavigate(agent.id)"
   >
-    <span
-      class="flex size-7 shrink-0 items-center justify-center rounded-md"
-      :class="AGENT_TONE_CLASS[agentTone(agent.id)]"
-    >
-      <Icon name="hugeicons:robotic" class="size-4" />
-    </span>
+    <AgentMark :agent-id="agent.id" />
     <span class="flex min-w-0 grow flex-col gap-0.5">
       <span class="truncate text-body font-medium">{{ agent.name }}</span>
       <span class="truncate text-caption text-muted-foreground">{{

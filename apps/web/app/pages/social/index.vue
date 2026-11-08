@@ -41,43 +41,45 @@ async function handleDeletePost(postId: string) {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('social.list.title')"
-          :subtitle="t('social.list.subtitle')"
-        >
-          <template #button>
-            <Button variant="secondary" as-child>
-              <NuxtLinkLocale to="/social/create">
-                {{ t('social.list.newPost') }}
-              </NuxtLinkLocale>
-            </Button>
-          </template>
-        </HeadingTitle>
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div v-if="data?.posts" class="px-5">
-      <SocialPostManyTable
-        :posts="data.posts"
-        :meta="meta"
-        @delete-post="handleDeletePost"
-      />
-      <div class="pb-10">
-        <PaginateControls
-          v-if="meta.totalCount > 10"
-          v-model:page="page"
-          v-model:limit="limit"
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('social.list.title')"
+            :subtitle="t('social.list.subtitle')"
+          >
+            <template #button>
+              <Button variant="secondary" as-child>
+                <NuxtLinkLocale to="/social/create">
+                  {{ t('social.list.newPost') }}
+                </NuxtLinkLocale>
+              </Button>
+            </template>
+          </HeadingTitle>
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div v-if="data?.posts" class="px-5">
+        <SocialPostManyTable
+          :posts="data.posts"
           :meta="meta"
+          @delete-post="handleDeletePost"
         />
+        <div class="pb-10">
+          <PaginateControls
+            v-if="meta.totalCount > 10"
+            v-model:page="page"
+            v-model:limit="limit"
+            :meta="meta"
+          />
+        </div>
       </div>
-    </div>
-    <div v-else-if="postsError">
-      <p class="text-sm text-stone-500">
-        {{ postsError.message || t('social.loadError') }}
-      </p>
-    </div>
-  </SectionWrapper>
+      <div v-else-if="postsError">
+        <p class="text-sm text-stone-500">
+          {{ postsError.message || t('social.loadError') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

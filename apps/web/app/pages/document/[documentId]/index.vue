@@ -35,20 +35,22 @@ useHead({
     :key="documentData.document.id"
     :document="documentData.document"
   />
-  <div
-    v-else-if="!activeWorkspaceId"
-    class="flex h-full items-center justify-center"
-  >
-    <p class="text-sm text-stone-500">
-      {{ t('document.list.loading') }}
-    </p>
-  </div>
-  <div
-    v-else-if="documentError"
-    class="flex h-full items-center justify-center"
-  >
-    <p class="text-sm text-stone-500">
-      {{ documentError.message || t('document.editor.loadError') }}
-    </p>
-  </div>
+  <PagePanel v-else>
+    <div
+      v-if="!activeWorkspaceId"
+      class="flex h-full items-center justify-center"
+    >
+      <p class="text-sm text-stone-500">
+        {{ t('document.list.loading') }}
+      </p>
+    </div>
+    <div
+      v-else-if="documentError"
+      class="flex h-full items-center justify-center"
+    >
+      <p class="text-sm text-stone-500">
+        {{ documentError.message || t('document.editor.loadError') }}
+      </p>
+    </div>
+  </PagePanel>
 </template>

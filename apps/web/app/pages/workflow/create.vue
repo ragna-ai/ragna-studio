@@ -17,7 +17,7 @@ useHead({
   title: t('workflow.create.title'),
 });
 
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('workflow.list.title'), to: '/workflow' },
   { label: t('workflow.create.title') },
 ]);
@@ -45,67 +45,72 @@ const form = useForm({
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('workflow.create.title')"
-          :subtitle="t('workflow.create.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div class="px-10">
-      <form class="max-w-lg space-y-6" @submit.prevent.stop="form.handleSubmit">
-        <form.Field name="name">
-          <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('common.name') }}
-              </Label>
-              <Input
-                :id="field.name"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="(v) => field.handleChange(String(v))"
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :state="state" />
-            </div>
-          </template>
-        </form.Field>
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('workflow.create.title')"
+            :subtitle="t('workflow.create.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div class="px-10">
+        <form
+          class="max-w-lg space-y-6"
+          @submit.prevent.stop="form.handleSubmit"
+        >
+          <form.Field name="name">
+            <template v-slot="{ field, state }">
+              <div>
+                <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  {{ t('common.name') }}
+                </Label>
+                <Input
+                  :id="field.name"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="(v) => field.handleChange(String(v))"
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo :state="state" />
+              </div>
+            </template>
+          </form.Field>
 
-        <form.Field name="description">
-          <template v-slot="{ field, state }">
-            <div>
-              <Label class="mb-2 block text-sm font-medium" :for="field.name">
-                {{ t('common.description') }}
-              </Label>
-              <Textarea
-                :id="field.name"
-                rows="3"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="(v) => field.handleChange(String(v))"
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :state="state" />
-            </div>
-          </template>
-        </form.Field>
+          <form.Field name="description">
+            <template v-slot="{ field, state }">
+              <div>
+                <Label class="mb-2 block text-sm font-medium" :for="field.name">
+                  {{ t('common.description') }}
+                </Label>
+                <Textarea
+                  :id="field.name"
+                  rows="3"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="(v) => field.handleChange(String(v))"
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo :state="state" />
+              </div>
+            </template>
+          </form.Field>
 
-        <div class="flex justify-end gap-4">
-          <Button as-child variant="secondary">
-            <NuxtLinkLocale to="/workflow">{{
-              t('common.cancel')
-            }}</NuxtLinkLocale>
-          </Button>
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" class="mr-2" />
-            {{ t('common.create') }}
-          </Button>
-        </div>
-      </form>
-    </div>
-  </SectionWrapper>
+          <div class="flex justify-end gap-4">
+            <Button as-child variant="secondary">
+              <NuxtLinkLocale to="/workflow">{{
+                t('common.cancel')
+              }}</NuxtLinkLocale>
+            </Button>
+            <Button type="submit" :disabled="isPending">
+              <Spinner v-if="isPending" class="mr-2" />
+              {{ t('common.create') }}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

@@ -41,35 +41,37 @@ const handleDeleteChat = async (chatId: string) => {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="$t('chat.history.title')"
-          :subtitle="$t('chat.history.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div v-if="data?.chats" class="px-5">
-      <ChatManyTable
-        :chats="data.chats"
-        :meta="meta"
-        @delete-chat="handleDeleteChat"
-      />
-      <div class="pb-10">
-        <!-- Pagination Controls -->
-        <PaginateControls
-          v-model:page="page"
-          v-model:limit="limit"
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="$t('chat.history.title')"
+            :subtitle="$t('chat.history.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div v-if="data?.chats" class="px-5">
+        <ChatManyTable
+          :chats="data.chats"
           :meta="meta"
+          @delete-chat="handleDeleteChat"
         />
+        <div class="pb-10">
+          <!-- Pagination Controls -->
+          <PaginateControls
+            v-model:page="page"
+            v-model:limit="limit"
+            :meta="meta"
+          />
+        </div>
       </div>
-    </div>
-    <div v-else-if="chatsError">
-      <p class="text-sm text-stone-500">
-        {{ chatsError.message || $t('chat.view.historyLoadError') }}
-      </p>
-    </div>
-  </SectionWrapper>
+      <div v-else-if="chatsError">
+        <p class="text-body text-muted-foreground">
+          {{ chatsError.message || $t('chat.view.historyLoadError') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

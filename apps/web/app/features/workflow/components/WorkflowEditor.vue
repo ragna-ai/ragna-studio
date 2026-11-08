@@ -73,7 +73,7 @@ const { mutateAsync: publishWorkflow, isPending: isPublishing } =
 const { data: agentsData } = useGetAllAgents();
 const { t } = useI18n();
 
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('workflow.list.title'), to: '/workflow' },
   { label: name.value },
 ]);
@@ -190,115 +190,117 @@ async function handlePublish() {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
-    <header class="flex items-center justify-between border-b px-4 py-2">
-      <div class="min-w-0">
-        <InlineNameField
-          v-model:name="name"
-          :label="t('workflow.editor.nameLabel')"
-          @save="handleSaveDetails"
-        />
-        <p class="text-xs text-muted-foreground">
-          {{
-            workflow.publishedDefinition
-              ? t('workflow.list.status.published')
-              : t('workflow.list.status.draft')
-          }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <WorkflowSchedulePausedBadge v-if="workflow.schedulePaused" />
-        <Badge
-          v-if="hasUnpublishedChanges"
-          variant="outline"
-          class="border-amber-500 text-amber-600"
-        >
-          {{ t('workflow.editor.unpublishedChanges') }}
-        </Badge>
-        <Button
-          variant="outline"
-          size="sm"
-          :aria-label="t('workflow.editor.settingsTitle')"
-          @click="toggleSettings"
-        >
-          <SettingsIcon class="size-4 stroke-1.5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="isSaving"
-          @click="handleSave"
-        >
-          <Spinner v-if="isSaving" class="mr-2" />
-          {{ t('common.save') }}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="isPublishing"
-          @click="handlePublish"
-        >
-          <Spinner v-if="isPublishing" class="mr-2" />
-          {{ t('common.publish') }}
-        </Button>
-        <Button size="sm" @click="isRunDialogOpen = true">
-          <PlayIcon class="mr-2 size-4 stroke-1.5" />
-          {{ t('common.run') }}
-        </Button>
-      </div>
-    </header>
+  <PagePanel :crumbs="crumbs">
+    <div class="flex h-full flex-col">
+      <header class="flex items-center justify-between border-b px-4 py-2">
+        <div class="min-w-0">
+          <InlineNameField
+            v-model:name="name"
+            :label="t('workflow.editor.nameLabel')"
+            @save="handleSaveDetails"
+          />
+          <p class="text-xs text-muted-foreground">
+            {{
+              workflow.publishedDefinition
+                ? t('workflow.list.status.published')
+                : t('workflow.list.status.draft')
+            }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <WorkflowSchedulePausedBadge v-if="workflow.schedulePaused" />
+          <Badge
+            v-if="hasUnpublishedChanges"
+            variant="outline"
+            class="border-amber-500 text-amber-600"
+          >
+            {{ t('workflow.editor.unpublishedChanges') }}
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            :aria-label="t('workflow.editor.settingsTitle')"
+            @click="toggleSettings"
+          >
+            <SettingsIcon class="size-4 stroke-1.5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="isSaving"
+            @click="handleSave"
+          >
+            <Spinner v-if="isSaving" class="mr-2" />
+            {{ t('common.save') }}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="isPublishing"
+            @click="handlePublish"
+          >
+            <Spinner v-if="isPublishing" class="mr-2" />
+            {{ t('common.publish') }}
+          </Button>
+          <Button size="sm" @click="isRunDialogOpen = true">
+            <PlayIcon class="mr-2 size-4 stroke-1.5" />
+            {{ t('common.run') }}
+          </Button>
+        </div>
+      </header>
 
-    <div class="flex min-h-0 flex-1">
-      <div
-        class="flex w-56 shrink-0 flex-col justify-between gap-3 overflow-y-auto border-r p-3"
-      >
-        <WorkflowNodePalette @add-node="addNode" />
-        <div class="flex flex-col gap-3">
-          <Separator />
-          <WorkflowRecentRuns
-            :workflow-id="workflow.id"
-            @show-all-runs="isRunsListOpen = true"
+      <div class="flex min-h-0 flex-1">
+        <div
+          class="flex w-56 shrink-0 flex-col justify-between gap-3 overflow-y-auto border-r p-3"
+        >
+          <WorkflowNodePalette @add-node="addNode" />
+          <div class="flex flex-col gap-3">
+            <Separator />
+            <WorkflowRecentRuns
+              :workflow-id="workflow.id"
+              @show-all-runs="isRunsListOpen = true"
+            />
+          </div>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <WorkflowCanvas
+            v-model:nodes="nodes"
+            v-model:edges="edges"
+            :node-issues="validation.nodeIssues"
+            @select-node="selectedNodeId = $event"
           />
         </div>
-      </div>
 
-      <div class="min-w-0 flex-1">
-        <WorkflowCanvas
-          v-model:nodes="nodes"
-          v-model:edges="edges"
-          :node-issues="validation.nodeIssues"
-          @select-node="selectedNodeId = $event"
+        <SettingsAside
+          v-if="isSettingsOpen"
+          :name="name"
+          :description="description"
+          :title="t('workflow.editor.settingsTitle')"
+          @save="handleSaveSettings"
+          @close="isSettingsOpen = false"
+        />
+        <WorkflowNodeConfigPanel
+          v-else-if="selectedNode"
+          :key="selectedNode.id"
+          :node="selectedNode"
+          :issues="validation.nodeIssues.get(selectedNode.id) ?? []"
+          @delete="deleteSelectedNode"
+          @close="selectedNodeId = null"
         />
       </div>
 
-      <SettingsAside
-        v-if="isSettingsOpen"
-        :name="name"
-        :description="description"
-        :title="t('workflow.editor.settingsTitle')"
-        @save="handleSaveSettings"
-        @close="isSettingsOpen = false"
+      <WorkflowRunDialog
+        v-model:open="isRunDialogOpen"
+        :workflow="workflow"
+        :draft-definition="draftDefinition"
+        :can-publish="validation.canPublish"
+        @publish-blocked="showWhyBlocked"
       />
-      <WorkflowNodeConfigPanel
-        v-else-if="selectedNode"
-        :key="selectedNode.id"
-        :node="selectedNode"
-        :issues="validation.nodeIssues.get(selectedNode.id) ?? []"
-        @delete="deleteSelectedNode"
-        @close="selectedNodeId = null"
+      <WorkflowRunsList
+        v-model:open="isRunsListOpen"
+        :workflow-id="workflow.id"
       />
     </div>
-
-    <WorkflowRunDialog
-      v-model:open="isRunDialogOpen"
-      :workflow="workflow"
-      :draft-definition="draftDefinition"
-      :can-publish="validation.canPublish"
-      @publish-blocked="showWhyBlocked"
-    />
-    <WorkflowRunsList
-      v-model:open="isRunsListOpen"
-      :workflow-id="workflow.id"
-    />
-  </div>
+  </PagePanel>
 </template>

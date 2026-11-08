@@ -4,20 +4,20 @@ import type {
   getGeneratedImagesOutput,
 } from '@repo/ai/client';
 import type { ToolUIPart } from 'ai';
+import StatusPill from '~/components/StatusPill.vue';
 import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-} from '~/components/ai-elements/tool';
-import { TOOL_ICONS } from '~/features/chat/lib/tool-icons';
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '~/components/ui/collapsible';
+import { FALLBACK_TOOL_ICON, TOOL_ICONS } from '~/features/chat/lib/tool-icons';
+import { TOOL_STATE_TONE } from '~/features/chat/lib/tool-status';
 
-interface Props {
+interface ToolCallProps {
   part: ToolUIPart;
 }
 
-const props = defineProps<Props>();
+const props = defineProps<ToolCallProps>();
 
 const { t, te } = useI18n();
 
@@ -30,7 +30,15 @@ const title = computed(() =>
     : toolId.value,
 );
 
-const icon = computed(() => TOOL_ICONS[toolId.value]);
+const icon = computed(() => TOOL_ICONS[toolId.value] ?? FALLBACK_TOOL_ICON);
+
+const hasOutput = computed(
+  () => props.part.output !== undefined || !!props.part.errorText,
+);
+
+function formatJson(value: unknown): string {
+  return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+}
 
 const generatedImages = computed<GeneratedAgentImage[]>(() => {
   if (
@@ -46,18 +54,30 @@ const generatedImages = computed<GeneratedAgentImage[]>(() => {
 </script>
 
 <template>
-  <Tool>
-    <ToolHeader
-      :type="part.type"
-      :state="part.state"
-      :title="title"
-      :icon="icon"
-    />
-    <ToolContent>
-      <ToolInput :input="part.input" />
-      <ToolOutput :output="part.output" :error-text="part.errorText" />
-    </ToolContent>
-  </Tool>
+  <Collapsible class="not-prose w-full">
+    <CollapsibleTrigger
+      class="group/call flex h-8 w-full items-center gap-2 rounded-sm text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      <Icon :name="icon" class="size-4 shrink-0 text-icon" />
+      <span class="min-w-0 flex-1 truncate text-small font-medium">
+        {{ title }}
+      </span>
+      <StatusPill
+        :tone="TOOL_STATE_TONE[part.state]"
+        :label="t(`chat.toolStatus.${part.state}`)"
+      />
+    </CollapsibleTrigger>
+    <CollapsibleContent class="flex flex-col gap-2 pt-1 pb-2">
+      <pre
+        class="max-h-64 overflow-auto rounded-md bg-surface-subtle p-2.5 font-mono text-mono-sm whitespace-pre-wrap"
+        >{{ formatJson(part.input) }}</pre>
+      <pre
+        v-if="hasOutput"
+        class="max-h-64 overflow-auto rounded-md bg-surface-subtle p-2.5 font-mono text-mono-sm whitespace-pre-wrap"
+        :class="part.errorText && 'text-status-danger-fg'"
+        >{{ part.errorText ?? formatJson(part.output) }}</pre>
+    </CollapsibleContent>
+  </Collapsible>
 
   <div v-if="generatedImages.length > 0" class="grid grid-cols-2 gap-2">
     <img

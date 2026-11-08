@@ -30,7 +30,9 @@ useHead({
 </script>
 
 <template>
-  <EmailPrivateWorkspaceGate>
-    <EmailClient :thread-id="threadId" />
-  </EmailPrivateWorkspaceGate>
+  <PagePanel>
+    <EmailPrivateWorkspaceGate>
+      <EmailClient :thread-id="threadId" />
+    </EmailPrivateWorkspaceGate>
+  </PagePanel>
 </template>

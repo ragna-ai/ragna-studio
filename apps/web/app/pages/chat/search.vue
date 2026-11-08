@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { CaseSensitiveIcon, SearchIcon, XIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import ChatSearchResultsTable from '~/features/chat/components/ChatSearchResultsTable.vue';
 import { useChatSearchApi } from '~/features/chat/composables/useChatSearchApi';
@@ -83,99 +82,106 @@ watch([query, page, limit], ([q, p, l]) => {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('chat.search.title')"
-          :subtitle="t('chat.search.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('chat.search.title')"
+            :subtitle="t('chat.search.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
 
-    <div class="space-y-4 px-5">
-      <div class="relative mx-auto max-w-xl">
-        <SearchIcon
-          class="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          v-model="searchInput"
-          class="h-11 py-2.5 pr-[4.5rem] pl-9"
-          :placeholder="t('chat.search.placeholder')"
-        />
-        <!-- Inline icon toggles docked in the input's right edge, VSCode
+      <div class="space-y-4 px-5">
+        <div class="relative mx-auto max-w-xl">
+          <Icon
+            name="hugeicons:search-01"
+            class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-icon"
+          />
+          <Input
+            v-model="searchInput"
+            class="h-11 py-2.5 pr-[4.5rem] pl-9"
+            :placeholder="t('chat.search.placeholder')"
+          />
+          <!-- Inline icon toggles docked in the input's right edge, VSCode
              search-widget style. Clear + case-sensitive today, but this
              wrapper is where a later whole-word/regex toggle would go next
              to them. `top-1/2 -translate-y-1/2` centers relative to this
              wrapper's own height, so it tracks the input's taller `h-11`
              automatically. -->
-        <div
-          class="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-0.5"
-        >
-          <Button
-            v-if="searchInput"
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            :aria-label="t('chat.search.clear')"
-            @click="clearSearch"
+          <div
+            class="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-0.5"
           >
-            <XIcon class="size-3.5 shrink-0 text-muted-foreground" />
-          </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  :class="cn(caseSensitive && 'border-primary bg-primary/10')"
-                  :aria-label="t('chat.search.caseSensitive')"
-                  :aria-pressed="caseSensitive"
-                  @click="toggleCaseSensitive"
-                >
-                  <CaseSensitiveIcon
-                    class="size-3.5 shrink-0 text-muted-foreground"
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{{ t('chat.search.caseSensitive') }}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+            <Button
+              v-if="searchInput"
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              :aria-label="t('chat.search.clear')"
+              @click="clearSearch"
+            >
+              <Icon
+                name="hugeicons:cancel-01"
+                class="size-4 shrink-0 text-icon"
+              />
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :class="cn(caseSensitive && 'border-primary bg-primary/10')"
+                    :aria-label="t('chat.search.caseSensitive')"
+                    :aria-pressed="caseSensitive"
+                    @click="toggleCaseSensitive"
+                  >
+                    <Icon
+                      name="hugeicons:case-sensitive"
+                      class="size-4 shrink-0 text-icon"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{{ t('chat.search.caseSensitive') }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-      </div>
 
-      <!-- No length gate needed here: `useChatSearchApi`'s `placeholderData`
+        <!-- No length gate needed here: `useChatSearchApi`'s `placeholderData`
            already resolves to an empty result set (not stale data) once the
            query drops below the enabled threshold, so this renders the
            table's normal empty state rather than leftover results. -->
-      <template v-if="data && data.results.length > 0">
-        <ChatSearchResultsTable
-          :results="data.results"
-          :meta="meta"
-          :query="query"
-          :class="{ 'opacity-60': isFetching }"
-        />
-        <div class="pb-10">
-          <PaginateControls
-            v-model:page="page"
-            v-model:limit="limit"
+        <template v-if="data && data.results.length > 0">
+          <ChatSearchResultsTable
+            :results="data.results"
             :meta="meta"
+            :query="query"
+            :class="{ 'opacity-60': isFetching }"
           />
-        </div>
-      </template>
-      <p
-        v-else-if="isLoading"
-        class="mx-auto max-w-md text-center text-sm text-muted-foreground"
-      >
-        {{ t('chat.search.loading') }}
-      </p>
-      <p v-else-if="error" class="text-sm text-stone-500">
-        {{ error.message || t('chat.search.error') }}
-      </p>
-    </div>
-  </SectionWrapper>
+          <div class="pb-10">
+            <PaginateControls
+              v-model:page="page"
+              v-model:limit="limit"
+              :meta="meta"
+            />
+          </div>
+        </template>
+        <p
+          v-else-if="isLoading"
+          class="mx-auto max-w-md text-center text-body text-muted-foreground"
+        >
+          {{ t('chat.search.loading') }}
+        </p>
+        <p v-else-if="error" class="text-body text-muted-foreground">
+          {{ error.message || t('chat.search.error') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

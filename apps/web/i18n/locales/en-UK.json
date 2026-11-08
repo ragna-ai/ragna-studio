@@ -431,12 +431,23 @@
       "approve": "Approve",
       "deny": "Deny",
       "denied": "Denied. Nothing was changed in your drive.",
-      "openFile": "Open {name} in Google Drive"
+      "openFile": "Open {name} in Google Drive",
+      "hint": "Nothing is saved until you approve.",
+      "saved": "Saved"
     },
+    "toolStatus": {
+      "input-streaming": "Pending",
+      "input-available": "Running",
+      "approval-requested": "Waiting for your approval",
+      "approval-responded": "Answered",
+      "output-available": "Done",
+      "output-error": "Failed",
+      "output-denied": "Denied"
+    },
+    "newChat": "New chat",
     "conversation": {
       "title": "Chat",
       "subtitle": "Chat with your AI agent.",
-      "disclaimer": "AI agents can make mistakes.",
       "errors": {
         "generic": "Something went wrong. Please try again."
       }
@@ -445,13 +456,16 @@
       "morning": "Good morning",
       "afternoon": "Good afternoon",
       "evening": "Good evening",
-      "withName": "{greeting}, {name}! What can I help you with?",
-      "withoutName": "{greeting}! What can I help you with?"
+      "greetingWithName": "{greeting}, {name}",
+      "subtitle": "What can an agent take off your plate today?"
     },
     "input": {
       "placeholder": "How can I help you?",
       "menu": "Add",
       "attach": "Add files",
+      "attachHint": "PDF, images, Office documents",
+      "askAgent": "Ask {agent}",
+      "replyToAgent": "Reply to {agent}",
       "errors": {
         "unsupportedType": "\"{name}\" isn't a supported file type.",
         "tooLarge": "\"{name}\" is larger than 10 MB."
@@ -463,6 +477,12 @@
       "create": "Create your own agent",
       "templateDivider": "or start from a template",
       "useTemplate": "Use"
+    },
+    "tools": {
+      "title": "Tools of {agent}",
+      "titleFallback": "Tools of this agent",
+      "count": "{n} tool · set in the agent | {n} tools · set in the agent",
+      "edit": "Edit in agent settings"
     },
     "agentSelect": {
       "placeholder": "Select an agent",
@@ -478,7 +498,6 @@
       "remove": "Remove attachment"
     },
     "message": {
-      "actions": "Message actions",
       "branch": "Branch from here",
       "copy": "Copy text",
       "copied": "Copied to clipboard",
@@ -490,15 +509,22 @@
       "title": "Recent chats",
       "hide": "Hide",
       "show": "Show",
-      "viewAll": "View all"
+      "viewAll": "All chats"
     },
     "history": {
       "title": "Chat history",
+      "button": "History",
       "subtitle": "Your past conversations.",
-      "toggle": "Toggle chat history",
-      "groupBy": "Change grouping",
-      "openAll": "Open full chat history",
-      "close": "Close",
+      "paneTitle": "Chats",
+      "search": "Search chats",
+      "newChat": "New chat",
+      "collapse": "Hide chat list",
+      "groups": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "thisWeek": "This week",
+        "earlier": "Earlier"
+      },
       "empty": "No chats yet",
       "rename": "Rename chat",
       "titleRequired": "Title is required.",
@@ -517,9 +543,6 @@
       "loading": "Searching...",
       "empty": "No chats match your search.",
       "error": "An error occurred while searching."
-    },
-    "create": {
-      "label": "New chat"
     }
   },
   "workflow": {
@@ -610,14 +633,14 @@
       },
       "time": "Time",
       "weekday": {
-        "label": "Day of week",
         "0": "Sunday",
         "1": "Monday",
         "2": "Tuesday",
         "3": "Wednesday",
         "4": "Thursday",
         "5": "Friday",
-        "6": "Saturday"
+        "6": "Saturday",
+        "label": "Day of week"
       },
       "cron": {
         "label": "Cron expression",

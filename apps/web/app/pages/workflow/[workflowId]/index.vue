@@ -24,12 +24,14 @@ useHead({
     :key="data.workflow.id"
     :workflow="data.workflow"
   />
-  <div
-    v-else-if="workflowError"
-    class="flex h-full w-full items-center justify-center"
-  >
-    <p class="text-sm text-stone-500">
-      {{ workflowError.message || t('workflow.editor.loadError') }}
-    </p>
-  </div>
+  <PagePanel v-else>
+    <div
+      v-if="workflowError"
+      class="flex h-full w-full items-center justify-center"
+    >
+      <p class="text-sm text-stone-500">
+        {{ workflowError.message || t('workflow.editor.loadError') }}
+      </p>
+    </div>
+  </PagePanel>
 </template>

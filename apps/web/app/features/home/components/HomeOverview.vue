@@ -20,8 +20,8 @@ const {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-(--gap-card) lg:grid-cols-12">
-    <div class="flex min-w-0 flex-col gap-(--gap-card) lg:col-span-8">
+  <div class="grid grid-cols-1 gap-gutter lg:grid-cols-12">
+    <div class="flex min-w-0 flex-col gap-gutter lg:col-span-8">
       <HomeOverviewCard
         icon="hugeicons:check-list"
         :title="t('home.dashboard.tasks.title')"
@@ -53,7 +53,7 @@ const {
       </HomeOverviewCard>
     </div>
 
-    <div class="flex min-w-0 flex-col gap-(--gap-card) lg:col-span-4">
+    <div class="flex min-w-0 flex-col gap-gutter lg:col-span-4">
       <HomeOverviewCard
         icon="hugeicons:robotic"
         :title="t('home.dashboard.agents.title')"

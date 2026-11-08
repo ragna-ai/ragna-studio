@@ -84,6 +84,13 @@ so there's no single spec doc; the closest reference is the message
 persistence design.
 → [specs/chat/chat-message-persistence.md](./chat/chat-message-persistence.md)
 
+The chat follows the new shell design: its own top bar (History toggle, chat
+title, search or the chat's agent), a 768 column for messages and composer,
+one composer toolbar with an add menu, the agent's tools as icons with a
+read-only tools panel, copy and branch as buttons, a one-line tool summary and
+the approval card. History stays in the side panel.
+→ [specs/chat/315-chat-redesign/prd.md](./chat/315-chat-redesign/prd.md)
+
 ### Chat search
 
 Live, debounced search across a workspace's chats by title and message

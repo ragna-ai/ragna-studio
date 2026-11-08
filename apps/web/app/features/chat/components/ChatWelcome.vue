@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Composables
 const { t } = useI18n();
 const session = useAuthSession();
 
-// Computed
 const timeOfDayGreeting = computed(() => {
   const hour = new Date().getHours();
   if (hour < 12) return t('chat.welcome.morning');
@@ -15,13 +13,19 @@ const firstName = computed(() => session.value?.user?.name?.split(' ')[0]);
 
 const heading = computed(() => {
   const greeting = timeOfDayGreeting.value;
-  if (!firstName.value) return t('chat.welcome.withoutName', { greeting });
-  return t('chat.welcome.withName', { greeting, name: firstName.value });
+  if (!firstName.value) return greeting;
+  return t('chat.welcome.greetingWithName', {
+    greeting,
+    name: firstName.value,
+  });
 });
 </script>
 
 <template>
-  <h1 class="text-center text-3xl font-medium tracking-tight">
-    {{ heading }}
-  </h1>
+  <div class="flex flex-col gap-2 px-1">
+    <h1 class="font-display text-display font-semibold">{{ heading }}</h1>
+    <p class="text-chat text-muted-foreground">
+      {{ t('chat.welcome.subtitle') }}
+    </p>
+  </div>
 </template>

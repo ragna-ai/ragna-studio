@@ -19,9 +19,7 @@ const props = withDefaults(defineProps<SidebarShellProps>(), {
     :class="
       cn(
         'relative flex h-full shrink-0 flex-col transition-[width] duration-200 ease-out motion-reduce:transition-none',
-        props.collapsed
-          ? 'w-(--sidebar-width-collapsed)'
-          : 'w-(--sidebar-width)',
+        props.collapsed ? 'w-rail' : 'w-sidebar',
         props.class,
       )
     "

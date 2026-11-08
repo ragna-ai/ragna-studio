@@ -40,7 +40,7 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
 
 // Reads from the `title` ref (not `task.value.title`) so the trail stays live
 // with the h1 while a debounced save is still pending.
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('task.list.title'), to: '/tasks' },
   {
     label: task.value
@@ -126,77 +126,79 @@ async function handleDelete() {
 </script>
 
 <template>
-  <div v-if="task" class="flex h-full flex-col">
-    <header class="flex items-center justify-end border-b p-4">
-      <div class="shrink-0 text-muted-foreground">
-        <SavePenIcon
-          v-if="descriptionSaveStatus === 'saving'"
-          class="size-4 stroke-1.5"
-        />
-        <SaveCheckIcon v-else class="size-4 stroke-1.5" />
-      </div>
-    </header>
+  <PagePanel :crumbs="crumbs">
+    <div v-if="task" class="flex h-full flex-col">
+      <header class="flex items-center justify-end border-b p-4">
+        <div class="shrink-0 text-muted-foreground">
+          <SavePenIcon
+            v-if="descriptionSaveStatus === 'saving'"
+            class="size-4 stroke-1.5"
+          />
+          <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+        </div>
+      </header>
 
-    <div class="flex min-h-0 flex-1 overflow-hidden">
-      <div class="min-h-0 flex-1 overflow-y-auto p-6">
-        <div class="mx-auto max-w-3xl space-y-4">
-          <NuxtLinkLocale
-            v-if="task.parentTaskId"
-            :to="`/tasks/${task.parentTaskId}`"
-            class="flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:underline"
-          >
-            <CornerUpLeftIcon class="size-3.5" />
-            {{ t('task.detail.backToParent') }}
-          </NuxtLinkLocale>
+      <div class="flex min-h-0 flex-1 overflow-hidden">
+        <div class="min-h-0 flex-1 overflow-y-auto p-6">
+          <div class="mx-auto max-w-3xl space-y-4">
+            <NuxtLinkLocale
+              v-if="task.parentTaskId"
+              :to="`/tasks/${task.parentTaskId}`"
+              class="flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:underline"
+            >
+              <CornerUpLeftIcon class="size-3.5" />
+              {{ t('task.detail.backToParent') }}
+            </NuxtLinkLocale>
 
-          <!-- The page's one semantic h1 wraps the editable input (same
+            <!-- The page's one semantic h1 wraps the editable input (same
                pattern as components/InlineNameField.vue), so the title
                keeps proper heading structure in the document outline while
                still behaving as a plain in-place text field. -->
-          <h1 class="text-2xl font-semibold">
-            <input
-              :value="title"
-              :placeholder="t('task.detail.titlePlaceholder')"
-              :aria-label="t('task.detail.rename')"
-              class="w-full truncate rounded-sm border-none bg-transparent p-0 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-              @input="handleTitleInput"
-              @blur="commitTitleNow"
-              @keydown.enter.prevent="handleTitleEnter"
-            />
-          </h1>
+            <h1 class="text-2xl font-semibold">
+              <input
+                :value="title"
+                :placeholder="t('task.detail.titlePlaceholder')"
+                :aria-label="t('task.detail.rename')"
+                class="w-full truncate rounded-sm border-none bg-transparent p-0 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                @input="handleTitleInput"
+                @blur="commitTitleNow"
+                @keydown.enter.prevent="handleTitleEnter"
+              />
+            </h1>
 
-          <div class="space-y-6">
-            <TaskDescriptionEditor
-              ref="descriptionEditorRef"
-              v-model:save-status="descriptionSaveStatus"
-              :task-id="task.id"
-              :description="task.description"
-            />
+            <div class="space-y-6">
+              <TaskDescriptionEditor
+                ref="descriptionEditorRef"
+                v-model:save-status="descriptionSaveStatus"
+                :task-id="task.id"
+                :description="task.description"
+              />
 
-            <TaskAttachments :task-id="task.id" />
+              <TaskAttachments :task-id="task.id" />
 
-            <TaskSubtaskList
-              v-if="!task.parentTaskId"
-              :parent-task-id="task.id"
-              :subtasks="task.subtasks"
-            />
+              <TaskSubtaskList
+                v-if="!task.parentTaskId"
+                :parent-task-id="task.id"
+                :subtasks="task.subtasks"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <TaskPropertiesSidebar
-        :task="task"
-        :labels="labels"
-        @delete="handleDelete"
-      />
+        <TaskPropertiesSidebar
+          :task="task"
+          :labels="labels"
+          @delete="handleDelete"
+        />
+      </div>
     </div>
-  </div>
-  <div v-else-if="taskError" class="flex h-full items-center justify-center">
-    <p class="text-sm text-stone-500">
-      {{ taskError.message || t('task.detail.loadError') }}
-    </p>
-  </div>
-  <div v-else class="flex h-full items-center justify-center">
-    <p class="text-sm text-stone-500">{{ t('task.detail.loading') }}</p>
-  </div>
+    <div v-else-if="taskError" class="flex h-full items-center justify-center">
+      <p class="text-sm text-stone-500">
+        {{ taskError.message || t('task.detail.loadError') }}
+      </p>
+    </div>
+    <div v-else class="flex h-full items-center justify-center">
+      <p class="text-sm text-stone-500">{{ t('task.detail.loading') }}</p>
+    </div>
+  </PagePanel>
 </template>

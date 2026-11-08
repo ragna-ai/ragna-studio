@@ -43,74 +43,76 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('task.list.title')"
-          :subtitle="t('task.list.subtitle')"
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('task.list.title')"
+            :subtitle="t('task.list.subtitle')"
+          >
+            <template #button>
+              <div class="flex gap-2">
+                <Button
+                  variant="secondary"
+                  :disabled="!activeWorkspaceId"
+                  @click="isLabelManageOpen = true"
+                >
+                  <TagIcon class="mr-2 size-4 stroke-1.5" />
+                  {{ t('task.label.manageTitle') }}
+                </Button>
+                <Button
+                  variant="secondary"
+                  :disabled="!activeWorkspaceId"
+                  @click="isCreateDialogOpen = true"
+                >
+                  {{ t('task.list.newTask') }}
+                </Button>
+              </div>
+            </template>
+          </HeadingTitle>
+        </template>
+        <template #bottom> </template>
+      </Heading>
+
+      <div class="space-y-4 px-5">
+        <div
+          v-if="!activeWorkspaceId"
+          class="rounded-lg border p-6 text-sm text-muted-foreground"
         >
-          <template #button>
-            <div class="flex gap-2">
-              <Button
-                variant="secondary"
-                :disabled="!activeWorkspaceId"
-                @click="isLabelManageOpen = true"
-              >
-                <TagIcon class="mr-2 size-4 stroke-1.5" />
-                {{ t('task.label.manageTitle') }}
-              </Button>
-              <Button
-                variant="secondary"
-                :disabled="!activeWorkspaceId"
-                @click="isCreateDialogOpen = true"
-              >
-                {{ t('task.list.newTask') }}
-              </Button>
-            </div>
-          </template>
-        </HeadingTitle>
-      </template>
-      <template #bottom> </template>
-    </Heading>
-
-    <div class="space-y-4 px-5">
-      <div
-        v-if="!activeWorkspaceId"
-        class="rounded-lg border p-6 text-sm text-muted-foreground"
-      >
-        {{ t('task.list.loading') }}
-      </div>
-      <template v-else-if="tasksData">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <ViewSwitcher v-model="view" :options="TASK_VIEWS" />
-          <TaskFilterBar
-            :status="statusFilter"
-            :priority="priorityFilter"
-            :task-label-id="taskLabelIdFilter"
-            :labels="labels"
-            @update:status="(v) => (statusFilter = v)"
-            @update:priority="(v) => (priorityFilter = v)"
-            @update:task-label-id="(v) => (taskLabelIdFilter = v)"
-          />
+          {{ t('task.list.loading') }}
         </div>
+        <template v-else-if="tasksData">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <ViewSwitcher v-model="view" :options="TASK_VIEWS" />
+            <TaskFilterBar
+              :status="statusFilter"
+              :priority="priorityFilter"
+              :task-label-id="taskLabelIdFilter"
+              :labels="labels"
+              @update:status="(v) => (statusFilter = v)"
+              @update:priority="(v) => (priorityFilter = v)"
+              @update:task-label-id="(v) => (taskLabelIdFilter = v)"
+            />
+          </div>
 
-        <TaskBoard v-if="view === 'board'" :tasks="tasks" />
-        <TaskListView v-else :tasks="tasks" />
-      </template>
-      <div v-else-if="tasksError">
-        <p class="text-sm text-stone-500">
-          {{ tasksError.message || t('task.list.loadError') }}
-        </p>
+          <TaskBoard v-if="view === 'board'" :tasks="tasks" />
+          <TaskListView v-else :tasks="tasks" />
+        </template>
+        <div v-else-if="tasksError">
+          <p class="text-sm text-stone-500">
+            {{ tasksError.message || t('task.list.loadError') }}
+          </p>
+        </div>
       </div>
-    </div>
 
-    <template v-if="activeWorkspaceId">
-      <TaskCreateDialog v-model:open="isCreateDialogOpen" />
-      <TaskLabelManageDialog
-        v-model:open="isLabelManageOpen"
-        :labels="labels"
-      />
-    </template>
-  </SectionWrapper>
+      <template v-if="activeWorkspaceId">
+        <TaskCreateDialog v-model:open="isCreateDialogOpen" />
+        <TaskLabelManageDialog
+          v-model:open="isLabelManageOpen"
+          :labels="labels"
+        />
+      </template>
+    </SectionWrapper>
+  </PagePanel>
 </template>
