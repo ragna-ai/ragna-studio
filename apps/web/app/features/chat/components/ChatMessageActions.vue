@@ -1,9 +1,10 @@
 <script setup lang="ts">
 interface ChatMessageActionsProps {
   alwaysVisible?: boolean;
+  copied?: boolean;
 }
 
-defineProps<ChatMessageActionsProps>();
+const props = defineProps<ChatMessageActionsProps>();
 
 const emit = defineEmits<{
   copy: [];
@@ -11,6 +12,10 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const copyLabel = computed(() =>
+  props.copied ? t('chat.message.copied') : t('chat.message.copy'),
+);
 </script>
 
 <template>
@@ -26,13 +31,14 @@ const { t } = useI18n();
             variant="ghost"
             size="icon"
             class="size-7 rounded-sm text-icon"
-            :aria-label="t('chat.message.copy')"
+            :aria-label="copyLabel"
             @click="emit('copy')"
           >
-            <Icon name="hugeicons:copy-01" class="size-4" />
+            <Icon v-if="copied" name="hugeicons:tick-02" class="size-4" />
+            <Icon v-else name="hugeicons:copy-01" class="size-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{{ t('chat.message.copy') }}</TooltipContent>
+        <TooltipContent>{{ copyLabel }}</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger as-child>

@@ -6,7 +6,6 @@ import {
   isStaticToolUIPart,
   isTextUIPart,
 } from 'ai';
-import { toast } from 'vue-sonner';
 import { Message, MessageResponse } from '~/components/ai-elements/message';
 import AgentMark from '~/features/agent/components/AgentMark.vue';
 import ChatMessageActions from '~/features/chat/components/ChatMessageActions.vue';
@@ -35,10 +34,9 @@ const emit = defineEmits<{
 }>();
 
 // Composables
-const { t } = useI18n();
 const apiBaseUrl = useRuntimeConfig().public.apiBaseUrl;
 const { branchChatAndNavigate } = useBranchChatAndNavigate();
-const { copy } = useClipboard();
+const { copy, copied } = useClipboard({ copiedDuring: 2000 });
 
 const isUser = computed(() => props.message.role === 'user');
 
@@ -66,7 +64,6 @@ function copyText() {
     .map((part) => part.text)
     .join('\n\n');
   copy(text);
-  toast.success(t('chat.message.copied'));
 }
 
 // Document file parts carry a relative, env-independent API download path
@@ -199,6 +196,7 @@ const renderItems = computed<RenderItem[]>(() => {
     <ChatMessageActions
       v-if="!isUser"
       :always-visible="isLast"
+      :copied="copied"
       @copy="copyText"
       @branch="branchFromHere"
     />
