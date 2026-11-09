@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { PlusIcon } from '@lucide/vue';
 import WorkspaceCreateDialog from '~/features/workspace/components/WorkspaceCreateDialog.vue';
 
 // Refs
@@ -17,8 +16,7 @@ const { t } = useI18n();
     <p class="max-w-sm text-sm text-muted-foreground">
       {{ t('workspace.emptyState.description') }}
     </p>
-    <Button @click="isCreateDialogOpen = true">
-      <PlusIcon class="mr-1 size-4" />
+    <Button leading-icon="hugeicons:add-01" @click="isCreateDialogOpen = true">
       {{ t('workspace.emptyState.action') }}
     </Button>
     <WorkspaceCreateDialog v-model:open="isCreateDialogOpen" />

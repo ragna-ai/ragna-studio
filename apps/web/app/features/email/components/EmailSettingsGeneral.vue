@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
-import { Spinner } from '~/components/ui/spinner';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import EmailSyncStatusBadge from '~/features/email/components/EmailSyncStatusBadge.vue';
 import {
@@ -100,11 +99,11 @@ function handleReconnect() {
             }}
           </p>
           <Button
+            :loading="isRelinking"
             variant="default"
             :disabled="isRelinking"
             @click="handleReconnect"
           >
-            <Spinner v-if="isRelinking" class="mr-2" />
             {{
               t('email.settings.general.reconnect', { provider: providerLabel })
             }}

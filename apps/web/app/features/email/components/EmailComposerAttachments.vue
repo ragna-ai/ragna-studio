@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FolderOpenIcon, PaperclipIcon, XIcon } from '@lucide/vue';
+import { PaperclipIcon, XIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import EmailMediaPickerDialog from '~/features/email/components/EmailMediaPickerDialog.vue';
 import { EMAIL_MAX_TOTAL_ATTACHMENT_BYTES } from '~/features/email/lib/email-attachment-limits';
@@ -148,17 +148,22 @@ function formatBytes(bytes: number): string {
         class="hidden"
         @change="handleFileChange"
       />
-      <Button type="button" variant="outline" size="sm" @click="openFilePicker">
-        <PaperclipIcon class="mr-2 size-3.5" />
+      <Button
+        leading-icon="hugeicons:attachment-01"
+        type="button"
+        variant="outline"
+        size="sm"
+        @click="openFilePicker"
+      >
         {{ t('email.compose.attachments.add') }}
       </Button>
       <Button
+        leading-icon="hugeicons:folder-open"
         type="button"
         variant="outline"
         size="sm"
         @click="isMediaPickerOpen = true"
       >
-        <FolderOpenIcon class="mr-2 size-3.5" />
         {{ t('email.compose.attachments.fromLibrary') }}
       </Button>
       <p v-if="isOverLimit" class="text-xs text-destructive">

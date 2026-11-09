@@ -125,11 +125,10 @@ function isCreateVisibility(
         </form.Field>
 
         <DialogFooter>
-          <Button type="button" variant="secondary" @click="open = false">
+          <Button type="button" variant="outline" @click="open = false">
             {{ t('common.cancel') }}
           </Button>
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" class="mr-2" />
+          <Button :loading="isPending" type="submit" :disabled="isPending">
             {{ t('workspace.create.submit') }}
           </Button>
         </DialogFooter>

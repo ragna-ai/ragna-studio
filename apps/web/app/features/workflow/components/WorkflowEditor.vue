@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { PlayIcon, SettingsIcon } from '@lucide/vue';
 import type {
   WorkflowEdge,
   WorkflowNode,
@@ -218,32 +217,34 @@ async function handlePublish() {
           </Badge>
           <Button
             variant="outline"
-            size="sm"
+            size="icon-sm"
             :aria-label="t('workflow.editor.settingsTitle')"
+            leading-icon="hugeicons:settings-01"
             @click="toggleSettings"
-          >
-            <SettingsIcon class="size-4 stroke-1.5" />
-          </Button>
+          />
           <Button
             variant="outline"
             size="sm"
             :disabled="isSaving"
+            :loading="isSaving"
             @click="handleSave"
           >
-            <Spinner v-if="isSaving" class="mr-2" />
             {{ t('common.save') }}
           </Button>
           <Button
             variant="outline"
             size="sm"
             :disabled="isPublishing"
+            :loading="isPublishing"
             @click="handlePublish"
           >
-            <Spinner v-if="isPublishing" class="mr-2" />
             {{ t('common.publish') }}
           </Button>
-          <Button size="sm" @click="isRunDialogOpen = true">
-            <PlayIcon class="mr-2 size-4 stroke-1.5" />
+          <Button
+            size="sm"
+            leading-icon="hugeicons:play"
+            @click="isRunDialogOpen = true"
+          >
             {{ t('common.run') }}
           </Button>
         </div>

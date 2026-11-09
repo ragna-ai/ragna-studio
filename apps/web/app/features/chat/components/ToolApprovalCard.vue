@@ -152,10 +152,10 @@ function respond(approved: boolean) {
       <p class="min-w-0 flex-1 text-small text-muted-foreground">
         {{ t('chat.toolApproval.hint') }}
       </p>
-      <Button size="sm" variant="secondary" @click="respond(false)">
+      <Button variant="outline" @click="respond(false)">
         {{ t('chat.toolApproval.deny') }}
       </Button>
-      <Button size="sm" @click="respond(true)">
+      <Button @click="respond(true)">
         {{ t('chat.toolApproval.approve') }}
       </Button>
     </div>

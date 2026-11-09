@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDownIcon, ImageIcon, UploadIcon, XIcon } from '@lucide/vue';
+import { ChevronDownIcon, XIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
@@ -517,13 +517,13 @@ watch(
             </div>
           </div>
           <Button
+            :loading="isUploadingReference"
+            leading-icon="hugeicons:upload-01"
             type="button"
             variant="outline"
             :disabled="isUploadingReference || isReferenceCapReached"
             @click="openReferenceFilePicker"
           >
-            <Spinner v-if="isUploadingReference" class="mr-2" />
-            <UploadIcon v-else class="mr-2 size-4" />
             {{ t('imagen.form.referenceImagesUploadButton') }}
           </Button>
         </TabsContent>
@@ -531,9 +531,12 @@ watch(
     </div>
 
     <div class="flex justify-end">
-      <Button type="submit" :disabled="isPending || !selectedModel">
-        <Spinner v-if="isPending" class="mr-2" />
-        <ImageIcon v-else class="mr-2 size-4" />
+      <Button
+        :loading="isPending"
+        leading-icon="hugeicons:image-01"
+        type="submit"
+        :disabled="isPending || !selectedModel"
+      >
         {{ t('imagen.form.submit') }}
       </Button>
     </div>

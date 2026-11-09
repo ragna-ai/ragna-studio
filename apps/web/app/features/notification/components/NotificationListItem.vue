@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import type { NotificationGroupKey } from '~/features/notification/lib/group-notifications';
 import type { Notification } from '~/features/notification/types';
 import {
@@ -77,13 +78,14 @@ const timeLabel = computed(() => {
         </span>
       </span>
     </button>
-    <button
-      type="button"
-      class="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-sm text-icon opacity-0 outline-hidden group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-border focus-visible:ring-2 focus-visible:ring-ring"
+    <Button
+      variant="ghost"
+      size="icon-2xs"
+      class="absolute top-2.5 right-2.5 text-icon opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-border"
       :aria-label="t('notification.delete')"
       @click="emit('delete', props.notification.id)"
     >
       <Icon name="hugeicons:cancel-01" class="size-3.5" />
-    </button>
+    </Button>
   </div>
 </template>

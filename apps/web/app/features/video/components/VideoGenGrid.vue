@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import { SparklesIcon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import VideoGenPreviewDialog from '~/features/video/components/VideoGenPreviewDialog.vue';
 import type {
@@ -203,17 +202,14 @@ function handleEnhance(video: GeneratedVideo) {
             <TooltipTrigger as-child>
               <span>
                 <Button
+                  :loading="enhancingDraftId === video.id"
+                  leading-icon="hugeicons:sparkles"
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="outline"
                   :disabled="isEnhanceDisabled(video)"
                   @click.stop="handleEnhance(video)"
                 >
-                  <Spinner
-                    v-if="enhancingDraftId === video.id"
-                    class="mr-1.5"
-                  />
-                  <SparklesIcon v-else class="mr-1.5 size-3.5" />
                   {{ $t('videogen.grid.enhance') }}
                 </Button>
               </span>

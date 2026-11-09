@@ -43,7 +43,7 @@ const handleDeleteDataset = async (datasetId: string) => {
             :subtitle="t('dataset.list.subtitle')"
           >
             <template #button>
-              <Button as-child variant="secondary">
+              <Button as-child variant="outline">
                 <NuxtLinkLocale to="/dataset/create">
                   {{ t('dataset.list.newDataset') }}
                 </NuxtLinkLocale>

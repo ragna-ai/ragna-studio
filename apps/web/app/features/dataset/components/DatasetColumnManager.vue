@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon,
-} from '@lucide/vue';
+import { ArrowDownIcon, ArrowUpIcon, Trash2Icon, XIcon } from '@lucide/vue';
 import type {
   DatasetColumn,
   DatasetColumnType,
@@ -178,16 +172,19 @@ function handleSave() {
         </div>
       </div>
 
-      <Button variant="outline" class="w-full" @click="addColumn">
-        <PlusIcon class="mr-2 size-4" />
+      <Button
+        variant="outline"
+        class="w-full"
+        leading-icon="hugeicons:add-01"
+        @click="addColumn"
+      >
         {{ t('dataset.columnManager.addColumn') }}
       </Button>
     </div>
 
     <Separator />
 
-    <Button :disabled="isSaving" @click="handleSave">
-      <Spinner v-if="isSaving" class="mr-2" />
+    <Button :disabled="isSaving" :loading="isSaving" @click="handleSave">
       {{ t('dataset.columnManager.save') }}
     </Button>
   </aside>

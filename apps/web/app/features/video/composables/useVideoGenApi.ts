@@ -233,7 +233,10 @@ export function useGenerateVideo() {
     mutationFn: (body) =>
       $api<GenerateVideoResponse>(
         `/workspace/${toValue(workspaceId)}/gen-video`,
-        { method: 'POST', body },
+        {
+          method: 'POST',
+          body,
+        },
       ),
     onSuccess: ({ genVideo }) => {
       // Prepend the pending row straight into every cached list page so it

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import {
   ArchiveIcon,
-  CornerUpLeftIcon,
-  ForwardIcon,
   MailIcon,
   MailOpenIcon,
   StarIcon,
@@ -283,13 +281,13 @@ function handleToggleRead() {
       >
         <div class="flex shrink-0 items-center gap-1">
           <Button
+            leading-icon="hugeicons:corner-up-left"
             v-if="lastMessage"
             variant="outline"
             size="sm"
             :disabled="isStartingDraft"
             @click="startCompose('reply')"
           >
-            <CornerUpLeftIcon class="mr-2 size-3.5" />
             {{ t('email.message.reply') }}
           </Button>
           <Button
@@ -302,13 +300,13 @@ function handleToggleRead() {
             {{ t('email.message.replyAll') }}
           </Button>
           <Button
+            leading-icon="hugeicons:forward-01"
             v-if="lastMessage"
             variant="outline"
             size="sm"
             :disabled="isStartingDraft"
             @click="startCompose('forward')"
           >
-            <ForwardIcon class="mr-2 size-3.5" />
             {{ t('email.message.forward') }}
           </Button>
           <EmailDraftTriggerButton

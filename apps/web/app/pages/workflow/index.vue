@@ -50,7 +50,7 @@ const handleDeleteWorkflow = async (workflowId: string) => {
             :subtitle="t('workflow.list.subtitle')"
           >
             <template #button>
-              <Button as-child variant="secondary">
+              <Button as-child variant="outline">
                 <NuxtLinkLocale to="/workflow/create">
                   {{ t('workflow.list.newWorkflow') }}
                 </NuxtLinkLocale>

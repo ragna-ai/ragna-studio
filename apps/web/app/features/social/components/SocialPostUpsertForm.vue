@@ -68,13 +68,17 @@ function handlePublish() {
         </span>
       </div>
       <div class="flex gap-4">
-        <Button as-child variant="secondary">
+        <Button as-child variant="outline">
           <NuxtLinkLocale to="/social">
             {{ t('common.cancel') }}
           </NuxtLinkLocale>
         </Button>
-        <Button v-if="canEdit" type="submit" :disabled="isUpdating">
-          <Spinner v-if="isUpdating" class="mr-2" />
+        <Button
+          :loading="isUpdating"
+          v-if="canEdit"
+          type="submit"
+          :disabled="isUpdating"
+        >
           {{ t('common.save') }}
         </Button>
       </div>

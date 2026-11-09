@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  MessageSquareIcon,
   MoreVerticalIcon,
   PencilIcon,
   StarIcon,
@@ -124,11 +123,12 @@ const handleDeleteFavorite = (agentId: string) => {
             class="flex justify-end space-x-2 text-right whitespace-nowrap"
             @click.stop
           >
-            <Button variant="outline" @click="() => handleNewChat(agent.id)">
+            <Button
+              variant="outline"
+              trailing-icon="hugeicons:message-01"
+              @click="() => handleNewChat(agent.id)"
+            >
               {{ t('agent.list.chat') }}
-              <MessageSquareIcon
-                class="ml-2 size-4 shrink-0 stroke-1.5 text-primary"
-              />
             </Button>
 
             <DropdownMenu>

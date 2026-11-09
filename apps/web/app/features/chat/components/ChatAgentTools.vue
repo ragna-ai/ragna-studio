@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import {
   Popover,
   PopoverAnchor,
@@ -50,17 +51,18 @@ const hiddenCount = computed(
           <div class="flex h-8 items-center pr-1.5 pl-1">
             <Tooltip v-for="{ toolId, icon } in shownTools" :key="toolId">
               <TooltipTrigger as-child>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   :aria-label="t(`agent.tool.${toolId}.label`)"
-                  class="group/tool flex size-6 items-center justify-center rounded-sm transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                  class="group/tool"
                   @click="isOpen = !isOpen"
                 >
                   <Icon
                     :name="icon"
                     class="size-4 text-icon group-hover/tool:text-foreground"
                   />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent
                 side="top"

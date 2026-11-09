@@ -2,7 +2,6 @@
 // Imports
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
-import { Spinner } from '~/components/ui/spinner';
 import {
   useCreateAgentFromTemplate,
   useGetAgentTemplates,
@@ -76,9 +75,9 @@ function quickCreate(templateId: string) {
             variant="outline"
             size="sm"
             :disabled="isPending"
+            :loading="pendingTemplateId === template.id"
             @click="quickCreate(template.id)"
           >
-            <Spinner v-if="pendingTemplateId === template.id" class="mr-2" />
             {{ t('chat.noAgent.useTemplate') }}
           </Button>
         </li>

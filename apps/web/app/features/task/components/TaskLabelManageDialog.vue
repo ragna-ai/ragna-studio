@@ -211,7 +211,7 @@ async function handleDelete(label: TaskLabel) {
       </p>
 
       <DialogFooter>
-        <Button variant="secondary" @click="open = false">
+        <Button variant="outline" @click="open = false">
           {{ t('common.close') }}
         </Button>
       </DialogFooter>

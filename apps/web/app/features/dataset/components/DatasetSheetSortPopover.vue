@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ArrowDownUpIcon } from '@lucide/vue';
 import type { DatasetSheetTable } from '~/features/dataset/composables/useDatasetSheet';
 import { getSheetDataColumns } from '~/features/dataset/utils/datasetSheetDataColumns';
 
@@ -38,8 +37,7 @@ function clearSort() {
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <Button variant="ghost" size="sm">
-        <ArrowDownUpIcon class="size-4 stroke-1.5 text-stone-500" />
+      <Button variant="ghost" size="sm" leading-icon="hugeicons:arrow-up-down">
         {{ t('dataset.sheet.toolbar.sort') }}
         <Badge v-if="sortCount > 0" variant="secondary">
           {{ sortCount }}

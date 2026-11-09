@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '~/components/ui/button';
-import { Spinner } from '~/components/ui/spinner';
 import type { SocialPost } from '~/features/social/composables/useSocialPostApi';
 import SocialPostLinkedInHint from '~/features/social/components/SocialPostLinkedInHint.vue';
 
@@ -72,8 +71,12 @@ function handlePublish() {
       {{ t('social.viewOnLinkedIn') }}
     </a>
 
-    <Button v-if="canPublish" :disabled="isPublishing" @click="handlePublish">
-      <Spinner v-if="isPublishing" class="mr-2" />
+    <Button
+      :loading="isPublishing"
+      v-if="canPublish"
+      :disabled="isPublishing"
+      @click="handlePublish"
+    >
       {{ t('common.publish') }}
     </Button>
   </div>

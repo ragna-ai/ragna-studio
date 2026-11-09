@@ -150,11 +150,10 @@ const siderBarTabs = computed(() => [
     @submit.prevent.stop="form.handleSubmit"
   >
     <div class="mb-4 flex w-full shrink-0 justify-end space-x-4">
-      <Button as-child variant="secondary">
+      <Button as-child variant="outline">
         <NuxtLinkLocale to="/agent">{{ t('common.cancel') }}</NuxtLinkLocale>
       </Button>
-      <Button type="submit" :disabled="isPending">
-        <Spinner v-if="isPending" class="mr-2" />
+      <Button type="submit" :disabled="isPending" :loading="isPending">
         {{ t('common.save') }}
       </Button>
     </div>

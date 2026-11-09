@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { CheckIcon, CopyIcon, DownloadIcon, Trash2Icon } from '@lucide/vue';
+import { CheckIcon, CopyIcon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
 import { downloadFileFromUrl } from '~/lib/file-export';
@@ -191,19 +191,22 @@ async function deleteImage() {
             <Button variant="outline" @click="reuseSettings">
               {{ $t('imagen.preview.reuseSettings') }}
             </Button>
-            <Button :disabled="isDownloading" @click="downloadImage">
-              <Spinner v-if="isDownloading" class="mr-2" />
-              <DownloadIcon v-else class="mr-2 size-4" />
+            <Button
+              :loading="isDownloading"
+              leading-icon="hugeicons:download-01"
+              :disabled="isDownloading"
+              @click="downloadImage"
+            >
               {{ $t('imagen.preview.download') }}
             </Button>
             <Button
+              :loading="isDeleting"
+              leading-icon="hugeicons:delete-02"
               variant="outline"
               class="hover:text-destructive"
               :disabled="isDeleting"
               @click="deleteImage"
             >
-              <Spinner v-if="isDeleting" class="mr-2" />
-              <Trash2Icon v-else class="mr-2 size-4 stroke-1.5" />
               {{ $t('imagen.preview.delete') }}
             </Button>
           </div>

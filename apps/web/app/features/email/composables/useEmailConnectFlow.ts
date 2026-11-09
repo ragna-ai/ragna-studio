@@ -142,7 +142,10 @@ export function useEmailConnectFlow() {
       startAccountSyncForcePoll(account.lastSyncedAt);
       queryClient.setQueryData<EmailAccountStatusResponse>(
         emailKeys.account(),
-        { connected: true, account },
+        {
+          connected: true,
+          account,
+        },
       );
       toast.success(
         t('email.toast.connected', {

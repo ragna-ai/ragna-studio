@@ -132,7 +132,7 @@ onMounted(() => {
         name="message"
         :class="
           cn(
-            'max-h-48 min-h-7 resize-none overflow-y-auto rounded-none border-0 bg-transparent px-1.5 py-0 text-chat shadow-none focus-visible:ring-0 md:text-chat dark:bg-transparent',
+            'max-h-48 min-h-7 resize-none overflow-y-auto rounded-none border-0 bg-transparent px-1.5 py-0 text-chat shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-chat dark:bg-transparent',
             isEmpty && 'min-h-14',
           )
         "

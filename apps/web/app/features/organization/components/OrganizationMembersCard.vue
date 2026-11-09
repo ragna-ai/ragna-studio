@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { OrganizationAssignableRole } from '@repo/auth/client';
-import { RotateCcwIcon, Trash2Icon } from '@lucide/vue';
+import { Trash2Icon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import {
   organizationErrorMessage,
@@ -158,12 +158,12 @@ async function handleRestore(member: OrganizationMember) {
 
             <template v-if="canManage && !isOwnerRow(member)">
               <Button
+                leading-icon="hugeicons:rotate-left-01"
                 v-if="isRemoved(member)"
                 variant="outline"
                 size="sm"
                 @click="handleRestore(member)"
               >
-                <RotateCcwIcon class="mr-1 size-4" />
                 {{ t('organization.members.restore') }}
               </Button>
               <Button

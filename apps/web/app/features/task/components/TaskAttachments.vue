@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import { PaperclipIcon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import { Button } from '~/components/ui/button';
 import { CHAT_ATTACHMENT_ACCEPT } from '~/features/chat/lib/attachment-mime';
@@ -82,9 +81,9 @@ onFilesPicked((fileList) => {
         type="button"
         variant="outline"
         size="sm"
+        leading-icon="hugeicons:attachment-01"
         @click="openFilePicker()"
       >
-        <PaperclipIcon class="mr-2 size-3.5" />
         {{ t('task.attachment.add') }}
       </Button>
     </div>

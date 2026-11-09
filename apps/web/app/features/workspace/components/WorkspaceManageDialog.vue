@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import {
-  ArrowLeftIcon,
   CheckIcon,
   PencilIcon,
-  PlusIcon,
   Trash2Icon,
   UsersIcon,
   XIcon,
@@ -96,12 +94,12 @@ async function handleDelete(workspace: Workspace) {
           </DialogDescription>
         </DialogHeader>
         <Button
+          leading-icon="hugeicons:arrow-left-02"
           variant="ghost"
           size="sm"
           class="w-fit"
           @click="membersWorkspaceId = null"
         >
-          <ArrowLeftIcon class="mr-1 size-4" />
           {{ t('workspace.manage.back') }}
         </Button>
         <WorkspaceMembersPanel
@@ -118,8 +116,11 @@ async function handleDelete(workspace: Workspace) {
           </DialogDescription>
         </DialogHeader>
 
-        <Button class="w-fit" @click="isCreateDialogOpen = true">
-          <PlusIcon class="mr-1 size-4" />
+        <Button
+          leading-icon="hugeicons:add-01"
+          class="w-fit"
+          @click="isCreateDialogOpen = true"
+        >
           {{ t('workspace.manage.create') }}
         </Button>
 
@@ -202,7 +203,7 @@ async function handleDelete(workspace: Workspace) {
         </p>
 
         <DialogFooter>
-          <Button variant="secondary" @click="open = false">
+          <Button variant="outline" @click="open = false">
             {{ t('common.close') }}
           </Button>
         </DialogFooter>

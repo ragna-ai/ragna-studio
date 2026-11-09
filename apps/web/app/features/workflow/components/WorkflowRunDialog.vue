@@ -120,7 +120,7 @@ async function handlePublishAndRun() {
       />
 
       <DialogFooter>
-        <Button variant="secondary" @click="open = false">{{
+        <Button variant="outline" @click="open = false">{{
           t('common.cancel')
         }}</Button>
         <Button
@@ -133,9 +133,9 @@ async function handlePublishAndRun() {
         </Button>
         <Button
           :disabled="isBusy"
+          :loading="isBusy"
           @click="hasUnpublishedChanges ? handlePublishAndRun() : handleRun()"
         >
-          <Spinner v-if="isBusy" class="mr-2" />
           {{
             hasUnpublishedChanges
               ? t('workflow.runDialog.publishAndRun')

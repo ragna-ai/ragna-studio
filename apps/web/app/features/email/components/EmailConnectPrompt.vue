@@ -35,18 +35,25 @@ function handleConnect(integrationId: EmailIntegrationId) {
       {{ t('email.connect.connecting') }}
     </div>
     <div v-else class="flex gap-2">
-      <Button :disabled="isLinking" @click="handleConnect('gmail')">
-        <Spinner v-if="isLinking" class="mr-2" />
-        <Icon v-else name="logos:google-icon" class="mr-2 size-4" />
+      <Button
+        :disabled="isLinking"
+        :loading="isLinking"
+        @click="handleConnect('gmail')"
+      >
+        <template #leading>
+          <Icon name="logos:google-icon" class="size-4" />
+        </template>
         {{ t('email.connect.gmailCta') }}
       </Button>
       <Button
         variant="outline"
         :disabled="isLinking"
+        :loading="isLinking"
         @click="handleConnect('outlook-mail')"
       >
-        <Spinner v-if="isLinking" class="mr-2" />
-        <Icon v-else name="logos:microsoft-icon" class="mr-2 size-4" />
+        <template #leading>
+          <Icon name="logos:microsoft-icon" class="size-4" />
+        </template>
         {{ t('email.connect.microsoftCta') }}
       </Button>
     </div>

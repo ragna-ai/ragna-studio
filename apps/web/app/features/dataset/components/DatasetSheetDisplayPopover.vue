@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { EyeIcon } from '@lucide/vue';
 import type { DatasetSheetTable } from '~/features/dataset/composables/useDatasetSheet';
 import { getSheetDataColumns } from '~/features/dataset/utils/datasetSheetDataColumns';
 
@@ -18,8 +17,7 @@ const hiddenCount = computed(
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <Button variant="ghost" size="sm">
-        <EyeIcon class="size-4 stroke-1.5 text-stone-500" />
+      <Button variant="ghost" size="sm" leading-icon="hugeicons:view">
         {{ t('dataset.sheet.toolbar.display') }}
         <Badge v-if="hiddenCount > 0" variant="secondary">
           {{ hiddenCount }}

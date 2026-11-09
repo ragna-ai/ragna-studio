@@ -4,7 +4,6 @@ import RichTextEditor from '~/components/editor/RichTextEditor.vue';
 import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
-import { Spinner } from '~/components/ui/spinner';
 import EmailComposerAttachments from '~/features/email/components/EmailComposerAttachments.vue';
 import EmailRecipientsField from '~/features/email/components/EmailRecipientsField.vue';
 import {
@@ -228,7 +227,7 @@ async function handleSend() {
         }}</span>
         <Input
           v-model="subject"
-          class="h-7 flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
+          class="h-7 flex-1 border-0 px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
           :placeholder="t('email.compose.subjectPlaceholder')"
         />
       </div>
@@ -245,8 +244,7 @@ async function handleSend() {
       />
       <div class="flex items-center justify-end gap-2">
         <slot name="extra-actions" />
-        <Button type="submit" :disabled="!canSend">
-          <Spinner v-if="isSending" class="mr-2" />
+        <Button :loading="isSending" type="submit" :disabled="!canSend">
           {{ t('email.compose.send') }}
         </Button>
       </div>

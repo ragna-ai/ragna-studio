@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { WORKFLOW_PROMPT_MAX_LENGTH } from '@repo/workflow';
 import type { WorkflowNode } from '@repo/workflow';
-import { PlusIcon, Trash2Icon } from '@lucide/vue';
+import { Trash2Icon } from '@lucide/vue';
 import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowFieldError from '~/features/workflow/components/WorkflowFieldError.vue';
@@ -125,10 +125,10 @@ function removeMember(index: number) {
         <Button
           variant="outline"
           size="sm"
+          leading-icon="hugeicons:add-01"
           :disabled="!canAddMember"
           @click="addMember"
         >
-          <PlusIcon class="size-3.5 stroke-1.5" />
           {{ t('workflow.teamConfig.addMember') }}
         </Button>
       </div>

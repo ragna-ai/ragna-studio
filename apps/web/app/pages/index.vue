@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NuxtLinkLocale } from '#components';
 import HomeOverview from '~/features/home/components/HomeOverview.vue';
 import { useHomeDashboard } from '~/features/home/composables/useHomeDashboard';
 
@@ -15,9 +16,6 @@ const headingTitle = computed(() => {
   }
   return t('home.title');
 });
-
-const buttonFocus =
-  'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-transparent';
 </script>
 
 <template>
@@ -42,27 +40,19 @@ const buttonFocus =
         </div>
         <div class="flex gap-2">
           <Button
-            as-child
+            :as="NuxtLinkLocale"
+            to="/chat"
             variant="outline"
-            size="sm"
-            class="bg-card pr-3 pl-2.5 text-body font-medium shadow-xs hover:bg-surface-subtle"
-            :class="buttonFocus"
+            leading-icon="hugeicons:bubble-chat"
           >
-            <NuxtLinkLocale to="/chat">
-              <Icon name="hugeicons:bubble-chat" class="size-4" />
-              {{ t('home.dashboard.newChat') }}
-            </NuxtLinkLocale>
+            {{ t('home.dashboard.newChat') }}
           </Button>
           <Button
-            as-child
-            size="sm"
-            class="pr-3 pl-2.5 text-body font-medium hover:bg-primary/90"
-            :class="buttonFocus"
+            :as="NuxtLinkLocale"
+            to="/tasks"
+            leading-icon="hugeicons:plus-sign"
           >
-            <NuxtLinkLocale to="/tasks">
-              <Icon name="hugeicons:plus-sign" class="size-4" />
-              {{ t('home.dashboard.newTask') }}
-            </NuxtLinkLocale>
+            {{ t('home.dashboard.newTask') }}
           </Button>
         </div>
       </header>

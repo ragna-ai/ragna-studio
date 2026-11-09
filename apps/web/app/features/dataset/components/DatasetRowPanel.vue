@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Trash2Icon } from '@lucide/vue';
 import type { DatasetColumn, DatasetRow } from '~/features/dataset/types';
 
 interface Props {
@@ -135,9 +134,9 @@ function handleOpenChange(isOpen: boolean) {
         <Button
           variant="outline"
           class="text-destructive"
+          leading-icon="hugeicons:delete-02"
           @click="emit('delete', row.id)"
         >
-          <Trash2Icon class="mr-2 size-4 stroke-1.5" />
           {{ t('dataset.grid.deleteRow') }}
         </Button>
       </DialogFooter>

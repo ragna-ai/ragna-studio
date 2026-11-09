@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOutIcon, Trash2Icon } from '@lucide/vue';
+import { Trash2Icon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import WorkspaceMemberPicker from '~/features/workspace/components/WorkspaceMemberPicker.vue';
 import {
@@ -229,23 +229,23 @@ async function handleLeave() {
           </SelectContent>
         </Select>
         <Button
+          :loading="isAdding"
           size="sm"
           :disabled="selectedUserIds.length === 0 || isAdding"
           @click="handleAdd"
         >
-          <Spinner v-if="isAdding" class="mr-2" />
           {{ t('workspace.members.add') }}
         </Button>
       </div>
     </div>
 
     <Button
+      leading-icon="hugeicons:logout-01"
       v-if="isCurrentUserMember"
       variant="outline"
       size="sm"
       @click="handleLeave"
     >
-      <LogOutIcon class="mr-1 size-4" />
       {{ t('workspace.members.leave') }}
     </Button>
   </div>

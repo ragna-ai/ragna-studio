@@ -305,7 +305,10 @@ export function useGetTaskAttachments(
     queryFn: ({ signal }) =>
       $api<GetTaskAttachmentsResponse>(
         taskAttachmentsBasePath(workspaceId, taskId),
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId) && !!toValue(taskId),
     ...options,
@@ -339,7 +342,10 @@ export function useUploadTaskAttachments() {
       files.forEach((file) => formData.append('files', file));
       return $api<UploadTaskAttachmentsResponse>(
         taskAttachmentsBasePath(workspaceId, taskId),
-        { method: 'POST', body: formData },
+        {
+          method: 'POST',
+          body: formData,
+        },
       );
     },
     onSuccess: (_response, { taskId }) => {
@@ -365,7 +371,9 @@ export function useDeleteTaskAttachment() {
     mutationFn: ({ taskId, attachmentId }) =>
       $api<void>(
         `${taskAttachmentsBasePath(workspaceId, taskId)}/${attachmentId}`,
-        { method: 'DELETE' },
+        {
+          method: 'DELETE',
+        },
       ),
     onSuccess: (_response, { taskId }) => {
       queryClient.invalidateQueries({

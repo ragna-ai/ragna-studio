@@ -93,7 +93,9 @@ export function useTurnOffConnectionIntegration() {
     mutationFn: ({ connectionId, integrationId }) =>
       $api(
         `/integration/connection/${connectionId}/integrations/${integrationId}`,
-        { method: 'DELETE' },
+        {
+          method: 'DELETE',
+        },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: integrationKeys.connections });

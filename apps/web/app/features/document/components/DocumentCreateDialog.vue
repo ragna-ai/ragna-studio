@@ -112,11 +112,10 @@ watch(open, (isOpen) => {
         </form.Field>
 
         <DialogFooter>
-          <Button type="button" variant="secondary" @click="open = false">
+          <Button type="button" variant="outline" @click="open = false">
             {{ t('common.cancel') }}
           </Button>
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" class="mr-2" />
+          <Button type="submit" :disabled="isPending" :loading="isPending">
             {{ t('common.create') }}
           </Button>
         </DialogFooter>

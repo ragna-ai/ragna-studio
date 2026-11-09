@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FilterIcon, PlusIcon, XIcon } from '@lucide/vue';
+import { XIcon } from '@lucide/vue';
 import type { DatasetColumnType } from '~/features/dataset/types';
 import type { DatasetSheetTable } from '~/features/dataset/composables/useDatasetSheet';
 import {
@@ -174,8 +174,7 @@ function handleOpenChange(open: boolean) {
 <template>
   <Popover @update:open="handleOpenChange">
     <PopoverTrigger as-child>
-      <Button variant="ghost" size="sm">
-        <FilterIcon class="size-4 stroke-1.5 text-stone-500" />
+      <Button variant="ghost" size="sm" leading-icon="hugeicons:filter">
         {{ t('dataset.sheet.toolbar.filter') }}
         <Badge v-if="activeFilterCount > 0" variant="secondary">
           {{ activeFilterCount }}
@@ -267,10 +266,10 @@ function handleOpenChange(open: boolean) {
         <Button
           variant="ghost"
           size="sm"
+          leading-icon="hugeicons:add-01"
           :disabled="freeColumns.length === 0"
           @click="addDraft"
         >
-          <PlusIcon class="size-4 stroke-1.5 text-stone-500" />
           {{ t('dataset.sheet.filter.add') }}
         </Button>
         <Button

@@ -52,7 +52,7 @@ const handleDeleteAgent = async (agentId: string) => {
             :subtitle="$t('agent.list.subtitle')"
           >
             <template #button>
-              <Button as-child variant="secondary">
+              <Button as-child variant="outline">
                 <NuxtLinkLocale to="/agent/create">
                   {{ $t('agent.list.newAgent') }}
                 </NuxtLinkLocale>
