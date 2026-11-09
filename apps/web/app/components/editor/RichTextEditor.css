@@ -176,22 +176,22 @@
 .document-sheet .ProseMirror .hljs-keyword,
 .document-sheet .ProseMirror .hljs-selector-tag,
 .document-sheet .ProseMirror .hljs-literal {
-  color: #d73a49;
+  color: oklch(0.588 0.193 20.469);
 }
 
 .document-sheet .ProseMirror .hljs-string,
 .document-sheet .ProseMirror .hljs-attr {
-  color: #032f62;
+  color: oklch(0.311 0.101 255.87);
 }
 
 .document-sheet .ProseMirror .hljs-title,
 .document-sheet .ProseMirror .hljs-name,
 .document-sheet .ProseMirror .hljs-section {
-  color: #6f42c1;
+  color: oklch(0.502 0.188 294.988);
 }
 
 .document-sheet .ProseMirror .hljs-number {
-  color: #005cc5;
+  color: oklch(0.495 0.18 257.601);
 }
 
 .document-sheet-compact .ProseMirror {
