@@ -72,13 +72,13 @@ async function joinAsManager() {
         {{ t('organization.workspaces.open') }}
       </Button>
       <Button
+        :loading="isJoining"
         v-else
         variant="outline"
         size="sm"
         :disabled="isJoining"
         @click="joinAsManager"
       >
-        <Spinner v-if="isJoining" class="mr-2" />
         {{ t('organization.workspaces.join') }}
       </Button>
     </div>

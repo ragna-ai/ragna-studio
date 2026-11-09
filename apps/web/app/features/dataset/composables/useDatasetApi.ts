@@ -114,7 +114,10 @@ export function useUpdateDataset() {
     mutationFn: ({ datasetId, ...body }) =>
       $api<DatasetResponse>(
         `/workspace/${toValue(workspaceId)}/dataset/${datasetId}`,
-        { method: 'PATCH', body },
+        {
+          method: 'PATCH',
+          body,
+        },
       ),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: datasetKeys.all(workspaceId) });

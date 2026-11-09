@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import ChatHistoryItemRow from '~/features/chat/components/ChatHistoryItem.vue';
 import {
   useGetChatHistory,
@@ -58,15 +59,16 @@ function openFullSearch() {
       >
         <Icon name="hugeicons:bubble-chat-add" class="size-4" />
       </NuxtLinkLocale>
-      <button
-        type="button"
-        class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon hover:bg-border"
+      <Button
+        variant="ghost"
+        size="icon"
+        class="text-icon hover:bg-border"
         :title="t('chat.history.collapse')"
         :aria-label="t('chat.history.collapse')"
         @click="sidePanel.close()"
       >
         <Icon name="hugeicons:sidebar-left" class="size-4" />
-      </button>
+      </Button>
     </div>
 
     <div class="px-3 pb-2">

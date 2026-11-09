@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SparklesIcon, Trash2Icon } from '@lucide/vue';
+import { SparklesIcon } from '@lucide/vue';
 import { refAutoReset } from '@vueuse/core';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
@@ -113,12 +113,12 @@ defineExpose({
       >
         <template #extra-actions>
           <Button
+            leading-icon="hugeicons:delete-02"
             type="button"
             variant="ghost"
             :disabled="isDiscarding"
             @click="handleDiscard"
           >
-            <Trash2Icon class="mr-2 size-3.5" />
             {{ t('email.draft.discard') }}
           </Button>
         </template>

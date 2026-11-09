@@ -153,7 +153,10 @@ export function useGenerateImages() {
     mutationFn: (body) =>
       $api<GenerateImagesResponse>(
         `/workspace/${toValue(workspaceId)}/gen-image`,
-        { method: 'POST', body },
+        {
+          method: 'POST',
+          body,
+        },
       ),
     onSuccess: ({ genImages }) => {
       // Prepend the batch's pending rows straight into every cached list

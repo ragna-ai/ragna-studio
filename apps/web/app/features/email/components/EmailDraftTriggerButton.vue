@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { SparklesIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import {
   Popover,
@@ -13,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
-import { Spinner } from '~/components/ui/spinner';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import { useTriggerEmailDraft } from '~/features/email/composables/useEmailDraftApi';
 import { usePersonalWorkspace } from '~/features/workspace/composables/usePersonalWorkspace';
@@ -63,8 +61,7 @@ function handleGenerate() {
 <template>
   <Popover v-model:open="open">
     <PopoverTrigger as-child>
-      <Button variant="outline" size="sm">
-        <SparklesIcon class="mr-2 size-3.5" />
+      <Button leading-icon="hugeicons:sparkles" variant="outline" size="sm">
         {{ t('email.draft.trigger.button') }}
       </Button>
     </PopoverTrigger>
@@ -83,12 +80,12 @@ function handleGenerate() {
         </SelectContent>
       </Select>
       <Button
+        :loading="isPending"
         class="w-full"
         size="sm"
         :disabled="!selectedAgentId || isPending"
         @click="handleGenerate"
       >
-        <Spinner v-if="isPending" class="mr-2" />
         {{ t('email.draft.trigger.generate') }}
       </Button>
     </PopoverContent>

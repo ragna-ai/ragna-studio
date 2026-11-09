@@ -2,7 +2,6 @@
 import {
   BoldIcon,
   CheckIcon,
-  ChevronDownIcon,
   CodeIcon,
   ItalicIcon,
   LinkIcon,
@@ -160,13 +159,13 @@ watch(isLinkFormOpen, (isOpen) => {
           <ToolbarButton as-child>
             <DropdownMenuTrigger as-child>
               <Button
+                trailing-icon="hugeicons:arrow-down-01"
                 variant="ghost"
                 size="sm"
                 class="gap-1 px-2"
                 :aria-label="t('editor.blockType.label')"
               >
                 {{ displayedBlockTypeLabel }}
-                <ChevronDownIcon class="size-3 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
           </ToolbarButton>

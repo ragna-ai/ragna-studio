@@ -118,7 +118,7 @@ watch(
       @update:open="handleSelectOpenChange"
     >
       <SelectTrigger
-        class="h-8 w-full border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+        class="h-8 w-full border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
       >
         <SelectValue :placeholder="mismatchRaw" />
       </SelectTrigger>
@@ -138,7 +138,7 @@ watch(
       v-model="draft"
       :type="column.type"
       :placeholder="mismatchRaw"
-      class="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+      class="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
       @keydown="handleEditorKeydown"
       @blur="emit('blur')"
     />

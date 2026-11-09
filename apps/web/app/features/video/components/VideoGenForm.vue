@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDownIcon, UploadIcon, VideoIcon, XIcon } from '@lucide/vue';
+import { ChevronDownIcon, XIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
@@ -490,14 +490,14 @@ watch(
               </Button>
             </div>
             <Button
+              :loading="isUploadingFrame"
+              leading-icon="hugeicons:upload-01"
               v-else
               type="button"
               variant="outline"
               :disabled="isUploadingFrame"
               @click="openFilePicker"
             >
-              <Spinner v-if="isUploadingFrame" class="mr-2" />
-              <UploadIcon v-else class="mr-2 size-4" />
               {{ t('videogen.form.frameUploadButton') }}
             </Button>
           </TabsContent>
@@ -506,9 +506,12 @@ watch(
     </div>
 
     <div class="flex justify-end">
-      <Button type="submit" :disabled="isPending || !selectedModel">
-        <Spinner v-if="isPending" class="mr-2" />
-        <VideoIcon v-else class="mr-2 size-4" />
+      <Button
+        :loading="isPending"
+        leading-icon="hugeicons:video-01"
+        type="submit"
+        :disabled="isPending || !selectedModel"
+      >
         {{ t('videogen.form.submit') }}
       </Button>
     </div>

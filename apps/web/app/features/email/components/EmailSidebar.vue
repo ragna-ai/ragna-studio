@@ -2,7 +2,6 @@
 import {
   FileEditIcon,
   HelpCircleIcon,
-  PenSquareIcon,
   RefreshCwIcon,
   SearchIcon,
   SettingsIcon,
@@ -12,7 +11,6 @@ import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { ScrollArea } from '~/components/ui/scroll-area';
-import { Spinner } from '~/components/ui/spinner';
 import {
   Tooltip,
   TooltipContent,
@@ -107,12 +105,12 @@ function handleSyncNow() {
   <div class="flex h-full w-64 shrink-0 flex-col border-r">
     <div class="shrink-0 space-y-3 p-3">
       <Button
+        :loading="props.isComposing"
+        leading-icon="hugeicons:edit-02"
         class="w-full justify-start"
         :disabled="props.isComposing"
         @click="emit('compose')"
       >
-        <Spinner v-if="props.isComposing" class="mr-2 size-4" />
-        <PenSquareIcon v-else class="mr-2 size-4" />
         {{ t('email.sidebar.compose') }}
       </Button>
       <div class="flex items-center gap-1">

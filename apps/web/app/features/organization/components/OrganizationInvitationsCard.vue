@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { OrganizationInvitationRecord } from '@repo/auth/client';
-import { CopyIcon, UserPlusIcon, XIcon } from '@lucide/vue';
+import { XIcon } from '@lucide/vue';
 import { toast } from 'vue-sonner';
 import OrganizationInviteDialog from '~/features/organization/components/OrganizationInviteDialog.vue';
 import {
@@ -58,8 +58,11 @@ async function handleCancel(invitation: OrganizationInvitationRecord) {
   <SettingsCard class="mx-auto w-full max-w-3xl">
     <CardHeader class="flex flex-row items-center justify-between">
       <CardTitle>{{ t('organization.invitations.title') }}</CardTitle>
-      <Button size="sm" @click="inviteDialogOpen = true">
-        <UserPlusIcon class="mr-1 size-4" />
+      <Button
+        leading-icon="hugeicons:user-add-01"
+        size="sm"
+        @click="inviteDialogOpen = true"
+      >
         {{ t('organization.invitations.invite') }}
       </Button>
     </CardHeader>
@@ -92,8 +95,12 @@ async function handleCancel(invitation: OrganizationInvitationRecord) {
             </p>
           </div>
           <div class="flex shrink-0 items-center gap-1">
-            <Button variant="outline" size="sm" @click="copyLink(invitation)">
-              <CopyIcon class="mr-1 size-4" />
+            <Button
+              leading-icon="hugeicons:copy-01"
+              variant="outline"
+              size="sm"
+              @click="copyLink(invitation)"
+            >
               {{ t('organization.invitations.copyLink') }}
             </Button>
             <Button

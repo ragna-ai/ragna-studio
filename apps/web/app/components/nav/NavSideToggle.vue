@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
+
 const navSidebarStore = useNavSidebarStore();
 const label = computed(() =>
   navSidebarStore.expanded ? 'nav.collapseSidebar' : 'nav.expandSidebar',
@@ -6,13 +8,14 @@ const label = computed(() =>
 </script>
 
 <template>
-  <button
-    type="button"
-    class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden"
+  <Button
+    variant="ghost"
+    size="icon"
+    class="text-icon"
     :title="$t(label)"
     :aria-label="$t(label)"
     @click="navSidebarStore.toggleExpanded()"
   >
     <Icon name="hugeicons:sidebar-left" class="size-4" />
-  </button>
+  </Button>
 </template>

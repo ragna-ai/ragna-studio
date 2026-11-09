@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Trash2Icon } from '@lucide/vue';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import {
   useMoveTask,
@@ -288,9 +287,9 @@ function commitCustomDays() {
     <Button
       variant="outline"
       class="hover:text-destructive"
+      leading-icon="hugeicons:delete-02"
       @click="emit('delete')"
     >
-      <Trash2Icon class="mr-2 size-4 stroke-1.5" />
       {{ t('task.property.delete') }}
     </Button>
   </aside>

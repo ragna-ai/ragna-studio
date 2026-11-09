@@ -8,7 +8,9 @@ import { PlusIcon } from '@lucide/vue';
 // Props
 const props = withDefaults(
   defineProps<{ placeholder: string; pending?: boolean }>(),
-  { pending: false },
+  {
+    pending: false,
+  },
 );
 
 // Emits

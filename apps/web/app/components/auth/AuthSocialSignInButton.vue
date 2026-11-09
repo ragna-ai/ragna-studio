@@ -2,7 +2,6 @@
 // Imports
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { LoaderCircleIcon } from '@lucide/vue';
 
 // Props
 interface SocialSignInButtonProps {
@@ -26,10 +25,12 @@ const emit = defineEmits<{ click: [] }>();
       variant="outline"
       class="w-full"
       :disabled="disabled"
+      :loading="loading"
       @click="emit('click')"
     >
-      <Icon v-if="!loading" :name="icon" class="h-4 w-4" />
-      <LoaderCircleIcon v-else class="h-4 w-4 animate-spin" />
+      <template #leading>
+        <Icon :name="icon" class="size-4" />
+      </template>
       {{ label }}
     </Button>
     <Badge v-if="lastUsed" variant="secondary" class="absolute -top-2 -right-2">

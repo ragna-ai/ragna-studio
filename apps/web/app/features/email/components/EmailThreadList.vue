@@ -207,12 +207,12 @@ function draftFor(thread: EmailThreadSummary): EmailDraft | null {
       />
       <div v-if="props.hasNextPage" class="flex justify-center py-4">
         <Button
+          :loading="props.isFetchingNextPage"
           variant="outline"
           size="sm"
           :disabled="props.isFetchingNextPage"
           @click="emit('loadMore')"
         >
-          <Spinner v-if="props.isFetchingNextPage" class="mr-2" />
           {{ t('email.thread.loadMore') }}
         </Button>
       </div>

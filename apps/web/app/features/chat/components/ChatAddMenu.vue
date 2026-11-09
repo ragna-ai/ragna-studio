@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,14 +19,15 @@ const { t } = useI18n();
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         :title="t('chat.input.menu')"
         :aria-label="t('chat.input.menu')"
-        class="flex size-8 shrink-0 items-center justify-center rounded-md text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden data-[state=open]:bg-surface-subtle"
+        class="text-icon"
       >
         <Icon name="hugeicons:plus-sign" class="size-4" />
-      </button>
+      </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent
       side="top"

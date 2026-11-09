@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownloadIcon, SaveCheckIcon, SavePenIcon } from '@lucide/vue';
+import { SaveCheckIcon, SavePenIcon } from '@lucide/vue';
 import RichTextEditor from '~/components/editor/RichTextEditor.vue';
 import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
 import {
@@ -104,10 +104,14 @@ onBeforeUnmount(() => {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="sm" :disabled="isExporting">
-                <Spinner v-if="isExporting" class="mr-2" />
-                <DownloadIcon v-else class="size-4 stroke-1.5" />
-              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                leading-icon="hugeicons:download-01"
+                :aria-label="t('document.editor.export.button')"
+                :disabled="isExporting"
+                :loading="isExporting"
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem @click="handleExport('md')">

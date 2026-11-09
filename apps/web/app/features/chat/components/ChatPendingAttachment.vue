@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // Imports
+import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
 import {
@@ -61,25 +62,27 @@ function onRemove() {
     </span>
 
     <Spinner v-if="item.status === 'uploading'" class="size-4 shrink-0" />
-    <button
+    <Button
       v-else-if="item.status === 'error'"
-      type="button"
-      class="flex size-6 shrink-0 items-center justify-center rounded-sm text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+      variant="ghost"
+      size="icon-xs"
+      class="text-icon"
       :title="t('chat.attachment.retry')"
       :aria-label="t('chat.attachment.retry')"
       @click="onRetry"
     >
       <Icon name="hugeicons:refresh" class="size-3.5" />
-    </button>
+    </Button>
 
-    <button
-      type="button"
-      class="flex size-6 shrink-0 items-center justify-center rounded-sm text-icon transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      class="text-icon"
       :title="t('chat.attachment.remove')"
       :aria-label="t('chat.attachment.remove')"
       @click="onRemove"
     >
       <Icon name="hugeicons:cancel-01" class="size-3.5" />
-    </button>
+    </Button>
   </div>
 </template>

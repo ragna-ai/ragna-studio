@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { TagIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import ViewSwitcher from '~/components/ViewSwitcher.vue';
 import TaskBoard from '~/features/task/components/TaskBoard.vue';
@@ -54,15 +53,15 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
             <template #button>
               <div class="flex gap-2">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   :disabled="!activeWorkspaceId"
+                  leading-icon="hugeicons:tag-01"
                   @click="isLabelManageOpen = true"
                 >
-                  <TagIcon class="mr-2 size-4 stroke-1.5" />
                   {{ t('task.label.manageTitle') }}
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   :disabled="!activeWorkspaceId"
                   @click="isCreateDialogOpen = true"
                 >

@@ -50,7 +50,7 @@ async function handleDeletePost(postId: string) {
             :subtitle="t('social.list.subtitle')"
           >
             <template #button>
-              <Button variant="secondary" as-child>
+              <Button variant="outline" as-child>
                 <NuxtLinkLocale to="/social/create">
                   {{ t('social.list.newPost') }}
                 </NuxtLinkLocale>

@@ -17,7 +17,7 @@ const { t } = useI18n();
         <Button
           as-child
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           :aria-label="t('chat.search.title')"
         >
           <NuxtLinkLocale to="/chat/search">

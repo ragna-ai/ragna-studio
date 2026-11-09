@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -60,25 +61,20 @@ function onCloseAutoFocus(event: Event) {
   </div>
   <Popover v-else v-model:open="isOpen">
     <PopoverTrigger as-child>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         role="combobox"
+        trailing-icon="hugeicons:arrow-down-01"
         :aria-expanded="isOpen"
-        class="flex h-8 max-w-64 items-center gap-1.5 rounded-md px-2 transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden data-[state=open]:bg-surface-subtle"
+        class="max-w-64 px-2"
       >
-        <AgentMark
-          v-if="selectedAgent"
-          :agent-id="selectedAgent.id"
-          :size="20"
-        />
+        <template v-if="selectedAgent" #leading>
+          <AgentMark :agent-id="selectedAgent.id" :size="20" />
+        </template>
         <span class="truncate text-small font-medium">
           {{ selectedAgent?.name ?? t('chat.agentSelect.placeholder') }}
         </span>
-        <Icon
-          name="hugeicons:arrow-down-01"
-          class="size-3.5 shrink-0 text-icon"
-        />
-      </button>
+      </Button>
     </PopoverTrigger>
     <!-- 17 = toolbar padding and composer border below the button, so the popover clears the composer -->
     <PopoverContent

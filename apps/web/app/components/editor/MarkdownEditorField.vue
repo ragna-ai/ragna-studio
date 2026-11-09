@@ -115,7 +115,7 @@ watch([model, controller.editor], ([value, editor]) => {
         :model-value="model"
         :aria-labelledby="ariaLabelledby"
         :aria-invalid="invalid || undefined"
-        class="min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+        class="min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
         @update:model-value="updateFromRaw"
       />
     </div>

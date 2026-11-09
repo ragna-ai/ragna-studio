@@ -202,7 +202,10 @@ export function useBranchChatAndNavigate() {
     mutationFn: ({ chatId, messageId }) =>
       $api<ChatResponse>(
         `/workspace/${toValue(workspaceId)}/chat/${chatId}/branch`,
-        { method: 'POST', body: { messageId } },
+        {
+          method: 'POST',
+          body: { messageId },
+        },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.all(workspaceId) });
@@ -309,7 +312,10 @@ export function useUploadChatAttachments() {
       files.forEach((file) => formData.append('files', file));
       return $api<UploadChatAttachmentsResponse>(
         attachmentsBasePath(workspaceId, chatId),
-        { method: 'POST', body: formData },
+        {
+          method: 'POST',
+          body: formData,
+        },
       );
     },
   });
@@ -329,7 +335,9 @@ export function useDeleteChatAttachment() {
     mutationFn: ({ chatId, attachmentId }) =>
       $api<void>(
         `${attachmentsBasePath(workspaceId, chatId)}/${attachmentId}`,
-        { method: 'DELETE' },
+        {
+          method: 'DELETE',
+        },
       ),
   });
 }

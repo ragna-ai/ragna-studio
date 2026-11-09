@@ -58,8 +58,11 @@ watch(
       />
     </div>
     <div class="flex justify-end">
-      <Button :disabled="isLoading || isSaving" @click="handleSave">
-        <Spinner v-if="isSaving" class="mr-2" />
+      <Button
+        :disabled="isLoading || isSaving"
+        :loading="isSaving"
+        @click="handleSave"
+      >
         {{ $t('common.save') }}
       </Button>
     </div>

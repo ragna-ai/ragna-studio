@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Columns3Icon, DownloadIcon, SettingsIcon } from '@lucide/vue';
 import DatasetDetail from '~/features/dataset/components/DatasetDetail.vue';
 import {
   useExportDataset,
@@ -87,13 +86,12 @@ function handleExport(format: DatasetExportFormat) {
             <DropdownMenuTrigger as-child>
               <Button
                 variant="outline"
-                size="sm"
+                size="icon-sm"
                 :disabled="!datasetData?.dataset || isExporting"
                 :aria-label="t('dataset.detail.export.button')"
-              >
-                <Spinner v-if="isExporting" class="mr-2" />
-                <DownloadIcon v-else class="size-4 stroke-1.5" />
-              </Button>
+                :loading="isExporting"
+                leading-icon="hugeicons:download-01"
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem @click="handleExport('csv')">
@@ -114,20 +112,19 @@ function handleExport(format: DatasetExportFormat) {
             variant="outline"
             size="sm"
             :disabled="!datasetData?.dataset"
+            leading-icon="hugeicons:table-columns-split"
             @click="isColumnManagerOpen = !isColumnManagerOpen"
           >
-            <Columns3Icon class="mr-2 size-4 stroke-1.5" />
             {{ t('dataset.detail.manageColumns') }}
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon-sm"
             :aria-label="t('dataset.detail.settings')"
             :disabled="!datasetData?.dataset"
+            leading-icon="hugeicons:settings-01"
             @click="isSettingsOpen = !isSettingsOpen"
-          >
-            <SettingsIcon class="size-4 stroke-1.5" />
-          </Button>
+          />
         </div>
       </header>
 

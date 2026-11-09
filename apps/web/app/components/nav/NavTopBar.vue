@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
+
 defineProps<{ crumbs?: PageCrumb[]; hideSidebarToggle?: boolean }>();
 </script>
 
@@ -25,22 +27,24 @@ defineProps<{ crumbs?: PageCrumb[]; hideSidebarToggle?: boolean }>();
     </div>
     <div class="ml-auto flex shrink-0 items-center gap-2">
       <slot name="right">
-        <button
-          type="button"
-          class="flex size-8 items-center justify-center rounded-md text-icon"
+        <Button
+          variant="ghost"
+          size="icon"
+          class="text-icon"
           aria-disabled="true"
           :aria-label="$t('nav.topBar.favorite')"
         >
           <Icon name="hugeicons:star" class="size-4" />
-        </button>
-        <button
-          type="button"
-          class="flex size-8 items-center justify-center rounded-md text-icon"
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          class="text-icon"
           aria-disabled="true"
           :aria-label="$t('nav.topBar.moreActions')"
         >
           <Icon name="hugeicons:more-horizontal" class="size-4" />
-        </button>
+        </Button>
       </slot>
     </div>
   </header>

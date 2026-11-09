@@ -155,13 +155,12 @@ const form = useForm({
           </form.Field>
 
           <div class="flex justify-end gap-4">
-            <Button as-child variant="secondary">
+            <Button as-child variant="outline">
               <NuxtLinkLocale to="/dataset">{{
                 t('common.cancel')
               }}</NuxtLinkLocale>
             </Button>
-            <Button type="submit" :disabled="isPending">
-              <Spinner v-if="isPending" class="mr-2" />
+            <Button type="submit" :disabled="isPending" :loading="isPending">
               {{ t('common.create') }}
             </Button>
           </div>

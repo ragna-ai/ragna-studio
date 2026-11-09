@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { FolderPlusIcon } from '@lucide/vue';
 import { storeToRefs } from 'pinia';
 import { toast } from 'vue-sonner';
 import DocumentCreateDialog from '~/features/document/components/DocumentCreateDialog.vue';
@@ -131,15 +130,15 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
             <template #button>
               <div class="flex gap-2">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   :disabled="!activeWorkspaceId"
+                  leading-icon="hugeicons:folder-add"
                   @click="isCreateFolderOpen = true"
                 >
-                  <FolderPlusIcon class="mr-2 size-4 stroke-1.5" />
                   {{ t('folder.newFolder') }}
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   :disabled="!activeWorkspaceId"
                   @click="isCreateDialogOpen = true"
                 >
@@ -164,7 +163,7 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
           <p class="text-sm text-muted-foreground">
             {{ t('folder.notFound.message') }}
           </p>
-          <Button variant="secondary" as-child>
+          <Button variant="outline" as-child>
             <NuxtLinkLocale to="/document">
               {{ t('folder.notFound.back') }}
             </NuxtLinkLocale>
@@ -184,12 +183,12 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
               }}
             </p>
             <div class="flex gap-2">
-              <Button variant="secondary" @click="isCreateDialogOpen = true">
+              <Button variant="outline" @click="isCreateDialogOpen = true">
                 {{ t('document.list.newDocument') }}
               </Button>
               <Button
                 v-if="!openFolderId"
-                variant="secondary"
+                variant="outline"
                 @click="isCreateFolderOpen = true"
               >
                 {{ t('folder.newFolder') }}

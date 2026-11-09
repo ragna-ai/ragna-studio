@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import { useSidePanelStore } from '~/stores/sidepanel.store';
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import ChatAgentChip from '~/features/chat/components/ChatAgentChip.vue';
@@ -79,14 +80,15 @@ onScopeDispose(() => chatStore.setChat());
             :name="chatAgent.name"
             :model-name="chatAgent.aiModel.displayName"
           />
-          <button
-            type="button"
-            class="flex size-8 items-center justify-center rounded-md text-icon"
+          <Button
+            variant="ghost"
+            size="icon"
+            class="text-icon"
             aria-disabled="true"
             :aria-label="$t('nav.topBar.moreActions')"
           >
             <Icon name="hugeicons:more-horizontal" class="size-4" />
-          </button>
+          </Button>
         </template>
       </NavTopBar>
     </template>

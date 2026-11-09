@@ -1,12 +1,6 @@
 <script setup lang="ts">
 // Imports
-import {
-  CheckIcon,
-  CopyIcon,
-  DownloadIcon,
-  SparklesIcon,
-  Trash2Icon,
-} from '@lucide/vue';
+import { CheckIcon, CopyIcon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { toast } from 'vue-sonner';
 import { downloadFileFromUrl } from '~/lib/file-export';
@@ -178,13 +172,13 @@ async function deleteVideo() {
                 <TooltipTrigger as-child>
                   <span>
                     <Button
+                      :loading="isEnhancing"
+                      leading-icon="hugeicons:sparkles"
                       class="w-full"
-                      variant="secondary"
+                      variant="outline"
                       :disabled="isEnhanceDisabled"
                       @click="handleEnhance"
                     >
-                      <Spinner v-if="isEnhancing" class="mr-2" />
-                      <SparklesIcon v-else class="mr-2 size-4" />
                       {{ $t('videogen.grid.enhance') }}
                     </Button>
                   </span>
@@ -196,21 +190,21 @@ async function deleteVideo() {
             </TooltipProvider>
 
             <Button
+              :loading="isDownloading"
+              leading-icon="hugeicons:download-01"
               :disabled="isDownloading || !video?.videoUrl"
               @click="downloadVideo"
             >
-              <Spinner v-if="isDownloading" class="mr-2" />
-              <DownloadIcon v-else class="mr-2 size-4" />
               {{ $t('videogen.preview.download') }}
             </Button>
             <Button
+              :loading="isDeleting"
+              leading-icon="hugeicons:delete-02"
               variant="outline"
               class="hover:text-destructive"
               :disabled="isDeleting"
               @click="deleteVideo"
             >
-              <Spinner v-if="isDeleting" class="mr-2" />
-              <Trash2Icon v-else class="mr-2 size-4 stroke-1.5" />
               {{ $t('videogen.preview.delete') }}
             </Button>
           </div>

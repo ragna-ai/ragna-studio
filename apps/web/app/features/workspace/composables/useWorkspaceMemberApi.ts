@@ -30,7 +30,10 @@ export function useGetWorkspaceMembers(workspaceId: MaybeRefOrGetter<string>) {
       (
         await $api<WorkspaceMembersResponse>(
           `/workspace/${toValue(workspaceId)}/members`,
-          { method: 'GET', signal },
+          {
+            method: 'GET',
+            signal,
+          },
         )
       ).members,
   });

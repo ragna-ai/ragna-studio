@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 // Imports
 import {
   Tooltip,
@@ -156,14 +157,15 @@ function handleClearAllClick() {
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="flex size-7 items-center justify-center rounded-md text-icon outline-hidden hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-icon"
                   :aria-label="t('notification.markAllRead')"
                   @click="handleMarkAllReadClick"
                 >
                   <Icon name="hugeicons:tick-double-02" class="size-4" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>{{
                 t('notification.markAllRead')
@@ -171,14 +173,15 @@ function handleClearAllClick() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="flex size-7 items-center justify-center rounded-md text-icon outline-hidden hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-icon"
                   :aria-label="t('notification.clearAll')"
                   @click="handleClearAllClick"
                 >
                   <Icon name="hugeicons:delete-02" class="size-4" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>{{ t('notification.clearAll') }}</TooltipContent>
             </Tooltip>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { UnplugIcon } from '@lucide/vue';
 import { clientHost } from '~/features/mcp/lib/oauth-client';
 import type { McpConnection } from '~/features/mcp/types';
 
@@ -65,11 +64,11 @@ function displayName(connection: McpConnection): string {
         </TableCell>
         <TableCell class="text-right">
           <Button
+            leading-icon="hugeicons:unplug"
             variant="outline"
             size="sm"
             @click="emit('revoke', connection.id)"
           >
-            <UnplugIcon class="size-4 stroke-1.5" />
             {{ t('mcp.settings.connections.revoke') }}
           </Button>
         </TableCell>

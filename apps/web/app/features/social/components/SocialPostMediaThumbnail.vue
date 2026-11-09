@@ -70,7 +70,7 @@ watch(
           <Button
             type="button"
             size="icon"
-            variant="secondary"
+            variant="outline"
             class="size-6"
             :title="t('social.media.editAltText')"
           >

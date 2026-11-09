@@ -145,7 +145,7 @@ async function deny() {
         <p class="mt-2 text-sm text-muted-foreground">
           {{ t('mcp.consent.disabled.message') }}
         </p>
-        <Button as-child variant="secondary" class="mt-6">
+        <Button as-child variant="outline" class="mt-6">
           <NuxtLink to="/settings/mcp">
             {{ t('mcp.consent.disabled.settingsLink') }}
           </NuxtLink>
