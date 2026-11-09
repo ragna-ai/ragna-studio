@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import { TriangleAlertIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Spinner } from '~/components/ui/spinner';
@@ -43,13 +42,11 @@ function quickCreate(templateId: string) {
 <template>
   <div class="w-full max-w-md space-y-5 text-center">
     <div class="space-y-1">
-      <div
-        class="flex flex-col items-center gap-2 text-amber-600 dark:text-amber-400"
-      >
-        <TriangleAlertIcon class="size-6" />
-        <p class="text-base font-medium">{{ t('chat.noAgent.title') }}</p>
+      <div class="flex flex-col items-center gap-2 text-status-warn-fg">
+        <Icon name="hugeicons:alert-02" class="size-6" />
+        <p class="text-body-lg font-medium">{{ t('chat.noAgent.title') }}</p>
       </div>
-      <p class="text-sm text-muted-foreground">
+      <p class="text-body text-muted-foreground">
         {{ t('chat.noAgent.description') }}
       </p>
     </div>
@@ -57,7 +54,7 @@ function quickCreate(templateId: string) {
       <NuxtLink to="/agent/create">{{ t('chat.noAgent.create') }}</NuxtLink>
     </Button>
     <template v-if="templates.length > 0">
-      <div class="flex items-center gap-3 text-xs text-muted-foreground">
+      <div class="flex items-center gap-3 text-caption text-muted-foreground">
         <Separator class="flex-1" />
         <span>{{ t('chat.noAgent.templateDivider') }}</span>
         <Separator class="flex-1" />
@@ -66,11 +63,11 @@ function quickCreate(templateId: string) {
         <li
           v-for="template in templates"
           :key="template.id"
-          class="flex items-center gap-3 rounded-lg border bg-card p-3"
+          class="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-xs"
         >
           <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium">{{ template.name }}</p>
-            <p class="line-clamp-2 text-xs text-muted-foreground">
+            <p class="truncate text-body font-medium">{{ template.name }}</p>
+            <p class="line-clamp-2 text-small text-muted-foreground">
               {{ template.description }}
             </p>
           </div>

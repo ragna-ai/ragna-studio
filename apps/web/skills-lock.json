@@ -19,6 +19,12 @@
       "skillPath": "skills/pinia/SKILL.md",
       "computedHash": "b02c9f6c2e1ec051be0ca5025804d8262815221fd7f5020734b5a9ad87f15617"
     },
+    "shadcn-vue": {
+      "source": "unovue/shadcn-vue",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn-vue/SKILL.md",
+      "computedHash": "8f889bee4622048473cab8272b5bbcdf3e0e83929afb1b444adf572fa9c252a3"
+    },
     "tailwind-v4": {
       "source": "mastra-ai/mastra",
       "sourceType": "github",

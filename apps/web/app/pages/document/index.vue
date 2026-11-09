@@ -65,7 +65,7 @@ const isFolderNotFound = computed(
 const isListEmpty = computed(
   () => documents.value.length === 0 && folderRows.value.length === 0,
 );
-usePageBreadcrumb(() =>
+const crumbs = computed<PageCrumb[]>(() =>
   openFolderId.value
     ? [
         { label: t('document.list.title'), to: '/document' },
@@ -120,112 +120,114 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('document.list.title')"
-          :subtitle="t('document.list.subtitle')"
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('document.list.title')"
+            :subtitle="t('document.list.subtitle')"
+          >
+            <template #button>
+              <div class="flex gap-2">
+                <Button
+                  variant="secondary"
+                  :disabled="!activeWorkspaceId"
+                  @click="isCreateFolderOpen = true"
+                >
+                  <FolderPlusIcon class="mr-2 size-4 stroke-1.5" />
+                  {{ t('folder.newFolder') }}
+                </Button>
+                <Button
+                  variant="secondary"
+                  :disabled="!activeWorkspaceId"
+                  @click="isCreateDialogOpen = true"
+                >
+                  {{ t('document.list.newDocument') }}
+                </Button>
+              </div>
+            </template>
+          </HeadingTitle>
+        </template>
+        <template #bottom> </template>
+      </Heading>
+
+      <div class="space-y-4 px-5">
+        <div
+          v-if="!activeWorkspaceId"
+          class="rounded-lg border p-6 text-sm text-muted-foreground"
         >
-          <template #button>
+          {{ t('document.list.loading') }}
+        </div>
+
+        <div v-else-if="isFolderNotFound" class="space-y-3">
+          <p class="text-sm text-muted-foreground">
+            {{ t('folder.notFound.message') }}
+          </p>
+          <Button variant="secondary" as-child>
+            <NuxtLinkLocale to="/document">
+              {{ t('folder.notFound.back') }}
+            </NuxtLinkLocale>
+          </Button>
+        </div>
+
+        <template v-else-if="documentsData">
+          <div
+            v-if="isListEmpty"
+            class="space-y-3 rounded-lg border p-6 text-sm text-muted-foreground"
+          >
+            <p>
+              {{
+                openFolderId
+                  ? t('folder.emptyFolder')
+                  : t('document.list.emptyWorkspace')
+              }}
+            </p>
             <div class="flex gap-2">
-              <Button
-                variant="secondary"
-                :disabled="!activeWorkspaceId"
-                @click="isCreateFolderOpen = true"
-              >
-                <FolderPlusIcon class="mr-2 size-4 stroke-1.5" />
-                {{ t('folder.newFolder') }}
-              </Button>
-              <Button
-                variant="secondary"
-                :disabled="!activeWorkspaceId"
-                @click="isCreateDialogOpen = true"
-              >
+              <Button variant="secondary" @click="isCreateDialogOpen = true">
                 {{ t('document.list.newDocument') }}
               </Button>
+              <Button
+                v-if="!openFolderId"
+                variant="secondary"
+                @click="isCreateFolderOpen = true"
+              >
+                {{ t('folder.newFolder') }}
+              </Button>
             </div>
-          </template>
-        </HeadingTitle>
-      </template>
-      <template #bottom> </template>
-    </Heading>
-
-    <div class="space-y-4 px-5">
-      <div
-        v-if="!activeWorkspaceId"
-        class="rounded-lg border p-6 text-sm text-muted-foreground"
-      >
-        {{ t('document.list.loading') }}
-      </div>
-
-      <div v-else-if="isFolderNotFound" class="space-y-3">
-        <p class="text-sm text-muted-foreground">
-          {{ t('folder.notFound.message') }}
-        </p>
-        <Button variant="secondary" as-child>
-          <NuxtLinkLocale to="/document">
-            {{ t('folder.notFound.back') }}
-          </NuxtLinkLocale>
-        </Button>
-      </div>
-
-      <template v-else-if="documentsData">
-        <div
-          v-if="isListEmpty"
-          class="space-y-3 rounded-lg border p-6 text-sm text-muted-foreground"
-        >
-          <p>
-            {{
-              openFolderId
-                ? t('folder.emptyFolder')
-                : t('document.list.emptyWorkspace')
-            }}
-          </p>
-          <div class="flex gap-2">
-            <Button variant="secondary" @click="isCreateDialogOpen = true">
-              {{ t('document.list.newDocument') }}
-            </Button>
-            <Button
-              v-if="!openFolderId"
-              variant="secondary"
-              @click="isCreateFolderOpen = true"
-            >
-              {{ t('folder.newFolder') }}
-            </Button>
           </div>
+          <DocumentTable
+            v-else
+            :documents="documents"
+            :folder-rows="folderRows"
+            :move-targets="folders"
+            @open-folder="openFolder"
+            @rename-folder="startRenameFolder"
+            @delete-folder="handleDeleteFolder"
+            @delete-document="handleDeleteDocument"
+            @move-document="handleMoveDocument"
+          />
+        </template>
+
+        <div v-else-if="documentsError">
+          <p class="text-sm text-stone-500">
+            {{ documentsError.message || t('document.list.loadError') }}
+          </p>
         </div>
-        <DocumentTable
-          v-else
-          :documents="documents"
-          :folder-rows="folderRows"
-          :move-targets="folders"
-          @open-folder="openFolder"
-          @rename-folder="startRenameFolder"
-          @delete-folder="handleDeleteFolder"
-          @delete-document="handleDeleteDocument"
-          @move-document="handleMoveDocument"
+      </div>
+
+      <template v-if="activeWorkspaceId">
+        <DocumentCreateDialog
+          v-model:open="isCreateDialogOpen"
+          :folders="folders"
+          :folder-id="openFolderId"
+        />
+        <FolderNameDialog v-model:open="isCreateFolderOpen" />
+        <FolderNameDialog
+          v-model:open="isRenameFolderOpen"
+          :folder="folderToRename ?? undefined"
         />
       </template>
-
-      <div v-else-if="documentsError">
-        <p class="text-sm text-stone-500">
-          {{ documentsError.message || t('document.list.loadError') }}
-        </p>
-      </div>
-    </div>
-
-    <template v-if="activeWorkspaceId">
-      <DocumentCreateDialog
-        v-model:open="isCreateDialogOpen"
-        :folders="folders"
-        :folder-id="openFolderId"
-      />
-      <FolderNameDialog v-model:open="isCreateFolderOpen" />
-      <FolderNameDialog
-        v-model:open="isRenameFolderOpen"
-        :folder="folderToRename ?? undefined"
-      />
-    </template>
-  </SectionWrapper>
+    </SectionWrapper>
+  </PagePanel>
 </template>

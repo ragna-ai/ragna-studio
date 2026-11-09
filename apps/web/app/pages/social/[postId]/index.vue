@@ -22,7 +22,7 @@ useHead({
 });
 
 // Computed
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('social.list.title'), to: '/social' },
   { label: t('social.editor.title') },
 ]);
@@ -32,24 +32,29 @@ usePageBreadcrumb(() => [
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('social.editor.title')"
-          :subtitle="t('social.editor.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div class="px-5 pb-10">
-      <SocialPostUpsertForm v-if="post" :key="post.id" :post="post" />
-      <p v-else-if="isError" class="py-12 text-center text-sm text-destructive">
-        {{ t('social.loadError') }}
-      </p>
-      <p v-else class="py-12 text-center text-sm text-muted-foreground">
-        {{ t('social.editor.notFound') }}
-      </p>
-    </div>
-  </SectionWrapper>
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('social.editor.title')"
+            :subtitle="t('social.editor.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div class="px-5 pb-10">
+        <SocialPostUpsertForm v-if="post" :key="post.id" :post="post" />
+        <p
+          v-else-if="isError"
+          class="py-12 text-center text-sm text-destructive"
+        >
+          {{ t('social.loadError') }}
+        </p>
+        <p v-else class="py-12 text-center text-sm text-muted-foreground">
+          {{ t('social.editor.notFound') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

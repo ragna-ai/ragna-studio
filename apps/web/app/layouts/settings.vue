@@ -17,7 +17,7 @@ const { navGroups } = useSettingsNavItems();
         :role="organization.role"
         :deleted-at="organization.deletedAt"
       />
-      <div v-else class="flex h-screen overflow-hidden p-(--shell-inset) pl-0">
+      <div v-else class="flex h-screen overflow-hidden p-shell pl-0">
         <SidebarShell>
           <template #header>
             <SettingsBackLink />
@@ -40,7 +40,7 @@ const { navGroups } = useSettingsNavItems();
           </nav>
         </SidebarShell>
         <div
-          class="box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs max-xl:[--page-x:2rem]"
+          class="box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
         >
           <main
             id="main"

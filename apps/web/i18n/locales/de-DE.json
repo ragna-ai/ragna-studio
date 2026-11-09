@@ -431,18 +431,26 @@
       "approve": "Genehmigen",
       "deny": "Ablehnen",
       "denied": "Abgelehnt. In deinem Drive wurde nichts geändert.",
-      "openFile": "{name} in Google Drive öffnen"
+      "openFile": "{name} in Google Drive öffnen",
+      "hint": "Es wird nichts gespeichert, bevor du genehmigst.",
+      "saved": "Gespeichert"
+    },
+    "toolStatus": {
+      "input-streaming": "Ausstehend",
+      "input-available": "Läuft",
+      "approval-requested": "Wartet auf deine Genehmigung",
+      "approval-responded": "Beantwortet",
+      "output-available": "Fertig",
+      "output-error": "Fehlgeschlagen",
+      "output-denied": "Abgelehnt"
     },
     "new": {
       "title": "Chat"
     },
-    "create": {
-      "label": "Neuer Chat"
-    },
+    "newChat": "Neuer Chat",
     "conversation": {
       "title": "Chat",
       "subtitle": "Unterhalte dich mit deinem KI-Agenten.",
-      "disclaimer": "KI-Agenten können Fehler machen.",
       "errors": {
         "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
       }
@@ -451,13 +459,16 @@
       "morning": "Guten Morgen",
       "afternoon": "Guten Tag",
       "evening": "Guten Abend",
-      "withName": "{greeting}, {name}! Wie kann ich dir helfen?",
-      "withoutName": "{greeting}! Wie kann ich dir helfen?"
+      "greetingWithName": "{greeting}, {name}",
+      "subtitle": "Was kann ein Agent dir heute abnehmen?"
     },
     "input": {
       "placeholder": "Wie kann ich dir helfen?",
       "menu": "Hinzufügen",
       "attach": "Dateien hinzufügen",
+      "attachHint": "PDF, Bilder, Office-Dokumente",
+      "askAgent": "{agent} fragen",
+      "replyToAgent": "Antwort an {agent}",
       "errors": {
         "unsupportedType": "„{name}“ ist kein unterstützter Dateityp.",
         "tooLarge": "„{name}“ ist größer als 10 MB."
@@ -469,6 +480,12 @@
       "create": "Eigenen Agenten erstellen",
       "templateDivider": "oder mit Vorlage starten",
       "useTemplate": "Nutzen"
+    },
+    "tools": {
+      "title": "Tools von {agent}",
+      "titleFallback": "Tools dieses Agenten",
+      "count": "{n} Tool · im Agenten festgelegt | {n} Tools · im Agenten festgelegt",
+      "edit": "In den Agenteneinstellungen bearbeiten"
     },
     "agentSelect": {
       "placeholder": "Agent auswählen",
@@ -484,7 +501,6 @@
       "remove": "Anhang entfernen"
     },
     "message": {
-      "actions": "Nachrichtenaktionen",
       "branch": "Ab hier verzweigen",
       "copy": "Text kopieren",
       "copied": "In die Zwischenablage kopiert",
@@ -496,15 +512,22 @@
       "title": "Letzte Chats",
       "hide": "Ausblenden",
       "show": "Einblenden",
-      "viewAll": "Alle anzeigen"
+      "viewAll": "Alle Chats"
     },
     "history": {
+      "button": "Verlauf",
       "title": "Chat-Verlauf",
       "subtitle": "Verlauf deiner Unterhaltungen.",
-      "toggle": "Chatverlauf ein-/ausblenden",
-      "groupBy": "Gruppierung ändern",
-      "openAll": "Gesamten Chat-Verlauf öffnen",
-      "close": "Schließen",
+      "paneTitle": "Chats",
+      "search": "Chats durchsuchen",
+      "newChat": "Neuer Chat",
+      "collapse": "Chat-Liste ausblenden",
+      "groups": {
+        "today": "Heute",
+        "yesterday": "Gestern",
+        "thisWeek": "Diese Woche",
+        "earlier": "Früher"
+      },
       "empty": "Noch keine Chats",
       "rename": "Chat umbenennen",
       "titleRequired": "Titel ist erforderlich.",
@@ -613,14 +636,14 @@
       },
       "time": "Uhrzeit",
       "weekday": {
-        "label": "Wochentag",
         "0": "Sonntag",
         "1": "Montag",
         "2": "Dienstag",
         "3": "Mittwoch",
         "4": "Donnerstag",
         "5": "Freitag",
-        "6": "Samstag"
+        "6": "Samstag",
+        "label": "Wochentag"
       },
       "cron": {
         "label": "Cron-Ausdruck",

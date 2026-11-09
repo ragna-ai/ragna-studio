@@ -1,31 +1,32 @@
 <script setup lang="ts">
 // Imports
 import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
-import { PaperclipIcon, PlusIcon } from '@lucide/vue';
 import type { ChatStatus } from 'ai';
-import { Button } from '~/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/lib/utils';
+import ChatAddMenu from '~/features/chat/components/ChatAddMenu.vue';
 import ChatPendingAttachment from '~/features/chat/components/ChatPendingAttachment.vue';
 import type { PendingAttachment } from '~/features/chat/composables/useChatAttachments';
 import { CHAT_ATTACHMENT_ACCEPT } from '~/features/chat/lib/attachment-mime';
 
+const SUBMIT_ICON: Record<ChatStatus, string> = {
+  ready: 'hugeicons:arrow-up-02',
+  submitted: 'hugeicons:loading-03',
+  streaming: 'hugeicons:stop',
+  error: 'hugeicons:cancel-01',
+};
+
 // Props
-interface Props {
+interface ChatInputProps {
   items: PendingAttachment[];
   status: ChatStatus;
   isBusy: boolean;
   isSendDisabled?: boolean;
   isEmpty?: boolean;
+  agentName?: string;
 }
 
-const props = defineProps<Props>();
+const props = defineProps<ChatInputProps>();
 
 // Emits
 const emit = defineEmits<{
@@ -65,7 +66,21 @@ const canSubmit = computed(
     !isUploading.value,
 );
 
+const placeholder = computed(() => {
+  if (!props.agentName) return t('chat.input.placeholder');
+  const key = props.isEmpty ? 'chat.input.askAgent' : 'chat.input.replyToAgent';
+  return t(key, { agent: props.agentName });
+});
+const submitIcon = computed(() => SUBMIT_ICON[props.status]);
+const submitIconClass = computed(() =>
+  props.status === 'submitted' ? 'size-4 animate-spin' : 'size-4',
+);
+
 // Functions
+function focus() {
+  containerRef.value?.querySelector('textarea')?.focus();
+}
+
 function onPaste(event: ClipboardEvent) {
   const files = Array.from(event.clipboardData?.files ?? []);
   if (files.length > 0) emit('files', files);
@@ -84,6 +99,8 @@ function onSubmit(event: Event) {
 }
 
 // Hooks
+defineExpose({ focus });
+
 onFilesPicked((fileList) => {
   if (fileList) emit('files', Array.from(fileList));
 });
@@ -95,62 +112,48 @@ onMounted(() => {
 
 <template>
   <form class="w-full" @submit.prevent="onSubmit">
-    <div v-if="items.length > 0" class="mb-2 flex flex-wrap gap-2">
-      <ChatPendingAttachment
-        v-for="item in items"
-        :key="item.id"
-        :item="item"
-        @retry="emit('retry', $event)"
-        @remove="emit('remove', $event)"
-      />
-    </div>
+    <div
+      ref="containerRef"
+      class="flex flex-col gap-2 rounded-xl border border-border-strong bg-background px-2.5 pt-4 pb-2.5 shadow-xs focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+    >
+      <div v-if="items.length > 0" class="flex flex-wrap gap-2">
+        <ChatPendingAttachment
+          v-for="item in items"
+          :key="item.id"
+          :item="item"
+          @retry="emit('retry', $event)"
+          @remove="emit('remove', $event)"
+        />
+      </div>
 
-    <div ref="containerRef" class="relative">
       <Textarea
         v-model="text"
-        :placeholder="t('chat.input.placeholder')"
+        :placeholder="placeholder"
         name="message"
         :class="
           cn(
-            'max-h-48 min-h-12 resize-none overflow-y-auto rounded-xl bg-stone-50 py-3 pr-14 shadow-inner!',
-            isEmpty && 'min-h-32',
+            'max-h-48 min-h-7 resize-none overflow-y-auto rounded-none border-0 bg-transparent px-1.5 py-0 text-chat shadow-none focus-visible:ring-0 md:text-chat dark:bg-transparent',
+            isEmpty && 'min-h-14',
           )
         "
         @keydown.enter.exact.prevent="onSubmit"
         @paste="onPaste"
       />
-      <div class="absolute right-2 bottom-2">
-        <PromptInputSubmit :status="status" :disabled="!isBusy && !canSubmit" />
-      </div>
-    </div>
 
-    <div class="mt-1 flex items-center gap-2 px-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            class="size-6"
-            :title="t('chat.input.menu')"
+      <div class="flex h-8 items-center gap-0.5">
+        <ChatAddMenu @add-files="openFilePicker()" />
+        <slot name="toolbar-start" />
+        <div class="ml-auto flex items-center gap-0.5">
+          <slot name="toolbar-end" />
+          <PromptInputSubmit
+            :status="status"
+            :disabled="!isBusy && !canSubmit"
+            class="ml-0.5 size-8 rounded-md"
           >
-            <PlusIcon class="size-4 stroke-1.5 opacity-75" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="top">
-          <DropdownMenuItem @select="openFilePicker()">
-            <PaperclipIcon />
-            {{ t('chat.input.attach') }}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <slot name="toolbar-start" />
-      <p
-        class="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground/75"
-      >
-        {{ t('chat.conversation.disclaimer') }}
-      </p>
-      <slot name="toolbar-end" />
+            <Icon :name="submitIcon" :class="submitIconClass" />
+          </PromptInputSubmit>
+        </div>
+      </div>
     </div>
   </form>
 </template>

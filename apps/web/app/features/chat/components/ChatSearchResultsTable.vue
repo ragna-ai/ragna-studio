@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { MessagesSquareIcon } from '@lucide/vue';
 import ChatSearchHighlightedText from '~/features/chat/components/ChatSearchHighlightedText.vue';
 import ChatSearchSnippetList from '~/features/chat/components/ChatSearchSnippetList.vue';
 import type { ChatSearchResult } from '~/features/chat/composables/useChatSearchApi';
@@ -51,10 +50,10 @@ const { t } = useI18n();
             :aria-label="result.title"
             class="absolute inset-0 z-10"
           />
-          <MessagesSquareIcon class="size-4 stroke-1.5" />
+          <Icon name="hugeicons:message-multiple-01" class="size-4 text-icon" />
         </TableCell>
         <TableCell>
-          <div class="text-sm font-semibold">
+          <div class="text-body font-medium">
             <ChatSearchHighlightedText :text="result.title" :query="query" />
           </div>
           <ChatSearchSnippetList

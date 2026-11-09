@@ -1,11 +1,4 @@
 <script setup lang="ts">
-import {
-  MessageCircleMoreIcon,
-  MessagesSquareIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  Trash2Icon,
-} from '@lucide/vue';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
 
 // Imports
@@ -61,10 +54,10 @@ const { t } = useI18n();
         @click="navigateTo(`/chat/${chat.id}`)"
       >
         <TableCell class="w-12">
-          <MessagesSquareIcon class="size-4 stroke-1.5" />
+          <Icon name="hugeicons:message-multiple-01" class="size-4 text-icon" />
         </TableCell>
         <TableCell>
-          <div class="text-sm font-semibold">
+          <div class="text-body font-medium">
             {{ chat.title }}
           </div>
         </TableCell>
@@ -84,7 +77,7 @@ const { t } = useI18n();
         >
           <Button as-child variant="outline" size="icon">
             <NuxtLinkLocale :to="`/chat/${chat.id}`">
-              <MessageCircleMoreIcon class="size-4 stroke-1.5 text-primary" />
+              <Icon name="hugeicons:message-01" class="size-4 text-icon" />
             </NuxtLinkLocale>
           </Button>
 
@@ -95,13 +88,13 @@ const { t } = useI18n();
                 size="icon"
                 :aria-label="t('common.actions')"
               >
-                <MoreVerticalIcon class="size-4 stroke-1.5" />
+                <Icon name="hugeicons:more-vertical" class="size-4 text-icon" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem as-child>
                 <NuxtLinkLocale :to="`/chat/${chat.id}`">
-                  <PencilIcon class="size-4 stroke-1.5" />
+                  <Icon name="hugeicons:pencil-edit-02" class="size-4" />
                   {{ t('common.edit') }}
                 </NuxtLinkLocale>
               </DropdownMenuItem>
@@ -110,7 +103,7 @@ const { t } = useI18n();
                 variant="destructive"
                 @click="() => emit('delete-chat', chat.id)"
               >
-                <Trash2Icon class="size-4 stroke-1.5" />
+                <Icon name="hugeicons:delete-02" class="size-4" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
             </DropdownMenuContent>

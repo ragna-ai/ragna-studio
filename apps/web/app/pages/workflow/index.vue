@@ -41,43 +41,45 @@ const handleDeleteWorkflow = async (workflowId: string) => {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('workflow.list.title')"
-          :subtitle="t('workflow.list.subtitle')"
-        >
-          <template #button>
-            <Button as-child variant="secondary">
-              <NuxtLinkLocale to="/workflow/create">
-                {{ t('workflow.list.newWorkflow') }}
-              </NuxtLinkLocale>
-            </Button>
-          </template>
-        </HeadingTitle>
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div v-if="data?.workflows" class="px-5">
-      <WorkflowManyTable
-        :workflows="data.workflows"
-        :meta="meta"
-        @delete-workflow="handleDeleteWorkflow"
-      />
-      <div class="pb-10">
-        <PaginateControls
-          v-if="meta.totalCount > 10"
-          v-model:page="page"
-          v-model:limit="limit"
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('workflow.list.title')"
+            :subtitle="t('workflow.list.subtitle')"
+          >
+            <template #button>
+              <Button as-child variant="secondary">
+                <NuxtLinkLocale to="/workflow/create">
+                  {{ t('workflow.list.newWorkflow') }}
+                </NuxtLinkLocale>
+              </Button>
+            </template>
+          </HeadingTitle>
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div v-if="data?.workflows" class="px-5">
+        <WorkflowManyTable
+          :workflows="data.workflows"
           :meta="meta"
+          @delete-workflow="handleDeleteWorkflow"
         />
+        <div class="pb-10">
+          <PaginateControls
+            v-if="meta.totalCount > 10"
+            v-model:page="page"
+            v-model:limit="limit"
+            :meta="meta"
+          />
+        </div>
       </div>
-    </div>
-    <div v-else-if="workflowsError">
-      <p class="text-sm text-stone-500">
-        {{ workflowsError.message || t('workflow.list.loadError') }}
-      </p>
-    </div>
-  </SectionWrapper>
+      <div v-else-if="workflowsError">
+        <p class="text-sm text-stone-500">
+          {{ workflowsError.message || t('workflow.list.loadError') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

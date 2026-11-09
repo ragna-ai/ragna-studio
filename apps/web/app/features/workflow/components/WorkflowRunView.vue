@@ -85,7 +85,7 @@ const isCancellable = computed(
   () => !!run.value && ACTIVE_STATUSES.has(run.value.status),
 );
 
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('workflow.list.title'), to: '/workflow' },
   {
     label: workflowData.value?.workflow.name ?? '…',
@@ -109,74 +109,76 @@ function countTraceToolCalls(
 </script>
 
 <template>
-  <div v-if="run" class="flex h-full flex-col">
-    <header class="flex flex-col gap-2 border-b px-4 py-3">
-      <div class="flex items-center justify-between">
-        <div class="min-w-0">
-          <h1 class="truncate text-sm font-semibold">
-            {{ t('workflow.run.breadcrumbLabel') }}
-          </h1>
-          <p class="text-xs text-muted-foreground">
-            {{ formatDateTime(run.createdAt) }}
-          </p>
+  <PagePanel :crumbs="crumbs">
+    <div v-if="run" class="flex h-full flex-col">
+      <header class="flex flex-col gap-2 border-b px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div class="min-w-0">
+            <h1 class="truncate text-sm font-semibold">
+              {{ t('workflow.run.breadcrumbLabel') }}
+            </h1>
+            <p class="text-xs text-muted-foreground">
+              {{ formatDateTime(run.createdAt) }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <WorkflowRunTriggerBadge :trigger="run.triggeredBy" />
+            <WorkflowRunStatusBadge :status="run.status" />
+            <Button
+              v-if="isCancellable"
+              variant="outline"
+              size="sm"
+              :disabled="isCancelling"
+              @click="cancelRun()"
+            >
+              {{ t('workflow.run.cancelRun') }}
+            </Button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <WorkflowRunTriggerBadge :trigger="run.triggeredBy" />
-          <WorkflowRunStatusBadge :status="run.status" />
-          <Button
-            v-if="isCancellable"
-            variant="outline"
-            size="sm"
-            :disabled="isCancelling"
-            @click="cancelRun()"
-          >
-            {{ t('workflow.run.cancelRun') }}
-          </Button>
+        <div
+          v-if="run.input || run.output || run.error"
+          class="grid gap-3 text-xs sm:grid-cols-3"
+        >
+          <div v-if="run.input" class="min-w-0">
+            <p class="font-medium text-muted-foreground">
+              {{ t('common.input') }}
+            </p>
+            <p class="truncate">{{ run.input }}</p>
+          </div>
+          <div v-if="run.error" class="min-w-0">
+            <p class="font-medium text-destructive">{{ t('common.error') }}</p>
+            <p class="truncate text-destructive">{{ run.error }}</p>
+          </div>
         </div>
-      </div>
-      <div
-        v-if="run.input || run.output || run.error"
-        class="grid gap-3 text-xs sm:grid-cols-3"
-      >
-        <div v-if="run.input" class="min-w-0">
-          <p class="font-medium text-muted-foreground">
-            {{ t('common.input') }}
-          </p>
-          <p class="truncate">{{ run.input }}</p>
-        </div>
-        <div v-if="run.error" class="min-w-0">
-          <p class="font-medium text-destructive">{{ t('common.error') }}</p>
-          <p class="truncate text-destructive">{{ run.error }}</p>
-        </div>
-      </div>
-    </header>
+      </header>
 
-    <WorkflowRunStepDialog
-      v-model:node-id="selectedNodeId"
-      :nodes="nodes"
-      :step-by-node-id="stepByNodeId"
-    />
+      <WorkflowRunStepDialog
+        v-model:node-id="selectedNodeId"
+        :nodes="nodes"
+        :step-by-node-id="stepByNodeId"
+      />
 
-    <div class="flex min-h-0 flex-1">
-      <div class="min-w-0 flex-1">
-        <WorkflowCanvas
-          v-model:nodes="nodes"
-          v-model:edges="edges"
-          readonly
-          @select-node="selectedNodeId = $event"
-        />
+      <div class="flex min-h-0 flex-1">
+        <div class="min-w-0 flex-1">
+          <WorkflowCanvas
+            v-model:nodes="nodes"
+            v-model:edges="edges"
+            readonly
+            @select-node="selectedNodeId = $event"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  <div
-    v-else-if="runError"
-    class="flex h-full w-full items-center justify-center"
-  >
-    <p class="text-sm text-stone-500">
-      {{ runError.message || t('workflow.run.loadError') }}
-    </p>
-  </div>
-  <div v-else class="flex h-full w-full items-center justify-center">
-    <Shimmer class="h-6 w-48">{{ t('workflow.run.loading') }}</Shimmer>
-  </div>
+    <div
+      v-else-if="runError"
+      class="flex h-full w-full items-center justify-center"
+    >
+      <p class="text-sm text-stone-500">
+        {{ runError.message || t('workflow.run.loadError') }}
+      </p>
+    </div>
+    <div v-else class="flex h-full w-full items-center justify-center">
+      <Shimmer class="h-6 w-48">{{ t('workflow.run.loading') }}</Shimmer>
+    </div>
+  </PagePanel>
 </template>

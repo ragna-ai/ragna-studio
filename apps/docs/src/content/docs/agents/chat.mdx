@@ -11,19 +11,21 @@ Chat is where a user works with an agent. Answers stream in as the agent writes 
 
 - Open **Chat** in the sidebar and pick an agent. RAGNA Studio preselects the last agent used, or the first agent in the list. Send stays off until an agent is selected.
 - Or choose **Chat** next to an agent in the **AI agents** list.
-- Or pick an agent tile on the home page.
+- Or choose an agent on the **Agents** card of the [dashboard](/getting-started/dashboard-and-navigation).
 
 A chat always needs an agent. Without agents, the message box stays visible but send is off. The middle of the page shows "You need an agent to start a chat". **Create your own agent** opens the agent form. Below "or start from a template", each template has a card with a **Use** button. **Use** creates the agent from that template in one click and selects it. See [Agents](/agents).
 
-While a chat is open, the top bar shows the agent's name. Use the plus button there to start another chat with the same agent.
+A new chat opens with a greeting that matches the time of day, such as "Good evening, Sven", and the line "What can an agent take off your plate today?". It uses the user's first name when RAGNA Studio knows it. The message box is taller until the first message is sent. The agent picker sits at the right of the message box. In a chat that is already open, the agent can't be changed.
 
-A new chat opens with a greeting that matches the time of day, such as "Good evening, Sven! What can I help you with?". It uses the user's first name when RAGNA Studio knows it. The message box is taller until the first message is sent.
+While a chat is open, the top bar shows the chat's title on the left and the agent with its model on the right.
 
-Below the message box, small round icons show the [tools](/agents/tools) of the selected agent. Hover an icon to see the tool name. Hover the row to spread the icons apart. Changing the agent changes the icons. They appear in new chats only, not in chats that are already open.
+The message box shows the [tools](/agents/tools) of the agent as small icons. Hover an icon to see the tool's name. Choose any icon to open the list of the agent's tools with a short description each. Tools are set on the agent, not per chat: **Edit in agent settings** opens the agent.
 
-Type in the box ("How can I help you?") and send. The answer streams in. While the agent is working, the send button becomes a stop button. It cancels the answer.
+Type in the box (for example "Ask Invoice Assistant") and send. The answer streams in. While the agent is working, the send button becomes a stop button. It cancels the answer.
 
-When the agent uses [tools](/agents/tools), each use appears as a step in the answer.
+When the agent uses [tools](/agents/tools), a line such as "Used 3 tools" appears in the answer. Choose it to see each tool call with its status.
+
+If an action needs approval, such as saving a file to Google Drive, the answer shows what will be saved. **Approve** saves it, **Deny** cancels it. Nothing is saved before approval.
 
 <Aside type="caution">
   AI generated. Responses may be incorrect. Verify important information.
@@ -31,7 +33,7 @@ When the agent uses [tools](/agents/tools), each use appears as a step in the an
 
 ## Attach files
 
-Choose the attach button (**Attach files**), or drop files onto the chat. Images and documents can be attached.
+Choose the plus button in the message box and then **Add files**, or drop files onto the chat. Images and documents can be attached.
 
 | Kind      | Types                               |
 | --------- | ----------------------------------- |
@@ -44,32 +46,34 @@ Images appear as thumbnails. The agent reads the text of documents. Very long do
 
 ## Copy a message
 
-Hover a message and open its **Message actions** menu. Choose **Copy text** to copy the message text. Reasoning, tool steps and files are not copied.
+Hover an answer and choose **Copy text**. The buttons always show below the latest answer. Only the message text is copied.
 
 ## Branch a conversation
 
 Branching copies a chat up to a message, so the user can try another direction without touching the original.
 
-1. Hover the message to branch from.
-2. Open **Message actions** and choose **Branch from here**.
+1. Hover the answer to branch from.
+2. Choose **Branch from here**.
 
 RAGNA Studio opens a new chat with every message up to and including that one. It is named after the original with "(branch)" added. The original stays as it was. In the history, a branch shows "Forked from" and the original title.
 
 ## Recent chats
 
-A new chat shows the user's 5 most recently active chats in the workspace below the input. Each row shows the title, the agent and the time of the latest message. Choose a row to open the chat. Choose **View all** to open the full chat history.
+A new chat shows the user's 5 most recently active chats in the workspace below the input. Each row shows the title, the agent and the time of the latest message. Choose a row to open the chat. Choose **All chats** to open the full chat history.
 
-Choose **Hide** to collapse the list. RAGNA Studio remembers the choice in the browser until the user chooses **Show**. The list disappears once the first message is sent. It does not appear when the user has no chats or the workspace has no agents.
+Choose the eye button (**Hide**) to collapse the list. RAGNA Studio remembers the choice in the browser until the user chooses **Show**. The list disappears once the first message is sent. It does not appear when the user has no chats or the workspace has no agents.
 
 ## Chat history
 
-Open the history with **Toggle chat history**. Chats are grouped by day, month or year. Use **Change grouping** to cycle through them. Chats are ordered by their latest message, so a chat moves to the top when a message is added. A rename does not change the order. The panel shows "No chats yet" when the user has no chats.
+Open the history with **History** in the top bar. The list of **Chats** opens on the left of the chat. Chats are grouped into **Today**, **Yesterday**, **This week** and **Earlier**, and ordered by their latest message, so a chat moves to the top when a message is added. A rename does not change the order. The list shows "No chats yet" when the user has no chats.
 
-To rename a chat, hover it and choose **Rename chat**. A title is required. To delete a chat, choose **View all** on the **Chats** card of the [dashboard](/getting-started/dashboard-and-navigation). In the chat list, open the actions menu of a chat and choose **Delete**.
+Type in **Search chats** to narrow the list to chats whose title matches. Press Enter to search titles and message text across all chats. **New chat** starts a chat, and **Hide chat list** closes the list.
+
+To rename a chat, hover it and choose **Rename chat**. A title is required. The chat that is open is highlighted. To delete a chat, choose **All chats** below the recent chats on a new chat. In the chat list, open the actions menu of a chat and choose **Delete**.
 
 ## Search chats
 
-Use the search button next to the history toggle to open **Search chats**. Type at least 3 characters. Results update while typing.
+On a new chat, use the search button at the right of the top bar to open **Search chats**. Type at least 3 characters. Results update while typing.
 
 Search looks at chat titles and message text. It matches parts of words, so "raph" finds "Raphaela". It ignores upper and lower case unless **Case sensitive** is on. Each result shows the chat with snippets of the matching text. Choose a result to open the chat. Use **Clear search** to start over.
 

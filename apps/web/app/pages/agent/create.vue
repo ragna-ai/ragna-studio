@@ -16,7 +16,7 @@ useHead({
 });
 
 // Computed
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('agent.list.title'), to: '/agent' },
   { label: t('agent.upsert.title') },
 ]);
@@ -27,18 +27,20 @@ usePageBreadcrumb(() => [
 </script>
 
 <template>
-  <SectionWrapper class="h-full">
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="$t('agent.upsert.title')"
-          :subtitle="$t('agent.upsert.subtitle')"
-        />
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div class="flex min-h-0 flex-1 flex-col px-10 pb-8">
-      <AgentUpsertForm />
-    </div>
-  </SectionWrapper>
+  <PagePanel :crumbs="crumbs">
+    <SectionWrapper class="h-full">
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="$t('agent.upsert.title')"
+            :subtitle="$t('agent.upsert.subtitle')"
+          />
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div class="flex min-h-0 flex-1 flex-col px-10 pb-8">
+        <AgentUpsertForm />
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

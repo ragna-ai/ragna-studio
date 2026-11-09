@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { SearchIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import {
   Tooltip,
@@ -8,7 +7,6 @@ import {
   TooltipTrigger,
 } from '~/components/ui/tooltip';
 
-// Composables
 const { t } = useI18n();
 </script>
 
@@ -19,15 +17,15 @@ const { t } = useI18n();
         <Button
           as-child
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           :aria-label="t('chat.search.title')"
         >
           <NuxtLinkLocale to="/chat/search">
-            <SearchIcon class="size-4 stroke-1.5 opacity-75" />
+            <Icon name="hugeicons:search-01" class="size-4 text-icon" />
           </NuxtLinkLocale>
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="right">
+      <TooltipContent side="bottom">
         {{ t('chat.search.title') }}
       </TooltipContent>
     </Tooltip>

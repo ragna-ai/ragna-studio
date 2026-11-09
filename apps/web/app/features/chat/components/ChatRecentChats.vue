@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ArrowRightIcon, EyeIcon, EyeOffIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import {
   Tooltip,
@@ -10,7 +9,7 @@ import {
 import ChatRecentRows from '~/features/chat/components/ChatRecentRows.vue';
 import { useGetRecentChats } from '~/features/chat/composables/useChatApi';
 import { useChatStore } from '~/features/chat/stores/chat.store';
-import type { ChatRecentItem } from '~/features/chat/types';
+import type { ChatRecentRowItem } from '~/features/chat/types';
 
 // Composables
 const { t } = useI18n();
@@ -19,10 +18,11 @@ const chatStore = useChatStore();
 const { recentChatsHidden } = storeToRefs(chatStore);
 
 // Computed
-const recentChats = computed<ChatRecentItem[]>(() =>
+const recentChats = computed<ChatRecentRowItem[]>(() =>
   (data.value?.chats ?? []).map((chat) => ({
     id: chat.id,
     title: chat.title,
+    agentId: chat.agent.id,
     agentName: chat.agent.name,
     lastMessageAt: chat.lastMessageAt,
   })),
@@ -38,53 +38,43 @@ function toggleHidden() {
 </script>
 
 <template>
-  <section v-if="recentChats.length > 0" class="mt-6 w-full">
-    <TooltipProvider :delay-duration="300">
-      <div class="flex items-center justify-between px-3">
-        <h2 class="text-xs font-medium text-muted-foreground">
-          {{ t('chat.recent.title') }}
-        </h2>
-        <div class="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon"
-                :aria-label="toggleLabel"
-                @click="toggleHidden"
-              >
-                <EyeIcon
-                  v-if="recentChatsHidden"
-                  class="size-4 stroke-1.5 opacity-75"
-                />
-                <EyeOffIcon v-else class="size-4 stroke-1.5 opacity-75" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ toggleLabel }}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon"
-                :aria-label="t('chat.recent.viewAll')"
-                as-child
-              >
-                <NuxtLinkLocale to="/chat/history">
-                  <ArrowRightIcon class="size-4 stroke-1.5 opacity-75" />
-                </NuxtLinkLocale>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ t('chat.recent.viewAll') }}</TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-    </TooltipProvider>
-    <ChatRecentRows
-      v-if="!recentChatsHidden"
-      :chats="recentChats"
-      row-class="rounded-md px-3"
-      class="mt-1"
-    />
+  <section v-if="recentChats.length > 0" class="w-full">
+    <div class="flex h-8 items-center gap-1 px-1">
+      <h2
+        class="font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
+      >
+        {{ t('chat.recent.title') }}
+      </h2>
+      <TooltipProvider :delay-duration="300">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="ml-auto size-7"
+              :aria-label="toggleLabel"
+              :aria-pressed="recentChatsHidden"
+              @click="toggleHidden"
+            >
+              <Icon
+                :name="
+                  recentChatsHidden ? 'hugeicons:view' : 'hugeicons:view-off'
+                "
+                class="size-4 text-icon"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ toggleLabel }}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NuxtLinkLocale
+        to="/chat/history"
+        class="flex items-center gap-0.5 text-body font-medium text-muted-foreground hover:text-foreground"
+      >
+        {{ t('chat.recent.viewAll') }}
+        <Icon name="hugeicons:arrow-right-01" class="size-3.5" />
+      </NuxtLinkLocale>
+    </div>
+    <ChatRecentRows v-if="!recentChatsHidden" :chats="recentChats" />
   </section>
 </template>

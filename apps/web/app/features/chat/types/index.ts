@@ -27,3 +27,7 @@ export interface ChatRecentItem {
   agentName: string;
   lastMessageAt: string;
 }
+
+export interface ChatRecentRowItem extends ChatRecentItem {
+  agentId: string;
+}

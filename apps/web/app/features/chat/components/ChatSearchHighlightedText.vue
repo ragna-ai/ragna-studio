@@ -22,7 +22,7 @@ const segments = computed(() =>
     <template v-for="(segment, index) in segments" :key="index">
       <mark
         v-if="segment.matched"
-        class="rounded-sm bg-yellow-200 px-0.5 text-foreground dark:bg-yellow-900"
+        class="rounded-sm bg-status-warn-bg px-0.5 text-foreground"
         >{{ segment.text }}</mark
       >
       <template v-else>{{ segment.text }}</template>

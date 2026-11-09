@@ -34,43 +34,45 @@ const handleDeleteDataset = async (datasetId: string) => {
 </script>
 
 <template>
-  <SectionWrapper>
-    <Heading bg-position="bottom">
-      <template #top>
-        <HeadingTitle
-          :title="t('dataset.list.title')"
-          :subtitle="t('dataset.list.subtitle')"
-        >
-          <template #button>
-            <Button as-child variant="secondary">
-              <NuxtLinkLocale to="/dataset/create">
-                {{ t('dataset.list.newDataset') }}
-              </NuxtLinkLocale>
-            </Button>
-          </template>
-        </HeadingTitle>
-      </template>
-      <template #bottom> </template>
-    </Heading>
-    <div v-if="data?.datasets" class="px-5">
-      <DatasetManyTable
-        :datasets="data.datasets"
-        :meta="meta"
-        @delete-dataset="handleDeleteDataset"
-      />
-      <div class="pb-10">
-        <PaginateControls
-          v-if="meta.totalCount > 10"
-          v-model:page="page"
-          v-model:limit="limit"
+  <PagePanel>
+    <SectionWrapper>
+      <Heading bg-position="bottom">
+        <template #top>
+          <HeadingTitle
+            :title="t('dataset.list.title')"
+            :subtitle="t('dataset.list.subtitle')"
+          >
+            <template #button>
+              <Button as-child variant="secondary">
+                <NuxtLinkLocale to="/dataset/create">
+                  {{ t('dataset.list.newDataset') }}
+                </NuxtLinkLocale>
+              </Button>
+            </template>
+          </HeadingTitle>
+        </template>
+        <template #bottom> </template>
+      </Heading>
+      <div v-if="data?.datasets" class="px-5">
+        <DatasetManyTable
+          :datasets="data.datasets"
           :meta="meta"
+          @delete-dataset="handleDeleteDataset"
         />
+        <div class="pb-10">
+          <PaginateControls
+            v-if="meta.totalCount > 10"
+            v-model:page="page"
+            v-model:limit="limit"
+            :meta="meta"
+          />
+        </div>
       </div>
-    </div>
-    <div v-else-if="datasetsError">
-      <p class="text-sm text-stone-500">
-        {{ datasetsError.message || t('dataset.list.loadError') }}
-      </p>
-    </div>
-  </SectionWrapper>
+      <div v-else-if="datasetsError">
+        <p class="text-sm text-stone-500">
+          {{ datasetsError.message || t('dataset.list.loadError') }}
+        </p>
+      </div>
+    </SectionWrapper>
+  </PagePanel>
 </template>

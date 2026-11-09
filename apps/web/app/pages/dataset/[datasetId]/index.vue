@@ -50,7 +50,7 @@ watch(
 );
 
 // Computed
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('dataset.list.title'), to: '/dataset' },
   { label: datasetName.value || t('dataset.detail.loading') },
 ]);
@@ -68,83 +68,85 @@ function handleExport(format: DatasetExportFormat) {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
-    <header class="flex items-center justify-between border-b px-4 py-2">
-      <div class="min-w-0">
-        <InlineNameField
-          v-if="datasetData?.dataset"
-          v-model:name="name"
-          :label="t('dataset.detail.rename')"
-          @save="handleRename"
-        />
-        <h1 v-else class="truncate text-sm font-semibold">
-          {{ t('dataset.detail.loading') }}
-        </h1>
-      </div>
-      <div class="flex shrink-0 items-center gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="!datasetData?.dataset || isExporting"
-              :aria-label="t('dataset.detail.export.button')"
-            >
-              <Spinner v-if="isExporting" class="mr-2" />
-              <DownloadIcon v-else class="size-4 stroke-1.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem @click="handleExport('csv')">
-              {{ t('dataset.detail.export.csv') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('xlsx')">
-              {{ t('dataset.detail.export.excel') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('pdf')">
-              {{ t('dataset.detail.export.pdf') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('md')">
-              {{ t('dataset.detail.export.markdown') }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="!datasetData?.dataset"
-          @click="isColumnManagerOpen = !isColumnManagerOpen"
-        >
-          <Columns3Icon class="mr-2 size-4 stroke-1.5" />
-          {{ t('dataset.detail.manageColumns') }}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          :aria-label="t('dataset.detail.settings')"
-          :disabled="!datasetData?.dataset"
-          @click="isSettingsOpen = !isSettingsOpen"
-        >
-          <SettingsIcon class="size-4 stroke-1.5" />
-        </Button>
-      </div>
-    </header>
+  <PagePanel :crumbs="crumbs">
+    <div class="flex h-full flex-col">
+      <header class="flex items-center justify-between border-b px-4 py-2">
+        <div class="min-w-0">
+          <InlineNameField
+            v-if="datasetData?.dataset"
+            v-model:name="name"
+            :label="t('dataset.detail.rename')"
+            @save="handleRename"
+          />
+          <h1 v-else class="truncate text-sm font-semibold">
+            {{ t('dataset.detail.loading') }}
+          </h1>
+        </div>
+        <div class="flex shrink-0 items-center gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="!datasetData?.dataset || isExporting"
+                :aria-label="t('dataset.detail.export.button')"
+              >
+                <Spinner v-if="isExporting" class="mr-2" />
+                <DownloadIcon v-else class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="handleExport('csv')">
+                {{ t('dataset.detail.export.csv') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('xlsx')">
+                {{ t('dataset.detail.export.excel') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('pdf')">
+                {{ t('dataset.detail.export.pdf') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('md')">
+                {{ t('dataset.detail.export.markdown') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="!datasetData?.dataset"
+            @click="isColumnManagerOpen = !isColumnManagerOpen"
+          >
+            <Columns3Icon class="mr-2 size-4 stroke-1.5" />
+            {{ t('dataset.detail.manageColumns') }}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            :aria-label="t('dataset.detail.settings')"
+            :disabled="!datasetData?.dataset"
+            @click="isSettingsOpen = !isSettingsOpen"
+          >
+            <SettingsIcon class="size-4 stroke-1.5" />
+          </Button>
+        </div>
+      </header>
 
-    <DatasetDetail
-      v-if="datasetData?.dataset"
-      :key="datasetData.dataset.id"
-      v-model:column-manager-open="isColumnManagerOpen"
-      v-model:settings-open="isSettingsOpen"
-      :dataset="datasetData.dataset"
-      :rows="rowsData?.rows ?? []"
-    />
-    <div
-      v-else-if="datasetError"
-      class="flex min-h-0 flex-1 items-center justify-center"
-    >
-      <p class="text-sm text-stone-500">
-        {{ datasetError.message || t('dataset.detail.loadError') }}
-      </p>
+      <DatasetDetail
+        v-if="datasetData?.dataset"
+        :key="datasetData.dataset.id"
+        v-model:column-manager-open="isColumnManagerOpen"
+        v-model:settings-open="isSettingsOpen"
+        :dataset="datasetData.dataset"
+        :rows="rowsData?.rows ?? []"
+      />
+      <div
+        v-else-if="datasetError"
+        class="flex min-h-0 flex-1 items-center justify-center"
+      >
+        <p class="text-sm text-stone-500">
+          {{ datasetError.message || t('dataset.detail.loadError') }}
+        </p>
+      </div>
     </div>
-  </div>
+  </PagePanel>
 </template>

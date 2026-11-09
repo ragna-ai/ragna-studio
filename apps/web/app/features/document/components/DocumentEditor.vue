@@ -41,7 +41,7 @@ const saveStatus = computed<'saved' | 'saving'>(() =>
   isDirty.value ? 'saving' : 'saved',
 );
 
-usePageBreadcrumb(() => [
+const crumbs = computed<PageCrumb[]>(() => [
   { label: t('document.list.title'), to: '/document' },
   { label: title.value },
 ]);
@@ -85,51 +85,53 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
-    <header class="flex items-center justify-between border-b px-4 py-2">
-      <InlineNameField
-        v-model:name="title"
-        :label="t('document.editor.rename')"
-        class="min-w-0"
-        @save="handleTitleSave"
-      />
-      <div class="flex shrink-0 items-center gap-3">
-        <div class="text-muted-foreground">
-          <SavePenIcon
-            v-if="saveStatus === 'saving'"
-            class="size-4 stroke-1.5"
-          />
-          <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+  <PagePanel :crumbs="crumbs">
+    <div class="flex h-full flex-col">
+      <header class="flex items-center justify-between border-b px-4 py-2">
+        <InlineNameField
+          v-model:name="title"
+          :label="t('document.editor.rename')"
+          class="min-w-0"
+          @save="handleTitleSave"
+        />
+        <div class="flex shrink-0 items-center gap-3">
+          <div class="text-muted-foreground">
+            <SavePenIcon
+              v-if="saveStatus === 'saving'"
+              class="size-4 stroke-1.5"
+            />
+            <SaveCheckIcon v-else class="size-4 stroke-1.5" />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="sm" :disabled="isExporting">
+                <Spinner v-if="isExporting" class="mr-2" />
+                <DownloadIcon v-else class="size-4 stroke-1.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="handleExport('md')">
+                {{ t('document.editor.export.markdown') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('txt')">
+                {{ t('document.editor.export.text') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('pdf')">
+                {{ t('document.editor.export.pdf') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExport('docx')">
+                {{ t('document.editor.export.word') }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button variant="outline" size="sm" :disabled="isExporting">
-              <Spinner v-if="isExporting" class="mr-2" />
-              <DownloadIcon v-else class="size-4 stroke-1.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem @click="handleExport('md')">
-              {{ t('document.editor.export.markdown') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('txt')">
-              {{ t('document.editor.export.text') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('pdf')">
-              {{ t('document.editor.export.pdf') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="handleExport('docx')">
-              {{ t('document.editor.export.word') }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      </header>
+      <div class="min-h-0 flex-1 overflow-y-auto bg-stone-50 pb-10">
+        <RichTextEditor
+          :controller="controller"
+          class="mx-auto mt-8 flex min-h-full max-w-4xl flex-col rounded-sm border bg-white px-16 py-12 shadow-md"
+        />
       </div>
-    </header>
-    <div class="min-h-0 flex-1 overflow-y-auto bg-stone-50 pb-10">
-      <RichTextEditor
-        :controller="controller"
-        class="mx-auto mt-8 flex min-h-full max-w-4xl flex-col rounded-sm border bg-white px-16 py-12 shadow-md"
-      />
     </div>
-  </div>
+  </PagePanel>
 </template>

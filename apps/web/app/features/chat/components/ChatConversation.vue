@@ -48,6 +48,8 @@ const props = defineProps<Props>();
 
 // Refs
 const conversationRef = useTemplateRef<HTMLDivElement>('conversationRef');
+const chatInputRef =
+  useTemplateRef<InstanceType<typeof ChatInput>>('chatInputRef');
 const chatId = ref(props.chatId ?? null);
 const inputText = ref('');
 
@@ -82,6 +84,11 @@ const selectedAgentId = computed(
 const isAgentLocked = computed(() => chatId.value !== null);
 const showNoAgentState = computed(
   () => !props.agent && newChatAgent.hasNoAgents.value,
+);
+const selectedAgentName = computed(
+  () =>
+    agentOptions.value.find((agent) => agent.id === selectedAgentId.value)
+      ?.name,
 );
 const isSendDisabled = computed(() => selectedAgentId.value === null);
 const selectedAgentToolIds = computed(
@@ -220,6 +227,10 @@ const hasVisibleReply = computed(() => {
 });
 
 // Functions
+function onAgentSelect(agentId: string) {
+  newChatAgent.selectAgent(agentId);
+  chatInputRef.value?.focus();
+}
 
 // Chat creation is lazy: the first attachment or the first sent message is
 // what actually creates the chat. Both the attachments composable and
@@ -268,25 +279,26 @@ async function handleSubmit(text: string) {
 <template>
   <div
     ref="conversationRef"
-    class="relative flex h-full w-full flex-col p-4 pb-1"
+    class="relative flex h-full w-full flex-col"
+    :class="{ 'overflow-y-auto pt-16 pb-10': isNewChatEmpty }"
   >
     <!-- Drag-n-drop overlay, covers the whole conversation while dragging -->
     <div
       v-if="isOverDropZone"
       class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-background/80 backdrop-blur-sm"
     >
-      <p class="text-sm font-medium text-primary">
+      <p class="text-body font-medium text-primary">
         {{ $t('chat.attachment.dropHint') }}
       </p>
     </div>
     <div
       v-if="showNoAgentState"
-      class="flex flex-1 items-center justify-center"
+      class="flex flex-1 items-center justify-center p-4"
     >
       <ChatNoAgentState @created="newChatAgent.addAndSelectAgent" />
     </div>
-    <div v-else-if="isNewChatEmpty" class="flex flex-1 items-end pb-8">
-      <ChatWelcome class="w-full" />
+    <div v-else-if="isNewChatEmpty" class="px-page">
+      <ChatWelcome class="mx-auto mb-7 max-w-3xl" />
     </div>
     <MessageScrollerProvider
       v-else
@@ -294,13 +306,17 @@ async function handleSubmit(text: string) {
       default-scroll-position="last-anchor"
     >
       <MessageScroller>
-        <MessageScrollerViewport>
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-border opacity-0 group-data-[scrollable~=start]/message-scroller:opacity-100"
+          aria-hidden="true"
+        />
+        <MessageScrollerViewport class="px-page">
           <MessageScrollerContent
             :aria-busy="isBusy"
-            class="mx-auto max-w-3xl pb-8"
+            class="mx-auto max-w-3xl py-6"
           >
             <MessageScrollerItem
-              v-for="message in messages"
+              v-for="(message, index) in messages"
               :key="message.id"
               :message-id="message.id"
               :scroll-anchor="message.role === 'user'"
@@ -311,12 +327,15 @@ async function handleSubmit(text: string) {
                 :key="message.id"
                 :message="message"
                 :chat-id="chatId"
+                :agent-id="selectedAgentId ?? undefined"
+                :agent-name="selectedAgentName"
+                :is-last="index === messages.length - 1"
                 @approval-response="answerApproval"
               />
               <!-- end chat message -->
             </MessageScrollerItem>
             <!-- Generating image/video -->
-            <Shimmer v-if="activeGeneration" class="text-sm">
+            <Shimmer v-if="activeGeneration" class="text-small text-agent">
               {{
                 $t(`agent.tool.${activeGeneration.kind}.generating`, {
                   prompt: activeGeneration.prompt,
@@ -325,9 +344,9 @@ async function handleSubmit(text: string) {
             </Shimmer>
             <!-- Loading -->
             <div v-else-if="isSubscribed" class="flex items-center gap-2">
-              <Loader />
+              <Loader class="text-agent" />
             </div>
-            <p v-if="error" class="text-sm text-destructive">
+            <p v-if="error" class="text-small text-status-danger-fg">
               {{ toErrorMessage(error, t('chat.conversation.errors.generic')) }}
             </p>
           </MessageScrollerContent>
@@ -337,38 +356,43 @@ async function handleSubmit(text: string) {
     </MessageScrollerProvider>
 
     <!-- input -->
-    <div class="mx-auto w-full max-w-4xl">
-      <ChatInput
-        v-model="inputText"
-        :items="chatAttachments.items.value"
-        :status="status"
-        :is-busy="isBusy"
-        :is-send-disabled="isSendDisabled"
-        :is-empty="isNewChatEmpty"
-        @submit="handleSubmit"
-        @stop="stop"
-        @files="chatAttachments.handleFiles"
-        @retry="chatAttachments.retry"
-        @remove="chatAttachments.remove"
-      >
-        <template #toolbar-start>
-          <ChatAgentTools :tool-ids="selectedAgentToolIds" />
-        </template>
-        <template #toolbar-end>
-          <ChatAgentSelect
-            :agents="agentOptions"
-            :selected-agent-id="selectedAgentId"
-            :disabled="isAgentLocked"
-            @select="newChatAgent.selectAgent"
-          />
-        </template>
-      </ChatInput>
+    <div class="px-page" :class="{ 'pb-4': !isNewChatEmpty }">
+      <div class="mx-auto w-full max-w-3xl">
+        <ChatInput
+          ref="chatInputRef"
+          v-model="inputText"
+          :items="chatAttachments.items.value"
+          :status="status"
+          :is-busy="isBusy"
+          :is-send-disabled="isSendDisabled"
+          :is-empty="isNewChatEmpty"
+          :agent-name="selectedAgentName"
+          @submit="handleSubmit"
+          @stop="stop"
+          @files="chatAttachments.handleFiles"
+          @retry="chatAttachments.retry"
+          @remove="chatAttachments.remove"
+        >
+          <template #toolbar-start>
+            <ChatAgentTools
+              :tool-ids="selectedAgentToolIds"
+              :agent-id="selectedAgentId"
+              :agent-name="selectedAgentName"
+            />
+          </template>
+          <template #toolbar-end>
+            <ChatAgentSelect
+              :agents="agentOptions"
+              :selected-agent-id="selectedAgentId"
+              :disabled="isAgentLocked"
+              @select="onAgentSelect"
+            />
+          </template>
+        </ChatInput>
+      </div>
     </div>
-    <div
-      v-if="isNewChatEmpty"
-      class="mx-auto min-h-0 w-full max-w-4xl flex-1 overflow-y-auto"
-    >
-      <ChatRecentChats />
+    <div v-if="isNewChatEmpty" class="mt-10 px-page">
+      <ChatRecentChats class="mx-auto max-w-3xl" />
     </div>
   </div>
 </template>

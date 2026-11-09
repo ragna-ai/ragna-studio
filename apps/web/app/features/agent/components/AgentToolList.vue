@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { CheckIcon } from '@lucide/vue';
 import {
   AGENT_TOOL_CATALOG,
   agentToolGrantSchema,
@@ -8,7 +7,7 @@ import {
   type AgentToolId,
   type ToolAccess,
 } from '@repo/ai/client';
-import { AGENT_TOOL_VISUALS } from '~/features/agent/lib/agent-tool-icons';
+import { AGENT_TOOL_ICONS } from '~/features/agent/lib/agent-tool-icons';
 import { useGetIntegrationConnections } from '~/features/integrations/composables/useIntegrationApi';
 import { CONNECTIONS_PAGE_PATH } from '~/features/integrations/lib/integration-meta';
 import { useGetAllDatasetsForPicker } from '~/features/dataset/composables/useDatasetApi';
@@ -119,17 +118,14 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
         class="border-stone-600"
         @update:model-value="(checked) => handleToggle(entry, Boolean(checked))"
       >
-        <CheckIcon class="size-3.5" />
+        <Icon name="hugeicons:tick-02" class="size-3.5" />
       </Checkbox>
       <Label
         :for="`form-rhf-checkbox-${entry.id}`"
         class="flex cursor-pointer space-x-3"
       >
         <div class="flex justify-center">
-          <component
-            :is="AGENT_TOOL_VISUALS[entry.id].icon"
-            class="size-5 stroke-1.5"
-          />
+          <Icon :name="AGENT_TOOL_ICONS[entry.id]" class="size-5 text-icon" />
         </div>
         <div class="space-y-1">
           <p class="text-sm">{{ $t(`agent.tool.${entry.id}.label`) }}</p>

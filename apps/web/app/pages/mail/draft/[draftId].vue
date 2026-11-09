@@ -21,7 +21,9 @@ useHead({
 </script>
 
 <template>
-  <EmailPrivateWorkspaceGate>
-    <EmailClient :draft-id="draftId" />
-  </EmailPrivateWorkspaceGate>
+  <PagePanel>
+    <EmailPrivateWorkspaceGate>
+      <EmailClient :draft-id="draftId" />
+    </EmailPrivateWorkspaceGate>
+  </PagePanel>
 </template>
