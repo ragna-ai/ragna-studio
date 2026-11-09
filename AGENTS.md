@@ -99,7 +99,7 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 **CSS tokens**: colours in `apps/web` CSS are `oklch()`, sizes are `rem` (16px = 1rem). `px` stays only for hairlines,
 shadow offsets and keyframe nudges. `app/assets/css/tokens.css` is generated from the design file: never edit it by
 hand; ask for a design change instead. `main.css` maps shadcn names onto it. Design tools such as FigCraft hand over
-`#hex` and `px`; convert them in classes, never paste them verbatim.
+`#hex` and `px`; convert them with the oklch-conversion skill's script, never by hand or verbatim.
 
 **migrations**: Local dev: push schema directly to DB with `db:push`, don't hand-write SQL. Anything destined for
 production goes through `db:generate` (commits SQL under `packages/database/drizzle/`) and is applied by the
