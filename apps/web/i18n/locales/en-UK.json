@@ -3,6 +3,7 @@
     "settings": "Settings",
     "descriptionPlaceholder": "Add a description...",
     "dismissError": "Dismiss error",
+    "hasErrors": "has errors",
     "validating": "Validating...",
     "nameRequired": "Name is required.",
     "titleRequired": "Title is required.",
@@ -204,7 +205,6 @@
       "createFailed": "Failed to create agent",
       "updated": "Agent updated",
       "updateFailed": "Failed to update agent",
-      "memoryUpdated": "Memory updated",
       "memoryUpdateFailed": "Failed to update memory",
       "deleted": "Agent deleted",
       "deleteFailed": "Failed to delete agent",
@@ -229,29 +229,38 @@
       "chat": "Chat"
     },
     "upsert": {
-      "title": "Edit AI agent",
-      "subtitle": "Create a new AI agent or edit an existing one tailored to your needs.",
+      "untitled": "Untitled agent",
       "tabs": {
         "persona": "Persona",
-        "intelligence": "Intelligence",
+        "model": "Model",
         "tools": "Tools",
         "context": "Context",
-        "memory": "Memory",
-        "settings": "Settings"
+        "memory": "Memory"
       },
+      "thisAgent": "this agent",
+      "personaSubtitle": "Who the agent is and how it works. Used in every chat and workflow step.",
+      "modelSubtitle": "Which model answers. The defaults suit most agents.",
+      "toolsSubtitle": "What {name} may use in chats and workflows. Changes apply when you save.",
+      "contextSubtitle": "Background knowledge this agent always has. For behaviour and rules, use Persona.",
+      "memorySubtitle": "What {name} has noted across chats. Edit or delete notes; it keeps learning.",
+      "modelRequired": "Choose a model for this agent.",
+      "maxOutputTokensInvalid": "Enter a whole number between 1 and 64,000.",
       "nameRequired": "Name must be at least 4 characters.",
-      "systemPromptLabel": "Behavior / Instructions",
-      "systemPromptTitle": "System Prompt",
+      "descriptionHint": "Shown in the agent picker and on the dashboard.",
+      "systemPromptLabel": "Instructions",
+      "modelLabel": "Model",
+      "advancedLabel": "Advanced",
+      "advancedHint": "Reasoning, temperature, output length",
       "documentsLabel": "Documents",
-      "documentsHint": "Upload files whose content this agent should always have access to. Extracted text joins the context text below.",
       "saveFirstDocuments": "Save the agent first to upload documents.",
-      "contextLabel": "Context",
-      "contextHint": "Background knowledge this agent should always have. For behavior and rules, use Persona.",
+      "contextLabel": "Background knowledge",
+      "memoryLabel": "Notes",
       "saveFirstMemory": "Save the agent first to view and edit its memory.",
       "temperatureLabel": "Temperature",
       "temperatureDisabled": "Disabled",
       "temperatureHint": "Set temperature to 0 to disable it.",
       "maxOutputTokensLabel": "Max output tokens",
+      "maxOutputTokensPlaceholder": "Model default",
       "maxOutputTokensHint": "Leave empty to use the model's default.",
       "reasoningLabel": "Reasoning",
       "reasoningDefault": "Default",
@@ -259,7 +268,7 @@
       "reasoningLow": "Low",
       "reasoningMedium": "Medium",
       "reasoningHigh": "High",
-      "reasoningHint": "Lets the model think before it answers. \"Default\" leaves it up to the model; \"Off\" explicitly disables it, which matters for models that reason by default. Only models that support reasoning use this; others ignore it."
+      "reasoningHint": "Lets the model think before it answers. “Default” leaves it to the model; “Off” turns it off."
     },
     "tool": {
       "think": {
@@ -352,8 +361,11 @@
         "read": "Read only",
         "write": "Read and write"
       },
-      "connectHint": "Connect {name} in settings to use it yourself",
-      "connectLink": "Open connections",
+      "notConnected": "Not connected. Click to open connections.",
+      "groups": {
+        "builtin": "Built in",
+        "connected": "Connected apps"
+      },
       "datasets": {
         "label": "Datasets",
         "description": "Read and write structured data tables: task queues, plans, and other durable state.",
@@ -370,11 +382,10 @@
         "description": "List, read, create, update, and move tasks on the workspace board."
       }
     },
-    "memory": {
-      "label": "Memory"
-    },
     "context": {
-      "empty": "No documents uploaded yet.",
+      "hint": "Their extracted text joins the context. Up to {max} documents.",
+      "uploadedAt": "Uploaded {date}",
+      "uploadingRow": "Uploading …",
       "uploading": "Uploading...",
       "tableSize": "Size",
       "truncated": "Truncated: only the first part of this document was kept.",
@@ -1316,10 +1327,7 @@
     }
   },
   "editor": {
-    "view": {
-      "formatted": "Formatted",
-      "raw": "Raw"
-    },
+    "markdownToggle": "Markdown",
     "charCount": "{count} / {max}",
     "blockType": {
       "paragraph": "Text",

@@ -11,7 +11,7 @@ import { STORAGE_STATE_PATH } from '../playwright.config';
 
 const API_URL = 'http://localhost:3110';
 const PROMPT_LIMIT = 30_000;
-const INSTRUCTIONS_LABEL = 'Behavior / Instructions';
+const INSTRUCTIONS_LABEL = 'Instructions';
 
 const storageStateSchema = z.object({
   origins: z.array(
@@ -178,11 +178,15 @@ async function replaceFormattedText(field: Locator, text: string) {
 }
 
 async function showRawView(page: Page) {
-  await page.getByRole('tab', { name: 'Raw' }).click();
+  const toggle = page.getByRole('button', { name: 'Markdown' });
+  if ((await toggle.getAttribute('aria-pressed')) !== 'true')
+    await toggle.click();
 }
 
 async function showFormattedView(page: Page) {
-  await page.getByRole('tab', { name: 'Formatted' }).click();
+  const toggle = page.getByRole('button', { name: 'Markdown' });
+  if ((await toggle.getAttribute('aria-pressed')) === 'true')
+    await toggle.click();
 }
 
 async function saveAgent(page: Page, agentId: string) {
@@ -399,7 +403,7 @@ test.describe('raw view', () => {
     await showRawView(page);
 
     await page.getByRole('tab', { name: 'Context' }).click();
-    await expect(promptField(page, 'Context')).toHaveValue(
+    await expect(promptField(page, 'Background knowledge')).toHaveValue(
       '<facts>one</facts>',
     );
 

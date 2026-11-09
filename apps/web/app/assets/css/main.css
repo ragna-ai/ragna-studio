@@ -45,6 +45,7 @@
   --text-xxs: 0.625rem;
   --color-canvas: var(--canvas);
   --color-surface-subtle: var(--surface-subtle);
+  --color-selected: var(--selected);
   --color-tray: var(--tray);
   --color-border-strong: var(--border-strong);
   --color-icon: var(--icon);

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { CodeXmlIcon, TypeIcon } from '@lucide/vue';
 import type { HTMLAttributes } from 'vue';
-import ViewSwitcher, { type ViewOption } from '~/components/ViewSwitcher.vue';
+import { Toggle } from '~/components/ui/toggle';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/lib/utils';
 import RichTextEditor from './RichTextEditor.vue';
@@ -18,11 +17,6 @@ export interface MarkdownEditorFieldProps {
   class?: HTMLAttributes['class'];
   ariaLabelledby?: string;
 }
-
-const MARKDOWN_FIELD_VIEWS: readonly ViewOption<MarkdownFieldView>[] = [
-  { value: 'formatted', labelKey: 'editor.view.formatted', icon: TypeIcon },
-  { value: 'raw', labelKey: 'editor.view.raw', icon: CodeXmlIcon },
-];
 
 // Props
 const props = withDefaults(defineProps<MarkdownEditorFieldProps>(), {
@@ -61,6 +55,10 @@ const isOverLimit = computed(
 );
 
 // Functions
+function setRaw(pressed: boolean) {
+  view.value = pressed ? 'raw' : 'formatted';
+}
+
 function emitBlurWhenFocusLeavesField(event: FocusEvent) {
   const field = event.currentTarget;
   const next = event.relatedTarget;
@@ -94,7 +92,14 @@ watch([model, controller.editor], ([value, editor]) => {
       <div class="min-w-0">
         <slot name="label" />
       </div>
-      <ViewSwitcher v-model="view" :options="MARKDOWN_FIELD_VIEWS" />
+      <Toggle
+        size="sm"
+        leading-icon="hugeicons:source-code"
+        :model-value="view === 'raw'"
+        @update:model-value="setRaw"
+      >
+        {{ t('editor.markdownToggle') }}
+      </Toggle>
     </div>
     <div
       :aria-invalid="invalid || undefined"

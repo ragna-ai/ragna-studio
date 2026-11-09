@@ -12,39 +12,42 @@ An agent is an AI assistant with its own instructions, model, knowledge, memory 
 
 1. Open **AI agents** from the sidebar.
 2. Choose **Create AI agent**.
-3. Fill in the tabs below. Only the name and the model are required.
-4. Choose **Save**.
+3. Fill in the sections below. Only the name and the model are required.
+4. Choose **Save** in the top right corner.
 
-Some tabs need a saved agent first. **Context** documents and **Memory** show "Save the agent first" until the agent is saved once. Open the agent again afterwards to use them.
+The page header shows the agent's name and description, with **Cancel** and **Save** on the right. The agent has five sections: **Persona**, **Model**, **Tools**, **Context** and **Memory**.
+
+Some sections need a saved agent first. **Context** documents and **Memory** show "Save the agent first" until the agent is saved once. Open the agent again afterwards to use them.
 
 To change an agent later, open its row actions in the list and choose **Edit**. **Delete** is in the same menu. The list also has a **Chat** button per agent.
 
 ## Persona
 
 - **Name:** at least 4 characters.
-- **Behavior / Instructions:** tells the agent who it is, how it should answer and which rules to follow. New agents start with "You are a helpful assistant."
+- **Description:** shown in the agent picker and on the dashboard.
+- **Instructions:** tells the agent who it is, how it should answer and which rules to follow. New agents start with "You are a helpful assistant."
 
 Put behavior and rules here. Put background facts in [Knowledge](/agents/knowledge).
 
-The instructions field is a formatted editor. Headings, lists, quotes, code and tables are available through the `/` menu and the selection toolbar. The field stores the text as markdown.
+The instructions field is a formatted editor by default. Headings, lists, quotes, code and tables are available through the `/` menu and the selection toolbar. The field stores the text as markdown.
 
 The text reaches the model exactly as written. Tags such as `<rules>`, placeholders such as `{{user_name}}` and symbols such as `*` or `_` are not changed or escaped. One effect: markdown that is typed as plain text, such as `*word*`, shows as italics when the agent is opened again.
 
-Choose **Raw** above the field to see and edit the stored text directly. Choose **Formatted** to go back. RAGNA Studio remembers the choice for every prompt field.
+Press the **Markdown** toggle above the field to see and edit the stored text directly. Press it again to go back to the formatted view. RAGNA Studio remembers the choice for every prompt field.
 
 The instructions are limited to 30,000 characters. A counter in the bottom right corner of the field shows the length, for example **12 / 30,000**. It turns red above the limit, and the agent cannot be saved until the text is shorter. Nothing is cut off while typing or pasting. Agents saved with longer instructions before the limit existed keep working in chat. Saving them in the editor needs the text to be shortened first.
 
-## Intelligence
+## Model
 
 Pick the model the agent uses. The selector lists text models only.
 
-## Settings
+Below it, a closed **Advanced** section holds **Reasoning**, **Temperature** and **Max output tokens**. It opens by itself when one of its fields has an error.
 
 | Setting               | What it does                                                                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reasoning**         | Lets the model think before it answers: **Default**, **Off**, **Low**, **Medium** or **High**.                                                                      |
 | **Temperature**       | Controls how varied the answers are. The slider runs from 0 to 1. At 0 it shows **Disabled**: RAGNA Studio sends no temperature and the model uses its own default. |
 | **Max output tokens** | Caps the length of one answer. Leave it empty to use the model's default. The maximum is 64,000.                                                                    |
-| **Reasoning**         | Lets the model think before it answers: **Default**, **Off**, **Low**, **Medium** or **High**.                                                                      |
 
 Reasoning only has an effect on models that support it. Other models ignore it. **Default** leaves the choice to the model. **Off** switches reasoning off explicitly, which matters for models that reason by default.
 

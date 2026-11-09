@@ -105,7 +105,7 @@ function handlePublish() {
               {{ state.value.length }} / 3000
             </span>
           </div>
-          <FormFieldInfo :state="state" />
+          <FormFieldInfo :field="field" />
         </div>
       </template>
     </form.Field>

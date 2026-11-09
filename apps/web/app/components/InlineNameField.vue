@@ -105,7 +105,7 @@ onKeyStroke('Escape', (event) => {
               }
             "
           />
-          <FormFieldInfo :state="state" />
+          <FormFieldInfo :field="field" />
         </template>
       </form.Field>
     </form>

@@ -15,6 +15,7 @@ interface Props {
   /** Only models with this modality are listed. */
   modality?: string;
   class?: HTMLAttributes['class'];
+  invalid?: boolean;
 }
 
 // Props
@@ -47,7 +48,7 @@ const normalizeModelProvider = (provider: string) => {
       {{ $t('aimodel.selector.loadError') }}
     </p>
     <Select v-else v-model="modelValue">
-      <SelectTrigger :class="props.class">
+      <SelectTrigger :class="props.class" :aria-invalid="invalid || undefined">
         <SelectValue :placeholder="$t('aimodel.selector.placeholder')" />
       </SelectTrigger>
       <SelectContent>
