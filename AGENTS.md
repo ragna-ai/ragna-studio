@@ -100,6 +100,8 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 shadow offsets and keyframe nudges. `app/assets/css/tokens.css` is generated from the design file: never edit it by
 hand; ask for a design change instead. `main.css` maps shadcn names onto it. Design tools such as FigCraft hand over
 `#hex` and `px`; convert them with the oklch-conversion skill's script, never by hand or verbatim.
+Controls focus with a 2px ink ring and a 2px offset. To switch it off inside a composite (input group, cell editor),
+use `focus-visible:ring-0 focus-visible:ring-offset-0`: in Tailwind v4 the offset alone still draws the ring.
 
 **migrations**: Local dev: push schema directly to DB with `db:push`, don't hand-write SQL. Anything destined for
 production goes through `db:generate` (commits SQL under `packages/database/drizzle/`) and is applied by the
@@ -147,6 +149,10 @@ Always load the clean-code skill. For `apps/api` changes, also load the tdd skil
 variants or a new abstraction, load the system-design skill; for a vendor connector, also integration-connector.
 Before adding a dependency, load the dependency-choice skill. For PRDs, design
 docs and slices in `specs/`, load the spec-writing skill.
+
+Skills in an app or package folder (`apps/web/.claude/skills`, `packages/*/.claude/skills`) are directory-scoped:
+they only load after you open a file in that folder, so `Skill(<name>)` can report "Unknown skill" before that.
+Read them by path instead: `apps/web/.claude/skills/<name>/SKILL.md`.
 
 **Branches and worktrees**: start every task on a new branch from `origin/main`. If the checkout has uncommitted
 changes or another agent works in it, create a worktree instead: `wt switch --create <branch> --base origin/main`
