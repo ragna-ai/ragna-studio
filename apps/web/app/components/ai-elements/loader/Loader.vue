@@ -12,13 +12,13 @@ defineProps<Props>();
 <template>
   <span :class="cn('inline-flex items-center gap-1', $props.class)">
     <span
-      class="h-1 w-1 animate-loader-dot rounded-full bg-muted-foreground/70 delay-0"
+      class="size-1 animate-loader-dot rounded-full bg-muted-foreground/70 motion-reduce:animate-none"
     />
     <span
-      class="h-1 w-1 animate-loader-dot rounded-full bg-muted-foreground/70 delay-150"
+      class="size-1 animate-loader-dot rounded-full bg-muted-foreground/70 [animation-delay:150ms] motion-reduce:animate-none"
     />
     <span
-      class="h-1 w-1 animate-loader-dot rounded-full bg-muted-foreground/70 delay-300"
+      class="size-1 animate-loader-dot rounded-full bg-muted-foreground/70 [animation-delay:300ms] motion-reduce:animate-none"
     />
   </span>
 </template>

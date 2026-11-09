@@ -360,6 +360,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.5(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3

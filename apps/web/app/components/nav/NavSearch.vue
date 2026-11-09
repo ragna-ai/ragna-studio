@@ -21,7 +21,7 @@ defineProps<{ collapsed?: boolean }>();
     <Icon name="hugeicons:search-01" class="size-4 shrink-0 text-icon" />
     <span class="truncate">{{ $t('nav.search') }}</span>
     <kbd
-      class="ml-auto flex h-5 items-center rounded-[5px] border px-1.25 font-mono text-caption font-medium"
+      class="ml-auto flex h-5 items-center rounded-sm border px-1.25 font-mono text-caption font-medium"
     >
       ⌘K
     </kbd>
