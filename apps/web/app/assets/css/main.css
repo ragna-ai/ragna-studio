@@ -173,7 +173,8 @@
 
 @theme {
   --animate-loader-dot: loader-dot-bounce 1.4s ease-in-out infinite;
-  --animate-wash-drift: wash-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+  --animate-wash-drift: wash-drift 6s cubic-bezier(0.22, 1, 0.36, 1) infinite
+    alternate;
 
   @keyframes loader-dot-bounce {
     0%,
