@@ -22,7 +22,7 @@ const props = withDefaults(
   {
     direction: 'end',
     behavior: 'smooth',
-    variant: 'secondary',
+    variant: 'outline',
     size: 'icon-sm',
   },
 );
