@@ -40,8 +40,10 @@ const controller = useRichTextEditor({
 const saveStatus = computed<'saved' | 'saving'>(() =>
   isDirty.value ? 'saving' : 'saved',
 );
-const ancestorItems = computed(() => [
+
+usePageBreadcrumb(() => [
   { label: t('document.list.title'), to: '/document' },
+  { label: title.value },
 ]);
 
 // Functions
@@ -85,15 +87,12 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
-      <PageBreadcrumb :items="ancestorItems">
-        <template #current>
-          <InlineNameField
-            v-model:name="title"
-            :label="t('document.editor.rename')"
-            @save="handleTitleSave"
-          />
-        </template>
-      </PageBreadcrumb>
+      <InlineNameField
+        v-model:name="title"
+        :label="t('document.editor.rename')"
+        class="min-w-0"
+        @save="handleTitleSave"
+      />
       <div class="flex shrink-0 items-center gap-3">
         <div class="text-muted-foreground">
           <SavePenIcon

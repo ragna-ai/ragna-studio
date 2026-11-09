@@ -65,10 +65,14 @@ const isFolderNotFound = computed(
 const isListEmpty = computed(
   () => documents.value.length === 0 && folderRows.value.length === 0,
 );
-const breadcrumbItems = computed(() => [
-  { label: t('document.list.title'), to: '/document' },
-  { label: openFolderData.value?.folder.name ?? '' },
-]);
+usePageBreadcrumb(() =>
+  openFolderId.value
+    ? [
+        { label: t('document.list.title'), to: '/document' },
+        { label: openFolderData.value?.folder.name ?? '' },
+      ]
+    : [],
+);
 
 // Functions
 function openFolder(folderId: string) {
@@ -167,8 +171,6 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
       </div>
 
       <template v-else-if="documentsData">
-        <PageBreadcrumb v-if="openFolderId" :items="breadcrumbItems" />
-
         <div
           v-if="isListEmpty"
           class="space-y-3 rounded-lg border p-6 text-sm text-muted-foreground"

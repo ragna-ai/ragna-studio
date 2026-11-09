@@ -44,6 +44,13 @@ own nav: account, organization, email and integrations, one address per
 section.
 → [specs/settings/246-settings-area/prd.md](./settings/246-settings-area/prd.md)
 
+Every page sits in an inset panel with a top bar: the sidebar toggle and one
+breadcrumb that pages declare (section name by default). The sidebar opens
+with the workspace row and ends with notifications and the user row. The
+dashboard leads with what is due today: a summary line, then Tasks,
+Workflows, Agents and Today cards on the home overview data.
+→ [specs/home/312-studio-shell/prd.md](./home/312-studio-shell/prd.md)
+
 ### Auth
 
 better-auth with a Drizzle adapter, Google OAuth, and an admin plugin.

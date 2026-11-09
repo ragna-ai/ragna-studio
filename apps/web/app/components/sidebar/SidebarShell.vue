@@ -11,8 +11,6 @@ const props = withDefaults(defineProps<SidebarShellProps>(), {
   collapsed: false,
   class: undefined,
 });
-
-const paddingX = computed(() => (props.collapsed ? 'px-2' : 'px-3'));
 </script>
 
 <template>
@@ -20,19 +18,21 @@ const paddingX = computed(() => (props.collapsed ? 'px-2' : 'px-3'));
     :data-collapsed="props.collapsed"
     :class="
       cn(
-        'relative flex h-full shrink-0 flex-col transition-all duration-300 ease-out',
-        props.collapsed ? 'w-14' : 'w-56',
+        'relative flex h-full shrink-0 flex-col transition-[width] duration-200 ease-out motion-reduce:transition-none',
+        props.collapsed
+          ? 'w-(--sidebar-width-collapsed)'
+          : 'w-(--sidebar-width)',
         props.class,
       )
     "
   >
-    <div class="shrink-0" :class="paddingX">
+    <div class="shrink-0 px-2">
       <slot name="header" />
     </div>
-    <div class="min-h-0 grow overflow-y-auto" :class="paddingX">
+    <div class="-my-1 min-h-0 grow overflow-y-auto px-2 py-1">
       <slot />
     </div>
-    <div class="shrink-0" :class="paddingX">
+    <div class="shrink-0 px-2">
       <slot name="footer" />
     </div>
   </aside>

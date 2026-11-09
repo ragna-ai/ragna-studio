@@ -73,6 +73,11 @@ const { mutateAsync: publishWorkflow, isPending: isPublishing } =
 const { data: agentsData } = useGetAllAgents();
 const { t } = useI18n();
 
+usePageBreadcrumb(() => [
+  { label: t('workflow.list.title'), to: '/workflow' },
+  { label: name.value },
+]);
+
 // Computed
 const selectedNode = computed(
   () => nodes.value.find((node) => node.id === selectedNodeId.value) ?? null,
@@ -188,17 +193,11 @@ async function handlePublish() {
   <div class="flex h-full flex-col">
     <header class="flex items-center justify-between border-b px-4 py-2">
       <div class="min-w-0">
-        <PageBreadcrumb
-          :items="[{ label: t('workflow.list.title'), to: '/workflow' }]"
-        >
-          <template #current>
-            <InlineNameField
-              v-model:name="name"
-              :label="t('workflow.editor.nameLabel')"
-              @save="handleSaveDetails"
-            />
-          </template>
-        </PageBreadcrumb>
+        <InlineNameField
+          v-model:name="name"
+          :label="t('workflow.editor.nameLabel')"
+          @save="handleSaveDetails"
+        />
         <p class="text-xs text-muted-foreground">
           {{
             workflow.publishedDefinition

@@ -17,7 +17,7 @@ useHead({
   title: t('workflow.create.title'),
 });
 
-const breadcrumbItems = computed(() => [
+usePageBreadcrumb(() => [
   { label: t('workflow.list.title'), to: '/workflow' },
   { label: t('workflow.create.title') },
 ]);
@@ -51,11 +51,7 @@ const form = useForm({
         <HeadingTitle
           :title="t('workflow.create.title')"
           :subtitle="t('workflow.create.subtitle')"
-        >
-          <template #title>
-            <PageBreadcrumb :items="breadcrumbItems" />
-          </template>
-        </HeadingTitle>
+        />
       </template>
       <template #bottom> </template>
     </Heading>

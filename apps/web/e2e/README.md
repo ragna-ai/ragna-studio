@@ -2,6 +2,8 @@
 
 Playwright drives the real web app against the real API, with the AI providers mocked.
 
+Tests check behaviour only: what the user can do and what happens. Never assert design (positions, sizes, spacing, colours, classes); that is a visual review against the design.
+
 ## Run
 
 One-time setup:

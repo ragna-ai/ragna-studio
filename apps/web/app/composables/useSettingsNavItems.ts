@@ -1,17 +1,3 @@
-import {
-  BuildingIcon,
-  CableIcon,
-  CoinsIcon,
-  LanguagesIcon,
-  PlugIcon,
-  UserIcon,
-  UsersIcon,
-  WalletCardsIcon,
-  LayoutGridIcon,
-  MailIcon,
-  TagIcon,
-} from '@lucide/vue';
-import type { Component } from 'vue';
 import { useGetMcpSettings } from '~/features/mcp/composables/useMcpApi';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 import { isOwnerOrAdmin } from '~/features/organization/lib/roles';
@@ -19,7 +5,7 @@ import { isOwnerOrAdmin } from '~/features/organization/lib/roles';
 export interface SettingsNavItem {
   id: string;
   path: string;
-  icon: Component;
+  icon: string;
   label: string;
   exact: boolean;
 }
@@ -43,7 +29,7 @@ export function useSettingsNavItems() {
   function item(
     id: string,
     path: string,
-    icon: Component,
+    icon: string,
     exact = false,
   ): SettingsNavItem {
     return { id, path, icon, label: t(`settings.nav.${id}`), exact };
@@ -51,27 +37,27 @@ export function useSettingsNavItems() {
 
   const navGroups = computed<SettingsNavGroup[]>(() => {
     const organizationItems = [
-      item('general', '/settings/organization', BuildingIcon, true),
-      item('members', '/settings/organization/members', UsersIcon),
+      item('general', '/settings/organization', 'building-03', true),
+      item('members', '/settings/organization/members', 'user-group'),
     ];
     if (canManageOrganization.value) {
       organizationItems.push(
-        item('workspaces', '/settings/organization/workspaces', LayoutGridIcon),
-        item('usage', '/settings/organization/usage', WalletCardsIcon),
+        item('workspaces', '/settings/organization/workspaces', 'grid-view'),
+        item('usage', '/settings/organization/usage', 'wallet-01'),
       );
     }
 
     const integrationItems = [
-      item('connections', '/settings/connections', CableIcon),
+      item('connections', '/settings/connections', 'connect'),
     ];
     if (isMcpAvailable.value) {
-      integrationItems.push(item('mcp', '/settings/mcp', PlugIcon));
+      integrationItems.push(item('mcp', '/settings/mcp', 'plug-01'));
     }
 
     const emailItems = [
-      item('general', '/settings/mail', MailIcon, true),
-      item('categories', '/settings/mail/categories', TagIcon),
-      item('senders', '/settings/mail/senders', UsersIcon),
+      item('general', '/settings/mail', 'mail-01', true),
+      item('categories', '/settings/mail/categories', 'tag-01'),
+      item('senders', '/settings/mail/senders', 'user-group'),
     ];
 
     return [
@@ -79,9 +65,9 @@ export function useSettingsNavItems() {
         id: 'account',
         label: t('settings.groups.account'),
         items: [
-          item('profile', '/settings/profile', UserIcon),
-          item('language', '/settings/language', LanguagesIcon),
-          item('credits', '/settings/credits', CoinsIcon),
+          item('profile', '/settings/profile', 'user'),
+          item('language', '/settings/language', 'translate'),
+          item('credits', '/settings/credits', 'coins-01'),
         ],
       },
       {

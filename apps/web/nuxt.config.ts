@@ -93,6 +93,8 @@ export default defineNuxtConfig({
   // ICONS
   icon: {
     provider: 'none',
+    // Icon CSS sits below Tailwind utilities, so `size-*` classes win over its 1em default.
+    cssLayer: 'base',
     clientBundle: {
       scan: true,
       // Attachment file-type icons are resolved from a filename at runtime
@@ -110,6 +112,31 @@ export default defineNuxtConfig({
         'logos:google-icon',
         'logos:microsoft-icon',
         'logos:linkedin-icon',
+        // Nav icons live in .ts lookups (`useNavItems`, `useSettingsNavItems`).
+        'hugeicons:mail-01',
+        'hugeicons:home-01',
+        'hugeicons:check-list',
+        'hugeicons:file-02',
+        'hugeicons:grid-table',
+        'hugeicons:bubble-chat',
+        'hugeicons:robotic',
+        'hugeicons:flow-connection',
+        'hugeicons:image-01',
+        'hugeicons:video-replay',
+        'hugeicons:share-08',
+        'hugeicons:building-03',
+        'hugeicons:user-group',
+        'hugeicons:grid-view',
+        'hugeicons:wallet-01',
+        'hugeicons:connect',
+        'hugeicons:plug-01',
+        'hugeicons:tag-01',
+        'hugeicons:user',
+        'hugeicons:translate',
+        'hugeicons:coins-01',
+        // Notification kind marks live in `types/kind.ts`.
+        'hugeicons:unplug',
+        'hugeicons:notification-01',
       ],
     },
     customCollections: [
@@ -130,6 +157,11 @@ export default defineNuxtConfig({
       {
         name: 'Inter',
         provider: 'google',
+      },
+      {
+        name: 'Geist Mono',
+        provider: 'google',
+        weights: [400, 500],
       },
     ],
   },

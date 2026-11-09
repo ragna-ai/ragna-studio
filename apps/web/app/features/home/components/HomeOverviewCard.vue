@@ -1,97 +1,65 @@
 <script setup lang="ts">
-import { Maximize2Icon, PlusIcon, type LucideIcon } from '@lucide/vue';
+interface HomeOverviewCardProps {
+  icon: string;
+  title: string;
+  total: number;
+  viewAllTo?: string;
+  actionLabel?: string;
+  loading?: boolean;
+  isEmpty?: boolean;
+  emptyLabel?: string;
+  quickCreateLabel?: string;
+  quickCreateTo?: string;
+}
 
-// Props
-// Generic shell shared by all four overview cards:
-// icon chip + title + total badge + "view all", a slotted
-// row/tile body, and a ghost quick-create row that doubles as the empty
-// state. `quickCreateLabel`/`quickCreateTo` are optional because the
-// Agents card builds its own dashed create tile into the body instead
-// and skips this footer entirely.
-const props = withDefaults(
-  defineProps<{
-    icon: LucideIcon;
-    iconClass: string;
-    title: string;
-    total: number;
-    viewAllTo: string;
-    loading?: boolean;
-    isEmpty?: boolean;
-    emptyLabel?: string;
-    quickCreateLabel?: string;
-    quickCreateTo?: string;
-  }>(),
-  {
-    loading: false,
-    isEmpty: false,
-    emptyLabel: '',
-    quickCreateLabel: undefined,
-    quickCreateTo: undefined,
-  },
-);
-
-// Computed
-// Bundled into one object (rather than two separate booleans/strings) so
-// the template never needs a non-null assertion to use the label/link
-// after the `v-if` guard below.
-const quickCreate = computed(() => {
-  if (!props.quickCreateLabel || !props.quickCreateTo) {
-    return null;
-  }
-  return { label: props.quickCreateLabel, to: props.quickCreateTo };
+withDefaults(defineProps<HomeOverviewCardProps>(), {
+  viewAllTo: undefined,
+  actionLabel: undefined,
+  loading: false,
+  isEmpty: false,
+  emptyLabel: '',
+  quickCreateLabel: undefined,
+  quickCreateTo: undefined,
 });
 </script>
 
 <template>
-  <Card class="gap-0 overflow-hidden px-6 shadow-none">
-    <CardHeader class="flex items-center justify-between gap-3 px-0! pb-4!">
-      <div class="flex min-w-0 items-center gap-2.5">
-        <div
-          class="flex size-8 shrink-0 items-center justify-center rounded-lg"
-          :class="iconClass"
-        >
-          <component :is="icon" class="size-4 stroke-1.5" />
-        </div>
-        <CardTitle class="truncate">
-          <NuxtLinkLocale
-            :to="viewAllTo"
-            :title="$t('home.overview.viewAll')"
-            class="text-base hover:underline"
-          >
-            {{ title }}
-          </NuxtLinkLocale>
-        </CardTitle>
-        <Badge variant="outline" class="text-xxs opacity-75">{{ total }}</Badge>
-      </div>
+  <section
+    :aria-label="title"
+    class="rounded-lg border bg-card px-(--inset-card) pt-4 pb-2"
+  >
+    <header class="mb-1 flex h-8 items-center gap-2">
+      <Icon :name="icon" class="size-4 shrink-0 text-icon" />
+      <h2 class="truncate text-title-sm font-semibold">{{ title }}</h2>
+      <span class="font-mono text-caption text-muted-foreground">{{
+        total
+      }}</span>
       <NuxtLinkLocale
+        v-if="viewAllTo && actionLabel"
         :to="viewAllTo"
-        :title="$t('home.overview.viewAll')"
-        class="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
+        class="-mr-2 ml-auto flex shrink-0 items-center gap-0.5 rounded-md px-2 py-1 text-body font-medium text-muted-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
-        <Maximize2Icon class="size-3" />
+        {{ actionLabel }}
+        <Icon name="hugeicons:arrow-right-01" class="size-3.5" />
       </NuxtLinkLocale>
-    </CardHeader>
+    </header>
 
-    <CardContent class="p-0">
-      <div v-if="loading" class="divide-y divide-foreground/5">
-        <div v-for="n in 3" :key="n" class="flex items-center gap-3 px-6 py-3">
-          <Skeleton class="h-4 w-full" />
-        </div>
+    <div v-if="loading">
+      <div v-for="n in 3" :key="n" class="flex h-11 items-center border-t">
+        <Skeleton class="h-4 w-full" />
       </div>
-      <p v-else-if="isEmpty" class="px-6 py-4 text-sm text-muted-foreground">
-        {{ emptyLabel }}
-      </p>
-      <slot v-else />
-    </CardContent>
-
-    <CardFooter v-if="quickCreate" class="border-t border-foreground/5 p-0!">
+    </div>
+    <div v-else-if="isEmpty" class="border-t py-3">
+      <p class="text-body text-muted-foreground">{{ emptyLabel }}</p>
       <NuxtLinkLocale
-        :to="quickCreate.to"
-        class="flex w-full items-center gap-2 px-6 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        v-if="quickCreateLabel && quickCreateTo"
+        :to="quickCreateTo"
+        class="mt-2 -ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-body font-medium text-foreground transition-colors hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
-        <PlusIcon class="size-4" />
-        {{ quickCreate.label }}
+        <Icon name="hugeicons:add-01" class="size-4 text-icon" />
+        {{ quickCreateLabel }}
       </NuxtLinkLocale>
-    </CardFooter>
-  </Card>
+    </div>
+    <slot v-else />
+  </section>
 </template>

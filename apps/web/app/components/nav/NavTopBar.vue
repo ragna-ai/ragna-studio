@@ -1,47 +1,28 @@
-<script setup lang="ts">
-import { MaximizeIcon } from '@lucide/vue';
-import ChatCreateButton from '~/features/chat/components/ChatCreateButton.vue';
-import ChatHeading from '~/features/chat/components/ChatHeading.vue';
-import { useChatStore } from '~/features/chat/stores/chat.store';
-import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
-
-const chatStore = useChatStore();
-
-const onExpandClick = () => {
-  const rootNode = document.documentElement;
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-  } else {
-    rootNode.requestFullscreen();
-  }
-};
-</script>
-
 <template>
-  <div class="grid h-14 grid-cols-3 items-center border-0">
-    <div class="flex">
-      <div class="mt-1 ml-[0.1rem] px-6">
-        <NavTopPopover />
-      </div>
-      <div class="flex items-center space-x-2 pl-2 text-sm">
-        <div>
-          <WorkspaceSwitcher />
-        </div>
-        <div></div>
-      </div>
-    </div>
-    <div class="flex flex-row items-center justify-center">
-      <ChatHeading v-if="chatStore.id" />
-    </div>
-    <div class="flex h-full items-center justify-end space-x-5">
-      <ChatCreateButton v-if="chatStore.agent" :agent-id="chatStore.agent.id" />
-      <NavNotifications />
-      <button type="button" @click.stop="onExpandClick">
-        <MaximizeIcon class="size-5 stroke-1 hover:stroke-1.5" />
+  <header
+    :aria-label="$t('nav.topBar.label')"
+    class="flex h-(--topbar-height) shrink-0 items-center gap-2 px-[calc(var(--page-x)-0.5rem)]"
+  >
+    <NavSideToggle />
+    <div class="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+    <NavBreadcrumb class="ml-3" />
+    <div class="ml-auto flex shrink-0 items-center gap-2">
+      <button
+        type="button"
+        class="flex size-8 items-center justify-center rounded-md text-icon"
+        aria-disabled="true"
+        :aria-label="$t('nav.topBar.favorite')"
+      >
+        <Icon name="hugeicons:star" class="size-4" />
       </button>
-      <div class="pr-5">
-        <NavUserMenu :size-full="false" />
-      </div>
+      <button
+        type="button"
+        class="flex size-8 items-center justify-center rounded-md text-icon"
+        aria-disabled="true"
+        :aria-label="$t('nav.topBar.moreActions')"
+      >
+        <Icon name="hugeicons:more-horizontal" class="size-4" />
+      </button>
     </div>
-  </div>
+  </header>
 </template>

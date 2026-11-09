@@ -5,63 +5,76 @@ sidebar:
   order: 2
 ---
 
-RAGNA Studio has one navigation sidebar on the left. Everything opened in it belongs to the workspace selected at the top of the sidebar.
+RAGNA Studio has one navigation sidebar on the left and a top bar above every page. Everything opened in the sidebar belongs to the workspace selected at the top of the sidebar.
 
 ## The sidebar
 
-The workspace switcher sits at the top. The selected workspace decides what every page shows. See [Workspaces](/workspaces).
+The workspace row sits at the top. It shows the selected workspace's name over the organization's name. Choose it to switch workspaces, add a workspace or manage workspaces. Workspaces are switched only here. The selected workspace decides what every page shows. See [Workspaces](/workspaces).
 
-Below it, the sidebar links to every area of RAGNA Studio:
+Below it, the sidebar links to every area of RAGNA Studio, in three groups:
 
-| Item          | What it holds                                                                                         |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| **Mail**      | The user's connected mailbox. Shown only in the personal workspace. See [Email](/integrations/email). |
-| **Dashboard** | The overview of the current workspace.                                                                |
-| **Tasks**     | The task board. See [Tasks](/content/tasks).                                                          |
-| **Workflows** | Automations built from agents. See [Workflows](/workflows).                                           |
-| **Agents**    | The AI co-workers. See [Create an agent](/agents).                                                    |
-| **Chat**      | Conversations with agents. See [Chat](/agents/chat).                                                  |
-| **Datasets**  | Tables that users and agents share. See [Datasets](/content/datasets).                                |
-| **Docs**      | Documents and folders. See [Documents](/content/documents).                                           |
-| **Images**    | Image generation. See [Images](/media/images).                                                        |
-| **Videos**    | Video generation. See [Videos](/media/videos).                                                        |
-| **Social**    | Social media posts. See [Social posts](/integrations/social-posts).                                   |
+| Group      | Item          | What it holds                                                                                         |
+| ---------- | ------------- | ----------------------------------------------------------------------------------------------------- |
+|            | **Mail**      | The user's connected mailbox. Shown only in the personal workspace. See [Email](/integrations/email). |
+|            | **Dashboard** | The overview of the current workspace.                                                                |
+| **Work**   | **Tasks**     | The task board. See [Tasks](/content/tasks).                                                          |
+| **Work**   | **Docs**      | Documents and folders. See [Documents](/content/documents).                                           |
+| **Work**   | **Datasets**  | Tables that users and agents share. See [Datasets](/content/datasets).                                |
+| **AI**     | **Chat**      | Conversations with agents. See [Chat](/agents/chat).                                                  |
+| **AI**     | **Agents**    | The AI co-workers. See [Create an agent](/agents).                                                    |
+| **AI**     | **Workflows** | Automations built from agents. See [Workflows](/workflows).                                           |
+| **Create** | **Images**    | Image generation. See [Images](/media/images).                                                        |
+| **Create** | **Videos**    | Video generation. See [Videos](/media/videos).                                                        |
+| **Create** | **Social**    | Social media posts. See [Social posts](/integrations/social-posts).                                   |
 
-The bell and the account menu sit at the bottom of the sidebar.
+**Notifications** and the user row sit at the bottom of the sidebar.
 
 ### Expand and collapse
 
-The sidebar shows icons only by default. Choose the toggle at the bottom to expand it. Every item then shows its name, and so do the workspace switcher, the bell and the account menu. Choose the toggle again to collapse it. In the collapsed sidebar, hover an item to see its name.
+The sidebar starts expanded. In a window narrower than 1024 pixels it starts collapsed. Choose the toggle at the left of the top bar to collapse or expand it. The collapsed sidebar shows icons only. Hover an item to see its name.
 
 RAGNA Studio remembers the choice after a reload.
 
+## The top bar
+
+The top bar shows where the user is. A list page shows its area, such as **Datasets**. A detail page adds the item's name after the area. Choose the area to go back to its list.
+
 ## The dashboard
 
-The **Dashboard** greets the user and shows the latest activity of the current workspace in cards:
+The **Dashboard** greets the user with today's date and a short summary: how many tasks are due today and how many workflows failed on their last run. When neither applies, it says **Nothing due today.**
 
-- **Tasks**: open tasks, grouped by status.
-- **Documents**, **Workflows** and **Chats**: the most recently changed items.
-- **Calendar**: tasks that are due this week. Page through the weeks with the arrows.
-- **Agents**: the workspace's agents, one tile each.
+**New chat** and **New task** start a chat or a task directly.
 
-Every card links to its full page with **View all**. An empty card offers a shortcut such as **New task** or **New chat**.
+The cards below show the current workspace:
+
+- **Tasks**: the most recently changed open tasks, sorted by due date. The header counts all open tasks.
+- **Workflows**: the most recently changed workflows with the status of their last run, or **Never run**.
+- **Agents**: the workspace's agents with their model. Choose an agent to start a chat with it.
+- **Today**: the tasks due today, with their time when one is set.
+
+Every card links to its full page. An empty card offers a shortcut such as **New task**.
 
 ## Notifications
 
-The bell shows a red dot when the user has unread notifications. A notification arrives when:
+**Notifications** shows the number of unread notifications. In the collapsed sidebar, a red dot marks unread notifications. A notification arrives when:
 
 - a workflow run completes or fails,
 - a task reminder is due,
 - generated images or a generated video are ready, or failed.
 
-Choose a notification to open what it is about. If it belongs to another workspace, RAGNA Studio switches there first. The panel can mark all as read, delete one notification, or clear all of them.
+Choose **Notifications** to open the panel. It groups notifications into **Today**, **Yesterday** and **Earlier**. Unread notifications are marked with a dot, and a failed result is shown in red.
+
+Choose a notification to open what it is about. If it belongs to another workspace, RAGNA Studio switches there first. **Mark all as read** and **Clear all** sit at the top of the panel. To delete one notification, hover it and choose the delete button in place of its time.
 
 ## The account menu
 
-Choose the user's initials at the bottom of the sidebar to open the account menu:
+The user row at the bottom of the sidebar shows the user's name and organization role. Choose it to open the account menu. It shows the user's name and email address, and:
 
+- **Credits** shows the credit balance and opens the credit settings.
 - **Settings** opens the settings area.
 - **Sign out** ends the session.
+
+The menu ends with the RAGNA Studio version.
 
 ## Settings
 

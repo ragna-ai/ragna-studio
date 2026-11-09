@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useNavItems } from '~/composables/useNavItems';
+import WorkspaceSwitcher from '~/features/workspace/components/WorkspaceSwitcher.vue';
 import { useNavSidebarStore } from '~/stores/navsidebar.store';
 
 const { navGroups } = useNavItems();
@@ -10,8 +11,9 @@ const collapsed = computed(() => !navSidebarStore.expanded);
 <template>
   <SidebarShell :collapsed="collapsed">
     <template #header>
-      <div class="pt-3 pb-3">
-        <NavSideToggle />
+      <div class="space-y-2.5 pb-2.5">
+        <WorkspaceSwitcher :collapsed="collapsed" />
+        <NavSearch :collapsed="collapsed" />
       </div>
     </template>
     <nav :aria-label="$t('nav.title')">
@@ -32,7 +34,7 @@ const collapsed = computed(() => !navSidebarStore.expanded);
       </SidebarGroup>
     </nav>
     <template #footer>
-      <div class="space-y-0.5 pt-2 pb-3">
+      <div class="space-y-0.5">
         <NavNotifications :expanded="!collapsed" />
         <NavUserMenu :size-full="!collapsed" />
       </div>

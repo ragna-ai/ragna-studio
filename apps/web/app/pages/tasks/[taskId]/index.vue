@@ -38,14 +38,9 @@ const { mutateAsync: deleteTask } = useDeleteTask();
 const task = computed(() => taskData.value?.task);
 const labels = computed(() => labelsData.value?.taskLabels ?? []);
 
-// The title field is a page-owned h1,
-// not the breadcrumb's current item; the breadcrumb's last item is a
-// read-only "TSK-<n>: <title>" label instead. It reads from the `title` ref
-// (not `task.value.title`) so it stays live with the h1 while a debounced
-// save is still pending, not just after the next refetch. Long titles are
-// truncated by PageBreadcrumb's own CSS (`max-w-lg truncate` on the last
-// item), the same mechanism the document editor's breadcrumb relies on.
-const ancestorItems = computed(() => [
+// Reads from the `title` ref (not `task.value.title`) so the trail stays live
+// with the h1 while a debounced save is still pending.
+usePageBreadcrumb(() => [
   { label: t('task.list.title'), to: '/tasks' },
   {
     label: task.value
@@ -132,8 +127,7 @@ async function handleDelete() {
 
 <template>
   <div v-if="task" class="flex h-full flex-col">
-    <header class="flex items-center justify-between border-b p-4">
-      <PageBreadcrumb :items="ancestorItems" />
+    <header class="flex items-center justify-end border-b p-4">
       <div class="shrink-0 text-muted-foreground">
         <SavePenIcon
           v-if="descriptionSaveStatus === 'saving'"

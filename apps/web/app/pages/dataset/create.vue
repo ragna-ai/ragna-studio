@@ -33,7 +33,7 @@ useHead({
   title: t('dataset.create.title'),
 });
 
-const breadcrumbItems = computed(() => [
+usePageBreadcrumb(() => [
   { label: t('dataset.list.title'), to: '/dataset' },
   { label: t('dataset.create.title') },
 ]);
@@ -65,11 +65,7 @@ const form = useForm({
         <HeadingTitle
           :title="t('dataset.create.title')"
           :subtitle="t('dataset.create.subtitle')"
-        >
-          <template #title>
-            <PageBreadcrumb :items="breadcrumbItems" />
-          </template>
-        </HeadingTitle>
+        />
       </template>
       <template #bottom> </template>
     </Heading>

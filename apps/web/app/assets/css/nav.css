@@ -1,22 +1,38 @@
-@layer components {
-  .sidebar-row {
-    @apply flex h-8 w-full items-center gap-2.5 rounded-md border border-transparent px-2 text-[0.8125rem] text-foreground transition-colors hover:bg-stone-200/50 hover:text-foreground;
-  }
+@utility sidebar-row {
+  @apply relative box-border flex h-8 w-full items-center gap-2.75 rounded-md border border-transparent px-2.5 text-body text-foreground outline-hidden transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 aria-disabled:opacity-50 data-[state=open]:bg-border;
 
-  .sidebar-row-active {
-    @apply bg-stone-200/60 text-foreground hover:bg-stone-200/60;
+  [data-collapsed='true'] & {
+    @apply justify-center px-0;
   }
+}
 
-  .sidebar-row-icon {
-    @apply size-4.5 shrink-0 stroke-1.5 text-stone-500;
-  }
+@utility sidebar-row-active {
+  @apply border-border bg-sidebar-accent font-medium shadow-xs hover:bg-sidebar-accent;
+}
 
-  .sidebar-row:hover .sidebar-row-icon,
-  .sidebar-row-active .sidebar-row-icon {
+@utility sidebar-row-icon {
+  @apply size-4.5 shrink-0 text-icon;
+
+  .sidebar-row:hover &,
+  .sidebar-row-active & {
     @apply text-foreground;
   }
+}
 
-  [data-collapsed='true'] .sidebar-row {
-    @apply justify-center px-0;
+@utility sidebar-menu-row {
+  @apply relative isolate flex h-13 w-full items-center gap-2 rounded-md px-2 outline-hidden transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas data-[state=open]:bg-border;
+
+  [data-collapsed='true'] & {
+    @apply justify-center bg-transparent px-0 hover:bg-transparent data-[state=open]:bg-transparent;
+  }
+
+  [data-collapsed='true'] &::before {
+    content: '';
+    @apply absolute -z-10 size-10 rounded-md transition-colors;
+  }
+
+  [data-collapsed='true'] &:hover::before,
+  [data-collapsed='true'] &[data-state='open']::before {
+    @apply bg-border;
   }
 }

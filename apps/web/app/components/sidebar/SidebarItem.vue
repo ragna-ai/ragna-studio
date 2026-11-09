@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
 import {
   Tooltip,
   TooltipContent,
@@ -9,7 +8,7 @@ import {
 
 interface SidebarItemProps {
   to: string;
-  icon: Component;
+  icon: string;
   label: string;
   collapsed?: boolean;
   exact?: boolean;
@@ -30,7 +29,7 @@ const isActive = computed(() => {
 <template>
   <li>
     <TooltipProvider :delay-duration="300">
-      <Tooltip>
+      <Tooltip :disabled="!props.collapsed">
         <TooltipTrigger as-child>
           <NuxtLinkLocale
             :to="props.to"
@@ -38,13 +37,16 @@ const isActive = computed(() => {
             :class="{ 'sidebar-row-active': isActive }"
             :aria-label="props.label"
           >
-            <component :is="props.icon" class="sidebar-row-icon" />
+            <Icon :name="`hugeicons:${props.icon}`" class="sidebar-row-icon" />
             <span v-if="!props.collapsed" class="truncate">
               {{ props.label }}
             </span>
           </NuxtLinkLocale>
         </TooltipTrigger>
-        <TooltipContent v-if="props.collapsed" side="right">
+        <TooltipContent
+          side="right"
+          class="flex h-7 items-center rounded-sm px-2.5 py-0 text-caption font-medium text-primary-foreground"
+        >
           {{ props.label }}
         </TooltipContent>
       </Tooltip>

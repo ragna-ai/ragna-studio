@@ -17,8 +17,8 @@ async function openUserMenu(page: Page) {
   await userRow(page).click();
 }
 
-function workspaceSubmenuTrigger(page: Page) {
-  return page.getByRole('menu').getByRole('menuitem').first();
+function workspaceRow(page: Page) {
+  return sidebar(page).getByRole('button').first();
 }
 
 function agentsLabel(page: Page) {
@@ -126,17 +126,6 @@ test.describe('app sidebar', () => {
     ).toBeVisible();
   });
 
-  test('opens the user menu on hover and closes it when the mouse leaves', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await userRow(page).hover();
-    await expect(page.getByRole('menu')).toBeVisible();
-
-    await page.getByRole('main').hover();
-    await expect(page.getByRole('menu')).toBeHidden();
-  });
-
   test('keeps the user menu open when its trigger is clicked after hovering', async ({
     page,
   }) => {
@@ -146,30 +135,29 @@ test.describe('app sidebar', () => {
     await expect(page.getByRole('menu')).toBeVisible();
   });
 
-  test('opens settings and help from the user menu', async ({ page }) => {
+  test('shows the version and opens settings from the user menu', async ({
+    page,
+  }) => {
     await page.goto('/');
     await openUserMenu(page);
-    await page.getByRole('menuitem', { name: 'Help' }).click();
-    await expect(page.getByText(/App version:/)).toBeVisible();
+    await expect(page.getByText(/^Version /)).toBeVisible();
 
     await page.getByRole('menuitem', { name: 'Settings' }).click();
     await expect(page).toHaveURL(/\/settings\/profile$/);
   });
 
-  test('switches workspace from the user menu', async ({ page }) => {
+  test('switches workspace from the workspace row', async ({ page }) => {
     await page.goto('/');
-    await openUserMenu(page);
-    await workspaceSubmenuTrigger(page).hover();
+    await workspaceRow(page).click();
     await page.getByRole('menuitem', { name: 'Add workspace' }).click();
     await page.getByRole('dialog').getByLabel('Name').fill(NEW_WORKSPACE_NAME);
     await page.getByRole('button', { name: 'Create workspace' }).click();
 
-    await openUserMenu(page);
-    await workspaceSubmenuTrigger(page).hover();
+    await workspaceRow(page).click();
     await page.getByRole('menuitem', { name: NEW_WORKSPACE_NAME }).click();
 
     await expect(
-      userRow(page).getByText(NEW_WORKSPACE_NAME, { exact: true }),
+      workspaceRow(page).getByText(NEW_WORKSPACE_NAME, { exact: true }),
     ).toBeVisible();
   });
 
