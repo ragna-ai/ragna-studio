@@ -57,7 +57,7 @@ const form = useForm({
                 @update:model-value="(v) => field.handleChange(String(v))"
                 @blur="field.handleBlur"
               />
-              <FormFieldInfo :state="state" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>

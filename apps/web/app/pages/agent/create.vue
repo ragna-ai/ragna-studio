@@ -12,13 +12,13 @@ import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 const { t } = useI18n();
 
 useHead({
-  title: t('agent.upsert.title'),
+  title: t('agent.list.newAgent'),
 });
 
 // Computed
 const crumbs = computed<PageCrumb[]>(() => [
   { label: t('agent.list.title'), to: '/agent' },
-  { label: t('agent.upsert.title') },
+  { label: t('agent.list.newAgent') },
 ]);
 
 // Functions
@@ -29,16 +29,7 @@ const crumbs = computed<PageCrumb[]>(() => [
 <template>
   <PagePanel :crumbs="crumbs">
     <SectionWrapper class="h-full">
-      <Heading bg-position="bottom">
-        <template #top>
-          <HeadingTitle
-            :title="$t('agent.upsert.title')"
-            :subtitle="$t('agent.upsert.subtitle')"
-          />
-        </template>
-        <template #bottom> </template>
-      </Heading>
-      <div class="flex min-h-0 flex-1 flex-col px-10 pb-8">
+      <div class="flex min-h-0 flex-1 flex-col px-20 py-8">
         <AgentUpsertForm />
       </div>
     </SectionWrapper>

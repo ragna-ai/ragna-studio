@@ -11,7 +11,7 @@ import { STORAGE_STATE_PATH } from '../playwright.config';
 
 const API_URL = 'http://localhost:3110';
 const PROMPT_LIMIT = 30_000;
-const INSTRUCTIONS_LABEL = 'Behavior / Instructions';
+const INSTRUCTIONS_LABEL = 'Instructions';
 
 const storageStateSchema = z.object({
   origins: z.array(
@@ -178,11 +178,11 @@ async function replaceFormattedText(field: Locator, text: string) {
 }
 
 async function showRawView(page: Page) {
-  await page.getByRole('tab', { name: 'Raw' }).click();
+  await page.getByRole('tab', { name: 'Raw text' }).click();
 }
 
 async function showFormattedView(page: Page) {
-  await page.getByRole('tab', { name: 'Formatted' }).click();
+  await page.getByRole('tab', { name: 'Markdown' }).click();
 }
 
 async function saveAgent(page: Page, agentId: string) {
@@ -399,13 +399,37 @@ test.describe('raw view', () => {
     await showRawView(page);
 
     await page.getByRole('tab', { name: 'Context' }).click();
-    await expect(promptField(page, 'Context')).toHaveValue(
+    await expect(promptField(page, 'Background knowledge')).toHaveValue(
       '<facts>one</facts>',
     );
 
     await page.reload();
     await expect(promptField(page, INSTRUCTIONS_LABEL)).toHaveValue(
       storedPrompt,
+    );
+  });
+});
+
+test.describe('field controls', () => {
+  test('edits the same value in the expanded side panel', async ({
+    page,
+    request,
+  }) => {
+    const agentId = await seedAgent(request, { systemPrompt: 'alpha' });
+    await page.goto(`/agent/${agentId}`);
+
+    await page.getByRole('button', { name: 'Expand' }).click();
+    const panel = page.getByRole('dialog', { name: INSTRUCTIONS_LABEL });
+    const panelField = panel.getByRole('textbox', { name: INSTRUCTIONS_LABEL });
+    await panelField.click();
+    await panelField.press('ControlOrMeta+End');
+    await panelField.pressSequentially(' beta');
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    await saveAgent(page, agentId);
+
+    expect((await fetchAgent(request, agentId)).systemPrompt).toBe(
+      'alpha beta',
     );
   });
 });

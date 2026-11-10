@@ -48,6 +48,8 @@
   --wash-sand: oklch(0.916 0.033 83.709);
   --wash-sage: oklch(0.908 0.026 126.569);
   --wash-ochre: oklch(0.905 0.056 82.927);
+  --selected: oklch(0.949 0.004 91.447);
+  --overlay: oklch(0.216 0.006 56.043 / 40%);
 }
 
 @theme static {

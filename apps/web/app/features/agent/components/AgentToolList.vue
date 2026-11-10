@@ -23,6 +23,11 @@ type AgentToolListEmit = {
   'update:defaultDatasetId': [value: string | null];
 };
 
+type AgentToolGroup = {
+  key: 'builtin' | 'connected';
+  entries: AgentToolCatalogEntry[];
+};
+
 // shadcn's Select can't use an empty string as an item value (it's the
 // internal "no selection" sentinel), so a "None" option needs its own
 // placeholder value, mapped back to `null` on change. Same pattern as
@@ -55,6 +60,22 @@ const connectedIntegrationIds = computed(
     ),
 );
 const isDatasetsGranted = computed(() => isGranted('datasets'));
+const toolGroups = computed<AgentToolGroup[]>(() =>
+  [
+    {
+      key: 'builtin' as const,
+      entries: AGENT_TOOL_CATALOG.filter(
+        ({ category }) => category === 'builtin',
+      ),
+    },
+    {
+      key: 'connected' as const,
+      entries: AGENT_TOOL_CATALOG.filter(
+        ({ category }) => category !== 'builtin',
+      ),
+    },
+  ].filter((group) => group.entries.length > 0),
+);
 
 // Functions
 function isGranted(toolId: AgentToolId): boolean {
@@ -106,101 +127,141 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
 </script>
 
 <template>
-  <template v-for="entry in AGENT_TOOL_CATALOG" :key="entry.id">
-    <div
-      :data-invalid="props.invalid"
-      class="flex flex-row items-center space-x-3"
+  <div class="space-y-6">
+    <section
+      v-for="group in toolGroups"
+      :key="group.key"
+      :aria-label="$t(`agent.tool.groups.${group.key}`)"
     >
-      <Checkbox
-        :id="`form-rhf-checkbox-${entry.id}`"
-        :name="entry.id"
-        :model-value="isGranted(entry.id)"
-        class="border-stone-600"
-        @update:model-value="(checked) => handleToggle(entry, Boolean(checked))"
+      <p
+        class="mb-2 font-mono text-caption font-medium tracking-[0.04em] text-muted-foreground uppercase"
       >
-        <Icon name="hugeicons:tick-02" class="size-3.5" />
-      </Checkbox>
-      <Label
-        :for="`form-rhf-checkbox-${entry.id}`"
-        class="flex cursor-pointer space-x-3"
-      >
-        <div class="flex justify-center">
-          <Icon :name="AGENT_TOOL_ICONS[entry.id]" class="size-5 text-icon" />
-        </div>
-        <div class="space-y-1">
-          <p class="text-sm">{{ $t(`agent.tool.${entry.id}.label`) }}</p>
-          <p class="text-xs font-normal opacity-75">
-            {{ $t(`agent.tool.${entry.id}.description`) }}
-          </p>
-        </div>
-      </Label>
-    </div>
-    <div
-      v-if="entry.hasAccessLevels && isGranted(entry.id)"
-      class="ml-8 max-w-xs space-y-2 border-l pl-4"
-    >
-      <Label class="text-xs text-muted-foreground">
-        {{ $t('agent.tool.accessLevelLabel') }}
-      </Label>
-      <Select
-        :model-value="grantedAccess(entry.id)"
-        @update:model-value="
-          (v) => handleAccessChange(entry, v === 'write' ? 'write' : 'read')
-        "
-      >
-        <SelectTrigger class="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="read">
-            {{ $t('agent.tool.accessLevel.read') }}
-          </SelectItem>
-          <SelectItem value="write">
-            {{ $t('agent.tool.accessLevel.write') }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-      <p v-if="isConnectMissing(entry)" class="text-xs text-muted-foreground">
-        {{
-          $t('agent.tool.connectHint', {
-            name: $t(`agent.tool.${entry.id}.label`),
-          })
-        }}.
-        <NuxtLink :to="CONNECTIONS_PAGE_PATH" class="underline">
-          {{ $t('agent.tool.connectLink') }}
-        </NuxtLink>
+        {{ $t(`agent.tool.groups.${group.key}`) }}
       </p>
-    </div>
-  </template>
-
-  <div v-if="isDatasetsGranted" class="ml-8 max-w-xs space-y-2 border-l pl-4">
-    <Label class="text-xs text-muted-foreground">
-      {{ $t('agent.tool.datasets.defaultDatasetLabel') }}
-    </Label>
-    <Select
-      :model-value="defaultDatasetId ?? NO_DATASET"
-      @update:model-value="
-        (v) =>
-          emit('update:defaultDatasetId', v === NO_DATASET ? null : String(v))
-      "
-    >
-      <SelectTrigger class="w-full">
-        <SelectValue
-          :placeholder="$t('agent.tool.datasets.defaultDatasetPlaceholder')"
+      <div
+        v-for="entry in group.entries"
+        :key="entry.id"
+        :data-invalid="props.invalid"
+        class="grid grid-cols-[1rem_1rem_1fr] gap-x-3 py-2"
+      >
+        <Checkbox
+          :id="`form-rhf-checkbox-${entry.id}`"
+          :name="entry.id"
+          :model-value="isGranted(entry.id)"
+          class="mt-0.5"
+          @update:model-value="
+            (checked) => handleToggle(entry, Boolean(checked))
+          "
         />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem :value="NO_DATASET">
-          {{ $t('agent.tool.datasets.defaultDatasetNone') }}
-        </SelectItem>
-        <SelectItem
-          v-for="dataset in pickerDatasets"
-          :key="dataset.id"
-          :value="dataset.id"
+        <Label
+          :for="`form-rhf-checkbox-${entry.id}`"
+          class="col-span-2 col-start-2 grid cursor-pointer grid-cols-subgrid items-start"
         >
-          {{ dataset.name }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
+          <Icon
+            :name="AGENT_TOOL_ICONS[entry.id]"
+            class="mt-0.5 size-4 text-icon"
+          />
+          <div>
+            <p class="flex items-center gap-1 text-sm">
+              {{ $t(`agent.tool.${entry.id}.label`) }}
+              <TooltipProvider v-if="isConnectMissing(entry)">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      :aria-label="$t('agent.tool.notConnected')"
+                      @click.prevent="navigateTo(CONNECTIONS_PAGE_PATH)"
+                    >
+                      <Icon
+                        name="hugeicons:alert-02"
+                        class="size-4 text-status-warn-fg"
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{{ $t('agent.tool.notConnected') }}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </p>
+            <p class="text-sm font-normal text-muted-foreground">
+              {{ $t(`agent.tool.${entry.id}.description`) }}
+            </p>
+          </div>
+        </Label>
+
+        <div
+          v-if="entry.hasAccessLevels && isGranted(entry.id)"
+          class="col-start-3 mt-2 flex items-center gap-2"
+        >
+          <Label
+            class="w-30 shrink-0 text-sm font-normal text-muted-foreground"
+          >
+            {{ $t('agent.tool.accessLevelLabel') }}
+          </Label>
+          <Select
+            :model-value="grantedAccess(entry.id)"
+            @update:model-value="
+              (v) => handleAccessChange(entry, v === 'write' ? 'write' : 'read')
+            "
+          >
+            <SelectTrigger size="sm" class="w-60">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="read">
+                {{ $t('agent.tool.accessLevel.read') }}
+              </SelectItem>
+              <SelectItem value="write">
+                {{ $t('agent.tool.accessLevel.write') }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div
+          v-if="entry.id === 'datasets' && isDatasetsGranted"
+          class="col-start-3 mt-2 flex items-center gap-2"
+        >
+          <Label
+            class="w-30 shrink-0 text-sm font-normal text-muted-foreground"
+          >
+            {{ $t('agent.tool.datasets.defaultDatasetLabel') }}
+          </Label>
+          <Select
+            :model-value="defaultDatasetId ?? NO_DATASET"
+            @update:model-value="
+              (v) =>
+                emit(
+                  'update:defaultDatasetId',
+                  v === NO_DATASET ? null : String(v),
+                )
+            "
+          >
+            <SelectTrigger size="sm" class="w-60">
+              <SelectValue
+                :placeholder="
+                  $t('agent.tool.datasets.defaultDatasetPlaceholder')
+                "
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem :value="NO_DATASET">
+                {{ $t('agent.tool.datasets.defaultDatasetNone') }}
+              </SelectItem>
+              <SelectItem
+                v-for="dataset in pickerDatasets"
+                :key="dataset.id"
+                :value="dataset.id"
+              >
+                {{ dataset.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </section>
   </div>
 </template>

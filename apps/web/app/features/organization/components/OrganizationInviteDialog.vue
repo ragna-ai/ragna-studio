@@ -73,7 +73,7 @@ watch(open, (isOpen) => {
                 "
                 @blur="field.handleBlur"
               />
-              <FormFieldInfo :state="state" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>

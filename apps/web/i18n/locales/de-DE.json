@@ -3,6 +3,7 @@
     "settings": "Einstellungen",
     "descriptionPlaceholder": "Beschreibung hinzufügen...",
     "dismissError": "Fehlermeldung schließen",
+    "hasErrors": "hat Fehler",
     "validating": "Wird geprüft...",
     "nameRequired": "Name ist erforderlich.",
     "titleRequired": "Titel ist erforderlich.",
@@ -204,7 +205,6 @@
       "createFailed": "Agent konnte nicht erstellt werden",
       "updated": "Agent aktualisiert",
       "updateFailed": "Agent konnte nicht aktualisiert werden",
-      "memoryUpdated": "Erinnerungen aktualisiert",
       "memoryUpdateFailed": "Erinnerungen konnten nicht aktualisiert werden",
       "deleted": "Agent gelöscht",
       "deleteFailed": "Agent konnte nicht gelöscht werden",
@@ -229,29 +229,41 @@
       "chat": "Chat"
     },
     "upsert": {
-      "title": "KI-Agent bearbeiten",
-      "subtitle": "Erstelle einen neuen oder bearbeite einen bestehenden KI-Agenten, der auf deine Bedürfnisse zugeschnitten ist.",
+      "untitled": "Unbenannter Agent",
       "tabs": {
         "persona": "Persona",
-        "intelligence": "Intelligenz",
+        "model": "Modell",
         "tools": "Werkzeuge",
         "context": "Kontext",
-        "memory": "Erinnerungen",
-        "settings": "Einstellungen"
+        "memory": "Erinnerungen"
       },
+      "thisAgent": "dieser Agent",
+      "personaSubtitle": "Wer der Agent ist und wie er arbeitet. Gilt in jedem Chat und jedem Workflow-Schritt.",
+      "modelSubtitle": "Welches Modell antwortet. Die Standardwerte passen für die meisten Agenten.",
+      "toolsSubtitle": "Was {name} in Chats und Workflows nutzen darf. Änderungen gelten, sobald du speicherst.",
+      "contextSubtitle": "Hintergrundwissen, das dieser Agent immer hat. Für Verhalten und Regeln nutze Persona.",
+      "memorySubtitle": "Was {name} sich über Chats hinweg notiert hat. Bearbeite oder lösche Notizen; der Agent lernt weiter.",
+      "modelRequired": "Wähle ein Modell für diesen Agenten.",
+      "maxOutputTokensInvalid": "Gib eine ganze Zahl zwischen 1 und 64.000 ein.",
       "nameRequired": "Name muss mindestens 4 Zeichen lang sein.",
-      "systemPromptLabel": "Verhalten / Anweisungen",
-      "systemPromptTitle": "Systemprompt",
+      "descriptionHint": "Wird in der Agentenauswahl und auf dem Dashboard angezeigt.",
+      "systemPromptLabel": "Anweisungen",
+      "systemPromptPlaceholder": "Beschreibe, was der Agent tut und wie er arbeitet, oder tippe / für Befehle",
+      "modelLabel": "Modell",
+      "advancedLabel": "Erweitert",
+      "advancedHint": "Reasoning, Temperatur, Ausgabelänge",
       "documentsLabel": "Dokumente",
-      "documentsHint": "Lade Dateien hoch, auf deren Inhalt dieser Agent immer zugreifen können soll. Extrahierter Text ergänzt den Kontexttext unten.",
       "saveFirstDocuments": "Speichere den Agenten zuerst, um Dokumente hochzuladen.",
-      "contextLabel": "Kontext",
-      "contextHint": "Hintergrundwissen, über das dieser Agent immer verfügen soll. Für Verhalten und Regeln nutze Persona.",
+      "contextLabel": "Hintergrundwissen",
+      "contextPlaceholder": "Füge hinzu, was der Agent immer wissen soll, oder tippe / für Befehle",
+      "memoryLabel": "Notizen",
+      "memoryPlaceholder": "Füge Notizen hinzu, die der Agent behalten soll, oder tippe / für Befehle",
       "saveFirstMemory": "Speichere den Agenten zuerst, um sein Gedächtnis anzusehen und zu bearbeiten.",
       "temperatureLabel": "Temperatur",
       "temperatureDisabled": "Deaktiviert",
       "temperatureHint": "Setze die Temperatur auf 0, um sie zu deaktivieren.",
       "maxOutputTokensLabel": "Maximale Ausgabe-Tokens",
+      "maxOutputTokensPlaceholder": "Modell-Standard",
       "maxOutputTokensHint": "Leer lassen, um den Standardwert des Modells zu verwenden.",
       "reasoningLabel": "Reasoning",
       "reasoningDefault": "Standard",
@@ -259,7 +271,7 @@
       "reasoningLow": "Niedrig",
       "reasoningMedium": "Mittel",
       "reasoningHigh": "Hoch",
-      "reasoningHint": "Lässt das Modell nachdenken, bevor es antwortet. \"Standard\" überlässt die Entscheidung dem Modell; \"Aus\" deaktiviert Reasoning explizit, was bei Modellen wichtig ist, die standardmäßig reasonen. Nur Modelle mit Reasoning-Unterstützung nutzen dies, andere ignorieren es."
+      "reasoningHint": "Lässt das Modell nachdenken, bevor es antwortet. „Standard“ überlässt es dem Modell; „Aus“ schaltet es ab."
     },
     "tool": {
       "think": {
@@ -301,8 +313,11 @@
         "read": "Nur lesen",
         "write": "Lesen und schreiben"
       },
-      "connectHint": "Verbinde {name} in den Einstellungen, um es selbst zu nutzen",
-      "connectLink": "Verbindungen öffnen",
+      "notConnected": "Nicht verbunden. Klicke, um die Verbindungen zu öffnen.",
+      "groups": {
+        "builtin": "Integriert",
+        "connected": "Verbundene Apps"
+      },
       "datasets": {
         "label": "Datensätze",
         "description": "Liest und schreibt strukturierte Datentabellen: Aufgabenlisten, Pläne und anderen dauerhaften Zustand.",
@@ -370,11 +385,9 @@
         "label": "Kontext durchsuchen"
       }
     },
-    "memory": {
-      "label": "Erinnerungen"
-    },
     "context": {
-      "empty": "Noch keine Dokumente hochgeladen.",
+      "hint": "Ihr extrahierter Text fließt in den Kontext ein. Bis zu {max} Dokumente.",
+      "uploadedAt": "Hochgeladen am {date}",
       "uploading": "Wird hochgeladen...",
       "tableSize": "Größe",
       "truncated": "Gekürzt: Nur der erste Teil dieses Dokuments wurde übernommen.",
@@ -393,8 +406,8 @@
         "tooManyFiles": "Ein Agent kann höchstens {max} Dokumente haben"
       },
       "status": {
-        "pending": "Ausstehend",
-        "ready": "Bereit",
+        "pending": "Wird indexiert",
+        "ready": "Indexiert",
         "failed": "Fehlgeschlagen"
       }
     }
@@ -1319,9 +1332,10 @@
     }
   },
   "editor": {
-    "view": {
-      "formatted": "Formatiert",
-      "raw": "Rohtext"
+    "field": {
+      "markdown": "Markdown",
+      "raw": "Rohtext",
+      "expand": "Vergrößern"
     },
     "charCount": "{count} / {max}",
     "blockType": {

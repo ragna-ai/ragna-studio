@@ -167,7 +167,6 @@ export function useUpdateAgentMemory() {
       queryClient.invalidateQueries({
         queryKey: agentKeys.memory(workspaceId, agentId),
       });
-      toast.success(t('agent.toast.memoryUpdated'));
     },
     onError: () => {
       toast.error(t('agent.toast.memoryUpdateFailed'));

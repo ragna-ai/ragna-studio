@@ -255,7 +255,7 @@ watch(
             @blur="field.handleBlur"
             class="border-0 shadow-none"
           />
-          <FormFieldInfo :state="state" />
+          <FormFieldInfo :field="field" />
         </div>
       </template>
     </form.Field>
@@ -389,7 +389,7 @@ watch(
                 @blur="field.handleBlur"
                 class="shadow-none"
               />
-              <FormFieldInfo :state="state" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>
@@ -411,7 +411,7 @@ watch(
                 @blur="field.handleBlur"
                 class="shadow-none"
               />
-              <FormFieldInfo :state="state" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>

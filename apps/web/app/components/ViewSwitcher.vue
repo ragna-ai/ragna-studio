@@ -4,11 +4,19 @@ import type { LucideIcon } from '@lucide/vue';
 export interface ViewOption<T extends string> {
   value: T;
   labelKey: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
 }
 
+export type ViewSwitcherSize = 'default' | 'sm';
+
 // Props
-const props = defineProps<{ options: readonly ViewOption<T>[] }>();
+const props = withDefaults(
+  defineProps<{
+    options: readonly ViewOption<T>[];
+    size?: ViewSwitcherSize;
+  }>(),
+  { size: 'default' },
+);
 
 // Refs
 const view = defineModel<T>({ required: true });
@@ -27,13 +35,18 @@ function selectView(value: string | number) {
 
 <template>
   <Tabs :model-value="view" @update:model-value="selectView">
-    <TabsList>
+    <TabsList :class="size === 'sm' && 'h-7 rounded-md p-0.5'">
       <TabsTrigger
         v-for="option in options"
         :key="option.value"
         :value="option.value"
+        :class="size === 'sm' && 'h-6 rounded-sm px-2 text-small'"
       >
-        <component :is="option.icon" class="mr-1.5 size-4 stroke-1.5" />
+        <component
+          :is="option.icon"
+          v-if="option.icon"
+          class="mr-1.5 size-4 stroke-1.5"
+        />
         {{ t(option.labelKey) }}
       </TabsTrigger>
     </TabsList>

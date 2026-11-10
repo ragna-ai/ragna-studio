@@ -75,7 +75,7 @@ const form = useForm({
               @blur="field.handleBlur"
             />
           </InputGroup>
-          <FormFieldInfo :state="state" />
+          <FormFieldInfo :field="field" />
         </div>
       </template>
     </form.Field>
