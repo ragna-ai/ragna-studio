@@ -53,6 +53,7 @@
   --color-agent-subtle: var(--agent-subtle);
   --color-agent-text: var(--agent-text);
   --color-chip: var(--chip);
+  --color-overlay: var(--overlay);
   --color-chip-foreground: var(--chip-foreground);
   --color-alert: var(--alert);
   --color-alert-foreground: var(--alert-foreground);

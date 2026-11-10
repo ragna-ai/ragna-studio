@@ -11,7 +11,7 @@ Knowledge is background material an agent should always have. Add it in the **Co
 
 Type or paste text into the **Background knowledge** field. The agent reads it in every chat.
 
-The field works like the instructions in the **Persona** section: it is a formatted editor, and the text reaches the model exactly as written, including tags such as `<facts>`. Press the **Markdown** toggle to edit the stored markdown directly. See [Create an agent](/agents).
+The field works like the instructions in the **Persona** section: it is a formatted editor, and the text reaches the model exactly as written, including tags such as `<facts>`. Switch to **Raw text** to edit the stored markdown directly, or use **Expand** for more room. See [Create an agent](/agents).
 
 The field is limited to 30,000 characters. A counter in the bottom right corner shows the length, for example **12 / 30,000**. It turns red above the limit, and the agent cannot be saved until the text is shorter.
 
@@ -23,15 +23,15 @@ The drop zone sits on top. Files can be dragged into it, or the zone can be clic
 
 A table lists the documents with their **Status** and **Size**. The status is one of:
 
-| Status      | Meaning                                                                               |
-| ----------- | ------------------------------------------------------------------------------------- |
-| **Pending** | RAGNA Studio is extracting the text. The list refreshes on its own.                   |
-| **Ready**   | The agent can use the document.                                                       |
-| **Failed**  | Extraction failed. Hover the badge to see why. Use **Retry extraction** to try again. |
+| Status       | Meaning                                                                               |
+| ------------ | ------------------------------------------------------------------------------------- |
+| **Indexing** | RAGNA Studio is extracting the text. The list refreshes on its own.                   |
+| **Indexed**  | The agent can use the document.                                                       |
+| **Failed**   | Extraction failed. Hover the badge to see why. Use **Retry extraction** to try again. |
 
 The ⋮ menu of a row has **Rename document**, **Replace file**, **Retry extraction** and **Delete document**. Very long documents are cut off after 500,000 characters. The list then notes "Truncated: only the first part of this document was kept."
 
-Only **Ready** documents count. The panel shows a summary of how the agent uses them.
+Only **Indexed** documents count. The panel shows a summary of how the agent uses them.
 
 ## Small and large knowledge
 

@@ -178,15 +178,11 @@ async function replaceFormattedText(field: Locator, text: string) {
 }
 
 async function showRawView(page: Page) {
-  const toggle = page.getByRole('button', { name: 'Markdown' });
-  if ((await toggle.getAttribute('aria-pressed')) !== 'true')
-    await toggle.click();
+  await page.getByRole('tab', { name: 'Raw text' }).click();
 }
 
 async function showFormattedView(page: Page) {
-  const toggle = page.getByRole('button', { name: 'Markdown' });
-  if ((await toggle.getAttribute('aria-pressed')) === 'true')
-    await toggle.click();
+  await page.getByRole('tab', { name: 'Markdown' }).click();
 }
 
 async function saveAgent(page: Page, agentId: string) {
@@ -410,6 +406,45 @@ test.describe('raw view', () => {
     await page.reload();
     await expect(promptField(page, INSTRUCTIONS_LABEL)).toHaveValue(
       storedPrompt,
+    );
+  });
+});
+
+test.describe('field controls', () => {
+  test('turns the current line into a heading from the format menu', async ({
+    page,
+    request,
+  }) => {
+    const agentId = await seedAgent(request);
+    await page.goto(`/agent/${agentId}`);
+    await replaceFormattedText(promptField(page, INSTRUCTIONS_LABEL), 'Role');
+
+    await page.getByRole('button', { name: 'Format' }).click();
+    await page.getByRole('menuitem', { name: 'Heading 2' }).click();
+    await saveAgent(page, agentId);
+
+    expect((await fetchAgent(request, agentId)).systemPrompt).toBe('## Role');
+  });
+
+  test('edits the same value in the expanded side panel', async ({
+    page,
+    request,
+  }) => {
+    const agentId = await seedAgent(request, { systemPrompt: 'alpha' });
+    await page.goto(`/agent/${agentId}`);
+
+    await page.getByRole('button', { name: 'Expand' }).click();
+    const panel = page.getByRole('dialog', { name: INSTRUCTIONS_LABEL });
+    const panelField = panel.getByRole('textbox', { name: INSTRUCTIONS_LABEL });
+    await panelField.click();
+    await panelField.press('ControlOrMeta+End');
+    await panelField.pressSequentially(' beta');
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    await saveAgent(page, agentId);
+
+    expect((await fetchAgent(request, agentId)).systemPrompt).toBe(
+      'alpha beta',
     );
   });
 });

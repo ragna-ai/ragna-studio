@@ -231,11 +231,9 @@ function handleDelete(document: AgentContextDocument) {
                 <p v-else class="truncate text-sm">{{ document.name }}</p>
                 <p class="text-xs text-muted-foreground">
                   {{
-                    document.status === 'pending'
-                      ? $t('agent.context.uploadingRow')
-                      : $t('agent.context.uploadedAt', {
-                          date: formatUploadedAt(document),
-                        })
+                    $t('agent.context.uploadedAt', {
+                      date: formatUploadedAt(document),
+                    })
                   }}
                 </p>
                 <p
