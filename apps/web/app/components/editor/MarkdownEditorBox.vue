@@ -2,7 +2,6 @@
 import type { HTMLAttributes } from 'vue';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/lib/utils';
-import EditorFormatMenu from './EditorFormatMenu.vue';
 import type { MarkdownFieldView } from './markdown-field-view';
 import RichTextEditor from './RichTextEditor.vue';
 import { useRichTextEditor } from './useRichTextEditor';
@@ -16,6 +15,7 @@ export interface MarkdownEditorBoxProps {
   maxLength?: number;
   showExpand?: boolean;
   class?: HTMLAttributes['class'];
+  rootClass?: HTMLAttributes['class'];
   ariaLabelledby?: string;
   ariaLabel?: string;
 }
@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<MarkdownEditorBoxProps>(), {
 });
 
 // Emits
-const emit = defineEmits<{ expand: [] }>();
+const emit = defineEmits<{ expand: []; escape: [] }>();
 
 // Refs
 const model = defineModel<string>({ required: true });
@@ -46,14 +46,25 @@ const controller = useRichTextEditor({
 });
 
 // Computed
-const hasFooterActions = computed(
-  () => props.view === 'formatted' || props.showExpand,
+const scrollerBottomPadding = computed(() =>
+  props.showExpand ? 'pb-8' : 'pb-2',
 );
 const isOverLimit = computed(
   () => props.maxLength !== undefined && model.value.length > props.maxLength,
 );
 
 // Functions
+// ProseMirror prevents every Escape, so the enclosing layer never sees it; this one is seen first.
+function emitEscapeUnlessPopupOpen() {
+  const popupOpen =
+    controller.slashMenu.value !== null ||
+    controller.isLinkFormOpen.value ||
+    controller.isImageFormOpen.value;
+  if (!popupOpen) {
+    emit('escape');
+  }
+}
+
 function editorAttributes(): Record<string, string> | undefined {
   if (props.ariaLabelledby) {
     return { 'aria-labelledby': props.ariaLabelledby };
@@ -76,12 +87,15 @@ watch([model, controller.editor], ([value, editor]) => {
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1 flex-col gap-2">
+  <div
+    :class="cn('flex min-h-0 flex-1 flex-col gap-2', rootClass)"
+    @keydown.esc.capture="emitEscapeUnlessPopupOpen"
+  >
     <div
       :aria-invalid="invalid || undefined"
       :class="
         cn(
-          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-input bg-transparent pt-2 pr-2 pb-2 pl-3 shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:ring-destructive/40',
+          'relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-input bg-transparent pt-2 pr-2 pl-3 shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:ring-destructive/40',
           props.class,
         )
       "
@@ -89,7 +103,12 @@ watch([model, controller.editor], ([value, editor]) => {
       <RichTextEditor
         v-show="view === 'formatted'"
         :controller="controller"
-        class="document-sheet-compact flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 text-base md:text-sm"
+        :class="
+          cn(
+            'document-sheet-compact flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 text-base md:text-sm',
+            scrollerBottomPadding,
+          )
+        "
       />
       <Textarea
         v-show="view === 'raw'"
@@ -97,30 +116,30 @@ watch([model, controller.editor], ([value, editor]) => {
         :aria-labelledby="ariaLabelledby"
         :aria-label="ariaLabel"
         :aria-invalid="invalid || undefined"
-        class="min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent p-0 pr-1 font-mono text-mono shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-mono dark:bg-transparent"
+        :class="
+          cn(
+            'min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent p-0 pr-1 font-mono text-mono shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-mono dark:bg-transparent',
+            scrollerBottomPadding,
+          )
+        "
         @update:model-value="updateFromRaw"
       />
-      <TooltipProvider v-if="hasFooterActions">
-        <div class="flex h-6 shrink-0 items-center justify-end gap-2">
-          <EditorFormatMenu
-            v-if="view === 'formatted'"
-            :controller="controller"
-          />
-          <Tooltip v-if="showExpand">
-            <TooltipTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon-xs"
-                class="text-icon"
-                :aria-label="t('editor.field.expand')"
-                @click="emit('expand')"
-              >
-                <Icon name="hugeicons:arrow-expand-01" class="size-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ t('editor.field.expand') }}</TooltipContent>
-          </Tooltip>
-        </div>
+      <TooltipProvider v-if="showExpand">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              type="button"
+              size="icon-xs"
+              class="absolute right-2 bottom-2 text-icon"
+              :aria-label="t('editor.field.expand')"
+              @click="emit('expand')"
+            >
+              <Icon name="hugeicons:arrow-expand-01" class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ t('editor.field.expand') }}</TooltipContent>
+        </Tooltip>
       </TooltipProvider>
     </div>
     <p

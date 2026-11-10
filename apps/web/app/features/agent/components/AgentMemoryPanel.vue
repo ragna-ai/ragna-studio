@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
+
 type AgentMemoryPanelProps = {
   loading: boolean;
 };
@@ -8,21 +10,28 @@ defineProps<AgentMemoryPanelProps>();
 
 // Refs
 const content = defineModel<string>({ required: true });
+
+// Composables
+const { t } = useI18n();
 </script>
 
 <template>
   <div v-if="loading" class="flex items-center justify-center py-12">
     <Spinner />
   </div>
-  <div v-else class="flex flex-col gap-2">
-    <Label class="block text-sm font-medium" for="agent-memory-content">
-      {{ $t('agent.upsert.memoryLabel') }}
-    </Label>
-    <Textarea
-      id="agent-memory-content"
+  <div v-else class="flex min-h-80 flex-col">
+    <MarkdownEditorField
       v-model="content"
-      rows="12"
-      autocomplete="off"
-    />
+      aria-labelledby="agent-memory-label"
+      :placeholder="t('agent.upsert.memoryPlaceholder')"
+      :panel-title="t('agent.upsert.memoryLabel')"
+      class="min-h-60"
+    >
+      <template #label>
+        <Label id="agent-memory-label" class="block text-sm font-medium">
+          {{ t('agent.upsert.memoryLabel') }}
+        </Label>
+      </template>
+    </MarkdownEditorField>
   </div>
 </template>

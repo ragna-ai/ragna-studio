@@ -257,6 +257,7 @@
       "contextLabel": "Background knowledge",
       "contextPlaceholder": "Add what the agent should always know, or type / for commands",
       "memoryLabel": "Notes",
+      "memoryPlaceholder": "Add notes the agent should keep, or type / for commands",
       "saveFirstMemory": "Save the agent first to view and edit its memory.",
       "temperatureLabel": "Temperature",
       "temperatureDisabled": "Disabled",
@@ -1331,9 +1332,7 @@
     "field": {
       "markdown": "Markdown",
       "raw": "Raw text",
-      "format": "Format",
-      "expand": "Expand",
-      "close": "Close"
+      "expand": "Expand"
     },
     "charCount": "{count} / {max}",
     "blockType": {

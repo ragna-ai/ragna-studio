@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-import { X } from '@lucide/vue';
 import { reactiveOmit } from '@vueuse/core';
 import { cn } from '@/lib/utils';
 import {
@@ -15,7 +14,6 @@ import SheetOverlay from './SheetOverlay.vue';
 interface SheetContentProps extends DialogContentProps {
   class?: HTMLAttributes['class'];
   side?: 'top' | 'right' | 'bottom' | 'left';
-  showCloseButton?: boolean;
 }
 
 defineOptions({
@@ -24,11 +22,11 @@ defineOptions({
 
 const props = withDefaults(defineProps<SheetContentProps>(), {
   side: 'right',
-  showCloseButton: true,
 });
+const { t } = useI18n();
 const emits = defineEmits<DialogContentEmits>();
 
-const delegatedProps = reactiveOmit(props, 'class', 'side', 'showCloseButton');
+const delegatedProps = reactiveOmit(props, 'class', 'side');
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
@@ -42,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
         cn(
           'fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
           side === 'right' &&
-            'inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
+            'inset-y-shell right-shell w-3/4 overflow-hidden rounded-lg border shadow-popover data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
           side === 'left' &&
             'inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
           side === 'top' &&
@@ -56,12 +54,16 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     >
       <slot />
 
-      <DialogClose
-        v-if="showCloseButton"
-        class="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary"
-      >
-        <X class="size-4" />
-        <span class="sr-only">Close</span>
+      <DialogClose as-child>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="absolute top-2.5 right-4 text-icon"
+          :aria-label="t('common.close')"
+        >
+          <Icon name="hugeicons:cancel-01" class="size-4" />
+        </Button>
       </DialogClose>
     </DialogContent>
   </DialogPortal>

@@ -411,21 +411,6 @@ test.describe('raw view', () => {
 });
 
 test.describe('field controls', () => {
-  test('turns the current line into a heading from the format menu', async ({
-    page,
-    request,
-  }) => {
-    const agentId = await seedAgent(request);
-    await page.goto(`/agent/${agentId}`);
-    await replaceFormattedText(promptField(page, INSTRUCTIONS_LABEL), 'Role');
-
-    await page.getByRole('button', { name: 'Format' }).click();
-    await page.getByRole('menuitem', { name: 'Heading 2' }).click();
-    await saveAgent(page, agentId);
-
-    expect((await fetchAgent(request, agentId)).systemPrompt).toBe('## Role');
-  });
-
   test('edits the same value in the expanded side panel', async ({
     page,
     request,

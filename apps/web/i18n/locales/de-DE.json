@@ -257,6 +257,7 @@
       "contextLabel": "Hintergrundwissen",
       "contextPlaceholder": "Füge hinzu, was der Agent immer wissen soll, oder tippe / für Befehle",
       "memoryLabel": "Notizen",
+      "memoryPlaceholder": "Füge Notizen hinzu, die der Agent behalten soll, oder tippe / für Befehle",
       "saveFirstMemory": "Speichere den Agenten zuerst, um sein Gedächtnis anzusehen und zu bearbeiten.",
       "temperatureLabel": "Temperatur",
       "temperatureDisabled": "Deaktiviert",
@@ -1334,9 +1335,7 @@
     "field": {
       "markdown": "Markdown",
       "raw": "Rohtext",
-      "format": "Formatieren",
-      "expand": "Vergrößern",
-      "close": "Schließen"
+      "expand": "Vergrößern"
     },
     "charCount": "{count} / {max}",
     "blockType": {
