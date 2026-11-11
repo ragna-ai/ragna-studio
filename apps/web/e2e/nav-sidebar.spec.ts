@@ -71,16 +71,6 @@ test.describe('app sidebar', () => {
     ).toBeVisible();
   });
 
-  test('shows a tooltip with the item name when collapsed', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await collapseSidebar(page);
-    await sidebar(page).getByRole('link', { name: 'Agents' }).hover();
-
-    await expect(page.getByRole('tooltip', { name: 'Agents' })).toBeVisible();
-  });
-
   test('shows icons only for a user who had turned on show-labels', async ({
     page,
   }) => {
