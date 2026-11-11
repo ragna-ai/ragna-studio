@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import ImageGenPreviewDialog from '~/features/image/components/ImageGenPreviewDialog.vue';
 import { useDeleteGenImage } from '~/features/image/composables/useImageGenApi';
 import type {

@@ -13,7 +13,7 @@ import type {
 import { NODE_TYPES } from '@repo/workflow';
 import { ConnectionMode } from '@vue-flow/core';
 import { nanoid } from 'nanoid';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { Canvas } from '~/components/ai-elements/canvas';
 import { Controls } from '~/components/ai-elements/controls';
 import WorkflowFlowNode from '~/features/workflow/components/WorkflowFlowNode.vue';

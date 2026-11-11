@@ -1,4 +1,4 @@
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import {
   CHAT_ATTACHMENT_MAX_FILE_BYTES,
   isAcceptedChatAttachment,

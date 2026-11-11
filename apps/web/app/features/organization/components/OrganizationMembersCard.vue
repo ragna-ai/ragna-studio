@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OrganizationAssignableRole } from '@repo/auth/client';
 import { Trash2Icon } from '@lucide/vue';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import {
   organizationErrorMessage,
   useGetOrganizationMembers,

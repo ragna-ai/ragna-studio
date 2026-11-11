@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Trash2Icon } from '@lucide/vue';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import WorkspaceMemberPicker from '~/features/workspace/components/WorkspaceMemberPicker.vue';
 import {
   useAddWorkspaceMember,

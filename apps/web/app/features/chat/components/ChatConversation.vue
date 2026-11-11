@@ -13,7 +13,7 @@ import {
   type UIMessagePart,
   type UITools,
 } from 'ai';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import ChatAgentSelect from '~/features/chat/components/ChatAgentSelect.vue';
 import ChatAgentTools from '~/features/chat/components/ChatAgentTools.vue';
 import ChatInput from '~/features/chat/components/ChatInput.vue';

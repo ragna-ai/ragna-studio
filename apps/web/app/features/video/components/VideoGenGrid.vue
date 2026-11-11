@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import VideoGenPreviewDialog from '~/features/video/components/VideoGenPreviewDialog.vue';
 import type {
   GeneratedVideo,

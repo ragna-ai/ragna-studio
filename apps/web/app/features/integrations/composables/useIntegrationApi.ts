@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { connectIntegrationResponseSchema } from '@repo/integrations/catalog';
 import type {
   ConnectIntegrationBody,

@@ -5,7 +5,7 @@ import {
   type UseQueryOptions,
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import type { ChatAgent } from '~/features/chat/types';
 import { toErrorMessage } from '~/lib/api-error';
 

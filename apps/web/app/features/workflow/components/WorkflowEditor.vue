@@ -4,7 +4,7 @@ import type {
   WorkflowNode,
   WorkflowNodeType,
 } from '@repo/workflow';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { isExecutionEquivalent } from '@repo/workflow';
 import { useGetAllAgents } from '~/features/agent/composables/useAgentApi';
 import WorkflowCanvas from '~/features/workflow/components/WorkflowCanvas.vue';

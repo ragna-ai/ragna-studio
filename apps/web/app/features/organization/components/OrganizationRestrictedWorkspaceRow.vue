@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import WorkspaceVisibilityIcon from '~/features/workspace/components/WorkspaceVisibilityIcon.vue';
 import { useAddWorkspaceMember } from '~/features/workspace/composables/useWorkspaceMemberApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';

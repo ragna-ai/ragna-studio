@@ -5,7 +5,7 @@ import {
   type QueryClient,
   type UseQueryOptions,
 } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import type {
   CreateTaskRequest,
   MoveTaskRequest,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import {
   organizationErrorMessage,
   useDeleteOrganization,

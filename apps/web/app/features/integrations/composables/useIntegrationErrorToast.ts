@@ -1,4 +1,4 @@
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { omitQueryParam } from '~/lib/omit-query-param';
 import { INTEGRATION_ERROR_QUERY_PARAM } from '~/features/integrations/lib/integration-meta';
 
