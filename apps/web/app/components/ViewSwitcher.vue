@@ -35,12 +35,11 @@ function selectView(value: string | number) {
 
 <template>
   <Tabs :model-value="view" @update:model-value="selectView">
-    <TabsList :class="size === 'sm' && 'h-7 rounded-md p-0.5'">
+    <TabsList :size>
       <TabsTrigger
         v-for="option in options"
         :key="option.value"
         :value="option.value"
-        :class="size === 'sm' && 'h-6 rounded-sm px-2 text-small'"
       >
         <component
           :is="option.icon"

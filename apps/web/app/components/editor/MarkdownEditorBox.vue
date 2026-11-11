@@ -135,7 +135,7 @@ watch([model, controller.editor], ([value, editor]) => {
               :aria-label="t('editor.field.expand')"
               @click="emit('expand')"
             >
-              <Icon name="hugeicons:arrow-expand-01" class="size-3.5" />
+              <Icon name="hugeicons:arrow-expand-01" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>{{ t('editor.field.expand') }}</TooltipContent>

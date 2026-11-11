@@ -85,7 +85,7 @@ const timeLabel = computed(() => {
       :aria-label="t('notification.delete')"
       @click="emit('delete', props.notification.id)"
     >
-      <Icon name="hugeicons:cancel-01" class="size-3.5" />
+      <Icon name="hugeicons:cancel-01" />
     </Button>
   </div>
 </template>

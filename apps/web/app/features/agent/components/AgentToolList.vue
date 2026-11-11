@@ -176,7 +176,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
                     >
                       <Icon
                         name="hugeicons:alert-02"
-                        class="size-4 text-status-warn-fg"
+                        class="text-status-warn-fg"
                       />
                     </Button>
                   </TooltipTrigger>
