@@ -65,6 +65,9 @@
   --spacing-page-bottom: 2.5rem;
   --spacing-gutter: 1.25rem;
   --spacing-card: 1.25rem;
+  --spacing-panel: 25rem;
+  --spacing-sheet: 36rem;
+  --spacing-sheet-lg: 45rem;
   --shadow-xs: 0px 1px 2px oklch(0.216 0.006 56.043 / 6%);
   --shadow-popover: 0px 8px 24px oklch(0.216 0.006 56.043 / 12%);
   --text-display: 2rem;

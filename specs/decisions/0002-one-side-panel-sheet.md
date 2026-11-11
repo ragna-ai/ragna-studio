@@ -1,6 +1,6 @@
 # 0002 · One side panel: the Sheet with options
 
-Status: decided (2026-11-10)
+Status: decided (2026-11-10, widths renamed 2026-11-11)
 
 Applies to every panel that opens at the right side of a page in `apps/web`. Code: #327 (supersedes the docked mode
 of #326). Follows [0001](./0001-ui-components-reuse-first.md).
@@ -9,12 +9,12 @@ of #326). Follows [0001](./0001-ui-components-reuse-first.md).
 
 On 2026-11-10 the app and the design had four different right-side panels:
 
-| Panel | Width | Placement | Header | Footer |
-| --- | --- | --- | --- | --- |
-| Expanded Markdown field (agent settings, #323) | 720 | over the window incl. the sidebar, flush to the edge, overlay | 56 | none |
-| Workflow detail (design) | 440 | inside the main panel, full height | 52 | 64 |
-| Workflow step panel (design) | 400 | inside the main panel, below the top bar | 64 | 64 |
-| Code: `WorkflowNodeConfigPanel`, `DatasetColumnManager`, `TaskPropertiesSidebar` | 320 / 288 | docked asides, `border-l`, `p-4` | own each | own each |
+| Panel                                                                            | Width     | Placement                                                     | Header   | Footer   |
+| -------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------- | -------- | -------- |
+| Expanded Markdown field (agent settings, #323)                                   | 720       | over the window incl. the sidebar, flush to the edge, overlay | 56       | none     |
+| Workflow detail (design)                                                         | 440       | inside the main panel, full height                            | 52       | 64       |
+| Workflow step panel (design)                                                     | 400       | inside the main panel, below the top bar                      | 64       | 64       |
+| Code: `WorkflowNodeConfigPanel`, `DatasetColumnManager`, `TaskPropertiesSidebar` | 320 / 288 | docked asides, `border-l`, `p-4`                              | own each | own each |
 
 The expanded field didn't feel like the rest of the redesign (rounded main panel inside an 8 px shell frame).
 
@@ -40,17 +40,18 @@ Every right-side panel is `ui/sheet` (`Sheet`, `side="right"`). No docked mode, 
   (`rounded-lg border bg-background shadow-popover`), slides in from the right.
 - **Options:**
 
-| Option | Values | Use |
-| --- | --- | --- |
-| width | `w-sheet` (720, default) | editing one thing in depth: the expanded Markdown field |
-| | `w-sheet-sm` (576, `--spacing-sheet-sm`) | details and settings: workflow detail and steps; later dataset columns, row details, task properties |
-| `modal` | `true` (default): `bg-overlay`, focus trapped, overlay click / Esc / close closes | the page waits: expanded field |
-| | `false`: no overlay, the page left of the sheet stays usable; selecting another item switches the content | workflow detail and step panels |
+| Option         | Values                                                                                                    | Use                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `size` (width) | `default`: `w-sheet` (576)                                                                                | details and settings: workflow detail and steps; later dataset columns, row details, task properties |
+|                | `lg`: `w-sheet-lg` (720)                                                                                  | editing one thing in depth: the expanded Markdown field                                              |
+| `modal`        | `true` (default): `bg-overlay`, focus trapped, overlay click / Esc / close closes                         | the page waits: expanded field                                                                       |
+|                | `false`: no overlay, the page left of the sheet stays usable; selecting another item switches the content | workflow detail and step panels                                                                      |
 
 - **Anatomy:**
   - Header: no fixed height, `py-4 pr-4 pl-6`, items centred, gap 3 (64 with one line, 72 with a meta line).
     Optional mark (`size-7`), title `text-title-sm`, optional meta line `text-caption text-muted-foreground`,
-    optional control after the title (view tabs). Actions right, `gap-1`, ghost `icon` buttons; **close always last**.
+    optional control after the title (view tabs). Actions right, `gap-1`, ghost `icon` buttons; **close always last**. The header renders the close button itself,
+    so it stays centred whatever the header's height.
   - Tabs (optional): `h-10 px-6 gap-5`, active `font-semibold text-foreground` with a 2 px `bg-foreground` bar,
     inactive muted.
   - One `border-b` between the fixed top and the scrolling body: under the tabs, else under the header.
@@ -76,7 +77,9 @@ added no value and confused). Fields keep only the expand button; the expanded s
 
 ## Consequences
 
-- #327: `SheetHeader` padding instead of `h-topbar`; `w-sheet-sm` token; `modal=false` for workflows.
+- #327: `SheetHeader` padding instead of `h-topbar`, with the close button inside it; `size` option on
+  `SheetContent` with the `--spacing-sheet` and `--spacing-sheet-lg` tokens. `modal=false` needs no code (no overlay
+  without modal); workflows use it when they are rebuilt.
 - #326 (docked mode) is superseded. `WorkflowNodeConfigPanel`, `DatasetColumnManager`, `TaskPropertiesSidebar` move
   onto the Sheet when their screens are rebuilt.
 - With a non-modal sheet open, it covers the right end of the page's top bar (e.g. Publish, Test run in the workflow

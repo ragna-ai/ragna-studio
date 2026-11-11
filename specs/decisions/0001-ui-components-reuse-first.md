@@ -29,13 +29,13 @@ For every UI piece, answer in this order and write the answer into the design ha
    `app/components/ai-elements/`, not only the upstream docs: it may already be changed.
 3. **Pick the lowest adaptation level that works:**
 
-| Level | What | When | Example |
-| --- | --- | --- | --- |
-| 1 | Tokens only | only colour, radius, shadow, spacing | `--overlay`, `rounded-lg` |
-| 2 | A variant, size or prop on the base | the change is an option, not a new look | Button `icon-xs`, Sheet `w-sheet-sm`, `modal` |
-| 3 | Change the base's default | the change applies to every use, or a wrapper would mostly override the base | `SheetContent` as a floating card in the shell frame |
-| 4 | Wrapper | one context, or a domain composition with its own props | `ViewSwitcher` (Tabs), `ConfirmDialog`, `StatusPill` |
-| 5 | Own component in the same style | no base fits | data grid cells, agent mark, workflow node if ai-elements' `node` doesn't fit |
+| Level | What                                | When                                                                         | Example                                                                       |
+| ----- | ----------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1     | Tokens only                         | only colour, radius, shadow, spacing                                         | `--overlay`, `rounded-lg`                                                     |
+| 2     | A variant, size or prop on the base | the change is an option, not a new look                                      | Button `icon-xs`, Sheet `size="lg"`, `modal`                                  |
+| 3     | Change the base's default           | the change applies to every use, or a wrapper would mostly override the base | `SheetContent` as a floating card in the shell frame                          |
+| 4     | Wrapper                             | one context, or a domain composition with its own props                      | `ViewSwitcher` (Tabs), `ConfirmDialog`, `StatusPill`                          |
+| 5     | Own component in the same style     | no base fits                                                                 | data grid cells, agent mark, workflow node if ai-elements' `node` doesn't fit |
 
 Rules around it:
 
