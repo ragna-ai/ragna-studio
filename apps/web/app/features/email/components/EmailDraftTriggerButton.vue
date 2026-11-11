@@ -65,7 +65,7 @@ function handleGenerate() {
         {{ t('email.draft.trigger.button') }}
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-72 space-y-3" align="start">
+    <PopoverContent class="space-y-3" align="start">
       <p class="text-sm font-medium">{{ t('email.draft.trigger.title') }}</p>
       <Select v-model="selectedAgentId">
         <SelectTrigger class="w-full" size="sm">

@@ -126,7 +126,7 @@ const trashLabel = computed(() =>
             <MoreVerticalIcon class="size-3.5 shrink-0 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent class="max-w-56 space-y-2" align="start">
+        <PopoverContent class="space-y-2" align="start">
           <p class="text-xs font-medium text-muted-foreground">
             {{ t('email.thread.filters.dateRange') }}
           </p>

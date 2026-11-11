@@ -81,7 +81,7 @@ function onCloseAutoFocus(event: Event) {
       side="bottom"
       align="end"
       :side-offset="17"
-      class="w-90 overflow-hidden rounded-lg border bg-popover p-0 shadow-popover"
+      class="w-90 overflow-hidden p-0"
       @close-auto-focus="onCloseAutoFocus"
     >
       <Command :model-value="selectedAgent?.name ?? ''">
