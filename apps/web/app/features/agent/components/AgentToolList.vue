@@ -181,7 +181,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="top" align="start">
                     <p>{{ $t('agent.tool.notConnected') }}</p>
                   </TooltipContent>
                 </Tooltip>
