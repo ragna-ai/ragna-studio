@@ -3,17 +3,13 @@ import type { DialogContentEmits, DialogContentProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { reactiveOmit } from '@vueuse/core';
 import { cn } from '@/lib/utils';
-import {
-  DialogClose,
-  DialogContent,
-  DialogPortal,
-  useForwardPropsEmits,
-} from 'reka-ui';
+import { DialogContent, DialogPortal, useForwardPropsEmits } from 'reka-ui';
 import SheetOverlay from './SheetOverlay.vue';
 
 interface SheetContentProps extends DialogContentProps {
   class?: HTMLAttributes['class'];
   side?: 'top' | 'right' | 'bottom' | 'left';
+  size?: 'default' | 'lg';
 }
 
 defineOptions({
@@ -22,11 +18,11 @@ defineOptions({
 
 const props = withDefaults(defineProps<SheetContentProps>(), {
   side: 'right',
+  size: 'default',
 });
-const { t } = useI18n();
 const emits = defineEmits<DialogContentEmits>();
 
-const delegatedProps = reactiveOmit(props, 'class', 'side');
+const delegatedProps = reactiveOmit(props, 'class', 'side', 'size');
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
@@ -40,7 +36,9 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
         cn(
           'fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
           side === 'right' &&
-            'inset-y-shell right-shell w-3/4 overflow-hidden rounded-lg border shadow-popover data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
+            'inset-y-shell right-shell max-w-3/4 overflow-hidden rounded-lg border shadow-popover data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
+          side === 'right' && size === 'default' && 'w-sheet',
+          side === 'right' && size === 'lg' && 'w-sheet-lg',
           side === 'left' &&
             'inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
           side === 'top' &&
@@ -53,18 +51,6 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       v-bind="{ ...$attrs, ...forwarded }"
     >
       <slot />
-
-      <DialogClose as-child>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          class="absolute top-2.5 right-4 text-icon"
-          :aria-label="t('common.close')"
-        >
-          <Icon name="hugeicons:cancel-01" class="size-4" />
-        </Button>
-      </DialogClose>
     </DialogContent>
   </DialogPortal>
 </template>

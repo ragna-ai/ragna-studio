@@ -22,7 +22,7 @@ const view = useMarkdownFieldView();
 
 <template>
   <Sheet v-model:open="open">
-    <SheetContent side="right" class="w-[45rem] gap-0 p-0 sm:max-w-none">
+    <SheetContent side="right" size="lg" class="gap-0 p-0">
       <SheetHeader>
         <SheetTitle>{{ title }}</SheetTitle>
         <SheetDescription class="sr-only">{{ title }}</SheetDescription>

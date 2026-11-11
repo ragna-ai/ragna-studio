@@ -11,6 +11,7 @@ specs/<area>/<issue>-<slug>/prd.md       requirements: stories, acceptance crite
 specs/<area>/<issue>-<slug>/design.md    schema, API, per-package changes (optional)
 specs/<area>/<issue>-<slug>/slices.md    build plan for parallel agents (optional)
 specs/<area>/reference/                  known issues, reviews, notes without a Status line
+specs/decisions/NNNN-<slug>.md           cross-cutting decisions (log since 2026-11-10)
 ```
 
 Example: `integrations/224-connections/prd.md` for issue #224. Follow-ups
