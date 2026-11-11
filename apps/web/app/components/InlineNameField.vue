@@ -95,7 +95,8 @@ onKeyStroke('Escape', (event) => {
             autofocus
             :aria-label="props.label"
             autocomplete="off"
-            class="h-7 px-2 py-0 text-sm font-semibold"
+            size="sm"
+            class="px-2 py-0 text-sm font-semibold"
             :model-value="state.value"
             @update:model-value="(v) => field.handleChange(String(v))"
             @blur="

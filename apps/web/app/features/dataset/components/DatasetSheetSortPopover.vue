@@ -49,7 +49,7 @@ function clearSort() {
         :model-value="activeSort?.id"
         @update:model-value="(value) => selectColumn(String(value))"
       >
-        <SelectTrigger class="h-8 w-full">
+        <SelectTrigger class="w-full">
           <SelectValue :placeholder="t('dataset.sheet.sort.column')" />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ function clearSort() {
         :disabled="!activeSort"
         @update:model-value="(value) => selectDirection(String(value))"
       >
-        <SelectTrigger class="h-8 w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

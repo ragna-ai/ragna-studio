@@ -120,7 +120,7 @@ function handleSyncNow() {
           />
           <Input
             v-model="searchInput"
-            class="h-8 pl-8 text-sm"
+            class="pl-8 text-sm"
             :placeholder="t('email.sidebar.searchPlaceholder')"
           />
         </div>
@@ -131,7 +131,7 @@ function handleSyncNow() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                class="size-8 shrink-0"
+                class="shrink-0"
                 :aria-label="t('email.sidebar.searchHintLabel')"
               >
                 <HelpCircleIcon class="size-3.5 text-muted-foreground" />
@@ -248,8 +248,7 @@ function handleSyncNow() {
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
-                class="size-6"
+                size="icon-xs"
                 :disabled="isSyncing"
                 :aria-label="t('email.sidebar.syncNow')"
                 @click="handleSyncNow"

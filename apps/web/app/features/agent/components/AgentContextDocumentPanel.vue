@@ -222,7 +222,6 @@ function handleDelete(document: AgentContextDocument) {
                   v-if="renamingDocumentId === document.id"
                   v-model="renameValue"
                   autofocus
-                  class="h-8"
                   autocomplete="off"
                   @keydown.enter="commitRename(document)"
                   @keydown.escape="cancelRename"

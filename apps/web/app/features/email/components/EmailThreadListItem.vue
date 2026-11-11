@@ -104,8 +104,7 @@ const { formatDateTime } = useDateTimeFormat();
             />
             <Button
               variant="ghost"
-              size="icon"
-              class="size-7"
+              size="icon-sm"
               :aria-label="t('email.thread.actions.toggleStar')"
               @click="emit('star', !props.thread.isStarred)"
             >
@@ -118,8 +117,7 @@ const { formatDateTime } = useDateTimeFormat();
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              class="size-7"
+              size="icon-sm"
               :aria-label="t('email.thread.actions.toggleRead')"
               @click="emit('toggleRead')"
             >
@@ -131,8 +129,7 @@ const { formatDateTime } = useDateTimeFormat();
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              class="size-7"
+              size="icon-sm"
               :aria-label="t('email.thread.actions.archive')"
               @click="emit('archive')"
             >
@@ -140,8 +137,8 @@ const { formatDateTime } = useDateTimeFormat();
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              class="group/trash size-7"
+              size="icon-sm"
+              class="group/trash"
               :aria-label="
                 props.isTrashedFolder
                   ? t('email.thread.actions.restore')

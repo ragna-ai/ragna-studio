@@ -170,7 +170,7 @@ async function handleRevoke(connectionId: string) {
                   (level) => setAccess(integration, level as McpAccessLevel)
                 "
               >
-                <SelectTrigger class="h-8 w-40">
+                <SelectTrigger class="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

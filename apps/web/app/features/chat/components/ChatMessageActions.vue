@@ -29,8 +29,8 @@ const copyLabel = computed(() =>
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            class="size-7 rounded-sm text-icon"
+            size="icon-sm"
+            class="rounded-sm text-icon"
             :aria-label="copyLabel"
             @click="emit('copy')"
           >
@@ -45,8 +45,8 @@ const copyLabel = computed(() =>
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            class="size-7 rounded-sm text-icon"
+            size="icon-sm"
+            class="rounded-sm text-icon"
             :aria-label="t('chat.message.branch')"
             @click="emit('branch')"
           >

@@ -95,8 +95,7 @@ function formatBytes(bytes: number): string {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          class="size-5"
+          size="icon-2xs"
           :aria-label="t('email.compose.attachments.remove')"
           @click="emit('removeDraftAttachment', attachment)"
         >
@@ -113,8 +112,7 @@ function formatBytes(bytes: number): string {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          class="size-5"
+          size="icon-2xs"
           :aria-label="t('email.compose.attachments.remove')"
           @click="removeFile(index)"
         >
@@ -131,8 +129,7 @@ function formatBytes(bytes: number): string {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          class="size-5"
+          size="icon-2xs"
           :aria-label="t('email.compose.attachments.remove')"
           @click="removeMedia(item.id)"
         >

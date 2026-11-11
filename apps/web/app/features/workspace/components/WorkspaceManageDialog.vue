@@ -139,7 +139,7 @@ async function handleDelete(workspace: Workspace) {
               <Input
                 v-model="editingName"
                 autocomplete="off"
-                class="h-8 flex-1"
+                class="flex-1"
                 @keyup.enter="saveEditing"
                 @keyup.esc="cancelEditing"
               />

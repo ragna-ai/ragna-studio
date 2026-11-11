@@ -79,7 +79,8 @@ onKeyStroke('Escape', (event) => {
           autofocus
           :aria-label="t('chat.history.rename')"
           autocomplete="off"
-          class="h-7 rounded-md px-2 py-0 text-body"
+          size="sm"
+          class="rounded-md px-2 py-0 text-body"
           :model-value="state.value"
           @update:model-value="(v) => field.handleChange(String(v))"
           @blur="
@@ -121,8 +122,8 @@ onKeyStroke('Escape', (event) => {
     <Button
       type="button"
       variant="ghost"
-      size="icon"
-      class="size-6 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+      size="icon-xs"
+      class="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       :aria-label="t('chat.history.rename')"
       @click.prevent.stop="startEditing"
     >

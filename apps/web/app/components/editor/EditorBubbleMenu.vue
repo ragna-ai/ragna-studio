@@ -199,7 +199,6 @@ watch(isLinkFormOpen, (isOpen) => {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8"
                 :class="{ 'is-active-button': editor.isActive(item.format) }"
                 :disabled="isInCodeBlock"
                 :aria-label="t(`editor.format.${item.format}`)"
@@ -228,7 +227,6 @@ watch(isLinkFormOpen, (isOpen) => {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8"
                 :class="{
                   'is-active-button':
                     controller.activeBlockType() === item.type,
@@ -259,7 +257,6 @@ watch(isLinkFormOpen, (isOpen) => {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8"
                 :class="{ 'is-active-button': isLinkActive }"
                 :disabled="isInCodeBlock"
                 :aria-label="t('editor.link.label')"

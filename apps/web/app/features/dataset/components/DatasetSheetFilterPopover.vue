@@ -192,7 +192,7 @@ function handleOpenChange(open: boolean) {
             :model-value="draft.columnId"
             @update:model-value="(value) => changeColumn(draft, String(value))"
           >
-            <SelectTrigger class="h-8 flex-1">
+            <SelectTrigger class="flex-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +215,7 @@ function handleOpenChange(open: boolean) {
             :model-value="draft.op"
             @update:model-value="(value) => changeOp(draft, String(value))"
           >
-            <SelectTrigger class="h-8 flex-1">
+            <SelectTrigger class="flex-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -227,7 +227,7 @@ function handleOpenChange(open: boolean) {
           <Button
             variant="ghost"
             size="icon"
-            class="size-8 shrink-0"
+            class="shrink-0"
             :aria-label="t('dataset.sheet.filter.remove')"
             @click="removeDraft(draft)"
           >
@@ -255,7 +255,6 @@ function handleOpenChange(open: boolean) {
         </div>
         <Input
           v-else
-          class="h-8"
           :type="inputTypeFor(draft)"
           :model-value="draft.value"
           :placeholder="t('dataset.sheet.filter.value')"

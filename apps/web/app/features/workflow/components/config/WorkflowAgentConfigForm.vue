@@ -75,8 +75,7 @@ const selectedAgent = computed(() =>
         <Button
           as-child
           variant="ghost"
-          size="icon"
-          class="size-6"
+          size="icon-xs"
           :aria-label="t('workflow.agentConfig.editAgentSettings')"
         >
           <NuxtLinkLocale :to="`/agent/${selectedAgent.id}`">
