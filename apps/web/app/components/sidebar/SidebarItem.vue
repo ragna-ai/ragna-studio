@@ -43,10 +43,7 @@ const isActive = computed(() => {
             </span>
           </NuxtLinkLocale>
         </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          class="flex h-7 items-center rounded-sm px-2.5 py-0 text-caption font-medium text-primary-foreground"
-        >
+        <TooltipContent side="right">
           {{ props.label }}
         </TooltipContent>
       </Tooltip>
