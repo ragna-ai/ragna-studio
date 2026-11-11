@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { parseDate, type DateValue } from '@internationalized/date';
-import { CalendarIcon, XIcon } from '@lucide/vue';
 import type { HTMLAttributes } from 'vue';
 import { computed, ref } from 'vue';
 
@@ -20,6 +19,7 @@ const props = withDefaults(
     locale?: string;
     weekStartsOn?: CalendarRootProps['weekStartsOn'];
     disabled?: boolean;
+    size?: 'sm' | 'default';
     class?: HTMLAttributes['class'];
     formatDate?: (isoDate: string) => string;
   }>(),
@@ -30,6 +30,7 @@ const props = withDefaults(
     locale: undefined,
     weekStartsOn: undefined,
     disabled: false,
+    size: 'default',
     class: undefined,
     formatDate: undefined,
   },
@@ -68,21 +69,26 @@ function clear() {
   <div :class="cn('flex items-center gap-1', props.class)">
     <Popover v-model:open="isOpen">
       <PopoverTrigger as-child>
-        <Button
+        <button
           type="button"
-          variant="outline"
-          class="min-w-0 shrink grow justify-start font-normal"
+          data-slot="date-picker-trigger"
+          :data-size="size"
           :disabled="disabled"
+          class="flex min-w-0 shrink grow items-center gap-2 rounded-md border border-input bg-transparent pr-3 pl-2.5 text-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-8 data-[size=sm]:h-7 dark:bg-input/30 dark:hover:bg-input/50"
         >
-          <CalendarIcon class="mr-2 size-4 shrink-0 stroke-1.5" />
+          <Icon
+            name="hugeicons:calendar-03"
+            class="size-4 shrink-0 text-icon"
+          />
           <span v-if="displayLabel" class="truncate">{{ displayLabel }}</span>
           <span v-else class="truncate text-muted-foreground">{{
             placeholder
           }}</span>
-        </Button>
+        </button>
       </PopoverTrigger>
-      <PopoverContent class="w-auto p-0" align="start">
+      <PopoverContent class="w-70 p-3" align="start" :side-offset="8">
         <Calendar
+          class="p-0"
           :model-value="dateValue"
           :locale="locale"
           :week-starts-on="weekStartsOn"
@@ -94,12 +100,12 @@ function clear() {
       v-if="modelValue"
       type="button"
       variant="ghost"
-      size="icon"
+      size="icon-sm"
       :aria-label="clearLabel"
       :title="clearLabel"
       @click="clear"
     >
-      <XIcon class="size-4" />
+      <Icon name="hugeicons:cancel-01" />
     </Button>
   </div>
 </template>

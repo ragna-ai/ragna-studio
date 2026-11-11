@@ -4,7 +4,6 @@ import type { HTMLAttributes } from 'vue';
 import { reactiveOmit } from '@vueuse/core';
 import { CalendarCellTrigger, useForwardProps } from 'reka-ui';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
 
 const props = withDefaults(
   defineProps<CalendarCellTriggerProps & { class?: HTMLAttributes['class'] }>(),
@@ -23,17 +22,12 @@ const forwardedProps = useForwardProps(delegatedProps);
     data-slot="calendar-cell-trigger"
     :class="
       cn(
-        buttonVariants({ variant: 'ghost' }),
-        'size-8 cursor-default p-0 font-normal aria-selected:opacity-100',
-        '[&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground',
-        // Selected
-        'data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[selected]:opacity-100 data-[selected]:hover:text-primary-foreground data-[selected]:focus:bg-primary data-[selected]:focus:text-primary-foreground [&[data-selected]:hover]:bg-primary',
-        // Disabled
-        'data-[disabled]:text-muted-foreground data-[disabled]:opacity-50',
-        // Unavailable
-        'data-[unavailable]:text-destructive-foreground data-[unavailable]:line-through',
-        // Outside months
-        'data-[outside-view]:text-muted-foreground',
+        'relative inline-flex h-8 w-9 cursor-default items-center justify-center rounded-md text-small outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'data-[today]:font-medium data-[today]:after:absolute data-[today]:after:bottom-0.5 data-[today]:after:left-1/2 data-[today]:after:size-1 data-[today]:after:-translate-x-1/2 data-[today]:after:rounded-full data-[today]:after:bg-foreground',
+        'data-[selected]:bg-primary data-[selected]:font-medium data-[selected]:text-primary-foreground data-[selected]:opacity-100 data-[selected]:after:bg-primary-foreground data-[selected]:hover:bg-primary',
+        'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
+        'data-[unavailable]:pointer-events-none data-[unavailable]:text-muted-foreground data-[unavailable]:line-through',
+        'data-[outside-view]:text-muted-foreground data-[outside-view]:opacity-60',
         props.class,
       )
     "
