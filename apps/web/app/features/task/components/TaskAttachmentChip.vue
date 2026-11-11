@@ -75,9 +75,9 @@ function onRemove() {
 
     <Button
       type="button"
-      size="icon"
+      size="icon-2xs"
       variant="outline"
-      class="absolute top-1 right-1 z-10 size-5 shadow-sm"
+      class="absolute top-1 right-1 z-10 shadow-sm"
       :title="t('task.attachment.remove')"
       @click="onRemove"
     >

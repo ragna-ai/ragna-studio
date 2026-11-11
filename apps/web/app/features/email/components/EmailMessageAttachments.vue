@@ -62,8 +62,7 @@ function formatBytes(bytes: number): string {
         }}</span>
         <Button
           variant="ghost"
-          size="icon"
-          class="size-5"
+          size="icon-2xs"
           :disabled="isRowDownloading(attachment.partId)"
           :aria-label="t('email.attachments.download')"
           @click="
