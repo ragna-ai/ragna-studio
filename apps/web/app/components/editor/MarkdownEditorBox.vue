@@ -84,6 +84,15 @@ watch([model, controller.editor], ([value, editor]) => {
   lastEmittedValue = value;
   controller.setContent(value);
 });
+
+// The hidden editor still receives raw edits; read-only keeps its slash menu from opening.
+watch(
+  [() => props.view, controller.editor],
+  ([view, editor]) => {
+    editor?.setEditable(view === 'formatted', false);
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
