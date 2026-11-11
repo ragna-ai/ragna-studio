@@ -4,7 +4,6 @@ import WorkspaceCreateDialog from '~/features/workspace/components/WorkspaceCrea
 import WorkspaceManageDialog from '~/features/workspace/components/WorkspaceManageDialog.vue';
 import WorkspaceMenuItems from '~/features/workspace/components/WorkspaceMenuItems.vue';
 import { useWorkspaceSwitcher } from '~/features/workspace/composables/useWorkspaceSwitcher';
-import { MENU_CONTENT_CLASS } from '~/lib/menu-row';
 
 interface WorkspaceSwitcherProps {
   collapsed?: boolean;
@@ -56,12 +55,7 @@ const mark = computed(() => initials.value.charAt(0).toUpperCase());
         </template>
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent
-      side="bottom"
-      align="start"
-      :side-offset="6"
-      :class="MENU_CONTENT_CLASS"
-    >
+    <DropdownMenuContent side="bottom" align="start" :side-offset="6">
       <WorkspaceMenuItems
         :groups="groups"
         :is-active="isActive"

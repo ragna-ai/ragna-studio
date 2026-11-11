@@ -4,7 +4,6 @@ import type {
   DropdownMenuCheckboxItemProps,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-import { Check } from '@lucide/vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   DropdownMenuCheckboxItem,
@@ -29,20 +28,20 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     v-bind="forwarded"
     :class="
       cn(
-        'relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=\'size-\'])]:size-4',
+        'relative flex min-h-9 cursor-default items-center gap-2.5 rounded-md px-2.5 py-0 text-body outline-hidden select-none focus:bg-surface-subtle focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=\'size-\'])]:size-4',
         props.class,
       )
     "
   >
+    <slot />
     <span
-      class="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center"
+      class="pointer-events-none ml-auto flex size-4 items-center justify-center"
     >
       <DropdownMenuItemIndicator>
         <slot name="indicator-icon">
-          <Check class="size-4" />
+          <Icon name="hugeicons:tick-02" class="size-4 text-foreground" />
         </slot>
       </DropdownMenuItemIndicator>
     </span>
-    <slot />
   </DropdownMenuCheckboxItem>
 </template>

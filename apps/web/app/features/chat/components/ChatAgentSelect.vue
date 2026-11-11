@@ -87,16 +87,16 @@ function onCloseAutoFocus(event: Event) {
       <Command :model-value="selectedAgent?.name ?? ''">
         <CommandInput :placeholder="t('chat.agentSelect.search')" />
         <CommandList class="max-h-84">
-          <CommandEmpty class="py-4 text-small text-muted-foreground">
+          <CommandEmpty>
             {{ t('chat.agentSelect.empty') }}
           </CommandEmpty>
-          <CommandGroup class="flex flex-col gap-0.5 p-1.5">
+          <CommandGroup class="flex flex-col gap-0.5">
             <CommandItem
               v-for="agent in agents"
               :key="agent.id"
               :value="agent.name"
               :class="[
-                'h-13 gap-2.5 rounded-md py-0 pr-2.5 pl-2 data-highlighted:bg-surface-subtle data-highlighted:text-foreground',
+                'h-13 pl-2',
                 agent.id === selectedAgentId && 'bg-surface-subtle',
               ]"
               @select="onSelect(agent.id)"

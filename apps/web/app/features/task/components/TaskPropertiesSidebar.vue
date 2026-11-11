@@ -213,7 +213,7 @@ function commitCustomDays() {
             </span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent class="w-56">
+        <DropdownMenuContent>
           <DropdownMenuCheckboxItem
             v-for="label in props.labels"
             :key="label.id"

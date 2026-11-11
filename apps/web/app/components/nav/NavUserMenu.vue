@@ -2,11 +2,6 @@
 import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 import { highestRole } from '~/features/organization/lib/roles';
-import {
-  MENU_CONTENT_CLASS,
-  MENU_ROW_CLASS,
-  MENU_SEPARATOR_CLASS,
-} from '~/lib/menu-row';
 import { createInitials } from '~/lib/utils';
 
 defineProps<{
@@ -67,12 +62,7 @@ async function signOut() {
         </span>
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent
-      side="top"
-      align="start"
-      :side-offset="6"
-      :class="MENU_CONTENT_CLASS"
-    >
+    <DropdownMenuContent side="top" align="start" :side-offset="6">
       <div class="flex h-13 items-center gap-2.5 px-2.5">
         <span
           class="flex size-8 shrink-0 items-center justify-center rounded-full bg-border-strong text-caption font-medium text-foreground"
@@ -88,12 +78,8 @@ async function signOut() {
           </span>
         </span>
       </div>
-      <DropdownMenuSeparator :class="MENU_SEPARATOR_CLASS" />
-      <DropdownMenuItem
-        v-if="displayedCredits !== null"
-        as-child
-        :class="MENU_ROW_CLASS"
-      >
+      <DropdownMenuSeparator />
+      <DropdownMenuItem v-if="displayedCredits !== null" as-child>
         <NuxtLink to="/settings/credits">
           <Icon name="hugeicons:coins-01" class="size-4 text-foreground" />
           {{ $t('nav.userMenu.credits') }}
@@ -102,14 +88,14 @@ async function signOut() {
           </span>
         </NuxtLink>
       </DropdownMenuItem>
-      <DropdownMenuItem as-child :class="MENU_ROW_CLASS">
+      <DropdownMenuItem as-child>
         <NuxtLink to="/settings/profile">
           <Icon name="hugeicons:settings-01" class="size-4 text-foreground" />
           {{ $t('nav.userMenu.settings') }}
         </NuxtLink>
       </DropdownMenuItem>
-      <DropdownMenuSeparator :class="MENU_SEPARATOR_CLASS" />
-      <DropdownMenuItem :class="MENU_ROW_CLASS" @click="signOut">
+      <DropdownMenuSeparator />
+      <DropdownMenuItem @click="signOut">
         <Icon name="hugeicons:logout-01" class="size-4 text-foreground" />
         {{ $t('nav.userMenu.signOut') }}
       </DropdownMenuItem>
