@@ -19,7 +19,6 @@ import {
 import { groupNotifications } from '~/features/notification/lib/group-notifications';
 import useNotificationParser from '~/features/notification/composables/useNotificationParser';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
-import { MENU_CONTENT_CLASS } from '~/lib/menu-row';
 
 // Props
 withDefaults(defineProps<{ expanded?: boolean }>(), {
@@ -140,9 +139,9 @@ function handleClearAllClick() {
       <PopoverContent
         side="top"
         align="start"
-        :side-offset="6"
+        padding="list"
+        class="flex max-h-130 w-90 flex-col overflow-hidden"
         @open-auto-focus="focusPanel"
-        :class="`${MENU_CONTENT_CLASS} flex max-h-130 w-90 flex-col overflow-hidden`"
       >
         <div class="flex h-11 shrink-0 items-center gap-3 pr-1.5 pl-2.5">
           <p class="text-body font-medium">

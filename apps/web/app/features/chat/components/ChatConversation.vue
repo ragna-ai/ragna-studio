@@ -330,6 +330,7 @@ async function handleSubmit(text: string) {
                 :agent-id="selectedAgentId ?? undefined"
                 :agent-name="selectedAgentName"
                 :is-last="index === messages.length - 1"
+                :is-streaming="isBusy && index === messages.length - 1"
                 @approval-response="answerApproval"
               />
               <!-- end chat message -->

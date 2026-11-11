@@ -64,10 +64,7 @@ const hiddenCount = computed(
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                class="flex h-7 items-center rounded-sm px-2.5 py-0 text-caption font-medium text-primary-foreground"
-              >
+              <TooltipContent side="top">
                 {{ t(`agent.tool.${toolId}.label`) }}
               </TooltipContent>
             </Tooltip>
@@ -82,12 +79,7 @@ const hiddenCount = computed(
           </div>
         </PopoverAnchor>
       </TooltipProvider>
-      <PopoverContent
-        side="top"
-        align="start"
-        :side-offset="8"
-        class="w-90 overflow-hidden rounded-lg border bg-popover p-0 shadow-popover"
-      >
+      <PopoverContent side="top" align="start" class="w-90 overflow-hidden p-0">
         <ChatToolsPanel
           :tool-ids="toolIds"
           :agent-id="agentId"

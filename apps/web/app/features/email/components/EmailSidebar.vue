@@ -137,7 +137,7 @@ function handleSyncNow() {
                 <HelpCircleIcon class="size-3.5 text-muted-foreground" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" class="max-w-56">
+            <TooltipContent side="right">
               <p>{{ t(searchHintKey) }}</p>
             </TooltipContent>
           </Tooltip>

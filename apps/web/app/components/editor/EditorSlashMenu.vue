@@ -126,9 +126,8 @@ onBeforeUnmount(() => props.controller.setSlashKeyHandler(null));
     <PopoverContent
       side="bottom"
       align="start"
-      :class="
-        isImageFormOpen ? 'w-80 p-2' : 'max-h-72 w-64 overflow-y-auto p-1'
-      "
+      :padding="isImageFormOpen ? 'default' : 'list'"
+      :class="isImageFormOpen ? 'w-80 p-2' : 'max-h-72 overflow-y-auto'"
       @open-auto-focus.prevent
     >
       <EditorImageForm
