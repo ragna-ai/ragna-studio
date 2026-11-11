@@ -67,10 +67,14 @@ const canSubmit = computed(
 );
 
 const placeholder = computed(() => {
+  if (props.isSendDisabled) return t('chat.input.chooseAgent');
   if (!props.agentName) return t('chat.input.placeholder');
   const key = props.isEmpty ? 'chat.input.askAgent' : 'chat.input.replyToAgent';
   return t(key, { agent: props.agentName });
 });
+const submitLabel = computed(() =>
+  props.isBusy ? t('chat.input.stop') : t('chat.input.send'),
+);
 const submitIcon = computed(() => SUBMIT_ICON[props.status]);
 const submitIconClass = computed(() =>
   props.status === 'submitted' ? 'size-4 animate-spin' : 'size-4',
@@ -129,6 +133,7 @@ onMounted(() => {
       <Textarea
         v-model="text"
         :placeholder="placeholder"
+        :disabled="isSendDisabled"
         name="message"
         :class="
           cn(
@@ -148,6 +153,7 @@ onMounted(() => {
           <PromptInputSubmit
             :status="status"
             :disabled="!isBusy && !canSubmit"
+            :aria-label="submitLabel"
             class="ml-0.5 size-8 rounded-md"
           >
             <Icon :name="submitIcon" :class="submitIconClass" />
