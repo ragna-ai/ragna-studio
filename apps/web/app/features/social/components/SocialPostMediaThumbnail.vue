@@ -76,7 +76,7 @@ watch(
             <PencilIcon class="size-3" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent class="space-y-2" align="start">
+        <PopoverContent class="flex flex-col gap-2" align="start">
           <Label :for="`social-media-alt-text-${media.id}`">
             {{ t('social.media.altTextLabel') }}
           </Label>

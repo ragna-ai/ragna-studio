@@ -324,7 +324,7 @@ watch(
     <Collapsible v-model:open="advancedOptionsOpen">
       <CollapsibleRow :label="t('imagen.form.advancedOptions')" />
 
-      <CollapsibleContent class="space-y-4 pt-2 pl-6">
+      <CollapsibleContent class="flex flex-col gap-4 pt-2 pl-6">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
