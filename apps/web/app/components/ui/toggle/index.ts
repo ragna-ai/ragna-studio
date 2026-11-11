@@ -9,9 +9,9 @@ export const toggleVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-transparent hover:bg-surface-subtle data-[state=on]:bg-surface-subtle',
+          'bg-transparent hover:bg-surface-subtle data-[state=on]:bg-selected data-[state=on]:text-foreground',
         outline:
-          'border bg-background shadow-xs hover:bg-surface-subtle data-[state=on]:bg-surface-subtle',
+          'border bg-background shadow-xs hover:bg-surface-subtle data-[state=on]:border-border-strong data-[state=on]:bg-selected data-[state=on]:text-foreground',
       },
       size: {
         default: 'h-8 px-3',
