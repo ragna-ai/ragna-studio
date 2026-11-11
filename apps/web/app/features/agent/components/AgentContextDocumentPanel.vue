@@ -292,7 +292,7 @@ function handleDelete(document: AgentContextDocument) {
                     size="icon-sm"
                     :aria-label="$t('common.actions')"
                   >
-                    <Icon name="hugeicons:more-vertical" class="size-4" />
+                    <Icon name="hugeicons:more-vertical" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" @close-auto-focus.prevent>
