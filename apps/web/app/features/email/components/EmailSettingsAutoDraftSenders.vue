@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { PlusIcon, Trash2Icon } from '@lucide/vue';
-import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
 import {
   useAddAutoDraftSender,
   useGetAutoDraftSenders,
@@ -33,9 +37,9 @@ function handleAdd() {
   <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.senders.title') }}</CardTitle>
-      <p class="text-sm text-muted-foreground">
-        {{ t('email.settings.senders.subtitle') }}
-      </p>
+      <CardDescription>{{
+        t('email.settings.senders.subtitle')
+      }}</CardDescription>
     </CardHeader>
     <CardContent class="space-y-4">
       <form class="flex items-center gap-2" @submit.prevent="handleAdd">
@@ -48,7 +52,7 @@ function handleAdd() {
         />
         <Button type="submit" size="icon" :disabled="isAdding">
           <Spinner v-if="isAdding" />
-          <PlusIcon v-else class="size-4" />
+          <Icon v-else name="hugeicons:add-01" />
         </Button>
       </form>
 
@@ -65,7 +69,7 @@ function handleAdd() {
             :aria-label="t('common.delete')"
             @click="removeSender(sender.id)"
           >
-            <Trash2Icon class="size-4 text-destructive" />
+            <Icon name="hugeicons:delete-02" class="text-destructive" />
           </Button>
         </li>
       </ul>

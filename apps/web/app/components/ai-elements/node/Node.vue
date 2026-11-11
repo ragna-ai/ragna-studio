@@ -24,7 +24,7 @@ const delegatedProps = reactiveOmit(props, 'class');
     v-bind="delegatedProps"
     :class="
       cn(
-        'node-container relative size-full h-auto w-sm gap-0 rounded-md p-0',
+        'node-container relative size-full h-auto w-sm gap-0 rounded-md bg-card p-0 shadow-xs',
         props.class,
       )
     "
