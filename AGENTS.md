@@ -100,6 +100,8 @@ This is a **pnpm + Turborepo monorepo** with two apps and several shared package
 shadow offsets and keyframe nudges. `app/assets/css/tokens.css` is generated from the design file: never edit it by
 hand; ask for a design change instead. `main.css` maps shadcn names onto it. Design tools such as FigCraft hand over
 `#hex` and `px`; convert them with the oklch-conversion skill's script, never by hand or verbatim.
+New `--text-*`, `--spacing-*` or `--shadow-*` names also go into `cn` in `app/lib/utils.ts`: tailwind-merge doesn't
+read `@theme`, so without them `cn` can't resolve conflicts like `px-card` vs `p-0`.
 Controls focus with a 2px ink ring and a 2px offset. To switch it off inside a composite (input group, cell editor),
 use `focus-visible:ring-0 focus-visible:ring-offset-0`: in Tailwind v4 the offset alone still draws the ring.
 
