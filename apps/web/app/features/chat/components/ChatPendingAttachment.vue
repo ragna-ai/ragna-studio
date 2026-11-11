@@ -71,7 +71,7 @@ function onRemove() {
       :aria-label="t('chat.attachment.retry')"
       @click="onRetry"
     >
-      <Icon name="hugeicons:refresh" class="size-3.5" />
+      <Icon name="hugeicons:refresh" />
     </Button>
 
     <Button
@@ -82,7 +82,7 @@ function onRemove() {
       :aria-label="t('chat.attachment.remove')"
       @click="onRemove"
     >
-      <Icon name="hugeicons:cancel-01" class="size-3.5" />
+      <Icon name="hugeicons:cancel-01" />
     </Button>
   </div>
 </template>

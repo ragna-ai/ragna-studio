@@ -3,8 +3,13 @@ import { cva } from 'class-variance-authority';
 
 export { default as Button } from './Button.vue';
 
+/**
+ * Slot icons without their own `size-*` class follow the button. `@nuxt/icon` renders
+ * `<Icon>` as `<span class="iconify">`, not an `<svg>`, so every rule names both.
+ * Class names stay literal so Tailwind can scan them.
+ */
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-body font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-body font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_.iconify:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -23,8 +28,10 @@ export const buttonVariants = cva(
         lg: 'h-10 px-4',
         icon: 'size-8',
         'icon-sm': 'size-7',
-        'icon-xs': 'size-6 rounded-sm',
-        'icon-2xs': "size-5 rounded-sm [&_svg:not([class*='size-'])]:size-3.5",
+        'icon-xs':
+          "size-6 rounded-sm [&_svg:not([class*='size-'])]:size-3.5 [&_.iconify:not([class*='size-'])]:size-3.5",
+        'icon-2xs':
+          "size-5 rounded-sm [&_svg:not([class*='size-'])]:size-3 [&_.iconify:not([class*='size-'])]:size-3",
         'icon-lg': 'size-10',
       },
       leading: {
@@ -52,7 +59,7 @@ export const buttonIconClasses: Record<ButtonSize, string> = {
   lg: 'size-4',
   icon: 'size-4',
   'icon-sm': 'size-4',
-  'icon-xs': 'size-4',
-  'icon-2xs': 'size-3.5',
+  'icon-xs': 'size-3.5',
+  'icon-2xs': 'size-3',
   'icon-lg': 'size-4',
 };

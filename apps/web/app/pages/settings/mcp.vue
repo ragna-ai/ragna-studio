@@ -136,7 +136,7 @@ async function handleRevoke(connectionId: string) {
           </CardHeader>
           <CardContent class="space-y-2">
             <div class="flex items-center gap-2">
-              <Input :model-value="data.connectorUrl" readonly class="h-9" />
+              <Input :model-value="data.connectorUrl" readonly />
               <Button variant="outline" size="icon" @click="copyConnectorUrl">
                 <CopyIcon class="size-4 stroke-1.5" />
               </Button>
