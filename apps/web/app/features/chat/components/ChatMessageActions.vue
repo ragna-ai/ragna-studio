@@ -29,13 +29,17 @@ const copyLabel = computed(() =>
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
-            class="rounded-sm text-icon"
+            size="icon-xs"
+            class="text-icon"
             :aria-label="copyLabel"
             @click="emit('copy')"
           >
-            <Icon v-if="copied" name="hugeicons:tick-02" class="size-4" />
-            <Icon v-else name="hugeicons:copy-01" class="size-4" />
+            <Icon
+              v-if="copied"
+              name="hugeicons:tick-02"
+              class="text-status-ok-fg"
+            />
+            <Icon v-else name="hugeicons:copy-01" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>{{ copyLabel }}</TooltipContent>
@@ -45,12 +49,12 @@ const copyLabel = computed(() =>
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
-            class="rounded-sm text-icon"
+            size="icon-xs"
+            class="text-icon"
             :aria-label="t('chat.message.branch')"
             @click="emit('branch')"
           >
-            <Icon name="hugeicons:git-branch" class="size-4" />
+            <Icon name="hugeicons:git-branch" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>{{ t('chat.message.branch') }}</TooltipContent>

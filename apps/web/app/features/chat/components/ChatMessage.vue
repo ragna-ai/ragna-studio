@@ -37,7 +37,7 @@ const emit = defineEmits<{
 // Composables
 const apiBaseUrl = useRuntimeConfig().public.apiBaseUrl;
 const { branchChatAndNavigate } = useBranchChatAndNavigate();
-const { copy, copied } = useClipboard({ copiedDuring: 2000 });
+const { copy, copied } = useClipboard({ copiedDuring: 1500 });
 
 const isUser = computed(() => props.message.role === 'user');
 
@@ -149,7 +149,7 @@ const renderItems = computed<RenderItem[]>(() => {
       class="flex flex-col gap-2"
       :class="
         isUser
-          ? 'ml-auto w-fit max-w-4/5 rounded-xl bg-chip px-3.5 py-2.5 text-chat leading-6'
+          ? 'ml-auto w-fit max-w-140 rounded-xl bg-chip px-3.5 py-2.5 text-chat'
           : 'w-full'
       "
     >

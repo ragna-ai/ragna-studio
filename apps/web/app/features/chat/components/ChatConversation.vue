@@ -320,6 +320,7 @@ async function handleSubmit(text: string) {
               :key="message.id"
               :message-id="message.id"
               :scroll-anchor="message.role === 'user'"
+              class="-m-1 p-1"
             >
               <!-- Message -->
               <ChatMessage
