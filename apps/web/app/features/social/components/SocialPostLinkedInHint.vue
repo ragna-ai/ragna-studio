@@ -20,6 +20,7 @@ function connectLinkedIn() {
 
 <template>
   <Alert>
+    <Icon data-slot="alert-icon" name="hugeicons:information-circle" />
     <AlertTitle>{{ t('social.linkedinHint.title') }}</AlertTitle>
     <AlertDescription>
       <span>{{ t('social.linkedinHint.message') }}</span>
