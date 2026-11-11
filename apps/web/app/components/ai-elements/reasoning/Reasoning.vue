@@ -104,7 +104,7 @@ provide(ReasoningKey, {
 </script>
 
 <template>
-  <Collapsible v-model:open="isOpen" :class="cn('not-prose mb-4', props.class)">
+  <Collapsible v-model:open="isOpen" :class="cn('not-prose', props.class)">
     <slot />
   </Collapsible>
 </template>
