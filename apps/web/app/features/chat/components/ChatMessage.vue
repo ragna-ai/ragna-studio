@@ -24,6 +24,7 @@ interface Props {
   agentId?: string;
   agentName?: string;
   isLast?: boolean;
+  isStreaming?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -194,7 +195,7 @@ const renderItems = computed<RenderItem[]>(() => {
     </div>
 
     <ChatMessageActions
-      v-if="!isUser"
+      v-if="!isUser && !isStreaming"
       :always-visible="isLast"
       :copied="copied"
       @copy="copyText"
