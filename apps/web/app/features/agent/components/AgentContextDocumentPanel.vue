@@ -12,8 +12,17 @@ import {
   useRetryAgentContextDocument,
   useUploadAgentContextDocuments,
 } from '~/features/agent/composables/useAgentApi';
-import type { AgentContextDocument } from '~/features/agent/types';
-import AgentContextDocumentStatusBadge from './AgentContextDocumentStatusBadge.vue';
+import type {
+  AgentContextDocument,
+  AgentContextDocumentStatus,
+} from '~/features/agent/types';
+import Status, { type StatusTone } from '~/components/Status.vue';
+
+const STATUS_TONE: Record<AgentContextDocumentStatus, StatusTone> = {
+  ready: 'ok',
+  pending: 'pending',
+  failed: 'danger',
+};
 
 type AgentContextDocumentPanelProps = {
   agentId: string;
@@ -189,125 +198,132 @@ function handleDelete(document: AgentContextDocument) {
       {{ $t('agent.context.uploading') }}
     </p>
 
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Spinner />
-    </div>
-    <Table v-else-if="documents.length > 0">
-      <TableHeader>
-        <TableRow>
-          <TableHead class="text-sm text-muted-foreground">
-            {{ $t('common.name') }}
-          </TableHead>
-          <TableHead class="text-sm text-muted-foreground">
-            {{ $t('common.status') }}
-          </TableHead>
-          <TableHead class="text-right text-sm text-muted-foreground">
-            {{ $t('agent.context.tableSize') }}
-          </TableHead>
-          <TableHead class="w-10">
-            <span class="sr-only">{{ $t('common.actions') }}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow v-for="document in documents" :key="document.id">
-          <TableCell class="max-w-xs">
-            <div class="flex items-center gap-3">
-              <Icon
-                name="hugeicons:file-02"
-                class="size-4 shrink-0 text-icon"
-              />
-              <div class="min-w-0">
-                <Input
-                  v-if="renamingDocumentId === document.id"
-                  v-model="renameValue"
-                  autofocus
-                  autocomplete="off"
-                  @keydown.enter="commitRename(document)"
-                  @keydown.escape="cancelRename"
-                  @blur="commitRename(document)"
+    <div>
+      <div v-if="isLoading" class="flex items-center justify-center py-8">
+        <Spinner />
+      </div>
+      <Table v-else-if="documents.length > 0">
+        <TableHeader>
+          <TableRow>
+            <TableHead class="text-sm text-muted-foreground">
+              {{ $t('common.name') }}
+            </TableHead>
+            <TableHead class="text-sm text-muted-foreground">
+              {{ $t('common.status') }}
+            </TableHead>
+            <TableHead class="text-right text-sm text-muted-foreground">
+              {{ $t('agent.context.tableSize') }}
+            </TableHead>
+            <TableHead class="w-10">
+              <span class="sr-only">{{ $t('common.actions') }}</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="document in documents" :key="document.id">
+            <TableCell class="max-w-xs">
+              <div class="flex items-center gap-3">
+                <Icon
+                  name="hugeicons:file-02"
+                  class="size-4 shrink-0 text-icon"
                 />
-                <p v-else class="truncate text-sm">{{ document.name }}</p>
-                <p class="text-xs text-muted-foreground">
-                  {{
-                    $t('agent.context.uploadedAt', {
-                      date: formatUploadedAt(document),
-                    })
-                  }}
-                </p>
-                <p
-                  v-if="document.isTruncated"
-                  class="text-xs text-muted-foreground"
-                >
-                  {{ $t('agent.context.truncated') }}
-                </p>
+                <div class="min-w-0">
+                  <Input
+                    v-if="renamingDocumentId === document.id"
+                    v-model="renameValue"
+                    autofocus
+                    autocomplete="off"
+                    @keydown.enter="commitRename(document)"
+                    @keydown.escape="cancelRename"
+                    @blur="commitRename(document)"
+                  />
+                  <p v-else class="truncate text-sm">{{ document.name }}</p>
+                  <p class="text-xs text-muted-foreground">
+                    {{
+                      $t('agent.context.uploadedAt', {
+                        date: formatUploadedAt(document),
+                      })
+                    }}
+                  </p>
+                  <p
+                    v-if="document.isTruncated"
+                    class="text-xs text-muted-foreground"
+                  >
+                    {{ $t('agent.context.truncated') }}
+                  </p>
+                </div>
               </div>
-            </div>
-          </TableCell>
-          <TableCell>
-            <TooltipProvider
-              v-if="document.status === 'failed' && document.errorMessage"
+            </TableCell>
+            <TableCell>
+              <TooltipProvider
+                v-if="document.status === 'failed' && document.errorMessage"
+              >
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <span tabindex="0">
+                      <Status
+                        :tone="STATUS_TONE[document.status]"
+                        :label="t(`agent.context.status.${document.status}`)"
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{{ document.errorMessage }}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Status
+                v-else
+                :tone="STATUS_TONE[document.status]"
+                :label="t(`agent.context.status.${document.status}`)"
+              />
+            </TableCell>
+            <TableCell
+              class="text-right font-mono text-sm whitespace-nowrap text-muted-foreground"
             >
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span>
-                    <AgentContextDocumentStatusBadge
-                      :status="document.status"
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{{ document.errorMessage }}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <AgentContextDocumentStatusBadge v-else :status="document.status" />
-          </TableCell>
-          <TableCell
-            class="text-right font-mono text-sm whitespace-nowrap text-muted-foreground"
-          >
-            {{ formatFileSize(document.fileSize) }}
-          </TableCell>
-          <TableCell class="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  :aria-label="$t('common.actions')"
-                >
-                  <Icon name="hugeicons:more-vertical" class="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" @close-auto-focus.prevent>
-                <DropdownMenuItem @select="startRename(document)">
-                  {{ $t('agent.context.actions.rename') }}
-                </DropdownMenuItem>
-                <DropdownMenuItem @select="openReplacePicker(document)">
-                  {{ $t('agent.context.actions.replace') }}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  v-if="document.status === 'failed'"
-                  @select="handleRetry(document)"
-                >
-                  {{ $t('agent.context.actions.retry') }}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  @select="handleDelete(document)"
-                >
-                  {{ $t('agent.context.actions.delete') }}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
-    <p class="text-xs text-muted-foreground">
-      {{ $t('agent.context.hint', { max: maxFiles }) }}
-    </p>
+              {{ formatFileSize(document.fileSize) }}
+            </TableCell>
+            <TableCell class="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :aria-label="$t('common.actions')"
+                  >
+                    <Icon name="hugeicons:more-vertical" class="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" @close-auto-focus.prevent>
+                  <DropdownMenuItem @select="startRename(document)">
+                    {{ $t('agent.context.actions.rename') }}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @select="openReplacePicker(document)">
+                    {{ $t('agent.context.actions.replace') }}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    v-if="document.status === 'failed'"
+                    @select="handleRetry(document)"
+                  >
+                    {{ $t('agent.context.actions.retry') }}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    @select="handleDelete(document)"
+                  >
+                    {{ $t('agent.context.actions.delete') }}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      <p class="pt-2 text-small text-muted-foreground">
+        {{ $t('agent.context.hint', { max: maxFiles }) }}
+      </p>
+    </div>
     <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a
          file input is never nested inside another interactive element. -->
     <input
