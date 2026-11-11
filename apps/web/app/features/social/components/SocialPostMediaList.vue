@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Imports
 import { PaperclipIcon } from '@lucide/vue';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { Button } from '~/components/ui/button';
 import { Spinner } from '~/components/ui/spinner';
 import SocialPostMediaThumbnail from '~/features/social/components/SocialPostMediaThumbnail.vue';

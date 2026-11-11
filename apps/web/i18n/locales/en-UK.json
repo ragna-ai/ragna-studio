@@ -2,7 +2,8 @@
   "common": {
     "settings": "Settings",
     "descriptionPlaceholder": "Add a description...",
-    "dismissError": "Dismiss error",
+    "dismiss": "Dismiss",
+    "loading": "Loading",
     "hasErrors": "has errors",
     "validating": "Validating...",
     "nameRequired": "Name is required.",

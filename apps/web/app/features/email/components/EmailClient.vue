@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { useIntegrationErrorToast } from '~/features/integrations/composables/useIntegrationErrorToast';
 import { INTEGRATION_ERROR_QUERY_PARAM } from '~/features/integrations/lib/integration-meta';
 import EmailConnectPrompt from '~/features/email/components/EmailConnectPrompt.vue';

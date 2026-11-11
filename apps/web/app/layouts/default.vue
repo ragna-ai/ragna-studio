@@ -37,7 +37,7 @@ const hasNoWorkspace = computed(
           </div>
         </div>
       </div>
-      <Toaster position="top-center" rich-colors />
+      <Toaster position="top-center" />
     </Body>
   </Html>
 </template>

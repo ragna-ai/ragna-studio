@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OrganizationAssignableRole } from '@repo/auth/client';
 import { useForm } from '@tanstack/vue-form';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { z } from 'zod';
 import {
   organizationErrorMessage,

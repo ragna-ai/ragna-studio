@@ -2,7 +2,8 @@
   "common": {
     "settings": "Einstellungen",
     "descriptionPlaceholder": "Beschreibung hinzufügen...",
-    "dismissError": "Fehlermeldung schließen",
+    "dismiss": "Ausblenden",
+    "loading": "Wird geladen",
     "hasErrors": "hat Fehler",
     "validating": "Wird geprüft...",
     "nameRequired": "Name ist erforderlich.",

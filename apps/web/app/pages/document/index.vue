@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import DocumentCreateDialog from '~/features/document/components/DocumentCreateDialog.vue';
 import DocumentTable, {
   type MoveDocumentPayload,

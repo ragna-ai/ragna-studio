@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TriangleAlertIcon } from '@lucide/vue';
 
 type SocialProvider = 'google' | 'microsoft' | 'apple';
 
@@ -108,12 +107,8 @@ async function signIn(provider: SocialProvider) {
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-1"
       >
-        <Alert
-          v-if="errorMessage"
-          variant="destructive"
-          class="mt-6 flex items-center space-x-2"
-        >
-          <TriangleAlertIcon class="size-4" />
+        <Alert v-if="errorMessage" variant="destructive" class="mt-6">
+          <Icon data-slot="alert-icon" name="hugeicons:alert-circle" />
           <AlertDescription>{{ errorMessage }}</AlertDescription>
         </Alert>
       </Transition>

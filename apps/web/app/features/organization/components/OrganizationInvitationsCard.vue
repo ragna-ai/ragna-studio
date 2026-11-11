@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OrganizationInvitationRecord } from '@repo/auth/client';
 import { XIcon } from '@lucide/vue';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import OrganizationInviteDialog from '~/features/organization/components/OrganizationInviteDialog.vue';
 import {
   organizationErrorMessage,

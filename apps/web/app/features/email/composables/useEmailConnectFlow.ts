@@ -3,7 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { useSyncEmailAccount } from '~/features/email/composables/useEmailAccountApi';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import { startAccountSyncForcePoll } from '~/features/email/lib/email-account-sync-poll';

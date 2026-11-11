@@ -1,6 +1,6 @@
 import type { MailAttachmentMeta } from '@repo/mail/provider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { emailKeys } from '~/features/email/composables/useEmailKeys';
 import {
   deriveThreadSummaryPatch,

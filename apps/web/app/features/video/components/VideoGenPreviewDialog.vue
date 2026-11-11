@@ -2,7 +2,7 @@
 // Imports
 import { CheckIcon, CopyIcon } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { downloadFileFromUrl } from '~/lib/file-export';
 import {
   useDeleteGenVideo,

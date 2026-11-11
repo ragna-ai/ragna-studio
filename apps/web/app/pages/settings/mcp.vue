@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CopyIcon } from '@lucide/vue';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import McpConnectedAppsList from '~/features/mcp/components/McpConnectedAppsList.vue';
 import {
   isMcpDisabledError,

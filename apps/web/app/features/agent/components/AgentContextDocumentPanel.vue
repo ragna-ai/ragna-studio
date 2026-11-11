@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import {
   AGENT_CONTEXT_DOCUMENT_ACCEPT,
   AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,

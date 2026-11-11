@@ -1,6 +1,6 @@
 import type { AuthSession } from '@repo/auth/client';
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 
 interface UpdateUserProfileBody {
   name: string;

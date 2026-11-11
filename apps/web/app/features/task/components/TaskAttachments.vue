@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imports
-import { toast } from 'vue-sonner';
+import { toast } from '~/lib/toast';
 import { Button } from '~/components/ui/button';
 import { CHAT_ATTACHMENT_ACCEPT } from '~/features/chat/lib/attachment-mime';
 import TaskAttachmentChip from '~/features/task/components/TaskAttachmentChip.vue';
