@@ -74,7 +74,7 @@ function clear() {
           data-slot="date-picker-trigger"
           :data-size="size"
           :disabled="disabled"
-          class="flex min-w-0 shrink grow items-center gap-2 rounded-md border border-input bg-transparent pr-3 pl-2.5 text-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-8 data-[size=sm]:h-7 dark:bg-input/30 dark:hover:bg-input/50"
+          class="flex min-w-0 shrink grow items-center gap-2 rounded-md border border-input bg-transparent pr-3 pl-2.5 text-body whitespace-nowrap shadow-xs outline-hidden transition-[color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-8 data-[size=sm]:h-7 dark:bg-input/30 dark:hover:bg-input/50"
         >
           <Icon
             name="hugeicons:calendar-03"
