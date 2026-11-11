@@ -35,13 +35,13 @@ function errorMessages(): string[] {
       <p
         v-for="message of errorMessages()"
         :key="message"
-        class="flex gap-1.5 text-sm text-destructive"
+        class="flex gap-1.5 text-small text-destructive"
       >
         <Icon name="hugeicons:alert-02" class="mt-0.5 size-4 shrink-0" />
         {{ message }}
       </p>
     </template>
-    <p v-else-if="hint" class="text-sm text-muted-foreground">{{ hint }}</p>
+    <p v-else-if="hint" class="text-small text-muted-foreground">{{ hint }}</p>
     <span
       v-if="field.state.meta.isValidating"
       class="text-xs text-muted-foreground"
