@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { AlertTriangleIcon } from '@lucide/vue';
 import { Button } from '~/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import {
@@ -91,7 +90,7 @@ function handleReconnect() {
           <p
             class="flex max-w-lg items-center gap-1.5 text-xs text-destructive"
           >
-            <AlertTriangleIcon class="size-3.5 shrink-0" />
+            <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
             {{
               t('email.settings.general.reconnectHint', {
                 provider: providerLabel,
@@ -122,7 +121,7 @@ function handleReconnect() {
           v-if="!defaultAgentId"
           class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400"
         >
-          <AlertTriangleIcon class="size-3.5 shrink-0" />
+          <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
           {{ t('email.settings.general.defaultAgentMissingHint') }}
         </p>
         <Select v-model="defaultAgentId">

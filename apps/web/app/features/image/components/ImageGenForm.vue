@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ChevronDownIcon, XIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
@@ -323,16 +322,9 @@ watch(
     </div>
 
     <Collapsible v-model:open="advancedOptionsOpen">
-      <CollapsibleTrigger
-        class="group/advanced ml-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        {{ t('imagen.form.advancedOptions') }}
-        <ChevronDownIcon
-          class="size-4 transition-transform group-data-[state=open]/advanced:rotate-180"
-        />
-      </CollapsibleTrigger>
+      <CollapsibleRow :label="t('imagen.form.advancedOptions')" />
 
-      <CollapsibleContent class="space-y-4 p-3">
+      <CollapsibleContent class="space-y-4 pt-2 pl-6">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
@@ -512,7 +504,7 @@ watch(
                 class="absolute -top-2 -right-2"
                 @click="removeUploadedReference(index)"
               >
-                <XIcon class="size-3.5" />
+                <Icon name="hugeicons:cancel-01" class="size-3.5" />
               </Button>
             </div>
           </div>

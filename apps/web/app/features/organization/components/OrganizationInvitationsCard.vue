@@ -56,7 +56,7 @@ async function handleCancel(invitation: OrganizationInvitationRecord) {
 
 <template>
   <SettingsCard class="mx-auto w-full max-w-3xl">
-    <CardHeader class="flex flex-row items-center justify-between">
+    <CardHeader class="justify-between">
       <CardTitle>{{ t('organization.invitations.title') }}</CardTitle>
       <Button
         leading-icon="hugeicons:user-add-01"

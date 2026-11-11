@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { PlusIcon, Trash2Icon } from '@lucide/vue';
-import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
 import { Switch } from '~/components/ui/switch';
 import { Textarea } from '~/components/ui/textarea';
 import {
@@ -75,9 +79,9 @@ async function handleDelete(categoryId: string, name: string) {
   <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ t('email.settings.categories.title') }}</CardTitle>
-      <p class="text-sm text-muted-foreground">
-        {{ t('email.settings.categories.subtitle') }}
-      </p>
+      <CardDescription>{{
+        t('email.settings.categories.subtitle')
+      }}</CardDescription>
     </CardHeader>
     <CardContent class="space-y-4">
       <form class="flex items-center gap-2" @submit.prevent="handleCreate">
@@ -95,7 +99,7 @@ async function handleDelete(categoryId: string, name: string) {
         />
         <Button type="submit" size="icon" :disabled="isCreating">
           <Spinner v-if="isCreating" />
-          <PlusIcon v-else class="size-4" />
+          <Icon v-else name="hugeicons:add-01" />
         </Button>
       </form>
 
@@ -135,7 +139,7 @@ async function handleDelete(categoryId: string, name: string) {
               :aria-label="t('common.delete')"
               @click="handleDelete(category.id, category.name)"
             >
-              <Trash2Icon class="size-4 text-destructive" />
+              <Icon name="hugeicons:delete-02" class="text-destructive" />
             </Button>
           </div>
           <Textarea

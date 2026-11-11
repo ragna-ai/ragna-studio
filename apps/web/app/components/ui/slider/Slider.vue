@@ -41,7 +41,7 @@ const attrs = useAttrs();
   >
     <SliderTrack
       data-slot="slider-track"
-      class="relative grow overflow-hidden rounded-full bg-muted data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5"
+      class="relative grow overflow-hidden rounded-full bg-border data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1"
     >
       <SliderRange
         data-slot="slider-range"
@@ -55,7 +55,7 @@ const attrs = useAttrs();
       data-slot="slider-thumb"
       :aria-label="attrs['aria-label'] as string | undefined"
       :aria-labelledby="attrs['aria-labelledby'] as string | undefined"
-      class="block size-4 shrink-0 rounded-full border border-primary bg-white shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
+      class="block size-4 shrink-0 rounded-full border-[1.5px] border-primary bg-background shadow-xs transition-[color,box-shadow] outline-none hover:ring-4 hover:ring-selected focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
     />
   </SliderRoot>
 </template>

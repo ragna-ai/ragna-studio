@@ -10,7 +10,12 @@ const props = defineProps<{
 
 <template>
   <CardHeader
-    :class="cn('gap-0.5 rounded-t-md border-b bg-secondary p-3!', props.class)"
+    :class="
+      cn(
+        'flex-col flex-nowrap items-stretch gap-0.5 rounded-t-md border-b bg-secondary p-3!',
+        props.class,
+      )
+    "
   >
     <slot />
   </CardHeader>

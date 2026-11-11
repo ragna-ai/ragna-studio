@@ -3,7 +3,7 @@ import CardTitle from '@/components/ui/card/CardTitle.vue';
 </script>
 
 <template>
-  <CardTitle>
+  <CardTitle class="leading-none">
     <slot />
   </CardTitle>
 </template>

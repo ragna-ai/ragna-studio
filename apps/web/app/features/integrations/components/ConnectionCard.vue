@@ -30,7 +30,7 @@ const { t } = useI18n();
 
 <template>
   <SettingsCard>
-    <CardContent class="flex items-center justify-between gap-4 py-4">
+    <CardContent class="flex items-center justify-between gap-4">
       <div class="flex min-w-0 items-center gap-3">
         <Icon :name="PROVIDER_ICON[connection.provider]" class="size-6" />
         <div class="min-w-0 space-y-1">

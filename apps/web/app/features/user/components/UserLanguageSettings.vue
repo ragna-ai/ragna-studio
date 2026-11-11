@@ -1,6 +1,11 @@
 <script setup lang="ts">
 // Imports
-import { CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -27,11 +32,9 @@ function handleLocaleChange(value: any) {
   <SettingsCard class="mx-auto w-full max-w-2xl">
     <CardHeader>
       <CardTitle>{{ $t('user.language.title') }}</CardTitle>
+      <CardDescription>{{ $t('user.language.subtitle') }}</CardDescription>
     </CardHeader>
     <CardContent>
-      <p class="mb-4 text-sm text-muted-foreground">
-        {{ $t('user.language.subtitle') }}
-      </p>
       <Select :model-value="locale" @update:model-value="handleLocaleChange">
         <SelectTrigger class="w-full">
           <SelectValue />

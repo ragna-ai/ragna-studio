@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 import { uuidv7 } from 'uuidv7';
 
-// Custom font sizes from main.css; without them `text-body` reads as a colour and drops `text-primary-foreground`.
+// Custom font sizes and spacing tokens; without them `text-body` reads as a colour and `px-card` survives `p-0`.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
@@ -19,6 +19,19 @@ const twMerge = extendTailwindMerge({
         'caption',
         'mono',
         'mono-sm',
+      ],
+      spacing: [
+        'shell',
+        'sidebar',
+        'rail',
+        'topbar',
+        'page',
+        'page-bottom',
+        'gutter',
+        'card',
+        'panel',
+        'sheet',
+        'sheet-lg',
       ],
       shadow: ['popover'],
     },
