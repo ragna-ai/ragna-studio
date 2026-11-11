@@ -38,8 +38,8 @@ const toLabel = computed(() => formatParticipantList(props.message.to));
       class="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted/30"
       @click="emit('toggleExpand')"
     >
-      <Avatar class="size-8 shrink-0">
-        <AvatarFallback class="text-xs">{{
+      <Avatar>
+        <AvatarFallback>{{
           participantInitials(props.message.from)
         }}</AvatarFallback>
       </Avatar>

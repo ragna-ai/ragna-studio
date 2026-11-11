@@ -1,13 +1,14 @@
 <script setup lang="ts">
 // Imports
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import type { AvatarVariants } from '@/components/ui/avatar';
 import type { HTMLAttributes } from 'vue';
 
 // Props
 interface Props {
   userName: string;
   imageUrl?: string;
+  size?: AvatarVariants['size'];
   class?: HTMLAttributes['class'];
 }
 
@@ -25,16 +26,9 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <Avatar :class="cn('size-8 shrink-0 rounded-full grayscale', props.class)">
-    <AvatarImage
-      v-if="imageUrl"
-      :src="imageUrl"
-      :alt="userName"
-      class="rounded-full"
-    />
-    <AvatarFallback
-      class="rounded-full border border-foreground/40 text-sm text-foreground"
-    >
+  <Avatar :size="size" :class="props.class">
+    <AvatarImage v-if="imageUrl" :src="imageUrl" :alt="userName" />
+    <AvatarFallback>
       {{ initials }}
     </AvatarFallback>
   </Avatar>
