@@ -78,7 +78,6 @@ onScopeDispose(() => chatStore.setChat());
             v-if="chatAgent"
             :agent-id="chatAgent.id"
             :name="chatAgent.name"
-            :model-name="chatAgent.aiModel.displayName"
           />
           <Button
             variant="ghost"
