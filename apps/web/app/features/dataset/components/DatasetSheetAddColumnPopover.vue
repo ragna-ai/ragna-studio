@@ -81,8 +81,7 @@ function handleOpenChange(open: boolean) {
       <span class="inline-flex" tabindex="0">
         <Button
           variant="ghost"
-          size="icon"
-          class="size-7"
+          size="icon-sm"
           disabled
           :aria-label="t('dataset.sheet.addColumn.label')"
         >
@@ -98,8 +97,8 @@ function handleOpenChange(open: boolean) {
     <PopoverTrigger as-child>
       <Button
         variant="ghost"
-        size="icon"
-        class="group/addcol size-7"
+        size="icon-sm"
+        class="group/addcol"
         :aria-label="t('dataset.sheet.addColumn.label')"
       >
         <PlusIcon
@@ -112,7 +111,6 @@ function handleOpenChange(open: boolean) {
         <div class="flex flex-col gap-1">
           <Input
             v-model="name"
-            class="h-8"
             :placeholder="t('dataset.columnManager.namePlaceholder')"
             :aria-invalid="showNameError && isNameMissing"
             @update:model-value="showNameError = false"
@@ -125,7 +123,7 @@ function handleOpenChange(open: boolean) {
           :model-value="type"
           @update:model-value="(v) => setType(String(v))"
         >
-          <SelectTrigger class="h-8 w-full">
+          <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -141,7 +139,6 @@ function handleOpenChange(open: boolean) {
         <Input
           v-if="type === 'select'"
           v-model="optionsText"
-          class="h-8"
           :placeholder="t('dataset.columnManager.optionsPlaceholder')"
         />
         <Button type="submit" size="sm" class="self-end">

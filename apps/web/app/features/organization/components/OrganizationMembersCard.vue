@@ -139,7 +139,7 @@ async function handleRestore(member: OrganizationMember) {
                 (role) => changeRole(member, role as OrganizationAssignableRole)
               "
             >
-              <SelectTrigger class="h-8 w-32">
+              <SelectTrigger class="w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

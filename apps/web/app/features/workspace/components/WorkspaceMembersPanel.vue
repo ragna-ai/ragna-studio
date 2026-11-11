@@ -168,7 +168,7 @@ async function handleLeave() {
             :model-value="member.workspaceRole"
             @update:model-value="(role) => handleChangeRole(member, role)"
           >
-            <SelectTrigger class="h-8 w-28">
+            <SelectTrigger class="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +215,7 @@ async function handleLeave() {
             (role) => isWorkspaceRole(role) && (newMemberRole = role)
           "
         >
-          <SelectTrigger class="h-8 w-28">
+          <SelectTrigger class="w-28">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

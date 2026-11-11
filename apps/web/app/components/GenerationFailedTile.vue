@@ -23,8 +23,8 @@ const emit = defineEmits<{
     <Button
       type="button"
       variant="ghost"
-      size="icon"
-      class="absolute top-1 right-1 size-7 hover:text-destructive"
+      size="icon-sm"
+      class="absolute top-1 right-1 hover:text-destructive"
       :aria-label="$t('common.delete')"
       :disabled="isDeleting"
       @click="emit('delete')"

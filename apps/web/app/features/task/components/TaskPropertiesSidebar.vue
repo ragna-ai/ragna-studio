@@ -271,7 +271,7 @@ function commitCustomDays() {
         <Input
           type="number"
           min="0"
-          class="h-8 w-20"
+          class="w-20"
           :model-value="customDays"
           @update:model-value="(v) => (customDays = Number(v))"
           @change="commitCustomDays"

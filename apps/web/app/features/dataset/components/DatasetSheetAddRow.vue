@@ -57,8 +57,7 @@ function dataColumnIdOf(column: SheetColumn) {
       <Button
         v-if="column.id === ROW_NUMBER_COLUMN_ID"
         variant="ghost"
-        size="icon"
-        class="size-6"
+        size="icon-xs"
         :disabled="isAddingRow"
         :aria-label="t('dataset.sheet.addRow')"
       >

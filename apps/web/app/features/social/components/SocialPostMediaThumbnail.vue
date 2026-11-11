@@ -69,9 +69,8 @@ watch(
         <PopoverTrigger as-child>
           <Button
             type="button"
-            size="icon"
+            size="icon-xs"
             variant="outline"
-            class="size-6"
             :title="t('social.media.editAltText')"
           >
             <PencilIcon class="size-3" />
@@ -93,9 +92,8 @@ watch(
 
       <Button
         type="button"
-        size="icon"
+        size="icon-xs"
         variant="destructive"
-        class="size-6"
         :disabled="isDeleting"
         :title="t('social.media.remove')"
         @click="emit('delete', media.id)"

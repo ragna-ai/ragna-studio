@@ -108,7 +108,6 @@ function handleSave() {
           <Input
             v-model="column.name"
             :placeholder="t('dataset.columnManager.namePlaceholder')"
-            class="h-8"
           />
           <div class="flex shrink-0 items-center">
             <Button
@@ -146,7 +145,7 @@ function handleSave() {
             (v) => setColumnType(column, v as DatasetColumnType)
           "
         >
-          <SelectTrigger class="h-8 w-full">
+          <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -163,7 +162,6 @@ function handleSave() {
           <Input
             :model-value="optionsText(column)"
             :placeholder="t('dataset.columnManager.optionsPlaceholder')"
-            class="h-8"
             @change="
               (e: Event) =>
                 setOptionsFromText(column, (e.target as HTMLInputElement).value)

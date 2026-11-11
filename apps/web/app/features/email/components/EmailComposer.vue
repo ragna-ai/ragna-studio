@@ -227,7 +227,8 @@ async function handleSend() {
         }}</span>
         <Input
           v-model="subject"
-          class="h-7 flex-1 border-0 px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          size="sm"
+          class="flex-1 border-0 px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
           :placeholder="t('email.compose.subjectPlaceholder')"
         />
       </div>

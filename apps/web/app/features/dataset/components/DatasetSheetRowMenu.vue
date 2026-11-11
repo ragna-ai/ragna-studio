@@ -60,9 +60,9 @@ const canShowMoveDown = computed(() => props.hasActiveView || !props.isLast);
         <DropdownMenuTrigger as-child>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             tabindex="-1"
-            class="pointer-events-none absolute inset-0 size-6 opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
+            class="pointer-events-none absolute inset-0 opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
             :aria-label="t('dataset.sheet.rowMenu.open')"
           >
             <EllipsisIcon class="size-4 stroke-1.5 text-stone-500" />

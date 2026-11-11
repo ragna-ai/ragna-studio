@@ -149,8 +149,7 @@ function removeMember(index: number) {
                   <span>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      class="size-6"
+                      size="icon-xs"
                       :aria-label="t('workflow.teamConfig.removeMember')"
                       :disabled="!canRemoveMember"
                       @click="removeMember(index)"

@@ -24,8 +24,8 @@ const { error, clearError } = useErrorAlert();
       </div>
       <Button
         variant="ghost"
-        size="icon"
-        class="size-6 text-destructive hover:bg-destructive/20 hover:text-destructive"
+        size="icon-xs"
+        class="text-destructive hover:bg-destructive/20 hover:text-destructive"
         :aria-label="$t('common.dismissError')"
         @click="clearError"
       >

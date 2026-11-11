@@ -141,7 +141,6 @@ function getTableReference(): TableReference | null {
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="size-8"
                   :class="{ 'text-destructive': action.isDestructive }"
                   :aria-label="t(action.labelKey)"
                   @click="action.run()"

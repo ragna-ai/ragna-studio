@@ -405,8 +405,7 @@ function columnTypeIcon(column: SheetColumn) {
             <TooltipTrigger as-child>
               <Button
                 variant="ghost"
-                size="icon"
-                class="size-7"
+                size="icon-sm"
                 :disabled="isAddingRow"
                 :aria-label="t('dataset.sheet.addRow')"
                 @click="addRowAndEdit()"

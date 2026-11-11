@@ -70,8 +70,8 @@ function snippet(text: string): string {
     <Button
       v-if="props.draft.status !== 'generating'"
       variant="ghost"
-      size="icon"
-      class="size-7 shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+      size="icon-sm"
+      class="shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
       :aria-label="t('email.draft.discard')"
       @click.stop="emit('discard')"
     >

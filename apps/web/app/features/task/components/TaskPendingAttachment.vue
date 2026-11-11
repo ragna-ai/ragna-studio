@@ -81,9 +81,8 @@ function onRemove() {
       </p>
       <Button
         type="button"
-        size="icon"
+        size="icon-xs"
         variant="outline"
-        class="size-6"
         :title="t('task.attachment.retry')"
         @click="onRetry"
       >

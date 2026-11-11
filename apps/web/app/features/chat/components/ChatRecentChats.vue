@@ -50,8 +50,8 @@ function toggleHidden() {
           <TooltipTrigger as-child>
             <Button
               variant="ghost"
-              size="icon"
-              class="ml-auto size-7"
+              size="icon-sm"
+              class="ml-auto"
               :aria-label="toggleLabel"
               :aria-pressed="recentChatsHidden"
               @click="toggleHidden"
