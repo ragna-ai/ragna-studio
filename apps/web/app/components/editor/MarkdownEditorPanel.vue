@@ -26,11 +26,7 @@ const view = useMarkdownFieldView();
       <SheetHeader>
         <SheetTitle>{{ title }}</SheetTitle>
         <SheetDescription class="sr-only">{{ title }}</SheetDescription>
-        <ViewSwitcher
-          v-model="view"
-          :options="MARKDOWN_FIELD_VIEWS"
-          size="sm"
-        />
+        <ViewSwitcher v-model="view" :options="MARKDOWN_FIELD_VIEWS" />
       </SheetHeader>
       <div class="flex min-h-0 flex-1 flex-col p-6">
         <MarkdownEditorBox

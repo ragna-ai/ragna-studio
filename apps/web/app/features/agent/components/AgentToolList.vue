@@ -171,6 +171,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
                       type="button"
                       variant="ghost"
                       size="icon-xs"
+                      class="-my-0.5"
                       :aria-label="$t('agent.tool.notConnected')"
                       @click.prevent="navigateTo(CONNECTIONS_PAGE_PATH)"
                     >
