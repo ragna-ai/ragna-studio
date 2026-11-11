@@ -29,7 +29,7 @@ const crumbs = computed<PageCrumb[]>(() => [
 <template>
   <PagePanel :crumbs="crumbs">
     <SectionWrapper class="h-full">
-      <div class="flex min-h-0 flex-1 flex-col px-20 py-8">
+      <div class="flex min-h-0 flex-1 flex-col px-page py-8">
         <AgentUpsertForm />
       </div>
     </SectionWrapper>
