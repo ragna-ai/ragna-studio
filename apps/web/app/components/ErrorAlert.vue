@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { TriangleAlertIcon, XIcon } from '@lucide/vue';
+import Banner from '~/components/Banner.vue';
 
 const { error, clearError } = useErrorAlert();
 </script>
@@ -14,23 +13,14 @@ const { error, clearError } = useErrorAlert();
     leave-from-class="translate-y-0 opacity-100"
     leave-to-class="-translate-y-full opacity-0"
   >
-    <div
+    <Banner
       v-if="error"
-      class="fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-4 border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      variant="destructive"
+      dismissible
+      class="fixed inset-x-0 top-0 z-50"
+      @dismiss="clearError"
     >
-      <div class="flex items-center gap-2">
-        <TriangleAlertIcon class="size-4 shrink-0" />
-        <span>{{ error }}</span>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        class="text-destructive hover:bg-destructive/20 hover:text-destructive"
-        :aria-label="$t('common.dismissError')"
-        @click="clearError"
-      >
-        <XIcon class="size-4" />
-      </Button>
-    </div>
+      {{ error }}
+    </Banner>
   </Transition>
 </template>
