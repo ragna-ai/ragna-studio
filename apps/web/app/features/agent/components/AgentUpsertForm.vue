@@ -401,22 +401,12 @@ watch(hasAdvancedError, (hasError) => {
           </template>
         </form.Field>
         <Collapsible v-model:open="advancedOpen" class="border-t pt-6">
-          <CollapsibleTrigger
-            class="group flex w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <Icon
-              name="hugeicons:arrow-down-01"
-              class="size-4 shrink-0 -rotate-90 text-icon transition-transform group-data-[state=open]:rotate-0"
-            />
-            <span class="text-sm font-medium">
-              {{ t('agent.upsert.advancedLabel') }}
-            </span>
-            <span class="text-sm text-muted-foreground">
-              {{ t('agent.upsert.advancedHint') }}
-            </span>
-          </CollapsibleTrigger>
+          <CollapsibleRow
+            :label="t('agent.upsert.advancedLabel')"
+            :hint="t('agent.upsert.advancedHint')"
+          />
           <CollapsibleContent>
-            <div class="flex flex-col gap-8 pt-6 pl-6">
+            <div class="flex flex-col gap-8 pt-2 pl-6">
               <form.Field name="settings.reasoning">
                 <template v-slot="{ field, state }">
                   <div class="flex flex-col gap-2">

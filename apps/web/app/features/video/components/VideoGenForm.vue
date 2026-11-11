@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ChevronDownIcon, XIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { storeToRefs } from 'pinia';
 import { z } from 'zod';
@@ -359,16 +358,9 @@ watch(
     </div>
 
     <Collapsible v-if="showAdvancedOptions" v-model:open="advancedOptionsOpen">
-      <CollapsibleTrigger
-        class="group/advanced ml-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        {{ t('videogen.form.advancedOptions') }}
-        <ChevronDownIcon
-          class="size-4 transition-transform group-data-[state=open]/advanced:rotate-180"
-        />
-      </CollapsibleTrigger>
+      <CollapsibleRow :label="t('videogen.form.advancedOptions')" />
 
-      <CollapsibleContent class="space-y-4 p-3">
+      <CollapsibleContent class="space-y-4 pt-2 pl-6">
         <form.Field
           v-if="capability.supportsNegativePrompt"
           name="negativePrompt"
@@ -486,7 +478,7 @@ watch(
                 size="icon-sm"
                 @click="clearUploadedFrame"
               >
-                <XIcon class="size-3.5" />
+                <Icon name="hugeicons:cancel-01" class="size-3.5" />
               </Button>
             </div>
             <Button
