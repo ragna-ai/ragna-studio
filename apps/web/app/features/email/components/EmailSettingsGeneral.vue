@@ -119,7 +119,7 @@ function handleReconnect() {
         </p>
         <p
           v-if="!defaultAgentId"
-          class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400"
+          class="flex items-center gap-1.5 text-xs text-status-warn-fg"
         >
           <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
           {{ t('email.settings.general.defaultAgentMissingHint') }}

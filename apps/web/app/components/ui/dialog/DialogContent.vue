@@ -58,7 +58,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
           class="absolute top-5 right-4 text-icon"
           :aria-label="t('common.close')"
         >
-          <Icon name="hugeicons:cancel-01" class="size-4" />
+          <Icon name="hugeicons:cancel-01" />
         </Button>
       </DialogClose>
     </DialogContent>

@@ -360,7 +360,7 @@ watch(
     <Collapsible v-if="showAdvancedOptions" v-model:open="advancedOptionsOpen">
       <CollapsibleRow :label="t('videogen.form.advancedOptions')" />
 
-      <CollapsibleContent class="space-y-4 pt-2 pl-6">
+      <CollapsibleContent class="flex flex-col gap-4 pt-2 pl-6">
         <form.Field
           v-if="capability.supportsNegativePrompt"
           name="negativePrompt"

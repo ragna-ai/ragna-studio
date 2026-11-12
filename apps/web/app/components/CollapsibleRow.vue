@@ -13,7 +13,7 @@ defineProps<CollapsibleRowProps>();
   <CollapsibleTrigger as-child>
     <button
       type="button"
-      class="group/row -mx-2 flex h-8 items-center gap-2 rounded-md px-2 text-left outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      class="group/row -mx-2 flex h-8 items-center gap-2 rounded-md px-2 text-left outline-hidden hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <Icon
         name="hugeicons:arrow-right-01"
