@@ -35,7 +35,8 @@
     "saveRename": "Save name",
     "cancelRename": "Cancel rename",
     "generating": "Generating…",
-    "clear": "Clear"
+    "clear": "Clear",
+    "tryAgain": "Try again"
   },
   "nav": {
     "home": "Dashboard",
@@ -218,19 +219,28 @@
       "documentDeleteFailed": "Failed to delete document"
     },
     "list": {
-      "title": "AI agents",
-      "subtitle": "All AI agents you have created.",
-      "newAgent": "Create AI agent",
+      "title": "Agents",
+      "subtitle": "Agents do recurring work for you. Each has its own instructions, model and tools.",
+      "newAgent": "New agent",
       "deleteConfirm": {
         "title": "Delete agent?",
         "message": "This permanently deletes \"{name}\" and all of its chats, its memory and its context documents. This can't be undone."
       },
+      "count": "No agents | {count} agent | {count} agents",
+      "search": "Search agents",
       "table": {
-        "favorite": "Favorite",
-        "avatar": "Avatar"
+        "agent": "Agent",
+        "model": "Model",
+        "tools": "Tools"
       },
-      "chat": "Chat",
-      "count": "No agents | {count} agent | {count} agents"
+      "empty": {
+        "title": "No agents yet",
+        "description": "Agents do recurring work for you, like checking invoices or writing reminders."
+      },
+      "loadError": {
+        "title": "Couldn't load your agents.",
+        "description": "Check your connection and try again."
+      }
     },
     "upsert": {
       "untitled": "Untitled agent",
@@ -430,7 +440,6 @@
     },
     "view": {
       "loadError": "An error occurred while fetching the chat.",
-      "historyLoadError": "An error occurred while fetching the chat history.",
       "loading": "Loading chat..."
     },
     "toolCall": {
@@ -539,7 +548,7 @@
     "history": {
       "title": "Chat history",
       "button": "History",
-      "subtitle": "Your past conversations.",
+      "subtitle": "Every conversation with your agents.",
       "paneTitle": "Chats",
       "search": "Search chats",
       "newChat": "New chat",
@@ -555,9 +564,16 @@
       "titleRequired": "Title is required.",
       "forkedFrom": "Forked from {title}",
       "table": {
-        "agent": "Agent"
+        "agent": "Agent",
+        "chat": "Chat",
+        "lastMessage": "Last message"
       },
-      "count": "No chats | {count} chat | {count} chats"
+      "count": "No chats | {count} chat | {count} chats",
+      "emptyDescription": "Start a conversation with one of your agents.",
+      "loadError": {
+        "title": "Couldn't load your chats.",
+        "description": "Check your connection and try again."
+      }
     },
     "search": {
       "title": "Search chats",

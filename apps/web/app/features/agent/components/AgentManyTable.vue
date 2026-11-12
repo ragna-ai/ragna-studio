@@ -1,165 +1,98 @@
 <script setup lang="ts">
-import {
-  MoreVerticalIcon,
-  PencilIcon,
-  StarIcon,
-  Trash2Icon,
-} from '@lucide/vue';
+import AgentMark from '~/features/agent/components/AgentMark.vue';
+import AgentToolIcons from '~/features/agent/components/AgentToolIcons.vue';
 import type { Agent } from '~/features/agent/types';
-import { useCreateChat } from '~/features/chat/composables/useChatApi';
 
 // Imports
 
 interface Props {
   agents: Agent[];
-  favorites?: any[];
+  isLoading: boolean;
 }
 
 // Props
-const props = defineProps<Props>();
-// Emits
-// Refs
-
-// Composables
-const router = useRouter();
-const { mutateAsync: createNewChat } = useCreateChat();
-const { t } = useI18n();
-
-// Computed
-
-// Functions
+defineProps<Props>();
 
 // Emits
 const emit = defineEmits<{
   (e: 'delete-agent', agentId: string): void;
 }>();
 
-// Refs
-
 // Composables
-
-// Computed
+const { t } = useI18n();
 
 // Functions
+function toolIdsOf(agent: Agent): string[] {
+  return agent.toolGrants?.map((grant) => grant.id) ?? [];
+}
 
-const handleNewChat = async (agentId: string) => {
-  const response = await createNewChat({ agentId });
-  const newChatId = response?.chat?.id;
-  if (!newChatId) {
-    throw createError({ status: 500, statusMessage: 'Failed to create chat' });
-  }
-  router.push(`/chat/${newChatId}`);
-};
-
-const handleAddFavorite = (agentId: string) => {
-  // Logic to handle adding the agent to favorites
-};
-
-const handleDeleteFavorite = (agentId: string) => {
-  // Logic to handle deleting the agent from favorites
-};
-
-// Hooks
+function agentPath(agent: Agent): string {
+  return `/agent/${agent.id}`;
+}
 </script>
 
 <template>
-  <div v-if="agents && agents.length > 0">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{{ t('agent.list.table.favorite') }}</TableHead>
-          <TableHead>{{ t('agent.list.table.avatar') }}</TableHead>
-          <TableHead>{{ t('common.name') }}</TableHead>
-          <TableHead class="whitespace-nowrap">
-            {{ t('common.model') }}
-          </TableHead>
-          <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow
-          v-for="agent in agents || []"
-          :key="agent.id"
-          class="cursor-pointer"
-          @click="navigateTo(`/agent/${agent.id}`)"
+  <ListTable>
+    <TableHeader>
+      <TableRow class="hover:bg-transparent">
+        <TableHead>{{ t('agent.list.table.agent') }}</TableHead>
+        <TableHead class="w-50">{{ t('agent.list.table.model') }}</TableHead>
+        <TableHead class="w-40">{{ t('agent.list.table.tools') }}</TableHead>
+        <TableHead class="w-10"
+          ><span class="sr-only">{{ t('common.actions') }}</span></TableHead
         >
-          <TableCell class="w-12">
-            <div class="border-0">
-              <Button
-                v-if="favorites?.some((f: any) => f.favoriteId === agent.id)"
-                variant="ghost"
-                size="icon"
-                @click="() => handleDeleteFavorite(agent.id)"
-              >
-                <StarIcon
-                  class="size-6! fill-blue-500 stroke-none stroke-1.5"
-                />
-              </Button>
-              <Button
-                v-else
-                variant="ghost"
-                size="icon"
-                @click="() => handleAddFavorite(agent.id)"
-              >
-                <StarIcon class="size-5! stroke-stone-400 stroke-1.5" />
-              </Button>
-            </div>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <ListSkeletonRows
+        v-if="isLoading"
+        :columns="['title', 'bar', 'bar', 'none']"
+        tall
+      />
+      <template v-else>
+        <TableRow
+          v-for="agent in agents"
+          :key="agent.id"
+          class="h-14 cursor-pointer"
+          @click="navigateTo(agentPath(agent))"
+        >
+          <TableCell>
+            <ListTitleCell
+              :title="agent.name"
+              :description="agent.description"
+              :to="agentPath(agent)"
+            >
+              <template #lead>
+                <AgentMark :agent-id="agent.id" :size="24" />
+              </template>
+            </ListTitleCell>
+          </TableCell>
+          <TableCell class="text-small text-muted-foreground">
+            {{ agent.aiModel?.displayName }}
           </TableCell>
           <TableCell>
-            <div class="size-8 rounded-full bg-slate-200"></div>
+            <AgentToolIcons :tool-ids="toolIdsOf(agent)" />
           </TableCell>
-          <TableCell class="">
-            <span class="text-sm font-semibold">{{ agent.name }}</span>
-          </TableCell>
-          <TableCell class="whitespace-nowrap">
-            <div v-if="agent.aiModel" class="flex items-center space-x-2">
-              <span :name="agent.aiModel.provider" class="size-4 stroke-1.5" />
-              <span>{{ agent.aiModel.displayName }}</span>
-            </div>
-          </TableCell>
-          <!-- Actions -->
-          <TableCell
-            class="flex justify-end space-x-2 text-right whitespace-nowrap"
-            @click.stop
-          >
-            <Button
-              variant="outline"
-              trailing-icon="hugeicons:message-01"
-              @click="() => handleNewChat(agent.id)"
-            >
-              {{ t('agent.list.chat') }}
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  :aria-label="t('common.actions')"
-                >
-                  <MoreVerticalIcon class="size-4 stroke-1.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem as-child>
-                  <NuxtLinkLocale :to="`/agent/${agent.id}`">
-                    <PencilIcon class="size-4 stroke-1.5" />
-                    {{ t('common.edit') }}
-                  </NuxtLinkLocale>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  @click="() => emit('delete-agent', agent.id)"
-                >
-                  <Trash2Icon class="size-4 stroke-1.5" />
-                  {{ t('common.delete') }}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <TableCell>
+            <ListRowActions>
+              <DropdownMenuItem as-child>
+                <NuxtLinkLocale :to="agentPath(agent)">
+                  <Icon name="hugeicons:pencil-edit-02" class="size-4" />
+                  {{ t('common.edit') }}
+                </NuxtLinkLocale>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                @click="emit('delete-agent', agent.id)"
+              >
+                <Icon name="hugeicons:delete-02" class="size-4" />
+                {{ t('common.delete') }}
+              </DropdownMenuItem>
+            </ListRowActions>
           </TableCell>
         </TableRow>
-      </TableBody>
-    </Table>
-  </div>
+      </template>
+    </TableBody>
+  </ListTable>
 </template>

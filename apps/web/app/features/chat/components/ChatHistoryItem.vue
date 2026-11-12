@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@tanstack/vue-form';
-import { z } from 'zod';
 import AgentMark from '~/features/agent/components/AgentMark.vue';
+import { createChatTitleSchema } from '~/features/chat/lib/chat-title-schema';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
 import { useUpdateChatTitle } from '~/features/chat/composables/useChatApi';
 
@@ -19,12 +19,7 @@ const formRef = useTemplateRef('formRef');
 const { t } = useI18n();
 const { mutate: updateChatTitle } = useUpdateChatTitle();
 
-const chatTitleSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, { message: t('chat.history.titleRequired') }),
-});
+const chatTitleSchema = createChatTitleSchema(t('chat.history.titleRequired'));
 
 const form = useForm({
   defaultValues: { title: props.chat.title },
