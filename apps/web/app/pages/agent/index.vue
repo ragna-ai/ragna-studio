@@ -6,11 +6,9 @@ import useAgentList from '~/features/agent/composables/useAgentList';
 // Props
 // Emits
 
-// Refs
-
 // Composables
 const { page, limit, useGetAllAgents } = useAgentList();
-const { data, error: agentsError } = useGetAllAgents();
+const { data, error, isPending, refetch } = useGetAllAgents();
 const { mutateAsync: deleteAgent } = useDeleteAgent();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
@@ -19,8 +17,12 @@ useHead({
   title: t('agent.list.title'),
 });
 
+// Refs
+const searchText = ref('');
+
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
+const hasNoAgentsAtAll = computed(() => data.value?.meta.totalCount === 0);
 
 // Functions
 const handleDeleteAgent = async (agentId: string) => {
@@ -38,8 +40,6 @@ const handleDeleteAgent = async (agentId: string) => {
   }
   await deleteAgent(agentId);
 };
-
-// Hooks
 </script>
 
 <template>
@@ -48,13 +48,13 @@ const handleDeleteAgent = async (agentId: string) => {
       <Heading bg-position="bottom">
         <template #top>
           <HeadingTitle
-            :title="$t('agent.list.title')"
-            :subtitle="$t('agent.list.subtitle')"
+            :title="t('agent.list.title')"
+            :subtitle="t('agent.list.subtitle')"
           >
             <template #button>
-              <Button as-child variant="outline">
+              <Button as-child leading-icon="hugeicons:plus-sign">
                 <NuxtLinkLocale to="/agent/create">
-                  {{ $t('agent.list.newAgent') }}
+                  {{ t('agent.list.newAgent') }}
                 </NuxtLinkLocale>
               </Button>
             </template>
@@ -62,28 +62,51 @@ const handleDeleteAgent = async (agentId: string) => {
         </template>
         <template #bottom> </template>
       </Heading>
-      <div v-if="data?.agents" class="px-5">
-        <AgentManyTable
-          :agents="data.agents"
-          @delete-agent="handleDeleteAgent"
+      <div class="px-5">
+        <ListErrorAlert
+          v-if="error && !data"
+          :title="t('agent.list.loadError.title')"
+          :description="t('agent.list.loadError.description')"
+          @retry="refetch()"
         />
-        <div class="pb-10">
-          <!-- Pagination Controls -->
+        <Empty v-else-if="hasNoAgentsAtAll">
+          <EmptyMedia variant="icon">
+            <Icon name="hugeicons:robotic" />
+          </EmptyMedia>
+          <EmptyHeader>
+            <EmptyTitle>{{ t('agent.list.empty.title') }}</EmptyTitle>
+            <EmptyDescription>
+              {{ t('agent.list.empty.description') }}
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button as-child leading-icon="hugeicons:plus-sign">
+              <NuxtLinkLocale to="/agent/create">
+                {{ t('agent.list.newAgent') }}
+              </NuxtLinkLocale>
+            </Button>
+          </EmptyContent>
+        </Empty>
+        <template v-else>
+          <div class="flex h-11 items-center border-b">
+            <ListSearch
+              v-model="searchText"
+              :placeholder="t('agent.list.search')"
+            />
+          </div>
+          <AgentManyTable
+            :agents="data?.agents ?? []"
+            :is-loading="isPending"
+            @delete-agent="handleDeleteAgent"
+          />
           <ListPagination
+            v-if="!isPending && meta.totalCount > 0"
             v-model:page="page"
             v-model:limit="limit"
             :total-count="meta.totalCount"
             noun="agent.list.count"
           />
-        </div>
-      </div>
-      <div v-else-if="agentsError">
-        <p class="text-sm text-stone-500">
-          {{
-            agentsError.message ||
-            'An error occurred while fetching the agents.'
-          }}
-        </p>
+        </template>
       </div>
     </SectionWrapper>
   </PagePanel>

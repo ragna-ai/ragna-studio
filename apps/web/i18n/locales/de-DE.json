@@ -35,7 +35,8 @@
     "saveRename": "Namen speichern",
     "cancelRename": "Umbenennen abbrechen",
     "generating": "Wird generiert…",
-    "clear": "Leeren"
+    "clear": "Leeren",
+    "tryAgain": "Erneut versuchen"
   },
   "nav": {
     "home": "Dashboard",
@@ -218,19 +219,28 @@
       "documentDeleteFailed": "Dokument konnte nicht gelöscht werden"
     },
     "list": {
-      "title": "KI-Agenten",
-      "subtitle": "Liste aller KI-Agenten, die du erstellt hast.",
-      "newAgent": "KI-Agent erstellen",
+      "title": "Agenten",
+      "subtitle": "Agenten erledigen wiederkehrende Aufgaben für dich. Jeder hat eigene Anweisungen, ein eigenes Modell und eigene Werkzeuge.",
+      "newAgent": "Neuer Agent",
       "deleteConfirm": {
         "title": "Agent löschen?",
         "message": "Dadurch werden \"{name}\" und alle zugehörigen Chats, sein Gedächtnis und seine Kontextdokumente endgültig gelöscht. Das lässt sich nicht rückgängig machen."
       },
+      "count": "Keine Agenten | {count} Agent | {count} Agenten",
+      "search": "Agenten durchsuchen",
       "table": {
-        "favorite": "Favorit",
-        "avatar": "Avatar"
+        "agent": "Agent",
+        "model": "Modell",
+        "tools": "Werkzeuge"
       },
-      "chat": "Chat",
-      "count": "Keine Agenten | {count} Agent | {count} Agenten"
+      "empty": {
+        "title": "Noch keine Agenten",
+        "description": "Agenten erledigen wiederkehrende Aufgaben für dich, etwa Rechnungen prüfen oder Erinnerungen schreiben."
+      },
+      "loadError": {
+        "title": "Deine Agenten konnten nicht geladen werden.",
+        "description": "Prüfe deine Verbindung und versuche es erneut."
+      }
     },
     "upsert": {
       "untitled": "Unbenannter Agent",
@@ -430,7 +440,6 @@
     },
     "view": {
       "loadError": "Beim Laden des Chats ist ein Fehler aufgetreten.",
-      "historyLoadError": "Beim Laden des Chat-Verlaufs ist ein Fehler aufgetreten.",
       "loading": "Chat wird geladen..."
     },
     "toolCall": {
@@ -542,7 +551,7 @@
     "history": {
       "button": "Verlauf",
       "title": "Chat-Verlauf",
-      "subtitle": "Verlauf deiner Unterhaltungen.",
+      "subtitle": "Alle Unterhaltungen mit deinen Agenten.",
       "paneTitle": "Chats",
       "search": "Chats durchsuchen",
       "newChat": "Neuer Chat",
@@ -558,9 +567,16 @@
       "titleRequired": "Titel ist erforderlich.",
       "forkedFrom": "Abgezweigt von {title}",
       "table": {
-        "agent": "Agent"
+        "agent": "Agent",
+        "chat": "Chat",
+        "lastMessage": "Letzte Nachricht"
       },
-      "count": "Keine Chats | {count} Chat | {count} Chats"
+      "count": "Keine Chats | {count} Chat | {count} Chats",
+      "emptyDescription": "Starte eine Unterhaltung mit einem deiner Agenten.",
+      "loadError": {
+        "title": "Deine Chats konnten nicht geladen werden.",
+        "description": "Prüfe deine Verbindung und versuche es erneut."
+      }
     },
     "search": {
       "title": "Chats durchsuchen",

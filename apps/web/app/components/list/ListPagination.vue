@@ -51,6 +51,13 @@ const pageItems = computed(() =>
   getPaginationPages(page.value, totalPages.value),
 );
 
+// Hooks
+watch(totalPages, (pageCount) => {
+  if (pageCount >= 1 && page.value > pageCount) {
+    page.value = pageCount;
+  }
+});
+
 // Functions
 function setLimit(value: unknown) {
   const newLimit = Number(value);

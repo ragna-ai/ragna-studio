@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import AgentMark from '~/features/agent/components/AgentMark.vue';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
 
 // Imports
 
 interface Props {
   chats: ChatHistoryItem[];
+  isLoading: boolean;
 }
 
 // Props
@@ -12,103 +14,76 @@ defineProps<Props>();
 
 // Emits
 const emit = defineEmits<{
+  (e: 'rename-chat', chat: ChatHistoryItem): void;
   (e: 'delete-chat', chatId: string): void;
 }>();
 
-// Refs
-
 // Composables
-const { formatDateTime } = useDateTimeFormat();
+const { formatRelative } = useDateTimeFormat();
 const { t } = useI18n();
 
-// Computed
-
 // Functions
-
-// Hooks
+function chatPath(chat: ChatHistoryItem): string {
+  return `/chat/${chat.id}`;
+}
 </script>
 
 <template>
-  <Table>
+  <ListTable>
     <TableHeader>
-      <TableRow>
-        <TableHead>&nbsp;</TableHead>
-        <TableHead>{{ t('common.title') }}</TableHead>
-        <TableHead>{{ t('chat.history.table.agent') }}</TableHead>
-        <TableHead class="whitespace-nowrap">
-          {{ t('common.model') }}
+      <TableRow class="hover:bg-transparent">
+        <TableHead>{{ t('chat.history.table.chat') }}</TableHead>
+        <TableHead class="w-55">{{ t('chat.history.table.agent') }}</TableHead>
+        <TableHead class="w-35 text-right">
+          {{ t('chat.history.table.lastMessage') }}
         </TableHead>
-        <TableHead>{{ t('common.updated') }}</TableHead>
-        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
+        <TableHead class="w-10">
+          <span class="sr-only">{{ t('common.actions') }}</span>
+        </TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <ListEmptyRow v-if="chats.length === 0" :colspan="6">
-        {{ $t('chat.history.empty') }}
-      </ListEmptyRow>
-      <TableRow
-        v-for="chat in chats"
-        :key="chat.id"
-        class="cursor-pointer"
-        @click="navigateTo(`/chat/${chat.id}`)"
-      >
-        <TableCell class="w-12">
-          <Icon name="hugeicons:message-multiple-01" class="size-4 text-icon" />
-        </TableCell>
-        <TableCell>
-          <div class="text-body font-medium">
-            {{ chat.title }}
-          </div>
-        </TableCell>
-        <TableCell class="max-w-40 truncate">
-          {{ chat.agent.name }}
-        </TableCell>
-        <TableCell class="whitespace-nowrap">
-          {{ chat.agent.aiModel.displayName }}
-        </TableCell>
-        <TableCell class="whitespace-nowrap">
-          {{ formatDateTime(chat.lastMessageAt) }}
-        </TableCell>
-        <!-- Actions -->
-        <TableCell
-          class="flex justify-end space-x-2 text-right whitespace-nowrap"
-          @click.stop
+      <ListSkeletonRows
+        v-if="isLoading"
+        :columns="['bar', 'bar', 'bar', 'none']"
+      />
+      <template v-else>
+        <TableRow
+          v-for="chat in chats"
+          :key="chat.id"
+          class="cursor-pointer"
+          @click="navigateTo(chatPath(chat))"
         >
-          <Button as-child variant="outline" size="icon">
-            <NuxtLinkLocale :to="`/chat/${chat.id}`">
-              <Icon name="hugeicons:message-01" class="size-4 text-icon" />
-            </NuxtLinkLocale>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                :aria-label="t('common.actions')"
-              >
-                <Icon name="hugeicons:more-vertical" class="size-4 text-icon" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem as-child>
-                <NuxtLinkLocale :to="`/chat/${chat.id}`">
-                  <Icon name="hugeicons:pencil-edit-02" class="size-4" />
-                  {{ t('common.edit') }}
-                </NuxtLinkLocale>
+          <TableCell>
+            <ListTitleCell :title="chat.title" :to="chatPath(chat)" />
+          </TableCell>
+          <TableCell>
+            <div class="flex min-w-0 items-center gap-2">
+              <AgentMark :agent-id="chat.agent.id" :size="20" />
+              <span class="truncate text-small">{{ chat.agent.name }}</span>
+            </div>
+          </TableCell>
+          <TableCell class="text-right text-small text-muted-foreground">
+            {{ formatRelative(chat.lastMessageAt) }}
+          </TableCell>
+          <TableCell>
+            <ListRowActions>
+              <DropdownMenuItem @click="emit('rename-chat', chat)">
+                <Icon name="hugeicons:pencil-edit-02" class="size-4" />
+                {{ t('chat.history.rename') }}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                @click="() => emit('delete-chat', chat.id)"
+                @click="emit('delete-chat', chat.id)"
               >
                 <Icon name="hugeicons:delete-02" class="size-4" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
+            </ListRowActions>
+          </TableCell>
+        </TableRow>
+      </template>
     </TableBody>
-  </Table>
+  </ListTable>
 </template>
