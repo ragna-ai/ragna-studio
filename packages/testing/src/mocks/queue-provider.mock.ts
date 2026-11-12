@@ -110,6 +110,7 @@ type QueueMockOverrides = {
     notification: () => ReturnType<typeof fakeQueue>;
     workflow: () => ReturnType<typeof fakeQueue>;
     agentContextDocument: () => ReturnType<typeof fakeQueue>;
+    agentImage: () => ReturnType<typeof fakeQueue>;
     genVideo: () => ReturnType<typeof fakeQueue>;
     genImages: () => ReturnType<typeof fakeQueue>;
     emailSync: () => ReturnType<typeof fakeQueue>;
@@ -138,6 +139,7 @@ export const queueModuleMock: Omit<typeof queuePackage, keyof QueueMockOverrides
     notification: () => fakeQueue(queuePackage.NOTIFICATIONS_QUEUE),
     workflow: () => fakeQueue(queuePackage.WORKFLOWS_QUEUE),
     agentContextDocument: () => fakeQueue(queuePackage.AGENT_CONTEXT_DOCUMENTS_QUEUE),
+    agentImage: () => fakeQueue(queuePackage.AGENT_IMAGE_QUEUE),
     genVideo: () => fakeQueue(queuePackage.GEN_VIDEOS_QUEUE),
     genImages: () => fakeQueue(queuePackage.GEN_IMAGES_QUEUE),
     emailSync: () => fakeQueue(queuePackage.EMAIL_SYNC_QUEUE),

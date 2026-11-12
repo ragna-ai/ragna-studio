@@ -99,7 +99,13 @@ onKeyStroke('Escape', (event) => {
         : 'border-transparent hover:bg-border',
     ]"
   >
-    <AgentMark :agent-id="chat.agent.id" :size="20" />
+    <AgentMark
+      :agent-id="chat.agent.id"
+      :icon="chat.agent.icon"
+      :tone="chat.agent.tone"
+      :image-url="chat.agent.imageUrl"
+      :size="20"
+    />
     <NuxtLinkLocale
       :to="`/chat/${chat.id}`"
       :title="chat.title"

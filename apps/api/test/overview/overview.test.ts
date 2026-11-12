@@ -38,7 +38,11 @@ const calendarTaskItemSchema = z.strictObject({
 const chatItemSchema = z.strictObject({
   id: z.string(),
   title: z.string(),
+  agentId: z.string(),
   agentName: z.string(),
+  icon: z.string().nullable(),
+  tone: z.string().nullable(),
+  imageUrl: z.string().nullable(),
   updatedAt: z.string(),
   lastMessageAt: z.string(),
 });
@@ -55,6 +59,9 @@ const agentItemSchema = z.strictObject({
   name: z.string(),
   description: z.string().nullable(),
   modelName: z.string(),
+  icon: z.string().nullable(),
+  tone: z.string().nullable(),
+  imageUrl: z.string().nullable(),
   updatedAt: z.string(),
 });
 

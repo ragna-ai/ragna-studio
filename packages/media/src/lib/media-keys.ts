@@ -33,6 +33,17 @@ export function toChatUploadImageUrl({
   return toPublicMediaUrl(getChatUploadImageKey({ ownerId, mediaId }));
 }
 
+// A distinct key per processed version, so a CDN never serves the original under the same URL.
+export function getAgentImageKey({
+  ownerId,
+  mediaId,
+}: {
+  ownerId: string;
+  mediaId: string;
+}): string {
+  return `${ownerId}/images/agent-images/${mediaId}.webp`;
+}
+
 // Everything else (pdf, docx, pptx, xlsx, csv, txt, md) goes to the private
 // documents bucket. No public URL: consumers stream it through their own
 // authenticated download route.

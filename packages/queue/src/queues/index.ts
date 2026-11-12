@@ -1,5 +1,6 @@
 import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
+  AGENT_IMAGE_QUEUE,
   EMAIL_CLASSIFY_QUEUE,
   EMAIL_DRAFT_QUEUE,
   EMAIL_SYNC_QUEUE,
@@ -37,6 +38,7 @@ export const queue = {
   notification: () => getOrCreateQueue({ name: NOTIFICATIONS_QUEUE }),
   workflow: () => getOrCreateQueue({ name: WORKFLOWS_QUEUE }),
   agentContextDocument: () => getOrCreateQueue({ name: AGENT_CONTEXT_DOCUMENTS_QUEUE }),
+  agentImage: () => getOrCreateQueue({ name: AGENT_IMAGE_QUEUE }),
   genVideo: () => getOrCreateQueue({ name: GEN_VIDEOS_QUEUE }),
   genImages: () => getOrCreateQueue({ name: GEN_IMAGES_QUEUE }),
   emailSync: () => getOrCreateQueue({ name: EMAIL_SYNC_QUEUE, opts: emailQueueOpts }),

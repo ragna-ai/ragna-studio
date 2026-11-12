@@ -7,6 +7,7 @@ export const NOTIFICATIONS_QUEUE = 'notifications-queue';
 export const WORKFLOWS_QUEUE = 'workflows-queue';
 export const WORKFLOW_SCHEDULES_QUEUE = 'workflow-schedules-queue';
 export const AGENT_CONTEXT_DOCUMENTS_QUEUE = 'agent-context-documents-queue';
+export const AGENT_IMAGE_QUEUE = 'agent-image-queue';
 export const GEN_VIDEOS_QUEUE = 'gen-videos-queue';
 export const GEN_IMAGES_QUEUE = 'gen-images-queue';
 export const EMAIL_SYNC_QUEUE = 'email-sync-queue';

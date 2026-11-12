@@ -59,7 +59,13 @@ function chatPath(chat: ChatHistoryItem): string {
           </TableCell>
           <TableCell>
             <div class="flex min-w-0 items-center gap-2">
-              <AgentMark :agent-id="chat.agent.id" :size="20" />
+              <AgentMark
+                :agent-id="chat.agent.id"
+                :icon="chat.agent.icon"
+                :tone="chat.agent.tone"
+                :image-url="chat.agent.imageUrl"
+                :size="20"
+              />
               <span class="truncate text-small">{{ chat.agent.name }}</span>
             </div>
           </TableCell>

@@ -1,0 +1,159 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "5649f0f0-0304-4645-8de0-7b7b860bb9b5",
+  "prevIds": ["aad69a3c-83b5-4d22-ad69-9b1dbfab54b8"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "icon"],
+      "writes": [
+        "s|col|public.agents.icon",
+        "n|col|public.agents.icon",
+        "e|col|public.agents.icon"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "tone"],
+      "writes": [
+        "s|col|public.agents.tone",
+        "n|col|public.agents.tone",
+        "e|col|public.agents.tone"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "image_media_id"],
+      "writes": [
+        "s|col|public.agents.image_media_id",
+        "n|col|public.agents.image_media_id",
+        "e|col|public.agents.image_media_id"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "agents", "agent_imageMediaId_idx"],
+      "writes": [
+        "s|idx|public.agent_imageMediaId_idx",
+        "n|idx|public.agent_imageMediaId_idx",
+        "e|idx|public.agent_imageMediaId_idx",
+        "n|rel|public.agent_imageMediaId_idx"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public", "n|col|public.agents.image_media_id"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agents"],
+      "writes": [
+        "s|fk|public.agents.agents_image_media_id_media_id_fkey",
+        "n|fk|public.agents.agents_image_media_id_media_id_fkey",
+        "e|fk|public.agents.agents_image_media_id_media_id_fkey",
+        "n|con|public.agents.agents_image_media_id_media_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|tbl|public.media",
+        "n|sch|public",
+        "n|col|public.agents.image_media_id",
+        "n|col|public.media.id",
+        "e|uniqueness|public.media.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "icon",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "tone",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "image_media_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "agent_imageMediaId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "image_media_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "agents_image_media_id_media_id_fkey",
+        "nameExplicit": false,
+        "columns": ["image_media_id"],
+        "schemaTo": "public",
+        "tableTo": "media",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    }
+  ]
+}

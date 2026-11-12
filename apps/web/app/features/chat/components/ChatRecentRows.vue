@@ -19,7 +19,13 @@ const { locale } = useI18n();
       :to="`/chat/${chat.id}`"
       class="flex h-13 items-center gap-3 border-t px-1 hover:bg-surface-subtle"
     >
-      <AgentMark :agent-id="chat.agentId" :size="28" />
+      <AgentMark
+        :agent-id="chat.agentId"
+        :icon="chat.icon"
+        :tone="chat.tone"
+        :image-url="chat.imageUrl"
+        :size="28"
+      />
       <div class="min-w-0 grow">
         <p class="truncate text-body font-medium text-foreground">
           {{ chat.title }}

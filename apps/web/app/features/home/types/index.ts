@@ -1,4 +1,5 @@
 import type { WorkflowRunStatus } from '@repo/workflow';
+import type { AgentMarkFields } from '~/features/agent/types';
 import type { ChatRecentItem } from '~/features/chat/types';
 import type { TaskPriority, TaskStatus } from '~/features/task/types';
 
@@ -31,7 +32,8 @@ export interface HomeOverviewCalendarTaskItem {
   assignedAgent: { id: string; name: string } | null;
 }
 
-export type HomeOverviewChatItem = ChatRecentItem;
+export type HomeOverviewChatItem = ChatRecentItem &
+  AgentMarkFields & { agentId: string };
 
 export interface HomeOverviewWorkflowItem {
   id: string;
@@ -41,7 +43,7 @@ export interface HomeOverviewWorkflowItem {
   updatedAt: string;
 }
 
-export interface HomeOverviewAgentItem {
+export interface HomeOverviewAgentItem extends AgentMarkFields {
   id: string;
   name: string;
   description: string;

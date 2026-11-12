@@ -3,6 +3,8 @@ import { useForm } from '@tanstack/vue-form';
 import {
   AGENT_CONTEXT_MAX_LENGTH,
   AGENT_INSTRUCTIONS_MAX_LENGTH,
+  agentMarkIconSchema,
+  agentMarkToneSchema,
   agentToolGrantsSchema,
   type AgentToolGrant,
 } from '@repo/ai/client';
@@ -14,6 +16,7 @@ import {
 import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMark from '~/features/agent/components/AgentMark.vue';
+import AgentMarkField from '~/features/agent/components/AgentMarkField.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentSettingsSectionTitle from '~/features/agent/components/AgentSettingsSectionTitle.vue';
 import AgentToolList from '~/features/agent/components/AgentToolList.vue';
@@ -23,7 +26,7 @@ import {
   useUpdateAgent,
   useUpdateAgentMemory,
 } from '~/features/agent/composables/useAgentApi';
-import type { AgentSettings } from '~/features/agent/types';
+import type { AgentMarkFields, AgentSettings } from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
 type UpsertAgentProps = {
@@ -37,7 +40,7 @@ type UpsertAgentProps = {
   toolGrants?: AgentToolGrant[];
   settings?: AgentSettings | null;
   defaultDatasetId?: string | null;
-};
+} & AgentMarkFields & { imageMediaId?: string | null };
 
 // Slider position when temperature is unset. 0 doubles as the "disabled"
 // position: Anthropic is deprecating the parameter, so an agent with no
@@ -46,6 +49,7 @@ const DISABLED_TEMPERATURE = 0;
 
 const TAB_BY_FIELD: Record<string, string> = {
   name: 'persona',
+  mark: 'persona',
   description: 'persona',
   systemPrompt: 'persona',
   aiModelId: 'model',
@@ -113,6 +117,12 @@ const agentUpsertSchema = z.object({
   toolGrants: agentToolGrantsSchema,
   settings: agentSettingsSchema,
   defaultDatasetId: z.uuidv7().nullable(),
+  mark: z.object({
+    icon: agentMarkIconSchema.nullable(),
+    tone: agentMarkToneSchema.nullable(),
+    imageMediaId: z.uuidv7().nullable(),
+    imageUrl: z.string().nullable(),
+  }),
 });
 
 const form = useForm({
@@ -129,20 +139,33 @@ const form = useForm({
       reasoning: props.settings?.reasoning ?? null,
     },
     defaultDatasetId: props.defaultDatasetId ?? null,
+    mark: {
+      icon: markIconOrNull(props.icon),
+      tone: markToneOrNull(props.tone),
+      imageMediaId: props.imageMediaId ?? null,
+      imageUrl: props.imageUrl ?? null,
+    },
   },
   validators: {
     onChange: agentUpsertSchema,
   },
   onSubmit: ({ value }) => {
+    const { mark, ...agentFields } = value;
     if (props.id) {
       const agentId = props.id;
       updateAgent(
-        { agentId, ...value },
+        {
+          agentId,
+          ...agentFields,
+          icon: mark.icon,
+          tone: mark.tone,
+          imageMediaId: mark.imageMediaId,
+        },
         { onSuccess: () => saveMemoryIfChanged(agentId) },
       );
       return;
     }
-    createAgent(value, { onSuccess: () => navigateTo('/agent') });
+    createAgent(agentFields, { onSuccess: () => navigateTo('/agent') });
   },
   onSubmitInvalid: () => revealFirstInvalidField(),
 });
@@ -208,6 +231,14 @@ const siderBarTabs = computed(() => [
 ]);
 
 // Functions
+function markIconOrNull(icon: string | null | undefined) {
+  return agentMarkIconSchema.safeParse(icon).data ?? null;
+}
+
+function markToneOrNull(tone: string | null | undefined) {
+  return agentMarkToneSchema.safeParse(tone).data ?? null;
+}
+
 async function revealFirstInvalidField() {
   const invalidTabs = new Set(
     fieldsWithErrors.value.flatMap((name) => TAB_BY_FIELD[name] ?? []),
@@ -251,6 +282,16 @@ watch(
   },
   { immediate: true },
 );
+// After Save the refetched agent carries the stored image URL: swap out the local preview.
+// Skipped while the form holds a different, unsaved image.
+watch(
+  () => props.imageUrl,
+  (imageUrl) => {
+    const mark = form.getFieldValue('mark');
+    if (mark.imageMediaId !== (props.imageMediaId ?? null)) return;
+    form.setFieldValue('mark', { ...mark, imageUrl: imageUrl ?? null });
+  },
+);
 // Validation errors must never hide inside the closed disclosure.
 watch(hasAdvancedError, (hasError) => {
   if (hasError) advancedOpen.value = true;
@@ -265,7 +306,14 @@ watch(hasAdvancedError, (hasError) => {
   >
     <header class="mb-8 flex shrink-0 items-start justify-between gap-4">
       <div class="flex min-w-0 items-start gap-3">
-        <AgentMark v-if="props.id" :agent-id="props.id" :size="28" />
+        <AgentMark
+          v-if="props.id"
+          :agent-id="props.id"
+          :icon="props.icon"
+          :tone="props.tone"
+          :image-url="props.imageUrl"
+          :size="28"
+        />
         <div class="min-w-0">
           <h1 class="truncate text-lg font-semibold">
             {{
@@ -299,6 +347,23 @@ watch(hasAdvancedError, (hasError) => {
           :title="t('agent.upsert.tabs.persona')"
           :subtitle="t('agent.upsert.personaSubtitle')"
         />
+        <form.Field v-if="props.id" name="mark">
+          <template v-slot="{ field, state }">
+            <div class="flex flex-col gap-2">
+              <Label class="text-sm font-medium">
+                {{ t('agent.mark.label') }}
+              </Label>
+              <div>
+                <AgentMarkField
+                  :agent-id="props.id"
+                  :model-value="state.value"
+                  @update:model-value="field.handleChange"
+                />
+                <FormFieldInfo :field="field" :hint="t('agent.mark.hint')" />
+              </div>
+            </div>
+          </template>
+        </form.Field>
         <form.Field name="name">
           <template v-slot="{ field, state }">
             <div class="flex flex-col gap-2">

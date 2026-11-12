@@ -63,7 +63,13 @@ function agentPath(agent: Agent): string {
               :to="agentPath(agent)"
             >
               <template #lead>
-                <AgentMark :agent-id="agent.id" :size="24" />
+                <AgentMark
+                  :agent-id="agent.id"
+                  :icon="agent.icon"
+                  :tone="agent.tone"
+                  :image-url="agent.imageUrl"
+                  :size="24"
+                />
               </template>
             </ListTitleCell>
           </TableCell>

@@ -1,7 +1,10 @@
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { singleUploadBodyLimit } from '../middlewares/bodyLimit';
 import { workspaceGuard } from '../middlewares/workspaceGuard';
+import { uploadAgentImage } from '../services/agent-image.service';
+import { BadRequestException } from '../exceptions';
 import {
   createAgentForWorkspace,
   createAgentFromTemplateForWorkspace,
@@ -84,6 +87,25 @@ export const agentController = new Hono()
     return c.json({ agent }, StatusCodes.CREATED);
   })
   /**
+   * [POST] /workspace/:workspaceId/agent/image-upload
+   * Uploads an image to use as an agent's mark. Multipart upload: a `file` field.
+   * PNG/JPEG only, 2 MB cap. Saved onto the agent via PATCH `imageMediaId`.
+   */
+  .post('/image-upload', singleUploadBodyLimit, async (c) => {
+    const workspace = c.get('workspace');
+
+    const body = await c.req.parseBody();
+    const file = body.file;
+
+    if (!(file instanceof File)) {
+      throw new BadRequestException('A file is required');
+    }
+
+    const uploaded = await uploadAgentImage({ workspaceId: workspace.id, file });
+
+    return c.json(uploaded, StatusCodes.CREATED);
+  })
+  /**
    * [GET] /workspace/:workspaceId/agent/:agentId
    */
   .get('/:agentId', validAgentIdParam, async (c) => {
@@ -102,11 +124,13 @@ export const agentController = new Hono()
    * Partial update. Never moves the agent to another workspace.
    */
   .patch('/:agentId', validAgentIdParam, validUpdateAgentBody, async (c) => {
+    const user = c.get('user');
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
     const agent = await updateAgentForWorkspace({
+      userId: user.id,
       workspaceId: workspace.id,
       agentId: param.agentId,
       name: body.name,
@@ -116,6 +140,9 @@ export const agentController = new Hono()
       context: body.context,
       toolGrants: body.toolGrants,
       defaultDatasetId: body.defaultDatasetId,
+      icon: body.icon,
+      tone: body.tone,
+      imageMediaId: body.imageMediaId,
       settings: body.settings,
     });
 

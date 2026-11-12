@@ -55,7 +55,14 @@ function onCloseAutoFocus(event: Event) {
 
 <template>
   <div v-if="disabled" class="flex h-8 max-w-64 items-center gap-1.5 px-2">
-    <AgentMark v-if="selectedAgent" :agent-id="selectedAgent.id" :size="20" />
+    <AgentMark
+      v-if="selectedAgent"
+      :agent-id="selectedAgent.id"
+      :icon="selectedAgent.icon"
+      :tone="selectedAgent.tone"
+      :image-url="selectedAgent.imageUrl"
+      :size="20"
+    />
     <span class="truncate text-small font-medium">
       {{ selectedAgent?.name ?? t('chat.agentSelect.placeholder') }}
     </span>
@@ -70,7 +77,13 @@ function onCloseAutoFocus(event: Event) {
         class="max-w-64 px-2"
       >
         <template v-if="selectedAgent" #leading>
-          <AgentMark :agent-id="selectedAgent.id" :size="20" />
+          <AgentMark
+            :agent-id="selectedAgent.id"
+            :icon="selectedAgent.icon"
+            :tone="selectedAgent.tone"
+            :image-url="selectedAgent.imageUrl"
+            :size="20"
+          />
         </template>
         <span class="truncate text-small font-medium">
           {{ selectedAgent?.name ?? t('chat.agentSelect.placeholder') }}
@@ -103,7 +116,13 @@ function onCloseAutoFocus(event: Event) {
                 :selected="agent.id === selectedAgentId"
               >
                 <template #lead>
-                  <AgentMark :agent-id="agent.id" :size="24" />
+                  <AgentMark
+                    :agent-id="agent.id"
+                    :icon="agent.icon"
+                    :tone="agent.tone"
+                    :image-url="agent.imageUrl"
+                    :size="24"
+                  />
                 </template>
               </PickerRow>
             </CommandItem>

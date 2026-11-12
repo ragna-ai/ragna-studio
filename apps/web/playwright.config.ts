@@ -44,7 +44,11 @@ export default defineConfig({
     {
       command: 'pnpm exec nuxt build && node .output/server/index.mjs',
       url: WEB_URL,
-      env: { PORT: String(WEB_PORT), NUXT_PUBLIC_API_BASE_URL: API_URL },
+      env: {
+        PORT: String(WEB_PORT),
+        NUXT_PUBLIC_API_BASE_URL: API_URL,
+        NUXT_PUBLIC_MEDIA_URL: 'https://media.test',
+      },
       reuseExistingServer: false,
       timeout: 240_000,
     },

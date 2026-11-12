@@ -20,7 +20,12 @@ const { createChatAndNavigate } = useCreateChatAndNavigate();
     tall
     @select="createChatAndNavigate(agent.id)"
   >
-    <AgentMark :agent-id="agent.id" />
+    <AgentMark
+      :agent-id="agent.id"
+      :icon="agent.icon"
+      :tone="agent.tone"
+      :image-url="agent.imageUrl"
+    />
     <span class="flex min-w-0 grow flex-col gap-0.5">
       <span class="truncate text-body font-medium">{{ agent.name }}</span>
       <span class="truncate text-caption text-muted-foreground">{{

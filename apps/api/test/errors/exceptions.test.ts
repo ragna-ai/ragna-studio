@@ -37,6 +37,10 @@ const exceptionFactories: Record<string, { create: ExceptionFactory; type: strin
     create: () => new exceptions.PayloadTooLargeException(),
     type: ABOUT_BLANK,
   },
+  UnsupportedMediaTypeException: {
+    create: () => new exceptions.UnsupportedMediaTypeException(),
+    type: ABOUT_BLANK,
+  },
   UnprocessableEntityException: {
     create: () => new exceptions.UnprocessableEntityException(),
     type: ABOUT_BLANK,

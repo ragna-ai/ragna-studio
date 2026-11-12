@@ -399,6 +399,71 @@
         "label": "Kontext durchsuchen"
       }
     },
+    "mark": {
+      "label": "Symbol",
+      "change": "Ändern",
+      "hint": "Wird in der Agentenauswahl, im Chat und in den Listen angezeigt.",
+      "popoverLabel": "Symbol des Agenten wählen",
+      "tabs": {
+        "icon": "Symbol",
+        "image": "Bild"
+      },
+      "colour": "Farbe",
+      "icon": "Symbol",
+      "tones": {
+        "sea": "Meer",
+        "sage": "Salbei",
+        "ochre": "Ocker",
+        "clay": "Ton",
+        "dusk": "Abenddämmerung",
+        "plum": "Pflaume",
+        "rose": "Rose",
+        "stone": "Stein"
+      },
+      "icons": {
+        "robotic": "Roboter",
+        "invoice-01": "Rechnung",
+        "receipt-text": "Beleg",
+        "mail-01": "E-Mail",
+        "inbox": "Posteingang",
+        "file-edit": "Datei bearbeiten",
+        "file-02": "Datei",
+        "file-validation": "Geprüfte Datei",
+        "search-01": "Suche",
+        "calendar-03": "Kalender",
+        "chart-line-data-01": "Liniendiagramm",
+        "money-bag-02": "Geldsack",
+        "calculator-01": "Taschenrechner",
+        "bank": "Bank",
+        "truck-delivery": "Lieferwagen",
+        "package": "Paket",
+        "shopping-cart-01": "Warenkorb",
+        "building-03": "Gebäude",
+        "user-group": "Team",
+        "call": "Telefon",
+        "wrench-01": "Schraubenschlüssel",
+        "settings-02": "Einstellungen",
+        "task-done-01": "Erledigte Aufgabe",
+        "note-edit": "Notiz bearbeiten",
+        "clipboard": "Klemmbrett",
+        "justice-scale-01": "Waage",
+        "shield-01": "Schild",
+        "database-01": "Datenbank"
+      },
+      "image": {
+        "dropzone": "Bild hierher ziehen oder klicken, um eines auszuwählen.",
+        "formats": "Quadratisches PNG oder JPG, bis zu {size}.",
+        "uploading": "Wird hochgeladen...",
+        "current": "Aktuelles Bild",
+        "replace": "Ersetzen",
+        "remove": "Bild entfernen"
+      },
+      "errors": {
+        "tooLarge": "Das Bild ist größer als {size}.",
+        "wrongType": "Verwende ein PNG- oder JPG-Bild.",
+        "uploadFailed": "Das Bild konnte nicht hochgeladen werden."
+      }
+    },
     "context": {
       "hint": "Ihr extrahierter Text fließt in den Kontext ein. Bis zu {max} Dokumente.",
       "uploadedAt": "Hochgeladen am {date}",

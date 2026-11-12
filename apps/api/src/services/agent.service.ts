@@ -17,10 +17,28 @@ import {
   upsertMemory,
 } from '@repo/database';
 import { logger } from '@repo/logger';
+import { deleteMediaIfUnreferenced } from '@repo/media';
 import { tryCatch } from '@repo/utils';
 import { InternalServerErrorException, NotFoundException } from '../exceptions';
 import { throwIfForeignReference } from '../utils/foreign-reference';
+import { toAgentMarkResponse } from '../utils/agent-mark';
 import { deleteAgentContextDocumentsForAgent } from './agent-context-document.service';
+import { getOwnedImageMedia } from './media.service';
+
+type AgentWithImageMedia = NonNullable<Awaited<ReturnType<typeof getAgentByIdAndWorkspaceId>>>;
+
+/** An agent as the API returns it: the row plus the public URL of its image, null without one. */
+export type AgentResponse = Agent & { imageUrl: string | null };
+
+/** The detail variant also carries the agent's AI model. */
+export type AgentDetailResponse = Omit<AgentWithImageMedia, 'imageMedia'> & {
+  imageUrl: string | null;
+};
+
+function toAgentDetailResponse(agentRecord: AgentWithImageMedia): AgentDetailResponse {
+  const { imageMedia, ...agentFields } = agentRecord;
+  return { ...agentFields, imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl };
+}
 
 /**
  * Loads an agent scoped to its workspace, throwing 404 if it doesn't exist
@@ -34,7 +52,7 @@ async function loadAgentInWorkspace({
 }: {
   agentId: string;
   workspaceId: string;
-}): Promise<Agent> {
+}): Promise<AgentWithImageMedia> {
   const { error, data: agentRecord } = await tryCatch(() =>
     getAgentByIdAndWorkspaceId({ agentId, workspaceId }),
   );
@@ -49,6 +67,19 @@ async function loadAgentInWorkspace({
   }
 
   return agentRecord;
+}
+
+type AgentListRow = Awaited<ReturnType<typeof getAgentsByWorkspaceId>>[number];
+export type AgentListItem = Omit<AgentListRow, 'imageMedia'> & { imageUrl: string | null };
+
+export interface AgentListResponse {
+  agents: AgentListItem[];
+  totalCount: number;
+}
+
+function toAgentListItem(agentRow: AgentListRow): AgentListItem {
+  const { imageMedia, ...agentFields } = agentRow;
+  return { ...agentFields, imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl };
 }
 
 /**
@@ -66,7 +97,7 @@ export async function listAgentsForWorkspace({
   page: number;
   limit: number;
   sort: 'asc' | 'desc';
-}): Promise<{ agents: Awaited<ReturnType<typeof getAgentsByWorkspaceId>>; totalCount: number }> {
+}): Promise<AgentListResponse> {
   const offset = (page - 1) * limit;
 
   const { error: countError, data: totalCount } = await tryCatch(() =>
@@ -87,7 +118,7 @@ export async function listAgentsForWorkspace({
     throw new InternalServerErrorException('Failed to list agents');
   }
 
-  return { agents, totalCount };
+  return { agents: agents.map(toAgentListItem), totalCount };
 }
 
 /**
@@ -99,8 +130,9 @@ export async function getAgentForWorkspace({
 }: {
   workspaceId: string;
   agentId: string;
-}): Promise<Agent> {
-  return loadAgentInWorkspace({ agentId, workspaceId });
+}): Promise<AgentDetailResponse> {
+  const agentRecord = await loadAgentInWorkspace({ agentId, workspaceId });
+  return toAgentDetailResponse(agentRecord);
 }
 
 export interface CreateAgentInput {
@@ -121,7 +153,7 @@ export interface CreateAgentInput {
  * Creates an agent in the given workspace. Replaces the old upsert
  * endpoint's create half.
  */
-export async function createAgentForWorkspace(input: CreateAgentInput): Promise<Agent> {
+export async function createAgentForWorkspace(input: CreateAgentInput): Promise<AgentResponse> {
   const { error, data: createdAgent } = await tryCatch(() => createAgent(input));
 
   if (error !== null) {
@@ -133,7 +165,7 @@ export async function createAgentForWorkspace(input: CreateAgentInput): Promise<
     throw new InternalServerErrorException('Failed to create agent');
   }
 
-  return createdAgent;
+  return { ...createdAgent, imageUrl: null };
 }
 
 export interface CreateAgentFromTemplateInput {
@@ -148,7 +180,7 @@ export interface CreateAgentFromTemplateInput {
  */
 export async function createAgentFromTemplateForWorkspace(
   input: CreateAgentFromTemplateInput,
-): Promise<Agent> {
+): Promise<AgentResponse> {
   const { error, data: createdAgent } = await tryCatch(() => createAgentFromTemplate(input));
 
   if (error !== null) {
@@ -160,7 +192,7 @@ export async function createAgentFromTemplateForWorkspace(
     throw new NotFoundException('Agent template not found');
   }
 
-  return createdAgent;
+  return { ...createdAgent, imageUrl: null };
 }
 
 export interface AgentTemplateListResponse {
@@ -183,6 +215,7 @@ export async function listAgentTemplatesForUser(): Promise<AgentTemplateListResp
 }
 
 export interface UpdateAgentInput {
+  userId: string;
   workspaceId: string;
   agentId: string;
   name?: string;
@@ -192,6 +225,9 @@ export interface UpdateAgentInput {
   context?: string | null;
   toolGrants?: StoredAgentToolGrant[];
   defaultDatasetId?: string | null;
+  icon?: string | null;
+  tone?: string | null;
+  imageMediaId?: string | null;
   settings?: AgentSettings;
 }
 
@@ -199,9 +235,13 @@ export interface UpdateAgentInput {
  * [PATCH] /workspace/:workspaceId/agent/:agentId
  * Partial update. Replaces the old upsert endpoint's update half.
  */
-export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<Agent> {
-  const { workspaceId, agentId } = input;
-  await loadAgentInWorkspace({ agentId, workspaceId });
+export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<AgentResponse> {
+  const { userId, workspaceId, agentId } = input;
+  const previousAgent = await loadAgentInWorkspace({ agentId, workspaceId });
+
+  if (input.imageMediaId) {
+    await getOwnedImageMedia({ userId, workspaceId, mediaId: input.imageMediaId });
+  }
 
   const { error, data: updatedAgent } = await tryCatch(() =>
     updateAgent({
@@ -214,6 +254,9 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
       context: input.context,
       toolGrants: input.toolGrants,
       defaultDatasetId: input.defaultDatasetId,
+      icon: input.icon,
+      tone: input.tone,
+      imageMediaId: input.imageMediaId,
       settings: input.settings,
     }),
   );
@@ -228,7 +271,16 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
     throw new NotFoundException('Agent not found');
   }
 
-  return updatedAgent;
+  const replacedImageMediaId = previousAgent.imageMediaId;
+  if (input.imageMediaId !== undefined && replacedImageMediaId) {
+    await deleteMediaIfUnreferenced({ mediaId: replacedImageMediaId });
+  }
+
+  const { imageMedia } = await loadAgentInWorkspace({ agentId, workspaceId });
+  return {
+    ...updatedAgent,
+    imageUrl: toAgentMarkResponse({ ...updatedAgent, imageMedia }).imageUrl,
+  };
 }
 
 /**
@@ -248,6 +300,10 @@ export async function deleteAgentForWorkspace({
 
   await deleteAgentContextDocumentsForAgent({ agentId: agentRecord.id });
   await deleteAgentById({ agentId: agentRecord.id, workspaceId });
+
+  if (agentRecord.imageMediaId) {
+    await deleteMediaIfUnreferenced({ mediaId: agentRecord.imageMediaId });
+  }
 }
 
 /**

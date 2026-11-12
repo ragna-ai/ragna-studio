@@ -1,4 +1,6 @@
-export interface ChatAgent {
+import type { AgentMarkFields } from '~/features/agent/types';
+
+export interface ChatAgent extends AgentMarkFields {
   id: string;
   name: string;
   aiModel: {
@@ -8,7 +10,7 @@ export interface ChatAgent {
   };
 }
 
-export interface ChatAgentOption {
+export interface ChatAgentOption extends AgentMarkFields {
   id: string;
   name: string;
   description?: string;
@@ -28,6 +30,6 @@ export interface ChatRecentItem {
   lastMessageAt: string;
 }
 
-export interface ChatRecentRowItem extends ChatRecentItem {
+export interface ChatRecentRowItem extends ChatRecentItem, AgentMarkFields {
   agentId: string;
 }

@@ -48,6 +48,7 @@ import {
 import { toProblemDetails } from '../exceptions/problem-details';
 import { answerPendingApprovals, denyOpenApprovals } from './chat-approval.service';
 import { assertCanSpend } from './credit.service';
+import { toAgentMarkResponse, type AgentMarkResponse } from '../utils/agent-mark';
 
 // CHAT CRUD
 //
@@ -56,21 +57,23 @@ import { assertCanSpend } from './credit.service';
 // author, so access is scoped by userId and workspaceId together. The
 // streaming pipeline further down has no workspace id and checks userId.
 
+export interface ChatAgentResponse extends AgentMarkResponse {
+  id: string;
+  name: string;
+  aiModel: {
+    id: string;
+    provider: string;
+    displayName: string;
+  };
+}
+
 export interface ChatSummaryResponse {
   id: string;
   title: string;
   createdAt: Date;
   updatedAt: Date;
   lastMessageAt: Date;
-  agent: {
-    id: string;
-    name: string;
-    aiModel: {
-      id: string;
-      provider: string;
-      displayName: string;
-    };
-  };
+  agent: ChatAgentResponse;
   // Branching provenance: set when this chat was
   // created via "Branch from here", null for an ordinary chat.
   forkedFrom: { chatId: string; title: string } | null;
@@ -128,6 +131,7 @@ export async function listChatsForWorkspace({
       agent: {
         id: chatRecord.agent.id,
         name: chatRecord.agent.name,
+        ...toAgentMarkResponse(chatRecord.agent),
         aiModel: {
           id: chatRecord.agent.aiModel.id,
           provider: chatRecord.agent.aiModel.provider,
@@ -148,15 +152,7 @@ export interface ChatSearchResult {
   title: string;
   titleMatched: boolean;
   updatedAt: Date;
-  agent: {
-    id: string;
-    name: string;
-    aiModel: {
-      id: string;
-      provider: string;
-      displayName: string;
-    };
-  };
+  agent: ChatAgentResponse;
   messageSnippets: ChatSearchMessageSnippet[];
 }
 
@@ -239,6 +235,7 @@ export async function searchChatsForWorkspace({
     agent: {
       id: matchedChat.agent.id,
       name: matchedChat.agent.name,
+      ...toAgentMarkResponse(matchedChat.agent),
       aiModel: {
         id: matchedChat.agent.aiModel.id,
         provider: matchedChat.agent.aiModel.provider,
@@ -256,16 +253,6 @@ export interface ChatMessageResponse {
   role: string;
   parts: unknown[];
   metadata?: Record<string, unknown>;
-}
-
-export interface ChatAgentResponse {
-  id: string;
-  name: string;
-  aiModel: {
-    id: string;
-    provider: string;
-    displayName: string;
-  };
 }
 
 export interface ChatDetailResponse {
@@ -316,6 +303,7 @@ export async function getChatForWorkspace({
     agent: {
       id: chatRecord.agent.id,
       name: chatRecord.agent.name,
+      ...toAgentMarkResponse(chatRecord.agent),
       aiModel: {
         id: chatRecord.agent.aiModel.id,
         provider: chatRecord.agent.aiModel.provider,

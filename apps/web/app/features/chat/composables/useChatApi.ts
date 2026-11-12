@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import type { UIMessage } from 'ai';
 import { toast } from '~/lib/toast';
+import type { AgentMarkFields } from '~/features/agent/types';
 import type { ChatAgent } from '~/features/chat/types';
 import { toErrorMessage } from '~/lib/api-error';
 
@@ -68,7 +69,7 @@ export interface ChatHistoryItem {
   createdAt: string;
   updatedAt: string;
   lastMessageAt: string;
-  agent: {
+  agent: AgentMarkFields & {
     id: string;
     name: string;
     aiModel: {
