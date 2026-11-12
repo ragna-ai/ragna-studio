@@ -1,4 +1,8 @@
-import type { AgentToolGrant } from '@repo/ai/client';
+import type {
+  AgentMarkIcon,
+  AgentMarkTone,
+  AgentToolGrant,
+} from '@repo/ai/client';
 
 export interface AgentAiModelRef {
   provider: string;
@@ -14,7 +18,14 @@ export interface AgentSettings {
   reasoning?: AgentReasoningEffort | null;
 }
 
-export interface Agent {
+/** What `AgentMark` needs besides the agent's id. Unset fields fall back to the id-derived look. */
+export interface AgentMarkFields {
+  icon?: string | null;
+  tone?: string | null;
+  imageUrl?: string | null;
+}
+
+export interface Agent extends AgentMarkFields {
   id: string;
   userId: string | null;
   // Every agent lives in exactly one workspace.
@@ -30,6 +41,8 @@ export interface Agent {
   // Soft pin: the dataset injected into this
   // agent's system prompt when the `datasets` tool is enabled.
   defaultDatasetId?: string | null;
+  // The uploaded image behind `imageUrl`; saved with the agent.
+  imageMediaId?: string | null;
 }
 
 export interface AgentTemplate {
@@ -60,10 +73,31 @@ export interface AgentManyResponse {
 // of one upsert.
 export type CreateAgentRequest = Omit<
   Agent,
-  'id' | 'userId' | 'workspaceId' | 'aiModel'
+  | 'id'
+  | 'userId'
+  | 'workspaceId'
+  | 'aiModel'
+  | 'icon'
+  | 'tone'
+  | 'imageUrl'
+  | 'imageMediaId'
 >;
 
-export type UpdateAgentRequest = Partial<CreateAgentRequest>;
+// The mark is edited on existing agents only; the create flow follows later.
+export type UpdateAgentRequest = Partial<CreateAgentRequest> &
+  Pick<Agent, 'icon' | 'tone' | 'imageMediaId'>;
+
+/** The mark as the agent form edits it. `imageUrl` is only for the preview; it is never sent. A picked file previews through a local object URL until the agent is saved. */
+export interface AgentMarkValue {
+  icon: AgentMarkIcon | null;
+  tone: AgentMarkTone | null;
+  imageMediaId: string | null;
+  imageUrl: string | null;
+}
+
+export interface UploadedAgentImage {
+  mediaId: string;
+}
 
 export interface AgentMemory {
   content: string;

@@ -23,6 +23,7 @@ To change an agent later, open its row actions in the list and choose **Edit**. 
 
 ## Persona
 
+- **Icon:** the agent's mark, shown in the agent picker, the chat, the lists and the dashboard. The field is at the top of **Persona** on saved agents. The create page does not have it yet.
 - **Name:** at least 4 characters.
 - **Description:** shown in the agent picker and on the dashboard.
 - **Instructions:** tells the agent who it is, how it should answer and which rules to follow. New agents start with "You are a helpful assistant."
@@ -38,6 +39,19 @@ Switch the tabs above the field from **Markdown** to **Raw text** to see and edi
 For more room, press **Expand** in the bottom right corner of the field. It opens the field in a wide side panel. Edits there go straight into the field. Press **Save** on the page to keep them. Close the panel with Esc, the close button or a click outside it.
 
 The instructions are limited to 30,000 characters. A counter in the bottom right corner of the field shows the length, for example **12 / 30,000**. It turns red above the limit, and the agent cannot be saved until the text is shorter. Nothing is cut off while typing or pasting. Agents saved with longer instructions before the limit existed keep working in chat. Saving them in the editor needs the text to be shortened first.
+
+### Icon
+
+The mark is an icon on a colour, or an uploaded image. Without either, the agent shows a robot icon on a colour picked from its id.
+
+1. Open the agent and choose **Change** next to the mark.
+2. On the **Icon** tab, pick one of 8 colours and one of 28 icons. Hover an icon to see its name.
+3. Or open the **Image** tab and drop an image, or click to browse. PNG and JPG are accepted, up to 2 MB.
+4. Choose **Save** on the page.
+
+The choice is part of the page, like the other fields. Leaving without **Save** keeps the old mark. An image replaces the icon. Picking a colour or an icon afterwards removes the image. **Remove image** brings back the icon.
+
+Images are cropped to a square from the centre and scaled to 80 × 80 pixels. For a good result, upload a square image. A short moment after the upload, RAGNA Studio replaces the original with the small version. Removing the image, or deleting the agent, deletes the stored file.
 
 ## Model
 

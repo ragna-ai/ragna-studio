@@ -3,3 +3,4 @@ export { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } fro
 export type { GeneratedAgentImage, getGeneratedImagesOutput } from './tools/image-gen.tool';
 export * from './agent-limits';
 export * from './tools/agent-tool-catalog';
+export * from './agent-mark';

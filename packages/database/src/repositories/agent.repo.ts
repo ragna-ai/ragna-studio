@@ -20,8 +20,21 @@ type UpdateAgentFields = Partial<
     | 'toolGrants'
     | 'settings'
     | 'defaultDatasetId'
+    | 'icon'
+    | 'tone'
+    | 'imageMediaId'
   >
 >;
+
+/**
+ * Relation to load wherever an agent's mark is shown. The API turns the storage key into the
+ * image URL; the database package has no storage dependency.
+ */
+export const agentImageMediaWith = { imageMedia: { columns: { storageKey: true } } } as const;
+
+export interface AgentMarkMedia {
+  imageMedia: { storageKey: string } | null;
+}
 
 export async function createAgent(values: ICreateAgent): Promise<Agent> {
   const {
@@ -69,7 +82,7 @@ export async function getAgentCountByWorkspaceId({
   return db.$count(agent, eq(agent.workspaceId, workspaceId));
 }
 
-// Plain lookup by id, scoped by workspace only: the workspace guard already
+// Plain lookup by id (with its model and mark image), scoped by workspace only: the workspace guard already
 // proved the caller owns `workspaceId`, so access control ends there.
 export async function getAgentByIdAndWorkspaceId({
   agentId,
@@ -77,11 +90,12 @@ export async function getAgentByIdAndWorkspaceId({
 }: {
   agentId: string;
   workspaceId: string;
-}): Promise<Agent | null> {
+}) {
   const agentRecord = await db.query.agent.findFirst({
     where: { id: agentId, workspaceId },
     with: {
       aiModel: true,
+      ...agentImageMediaWith,
     },
   });
 
@@ -157,11 +171,14 @@ export async function getAgentsByWorkspaceId({
       name: true,
       description: true,
       toolGrants: true,
+      icon: true,
+      tone: true,
       createdAt: true,
       updatedAt: true,
     },
     where: { workspaceId },
     with: {
+      ...agentImageMediaWith,
       aiModel: {
         columns: {
           provider: true,

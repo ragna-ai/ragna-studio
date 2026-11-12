@@ -16,13 +16,15 @@ import {
   getFileTypeIconName,
   isImageMediaType,
 } from '~/features/chat/lib/attachment-mime';
-import type { ToolApprovalDecision } from '~/features/chat/types';
+import type {
+  ChatAgentOption,
+  ToolApprovalDecision,
+} from '~/features/chat/types';
 
 interface Props {
   message: UIMessage;
   chatId: string;
-  agentId?: string;
-  agentName?: string;
+  agent?: ChatAgentOption;
   isLast?: boolean;
   isStreaming?: boolean;
 }
@@ -139,9 +141,16 @@ const renderItems = computed<RenderItem[]>(() => {
     :class="isUser ? 'max-w-full' : 'max-w-full flex-col gap-4'"
   >
     <div v-if="!isUser" class="flex h-6 items-center gap-2">
-      <AgentMark v-if="agentId" :agent-id="agentId" :size="24" />
-      <span v-if="agentName" class="text-body font-medium">
-        {{ agentName }}
+      <AgentMark
+        v-if="agent"
+        :agent-id="agent.id"
+        :icon="agent.icon"
+        :tone="agent.tone"
+        :image-url="agent.imageUrl"
+        :size="24"
+      />
+      <span v-if="agent" class="text-body font-medium">
+        {{ agent.name }}
       </span>
     </div>
 

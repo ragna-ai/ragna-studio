@@ -8,6 +8,7 @@ import type {
   NewMedia,
 } from '../schema';
 import {
+  agent,
   chat,
   chatAttachment,
   genImage,
@@ -56,6 +57,23 @@ export async function getMediaInPersonalWorkspace({
   return db.query.media.findMany({
     where: { id: { in: ids }, ownerWorkspace: { personalUserId: userId } },
   });
+}
+
+export interface MediaStorageUpdate {
+  id: string;
+  storageKey: string;
+  mimeType: string;
+  size: number;
+}
+
+/** Points the row at a replacement object, e.g. after the worker re-encoded the file. */
+export async function updateMediaStorage({
+  id,
+  storageKey,
+  mimeType,
+  size,
+}: MediaStorageUpdate): Promise<void> {
+  await db.update(media).set({ storageKey, mimeType, size }).where(eq(media.id, id));
 }
 
 export async function deleteMediaById({ id }: { id: string }): Promise<void> {
@@ -159,6 +177,7 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
     genVideoCount,
     genVideoFrameCount,
     socialPostMediaCount,
+    agentImageCount,
   ] = await Promise.all([
     db.$count(chatAttachment, eq(chatAttachment.mediaId, mediaId)),
     db.$count(taskAttachment, eq(taskAttachment.mediaId, mediaId)),
@@ -167,6 +186,7 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
     db.$count(genVideo, eq(genVideo.mediaId, mediaId)),
     db.$count(genVideo, eq(genVideo.frameMediaId, mediaId)),
     db.$count(socialPostMedia, eq(socialPostMedia.mediaId, mediaId)),
+    db.$count(agent, eq(agent.imageMediaId, mediaId)),
   ]);
 
   return (
@@ -176,7 +196,8 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
     genImageReferenceCount +
     genVideoCount +
     genVideoFrameCount +
-    socialPostMediaCount
+    socialPostMediaCount +
+    agentImageCount
   );
 }
 
@@ -201,6 +222,7 @@ export async function findUnreferencedMediaOlderThan({
     .leftJoin(genImageReference, eq(genImageReference.mediaId, media.id))
     .leftJoin(genVideo, or(eq(genVideo.mediaId, media.id), eq(genVideo.frameMediaId, media.id)))
     .leftJoin(socialPostMedia, eq(socialPostMedia.mediaId, media.id))
+    .leftJoin(agent, eq(agent.imageMediaId, media.id))
     .where(
       and(
         isNull(chatAttachment.id),
@@ -209,6 +231,7 @@ export async function findUnreferencedMediaOlderThan({
         isNull(genImageReference.id),
         isNull(genVideo.id),
         isNull(socialPostMedia.id),
+        isNull(agent.id),
         lt(media.createdAt, cutoff),
       ),
     );

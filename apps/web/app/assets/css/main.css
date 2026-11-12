@@ -79,6 +79,14 @@
   --color-id-ochre-fg: var(--id-ochre-fg);
   --color-id-clay-bg: var(--id-clay-bg);
   --color-id-clay-fg: var(--id-clay-fg);
+  --color-id-dusk-bg: var(--id-dusk-bg);
+  --color-id-dusk-fg: var(--id-dusk-fg);
+  --color-id-plum-bg: var(--id-plum-bg);
+  --color-id-plum-fg: var(--id-plum-fg);
+  --color-id-rose-bg: var(--id-rose-bg);
+  --color-id-rose-fg: var(--id-rose-fg);
+  --color-id-stone-bg: var(--id-stone-bg);
+  --color-id-stone-fg: var(--id-stone-fg);
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;

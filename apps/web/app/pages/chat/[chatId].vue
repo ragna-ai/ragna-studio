@@ -74,11 +74,7 @@ onScopeDispose(() => chatStore.setChat());
           <div class="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
         </template>
         <template #right>
-          <ChatAgentChip
-            v-if="chatAgent"
-            :agent-id="chatAgent.id"
-            :name="chatAgent.name"
-          />
+          <ChatAgentChip v-if="chatAgent" :agent="chatAgent" />
           <Button
             variant="ghost"
             size="icon"

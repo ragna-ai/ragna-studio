@@ -1,5 +1,6 @@
 import { logger } from '@repo/logger';
 import { registerAgentContextDocumentJobProcessor } from './agent-context-document.processor';
+import { registerAgentImageJobProcessor } from './agent-image.processor';
 import { registerSendEmailJobProcessor } from './email.processor';
 import { registerEmailClassifyJobProcessor } from './email-classify.processor';
 import { registerEmailDraftJobProcessor } from './email-draft.processor';
@@ -19,6 +20,7 @@ export function registerJobProcessors() {
   registerWorkflowJobProcessor();
   registerWorkflowScheduleJobProcessor();
   registerAgentContextDocumentJobProcessor();
+  registerAgentImageJobProcessor();
   registerGenVideoJobProcessor();
   registerGenImagesJobProcessor();
   registerEmailSyncJobProcessor();

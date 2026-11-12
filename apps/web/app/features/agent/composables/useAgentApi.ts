@@ -13,6 +13,7 @@ import type {
   AgentResponse,
   CreateAgentRequest,
   UpdateAgentRequest,
+  UploadedAgentImage,
 } from '~/features/agent/types';
 import { toErrorMessage } from '~/lib/api-error';
 
@@ -122,6 +123,37 @@ export function useUpdateAgent() {
     },
     onError: () => {
       toast.error(t('agent.toast.updateFailed'));
+    },
+  });
+}
+
+// Client-side mirror of the API's agent image limits
+// (apps/api/src/services/agent-image.service.ts).
+export const AGENT_IMAGE_MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
+export const AGENT_IMAGE_ACCEPT = 'image/png,image/jpeg';
+
+/**
+ * Uploads an image for an agent's mark. The agent only references it once the
+ * form is saved with the returned `mediaId`.
+ */
+export function useUploadAgentImage() {
+  const { $api } = useNuxtApp();
+  const { t } = useI18n();
+  const workspaceId = useActiveWorkspaceId();
+  return useMutation<UploadedAgentImage, unknown, File>({
+    mutationFn: (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return $api<UploadedAgentImage>(
+        `${agentBasePath(workspaceId)}/image-upload`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
+    },
+    onError: (error) => {
+      toast.error(toErrorMessage(error, t('agent.mark.errors.uploadFailed')));
     },
   });
 }

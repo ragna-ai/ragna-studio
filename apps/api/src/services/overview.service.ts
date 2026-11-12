@@ -16,6 +16,7 @@ import { logger } from '@repo/logger';
 import { tryCatch } from '@repo/utils';
 import type { WorkflowRunStatus } from '@repo/workflow';
 import { InternalServerErrorException } from '../exceptions';
+import { toAgentMarkResponse } from '../utils/agent-mark';
 
 // Home overview cards: one aggregated read per workspace,
 // five entities in parallel. Slim, card-only DTOs, never full rows. Data
@@ -69,7 +70,11 @@ export interface OverviewCalendarTaskItem {
 export interface OverviewChatItem {
   id: string;
   title: string;
+  agentId: string;
   agentName: string;
+  icon: string | null;
+  tone: string | null;
+  imageUrl: string | null;
   updatedAt: Date;
   lastMessageAt: Date;
 }
@@ -86,6 +91,9 @@ export interface OverviewAgentItem {
   name: string;
   description: string | null;
   modelName: string;
+  icon: string | null;
+  tone: string | null;
+  imageUrl: string | null;
   updatedAt: Date;
 }
 
@@ -171,7 +179,9 @@ export async function getWorkspaceOverview({
       items: chatRows.map((chatRecord) => ({
         id: chatRecord.id,
         title: chatRecord.title,
+        agentId: chatRecord.agent.id,
         agentName: chatRecord.agent.name,
+        ...toAgentMarkResponse(chatRecord.agent),
         updatedAt: chatRecord.updatedAt,
         lastMessageAt: chatRecord.lastMessageAt,
       })),
@@ -192,6 +202,7 @@ export async function getWorkspaceOverview({
         name: agentRecord.name,
         description: agentRecord.description,
         modelName: agentRecord.aiModel.displayName,
+        ...toAgentMarkResponse(agentRecord),
         updatedAt: agentRecord.updatedAt,
       })),
       total: agentTotal,

@@ -15,7 +15,14 @@ export { sniffMediaKind } from './services/registry.service';
 
 export { extractText } from './services/extract.service';
 
-export { toChatUploadImageUrl, getChatUploadImageKey, getMediaDocumentKey } from './lib/media-keys';
+export {
+  getAgentImageKey,
+  toChatUploadImageUrl,
+  getChatUploadImageKey,
+  getMediaDocumentKey,
+} from './lib/media-keys';
+
+export { AGENT_IMAGE_SIZE_PX, shrinkAgentImage } from './services/agent-image.service';
 
 export {
   createMediaForObject,

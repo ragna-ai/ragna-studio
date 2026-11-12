@@ -1,6 +1,8 @@
 import {
   AGENT_CONTEXT_MAX_LENGTH,
   AGENT_INSTRUCTIONS_MAX_LENGTH,
+  agentMarkIconSchema,
+  agentMarkToneSchema,
   agentToolGrantsSchema,
 } from '@repo/ai';
 import { agentSettingsSchema } from '@repo/database';
@@ -59,6 +61,9 @@ export const validUpdateAgentBody = myzValidator(
       context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
       toolGrants: agentToolGrantsSchema.optional(),
       defaultDatasetId: primaryId.nullish(),
+      icon: agentMarkIconSchema.nullish(),
+      tone: agentMarkToneSchema.nullish(),
+      imageMediaId: primaryId.nullish(),
       settings: agentSettingsSchema,
     })
     .refine((body) => Object.values(body).some((value) => value !== undefined), {

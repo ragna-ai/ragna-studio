@@ -85,11 +85,10 @@ const isAgentLocked = computed(() => chatId.value !== null);
 const showNoAgentState = computed(
   () => !props.agent && newChatAgent.hasNoAgents.value,
 );
-const selectedAgentName = computed(
-  () =>
-    agentOptions.value.find((agent) => agent.id === selectedAgentId.value)
-      ?.name,
+const selectedAgent = computed(() =>
+  agentOptions.value.find((agent) => agent.id === selectedAgentId.value),
 );
+const selectedAgentName = computed(() => selectedAgent.value?.name);
 const isSendDisabled = computed(() => selectedAgentId.value === null);
 const selectedAgentToolIds = computed(
   () =>
@@ -328,8 +327,7 @@ async function handleSubmit(text: string) {
                 :key="message.id"
                 :message="message"
                 :chat-id="chatId"
-                :agent-id="selectedAgentId ?? undefined"
-                :agent-name="selectedAgentName"
+                :agent="selectedAgent"
                 :is-last="index === messages.length - 1"
                 :is-streaming="isBusy && index === messages.length - 1"
                 @approval-response="answerApproval"

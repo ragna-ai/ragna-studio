@@ -24,6 +24,9 @@ const recentChats = computed<ChatRecentRowItem[]>(() =>
     title: chat.title,
     agentId: chat.agent.id,
     agentName: chat.agent.name,
+    icon: chat.agent.icon,
+    tone: chat.agent.tone,
+    imageUrl: chat.agent.imageUrl,
     lastMessageAt: chat.lastMessageAt,
   })),
 );

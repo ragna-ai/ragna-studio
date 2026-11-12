@@ -19,6 +19,9 @@ const searchResponseSchema = z.strictObject({
       agent: z.strictObject({
         id: z.string(),
         name: z.string(),
+        icon: z.string().nullable(),
+        tone: z.string().nullable(),
+        imageUrl: z.string().nullable(),
         aiModel: z.strictObject({
           id: z.string(),
           provider: z.string(),

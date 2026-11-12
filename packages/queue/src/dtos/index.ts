@@ -1,3 +1,4 @@
+export * from './agent-image-job.dto';
 export * from './agent-context-document-job.dto';
 export * from './email-classify-job.dto';
 export * from './email-draft-job.dto';

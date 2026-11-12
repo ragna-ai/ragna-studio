@@ -3,6 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import type { TaskPriority, TaskStatus } from '../schema';
 import { task } from '../schema';
+import { agentImageMediaWith, type AgentMarkMedia } from './agent.repo';
 
 // The only statuses the tasks card shows:
 // the overview is about work needing attention, so done,
@@ -116,7 +117,7 @@ export type RecentChat = {
   title: string;
   updatedAt: Date;
   lastMessageAt: Date;
-  agent: { name: string };
+  agent: { id: string; name: string; icon: string | null; tone: string | null } & AgentMarkMedia;
 };
 
 /**
@@ -134,7 +135,12 @@ export async function getRecentChats({
 }): Promise<RecentChat[]> {
   return db.query.chat.findMany({
     columns: { id: true, title: true, updatedAt: true, lastMessageAt: true },
-    with: { agent: { columns: { name: true } } },
+    with: {
+      agent: {
+        columns: { id: true, name: true, icon: true, tone: true },
+        with: agentImageMediaWith,
+      },
+    },
     where: { userId, workspaceId },
     orderBy: (t, { desc }) => [desc(t.lastMessageAt), desc(t.id)],
     limit,
@@ -180,8 +186,10 @@ export type RecentAgent = {
   name: string;
   description: string | null;
   updatedAt: Date;
+  icon: string | null;
+  tone: string | null;
   aiModel: { displayName: string };
-};
+} & AgentMarkMedia;
 
 /**
  * Latest agents for the agents card, newest first, with the model's
@@ -195,8 +203,8 @@ export async function getRecentAgentsByWorkspaceId({
   limit: number;
 }): Promise<RecentAgent[]> {
   return db.query.agent.findMany({
-    columns: { id: true, name: true, description: true, updatedAt: true },
-    with: { aiModel: { columns: { displayName: true } } },
+    columns: { id: true, name: true, description: true, updatedAt: true, icon: true, tone: true },
+    with: { aiModel: { columns: { displayName: true } }, ...agentImageMediaWith },
     where: { workspaceId },
     orderBy: (t, { desc }) => desc(t.updatedAt),
     limit,

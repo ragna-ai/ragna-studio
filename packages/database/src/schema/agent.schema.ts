@@ -2,6 +2,7 @@ import { foreignKey, index, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-
 import { aiModel, type AiModel } from './aimodel.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { dataset } from './dataset.schema';
+import { media } from './media.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
@@ -70,6 +71,12 @@ export const agent = pgTable(
     // `datasetFind` and go straight to row operations. Deleting the dataset
     // nulls this out (the repo clears it first) and the agent degrades to lookup mode.
     defaultDatasetId: text('default_dataset_id'),
+    // Mark: an icon name and a tone from @repo/ai's agent-mark lists, validated at the API.
+    // Null means "derived from the agent id" in the web app.
+    icon: text('icon'),
+    tone: text('tone'),
+    // Uploaded image that replaces the icon. Cleared (not cascaded) when the media row goes.
+    imageMediaId: text('image_media_id').references(() => media.id, { onDelete: 'set null' }),
     settings: jsonb('settings')
       .notNull()
       .$type<AgentSettings>()
@@ -81,6 +88,7 @@ export const agent = pgTable(
     index('agent_aiModelId_idx').on(table.aiModelId),
     index('agent_workspaceId_idx').on(table.workspaceId),
     index('agent_defaultDatasetId_idx').on(table.defaultDatasetId),
+    index('agent_imageMediaId_idx').on(table.imageMediaId),
     unique('agents_workspace_id_unique').on(table.workspaceId, table.id),
     foreignKey({
       columns: [table.workspaceId, table.defaultDatasetId],

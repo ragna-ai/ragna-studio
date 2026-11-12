@@ -399,6 +399,71 @@
         "description": "List, read, create, update, and move tasks on the workspace board."
       }
     },
+    "mark": {
+      "label": "Icon",
+      "change": "Change",
+      "hint": "Shown in the agent picker, the chat and the lists.",
+      "popoverLabel": "Choose the agent's icon",
+      "tabs": {
+        "icon": "Icon",
+        "image": "Image"
+      },
+      "colour": "Colour",
+      "icon": "Icon",
+      "tones": {
+        "sea": "Sea",
+        "sage": "Sage",
+        "ochre": "Ochre",
+        "clay": "Clay",
+        "dusk": "Dusk",
+        "plum": "Plum",
+        "rose": "Rose",
+        "stone": "Stone"
+      },
+      "icons": {
+        "robotic": "Robot",
+        "invoice-01": "Invoice",
+        "receipt-text": "Receipt",
+        "mail-01": "Mail",
+        "inbox": "Inbox",
+        "file-edit": "Edit file",
+        "file-02": "File",
+        "file-validation": "Checked file",
+        "search-01": "Search",
+        "calendar-03": "Calendar",
+        "chart-line-data-01": "Line chart",
+        "money-bag-02": "Money bag",
+        "calculator-01": "Calculator",
+        "bank": "Bank",
+        "truck-delivery": "Delivery truck",
+        "package": "Package",
+        "shopping-cart-01": "Shopping cart",
+        "building-03": "Building",
+        "user-group": "Team",
+        "call": "Phone",
+        "wrench-01": "Wrench",
+        "settings-02": "Settings",
+        "task-done-01": "Done task",
+        "note-edit": "Edit note",
+        "clipboard": "Clipboard",
+        "justice-scale-01": "Scales of justice",
+        "shield-01": "Shield",
+        "database-01": "Database"
+      },
+      "image": {
+        "dropzone": "Drop an image or click to browse.",
+        "formats": "Square PNG or JPG, up to {size}.",
+        "uploading": "Uploading...",
+        "current": "Current image",
+        "replace": "Replace",
+        "remove": "Remove image"
+      },
+      "errors": {
+        "tooLarge": "The image is larger than {size}.",
+        "wrongType": "Use a PNG or JPG image.",
+        "uploadFailed": "The image could not be uploaded."
+      }
+    },
     "context": {
       "hint": "Their extracted text joins the context. Up to {max} documents.",
       "uploadedAt": "Uploaded {date}",

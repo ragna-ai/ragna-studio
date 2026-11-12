@@ -4,6 +4,7 @@ import { db } from '../db';
 import type { Chat, ChatMessage } from '../schema';
 import { agent, chat, chatAttachment, chatMessage } from '../schema';
 import type { ICreateChat, ICreateChatMessage, IUpsertChatMessage } from '../zod';
+import { agentImageMediaWith } from './agent.repo';
 
 export type { Chat, ChatMessage } from '../schema';
 
@@ -92,8 +93,11 @@ export async function getChatById(payload: ChatScope & { chatId: string }) {
         columns: {
           id: true,
           name: true,
+          icon: true,
+          tone: true,
         },
         with: {
+          ...agentImageMediaWith,
           aiModel: {
             columns: { id: true, provider: true, displayName: true },
           },
@@ -147,8 +151,11 @@ export async function getChats({
         columns: {
           id: true,
           name: true,
+          icon: true,
+          tone: true,
         },
         with: {
+          ...agentImageMediaWith,
           aiModel: {
             columns: { id: true, provider: true, displayName: true },
           },
@@ -391,6 +398,9 @@ export interface ChatSearchMatchedChat {
   agent: {
     id: string;
     name: string;
+    icon: string | null;
+    tone: string | null;
+    imageMedia: { storageKey: string } | null;
     aiModel: { id: string; provider: string; displayName: string };
   };
 }
@@ -431,8 +441,9 @@ export async function getChatSearchMatchedChats({
     where: { id: { in: chatIds } },
     with: {
       agent: {
-        columns: { id: true, name: true },
+        columns: { id: true, name: true, icon: true, tone: true },
         with: {
+          ...agentImageMediaWith,
           aiModel: { columns: { id: true, provider: true, displayName: true } },
         },
       },
@@ -458,6 +469,9 @@ export async function getChatSearchMatchedChats({
         agent: {
           id: chatRecord.agent.id,
           name: chatRecord.agent.name,
+          icon: chatRecord.agent.icon,
+          tone: chatRecord.agent.tone,
+          imageMedia: chatRecord.agent.imageMedia,
           aiModel: {
             id: chatRecord.agent.aiModel.id,
             provider: chatRecord.agent.aiModel.provider,

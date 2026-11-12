@@ -17,7 +17,7 @@ const toolGrantsSchema = z.array(
   ]),
 );
 
-const agentSchema = z.object({
+const agentSchema = z.strictObject({
   id: z.string(),
   userId: z.string(),
   workspaceId: z.string(),
@@ -28,6 +28,10 @@ const agentSchema = z.object({
   context: z.string().nullable(),
   toolGrants: toolGrantsSchema,
   defaultDatasetId: z.string().nullable(),
+  icon: z.string().nullable(),
+  tone: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  imageMediaId: z.string().nullable(),
   settings: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -40,6 +44,9 @@ const agentListItemSchema = z.strictObject({
   name: z.string(),
   description: z.string().nullable(),
   toolGrants: toolGrantsSchema,
+  icon: z.string().nullable(),
+  tone: z.string().nullable(),
+  imageUrl: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   aiModel: z.strictObject({ provider: z.string(), model: z.string(), displayName: z.string() }),

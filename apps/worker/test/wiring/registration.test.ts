@@ -1,6 +1,7 @@
 import { config } from '@repo/config';
 import {
   AGENT_CONTEXT_DOCUMENTS_QUEUE,
+  AGENT_IMAGE_QUEUE,
   EMAIL_CLASSIFY_QUEUE,
   EMAIL_DRAFT_QUEUE,
   EMAIL_SYNC_QUEUE,
@@ -31,6 +32,7 @@ const expectedWorkers: ExpectedWorker[] = [
   { queue: WORKFLOWS_QUEUE, opts: { lockDuration: TEN_MINUTES_MS } },
   { queue: WORKFLOW_SCHEDULES_QUEUE, opts: undefined },
   { queue: AGENT_CONTEXT_DOCUMENTS_QUEUE, opts: undefined },
+  { queue: AGENT_IMAGE_QUEUE, opts: undefined },
   { queue: GEN_VIDEOS_QUEUE, opts: { concurrency: 2, lockDuration: TEN_MINUTES_MS } },
   { queue: GEN_IMAGES_QUEUE, opts: { concurrency: 2, lockDuration: FIVE_MINUTES_MS } },
   { queue: EMAIL_SYNC_QUEUE, opts: { concurrency: 5, lockDuration: TEN_MINUTES_MS } },

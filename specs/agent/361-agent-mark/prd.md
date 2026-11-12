@@ -1,6 +1,6 @@
 # Agent mark: an icon on a tone, or an uploaded image (PRD)
 
-> **Status: proposed** (2026-11-12). Issue #361. Part of #356 (design handoff 12 Nov 2026, §5).
+> **Status: implemented** (2026-11-12, PR #367). Issue #361. Part of #356 (design handoff 12 Nov 2026, §5).
 
 Every agent looks the same today: the robotic icon on a colour picked from its id. In a list of nine
 agents, users find theirs by reading names. This PRD lets the people who edit an agent give it its
@@ -38,7 +38,7 @@ tell my agents apart at a glance.
 - **US-1.1** Given an agent, when the editor saves an icon and a tone, then every response that
   returns the agent's name also returns that icon and tone.
 - **US-1.2** Given an icon that is not in the offered list, or an unknown tone, when the editor
-  saves, then the request is rejected with `400` and the agent is unchanged.
+  saves, then the request is rejected with `422` and the agent is unchanged.
 - **US-1.3** Given an agent with no icon, when it is shown, then it gets the robotic icon on the
   tone derived from its id, as today.
 - **US-1.4** Rule: 28 icons and 8 tones (`sea`, `sage`, `ochre`, `clay`, `dusk`, `plum`, `rose`,
@@ -114,7 +114,7 @@ the agent tool ids the web already imports from there.
 
 - `POST /workspace/:workspaceId/agent/image-upload`: multipart `file`, the same body limit and
   content sniffing as the existing reference uploads (PNG or JPEG only). Stores a workspace-owned
-  media row in the images bucket, enqueues the resize job and returns `{ mediaId, url }`.
+  media row in the images bucket, enqueues the resize job and returns `{ mediaId }`.
 - `PATCH /workspace/:workspaceId/agent/:agentId` accepts `icon`, `tone` and `imageMediaId` (each
   nullable). An `imageMediaId` must belong to the workspace and be an image. Replacing or clearing
   it runs `deleteMediaIfUnreferenced` on the old id.
@@ -123,7 +123,9 @@ the agent tool ids the web already imports from there.
 
 **Worker.** A new queue `agent-image` with a `{ mediaId }` DTO. The processor downloads the object,
 runs ffmpeg (already in the worker image) to centre-crop and scale to 80 × 80 PNG, uploads it under
-the same media id and updates the row's key, MIME type and size. Until then the original is served.
+the same media id under a new storage key (`<workspaceId>/images/agent-images/<mediaId>.png`, so the CDN never serves the stale original) and updates the row's key, MIME type and size, then
+deletes the original object. Until then the original is served. The web previews a picked file from
+memory until the agent is saved, because the original's URL stops working once the worker is done.
 
 **Web.** `AgentMark` gets `icon`, `tone`, `imageUrl` and size 40 (image, else icon on its tone, else
 today's fallback). Every `AgentMark` caller passes the fields it now has. The Persona section gets

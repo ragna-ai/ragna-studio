@@ -77,6 +77,15 @@ export class PayloadTooLargeException extends HTTPException {
   }
 }
 
+// Unsupported Media Type (415) Exception
+export class UnsupportedMediaTypeException extends HTTPException {
+  constructor(message?: string) {
+    super(StatusCodes.UNSUPPORTED_MEDIA_TYPE, {
+      message: message || ReasonPhrases.UNSUPPORTED_MEDIA_TYPE,
+    });
+  }
+}
+
 // Unprocessable Entity (422) Exception
 export class UnprocessableEntityException extends HTTPException {
   constructor(message?: string) {
