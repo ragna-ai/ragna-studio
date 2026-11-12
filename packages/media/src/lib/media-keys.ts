@@ -41,7 +41,7 @@ export function getAgentImageKey({
   ownerId: string;
   mediaId: string;
 }): string {
-  return `${ownerId}/images/agent-images/${mediaId}.png`;
+  return `${ownerId}/images/agent-images/${mediaId}.webp`;
 }
 
 // Everything else (pdf, docx, pptx, xlsx, csv, txt, md) goes to the private

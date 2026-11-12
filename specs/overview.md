@@ -137,7 +137,7 @@ of the model and the client.
 ### Agent mark
 
 An agent's mark is one of 28 icons on one of 8 tones, or an uploaded image
-(PNG or JPEG, up to 2 MB). The worker scales the image to 80 × 80. The mark
+(PNG or JPEG, up to 2 MB). The worker scales the image to 80 × 80 (lossless WebP). The mark
 is edited in the Persona section of the agent settings and shown wherever the
 agent's name is.
 → [specs/agent/361-agent-mark/prd.md](./agent/361-agent-mark/prd.md)

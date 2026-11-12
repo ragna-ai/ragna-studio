@@ -12,13 +12,20 @@
 // on @repo/logger. The caller decides what "best-effort" means (log a
 // warning, fall back to the raw bytes, flip visibleWatermark), not this
 // package.
+import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
-import { FFMPEG_BINARY, runFfmpeg } from '../lib/ffmpeg.util';
 import { buildWatermarkFfmpegArgs, probeVideoDimensions } from '../lib/watermark-ffmpeg.util';
+
+// System-installed ffmpeg, resolved via PATH: brew on dev machines, apt in
+// the Docker image (both put it on PATH; ffmpeg comes from the system, not
+// npm). No config knob: every environment this
+// runs in already has ffmpeg on PATH, so an override would have nothing to
+// point at.
+const FFMPEG_BINARY = 'ffmpeg';
 
 // A real asset file rather than an inlined string: tsdown's `copy` option
 // (tsdown.config.ts) carries assets/ai-badge.svg into dist/assets/, and this
@@ -137,6 +144,31 @@ export interface ApplyVideoWatermarkResult {
 const VIDEO_BADGE_HEIGHT_RATIO = 0.04;
 const VIDEO_BADGE_MIN_HEIGHT_PX = 16;
 const VIDEO_BADGE_MARGIN_RATIO = 0.03;
+
+// stderr tail only: ffmpeg logs its actual error in the last few lines,
+// everything before that is codec/build banner noise not worth keeping.
+const STDERR_TAIL_CHARS = 4000;
+
+function runFfmpeg(binaryPath: string, args: string[]): Promise<void> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn(binaryPath, args);
+    let stderrTail = '';
+
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderrTail = (stderrTail + chunk.toString()).slice(-STDERR_TAIL_CHARS);
+    });
+
+    child.on('error', rejectPromise);
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolvePromise();
+        return;
+      }
+
+      rejectPromise(new Error(`ffmpeg exited with code ${code}: ${stderrTail}`));
+    });
+  });
+}
 
 /**
  * Burns the badge into a video's bottom-right corner. Runs in the videogen

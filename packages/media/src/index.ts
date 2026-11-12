@@ -22,7 +22,7 @@ export {
   getMediaDocumentKey,
 } from './lib/media-keys';
 
-export { AGENT_IMAGE_SIZE_PX, shrinkAgentImage } from './services/agent-image.service';
+export { shrinkAgentImage } from './services/agent-image.service';
 
 export {
   createMediaForObject,

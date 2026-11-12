@@ -53,7 +53,7 @@ carry a logo or a face the team recognises.
   every response that returns the agent's name returns an image URL, and the mark shows the image
   instead of the icon.
 - **US-2.2** Given an uploaded image, when processing has finished, then the stored image is
-  80 × 80 pixels, centre-cropped if it wasn't square.
+  80 × 80 pixels as lossless WebP, centre-cropped if it wasn't square.
 - **US-2.3** Given a file over 2 MB or of another type, when the editor uploads it, then the
   request is rejected with `413` or `415` and nothing is stored.
 - **US-2.4** Given an agent with an image, when the editor removes it and saves, then the image URL
@@ -122,8 +122,8 @@ the agent tool ids the web already imports from there.
   agent list and detail, chat and chat history, the chat agent picker, the home overview.
 
 **Worker.** A new queue `agent-image` with a `{ mediaId }` DTO. The processor downloads the object,
-runs ffmpeg (already in the worker image) to centre-crop and scale to 80 × 80 PNG, uploads it under
-the same media id under a new storage key (`<workspaceId>/images/agent-images/<mediaId>.png`, so the CDN never serves the stale original) and updates the row's key, MIME type and size, then
+uses `sharp` (already used by `@repo/media` for image watermarks) to centre-crop and scale to 80 × 80 WebP (lossless: logos and transparency stay exact, and it is about 40 % smaller than PNG, measured 11 to 15 KB vs about 18.5 KB), uploads it under
+the same media id under a new storage key (`<workspaceId>/images/agent-images/<mediaId>.webp`, so the CDN never serves the stale original) and updates the row's key, MIME type and size, then
 deletes the original object. Until then the original is served. The web previews a picked file from
 memory until the agent is saved, because the original's URL stops working once the worker is done.
 
@@ -134,7 +134,8 @@ synced from the design file.
 
 ## Decisions
 
-- **Resize in the worker, not the API** (Sven, 12 Nov). The API image has neither ffmpeg nor an
-  image library; the worker already runs ffmpeg for watermarks. The cost is a short window where the
+- **Resize in the worker, not the API** (Sven, 12 Nov). The API image has no image library;
+  the worker already runs the media code that processes images. The cost is a short window where the
   original (up to 2 MB) is served. Lost alternatives: ffmpeg in the API image (about 80 MB more),
-  `sharp` (a native dependency on Bun), no resize at all.
+  no resize at all. The resize uses `sharp`, which `@repo/media` already depends on, so there is no
+  new dependency.
