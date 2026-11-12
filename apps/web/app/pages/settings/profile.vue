@@ -10,17 +10,16 @@ useHead({ title: t('user.profile.title') });
 
 <template>
   <SectionWrapper>
-    <Heading bg-position="bottom">
+    <Heading>
       <template #top>
         <HeadingTitle
           :title="t('user.profile.title')"
           :subtitle="t('user.profile.subtitle')"
         />
       </template>
-      <template #bottom> </template>
     </Heading>
 
-    <div class="space-y-6 px-5 pb-10">
+    <div class="space-y-6 px-page pt-6 pb-10">
       <UserProfileSettings />
       <AccountDeletionCard />
     </div>

@@ -69,7 +69,7 @@ function chatPath(chat: ChatHistoryItem): string {
           <TableCell>
             <ListRowActions>
               <DropdownMenuItem @click="emit('rename-chat', chat)">
-                <Icon name="hugeicons:pencil-edit-02" class="size-4" />
+                <Icon name="hugeicons:pencil-edit-02" />
                 {{ t('chat.history.rename') }}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -77,7 +77,7 @@ function chatPath(chat: ChatHistoryItem): string {
                 variant="destructive"
                 @click="emit('delete-chat', chat.id)"
               >
-                <Icon name="hugeicons:delete-02" class="size-4" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
             </ListRowActions>

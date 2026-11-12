@@ -18,6 +18,8 @@ import {
 interface ListPaginationProps {
   totalCount: number;
   noun: string;
+  /** Appended to the count when everything fits on one page, e.g. "395 rows". */
+  singlePageDetail?: string;
 }
 
 const PAGE_SIZE_OPTIONS = [10, DEFAULT_LIST_PAGE_SIZE, 50, 100];
@@ -39,7 +41,10 @@ const hasControls = computed(
 );
 const countText = computed(() => {
   if (totalPages.value <= 1) {
-    return t(props.noun, props.totalCount);
+    const count = t(props.noun, props.totalCount);
+    return props.singlePageDetail
+      ? `${count} · ${props.singlePageDetail}`
+      : count;
   }
   return t('pagination.range', {
     from: (page.value - 1) * limit.value + 1,

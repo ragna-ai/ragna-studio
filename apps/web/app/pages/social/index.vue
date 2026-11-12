@@ -43,7 +43,7 @@ async function handleDeletePost(postId: string) {
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('social.list.title')"
@@ -58,9 +58,8 @@ async function handleDeletePost(postId: string) {
             </template>
           </HeadingTitle>
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div v-if="data?.posts" class="px-5">
+      <div v-if="data?.posts" class="px-page pt-6">
         <SocialPostManyTable
           :posts="data.posts"
           @delete-post="handleDeletePost"

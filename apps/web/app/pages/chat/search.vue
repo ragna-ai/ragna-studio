@@ -84,17 +84,16 @@ watch([query, page, limit], ([q, p, l]) => {
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('chat.search.title')"
             :subtitle="t('chat.search.subtitle')"
           />
         </template>
-        <template #bottom> </template>
       </Heading>
 
-      <div class="space-y-4 px-5">
+      <div class="space-y-4 px-page pt-6">
         <div class="relative mx-auto max-w-xl">
           <Icon
             name="hugeicons:search-01"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NuxtLinkLocale } from '#components';
 import ChatManyTable from '~/features/chat/components/ChatManyTable.vue';
 import ChatRenameDialog from '~/features/chat/components/ChatRenameDialog.vue';
 import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
@@ -54,24 +55,25 @@ const handleDeleteChat = async (chatId: string) => {
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('chat.history.title')"
             :subtitle="t('chat.history.subtitle')"
           >
             <template #button>
-              <Button as-child leading-icon="hugeicons:plus-sign">
-                <NuxtLinkLocale to="/chat">
-                  {{ t('chat.history.newChat') }}
-                </NuxtLinkLocale>
+              <Button
+                :as="NuxtLinkLocale"
+                to="/chat"
+                leading-icon="hugeicons:plus-sign"
+              >
+                {{ t('chat.history.newChat') }}
               </Button>
             </template>
           </HeadingTitle>
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div class="px-5">
+      <div class="px-page pt-6">
         <ListErrorAlert
           v-if="error && !data"
           :title="t('chat.history.loadError.title')"
@@ -89,10 +91,12 @@ const handleDeleteChat = async (chatId: string) => {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button as-child leading-icon="hugeicons:plus-sign">
-              <NuxtLinkLocale to="/chat">
-                {{ t('chat.history.newChat') }}
-              </NuxtLinkLocale>
+            <Button
+              :as="NuxtLinkLocale"
+              to="/chat"
+              leading-icon="hugeicons:plus-sign"
+            >
+              {{ t('chat.history.newChat') }}
             </Button>
           </EmptyContent>
         </Empty>

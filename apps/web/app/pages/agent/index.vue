@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NuxtLinkLocale } from '#components';
 import AgentManyTable from '~/features/agent/components/AgentManyTable.vue';
 import { useDeleteAgent } from '~/features/agent/composables/useAgentApi';
 import useAgentList from '~/features/agent/composables/useAgentList';
@@ -45,24 +46,25 @@ const handleDeleteAgent = async (agentId: string) => {
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('agent.list.title')"
             :subtitle="t('agent.list.subtitle')"
           >
             <template #button>
-              <Button as-child leading-icon="hugeicons:plus-sign">
-                <NuxtLinkLocale to="/agent/create">
-                  {{ t('agent.list.newAgent') }}
-                </NuxtLinkLocale>
+              <Button
+                :as="NuxtLinkLocale"
+                to="/agent/create"
+                leading-icon="hugeicons:plus-sign"
+              >
+                {{ t('agent.list.newAgent') }}
               </Button>
             </template>
           </HeadingTitle>
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div class="px-5">
+      <div class="px-page pt-6">
         <ListErrorAlert
           v-if="error && !data"
           :title="t('agent.list.loadError.title')"
@@ -80,10 +82,12 @@ const handleDeleteAgent = async (agentId: string) => {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button as-child leading-icon="hugeicons:plus-sign">
-              <NuxtLinkLocale to="/agent/create">
-                {{ t('agent.list.newAgent') }}
-              </NuxtLinkLocale>
+            <Button
+              :as="NuxtLinkLocale"
+              to="/agent/create"
+              leading-icon="hugeicons:plus-sign"
+            >
+              {{ t('agent.list.newAgent') }}
             </Button>
           </EmptyContent>
         </Empty>

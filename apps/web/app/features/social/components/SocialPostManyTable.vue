@@ -82,10 +82,10 @@ const { formatDateTime } = useDateTimeFormat();
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent size="sm" align="end">
               <DropdownMenuItem as-child>
                 <NuxtLinkLocale :to="`/social/${post.id}`">
-                  <PencilIcon class="size-4 stroke-1.5" />
+                  <PencilIcon class="stroke-1.5" />
                   {{ t('common.edit') }}
                 </NuxtLinkLocale>
               </DropdownMenuItem>
@@ -94,7 +94,7 @@ const { formatDateTime } = useDateTimeFormat();
                 variant="destructive"
                 @click="() => emit('delete-post', post.id)"
               >
-                <Trash2Icon class="size-4 stroke-1.5" />
+                <Trash2Icon class="stroke-1.5" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
             </DropdownMenuContent>

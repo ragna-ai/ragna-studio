@@ -295,7 +295,11 @@ function handleDelete(document: AgentContextDocument) {
                     <Icon name="hugeicons:more-vertical" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" @close-auto-focus.prevent>
+                <DropdownMenuContent
+                  size="sm"
+                  align="end"
+                  @close-auto-focus.prevent
+                >
                   <DropdownMenuItem @select="startRename(document)">
                     {{ $t('agent.context.actions.rename') }}
                   </DropdownMenuItem>

@@ -20,19 +20,18 @@ const account = computed(() => data.value?.account ?? null);
 <template>
   <EmailPrivateWorkspaceGate>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="title"
             :subtitle="$t('email.settings.subtitle')"
           />
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div v-if="account" class="space-y-6 px-5 pb-10">
+      <div v-if="account" class="space-y-6 px-page pt-6 pb-10">
         <slot :account="account" />
       </div>
-      <p v-else class="px-5 text-sm text-muted-foreground">
+      <p v-else class="px-page text-sm text-muted-foreground">
         {{ $t('email.settings.notConnected') }}
       </p>
     </SectionWrapper>

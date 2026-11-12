@@ -8,6 +8,7 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
 
@@ -31,18 +32,20 @@ const { t } = useI18n();
 
 <template>
   <div class="flex items-center justify-end gap-1" @click.stop>
-    <Tooltip v-if="primaryAction">
-      <TooltipTrigger as-child>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          :leading-icon="primaryAction.icon"
-          :aria-label="primaryAction.label"
-          @click="emit('primary')"
-        />
-      </TooltipTrigger>
-      <TooltipContent>{{ primaryAction.label }}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip v-if="primaryAction">
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            :leading-icon="primaryAction.icon"
+            :aria-label="primaryAction.label"
+            @click="emit('primary')"
+          />
+        </TooltipTrigger>
+        <TooltipContent>{{ primaryAction.label }}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
         <Button
@@ -52,7 +55,7 @@ const { t } = useI18n();
           :aria-label="t('common.actions')"
         />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" size="sm">
         <slot />
       </DropdownMenuContent>
     </DropdownMenu>

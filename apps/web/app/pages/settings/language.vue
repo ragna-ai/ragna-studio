@@ -9,17 +9,16 @@ useHead({ title: t('settings.sections.language.title') });
 
 <template>
   <SectionWrapper>
-    <Heading bg-position="bottom">
+    <Heading>
       <template #top>
         <HeadingTitle
           :title="t('settings.sections.language.title')"
           :subtitle="t('settings.sections.language.subtitle')"
         />
       </template>
-      <template #bottom> </template>
     </Heading>
 
-    <div class="space-y-6 px-5 pb-10">
+    <div class="space-y-6 px-page pt-6 pb-10">
       <UserLanguageSettings />
     </div>
   </SectionWrapper>

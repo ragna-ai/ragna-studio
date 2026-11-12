@@ -61,16 +61,15 @@ const form = useForm({
 <template>
   <PagePanel :crumbs="crumbs">
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('dataset.create.title')"
             :subtitle="t('dataset.create.subtitle')"
           />
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div class="px-10">
+      <div class="px-page pt-6">
         <form
           class="max-w-lg space-y-6"
           @submit.prevent.stop="form.handleSubmit"

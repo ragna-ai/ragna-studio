@@ -39,14 +39,13 @@ onMounted(() => {
 <template>
   <PagePanel :crumbs="crumbs">
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('social.create.title')"
             :subtitle="t('social.create.subtitle')"
           />
         </template>
-        <template #bottom> </template>
       </Heading>
       <div class="flex justify-center py-12">
         <p v-if="isError" class="text-sm text-destructive">
