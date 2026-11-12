@@ -6,22 +6,22 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex w-full items-center justify-between">
-    <div class="">
+  <header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+    <div class="flex min-w-0 flex-col gap-1.5">
       <!-- Pages that show a breadcrumb trail (e.g. a detail page's parent
            list + its own name) pass #title to replace the plain <h1> with
            it, in place, so no extra bar/row is added. -->
       <slot name="title">
-        <h1 class="max-w-lg truncate text-xl font-bold">
+        <h1 class="text-title font-semibold">
           {{ title ?? '' }}
         </h1>
       </slot>
-      <p class="max-w-2xl truncate text-sm text-muted-foreground">
-        {{ subtitle ?? '' }}
+      <p v-if="subtitle" class="text-body text-muted-foreground">
+        {{ subtitle }}
       </p>
     </div>
-    <div>
+    <div class="flex gap-2">
       <slot name="button" />
     </div>
-  </div>
+  </header>
 </template>

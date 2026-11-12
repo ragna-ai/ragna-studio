@@ -1055,14 +1055,21 @@
       "subtitle": "Structured tables you and your agents can read and edit.",
       "newDataset": "New dataset",
       "empty": "No datasets yet.",
-      "loadError": "Failed to load datasets.",
+      "loadError": {
+        "title": "Couldn't load your datasets.",
+        "description": "Check your connection and try again."
+      },
       "loading": "Loading datasets...",
       "table": {
         "origin": "Origin",
         "rows": "Rows",
-        "workspace": "Workspace"
+        "workspace": "Workspace",
+        "columns": "Columns"
       },
-      "count": "No datasets | {count} dataset | {count} datasets"
+      "count": "No datasets | {count} dataset | {count} datasets",
+      "search": "Search datasets",
+      "rowSum": "{count} rows",
+      "emptyDescription": "Datasets are structured tables you and your agents can read and edit."
     },
     "origin": {
       "user": "User",
@@ -1161,7 +1168,8 @@
       "display": {
         "title": "Show columns"
       },
-      "resizeColumn": "Resize {column}"
+      "resizeColumn": "Resize {column}",
+      "search": "Search {count} rows"
     },
     "grid": {
       "selectPlaceholder": "Select...",

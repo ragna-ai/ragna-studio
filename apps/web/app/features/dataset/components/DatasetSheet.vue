@@ -203,7 +203,7 @@ function columnTypeIcon(column: SheetColumn) {
       class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white"
     >
       <div class="flex-none border-b border-stone-200">
-        <DatasetSheetToolbar :table="table" :title="dataset.name" />
+        <DatasetSheetToolbar :table="table" :row-count="totalRowCount" />
       </div>
 
       <div
@@ -399,24 +399,20 @@ function columnTypeIcon(column: SheetColumn) {
         </div>
 
         <div
-          class="flex h-10 flex-none items-center justify-between border-t border-stone-200 px-3 text-xs text-stone-500"
+          class="flex h-12 flex-none items-center justify-between border-t border-stone-200 px-3"
         >
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                :disabled="isAddingRow"
-                :aria-label="t('dataset.sheet.addRow')"
-                @click="addRowAndEdit()"
-              >
-                <Spinner v-if="isAddingRow" />
-                <PlusIcon v-else class="size-4 stroke-1.5 text-stone-500" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ t('dataset.sheet.addRow') }}</TooltipContent>
-          </Tooltip>
-          <span>
+          <Button
+            variant="ghost"
+            size="sm"
+            leading-icon="hugeicons:plus-sign"
+            :loading="isAddingRow"
+            @click="addRowAndEdit()"
+          >
+            {{ t('dataset.sheet.addRow') }}
+          </Button>
+          <span
+            class="font-mono text-label font-medium text-muted-foreground uppercase"
+          >
             {{
               isFiltered
                 ? t('dataset.sheet.count.filtered', {

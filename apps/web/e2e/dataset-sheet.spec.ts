@@ -267,7 +267,9 @@ test('US-2 moves between cells', async ({ page, request }) => {
 
   await cellAt(page, 0, 0).click();
   await expect(cellAt(page, 0, 0)).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('input, textarea')).toHaveCount(0);
+  await expect(page.getByRole('grid').locator('input, textarea')).toHaveCount(
+    0,
+  );
 
   await page.keyboard.press('ArrowDown');
   await expect(cellAt(page, 1, 0)).toHaveAttribute('aria-selected', 'true');

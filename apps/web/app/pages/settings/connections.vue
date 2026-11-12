@@ -120,17 +120,16 @@ async function handleTurnOff(
 
 <template>
   <SectionWrapper>
-    <Heading bg-position="bottom">
+    <Heading>
       <template #top>
         <HeadingTitle
           :title="t('integrations.page.title')"
           :subtitle="t('integrations.page.subtitle')"
         />
       </template>
-      <template #bottom> </template>
     </Heading>
 
-    <div class="mx-auto w-full max-w-2xl space-y-6 px-5 pb-10">
+    <div class="mx-auto w-full max-w-2xl space-y-6 px-page pt-6 pb-10">
       <div v-if="isLoadingConnections" class="space-y-3">
         <Skeleton class="h-20 w-full" />
         <Skeleton class="h-20 w-full" />

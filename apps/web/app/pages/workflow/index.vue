@@ -43,7 +43,7 @@ const handleDeleteWorkflow = async (workflowId: string) => {
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('workflow.list.title')"
@@ -58,9 +58,8 @@ const handleDeleteWorkflow = async (workflowId: string) => {
             </template>
           </HeadingTitle>
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div v-if="data?.workflows" class="px-5">
+      <div v-if="data?.workflows" class="px-page pt-6">
         <WorkflowManyTable
           :workflows="data.workflows"
           @delete-workflow="handleDeleteWorkflow"

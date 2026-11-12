@@ -34,16 +34,15 @@ const crumbs = computed<PageCrumb[]>(() => [
 <template>
   <PagePanel :crumbs="crumbs">
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('social.editor.title')"
             :subtitle="t('social.editor.subtitle')"
           />
         </template>
-        <template #bottom> </template>
       </Heading>
-      <div class="px-5 pb-10">
+      <div class="px-page pt-6 pb-10">
         <SocialPostUpsertForm v-if="post" :key="post.id" :post="post" />
         <p
           v-else-if="isError"

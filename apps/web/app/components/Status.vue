@@ -9,12 +9,20 @@ export type StatusTone =
   | 'pending'
   | 'agent';
 
+export type StatusSize = 'default' | 'sm';
+
 interface StatusProps {
   tone: StatusTone;
   label: string;
+  size?: StatusSize;
 }
 
-defineProps<StatusProps>();
+withDefaults(defineProps<StatusProps>(), { size: 'default' });
+
+const SIZE_CLASS: Record<StatusSize, string> = {
+  default: 'h-5 gap-1.5 text-body',
+  sm: 'h-4 gap-1 text-caption',
+};
 
 const DOT_CLASS: Record<Exclude<StatusTone, 'pending' | 'agent'>, string> = {
   ok: 'bg-status-ok',
@@ -35,8 +43,8 @@ const TEXT_CLASS: Record<StatusTone, string> = {
 
 <template>
   <span
-    class="inline-flex h-5 items-center gap-1.5 text-body"
-    :class="TEXT_CLASS[tone]"
+    class="inline-flex items-center"
+    :class="[SIZE_CLASS[size], TEXT_CLASS[tone]]"
   >
     <Spinner
       v-if="tone === 'pending'"

@@ -26,17 +26,16 @@ const isOwner = computed(() =>
 
 <template>
   <SectionWrapper>
-    <Heading bg-position="bottom">
+    <Heading>
       <template #top>
         <HeadingTitle
           :title="t('settings.sections.general.title')"
           :subtitle="t('settings.sections.general.subtitle')"
         />
       </template>
-      <template #bottom> </template>
     </Heading>
 
-    <div class="space-y-6 px-5 pb-10">
+    <div class="space-y-6 px-page pt-6 pb-10">
       <div v-if="isPending" class="space-y-4">
         <Skeleton class="h-24 w-full" />
         <Skeleton class="h-24 w-full" />

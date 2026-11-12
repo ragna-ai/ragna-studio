@@ -1058,14 +1058,21 @@
       "subtitle": "Strukturierte Tabellen, die du und deine Agenten lesen und bearbeiten können.",
       "newDataset": "Neuer Datensatz",
       "empty": "Noch keine Datensätze.",
-      "loadError": "Datensätze konnten nicht geladen werden.",
+      "loadError": {
+        "title": "Deine Datensätze konnten nicht geladen werden.",
+        "description": "Prüfe deine Verbindung und versuche es erneut."
+      },
       "loading": "Datensätze werden geladen...",
       "table": {
         "origin": "Herkunft",
         "rows": "Zeilen",
-        "workspace": "Arbeitsbereich"
+        "workspace": "Arbeitsbereich",
+        "columns": "Spalten"
       },
-      "count": "Keine Datensätze | {count} Datensatz | {count} Datensätze"
+      "count": "Keine Datensätze | {count} Datensatz | {count} Datensätze",
+      "search": "Datensätze durchsuchen",
+      "rowSum": "{count} Zeilen",
+      "emptyDescription": "Datensätze sind strukturierte Tabellen, die du und deine Agenten lesen und bearbeiten können."
     },
     "origin": {
       "user": "Nutzer",
@@ -1164,7 +1171,8 @@
       "display": {
         "title": "Spalten anzeigen"
       },
-      "resizeColumn": "{column} Größe ändern"
+      "resizeColumn": "{column} Größe ändern",
+      "search": "{count} Zeilen durchsuchen"
     },
     "grid": {
       "selectPlaceholder": "Auswählen...",

@@ -6,12 +6,16 @@ import Spinner from '~/components/ui/spinner/Spinner.vue';
 
 const props = defineProps<ToasterProps>();
 
+const { t } = useI18n();
+
 // `!` because vue-sonner's stylesheet sets padding, shadow and description colour with higher specificity
 const TOAST_OPTIONS: ToasterProps['toastOptions'] = {
   classes: {
     toast: 'gap-2 px-4! py-3! shadow-popover!',
     title: 'text-body font-medium text-foreground',
     description: 'text-small text-muted-foreground!',
+    closeButton:
+      'static! order-last ml-auto size-6! self-start rounded-sm! border-0! bg-transparent! text-icon! transform-none! hover:bg-surface-subtle!',
   },
 };
 </script>
@@ -28,6 +32,7 @@ const TOAST_OPTIONS: ToasterProps['toastOptions'] = {
       '--width': '22.5rem',
     }"
     :toast-options="TOAST_OPTIONS"
+    :close-button-aria-label="t('common.close')"
   >
     <template #success-icon>
       <Icon
@@ -51,7 +56,7 @@ const TOAST_OPTIONS: ToasterProps['toastOptions'] = {
       <Spinner />
     </template>
     <template #close-icon>
-      <Icon name="hugeicons:cancel-01" class="size-4" />
+      <Icon name="hugeicons:cancel-01" class="size-3.5" />
     </template>
   </Sonner>
 </template>

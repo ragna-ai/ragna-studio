@@ -44,7 +44,7 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
 <template>
   <PagePanel>
     <SectionWrapper>
-      <Heading bg-position="bottom">
+      <Heading>
         <template #top>
           <HeadingTitle
             :title="t('task.list.title')"
@@ -71,10 +71,9 @@ const labels = computed(() => labelsData.value?.taskLabels ?? []);
             </template>
           </HeadingTitle>
         </template>
-        <template #bottom> </template>
       </Heading>
 
-      <div class="space-y-4 px-5">
+      <div class="space-y-4 px-page pt-6">
         <div
           v-if="!activeWorkspaceId"
           class="rounded-lg border p-6 text-sm text-muted-foreground"

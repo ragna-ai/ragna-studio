@@ -9,17 +9,16 @@ useHead({ title: t('settings.sections.credits.title') });
 
 <template>
   <SectionWrapper>
-    <Heading bg-position="bottom">
+    <Heading>
       <template #top>
         <HeadingTitle
           :title="t('settings.sections.credits.title')"
           :subtitle="t('settings.sections.credits.subtitle')"
         />
       </template>
-      <template #bottom> </template>
     </Heading>
 
-    <div class="space-y-6 px-5 pb-10">
+    <div class="space-y-6 px-page pt-6 pb-10">
       <UserCreditSettings />
     </div>
   </SectionWrapper>
