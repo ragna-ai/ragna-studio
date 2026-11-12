@@ -64,11 +64,9 @@ async function signOut() {
     </DropdownMenuTrigger>
     <DropdownMenuContent side="top" align="start" :side-offset="6">
       <div class="flex h-13 items-center gap-2.5 px-2.5">
-        <span
-          class="flex size-8 shrink-0 items-center justify-center rounded-full bg-border-strong text-caption font-medium text-foreground"
-        >
-          {{ initials }}
-        </span>
+        <Avatar>
+          <AvatarFallback>{{ initials }}</AvatarFallback>
+        </Avatar>
         <span class="flex min-w-0 flex-col">
           <span class="truncate text-body font-medium">
             {{ session?.user?.name }}

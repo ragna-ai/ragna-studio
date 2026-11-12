@@ -38,7 +38,7 @@ const {
       </HomeOverviewCard>
 
       <HomeOverviewCard
-        icon="hugeicons:workflow-square-01"
+        icon="hugeicons:flow-connection"
         :title="t('home.dashboard.workflows.title')"
         :total="workflowsTotal"
         view-all-to="/workflow"
