@@ -9,7 +9,6 @@ import type { DatasetListItem } from '~/features/dataset/types';
 
 interface Props {
   datasets: DatasetListItem[];
-  meta?: { totalCount: number };
 }
 
 defineProps<Props>();
@@ -42,9 +41,9 @@ const columnCount = 6;
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="datasets.length === 0" :colspan="columnCount">
+      <ListEmptyRow v-if="datasets.length === 0" :colspan="columnCount">
         {{ t('dataset.list.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow
         v-for="dataset in datasets"
         :key="dataset.id"
@@ -103,6 +102,5 @@ const columnCount = 6;
         </TableCell>
       </TableRow>
     </TableBody>
-    <TableMetaCaption :itemsLength="datasets.length" :meta="meta" />
   </Table>
 </template>

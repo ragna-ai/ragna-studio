@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Page sizes offered by `PaginateControls`' `Select` (app/components/PaginateControls.vue) -
+/** Page sizes offered by `ListPagination`' `Select` -
  * a `limit` outside this list leaves the select bound to a value with no matching `SelectItem`,
  * which Radix/shadcn renders blank instead of falling back to the first option. */
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;

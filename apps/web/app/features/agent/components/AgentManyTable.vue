@@ -13,7 +13,6 @@ import { useCreateChat } from '~/features/chat/composables/useChatApi';
 interface Props {
   agents: Agent[];
   favorites?: any[];
-  meta?: any;
 }
 
 // Props
@@ -161,8 +160,6 @@ const handleDeleteFavorite = (agentId: string) => {
           </TableCell>
         </TableRow>
       </TableBody>
-      <!-- Meta Caption -->
-      <TableMetaCaption :itemsLength="agents.length" :meta="meta" />
     </Table>
   </div>
 </template>

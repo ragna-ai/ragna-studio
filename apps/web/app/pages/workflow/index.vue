@@ -63,15 +63,14 @@ const handleDeleteWorkflow = async (workflowId: string) => {
       <div v-if="data?.workflows" class="px-5">
         <WorkflowManyTable
           :workflows="data.workflows"
-          :meta="meta"
           @delete-workflow="handleDeleteWorkflow"
         />
         <div class="pb-10">
-          <PaginateControls
-            v-if="meta.totalCount > 10"
+          <ListPagination
             v-model:page="page"
             v-model:limit="limit"
-            :meta="meta"
+            :total-count="meta.totalCount"
+            noun="workflow.list.count"
           />
         </div>
       </div>

@@ -21,7 +21,7 @@ const query = ref(initialQuery.q);
 const page = ref(initialQuery.page);
 // 10, not the API's documented default of 20
 // - `limit` is always sent explicitly below, so that default only
-// matters when the param is omitted, and `PaginateControls`' page-size
+// matters when the param is omitted, and `ListPagination`' page-size
 // `Select` only offers 10/25/50/100. A value outside that list (e.g. 20)
 // leaves the select bound to a value with no matching `SelectItem`, which
 // Radix/shadcn renders blank instead of falling back to the first option.
@@ -160,15 +160,15 @@ watch([query, page, limit], ([q, p, l]) => {
         <template v-if="data && data.results.length > 0">
           <ChatSearchResultsTable
             :results="data.results"
-            :meta="meta"
             :query="query"
             :class="{ 'opacity-60': isFetching }"
           />
           <div class="pb-10">
-            <PaginateControls
+            <ListPagination
               v-model:page="page"
               v-model:limit="limit"
-              :meta="meta"
+              :total-count="meta.totalCount"
+              noun="chat.history.count"
             />
           </div>
         </template>

@@ -12,7 +12,6 @@ import type { SocialPost } from '~/features/social/composables/useSocialPostApi'
 
 interface Props {
   posts: SocialPost[];
-  meta?: { totalCount: number };
 }
 
 // Props
@@ -50,9 +49,9 @@ const { formatDateTime } = useDateTimeFormat();
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="posts.length === 0" :colspan="4">
+      <ListEmptyRow v-if="posts.length === 0" :colspan="4">
         {{ t('social.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow
         v-for="post in posts"
         :key="post.id"
@@ -103,6 +102,5 @@ const { formatDateTime } = useDateTimeFormat();
         </TableCell>
       </TableRow>
     </TableBody>
-    <TableMetaCaption :itemsLength="posts.length" :meta="meta" />
   </Table>
 </template>

@@ -95,4 +95,7 @@
   --text-mono--line-height: 1.25rem;
   --text-mono-sm: 0.75rem;
   --text-mono-sm--line-height: 1rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.04em;
 }

@@ -8,7 +8,6 @@ import { chatUrl } from '~/features/chat/lib/chat-navigation';
 interface Props {
   results: ChatSearchResult[];
   query: string;
-  meta?: { totalCount: number };
 }
 defineProps<Props>();
 
@@ -31,9 +30,9 @@ const { t } = useI18n();
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="results.length === 0" :colspan="5">
+      <ListEmptyRow v-if="results.length === 0" :colspan="5">
         {{ t('chat.search.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow
         v-for="result in results"
         :key="result.id"
@@ -73,6 +72,5 @@ const { t } = useI18n();
         </TableCell>
       </TableRow>
     </TableBody>
-    <TableMetaCaption :itemsLength="results.length" :meta="meta" />
   </Table>
 </template>

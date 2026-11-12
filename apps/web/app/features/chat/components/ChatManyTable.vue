@@ -5,7 +5,6 @@ import type { ChatHistoryItem } from '~/features/chat/composables/useChatApi';
 
 interface Props {
   chats: ChatHistoryItem[];
-  meta?: { totalCount: number };
 }
 
 // Props
@@ -44,9 +43,9 @@ const { t } = useI18n();
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="chats.length === 0" :colspan="6">
+      <ListEmptyRow v-if="chats.length === 0" :colspan="6">
         {{ $t('chat.history.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow
         v-for="chat in chats"
         :key="chat.id"
@@ -111,7 +110,5 @@ const { t } = useI18n();
         </TableCell>
       </TableRow>
     </TableBody>
-    <!-- Meta Caption -->
-    <TableMetaCaption :itemsLength="chats.length" :meta="meta" />
   </Table>
 </template>

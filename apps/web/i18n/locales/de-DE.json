@@ -34,7 +34,8 @@
     "publish": "Veröffentlichen",
     "saveRename": "Namen speichern",
     "cancelRename": "Umbenennen abbrechen",
-    "generating": "Wird generiert…"
+    "generating": "Wird generiert…",
+    "clear": "Leeren"
   },
   "nav": {
     "home": "Dashboard",
@@ -228,7 +229,8 @@
         "favorite": "Favorit",
         "avatar": "Avatar"
       },
-      "chat": "Chat"
+      "chat": "Chat",
+      "count": "Keine Agenten | {count} Agent | {count} Agenten"
     },
     "upsert": {
       "untitled": "Unbenannter Agent",
@@ -557,7 +559,8 @@
       "forkedFrom": "Abgezweigt von {title}",
       "table": {
         "agent": "Agent"
-      }
+      },
+      "count": "Keine Chats | {count} Chat | {count} Chats"
     },
     "search": {
       "title": "Chats durchsuchen",
@@ -618,7 +621,8 @@
       "deleteConfirm": {
         "title": "Workflow löschen",
         "message": "Möchtest du diesen Workflow wirklich löschen?"
-      }
+      },
+      "count": "Keine Workflows | {count} Workflow | {count} Workflows"
     },
     "create": {
       "title": "Workflow erstellen",
@@ -918,7 +922,8 @@
         "chat": "Chat",
         "workflow": "Workflow",
         "team": "Team"
-      }
+      },
+      "count": "Keine Einträge | {count} Eintrag | {count} Einträge"
     }
   },
   "user": {
@@ -960,7 +965,8 @@
       "loading": "Posts werden geladen...",
       "table": {
         "content": "Inhalt"
-      }
+      },
+      "count": "Keine Beiträge | {count} Beitrag | {count} Beiträge"
     },
     "create": {
       "title": "Neuer Post",
@@ -1042,7 +1048,8 @@
         "origin": "Herkunft",
         "rows": "Zeilen",
         "workspace": "Arbeitsbereich"
-      }
+      },
+      "count": "Keine Datensätze | {count} Datensatz | {count} Datensätze"
     },
     "origin": {
       "user": "Nutzer",
@@ -1951,8 +1958,8 @@
     "next": "Nächste Seite",
     "goToPage": "Gehe zu Seite {page}",
     "itemsPerPage": "Einträge pro Seite",
-    "perPage": "pro Seite",
-    "entries": "{count} von {total} Einträgen"
+    "perPage": "{count} pro Seite",
+    "range": "{from}–{to} von {total}"
   },
   "aimodel": {
     "selector": {
