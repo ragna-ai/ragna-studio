@@ -14,7 +14,7 @@ A framework for building ui, components and design systems. Components are added
 ## Current Project Context
 
 ```json
-!`npx shadcn-vue@latest info --json`
+!`npx shadcn-vue@latest info --json --cwd "$(git rev-parse --show-toplevel)/apps/web"`
 ```
 
 The JSON above has two keys: `project` (detected framework, Tailwind setup, package manager) and `config` (the resolved `components.json`). It does not list installed components — list the `config.resolvedPaths.ui` directory for that. Use `npx shadcn-vue@latest docs <component>` to get the documentation URL for any component.
@@ -172,7 +172,7 @@ npx shadcn-vue@latest docs button dialog select
 
 ## Workflow
 
-1. **Get project context** — already injected above. Run `npx shadcn-vue@latest info` again if you need to refresh.
+1. **Get project context** — already injected above. Run `npx shadcn-vue@latest info --cwd apps/web` from the repo root again if you need to refresh.
 2. **Check installed components first** — before running `add`, list the `config.resolvedPaths.ui` directory (each component is a folder, e.g. `button/`). Don't import components that haven't been added, and don't re-add ones already installed.
 3. **Find components** — `npx shadcn-vue@latest search`.
 4. **Get docs and examples** — run `npx shadcn-vue@latest docs <component>` to get the URL, then fetch it. Use `npx shadcn-vue@latest view` to browse registry items you haven't installed. To compare installed components with the registry, use `npx shadcn-vue@latest diff`.

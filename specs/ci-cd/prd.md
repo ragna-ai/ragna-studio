@@ -92,7 +92,7 @@ numbers are estimates; the first real CI runs replace them.
   6. `pnpm lint`, `pnpm check-types`, `pnpm build`, `pnpm format --check`
      (oxfmt; vendor skills and the generated `specs/INDEX.md` are excluded
      via `.prettierignore`, since `ignorePatterns` in `.oxfmtrc.json` misses
-     nested folders like `apps/web/.agents/`)
+     nested folders like `packages/mail/.agents/`)
 - **Job name:** `build-and-check` (renamed from `ci` on 2026-10-08, since it
   builds as well). The required check in the ruleset was renamed with it.
 - **Web type-check** runs again since 2026-10-08. It was excluded because

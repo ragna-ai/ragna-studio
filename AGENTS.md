@@ -152,9 +152,11 @@ variants or a new abstraction, load the system-design skill; for a vendor connec
 Before adding a dependency, load the dependency-choice skill. For PRDs, design
 docs and slices in `specs/`, load the spec-writing skill.
 
-Skills in an app or package folder (`apps/web/.claude/skills`, `packages/*/.claude/skills`) are directory-scoped:
-they only load after you open a file in that folder, so `Skill(<name>)` can report "Unknown skill" before that.
-Read them by path instead: `apps/web/.claude/skills/<name>/SKILL.md`.
+Skills live in the root `.agents/skills` (`.claude/skills` links to it), including the `apps/web` ones, so they
+load in every worktree. Skills in a package folder (`packages/*/.claude/skills`) are directory-scoped: they only load
+after you open a file in that folder. Read them by path instead: `packages/<pkg>/.claude/skills/<name>/SKILL.md`.
+Third-party skills are tracked in the root `skills-lock.json`. Our copy of shadcn-vue runs its CLI with
+`--cwd .../apps/web`: re-apply that after `npx skills update`.
 
 **Branches and worktrees**: start every task on a new branch from `origin/main`. If the checkout has uncommitted
 changes or another agent works in it, create a worktree instead: `wt switch --create <branch> --base origin/main`
