@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import { NuxtLinkLocale } from '#components';
 import PickerRow from '~/components/PickerRow.vue';
-import { Separator } from '~/components/ui/separator';
+import { Button } from '~/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 import { getAgentToolIcon } from '~/features/agent/lib/agent-tool-icons';
 
 interface ChatToolsPanelProps {
@@ -22,19 +29,37 @@ const tools = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col px-2.5 py-1.5">
-    <p class="truncate text-small font-medium">
-      {{
-        agentName
-          ? t('chat.tools.title', { agent: agentName })
-          : t('chat.tools.titleFallback')
-      }}
-    </p>
-    <p class="text-caption text-muted-foreground">
-      {{ t('chat.tools.count', { n: tools.length }, tools.length) }}
-    </p>
+  <div class="flex items-center gap-2 px-2.5 py-2.5">
+    <div class="flex min-w-0 flex-1 flex-col">
+      <p class="truncate text-small font-medium">
+        {{
+          agentName
+            ? t('chat.tools.title', { agent: agentName })
+            : t('chat.tools.titleFallback')
+        }}
+      </p>
+      <p class="text-caption text-muted-foreground">
+        {{ t('chat.tools.count', { n: tools.length }, tools.length) }}
+      </p>
+    </div>
+    <TooltipProvider>
+      <Tooltip v-if="agentId">
+        <TooltipTrigger as-child>
+          <Button
+            :as="NuxtLinkLocale"
+            :to="`/agent/${agentId}`"
+            variant="ghost"
+            size="icon-sm"
+            class="-mr-1.5"
+            leading-icon="hugeicons:settings-01"
+            :aria-label="t('chat.tools.edit')"
+          />
+        </TooltipTrigger>
+        <TooltipContent>{{ t('chat.tools.edit') }}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   </div>
-  <ul class="flex flex-col">
+  <ul class="flex flex-col pb-1.5">
     <li
       v-for="{ toolId, icon } in tools"
       :key="toolId"
@@ -50,14 +75,4 @@ const tools = computed(() =>
       </PickerRow>
     </li>
   </ul>
-  <template v-if="agentId">
-    <Separator class="my-1.5" />
-    <NuxtLinkLocale
-      :to="`/agent/${agentId}`"
-      class="flex min-h-9 items-center rounded-md px-2.5 text-body font-medium text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden focus-visible:ring-inset"
-    >
-      {{ t('chat.tools.edit') }}
-      <Icon name="hugeicons:arrow-right-01" class="ml-0.5 size-3.5" />
-    </NuxtLinkLocale>
-  </template>
 </template>

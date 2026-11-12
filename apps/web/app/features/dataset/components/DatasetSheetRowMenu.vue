@@ -68,9 +68,9 @@ const canShowMoveDown = computed(() => props.hasActiveView || !props.isLast);
             <EllipsisIcon class="size-4 stroke-1.5 text-stone-500" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" @close-auto-focus.prevent>
+        <DropdownMenuContent size="sm" align="start" @close-auto-focus.prevent>
           <DropdownMenuItem @select="emit('expand')">
-            <Maximize2Icon class="size-4 stroke-1.5" />
+            <Maximize2Icon class="stroke-1.5" />
             {{ t('dataset.sheet.rowMenu.expand') }}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -78,7 +78,7 @@ const canShowMoveDown = computed(() => props.hasActiveView || !props.isLast);
             :disabled="isMoveDisabled"
             @select="emit('move-up')"
           >
-            <ArrowUpIcon class="size-4 stroke-1.5" />
+            <ArrowUpIcon class="stroke-1.5" />
             {{ t('dataset.sheet.rowMenu.moveUp') }}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -86,7 +86,7 @@ const canShowMoveDown = computed(() => props.hasActiveView || !props.isLast);
             :disabled="isMoveDisabled"
             @select="emit('move-down')"
           >
-            <ArrowDownIcon class="size-4 stroke-1.5" />
+            <ArrowDownIcon class="stroke-1.5" />
             {{ t('dataset.sheet.rowMenu.moveDown') }}
           </DropdownMenuItem>
           <DropdownMenuLabel
@@ -97,7 +97,7 @@ const canShowMoveDown = computed(() => props.hasActiveView || !props.isLast);
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" @select="emit('delete')">
-            <Trash2Icon class="size-4 stroke-1.5" />
+            <Trash2Icon class="stroke-1.5" />
             {{ t('dataset.sheet.rowMenu.delete') }}
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -77,7 +77,7 @@ function agentPath(agent: Agent): string {
             <ListRowActions>
               <DropdownMenuItem as-child>
                 <NuxtLinkLocale :to="agentPath(agent)">
-                  <Icon name="hugeicons:pencil-edit-02" class="size-4" />
+                  <Icon name="hugeicons:pencil-edit-02" />
                   {{ t('common.edit') }}
                 </NuxtLinkLocale>
               </DropdownMenuItem>
@@ -86,7 +86,7 @@ function agentPath(agent: Agent): string {
                 variant="destructive"
                 @click="emit('delete-agent', agent.id)"
               >
-                <Icon name="hugeicons:delete-02" class="size-4" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
             </ListRowActions>

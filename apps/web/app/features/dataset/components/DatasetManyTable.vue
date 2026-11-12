@@ -88,7 +88,7 @@ function datasetPath(dataset: DatasetListItem): string {
             <ListRowActions>
               <DropdownMenuItem as-child>
                 <NuxtLinkLocale :to="datasetPath(dataset)">
-                  <Icon name="hugeicons:pencil-edit-02" class="size-4" />
+                  <Icon name="hugeicons:pencil-edit-02" />
                   {{ t('common.edit') }}
                 </NuxtLinkLocale>
               </DropdownMenuItem>
@@ -97,7 +97,7 @@ function datasetPath(dataset: DatasetListItem): string {
                 variant="destructive"
                 @click="emit('delete-dataset', dataset.id)"
               >
-                <Icon name="hugeicons:delete-02" class="size-4" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
             </ListRowActions>

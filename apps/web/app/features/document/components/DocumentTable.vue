@@ -90,9 +90,9 @@ function authorName(document: Document): string {
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent size="sm" align="end">
               <DropdownMenuItem @click="emit('rename-folder', folder)">
-                <PencilIcon class="size-4 stroke-1.5" />
+                <PencilIcon class="stroke-1.5" />
                 {{ t('folder.rename') }}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -100,7 +100,7 @@ function authorName(document: Document): string {
                 variant="destructive"
                 @click="emit('delete-folder', folder)"
               >
-                <Trash2Icon class="size-4 stroke-1.5" />
+                <Trash2Icon class="stroke-1.5" />
                 {{ t('folder.delete') }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -139,10 +139,10 @@ function authorName(document: Document): string {
                 <MoreVerticalIcon class="size-4 stroke-1.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent size="sm" align="end">
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <FolderInputIcon class="size-4 stroke-1.5" />
+                  <FolderInputIcon class="stroke-1.5" />
                   {{ t('document.list.item.moveToFolder') }}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -177,7 +177,7 @@ function authorName(document: Document): string {
                 variant="destructive"
                 @click="emit('delete-document', document.id)"
               >
-                <Trash2Icon class="size-4 stroke-1.5" />
+                <Trash2Icon class="stroke-1.5" />
                 {{ t('document.list.item.delete') }}
               </DropdownMenuItem>
             </DropdownMenuContent>

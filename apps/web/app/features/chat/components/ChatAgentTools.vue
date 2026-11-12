@@ -43,7 +43,13 @@ const hasVisibleTools = computed(() =>
           />
         </div>
       </PopoverAnchor>
-      <PopoverContent side="top" align="start" padding="list" class="w-90">
+      <PopoverContent
+        side="top"
+        align="start"
+        padding="list"
+        class="w-90"
+        @open-auto-focus.prevent
+      >
         <ChatToolsPanel
           :tool-ids="toolIds"
           :agent-id="agentId"
