@@ -305,20 +305,22 @@ watch(hasAdvancedError, (hasError) => {
               <Label class="text-sm font-medium" :for="field.name">
                 {{ t('common.name') }}
               </Label>
-              <Input
-                :id="field.name"
-                :aria-invalid="
-                  isFieldErrorVisible(field, submissionAttempts) || undefined
-                "
-                :aria-describedby="fieldMessageId(field)"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :field="field" class="-mt-2" />
+              <div>
+                <Input
+                  :id="field.name"
+                  :aria-invalid="
+                    isFieldErrorVisible(field, submissionAttempts) || undefined
+                  "
+                  :aria-describedby="fieldMessageId(field)"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="
+                    (v: string | number) => field.handleChange(String(v))
+                  "
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo :field="field" />
+              </div>
             </div>
           </template>
         </form.Field>
@@ -328,25 +330,26 @@ watch(hasAdvancedError, (hasError) => {
               <Label class="text-sm font-medium" :for="field.name">
                 {{ t('common.description') }}
               </Label>
-              <Textarea
-                :id="field.name"
-                :aria-invalid="
-                  isFieldErrorVisible(field, submissionAttempts) || undefined
-                "
-                :aria-describedby="fieldMessageId(field)"
-                rows="3"
-                :model-value="state.value"
-                autocomplete="off"
-                @update:model-value="
-                  (v: string | number) => field.handleChange(String(v))
-                "
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo
-                :field="field"
-                :hint="t('agent.upsert.descriptionHint')"
-                class="-mt-2"
-              />
+              <div>
+                <Textarea
+                  :id="field.name"
+                  :aria-invalid="
+                    isFieldErrorVisible(field, submissionAttempts) || undefined
+                  "
+                  :aria-describedby="fieldMessageId(field)"
+                  rows="3"
+                  :model-value="state.value"
+                  autocomplete="off"
+                  @update:model-value="
+                    (v: string | number) => field.handleChange(String(v))
+                  "
+                  @blur="field.handleBlur"
+                />
+                <FormFieldInfo
+                  :field="field"
+                  :hint="t('agent.upsert.descriptionHint')"
+                />
+              </div>
             </div>
           </template>
         </form.Field>
@@ -373,7 +376,7 @@ watch(hasAdvancedError, (hasError) => {
                   </Label>
                 </template>
               </MarkdownEditorField>
-              <FormFieldInfo :field="field" class="-mt-2" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>
@@ -390,148 +393,159 @@ watch(hasAdvancedError, (hasError) => {
               <Label class="text-sm font-medium">
                 {{ t('agent.upsert.modelLabel') }}
               </Label>
-              <AiModelSelector
-                :model-value="state.value"
-                modality="text"
-                :invalid="isFieldErrorVisible(field, submissionAttempts)"
-                @update:model-value="(value) => field.handleChange(value ?? '')"
-              />
-              <FormFieldInfo :field="field" class="-mt-2" />
+              <div>
+                <AiModelSelector
+                  :model-value="state.value"
+                  modality="text"
+                  :invalid="isFieldErrorVisible(field, submissionAttempts)"
+                  @update:model-value="
+                    (value) => field.handleChange(value ?? '')
+                  "
+                />
+                <FormFieldInfo :field="field" />
+              </div>
             </div>
           </template>
         </form.Field>
-        <Collapsible v-model:open="advancedOpen" class="border-t pt-6">
-          <CollapsibleRow
-            :label="t('agent.upsert.advancedLabel')"
-            :hint="t('agent.upsert.advancedHint')"
-          />
-          <CollapsibleContent>
-            <div class="flex flex-col gap-8 pt-2 pl-6">
-              <form.Field name="settings.reasoning">
-                <template v-slot="{ field, state }">
-                  <div class="flex flex-col gap-2">
-                    <Label class="text-sm font-medium" :for="field.name">
-                      {{ t('agent.upsert.reasoningLabel') }}
-                    </Label>
-                    <Select
-                      :model-value="state.value ?? REASONING_DEFAULT"
-                      @update:model-value="
-                        (v) =>
-                          field.handleChange(
-                            v === REASONING_DEFAULT
-                              ? null
-                              : (v as 'none' | 'low' | 'medium' | 'high'),
-                          )
-                      "
-                    >
-                      <SelectTrigger
-                        :id="field.name"
-                        :aria-invalid="
-                          isFieldErrorVisible(field, submissionAttempts) ||
-                          undefined
-                        "
-                        :aria-describedby="fieldMessageId(field)"
-                        class="w-full"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem :value="REASONING_DEFAULT">
-                          {{ t('agent.upsert.reasoningDefault') }}
-                        </SelectItem>
-                        <SelectItem value="none">
-                          {{ t('agent.upsert.reasoningOff') }}
-                        </SelectItem>
-                        <SelectItem value="low">
-                          {{ t('agent.upsert.reasoningLow') }}
-                        </SelectItem>
-                        <SelectItem value="medium">
-                          {{ t('agent.upsert.reasoningMedium') }}
-                        </SelectItem>
-                        <SelectItem value="high">
-                          {{ t('agent.upsert.reasoningHigh') }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormFieldInfo
-                      :field="field"
-                      :hint="t('agent.upsert.reasoningHint')"
-                      class="-mt-2"
-                    />
-                  </div>
-                </template>
-              </form.Field>
-              <form.Field name="settings.temperature">
-                <template v-slot="{ field, state }">
-                  <div class="flex flex-col gap-2">
-                    <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-4">
+          <Separator />
+          <Collapsible v-model:open="advancedOpen">
+            <CollapsibleRow
+              :label="t('agent.upsert.advancedLabel')"
+              :hint="t('agent.upsert.advancedHint')"
+            />
+            <CollapsibleContent>
+              <div class="flex flex-col gap-8 pt-2 pl-6">
+                <form.Field name="settings.reasoning">
+                  <template v-slot="{ field, state }">
+                    <div class="flex flex-col gap-2">
+                      <Label class="text-sm font-medium" :for="field.name">
+                        {{ t('agent.upsert.reasoningLabel') }}
+                      </Label>
+                      <div>
+                        <Select
+                          :model-value="state.value ?? REASONING_DEFAULT"
+                          @update:model-value="
+                            (v) =>
+                              field.handleChange(
+                                v === REASONING_DEFAULT
+                                  ? null
+                                  : (v as 'none' | 'low' | 'medium' | 'high'),
+                              )
+                          "
+                        >
+                          <SelectTrigger
+                            :id="field.name"
+                            :aria-invalid="
+                              isFieldErrorVisible(field, submissionAttempts) ||
+                              undefined
+                            "
+                            :aria-describedby="fieldMessageId(field)"
+                            class="w-full"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem :value="REASONING_DEFAULT">
+                              {{ t('agent.upsert.reasoningDefault') }}
+                            </SelectItem>
+                            <SelectItem value="none">
+                              {{ t('agent.upsert.reasoningOff') }}
+                            </SelectItem>
+                            <SelectItem value="low">
+                              {{ t('agent.upsert.reasoningLow') }}
+                            </SelectItem>
+                            <SelectItem value="medium">
+                              {{ t('agent.upsert.reasoningMedium') }}
+                            </SelectItem>
+                            <SelectItem value="high">
+                              {{ t('agent.upsert.reasoningHigh') }}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormFieldInfo
+                          :field="field"
+                          :hint="t('agent.upsert.reasoningHint')"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                </form.Field>
+                <form.Field name="settings.temperature">
+                  <template v-slot="{ field, state }">
+                    <div class="flex flex-col gap-2">
                       <Label
                         :id="`${field.name}-label`"
                         class="text-sm font-medium"
                       >
                         {{ t('agent.upsert.temperatureLabel') }}
                       </Label>
-                      <span class="font-mono text-sm text-muted-foreground">
-                        {{ temperatureText(state.value) }}
-                      </span>
+                      <div>
+                        <div class="flex items-center gap-3">
+                          <Slider
+                            class="w-60"
+                            :aria-labelledby="`${field.name}-label`"
+                            :model-value="[state.value ?? DISABLED_TEMPERATURE]"
+                            :min="0"
+                            :max="1"
+                            :step="0.05"
+                            @update:model-value="
+                              (v) => field.handleChange(v?.[0] ? v[0] : null)
+                            "
+                          />
+                          <span class="text-mono text-foreground">
+                            {{ temperatureText(state.value) }}
+                          </span>
+                        </div>
+                        <FormFieldInfo
+                          :field="field"
+                          :hint="t('agent.upsert.temperatureHint')"
+                        />
+                      </div>
                     </div>
-                    <Slider
-                      :aria-labelledby="`${field.name}-label`"
-                      :model-value="[state.value ?? DISABLED_TEMPERATURE]"
-                      :min="0"
-                      :max="1"
-                      :step="0.05"
-                      @update:model-value="
-                        (v) => field.handleChange(v?.[0] ? v[0] : null)
-                      "
-                    />
-                    <FormFieldInfo
-                      :field="field"
-                      :hint="t('agent.upsert.temperatureHint')"
-                      class="-mt-2"
-                    />
-                  </div>
-                </template>
-              </form.Field>
-              <form.Field name="settings.maxOutputTokens">
-                <template v-slot="{ field, state }">
-                  <div class="flex flex-col gap-2">
-                    <Label class="text-sm font-medium" :for="field.name">
-                      {{ t('agent.upsert.maxOutputTokensLabel') }}
-                    </Label>
-                    <Input
-                      :id="field.name"
-                      :aria-invalid="
-                        isFieldErrorVisible(field, submissionAttempts) ||
-                        undefined
-                      "
-                      :aria-describedby="fieldMessageId(field)"
-                      type="number"
-                      min="1"
-                      max="64000"
-                      class="w-60"
-                      :placeholder="
-                        t('agent.upsert.maxOutputTokensPlaceholder')
-                      "
-                      :model-value="state.value ?? ''"
-                      autocomplete="off"
-                      @update:model-value="
-                        (v: string | number) =>
-                          field.handleChange(v === '' ? null : Number(v))
-                      "
-                      @blur="field.handleBlur"
-                    />
-                    <FormFieldInfo
-                      :field="field"
-                      :hint="t('agent.upsert.maxOutputTokensHint')"
-                      class="-mt-2"
-                    />
-                  </div>
-                </template>
-              </form.Field>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+                  </template>
+                </form.Field>
+                <form.Field name="settings.maxOutputTokens">
+                  <template v-slot="{ field, state }">
+                    <div class="flex flex-col gap-2">
+                      <Label class="text-sm font-medium" :for="field.name">
+                        {{ t('agent.upsert.maxOutputTokensLabel') }}
+                      </Label>
+                      <div>
+                        <Input
+                          :id="field.name"
+                          :aria-invalid="
+                            isFieldErrorVisible(field, submissionAttempts) ||
+                            undefined
+                          "
+                          :aria-describedby="fieldMessageId(field)"
+                          type="number"
+                          min="1"
+                          max="64000"
+                          class="w-60"
+                          :placeholder="
+                            t('agent.upsert.maxOutputTokensPlaceholder')
+                          "
+                          :model-value="state.value ?? ''"
+                          autocomplete="off"
+                          @update:model-value="
+                            (v: string | number) =>
+                              field.handleChange(v === '' ? null : Number(v))
+                          "
+                          @blur="field.handleBlur"
+                        />
+                        <FormFieldInfo
+                          :field="field"
+                          :hint="t('agent.upsert.maxOutputTokensHint')"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                </form.Field>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </template>
       <!-- Tools -->
       <template #tools>
@@ -541,7 +555,7 @@ watch(hasAdvancedError, (hasError) => {
         />
         <form.Field name="toolGrants">
           <template v-slot="{ field, state }">
-            <div class="space-y-6">
+            <div>
               <form.Field name="defaultDatasetId">
                 <template v-slot="{ field: datasetField, state: datasetState }">
                   <AgentToolList
@@ -553,7 +567,7 @@ watch(hasAdvancedError, (hasError) => {
                   />
                 </template>
               </form.Field>
-              <FormFieldInfo :field="field" class="-mt-2" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>
@@ -599,7 +613,7 @@ watch(hasAdvancedError, (hasError) => {
                   </Label>
                 </template>
               </MarkdownEditorField>
-              <FormFieldInfo :field="field" class="-mt-2" />
+              <FormFieldInfo :field="field" />
             </div>
           </template>
         </form.Field>
