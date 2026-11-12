@@ -59,8 +59,8 @@ approval to build.
 - Split into slices that touch separate files. Parallel only when slices are independent.
 - **De-risk before dispatching.** Read the key files of each slice yourself. Put landmines you found into the
   brief as "already verified, don't rediscover".
-- **Every brief contains:** goal and the PRD section, files to touch, the skills to load (app or package skills
-  by file path, e.g. `apps/web/.claude/skills/tailwind-v4/SKILL.md`: they are directory-scoped), one or two existing
+- **Every brief contains:** goal and the PRD section, files to touch, the skills to load (package skills by file
+  path, e.g. `packages/mail/.claude/skills/maizzle/SKILL.md`: they are directory-scoped), one or two existing
   files as house style, the tests to write and run, `pnpm check-types` before reporting done, and "don't
   commit".
 - Reuse an idle worker for follow-ups in its area. If the design shifts mid-flight, tell the worker which
