@@ -17,7 +17,7 @@ test('creates an agent and chats with it', async ({ page }) => {
     page.getByRole('combobox').filter({ hasText: AGENT_NAME }),
   ).toBeVisible();
   await page.getByPlaceholder('Ask E2E Assistant').fill('Hello');
-  await page.getByRole('button', { name: 'Submit' }).click();
+  await page.getByRole('button', { name: 'Send' }).click();
 
   await expect(page.getByText(SCRIPTED_REPLY, { exact: true })).toBeVisible();
 });
