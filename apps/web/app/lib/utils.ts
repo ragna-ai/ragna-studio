@@ -19,6 +19,7 @@ const twMerge = extendTailwindMerge({
         'caption',
         'mono',
         'mono-sm',
+        'label',
       ],
       spacing: [
         'shell',

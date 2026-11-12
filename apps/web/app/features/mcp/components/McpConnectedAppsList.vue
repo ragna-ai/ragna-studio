@@ -44,9 +44,9 @@ function displayName(connection: McpConnection): string {
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="connections.length === 0" :colspan="5">
+      <ListEmptyRow v-if="connections.length === 0" :colspan="5">
         {{ t('mcp.settings.connections.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow v-for="connection in connections" :key="connection.id">
         <TableCell class="text-sm font-medium">
           {{ displayName(connection) }}

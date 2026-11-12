@@ -1,3 +1,4 @@
+import { DEFAULT_LIST_PAGE_SIZE } from '~/lib/pagination-pages';
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import {
   socialPostKeys,
@@ -13,7 +14,10 @@ export default function useSocialPostList() {
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
   const page = useState('social-post-list:page', () => 1);
-  const limit = useState('social-post-list:limit', () => 10);
+  const limit = useState(
+    'social-post-list:limit',
+    () => DEFAULT_LIST_PAGE_SIZE,
+  );
 
   function setPage(newPage: number) {
     page.value = newPage;

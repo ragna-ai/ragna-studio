@@ -63,15 +63,14 @@ async function handleDeletePost(postId: string) {
       <div v-if="data?.posts" class="px-5">
         <SocialPostManyTable
           :posts="data.posts"
-          :meta="meta"
           @delete-post="handleDeletePost"
         />
         <div class="pb-10">
-          <PaginateControls
-            v-if="meta.totalCount > 10"
+          <ListPagination
             v-model:page="page"
             v-model:limit="limit"
-            :meta="meta"
+            :total-count="meta.totalCount"
+            noun="social.list.count"
           />
         </div>
       </div>

@@ -34,7 +34,8 @@
     "publish": "Publish",
     "saveRename": "Save name",
     "cancelRename": "Cancel rename",
-    "generating": "Generating…"
+    "generating": "Generating…",
+    "clear": "Clear"
   },
   "nav": {
     "home": "Dashboard",
@@ -228,7 +229,8 @@
         "favorite": "Favorite",
         "avatar": "Avatar"
       },
-      "chat": "Chat"
+      "chat": "Chat",
+      "count": "No agents | {count} agent | {count} agents"
     },
     "upsert": {
       "untitled": "Untitled agent",
@@ -554,7 +556,8 @@
       "forkedFrom": "Forked from {title}",
       "table": {
         "agent": "Agent"
-      }
+      },
+      "count": "No chats | {count} chat | {count} chats"
     },
     "search": {
       "title": "Search chats",
@@ -615,7 +618,8 @@
       "deleteConfirm": {
         "title": "Delete workflow",
         "message": "Are you sure you want to delete this workflow?"
-      }
+      },
+      "count": "No workflows | {count} workflow | {count} workflows"
     },
     "create": {
       "title": "Create workflow",
@@ -915,7 +919,8 @@
         "chat": "Chat",
         "workflow": "Workflow",
         "team": "Team"
-      }
+      },
+      "count": "No entries | {count} entry | {count} entries"
     }
   },
   "user": {
@@ -957,7 +962,8 @@
       "loading": "Loading posts...",
       "table": {
         "content": "Content"
-      }
+      },
+      "count": "No posts | {count} post | {count} posts"
     },
     "create": {
       "title": "New post",
@@ -1039,7 +1045,8 @@
         "origin": "Origin",
         "rows": "Rows",
         "workspace": "Workspace"
-      }
+      },
+      "count": "No datasets | {count} dataset | {count} datasets"
     },
     "origin": {
       "user": "User",
@@ -1948,8 +1955,8 @@
     "next": "Next page",
     "goToPage": "Go to page {page}",
     "itemsPerPage": "Items per page",
-    "perPage": "per page",
-    "entries": "{count} of {total} entries"
+    "perPage": "{count} per page",
+    "range": "{from}–{to} of {total}"
   },
   "aimodel": {
     "selector": {

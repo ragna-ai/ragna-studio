@@ -69,11 +69,11 @@ const handleDeleteAgent = async (agentId: string) => {
         />
         <div class="pb-10">
           <!-- Pagination Controls -->
-          <PaginateControls
-            v-if="meta.totalCount > 10"
+          <ListPagination
             v-model:page="page"
             v-model:limit="limit"
-            :meta="meta"
+            :total-count="meta.totalCount"
+            noun="agent.list.count"
           />
         </div>
       </div>

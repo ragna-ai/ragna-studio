@@ -44,9 +44,9 @@ function rowClass(task: TaskWithBoardInfo): Record<string, boolean> {
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="tasks.length === 0" :colspan="6">
+      <ListEmptyRow v-if="tasks.length === 0" :colspan="6">
         {{ t('task.list.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <template v-for="group in groups" :key="group.value">
         <TableRow class="hover:bg-transparent">
           <TableCell

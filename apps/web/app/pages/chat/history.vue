@@ -53,17 +53,14 @@ const handleDeleteChat = async (chatId: string) => {
         <template #bottom> </template>
       </Heading>
       <div v-if="data?.chats" class="px-5">
-        <ChatManyTable
-          :chats="data.chats"
-          :meta="meta"
-          @delete-chat="handleDeleteChat"
-        />
+        <ChatManyTable :chats="data.chats" @delete-chat="handleDeleteChat" />
         <div class="pb-10">
           <!-- Pagination Controls -->
-          <PaginateControls
+          <ListPagination
             v-model:page="page"
             v-model:limit="limit"
-            :meta="meta"
+            :total-count="meta.totalCount"
+            noun="chat.history.count"
           />
         </div>
       </div>

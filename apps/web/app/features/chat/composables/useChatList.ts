@@ -1,3 +1,4 @@
+import { DEFAULT_LIST_PAGE_SIZE } from '~/lib/pagination-pages';
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
 import {
@@ -15,7 +16,7 @@ export default function useChatList() {
   // owned once instead of per-caller (the old clustered composable gave each
   // caller its own independent state).
   const page = useState('chat-list:page', () => 1);
-  const limit = useState('chat-list:limit', () => 10);
+  const limit = useState('chat-list:limit', () => DEFAULT_LIST_PAGE_SIZE);
   const searchQuery = useState('chat-list:search', () => '');
 
   const setSearchQuery = useDebounceFn((newSearchQuery: string) => {

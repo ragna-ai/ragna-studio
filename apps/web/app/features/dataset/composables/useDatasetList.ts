@@ -1,3 +1,4 @@
+import { DEFAULT_LIST_PAGE_SIZE } from '~/lib/pagination-pages';
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
 import { datasetKeys } from '~/features/dataset/composables/useDatasetApi';
 import type { DatasetManyResponse } from '~/features/dataset/types';
@@ -11,7 +12,7 @@ export default function useDatasetList() {
   // useState -> single shared instance keyed by name, so pagination is owned
   // once instead of per-caller.
   const page = useState('dataset-list:page', () => 1);
-  const limit = useState('dataset-list:limit', () => 10);
+  const limit = useState('dataset-list:limit', () => DEFAULT_LIST_PAGE_SIZE);
 
   function setPage(newPage: number) {
     page.value = newPage;

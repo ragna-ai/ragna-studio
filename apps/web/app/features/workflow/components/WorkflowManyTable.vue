@@ -13,7 +13,6 @@ import type { Workflow } from '~/features/workflow/types';
 
 interface Props {
   workflows: Workflow[];
-  meta?: { totalCount: number };
 }
 
 // Props
@@ -49,9 +48,9 @@ const { formatDateTime } = useDateTimeFormat();
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="workflows.length === 0" :colspan="5">
+      <ListEmptyRow v-if="workflows.length === 0" :colspan="5">
         {{ t('workflow.list.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow
         v-for="workflow in workflows"
         :key="workflow.id"
@@ -141,6 +140,5 @@ const { formatDateTime } = useDateTimeFormat();
         </TableCell>
       </TableRow>
     </TableBody>
-    <TableMetaCaption :itemsLength="workflows.length" :meta="meta" />
   </Table>
 </template>

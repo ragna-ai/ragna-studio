@@ -56,15 +56,14 @@ const handleDeleteDataset = async (datasetId: string) => {
       <div v-if="data?.datasets" class="px-5">
         <DatasetManyTable
           :datasets="data.datasets"
-          :meta="meta"
           @delete-dataset="handleDeleteDataset"
         />
         <div class="pb-10">
-          <PaginateControls
-            v-if="meta.totalCount > 10"
+          <ListPagination
             v-model:page="page"
             v-model:limit="limit"
-            :meta="meta"
+            :total-count="meta.totalCount"
+            noun="dataset.list.count"
           />
         </div>
       </div>

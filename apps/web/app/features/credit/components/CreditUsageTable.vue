@@ -5,7 +5,6 @@ import type { CreditUsage } from '~/features/credit/types';
 
 interface Props {
   usages: CreditUsage[];
-  meta?: { totalCount: number };
 }
 
 // Props
@@ -49,9 +48,9 @@ function featureLabel(feature: CreditUsage['feature']): string {
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableEmpty v-if="usages.length === 0" :colspan="7">
+      <ListEmptyRow v-if="usages.length === 0" :colspan="7">
         {{ t('credit.usage.empty') }}
-      </TableEmpty>
+      </ListEmptyRow>
       <TableRow v-for="usage in usages" :key="usage.id">
         <TableCell class="font-medium">{{ usage.modelDisplayName }}</TableCell>
         <TableCell class="whitespace-nowrap">
@@ -74,7 +73,5 @@ function featureLabel(feature: CreditUsage['feature']): string {
         </TableCell>
       </TableRow>
     </TableBody>
-    <!-- Meta Caption -->
-    <TableMetaCaption :itemsLength="usages.length" :meta="meta" />
   </Table>
 </template>
