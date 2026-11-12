@@ -25,7 +25,7 @@ const { t } = useI18n();
         :aria-label="t('chat.input.menu')"
         class="text-icon"
       >
-        <Icon name="hugeicons:plus-sign" class="size-4" />
+        <Icon name="hugeicons:plus-sign" />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent side="top" align="start" :side-offset="8" class="w-90">

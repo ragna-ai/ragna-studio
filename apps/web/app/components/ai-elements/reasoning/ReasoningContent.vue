@@ -33,10 +33,10 @@ const md = computed(() => (slotContent.value ?? props.content ?? '') as string);
   <CollapsibleContent
     :class="
       cn(
-        'mt-4 text-sm',
+        'mt-1.5 ml-2 border-l pl-3.25 text-small text-muted-foreground',
         'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
-        'text-muted-foreground data-[state=open]:slide-in-from-top-2',
-        'outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
+        'data-[state=open]:slide-in-from-top-2',
+        'outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in',
         props.class,
       )
     "

@@ -484,6 +484,9 @@
       "attachHint": "PDF, Bilder, Office-Dokumente",
       "askAgent": "{agent} fragen",
       "replyToAgent": "Antwort an {agent}",
+      "chooseAgent": "Wähle einen Agenten, um zu starten",
+      "send": "Senden",
+      "stop": "Stoppen",
       "errors": {
         "unsupportedType": "„{name}“ ist kein unterstützter Dateityp.",
         "tooLarge": "„{name}“ ist größer als 10 MB."
@@ -521,6 +524,11 @@
       "copied": "In die Zwischenablage kopiert",
       "toolGroup": {
         "summary": "Werkzeuge verwendet | {count} Werkzeug verwendet | {count} Werkzeuge verwendet"
+      },
+      "reasoning": {
+        "thinking": "Denkt nach …",
+        "thoughtFor": "{n} s nachgedacht",
+        "thought": "Kurz nachgedacht"
       }
     },
     "recent": {

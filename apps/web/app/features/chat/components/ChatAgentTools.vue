@@ -5,6 +5,7 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from '~/components/ui/popover';
+import { Separator } from '~/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
@@ -44,11 +45,14 @@ const hiddenCount = computed(
 
 <template>
   <template v-if="visibleTools.length > 0">
-    <span class="mr-1 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+    <Separator
+      orientation="vertical"
+      class="mr-2 ml-1 data-[orientation=vertical]:h-4"
+    />
     <Popover v-model:open="isOpen">
       <TooltipProvider :delay-duration="300">
         <PopoverAnchor as-child>
-          <div class="flex h-8 items-center pr-1.5 pl-1">
+          <div class="flex h-8 items-center pr-1.5">
             <Tooltip v-for="{ toolId, icon } in shownTools" :key="toolId">
               <TooltipTrigger as-child>
                 <Button
@@ -60,7 +64,7 @@ const hiddenCount = computed(
                 >
                   <Icon
                     :name="icon"
-                    class="size-4 text-icon group-hover/tool:text-foreground"
+                    class="text-icon group-hover/tool:text-foreground"
                   />
                 </Button>
               </TooltipTrigger>
@@ -79,7 +83,7 @@ const hiddenCount = computed(
           </div>
         </PopoverAnchor>
       </TooltipProvider>
-      <PopoverContent side="top" align="start" class="w-90 overflow-hidden p-0">
+      <PopoverContent side="top" align="start" padding="list" class="w-90">
         <ChatToolsPanel
           :tool-ids="toolIds"
           :agent-id="agentId"

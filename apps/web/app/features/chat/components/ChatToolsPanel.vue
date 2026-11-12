@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PickerRow from '~/components/PickerRow.vue';
+import { Separator } from '~/components/ui/separator';
 import { getAgentToolIcon } from '~/features/agent/lib/agent-tool-icons';
 
 interface ChatToolsPanelProps {
@@ -20,8 +22,8 @@ const tools = computed(() =>
 </script>
 
 <template>
-  <div class="flex h-13 flex-col justify-center px-3.5">
-    <p class="truncate text-body font-medium">
+  <div class="flex flex-col px-2.5 py-1.5">
+    <p class="truncate text-small font-medium">
       {{
         agentName
           ? t('chat.tools.title', { agent: agentName })
@@ -32,29 +34,30 @@ const tools = computed(() =>
       {{ t('chat.tools.count', { n: tools.length }, tools.length) }}
     </p>
   </div>
-  <ul class="pb-1.5">
+  <ul class="flex flex-col">
     <li
       v-for="{ toolId, icon } in tools"
       :key="toolId"
-      class="flex h-11 items-center gap-2.5 px-3.5"
+      class="flex min-h-9 items-center px-2.5"
     >
-      <Icon :name="icon" class="size-4 shrink-0 text-foreground" />
-      <div class="flex min-w-0 flex-col">
-        <span class="truncate text-small font-medium">
-          {{ t(`agent.tool.${toolId}.label`) }}
-        </span>
-        <span class="truncate text-caption text-muted-foreground">
-          {{ t(`agent.tool.${toolId}.description`) }}
-        </span>
-      </div>
+      <PickerRow
+        :title="t(`agent.tool.${toolId}.label`)"
+        :hint="t(`agent.tool.${toolId}.description`)"
+      >
+        <template #lead>
+          <Icon :name="icon" class="size-4 shrink-0 text-icon" />
+        </template>
+      </PickerRow>
     </li>
   </ul>
-  <NuxtLinkLocale
-    v-if="agentId"
-    :to="`/agent/${agentId}`"
-    class="flex h-10 items-center gap-0.5 border-t px-3.5 text-body font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden focus-visible:ring-inset"
-  >
-    {{ t('chat.tools.edit') }}
-    <Icon name="hugeicons:arrow-right-01" class="size-3.5" />
-  </NuxtLinkLocale>
+  <template v-if="agentId">
+    <Separator class="my-1.5" />
+    <NuxtLinkLocale
+      :to="`/agent/${agentId}`"
+      class="flex min-h-9 items-center rounded-md px-2.5 text-body font-medium text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden focus-visible:ring-inset"
+    >
+      {{ t('chat.tools.edit') }}
+      <Icon name="hugeicons:arrow-right-01" class="ml-0.5 size-3.5" />
+    </NuxtLinkLocale>
+  </template>
 </template>

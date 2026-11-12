@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
-import { BrainIcon, ChevronDownIcon } from '@lucide/vue';
 import { CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { computed } from 'vue';
-import { Shimmer } from '../shimmer';
 import { useReasoningContext } from './context';
 
 interface Props {
@@ -13,16 +11,13 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { isStreaming, isOpen, duration } = useReasoningContext();
+const { t } = useI18n();
+const { isStreaming, duration } = useReasoningContext();
 
-const thinkingMessage = computed(() => {
-  if (isStreaming.value || duration.value === 0) {
-    return 'thinking';
-  }
-  if (duration.value === undefined) {
-    return 'default_done';
-  }
-  return 'duration_done';
+const label = computed(() => {
+  if (isStreaming.value) return t('chat.message.reasoning.thinking');
+  if (!duration.value) return t('chat.message.reasoning.thought');
+  return t('chat.message.reasoning.thoughtFor', { n: duration.value });
 });
 </script>
 
@@ -30,30 +25,24 @@ const thinkingMessage = computed(() => {
   <CollapsibleTrigger
     :class="
       cn(
-        'flex w-full items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground',
+        'group/line flex h-6 items-center gap-1.5 rounded-sm text-left text-small focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden',
+        isStreaming ? 'text-agent-text' : 'text-muted-foreground',
         props.class,
       )
     "
   >
     <slot>
-      <BrainIcon class="size-4" />
-
-      <template v-if="thinkingMessage === 'thinking'">
-        <Shimmer :duration="1"> Thinking... </Shimmer>
-      </template>
-
-      <template v-else-if="thinkingMessage === 'default_done'">
-        <p>Thought for a few seconds</p>
-      </template>
-
-      <template v-else>
-        <p>Thought for {{ duration }} seconds</p>
-      </template>
-
-      <ChevronDownIcon
-        :class="
-          cn('size-4 transition-transform', isOpen ? 'rotate-180' : 'rotate-0')
-        "
+      <span class="flex size-4 shrink-0 items-center justify-center">
+        <Icon
+          name="hugeicons:ai-brain-01"
+          class="size-3.5"
+          :class="isStreaming ? 'text-agent' : 'text-icon'"
+        />
+      </span>
+      <span class="truncate">{{ label }}</span>
+      <Icon
+        name="hugeicons:arrow-right-01"
+        class="size-3.5 shrink-0 text-icon transition-transform group-data-[state=open]/line:rotate-90"
       />
     </slot>
   </CollapsibleTrigger>

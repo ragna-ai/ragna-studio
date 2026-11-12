@@ -4,7 +4,6 @@ import AgentMark from '~/features/agent/components/AgentMark.vue';
 interface ChatAgentChipProps {
   agentId: string;
   name: string;
-  modelName?: string;
 }
 
 defineProps<ChatAgentChipProps>();
@@ -16,11 +15,5 @@ defineProps<ChatAgentChipProps>();
   >
     <AgentMark :agent-id="agentId" :size="20" />
     <span class="truncate text-body font-medium">{{ name }}</span>
-    <span
-      v-if="modelName"
-      class="hidden truncate text-caption text-muted-foreground md:block"
-    >
-      {{ modelName }}
-    </span>
   </div>
 </template>
