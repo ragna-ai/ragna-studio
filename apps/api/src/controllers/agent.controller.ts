@@ -64,6 +64,9 @@ export const agentController = new Hono()
       context: body.context,
       toolGrants: body.toolGrants,
       defaultDatasetId: body.defaultDatasetId,
+      icon: body.icon,
+      tone: body.tone,
+      imageMediaId: body.imageMediaId,
       settings: body.settings,
     });
 

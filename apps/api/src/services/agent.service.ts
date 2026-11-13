@@ -145,6 +145,9 @@ export interface CreateAgentInput {
   context?: string | null;
   toolGrants?: StoredAgentToolGrant[];
   defaultDatasetId?: string | null;
+  icon?: string | null;
+  tone?: string | null;
+  imageMediaId?: string | null;
   settings?: AgentSettings;
 }
 
@@ -154,6 +157,11 @@ export interface CreateAgentInput {
  * endpoint's create half.
  */
 export async function createAgentForWorkspace(input: CreateAgentInput): Promise<AgentResponse> {
+  const { userId, workspaceId, imageMediaId } = input;
+  const imageMedia = imageMediaId
+    ? await getOwnedImageMedia({ userId, workspaceId, mediaId: imageMediaId })
+    : null;
+
   const { error, data: createdAgent } = await tryCatch(() => createAgent(input));
 
   if (error !== null) {
@@ -165,7 +173,10 @@ export async function createAgentForWorkspace(input: CreateAgentInput): Promise<
     throw new InternalServerErrorException('Failed to create agent');
   }
 
-  return { ...createdAgent, imageUrl: null };
+  return {
+    ...createdAgent,
+    imageUrl: toAgentMarkResponse({ ...createdAgent, imageMedia }).imageUrl,
+  };
 }
 
 export interface CreateAgentFromTemplateInput {
