@@ -1505,9 +1505,6 @@
       "labelDeleted": "Label deleted",
       "labelDeleteFailed": "Failed to delete label"
     },
-    "validation": {
-      "colorInvalid": "Must be a hex color, e.g. #4287f5."
-    },
     "list": {
       "title": "Tasks",
       "subtitle": "Plan and track work for your team and your agents.",
@@ -1574,14 +1571,16 @@
     },
     "label": {
       "manageTitle": "Labels",
-      "manageDescription": "Create, rename, recolor, and delete workspace labels.",
+      "manageDescription": "Create, rename, recolour and delete workspace labels.",
       "namePlaceholder": "Label name",
-      "colorLabel": "Label color",
+      "colorLabel": "Label colour",
       "rename": "Rename label",
       "delete": "Delete label",
       "deleteTitle": "Delete label",
       "deleteMessage": "Delete \"{name}\"? It is removed from every task, no tasks are deleted.",
-      "empty": "No labels yet."
+      "empty": "No labels yet.",
+      "colour": "Colour",
+      "add": "Add"
     },
     "detail": {
       "title": "Task",

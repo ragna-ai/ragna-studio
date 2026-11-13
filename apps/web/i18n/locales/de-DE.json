@@ -1508,9 +1508,6 @@
       "labelDeleted": "Label gelöscht",
       "labelDeleteFailed": "Label konnte nicht gelöscht werden"
     },
-    "validation": {
-      "colorInvalid": "Muss eine Hex-Farbe sein, z. B. #4287f5."
-    },
     "list": {
       "title": "Aufgaben",
       "subtitle": "Plane und verfolge Arbeit für dein Team und deine Agents.",
@@ -1584,7 +1581,9 @@
       "delete": "Label löschen",
       "deleteTitle": "Label löschen",
       "deleteMessage": "„{name}“ löschen? Es wird von allen Aufgaben entfernt, keine Aufgaben werden gelöscht.",
-      "empty": "Noch keine Labels."
+      "empty": "Noch keine Labels.",
+      "colour": "Farbe",
+      "add": "Hinzufügen"
     },
     "detail": {
       "title": "Aufgabe",

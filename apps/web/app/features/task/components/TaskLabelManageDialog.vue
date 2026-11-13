@@ -1,30 +1,36 @@
 <script setup lang="ts">
-import {
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-  XIcon,
-} from '@lucide/vue';
+import { AGENT_MARK_TONES, type AgentMarkTone } from '@repo/ai/client';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
+import TaskLabelToneTrigger from '~/features/task/components/TaskLabelToneTrigger.vue';
 import {
   useCreateTaskLabel,
   useDeleteTaskLabel,
   useUpdateTaskLabel,
 } from '~/features/task/composables/useTaskLabelApi';
+import {
+  firstUnusedTone,
+  LABEL_TONE_HEX,
+  labelTone,
+} from '~/features/task/lib/label-tone';
 import type { TaskLabel } from '~/features/task/types';
+import { TONE_DOT_CLASS } from '~/lib/tone';
+import { cn } from '~/lib/utils';
 
-const DEFAULT_COLOR = '#78716c';
+interface TaskLabelManageDialogProps {
+  labels: TaskLabel[];
+}
 
 // Props
-const props = defineProps<{ labels: TaskLabel[] }>();
+const props = defineProps<TaskLabelManageDialogProps>();
 
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 const editingLabelId = ref<string | null>(null);
 const editingName = ref('');
-const editingColor = ref(DEFAULT_COLOR);
+const editingTone = ref<AgentMarkTone>('sea');
+const nameInput = useTemplateRef('nameInput');
+const editInputs = useTemplateRef('editInput');
 
 // Composables
 const { mutateAsync: createTaskLabel, isPending: isCreating } =
@@ -35,27 +41,54 @@ const { mutateAsync: deleteTaskLabel } = useDeleteTaskLabel();
 const { confirm } = useConfirmDialog();
 const { t } = useI18n();
 
+// Computed
+const usedTones = computed(() => props.labels.map((label) => labelTone(label)));
+
 const createLabelSchema = z.object({
-  name: z.string().min(1, { message: t('common.nameRequired') }),
-  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
-    message: t('task.validation.colorInvalid'),
-  }),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: t('common.nameRequired') }),
+  tone: z.enum(AGENT_MARK_TONES),
 });
 
 const createForm = useForm({
-  defaultValues: { name: '', color: DEFAULT_COLOR },
+  defaultValues: {
+    name: '',
+    tone: firstUnusedTone(usedTones.value),
+  },
   validators: { onChange: createLabelSchema },
   onSubmit: async ({ value }) => {
-    await createTaskLabel(value);
+    const name = value.name.trim();
+    await createTaskLabel({ name, color: LABEL_TONE_HEX[value.tone] });
     createForm.reset();
+    createForm.setFieldValue(
+      'tone',
+      firstUnusedTone([...usedTones.value, value.tone]),
+    );
   },
 });
+const hasName = createForm.useStore((state) => state.values.name.trim() !== '');
 
 // Functions
-function startEditing(label: TaskLabel) {
+function focusInput(input: { $el: unknown } | null | undefined) {
+  if (input?.$el instanceof HTMLElement) {
+    input.$el.focus();
+  }
+}
+
+// The colour trigger comes first in the DOM; focusing it would open its tooltip.
+function focusNameOnOpen(event: Event) {
+  event.preventDefault();
+  focusInput(nameInput.value);
+}
+
+async function startEditing(label: TaskLabel) {
   editingLabelId.value = label.id;
   editingName.value = label.name;
-  editingColor.value = label.color;
+  editingTone.value = labelTone(label);
+  await nextTick();
+  focusInput(editInputs.value?.[0]);
 }
 
 function cancelEditing() {
@@ -63,13 +96,18 @@ function cancelEditing() {
   editingName.value = '';
 }
 
-async function saveEditing() {
-  const taskLabelId = editingLabelId.value;
+async function saveEditing(label: TaskLabel) {
   const name = editingName.value.trim();
-  if (!taskLabelId || !name) {
+  if (!name || isRenaming.value) {
     return;
   }
-  await updateTaskLabel({ taskLabelId, name, color: editingColor.value });
+  // Recolour only on a tone change: an older hex stays until then.
+  const toneChanged = editingTone.value !== labelTone(label);
+  await updateTaskLabel({
+    taskLabelId: label.id,
+    name,
+    ...(toneChanged && { color: LABEL_TONE_HEX[editingTone.value] }),
+  });
   cancelEditing();
 }
 
@@ -86,11 +124,18 @@ async function handleDelete(label: TaskLabel) {
   }
   await deleteTaskLabel(label.id);
 }
+
+// Hooks
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    cancelEditing();
+  }
+});
 </script>
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent>
+    <DialogContent @open-auto-focus="focusNameOnOpen">
       <DialogHeader>
         <DialogTitle>{{ t('task.label.manageTitle') }}</DialogTitle>
         <DialogDescription>{{
@@ -99,122 +144,118 @@ async function handleDelete(label: TaskLabel) {
       </DialogHeader>
 
       <form
-        class="flex items-start gap-2"
+        class="flex items-center gap-2"
         @submit.prevent.stop="createForm.handleSubmit"
       >
-        <createForm.Field name="color">
+        <createForm.Field name="tone">
           <template v-slot="{ field, state }">
-            <input
-              :id="field.name"
-              type="color"
-              class="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input"
-              :value="state.value"
-              :aria-label="t('task.label.colorLabel')"
-              @input="
-                (e) => field.handleChange((e.target as HTMLInputElement).value)
-              "
+            <TaskLabelToneTrigger
+              :model-value="state.value"
+              @update:model-value="field.handleChange"
             />
           </template>
         </createForm.Field>
         <createForm.Field name="name">
           <template v-slot="{ field, state }">
-            <div class="flex-1">
-              <Input
-                :id="field.name"
-                :model-value="state.value"
-                :placeholder="t('task.label.namePlaceholder')"
-                autocomplete="off"
-                @update:model-value="(v) => field.handleChange(String(v))"
-                @blur="field.handleBlur"
-              />
-              <FormFieldInfo :field="field" />
-            </div>
+            <Input
+              :id="field.name"
+              ref="nameInput"
+              :model-value="state.value"
+              :placeholder="t('task.label.namePlaceholder')"
+              :aria-label="t('task.label.namePlaceholder')"
+              autocomplete="off"
+              class="flex-1"
+              @update:model-value="(v) => field.handleChange(String(v))"
+              @blur="field.handleBlur"
+            />
           </template>
         </createForm.Field>
-        <Button type="submit" size="icon" :disabled="isCreating">
-          <Spinner v-if="isCreating" />
-          <PlusIcon v-else class="size-4" />
+        <Button type="submit" :disabled="!hasName || isCreating">
+          {{ t('task.label.add') }}
         </Button>
       </form>
 
-      <Separator v-if="props.labels.length > 0" />
+      <Separator class="my-4" />
 
-      <ul
-        v-if="props.labels.length > 0"
-        class="max-h-64 space-y-1 overflow-y-auto"
-      >
+      <ul v-if="props.labels.length > 0" class="max-h-64 overflow-y-auto">
         <li
           v-for="label in props.labels"
           :key="label.id"
-          class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-stone-50"
+          class="group flex h-9 items-center rounded-md hover:bg-surface-subtle"
         >
-          <template v-if="editingLabelId === label.id">
-            <input
-              v-model="editingColor"
-              type="color"
-              class="h-8 w-10 shrink-0 cursor-pointer rounded-md border border-input"
-              :aria-label="t('task.label.colorLabel')"
-            />
+          <form
+            v-if="editingLabelId === label.id"
+            class="flex w-full items-center gap-2"
+            @submit.prevent="saveEditing(label)"
+            @keydown.esc.stop.prevent="cancelEditing"
+          >
+            <TaskLabelToneTrigger v-model="editingTone" />
             <Input
+              ref="editInput"
               v-model="editingName"
               autocomplete="off"
+              :aria-label="t('task.label.namePlaceholder')"
               class="flex-1"
-              @keyup.enter="saveEditing"
-              @keyup.esc="cancelEditing"
             />
             <Button
+              type="submit"
               variant="ghost"
               size="icon"
+              class="text-icon"
               :disabled="isRenaming"
-              :aria-label="t('common.saveRename')"
-              @click="saveEditing"
+              :aria-label="t('common.save')"
             >
-              <Spinner v-if="isRenaming" />
-              <CheckIcon v-else class="size-4" />
+              <Icon name="hugeicons:tick-02" />
             </Button>
             <Button
+              type="button"
               variant="ghost"
               size="icon"
-              :aria-label="t('common.cancelRename')"
+              class="text-icon"
+              :aria-label="t('common.cancel')"
               @click="cancelEditing"
             >
-              <XIcon class="size-4" />
+              <Icon name="hugeicons:cancel-01" />
             </Button>
-          </template>
+          </form>
           <template v-else>
-            <span
-              class="size-4 shrink-0 rounded-full"
-              :style="{ backgroundColor: label.color }"
-            />
-            <span class="flex-1 truncate text-sm">{{ label.name }}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              :aria-label="t('task.label.rename')"
-              @click="startEditing(label)"
+            <span class="flex w-8 shrink-0 items-center justify-center">
+              <span
+                :class="
+                  cn('size-2 rounded-full', TONE_DOT_CLASS[labelTone(label)])
+                "
+                aria-hidden="true"
+              />
+            </span>
+            <span class="ml-2 flex-1 truncate text-body">{{ label.name }}</span>
+            <div
+              class="flex opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
             >
-              <PencilIcon class="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              :aria-label="t('task.label.delete')"
-              @click="handleDelete(label)"
-            >
-              <Trash2Icon class="size-4 text-destructive" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="text-icon"
+                :aria-label="t('task.label.rename')"
+                @click="startEditing(label)"
+              >
+                <Icon name="hugeicons:pencil-edit-02" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="text-icon"
+                :aria-label="t('task.label.delete')"
+                @click="handleDelete(label)"
+              >
+                <Icon name="hugeicons:delete-02" />
+              </Button>
+            </div>
           </template>
         </li>
       </ul>
-      <p v-else class="text-sm text-muted-foreground">
+      <p v-else class="text-small text-muted-foreground">
         {{ t('task.label.empty') }}
       </p>
-
-      <DialogFooter>
-        <Button variant="outline" @click="open = false">
-          {{ t('common.close') }}
-        </Button>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
