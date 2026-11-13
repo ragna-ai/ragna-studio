@@ -5,6 +5,15 @@ import { useCreateTask } from '~/features/task/composables/useTaskApi';
 import { isTaskStatus, STATUS_COLUMNS } from '~/features/task/lib/task-display';
 import { TASK_STATUSES, type TaskStatus } from '~/features/task/types';
 
+interface TaskCreateDialogProps {
+  status?: TaskStatus;
+}
+
+// Props
+const props = withDefaults(defineProps<TaskCreateDialogProps>(), {
+  status: 'backlog',
+});
+
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 
@@ -20,7 +29,7 @@ const createTaskSchema = z.object({
 });
 
 const form = useForm({
-  defaultValues: { title: '', status: 'backlog' as TaskStatus },
+  defaultValues: { title: '', status: props.status },
   validators: { onChange: createTaskSchema },
   onSubmit: async ({ value }) => {
     const response = await createTask({
@@ -31,6 +40,12 @@ const form = useForm({
     form.reset();
     await navigateTo(`/tasks/${response.task.id}`);
   },
+});
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    form.setFieldValue('status', props.status);
+  }
 });
 </script>
 

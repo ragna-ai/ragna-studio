@@ -225,3 +225,7 @@
 @utility is-active-button {
   @apply bg-accent text-accent-foreground;
 }
+
+@utility task-card-lifted {
+  @apply rotate-2 shadow-popover;
+}

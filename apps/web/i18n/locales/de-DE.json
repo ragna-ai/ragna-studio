@@ -1513,17 +1513,26 @@
     },
     "list": {
       "title": "Aufgaben",
-      "subtitle": "Plane und verfolge Arbeit auf einem Linear-artigen Board.",
+      "subtitle": "Plane und verfolge Arbeit für dein Team und deine Agents.",
       "newTask": "Neue Aufgabe",
-      "loading": "Aufgaben werden geladen...",
-      "loadError": "Aufgaben konnten nicht geladen werden.",
-      "empty": "Noch keine Aufgaben.",
+      "loadError": {
+        "title": "Aufgaben konnten nicht geladen werden.",
+        "description": "Prüfe deine Verbindung und versuche es erneut."
+      },
+      "empty": {
+        "title": "Noch keine Aufgaben",
+        "description": "Aufgaben sind Arbeit für dich und deine Agents. Agents können auch selbst Aufgaben anlegen und abschließen."
+      },
       "table": {
         "id": "ID",
         "priority": "Priorität",
         "labels": "Labels",
         "dueDate": "Fällig am",
         "assignee": "Zugewiesen an"
+      },
+      "noResults": {
+        "title": "Keine Aufgaben passen zu diesen Filtern",
+        "clearFilters": "Filter zurücksetzen"
       }
     },
     "view": {
@@ -1531,7 +1540,7 @@
       "list": "Liste"
     },
     "board": {
-      "quickAddPlaceholder": "Titel der neuen Aufgabe..."
+      "createInStatus": "Neue Aufgabe in {status}"
     },
     "filter": {
       "status": "Status",
@@ -1542,7 +1551,8 @@
       "allLabels": "Alle Labels"
     },
     "card": {
-      "subtaskProgress": "{done}/{total}"
+      "subtaskProgress": "{done}/{total}",
+      "overdue": "Überfällig, {date}"
     },
     "status": {
       "backlog": "Backlog",

@@ -22,6 +22,7 @@ const props = defineProps<{
   priority: TaskPriority | null;
   taskLabelId: string | null;
   labels: TaskLabel[];
+  hideStatus?: boolean;
 }>();
 
 // Emits
@@ -38,6 +39,7 @@ const { t } = useI18n();
 <template>
   <div class="flex flex-wrap items-center gap-2">
     <Select
+      v-if="!hideStatus"
       :model-value="props.status ?? ALL"
       @update:model-value="
         (v) => emit('update:status', isTaskStatus(v) ? v : null)

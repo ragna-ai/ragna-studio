@@ -1510,17 +1510,26 @@
     },
     "list": {
       "title": "Tasks",
-      "subtitle": "Plan and track work on a Linear-style board.",
+      "subtitle": "Plan and track work for your team and your agents.",
       "newTask": "New task",
-      "loading": "Loading tasks...",
-      "loadError": "Failed to load tasks.",
-      "empty": "No tasks yet.",
+      "loadError": {
+        "title": "Couldn't load your tasks.",
+        "description": "Check your connection and try again."
+      },
+      "empty": {
+        "title": "No tasks yet",
+        "description": "Tasks are work for you and your agents. Agents can create and finish tasks too."
+      },
       "table": {
         "id": "ID",
         "priority": "Priority",
         "labels": "Labels",
         "dueDate": "Due date",
         "assignee": "Assignee"
+      },
+      "noResults": {
+        "title": "No tasks match these filters",
+        "clearFilters": "Clear filters"
       }
     },
     "view": {
@@ -1528,7 +1537,7 @@
       "list": "List"
     },
     "board": {
-      "quickAddPlaceholder": "New task title..."
+      "createInStatus": "New task in {status}"
     },
     "filter": {
       "status": "Status",
@@ -1539,7 +1548,8 @@
       "allLabels": "All labels"
     },
     "card": {
-      "subtaskProgress": "{done}/{total}"
+      "subtaskProgress": "{done}/{total}",
+      "overdue": "Overdue, {date}"
     },
     "status": {
       "backlog": "Backlog",
