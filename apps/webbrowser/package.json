@@ -23,7 +23,7 @@
     "@hono/zod-validator": "^0.9.1",
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
-    "hono": "^4.13.14",
+    "hono": "^4.13.16",
     "http-status-codes": "^2.3.0",
     "mdream": "catalog:",
     "puppeteer": "^25.16.0",
