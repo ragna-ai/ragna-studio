@@ -1568,7 +1568,9 @@
     },
     "createDialog": {
       "title": "New task",
-      "titlePlaceholder": "Task title"
+      "titlePlaceholder": "Task title",
+      "createMore": "Create more",
+      "create": "Create task"
     },
     "label": {
       "manageTitle": "Labels",
@@ -1618,7 +1620,11 @@
       "labels": "Labels",
       "noLabels": "No labels",
       "reminder": "Remind me",
-      "delete": "Delete task"
+      "delete": "Delete task",
+      "removeDate": "Remove date",
+      "searchAgents": "Search agents",
+      "noAgents": "No agents found",
+      "searchLabels": "Search labels"
     },
     "reminder": {
       "off": "Off",

@@ -1571,7 +1571,9 @@
     },
     "createDialog": {
       "title": "Neue Aufgabe",
-      "titlePlaceholder": "Titel der Aufgabe"
+      "titlePlaceholder": "Titel der Aufgabe",
+      "createMore": "Weitere erstellen",
+      "create": "Aufgabe erstellen"
     },
     "label": {
       "manageTitle": "Labels",
@@ -1621,7 +1623,11 @@
       "labels": "Labels",
       "noLabels": "Keine Labels",
       "reminder": "Erinnere mich",
-      "delete": "Aufgabe löschen"
+      "delete": "Aufgabe löschen",
+      "removeDate": "Datum entfernen",
+      "searchAgents": "Agents suchen",
+      "noAgents": "Keine Agents gefunden",
+      "searchLabels": "Labels suchen"
     },
     "reminder": {
       "off": "Aus",
