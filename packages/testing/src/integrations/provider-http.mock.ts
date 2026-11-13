@@ -97,6 +97,7 @@ export interface ProviderHttpState {
   requestedScopes: Partial<Record<ProviderId, string[]>>;
   refreshRejected: Set<ProviderId>;
   profileFailing: Set<ProviderId>;
+  revokeFailing: Set<ProviderId>;
   tokenRequests: FakeTokenRequest[];
   revokeRequests: FakeRevokeRequest[];
   profileTokens: string[];
@@ -109,6 +110,7 @@ function emptyState(): ProviderHttpState {
     requestedScopes: {},
     refreshRejected: new Set(),
     profileFailing: new Set(),
+    revokeFailing: new Set(),
     tokenRequests: [],
     revokeRequests: [],
     profileTokens: [],
@@ -146,6 +148,11 @@ export function rejectProviderRefresh(provider: ProviderId): void {
 /** Makes every profile read for the provider fail with a server error. */
 export function failProviderProfile(provider: ProviderId): void {
   providerHttp.profileFailing.add(provider);
+}
+
+/** Makes every revoke for the provider fail with a server error. */
+export function failProviderRevoke(provider: ProviderId): void {
+  providerHttp.revokeFailing.add(provider);
 }
 
 function json(body: unknown, status = 200): Response {
@@ -292,6 +299,9 @@ async function route(endpoint: ProviderEndpoint, init: RequestInit | undefined) 
       provider: endpoint.provider,
       token: form.get('token') ?? '',
     });
+    if (providerHttp.revokeFailing.has(endpoint.provider)) {
+      return json({ error: 'server_error' }, 500);
+    }
     return json({});
   }
   return answerToken(endpoint.provider, form);

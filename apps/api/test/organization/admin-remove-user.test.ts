@@ -6,7 +6,6 @@ import {
   PURGE_ORGANIZATION_JOB,
   purgeOrganizationJobSchema,
 } from '@repo/queue';
-import { purgeOrganization } from '@repo/media';
 import {
   deleteObjectsMock,
   queueAddBulkMock,
@@ -102,32 +101,6 @@ describe('platform admin remove-user', () => {
     expect(
       await db.query.integrationConnection.findMany({ where: { userId: colleague.userId } }),
     ).toHaveLength(0);
-  });
-
-  test('running the enqueued job removes the organization, workspaces and R2 objects', async () => {
-    const owner = await seedAuthenticatedUser();
-    const organizationId = await activeOrganizationId(owner.cookieHeader);
-    const storageKey = `org/${organizationId}/file.pdf`;
-    await createMedia({
-      ownerWorkspaceId: owner.workspaceId,
-      bucket: 'documents-bucket',
-      storageKey,
-      filename: 'file.pdf',
-      mimeType: 'application/pdf',
-      size: 10,
-      origin: 'uploaded',
-    });
-    await removeUserAsPlatformAdmin(owner.userId);
-
-    await purgeOrganization({ organizationId });
-
-    expect(
-      await db.query.organization.findFirst({ where: { id: organizationId } }),
-    ).toBeUndefined();
-    expect(
-      await db.query.workspace.findFirst({ where: { id: owner.workspaceId } }),
-    ).toBeUndefined();
-    expect(deleteObjectsMock).toHaveBeenCalledWith('documents-bucket', [storageKey]);
   });
 
   test('a non-owner member has their personal workspace objects queued for deletion', async () => {

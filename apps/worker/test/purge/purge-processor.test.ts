@@ -1,13 +1,21 @@
+import { db } from '@repo/database';
+import { creditAccount } from '@repo/database/schema';
 import { DELETE_MEDIA_OBJECTS_JOB, PURGE_ORGANIZATION_JOB } from '@repo/queue';
 import {
   deleteObjectsMock,
+  failProviderRevoke,
+  providerHttp,
   resetProviderMocks,
   seedAuthenticatedUser,
+  seedGmailConnection,
+  seedLinkedinConnection,
+  seedOrganizationMember,
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { processPurgeJob } from '../../src/processors/purge.processor';
 import {
+  listOrganizationConnectionIds,
   organizationExists,
   requireOrganizationId,
   seedWorkspaceMedia,
@@ -56,6 +64,97 @@ describe('processPurgeJob', () => {
 
       expect(processPurgeJob(job)).rejects.toThrow('Could not delete all media objects');
       expect(await organizationExists(organizationId)).toBe(true);
+    });
+
+    test('removes the workspaces, members, credit account and every user', async () => {
+      const owner = await seedAuthenticatedUser();
+      const organizationId = await requireOrganizationId(owner.userId);
+      const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+      await db.insert(creditAccount).values({ organizationId });
+
+      await processPurgeJob(buildJob({ name: PURGE_ORGANIZATION_JOB, data: { organizationId } }));
+
+      expect(
+        await db.query.workspace.findFirst({ where: { id: owner.workspaceId } }),
+      ).toBeUndefined();
+      expect(await db.query.organizationMember.findMany({ where: { organizationId } })).toEqual([]);
+      expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
+      expect(await userExists(colleague.userId)).toBe(false);
+    });
+
+    test('deletes the R2 objects before any row goes', async () => {
+      const owner = await seedAuthenticatedUser();
+      const organizationId = await requireOrganizationId(owner.userId);
+      const mediaRow = await seedWorkspaceMedia({ workspaceId: owner.workspaceId });
+      let rowsExistedAtDeleteTime = false;
+      deleteObjectsMock.mockImplementationOnce(async (_bucket, keys) => {
+        const mediaFound = await db.query.media.findFirst({ where: { id: mediaRow.id } });
+        rowsExistedAtDeleteTime =
+          mediaFound !== undefined && (await organizationExists(organizationId));
+        return { deleted: keys, errors: [] };
+      });
+
+      await processPurgeJob(buildJob({ name: PURGE_ORGANIZATION_JOB, data: { organizationId } }));
+
+      expect(rowsExistedAtDeleteTime).toBe(true);
+    });
+
+    test('revokes every connection of the organization at its provider and deletes it', async () => {
+      const owner = await seedAuthenticatedUser();
+      const organizationId = await requireOrganizationId(owner.userId);
+      const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+      const ownerGmail = await seedGmailConnection({ userId: owner.userId });
+      const colleagueLinkedin = await seedLinkedinConnection({ userId: colleague.userId });
+      const outsider = await seedAuthenticatedUser();
+      const outsiderGmail = await seedGmailConnection({ userId: outsider.userId });
+
+      await processPurgeJob(buildJob({ name: PURGE_ORGANIZATION_JOB, data: { organizationId } }));
+
+      expect(providerHttp.revokeRequests).toHaveLength(2);
+      expect(providerHttp.revokeRequests).toContainEqual({
+        provider: 'google',
+        token: ownerGmail.refreshToken ?? ownerGmail.accessToken,
+      });
+      expect(providerHttp.revokeRequests).toContainEqual({
+        provider: 'linkedin',
+        token: colleagueLinkedin.refreshToken ?? colleagueLinkedin.accessToken,
+      });
+      expect(await listOrganizationConnectionIds(organizationId)).toEqual([]);
+      expect(
+        await listOrganizationConnectionIds(await requireOrganizationId(outsider.userId)),
+      ).toEqual([outsiderGmail.connection.id]);
+    });
+
+    test('revokes the connections even when the R2 cleanup fails', async () => {
+      const owner = await seedAuthenticatedUser();
+      const organizationId = await requireOrganizationId(owner.userId);
+      const ownerGmail = await seedGmailConnection({ userId: owner.userId });
+      await seedWorkspaceMedia({ workspaceId: owner.workspaceId });
+      deleteObjectsMock.mockImplementation((_bucket, keys) =>
+        Promise.resolve({ deleted: [], errors: keys }),
+      );
+
+      const job = buildJob({ name: PURGE_ORGANIZATION_JOB, data: { organizationId } });
+
+      await expect(processPurgeJob(job)).rejects.toThrow('Could not delete all media objects');
+      expect(providerHttp.revokeRequests).toEqual([
+        { provider: 'google', token: ownerGmail.refreshToken ?? ownerGmail.accessToken },
+      ]);
+      expect(await listOrganizationConnectionIds(organizationId)).toEqual([]);
+      expect(await organizationExists(organizationId)).toBe(true);
+    });
+
+    test('purges the organization when the provider fails to revoke', async () => {
+      const owner = await seedAuthenticatedUser();
+      const organizationId = await requireOrganizationId(owner.userId);
+      await seedGmailConnection({ userId: owner.userId });
+      failProviderRevoke('google');
+
+      await processPurgeJob(buildJob({ name: PURGE_ORGANIZATION_JOB, data: { organizationId } }));
+
+      expect(providerHttp.revokeRequests).toHaveLength(1);
+      expect(await listOrganizationConnectionIds(organizationId)).toEqual([]);
+      expect(await organizationExists(organizationId)).toBe(false);
     });
 
     test('rejects a payload without a valid organization id', async () => {

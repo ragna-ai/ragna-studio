@@ -134,6 +134,14 @@ export async function listUserConnections({
   });
 }
 
+export async function listOrganizationConnections({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<IntegrationConnection[]> {
+  return db.query.integrationConnection.findMany({ where: { organizationId } });
+}
+
 /** Removes one integration id from the connection and returns the row, or null if it is gone. */
 export async function removeEnabledIntegration({
   id,
@@ -159,6 +167,16 @@ export async function deleteConnectionById({ id }: { id: string }): Promise<void
 
 export async function deleteUserConnections({ userId }: { userId: string }): Promise<void> {
   await db.delete(integrationConnection).where(eq(integrationConnection.userId, userId));
+}
+
+export async function deleteOrganizationConnections({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<void> {
+  await db
+    .delete(integrationConnection)
+    .where(eq(integrationConnection.organizationId, organizationId));
 }
 
 export interface ConnectionTokenPatch {

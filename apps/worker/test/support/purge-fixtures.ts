@@ -75,3 +75,8 @@ export async function userExists(userId: string): Promise<boolean> {
   const found = await db.query.user.findFirst({ where: { id: userId } });
   return found !== undefined;
 }
+
+export async function listOrganizationConnectionIds(organizationId: string): Promise<string[]> {
+  const connections = await db.query.integrationConnection.findMany({ where: { organizationId } });
+  return connections.map((connection) => connection.id);
+}

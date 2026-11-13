@@ -1,8 +1,9 @@
 import { db } from '@repo/database';
-import { creditAccount } from '@repo/database/schema';
-import { purgeOrganization } from '@repo/media';
+import { PURGE_ORGANIZATION_JOB, purgeOrganizationJobSchema } from '@repo/queue';
 import {
   deleteSeededUser,
+  queueAddMock,
+  resetQueueMock,
   seedAuthenticatedUser,
   seedOrganizationMember,
   truncateAllTables,
@@ -11,6 +12,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 
 beforeEach(async () => {
   await truncateAllTables();
+  resetQueueMock();
 });
 
 async function organizationIdOf(userId: string): Promise<string> {
@@ -19,22 +21,18 @@ async function organizationIdOf(userId: string): Promise<string> {
 }
 
 describe('user deletion', () => {
-  test('a sole owner leaves the organization deleted until the purge removes it', async () => {
-    const { userId, workspaceId } = await seedAuthenticatedUser();
+  test('a sole owner leaves the organization marked deleted and queued for the purge', async () => {
+    const { userId } = await seedAuthenticatedUser();
     const organizationId = await organizationIdOf(userId);
-    await db.insert(creditAccount).values({ organizationId });
 
     await deleteSeededUser({ userId });
-    const markedDeleted = await db.query.organization.findFirst({ where: { id: organizationId } });
-    await purgeOrganization({ organizationId });
 
+    const markedDeleted = await db.query.organization.findFirst({ where: { id: organizationId } });
     expect(markedDeleted?.deletedAt).toBeInstanceOf(Date);
-    expect(
-      await db.query.organization.findFirst({ where: { id: organizationId } }),
-    ).toBeUndefined();
-    expect(await db.query.workspace.findFirst({ where: { id: workspaceId } })).toBeUndefined();
-    expect(await db.query.organizationMember.findMany({ where: { organizationId } })).toEqual([]);
-    expect(await db.query.creditAccount.findFirst({ where: { organizationId } })).toBeUndefined();
+    const purgeCalls = queueAddMock.mock.calls.filter(([name]) => name === PURGE_ORGANIZATION_JOB);
+    expect(purgeCalls.map(([, data]) => purgeOrganizationJobSchema.parse(data))).toEqual([
+      { organizationId },
+    ]);
   });
 
   test('is blocked while the organization has other active members', async () => {

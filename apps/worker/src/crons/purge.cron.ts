@@ -1,5 +1,5 @@
 import { logger } from '@repo/logger';
-import { purgeExpiredDeletions } from '@repo/media';
+import { purgeExpiredDeletions } from '../purge/purge.service';
 
 // Hard-deletes organizations and users whose 30 day recovery window has passed.
 export async function purgeProcessor() {
