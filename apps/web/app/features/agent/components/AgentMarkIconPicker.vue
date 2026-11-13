@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   AGENT_MARK_ICONS,
-  AGENT_MARK_TONES,
   type AgentMarkIcon,
   type AgentMarkTone,
 } from '@repo/ai/client';
@@ -12,8 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
-import { AGENT_TONE_CLASS } from '~/features/agent/lib/agent-tone';
-import { cn } from '~/lib/utils';
+import ToneSwatchGroup from '~/components/ToneSwatchGroup.vue';
 
 // Models
 const icon = defineModel<AgentMarkIcon>('icon', { required: true });
@@ -32,32 +30,10 @@ const { t } = useI18n();
       >
         {{ t('agent.mark.colour') }}
       </span>
-      <div
-        role="radiogroup"
-        aria-labelledby="agent-mark-colour-label"
-        class="flex gap-2"
-      >
-        <button
-          v-for="option in AGENT_MARK_TONES"
-          :key="option"
-          type="button"
-          role="radio"
-          :aria-checked="option === tone"
-          :aria-label="t(`agent.mark.tones.${option}`)"
-          :data-tone="option"
-          :class="
-            cn(
-              'flex size-6 shrink-0 items-center justify-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              AGENT_TONE_CLASS[option],
-              option === tone &&
-                'ring-2 ring-foreground ring-offset-2 ring-offset-background',
-            )
-          "
-          @click="tone = option"
-        >
-          <span class="size-3 rounded-full bg-current" aria-hidden="true" />
-        </button>
-      </div>
+      <ToneSwatchGroup
+        v-model="tone"
+        ariaLabelledby="agent-mark-colour-label"
+      />
     </div>
     <div class="flex flex-col gap-2">
       <span

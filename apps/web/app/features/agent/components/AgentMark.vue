@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { AGENT_MARK_ICONS } from '@repo/ai/client';
 import {
-  AGENT_TONE_CLASS,
   fallbackAgentTone,
   isAgentMarkTone,
 } from '~/features/agent/lib/agent-tone';
+import { TONE_CLASS } from '~/lib/tone';
 import { cn } from '~/lib/utils';
 
 export type AgentMarkSize = 16 | 20 | 24 | 28 | 40;
@@ -42,7 +42,7 @@ const iconName = computed(
 const toneName = computed(() =>
   isAgentMarkTone(props.tone) ? props.tone : fallbackAgentTone(props.agentId),
 );
-const toneClass = computed(() => AGENT_TONE_CLASS[toneName.value]);
+const toneClass = computed(() => TONE_CLASS[toneName.value]);
 
 // Hooks
 watch(

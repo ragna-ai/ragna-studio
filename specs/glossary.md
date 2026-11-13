@@ -42,3 +42,10 @@ Role names are always qualified. The full table, with storage and code identifie
 | tool failure     | An expected tool outcome returned to the model as `{ status, message }` (`ToolFailure`), such as not connected or too large.             | tool error (for returned outcomes) |
 | AI model         | A row in `ai_models`: provider, model id and capabilities.                                                                               | model (where data models are near) |
 | template         | A predefined agent a user can create an agent from (`agent_templates`).                                                                  | preset                             |
+
+## Tasks and tones
+
+| Term       | Meaning                                                                                                                    | _Avoid_                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| tone       | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
+| task label | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |

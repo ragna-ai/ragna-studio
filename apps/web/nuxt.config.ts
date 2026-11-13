@@ -137,6 +137,18 @@ export default defineNuxtConfig({
         // Notification kind marks live in `types/kind.ts`.
         'hugeicons:unplug',
         'hugeicons:notification-01',
+        // Task priority and status icons live in `task-display.ts`.
+        'hugeicons:minus-sign',
+        'hugeicons:signal-low-02',
+        'hugeicons:signal-medium-02',
+        'hugeicons:signal-full-02',
+        'hugeicons:alert-02',
+        'hugeicons:circle-dashed',
+        'hugeicons:progress-01',
+        'hugeicons:progress-03',
+        'hugeicons:progress-04',
+        'hugeicons:checkmark-circle-02',
+        'hugeicons:cancel-circle',
         // Agent tool icons live in `agent-tool-icons.ts`.
         'hugeicons:ai-brain-01',
         'hugeicons:notebook-02',
