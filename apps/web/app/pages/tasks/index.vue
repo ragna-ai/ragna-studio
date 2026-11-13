@@ -84,7 +84,9 @@ function clearFilters() {
 
 <template>
   <PagePanel>
-    <SectionWrapper :class="{ 'h-full': isBoard && !hasNoTasksAtAll }">
+    <SectionWrapper
+      :class="{ 'h-full overflow-hidden': isBoard && !hasNoTasksAtAll }"
+    >
       <Heading>
         <template #top>
           <HeadingTitle

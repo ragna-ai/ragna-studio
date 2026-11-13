@@ -97,49 +97,58 @@ function handleDragEnd(event: DraggableEvent<TaskWithBoardInfo>) {
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1 gap-3 overflow-x-auto pt-6 pr-page pl-page">
+  <div
+    class="flex min-h-0 flex-1 gap-3 overflow-x-auto overscroll-none pt-6 pr-page pl-page"
+  >
     <div
       v-for="column in STATUS_COLUMNS"
       :key="column.value"
-      class="flex w-66 shrink-0 flex-col rounded-lg bg-surface-subtle px-2 pt-1 pb-2"
+      class="flex min-h-0 w-66 shrink-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-none pb-6"
     >
-      <TaskBoardColumnHeader
-        :status="column"
-        :count="columns[column.value].length"
-        :hide-count="isLoading"
-        @create="emit('create', column.value)"
-      />
-
-      <div v-if="isLoading" class="mt-2 flex flex-col gap-2" aria-hidden="true">
-        <div
-          v-for="n in SKELETON_CARDS_PER_LANE"
-          :key="n"
-          class="flex flex-col gap-2 rounded-md border bg-card p-3"
-        >
-          <Skeleton class="h-3 w-12 rounded-sm" />
-          <Skeleton class="h-3.5 w-50 rounded-sm" />
-          <Skeleton class="h-3.5 w-35 rounded-sm" />
-          <Skeleton class="h-3 w-24 rounded-sm" />
-        </div>
-      </div>
-      <VueDraggable
-        v-else
-        v-model="columns[column.value]"
-        :data-status="column.value"
-        group="tasks-board"
-        :animation="150"
-        force-fallback
-        fallback-class="task-card-lifted"
-        ghost-class="opacity-40"
-        class="mt-2 flex min-h-12 flex-1 flex-col gap-2 overflow-y-auto"
-        @end="handleDragEnd"
-      >
-        <TaskCard
-          v-for="task in columns[column.value]"
-          :key="task.id"
-          :task="task"
+      <div class="flex flex-col rounded-lg bg-surface-subtle px-2 pb-2">
+        <TaskBoardColumnHeader
+          class="sticky top-0 z-10 h-10 bg-surface-subtle pt-1"
+          :status="column"
+          :count="columns[column.value].length"
+          :hide-count="isLoading"
+          @create="emit('create', column.value)"
         />
-      </VueDraggable>
+
+        <div
+          v-if="isLoading"
+          class="mt-2 flex flex-col gap-2"
+          aria-hidden="true"
+        >
+          <div
+            v-for="n in SKELETON_CARDS_PER_LANE"
+            :key="n"
+            class="flex flex-col gap-2 rounded-md border bg-card p-3"
+          >
+            <Skeleton class="h-3 w-12 rounded-sm" />
+            <Skeleton class="h-3.5 w-50 rounded-sm" />
+            <Skeleton class="h-3.5 w-35 rounded-sm" />
+            <Skeleton class="h-3 w-24 rounded-sm" />
+          </div>
+        </div>
+        <VueDraggable
+          v-else
+          v-model="columns[column.value]"
+          :data-status="column.value"
+          group="tasks-board"
+          :animation="150"
+          force-fallback
+          fallback-class="task-card-lifted"
+          ghost-class="opacity-40"
+          class="mt-2 flex min-h-12 flex-col gap-2"
+          @end="handleDragEnd"
+        >
+          <TaskCard
+            v-for="task in columns[column.value]"
+            :key="task.id"
+            :task="task"
+          />
+        </VueDraggable>
+      </div>
     </div>
   </div>
 </template>
