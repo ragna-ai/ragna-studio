@@ -1,12 +1,15 @@
-import { purgeExpiredDeletions } from '@repo/media';
+import { db, restoreOrganization, softDeleteOrganization } from '@repo/database';
+import { dataset } from '@repo/database/schema';
 import {
   deleteObjectsMock,
   resetProviderMocks,
   seedAuthenticatedUser,
+  seedOrganizationMember,
   truncateAllTables,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { purgeProcessor } from '../../src/crons/purge.cron';
+import { purgeExpiredDeletions } from '../../src/purge/purge.service';
 import {
   daysAgo,
   organizationExists,
@@ -140,5 +143,95 @@ describe('purge cron', () => {
     expect(summary.organizationsPurged).toBe(1);
     expect(await organizationExists(oldestOrganizationId)).toBe(false);
     expect(await organizationExists(newestOrganizationId)).toBe(true);
+  });
+
+  test('purges removed users, keeping their shared work with a null author', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await requireOrganizationId(owner.userId);
+    const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+    const [sharedDataset] = await db
+      .insert(dataset)
+      .values({ userId: colleague.userId, workspaceId: owner.workspaceId, name: 'Shared' })
+      .returning();
+    await softDeleteUserAt({ userId: colleague.userId, deletedAt: daysAgo(31) });
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 1, failures: 0 });
+    expect(await userExists(colleague.userId)).toBe(false);
+    expect(await organizationExists(organizationId)).toBe(true);
+    const kept = await db.query.dataset.findFirst({ where: { id: sharedDataset?.id ?? '' } });
+    expect(kept).toMatchObject({ name: 'Shared', userId: null });
+  });
+
+  test('deletes the personal workspace R2 objects before the removed user row', async () => {
+    const removedUser = await seedAuthenticatedUser();
+    const personalMedia = await seedWorkspaceMedia({
+      workspaceId: removedUser.personalWorkspaceId,
+    });
+    await softDeleteUserAt({ userId: removedUser.userId, deletedAt: daysAgo(31) });
+    let userRowExistedAtDeleteTime = false;
+    deleteObjectsMock.mockImplementationOnce(async (_bucket, keys) => {
+      userRowExistedAtDeleteTime = await userExists(removedUser.userId);
+      return { deleted: keys, errors: [] };
+    });
+
+    await purgeExpiredDeletions();
+
+    expect(deleteObjectsMock.mock.calls[0]).toEqual([
+      personalMedia.bucket,
+      [personalMedia.storageKey],
+    ]);
+    expect(userRowExistedAtDeleteTime).toBe(true);
+    expect(await userExists(removedUser.userId)).toBe(false);
+  });
+
+  test('does not purge members of a restored organization', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await requireOrganizationId(owner.userId);
+    const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+    await softDeleteOrganization({ organizationId });
+    await restoreOrganization({ organizationId });
+    const inFortyDays = new Date(Date.now() + 40 * 24 * 60 * 60 * 1000);
+
+    const summary = await purgeExpiredDeletions({ now: inFortyDays });
+
+    expect(summary).toEqual({ organizationsPurged: 0, usersPurged: 0, failures: 0 });
+    expect(await userExists(colleague.userId)).toBe(true);
+    expect(await organizationExists(organizationId)).toBe(true);
+  });
+
+  test('leaves the users of a deleted organization to the organization purge', async () => {
+    const owner = await seedAuthenticatedUser();
+    const organizationId = await requireOrganizationId(owner.userId);
+    const colleague = await seedOrganizationMember({ organizationId, role: 'member' });
+    await softDeleteOrganizationAt({ organizationId, deletedAt: daysAgo(10) });
+    await softDeleteUserAt({ userId: colleague.userId, deletedAt: daysAgo(31) });
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary.usersPurged).toBe(0);
+    expect(await userExists(colleague.userId)).toBe(true);
+  });
+
+  test('one failing organization does not block the next', async () => {
+    const firstOwner = await seedAuthenticatedUser();
+    const secondOwner = await seedAuthenticatedUser();
+    const firstOrganizationId = await requireOrganizationId(firstOwner.userId);
+    const secondOrganizationId = await requireOrganizationId(secondOwner.userId);
+    await seedWorkspaceMedia({ workspaceId: firstOwner.workspaceId });
+    await seedWorkspaceMedia({ workspaceId: secondOwner.workspaceId });
+    await softDeleteOrganizationAt({ organizationId: firstOrganizationId, deletedAt: daysAgo(40) });
+    await softDeleteOrganizationAt({
+      organizationId: secondOrganizationId,
+      deletedAt: daysAgo(31),
+    });
+    deleteObjectsMock.mockImplementationOnce(() => Promise.reject(new Error('R2 down')));
+
+    const summary = await purgeExpiredDeletions();
+
+    expect(summary).toEqual({ organizationsPurged: 1, usersPurged: 0, failures: 1 });
+    expect(await organizationExists(firstOrganizationId)).toBe(true);
+    expect(await organizationExists(secondOrganizationId)).toBe(false);
   });
 });

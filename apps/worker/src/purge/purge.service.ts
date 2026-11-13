@@ -1,5 +1,5 @@
 // Hard deletes after the 30 day recovery window. R2 objects go before the rows that point at
-// them, so a failed run keeps everything and the next run retries.
+// them, so a failed R2 cleanup keeps the rows and the next run retries.
 import {
   deleteOrganizationById,
   deleteUsersByIds,
@@ -9,8 +9,9 @@ import {
   listOrganizationIdsDeletedBefore,
   listUserIdsDeletedBefore,
 } from '@repo/database';
+import { removeOrganizationConnections } from '@repo/integrations';
 import { logger } from '@repo/logger';
-import { deleteWorkspaceMediaObjects } from './media.service';
+import { deleteWorkspaceMediaObjects } from '@repo/media';
 
 const RECOVERY_WINDOW_DAYS = 30;
 /** Per kind (organizations, users) and per run; the rest follow on later runs. */
@@ -24,9 +25,11 @@ export interface PurgeExpiredDeletionsSummary {
 }
 
 /**
- * Deletes an organization for good: R2 objects of every workspace, the non-owner users,
- * the organization row (cascading workspaces, members, invitations, credit account), then the owner.
- * Throws when R2 cleanup is incomplete, before any row is touched.
+ * Deletes an organization for good: its integration connections (revoked at the provider first),
+ * R2 objects of every workspace, the non-owner users, the organization row (cascading workspaces,
+ * members, invitations, credit account), then the owner.
+ * Revoking comes first so a failing R2 cleanup never keeps a provider grant alive.
+ * Throws when R2 cleanup is incomplete, before any other row is touched.
  */
 export async function purgeOrganization({
   organizationId,
@@ -35,6 +38,8 @@ export async function purgeOrganization({
 }): Promise<void> {
   const workspaces = await getAllWorkspacesByOrganizationId({ organizationId });
   const organizationMemberUsers = await getOrganizationMemberUsers({ organizationId });
+
+  await removeOrganizationConnections({ organizationId });
 
   for (const { id: workspaceId } of workspaces) {
     const objectsDeleted = await deleteWorkspaceMediaObjects({ workspaceId });

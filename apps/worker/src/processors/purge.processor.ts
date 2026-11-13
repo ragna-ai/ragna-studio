@@ -1,5 +1,5 @@
 import { logger } from '@repo/logger';
-import { deleteMediaObjectsByKeys, purgeOrganization } from '@repo/media';
+import { deleteMediaObjectsByKeys } from '@repo/media';
 import type { ProcessorJob, Worker } from '@repo/queue';
 import {
   createWorker,
@@ -9,6 +9,7 @@ import {
   PURGE_QUEUE,
   purgeOrganizationJobSchema,
 } from '@repo/queue';
+import { purgeOrganization } from '../purge/purge.service';
 
 export function registerPurgeJobProcessor(): Worker<any, any, string> {
   const purgeWorker = createWorker({

@@ -92,8 +92,8 @@ For tables whose feature PRD decides on a trash.
 ## Purge
 
 The existing daily `purge` cron (`apps/worker/src/crons/purge.cron.ts`,
-`purgeExpiredDeletions` in `@repo/media`) already hard-deletes organizations and users after 30
-days, R2 objects first. It grows two steps:
+`purgeExpiredDeletions` in `apps/worker/src/purge/`) already hard-deletes organizations and users after 30
+days, R2 objects first (an organization revokes its integration connections before that). It grows two steps:
 
 1. **Trash**: hard-delete rows of registered tables whose `deleted_at` is older than 30 days.
    R2 objects of those rows go first, as for organizations.

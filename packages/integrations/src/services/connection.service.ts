@@ -1,7 +1,9 @@
 import {
   deleteConnectionById,
+  deleteOrganizationConnections,
   deleteUserConnections,
   getUserConnectionByProvider,
+  listOrganizationConnections,
   listUserConnections,
   removeEnabledIntegration,
   upsertUserConnection,
@@ -134,6 +136,17 @@ export async function removeUserConnections({ userId }: { userId: string }): Pro
   const connections = await listUserConnections({ userId });
   await Promise.all(connections.map(revokeGrantAtProvider));
   await deleteUserConnections({ userId });
+}
+
+/** Organization purge: revokes every connection of the organization at its provider, then deletes them. */
+export async function removeOrganizationConnections({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<void> {
+  const connections = await listOrganizationConnections({ organizationId });
+  await Promise.all(connections.map(revokeGrantAtProvider));
+  await deleteOrganizationConnections({ organizationId });
 }
 
 export interface UnbindConnectionIntegrationParams {
