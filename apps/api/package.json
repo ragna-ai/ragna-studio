@@ -40,7 +40,7 @@
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "hono": "^4.13.14",
+    "hono": "^4.13.16",
     "http-status-codes": "^2.3.0",
     "zod": "catalog:"
   },
