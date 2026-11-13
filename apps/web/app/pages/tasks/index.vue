@@ -185,6 +185,7 @@ function clearFilters() {
         <TaskCreateDialog
           v-model:open="isCreateDialogOpen"
           :status="createStatus"
+          @manage-labels="isLabelManageOpen = true"
         />
         <TaskLabelManageDialog
           v-model:open="isLabelManageOpen"

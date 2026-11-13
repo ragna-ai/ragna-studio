@@ -94,3 +94,10 @@ export function labelTone(label: Pick<TaskLabel, 'color'>): AgentMarkTone {
   }
   return nearest;
 }
+
+/** First tone in code order that no label uses yet; `sea` once all are used. */
+export function firstUnusedTone(
+  usedTones: readonly AgentMarkTone[],
+): AgentMarkTone {
+  return AGENT_MARK_TONES.find((tone) => !usedTones.includes(tone)) ?? 'sea';
+}

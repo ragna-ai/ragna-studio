@@ -1508,9 +1508,6 @@
       "labelDeleted": "Label gelöscht",
       "labelDeleteFailed": "Label konnte nicht gelöscht werden"
     },
-    "validation": {
-      "colorInvalid": "Muss eine Hex-Farbe sein, z. B. #4287f5."
-    },
     "list": {
       "title": "Aufgaben",
       "subtitle": "Plane und verfolge Arbeit für dein Team und deine Agents.",
@@ -1571,7 +1568,9 @@
     },
     "createDialog": {
       "title": "Neue Aufgabe",
-      "titlePlaceholder": "Titel der Aufgabe"
+      "titlePlaceholder": "Titel der Aufgabe",
+      "createMore": "Weitere erstellen",
+      "create": "Aufgabe erstellen"
     },
     "label": {
       "manageTitle": "Labels",
@@ -1582,7 +1581,9 @@
       "delete": "Label löschen",
       "deleteTitle": "Label löschen",
       "deleteMessage": "„{name}“ löschen? Es wird von allen Aufgaben entfernt, keine Aufgaben werden gelöscht.",
-      "empty": "Noch keine Labels."
+      "empty": "Noch keine Labels.",
+      "colour": "Farbe",
+      "add": "Hinzufügen"
     },
     "detail": {
       "title": "Aufgabe",
@@ -1621,7 +1622,11 @@
       "labels": "Labels",
       "noLabels": "Keine Labels",
       "reminder": "Erinnere mich",
-      "delete": "Aufgabe löschen"
+      "delete": "Aufgabe löschen",
+      "removeDate": "Datum entfernen",
+      "searchAgents": "Agents suchen",
+      "noAgents": "Keine Agents gefunden",
+      "searchLabels": "Labels suchen"
     },
     "reminder": {
       "off": "Aus",
