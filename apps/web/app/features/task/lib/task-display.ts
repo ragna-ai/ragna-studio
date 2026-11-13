@@ -1,12 +1,4 @@
 import {
-  MinusIcon,
-  SignalHighIcon,
-  SignalLowIcon,
-  SignalMediumIcon,
-  TriangleAlertIcon,
-  type LucideIcon,
-} from '@lucide/vue';
-import {
   TASK_PRIORITIES,
   TASK_STATUSES,
   type Task,
@@ -19,50 +11,110 @@ export function formatTaskDisplayId(taskNumber: number): string {
   return `TSK-${taskNumber}`;
 }
 
-export const STATUS_COLUMNS: { value: TaskStatus; labelKey: string }[] = [
-  { value: 'backlog', labelKey: 'task.status.backlog' },
-  { value: 'todo', labelKey: 'task.status.todo' },
-  { value: 'in_progress', labelKey: 'task.status.in_progress' },
-  { value: 'in_review', labelKey: 'task.status.in_review' },
-  { value: 'done', labelKey: 'task.status.done' },
-  { value: 'canceled', labelKey: 'task.status.canceled' },
-];
-
-export const PRIORITY_OPTIONS: {
-  value: TaskPriority;
+export interface TaskStatusOption {
+  value: TaskStatus;
   labelKey: string;
-  icon: LucideIcon;
-}[] = [
-  { value: 'none', labelKey: 'task.priority.none', icon: MinusIcon },
-  { value: 'low', labelKey: 'task.priority.low', icon: SignalLowIcon },
-  { value: 'medium', labelKey: 'task.priority.medium', icon: SignalMediumIcon },
-  { value: 'high', labelKey: 'task.priority.high', icon: SignalHighIcon },
-  {
-    value: 'urgent',
-    labelKey: 'task.priority.urgent',
-    icon: TriangleAlertIcon,
-  },
-];
-
-export function priorityIcon(priority: TaskPriority): LucideIcon {
-  return (
-    PRIORITY_OPTIONS.find((option) => option.value === priority)?.icon ??
-    MinusIcon
-  );
+  icon: string;
+  iconClass: string;
 }
 
-export function priorityLabelKey(priority: TaskPriority): string {
-  return (
-    PRIORITY_OPTIONS.find((option) => option.value === priority)?.labelKey ??
-    'task.priority.none'
-  );
+export interface TaskPriorityOption {
+  value: TaskPriority;
+  labelKey: string;
+  icon: string;
+  iconClass: string;
+}
+
+const STATUS_DISPLAY = {
+  backlog: {
+    value: 'backlog',
+    labelKey: 'task.status.backlog',
+    icon: 'hugeicons:circle-dashed',
+    iconClass: 'text-icon',
+  },
+  todo: {
+    value: 'todo',
+    labelKey: 'task.status.todo',
+    icon: 'hugeicons:progress-01',
+    iconClass: 'text-icon',
+  },
+  in_progress: {
+    value: 'in_progress',
+    labelKey: 'task.status.in_progress',
+    icon: 'hugeicons:progress-03',
+    iconClass: 'text-icon',
+  },
+  in_review: {
+    value: 'in_review',
+    labelKey: 'task.status.in_review',
+    icon: 'hugeicons:progress-04',
+    iconClass: 'text-icon',
+  },
+  done: {
+    value: 'done',
+    labelKey: 'task.status.done',
+    icon: 'hugeicons:checkmark-circle-02',
+    iconClass: 'text-status-ok-fg',
+  },
+  canceled: {
+    value: 'canceled',
+    labelKey: 'task.status.canceled',
+    icon: 'hugeicons:cancel-circle',
+    iconClass: 'text-muted-foreground',
+  },
+} satisfies Record<TaskStatus, TaskStatusOption>;
+
+const PRIORITY_DISPLAY = {
+  none: {
+    value: 'none',
+    labelKey: 'task.priority.none',
+    icon: 'hugeicons:minus-sign',
+    iconClass: 'text-icon',
+  },
+  urgent: {
+    value: 'urgent',
+    labelKey: 'task.priority.urgent',
+    icon: 'hugeicons:alert-02',
+    iconClass: 'text-status-warn-fg',
+  },
+  high: {
+    value: 'high',
+    labelKey: 'task.priority.high',
+    icon: 'hugeicons:signal-full-02',
+    iconClass: 'text-icon',
+  },
+  medium: {
+    value: 'medium',
+    labelKey: 'task.priority.medium',
+    icon: 'hugeicons:signal-medium-02',
+    iconClass: 'text-icon',
+  },
+  low: {
+    value: 'low',
+    labelKey: 'task.priority.low',
+    icon: 'hugeicons:signal-low-02',
+    iconClass: 'text-icon',
+  },
+} satisfies Record<TaskPriority, TaskPriorityOption>;
+
+export const STATUS_COLUMNS: TaskStatusOption[] = TASK_STATUSES.map(
+  (status) => STATUS_DISPLAY[status],
+);
+
+export const PRIORITY_OPTIONS: TaskPriorityOption[] = TASK_PRIORITIES.map(
+  (priority) => PRIORITY_DISPLAY[priority],
+);
+
+export function priorityOption(priority: TaskPriority): TaskPriorityOption {
+  return PRIORITY_DISPLAY[priority];
+}
+
+export function statusOption(status: TaskStatus): TaskStatusOption {
+  return STATUS_DISPLAY[status];
 }
 
 export function statusLabelKey(status: TaskStatus): string {
-  return (
-    STATUS_COLUMNS.find((column) => column.value === status)?.labelKey ??
-    'task.status.todo'
-  );
+  return STATUS_DISPLAY[status].labelKey;
 }
 
 // shadcn's Select emits its generic `AcceptableValue` (string | Record<string,

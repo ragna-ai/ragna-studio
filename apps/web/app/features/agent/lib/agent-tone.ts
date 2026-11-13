@@ -1,17 +1,5 @@
 import { AGENT_MARK_TONES, type AgentMarkTone } from '@repo/ai/client';
 
-// Utility classes are written out in full so Tailwind can detect them.
-export const AGENT_TONE_CLASS: Record<AgentMarkTone, string> = {
-  sea: 'bg-id-sea-bg text-id-sea-fg',
-  sage: 'bg-id-sage-bg text-id-sage-fg',
-  ochre: 'bg-id-ochre-bg text-id-ochre-fg',
-  clay: 'bg-id-clay-bg text-id-clay-fg',
-  dusk: 'bg-id-dusk-bg text-id-dusk-fg',
-  plum: 'bg-id-plum-bg text-id-plum-fg',
-  rose: 'bg-id-rose-bg text-id-rose-fg',
-  stone: 'bg-id-stone-bg text-id-stone-fg',
-};
-
 // Agents without a stored tone keep the colour they always had: one of the original four.
 const FALLBACK_TONES: readonly AgentMarkTone[] = [
   'sea',

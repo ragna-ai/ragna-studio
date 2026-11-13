@@ -3,8 +3,10 @@ import { CalendarIcon, UserIcon } from '@lucide/vue';
 import {
   formatTaskDisplayId,
   isTaskOverdue,
-  priorityIcon,
+  priorityOption,
 } from '~/features/task/lib/task-display';
+import { labelTone } from '~/features/task/lib/label-tone';
+import { cn } from '~/lib/utils';
 import type { TaskWithBoardInfo } from '~/features/task/types';
 
 // Props
@@ -17,7 +19,7 @@ const { formatDate } = useDateTimeFormat();
 // Computed
 const displayId = computed(() => formatTaskDisplayId(props.task.number));
 const overdue = computed(() => isTaskOverdue(props.task));
-const PriorityIcon = computed(() => priorityIcon(props.task.priority));
+const priority = computed(() => priorityOption(props.task.priority));
 const dueDateLabel = computed(() =>
   props.task.dueDate ? formatDate(props.task.dueDate) : null,
 );
@@ -32,25 +34,24 @@ const dueDateLabel = computed(() =>
       <span class="text-xs font-medium text-muted-foreground">{{
         displayId
       }}</span>
-      <component
-        :is="PriorityIcon"
-        v-if="task.priority !== 'none'"
-        class="size-3.5 shrink-0 text-muted-foreground"
-        :aria-label="t(`task.priority.${task.priority}`)"
+      <Icon
+        :name="priority.icon"
+        :class="cn('size-3.5 shrink-0', priority.iconClass)"
+        role="img"
+        :aria-label="t(priority.labelKey)"
       />
     </div>
 
     <p class="mt-1 line-clamp-3 text-sm font-medium">{{ task.title }}</p>
 
     <div v-if="task.labels.length > 0" class="mt-2 flex flex-wrap gap-1">
-      <Badge
+      <Tag
         v-for="label in task.labels"
         :key="label.id"
-        variant="outline"
-        :style="{ borderColor: label.color, color: label.color }"
+        :tone="labelTone(label)"
       >
         {{ label.name }}
-      </Badge>
+      </Tag>
     </div>
 
     <div

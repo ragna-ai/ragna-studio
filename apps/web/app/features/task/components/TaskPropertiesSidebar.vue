@@ -4,6 +4,9 @@ import {
   useMoveTask,
   useUpdateTask,
 } from '~/features/task/composables/useTaskApi';
+import { labelTone } from '~/features/task/lib/label-tone';
+import { TONE_DOT_CLASS } from '~/lib/tone';
+import { cn } from '~/lib/utils';
 import {
   isTaskPriority,
   isTaskStatus,
@@ -202,14 +205,13 @@ function commitCustomDays() {
               {{ t('task.property.noLabels') }}
             </span>
             <span v-else class="flex flex-wrap gap-1">
-              <Badge
+              <Tag
                 v-for="label in task.labels"
                 :key="label.id"
-                variant="outline"
-                :style="{ borderColor: label.color, color: label.color }"
+                :tone="labelTone(label)"
               >
                 {{ label.name }}
-              </Badge>
+              </Tag>
             </span>
           </Button>
         </DropdownMenuTrigger>
@@ -221,8 +223,12 @@ function commitCustomDays() {
             @update:model-value="(checked) => toggleLabel(label.id, checked)"
           >
             <span
-              class="mr-2 inline-block size-2.5 rounded-full"
-              :style="{ backgroundColor: label.color }"
+              :class="
+                cn(
+                  'mr-2 inline-block size-1.5 rounded-full',
+                  TONE_DOT_CLASS[labelTone(label)],
+                )
+              "
             />
             {{ label.name }}
           </DropdownMenuCheckboxItem>

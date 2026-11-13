@@ -3,9 +3,11 @@ import { UserIcon } from '@lucide/vue';
 import {
   formatTaskDisplayId,
   isTaskOverdue,
-  priorityIcon,
+  priorityOption,
   STATUS_COLUMNS,
 } from '~/features/task/lib/task-display';
+import { labelTone } from '~/features/task/lib/label-tone';
+import { cn } from '~/lib/utils';
 import type { TaskWithBoardInfo } from '~/features/task/types';
 
 // Props
@@ -70,24 +72,28 @@ function rowClass(task: TaskWithBoardInfo): Record<string, boolean> {
             <div
               class="flex items-center gap-1.5 text-sm text-muted-foreground"
             >
-              <component
-                :is="priorityIcon(task.priority)"
-                v-if="task.priority !== 'none'"
-                class="size-3.5"
+              <Icon
+                :name="priorityOption(task.priority).icon"
+                :class="
+                  cn(
+                    'size-3.5 shrink-0',
+                    priorityOption(task.priority).iconClass,
+                  )
+                "
+                aria-hidden="true"
               />
-              <span>{{ t(`task.priority.${task.priority}`) }}</span>
+              <span>{{ t(priorityOption(task.priority).labelKey) }}</span>
             </div>
           </TableCell>
           <TableCell>
             <div class="flex flex-wrap gap-1">
-              <Badge
+              <Tag
                 v-for="label in task.labels"
                 :key="label.id"
-                variant="outline"
-                :style="{ borderColor: label.color, color: label.color }"
+                :tone="labelTone(label)"
               >
                 {{ label.name }}
-              </Badge>
+              </Tag>
             </div>
           </TableCell>
           <TableCell class="text-sm whitespace-nowrap" :class="rowClass(task)">
