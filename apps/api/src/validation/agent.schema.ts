@@ -44,6 +44,9 @@ export const validCreateAgentBody = myzValidator(
     context: z.string().max(AGENT_CONTEXT_MAX_LENGTH).nullish(),
     toolGrants: agentToolGrantsSchema.optional(),
     defaultDatasetId: primaryId.nullish(),
+    icon: agentMarkIconSchema.nullish(),
+    tone: agentMarkToneSchema.nullish(),
+    imageMediaId: primaryId.nullish(),
     settings: agentSettingsSchema,
   }),
 );

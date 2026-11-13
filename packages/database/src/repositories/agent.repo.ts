@@ -48,6 +48,9 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
     toolGrants,
     settings,
     defaultDatasetId,
+    icon,
+    tone,
+    imageMediaId,
   } = values;
 
   const [createdAgent] = await db
@@ -62,6 +65,9 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
       context,
       toolGrants,
       defaultDatasetId,
+      icon,
+      tone,
+      imageMediaId,
       // Omit when unset so the column's $defaultFn default applies.
       ...(settings !== undefined ? { settings } : {}),
     })

@@ -107,6 +107,20 @@ async function uploadLogo(page: Page) {
     });
 }
 
+async function fillCreateForm(page: Page, name: string) {
+  await page.goto('/agent/create');
+  await page.getByLabel('Name').fill(name);
+  await page.getByRole('tab', { name: 'Model' }).click();
+  await page.getByRole('combobox').click();
+  await page.getByRole('option', { name: /E2E Model/ }).click();
+  await page.getByRole('tab', { name: 'Persona' }).click();
+}
+
+async function saveNew(page: Page) {
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page).toHaveURL(/\/agent$/);
+}
+
 async function save(page: Page) {
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Agent updated')).toBeVisible();
@@ -209,4 +223,36 @@ test('keeps the old mark when the page is left without saving', async ({
   const mark = listMark(page, name);
   await expect(mark).toHaveAttribute('data-icon', 'bank');
   await expect(mark).toHaveAttribute('data-tone', 'rose');
+});
+
+test('creates an agent with the picked icon and tone', async ({ page }) => {
+  const name = uniqueName('Created marked agent');
+  await fillCreateForm(page, name);
+  await page.getByRole('button', { name: 'Change' }).click();
+
+  await page.getByRole('radio', { name: 'Plum' }).click();
+  await page.getByRole('radio', { name: 'Invoice' }).click();
+  await saveNew(page);
+
+  const mark = listMark(page, name);
+  await expect(mark).toHaveAttribute('data-icon', 'invoice-01');
+  await expect(mark).toHaveAttribute('data-tone', 'plum');
+});
+
+test('creates an agent with an uploaded image', async ({ page }) => {
+  await page.route(MEDIA_URL_PATTERN, (route) =>
+    route.fulfill({ contentType: 'image/png', body: ONE_PX_PNG }),
+  );
+  const name = uniqueName('Created image agent');
+  await fillCreateForm(page, name);
+  await page.getByRole('button', { name: 'Change' }).click();
+
+  await page.getByRole('tab', { name: 'Image' }).click();
+  await uploadLogo(page);
+  await expect(
+    page.getByRole('button', { name: 'Remove image' }),
+  ).toBeVisible();
+  await saveNew(page);
+
+  await expect(listMark(page, name)).toHaveAttribute('data-kind', 'image');
 });

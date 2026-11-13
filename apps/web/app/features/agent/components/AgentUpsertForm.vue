@@ -4,6 +4,7 @@ import {
   AGENT_CONTEXT_MAX_LENGTH,
   AGENT_INSTRUCTIONS_MAX_LENGTH,
   agentMarkIconSchema,
+  AGENT_MARK_TONES,
   agentMarkToneSchema,
   agentToolGrantsSchema,
   type AgentToolGrant,
@@ -141,7 +142,7 @@ const form = useForm({
     defaultDatasetId: props.defaultDatasetId ?? null,
     mark: {
       icon: markIconOrNull(props.icon),
-      tone: markToneOrNull(props.tone),
+      tone: props.id ? markToneOrNull(props.tone) : randomMarkTone(),
       imageMediaId: props.imageMediaId ?? null,
       imageUrl: props.imageUrl ?? null,
     },
@@ -165,7 +166,15 @@ const form = useForm({
       );
       return;
     }
-    createAgent(agentFields, { onSuccess: () => navigateTo('/agent') });
+    createAgent(
+      {
+        ...agentFields,
+        icon: mark.icon,
+        tone: mark.tone,
+        imageMediaId: mark.imageMediaId,
+      },
+      { onSuccess: () => navigateTo('/agent') },
+    );
   },
   onSubmitInvalid: () => revealFirstInvalidField(),
 });
@@ -233,6 +242,13 @@ const siderBarTabs = computed(() => [
 // Functions
 function markIconOrNull(icon: string | null | undefined) {
   return agentMarkIconSchema.safeParse(icon).data ?? null;
+}
+
+function randomMarkTone() {
+  return (
+    AGENT_MARK_TONES[Math.floor(Math.random() * AGENT_MARK_TONES.length)] ??
+    null
+  );
 }
 
 function markToneOrNull(tone: string | null | undefined) {
@@ -347,7 +363,7 @@ watch(hasAdvancedError, (hasError) => {
           :title="t('agent.upsert.tabs.persona')"
           :subtitle="t('agent.upsert.personaSubtitle')"
         />
-        <form.Field v-if="props.id" name="mark">
+        <form.Field name="mark">
           <template v-slot="{ field, state }">
             <div class="flex flex-col gap-2">
               <Label class="text-sm font-medium">

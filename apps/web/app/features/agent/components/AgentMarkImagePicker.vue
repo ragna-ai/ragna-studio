@@ -10,7 +10,7 @@ import type { UploadedAgentImage } from '~/features/agent/types';
 import { toast } from '~/lib/toast';
 
 interface AgentMarkImagePickerProps {
-  agentId: string;
+  agentId?: string;
   imageUrl: string | null;
   // Known only for a file picked in this session.
   imageName?: string | null;

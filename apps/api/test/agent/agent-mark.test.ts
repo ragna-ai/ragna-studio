@@ -248,6 +248,115 @@ describe('PATCH /workspace/:workspaceId/agent/:agentId mark fields', () => {
   });
 });
 
+describe('POST /workspace/:workspaceId/agent mark fields', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
+
+  async function postAgent(session: Session, mark: Record<string, unknown>): Promise<Response> {
+    const { aiModelId } = await seedTokenPricedAiModel();
+    return app.request(
+      `/workspace/${session.workspaceId}/agent`,
+      jsonRequest(session.cookieHeader, 'POST', {
+        name: 'Mark bot',
+        aiModelId,
+        systemPrompt: 'Be brief.',
+        ...mark,
+      }),
+    );
+  }
+
+  async function listAgentIds(session: Session): Promise<string[]> {
+    const response = await app.request(`/workspace/${session.workspaceId}/agent`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    return agentListResponseSchema.parse(await response.json()).agents.map((agent) => agent.id);
+  }
+
+  test('creates an agent with an icon and a tone', async () => {
+    const session = await seedAuthenticatedUser();
+
+    const response = await postAgent(session, { icon: 'invoice-01', tone: 'plum' });
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+    const { agent } = agentResponseSchema.parse(await response.json());
+    expect(agent).toMatchObject({ icon: 'invoice-01', tone: 'plum', imageUrl: null });
+    expect(await getAgent(session, agent.id)).toMatchObject({ icon: 'invoice-01', tone: 'plum' });
+  });
+
+  test('creates an agent with an image uploaded before it existed', async () => {
+    const session = await seedAuthenticatedUser();
+    const mediaId = await uploadedMediaId(session);
+    const mediaRow = await getMediaById({ id: mediaId });
+
+    const response = await postAgent(session, { imageMediaId: mediaId });
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+    const expectedUrl = toPublicMediaUrl(mediaRow?.storageKey ?? '');
+    const { agent } = agentResponseSchema.parse(await response.json());
+    expect(agent).toMatchObject({ imageMediaId: mediaId, imageUrl: expectedUrl });
+    expect(await getAgent(session, agent.id)).toMatchObject({ imageUrl: expectedUrl });
+  });
+
+  test('keeps an image saved on create through the media sweep', async () => {
+    const session = await seedAuthenticatedUser();
+    const mediaId = await uploadedMediaId(session);
+    await postAgent(session, { imageMediaId: mediaId });
+
+    await sweepUnreferencedMedia({ olderThanHours: 0 });
+
+    expect(await getMediaById({ id: mediaId })).not.toBeNull();
+  });
+
+  test('rejects an icon that is not offered and creates nothing', async () => {
+    const session = await seedAuthenticatedUser();
+
+    const response = await postAgent(session, { icon: 'rocket-launch' });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await listAgentIds(session)).toEqual([]);
+  });
+
+  test('rejects an unknown tone and creates nothing', async () => {
+    const session = await seedAuthenticatedUser();
+
+    const response = await postAgent(session, { tone: 'neon' });
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+    expect(await listAgentIds(session)).toEqual([]);
+  });
+
+  test('404s an image that belongs to another workspace and creates nothing', async () => {
+    const owner = await seedAuthenticatedUser();
+    const other = await seedAuthenticatedUser();
+    const foreignMediaId = await uploadedMediaId(other);
+
+    const response = await postAgent(owner, { imageMediaId: foreignMediaId });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(await listAgentIds(owner)).toEqual([]);
+  });
+
+  test('404s a media row that is not an image and creates nothing', async () => {
+    const session = await seedAuthenticatedUser();
+    const document = await createMedia({
+      ownerWorkspaceId: session.workspaceId,
+      bucket: 'documents',
+      storageKey: `${session.workspaceId}/media/doc`,
+      filename: 'doc.pdf',
+      mimeType: 'application/pdf',
+      size: 10,
+      origin: 'uploaded',
+    });
+
+    const response = await postAgent(session, { imageMediaId: document.id });
+
+    expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    expect(await listAgentIds(session)).toEqual([]);
+  });
+});
+
 describe('POST /workspace/:workspaceId/agent/image-upload', () => {
   beforeEach(async () => {
     await truncateAllTables();

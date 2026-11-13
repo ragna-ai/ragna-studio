@@ -20,7 +20,7 @@ import type {
 } from '~/features/agent/types';
 
 interface AgentMarkFieldProps {
-  agentId: string;
+  agentId?: string;
 }
 
 const DEFAULT_ICON = agentMarkIconSchema.enum.robotic;

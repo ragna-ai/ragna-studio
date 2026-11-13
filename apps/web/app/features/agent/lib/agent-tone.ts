@@ -21,7 +21,7 @@ const FALLBACK_TONES: readonly AgentMarkTone[] = [
 ];
 
 /** Stable tone for an agent that has none of its own. */
-export function fallbackAgentTone(agentId: string): AgentMarkTone {
+export function fallbackAgentTone(agentId = ''): AgentMarkTone {
   let hash = 0;
   for (const char of agentId) {
     hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0;

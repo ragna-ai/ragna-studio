@@ -10,7 +10,7 @@ import { cn } from '~/lib/utils';
 export type AgentMarkSize = 16 | 20 | 24 | 28 | 40;
 
 interface AgentMarkProps {
-  agentId: string;
+  agentId?: string;
   icon?: string | null;
   tone?: string | null;
   imageUrl?: string | null;

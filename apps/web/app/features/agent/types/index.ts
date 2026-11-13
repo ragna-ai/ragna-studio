@@ -73,17 +73,9 @@ export interface AgentManyResponse {
 // of one upsert.
 export type CreateAgentRequest = Omit<
   Agent,
-  | 'id'
-  | 'userId'
-  | 'workspaceId'
-  | 'aiModel'
-  | 'icon'
-  | 'tone'
-  | 'imageUrl'
-  | 'imageMediaId'
+  'id' | 'userId' | 'workspaceId' | 'aiModel' | 'imageUrl'
 >;
 
-// The mark is edited on existing agents only; the create flow follows later.
 export type UpdateAgentRequest = Partial<CreateAgentRequest> &
   Pick<Agent, 'icon' | 'tone' | 'imageMediaId'>;
 
