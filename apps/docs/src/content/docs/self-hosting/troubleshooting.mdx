@@ -26,11 +26,12 @@ Add a service name, such as `backend` or `migrate`, to see only its logs.
 
 ## Startup
 
-| Symptom                                          | Likely cause and fix                                                                                                           |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `migrate` fails with `ECONNREFUSED` on port 5432 | Releases before the Postgres health check started `migrate` too early on the first start. Run the installer again, or upgrade. |
-| `backend` or `migrate` can't log in to Postgres  | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value.      |
-| Log warning `MEDIA_URL is not set`               | No storage configured. Fine if storage was skipped, see [Storage](/self-hosting/storage).                                      |
+| Symptom                                                     | Likely cause and fix                                                                                                                                |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `migrate` fails with `ECONNREFUSED` on port 5432            | Releases before the Postgres health check started `migrate` too early on the first start. Run the installer again, or upgrade.                      |
+| `backend` or `migrate` can't log in to Postgres             | `DB_PASSWORD` changed after the first start. The database keeps the password from its first start. Restore the old value.                           |
+| `seed` fails with `exec: "node": executable file not found` | The compose files are older than the images. Download the release's compose files, see [Upgrades](/self-hosting/upgrades-and-backups#seed-command). |
+| Log warning `MEDIA_URL is not set`                          | No storage configured. Fine if storage was skipped, see [Storage](/self-hosting/storage).                                                           |
 
 ## Sign-in / Auth
 
@@ -48,6 +49,27 @@ Add a service name, such as `backend` or `migrate`, to see only its logs.
 | Uploads and image generation fail | No storage configured. Set the `S3_*` values, see [Storage](/self-hosting/storage).                             |
 | Images don't load                 | The images bucket isn't public-read, or `MEDIA_URL` and `NUXT_PUBLIC_MEDIA_URL` don't match its public URL.     |
 | Live updates don't arrive         | The reverse proxy doesn't pass WebSocket upgrades to the API, see [Reverse proxy](/self-hosting/reverse-proxy). |
+
+## Debugging a running container
+
+The `migrate`, `frontend`, `backend` and `worker` images have no shell and no package manager. This keeps them small and leaves fewer packages to patch. `docker exec ... sh` doesn't work on them.
+
+To look inside one, start a throwaway `busybox` container that shares its processes and network. This example attaches to `backend`:
+
+```bash
+docker run --rm -it --cap-add SYS_PTRACE \
+  --pid=container:ragna_studio_backend \
+  --network=container:ragna_studio_backend \
+  busybox sh
+```
+
+Inside it:
+
+- `ps` lists the service's processes.
+- `wget -qO- http://localhost:3010/health` calls the service from its own network.
+- `ls /proc/1/root/app` shows the service's files.
+
+To copy a file out, `docker cp` works without a shell: `docker cp ragna_studio_backend:/app/package.json .`
 
 ## Changed `.env`?
 

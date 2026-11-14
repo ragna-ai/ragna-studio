@@ -23,7 +23,7 @@ services:
     image: ghcr.io/ragna-ai/ragna-studio-migrate:${RAGNA_VERSION:-latest}
     container_name: ragna_studio_seed
     restart: 'no'
-    command: ['node', 'dist/seed/index.mjs']
+    command: ['bun', 'dist/seed/index.mjs']
     env_file:
       - .env
     security_opt:

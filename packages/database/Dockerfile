@@ -60,23 +60,23 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
   pnpm --filter @repo/database deploy --prod /prod/database --store-dir /var/cache/pnpm
 
 # ============================================================
-# Runner — minimal image for the migrate/seed one-shot commands
+# Runner — Bun distroless (no shell, no package manager) for the
+# migrate/seed one-shot commands. Numeric UID: distroless has no user
+# 1000, but the prod Job runs as 1000.
 # ============================================================
-FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runner
+FROM oven/bun:1.4.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# npm is unused at runtime and its bundled deps carry CVEs.
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
-
-COPY --from=builder --chown=node:node /prod/database .
+COPY --from=builder --chown=1000:1000 /prod/database .
 # pnpm deploy only keeps files listed in package.json's "files" field
 # (dist/); the generated SQL migrations live outside that, so pull them
 # straight from the pruned source instead.
-COPY --from=pruner --chown=node:node /app/out/full/packages/database/drizzle ./drizzle
+COPY --from=pruner --chown=1000:1000 /app/out/full/packages/database/drizzle ./drizzle
 
-USER node
+USER 1000:1000
 
-CMD ["node", "dist/scripts/migrate.mjs"]
+ENTRYPOINT []
+CMD ["bun", "dist/scripts/migrate.mjs"]

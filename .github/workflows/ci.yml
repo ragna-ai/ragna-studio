@@ -23,6 +23,7 @@ jobs:
       code: ${{ steps.detect.outputs.code }}
       tests: ${{ steps.detect.outputs.tests }}
       e2e: ${{ steps.detect.outputs.e2e }}
+      images: ${{ steps.detect.outputs.images }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,10 +64,33 @@ jobs:
           if [ "$root_changed" = true ] || echo "$affected" | grep -qxE '@repo/api|@repo/worker'; then tests=true; fi
           if [ "$root_changed" = true ] || echo "$affected" | grep -qxE '@repo/api|@repo/web'; then e2e=true; fi
 
+          # An image is rebuilt when its package or a dependency changed. Files that shape
+          # every image (lockfile, smoke tests, compose, the release build) rebuild all.
+          all_images=$root_changed
+          if git diff --name-only "$BASE...HEAD" |
+            grep -qE '^(pnpm-lock\.yaml|scripts/image-smoke/|docker/|\.github/workflows/release\.yml)'; then
+            all_images=true
+          fi
+          images='[]'
+          for entry in \
+            migrate:@repo/database:packages/database/Dockerfile \
+            backend:@repo/api:apps/api/Dockerfile \
+            frontend:@repo/web:apps/web/Dockerfile \
+            worker:@repo/worker:apps/worker/Dockerfile \
+            webbrowser:@repo/webbrowser:apps/webbrowser/Dockerfile; do
+            IFS=: read -r image package dockerfile <<< "$entry"
+            if [ "$all_images" = true ] || echo "$affected" | grep -qxF "$package"; then
+              images=$(echo "$images" | jq -c --arg image "$image" --arg dockerfile "$dockerfile" \
+                '. + [{image: $image, dockerfile: $dockerfile}]')
+            fi
+          done
+
           echo "Affected packages: ${affected:-none}, root files changed: $root_changed"
+          echo "Images: $images"
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "tests=$tests" >> "$GITHUB_OUTPUT"
           echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
+          echo "images=$images" >> "$GITHUB_OUTPUT"
 
   build-and-check:
     needs: changes
@@ -231,3 +255,51 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # Releases are the only other place images get built, so a broken Dockerfile or base
+  # image would otherwise first fail at release time. amd64 only, never pushed.
+  image-smoke:
+    needs: changes
+    if: needs.changes.outputs.images != '[]'
+    name: image-smoke (${{ matrix.image }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.changes.outputs.images) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The worker only boots on a migrated database.
+      - if: matrix.image == 'worker'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: packages/database/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ragna-studio-migrate:smoke
+          # Read-only use of the release cache; PRs never write to it.
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-migrate:buildcache-linux-amd64
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          load: true
+          tags: ragna-studio-${{ matrix.image }}:smoke
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}:buildcache-linux-amd64
+
+      - name: Smoke test
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: |
+          migrate_ref=""
+          if [ "$IMAGE" = worker ]; then migrate_ref=ragna-studio-migrate:smoke; fi
+          scripts/image-smoke/run.sh "$IMAGE" "ragna-studio-$IMAGE:smoke" $migrate_ref

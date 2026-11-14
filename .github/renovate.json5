@@ -37,6 +37,18 @@
     // v2 needs upstream fixes before we can move
     'vue-stream-markdown',
   ],
+  customManagers: [
+    {
+      // Source pins in Dockerfiles (the worker's ffmpeg build), marked with a
+      // `# renovate:` comment on the line above the ARG.
+      customType: 'regex',
+      managerFilePatterns: ['/(^|/)Dockerfile$/'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( extractVersion=(?<extractVersion>\\S+))?\\nARG \\w+_VERSION=(?<currentValue>\\S+)',
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) currentValue=(?<currentValue>\\S+)\\nARG \\w+_COMMIT=(?<currentDigest>\\S+)',
+      ],
+    },
+  ],
   packageRules: [
     {
       // npm majors are done by hand with `pnpm pkg:update`
@@ -91,8 +103,15 @@
       // below the 'docker images' rule to override its group.
       groupName: 'runtime images',
       matchDatasources: ['docker'],
-      matchPackageNames: ['node', 'oven/bun'],
+      matchPackageNames: ['node', 'oven/bun', 'debian'],
       pinDigests: true,
+      schedule: ['at any time'],
+      draftPR: false,
+    },
+    {
+      // The worker's ffmpeg is built from source, so its security fixes arrive here.
+      groupName: 'runtime images',
+      matchPackageNames: ['FFmpeg/FFmpeg', 'https://code.videolan.org/videolan/x264.git'],
       schedule: ['at any time'],
       draftPR: false,
     },

@@ -27,6 +27,12 @@ For a setup [installed by hand](/self-hosting/install-options/docker-compose), d
 
 Or switch to the installer. It recognizes the folder because `.env` has `RAGNA_VERSION`.
 
+### Seed command
+
+The images run on Bun and no longer contain `node`. The `seed` service in `docker/docker-compose.yml` now runs `bun dist/seed/index.mjs`.
+
+The installer's `--upgrade` downloads the new compose files. For a manual setup, download them as in step 2 above. With the old compose file, `seed` fails with `exec: "node": executable file not found` and the other services don't start.
+
 ### API error format
 
 API error responses now follow RFC 9457 (`application/problem+json`) with a `type` and a `status`. This release still sends the old `code` and `error` fields next to the new ones. Both are removed in the next minor release.

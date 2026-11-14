@@ -1,6 +1,7 @@
 # Runtime images: Bun everywhere, distroless where possible (PRD)
 
 > **Status: proposed** (2026-11-14). Issue #392. Follows #391 (Node 26, npm removed from runners).
+> Also covers #259 (build images in CI) and #160 (migrations on a fresh Postgres in CI).
 
 The runtime images ship OS packages they never use, and Trivy reports them as HIGH findings. This PRD
 moves every runner stage to Bun and, except for webbrowser, to Bun's distroless image. Build stages
@@ -28,7 +29,9 @@ api and webbrowser already run on Bun. web, worker and migrate run on Node.
 
 ## Non-goals
 
-- Build stages. They keep Node, pnpm, turbo, Vite and tsdown. Their layers don't ship.
+- Build stages. They keep Node, pnpm, turbo, Vite and tsdown. Their layers don't ship. Only web's
+  build stage moves from Alpine to Debian slim, so the sharp it traces matches the glibc runner.
+- How the build stages install pnpm and turbo (#258).
 - webbrowser on distroless. Chromium needs about 100 shared libraries plus fonts. Copying them by hand
   is fragile and hides their CVEs from Trivy (see Decisions).
 - A `-debug` image variant with a shell.
@@ -83,21 +86,38 @@ without `exec sh`.
 - **US-4.1** Given a running api container, when the platform admin follows the self-hosting docs,
   then they get a shell that sees the container's processes, network and files.
 
+### US-5 Images are built and tested before release (P1)
+
+As a platform admin, I want every pull request that touches an image to build and boot it, so that a
+broken image fails the pull request instead of the release.
+
+- **US-5.1** Given a pull request that changes an image's package, one of its dependencies, the
+  lockfile or a Dockerfile, when CI runs, then that image is built and smoke-tested.
+- **US-5.2** Given a change that breaks an image's build, boot or health check, when CI runs, then
+  the pull request's image check fails.
+- **US-5.3** Given a fresh Postgres, when the migrate image runs, then every migration applies and the
+  seed exits 0.
+- **US-5.4** Given a running service, when it receives SIGTERM, then it exits 0 without waiting for
+  the kill timeout.
+
 ## Testing
 
-CI never builds images, so these run by hand before the PR leaves draft.
+`scripts/image-smoke/run.sh` runs the same checks locally and in the CI `image-smoke` job.
 
-| Criterion      | Level                              | Where               |
-| -------------- | ---------------------------------- | ------------------- |
-| US-1.1, US-1.3 | Trivy scan per image               | PR body             |
-| US-1.2         | `docker run --entrypoint sh` fails | local build         |
-| US-2.1         | migrate + seed against local DB    | local build         |
-| US-2.2, US-2.3 | worker job smoke test              | local build         |
-| US-2.4, US-2.5 | compose `--wait`, stopped endpoint | local build         |
-| US-2.6         | prod deploy                        | Sven, after release |
-| web in browser | visual review (OAuth login)        | Sven                |
-| US-3.1, US-3.2 | upgrade from previous release      | local compose       |
-| US-4.1         | follow the docs recipe             | local build         |
+| Criterion      | Level                                 | Where                      |
+| -------------- | ------------------------------------- | -------------------------- |
+| US-1.1, US-1.3 | Trivy scan per image                  | PR body                    |
+| US-1.2         | image smoke (no shell)                | `scripts/image-smoke/`     |
+| US-2.1, US-5.3 | image smoke (migrate + seed)          | `scripts/image-smoke/`     |
+| US-2.2, US-2.3 | image smoke (worker script, fixtures) | `scripts/image-smoke/`     |
+| US-2.4         | image smoke (health status)           | `scripts/image-smoke/`     |
+| US-2.5         | health check against a dead port      | local, by hand             |
+| US-2.6         | prod deploy                           | Sven, after release        |
+| web in browser | visual review (OAuth login)           | Sven                       |
+| US-3.1, US-3.2 | upgrade from previous release         | local compose              |
+| US-4.1         | follow the docs recipe                | local, by hand             |
+| US-5.1, US-5.2 | CI `image-smoke` job                  | `.github/workflows/ci.yml` |
+| US-5.4         | image smoke (clean stop)              | `scripts/image-smoke/`     |
 
 ## Standards checklist
 
@@ -108,7 +128,7 @@ CI never builds images, so these run by hand before the PR leaves draft.
 ## Decisions
 
 **Own minimal ffmpeg build for the worker.** A build stage compiles x264 and ffmpeg from pinned,
-checksummed source with only what the watermark uses. Debian's `ffmpeg` carries 284 HIGH from
+verified source with only what the watermark uses. Debian's `ffmpeg` carries 284 HIGH from
 libraries we never call. A prebuilt static ffmpeg would hide its libraries from Trivy instead of
 removing them. The cost is compile time when the version changes (the registry build cache keeps it
 otherwise) and owning the upgrades through Renovate. The binary is GPL because of x264, as Debian's
@@ -117,6 +137,11 @@ is. It runs as a separate process.
 **No `node` shim in the migrate image.** Seed moves to `bun dist/seed/index.mjs` in compose and in
 the prod Job. The installer's `--upgrade` and the documented manual steps both download the new
 compose files. A shim would keep a second name for the runtime alive for one unusual upgrade path.
+
+**web uses Nitro's bun preset.** The `node-server` output only traces files for the `node` export
+condition. Under Bun, packages with a `bun` export (`srvx` through ipx) resolve to files that were
+never copied, and the server crashes at start. The preset is set only in the image build, so dev and
+e2e keep `node-server`.
 
 **webbrowser stays on Debian.** Chromium's dependency tree only works as Debian packages. Copied in
 by hand, Trivy can't see it, and every Chromium update risks a missing library at runtime.
@@ -127,32 +152,4 @@ None.
 
 ## Design
 
-| Image      | Runner                            | Extra                                                   |
-| ---------- | --------------------------------- | ------------------------------------------------------- |
-| migrate    | `oven/bun:<v>-distroless`         | `USER 1000:1000`                                        |
-| api        | `oven/bun:<v>-distroless`         | `USER 1000:1000`, `libgcc_s` if anydoc needs it         |
-| web        | `oven/bun:<v>-distroless`         | Nitro `node-server` output run by Bun, `USER 1001:1001` |
-| worker     | `oven/bun:<v>-distroless`         | own ffmpeg, `USER 1000:1000`                            |
-| webbrowser | `oven/bun:<v>-debian` (unchanged) | chromium, tini, wget                                    |
-
-- **Images and pins:** all `oven/bun` tags digest-pinned, same version for all five runners.
-- **Users:** distroless has no users 1000 or 1001. Files are copied with numeric `--chown`. The prod
-  manifests' `runAsUser` keeps working.
-- **Entrypoint:** the distroless entrypoint is `bun`. Set `ENTRYPOINT []` and `CMD ["bun", ...]`, so
-  compose overrides read the same in every image.
-- **Health checks:** exec form, no shell:
-  `HEALTHCHECK CMD ["bun", "-e", "fetch(...).then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]`.
-  The port comes from `process.env` inside the script.
-- **Native libraries:** anydoc (Rust) and sharp need glibc. If either needs `libgcc_s` or `libstdc++`,
-  copy them from a Debian 13 stage together with their `var/lib/dpkg/status.d` entries, so Trivy still
-  sees them. Library paths differ per arch (amd64 and arm64 build natively in `release.yml`).
-- **ffmpeg stage:** `--disable-everything` plus h264, hevc, vp8 and vp9 decoders, png (badge), the
-  mov/mp4, matroska/webm demuxers, the mp4 muxer, the `overlay` filter and libx264. Static link, copied
-  to `/usr/local/bin/ffmpeg`. Versions sit in `ARG`s that a Renovate regex manager bumps.
-- **web:** Nitro's `node-server` output runs under Bun without a build change. Going back to Node is a
-  one-line runner swap.
-- **Worker on Bun:** BullMQ supports Bun. The worker tests already run on `bun test`. If in-process
-  ONNX embedding comes (see the agent context retrieval spec), the worker runner moves back to
-  `node:26-slim`, because Bun with `onnxruntime-node` is the least-tested pairing.
-- **Seed command:** `docker/docker-compose.yml` and ragna-infra's `ragna/migrate-job.yaml` switch to
-  `["bun", "dist/seed/index.mjs"]`. The ragna-infra change ships with the release that carries this.
+See [design.md](./design.md).
