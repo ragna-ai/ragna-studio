@@ -43,7 +43,8 @@ COPY --from=pruner /app/out/full .
 ARG APP_VERSION
 ENV NODE_ENV=production
 ENV VITE_APP_VERSION=$APP_VERSION
-RUN pnpm turbo build --filter=@repo/web
+# postinstall ran `nuxt prepare` before app/ existed; nuxt build reuses those stale tsconfigs.
+RUN rm -rf apps/web/.nuxt && pnpm turbo build --filter=@repo/web
 
 # ============================================================
 # Runner — minimal image, only .output is needed
