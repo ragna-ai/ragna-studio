@@ -1,4 +1,4 @@
-// packages/media/src/lib/watermark-ffmpeg.util.ts
+// packages/media-transform/src/lib/watermark-ffmpeg.util.ts
 //
 // Version-proof ffmpeg pieces for the video watermark. ffmpeg 6/7/8 disagree on `scale2ref`
 // (7.0.2 on Linux silently drops the video stream through it, 8 removed the

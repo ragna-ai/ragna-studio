@@ -3,7 +3,8 @@
 // Usage: bun image-smoke.mjs <video>...   (needs REDIS_HOST / REDIS_PORT)
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { applyVideoWatermark, extractText, probeVideoDimensions } from '@repo/media';
+import { extractText } from '@repo/media';
+import { applyVideoWatermark, probeVideoDimensions } from '@repo/media-transform';
 
 const PDF_TEXT = 'RAGNA image smoke';
 

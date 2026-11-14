@@ -1,6 +1,6 @@
 # AI labeling: label in its own job, image tools out of the api (PRD)
 
-> **Status: decided** (2026-11-14). Issue #394. Extends [the AI labeling PRD](../prd.md) and
+> **Status: implemented** (2026-11-14, PR #396). Issue #394. Extends [the AI labeling PRD](../prd.md) and
 > replaces its "Processing (revision 1)" and "Failure semantics" sections.
 
 The api ships and loads sharp, although every image and video task runs in the worker. It comes in
@@ -72,7 +72,7 @@ can't fail at boot because of a native image library.
 
 - **US-3.1** Rule: the api's production dependency tree contains no `sharp`.
 - **US-3.2** Given an agent image upload, when the worker processes it, then the agent mark is
-  80 × 80 PNG, as today.
+  an 80 × 80 lossless WebP, as today.
 
 ## Testing
 
@@ -96,7 +96,9 @@ apart from `runsInWorker` fixtures.
 - **Deletion:** the unlabeled object is deleted once the labeled one is stored. Workspace and
   media deletion are unchanged: both only see the final object.
 - **Retention:** unlabeled objects live from generation to labeling, seconds to minutes. A lost
-  job can leave one behind under the `unlabeled/` prefix (see Non-goals).
+  job can leave one behind under the `unlabeled/` prefix (see Non-goals). An output whose labeling
+  finally failed keeps its `unlabeled/` key as its final object, so a future sweep must skip keys
+  that a media row references.
 - **Erasure:** n/a. No new personal data. Objects stay under the author's prefix.
 - **Docs:** `apps/docs/src/content/docs/media/ai-labeling.mdx` gets one sentence: with the label
   on, the output appears once the badge is applied.
@@ -116,7 +118,7 @@ lost: the image smoke script and the badge asset both need a package entry.
 
 ## Design
 
-**`@repo/media-transform`** (new, `pnpm gen package`). Exports `resizeImageToSquarePng`,
+**`@repo/media-transform`** (new, `pnpm gen package`). Exports `resizeImageToSquareWebp`,
 `applyImageWatermark`, `applyVideoWatermark`, `probeVideoDimensions`. Takes over `sharp`, the
 badge SVG and its tsdown `copy` rule from `@repo/media`. Only `apps/worker` depends on it.
 `@repo/media` drops `sharp`, `agent-image.service.ts`, `watermark.service.ts` and
@@ -141,7 +143,10 @@ discriminated union on `kind: 'image' | 'video'`. Processor `visible-watermark.p
 exponential backoff. Each attempt: download raw, label, upload under the final key, complete the
 row with `visibleWatermark: true`, notify, delete the raw object. The last failed attempt completes
 the row with the raw object and `visibleWatermark: false`, then notifies. The processor takes the
-transform functions through a deps object, so tests can fake the video transform.
+transform functions through a deps object, so tests can fake the video transform. The final key is the raw key without
+the `unlabeled/` segment, so a retry overwrites the same object. The job carries each output's size.
+If enqueueing the job fails, generation completes the rows with the raw output right away, as on
+the last failed attempt.
 
 **api image.** Check whether anydoc loads on plain `oven/bun` distroless. If it does, drop
 `cxx-runtime` from `apps/api/Dockerfile`; otherwise keep only the libraries anydoc needs. The image

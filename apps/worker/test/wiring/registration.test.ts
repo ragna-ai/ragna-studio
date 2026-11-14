@@ -10,6 +10,7 @@ import {
   GEN_VIDEOS_QUEUE,
   NOTIFICATIONS_QUEUE,
   PURGE_QUEUE,
+  VISIBLE_WATERMARK_QUEUE,
   WORKFLOW_SCHEDULES_QUEUE,
   WORKFLOWS_QUEUE,
 } from '@repo/queue';
@@ -39,6 +40,7 @@ const expectedWorkers: ExpectedWorker[] = [
   { queue: EMAIL_CLASSIFY_QUEUE, opts: { concurrency: 10 } },
   { queue: EMAIL_DRAFT_QUEUE, opts: { concurrency: 3, lockDuration: TEN_MINUTES_MS } },
   { queue: PURGE_QUEUE, opts: undefined },
+  { queue: VISIBLE_WATERMARK_QUEUE, opts: { concurrency: 2, lockDuration: TEN_MINUTES_MS } },
 ];
 
 const expectedCrons = [

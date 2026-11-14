@@ -48,7 +48,7 @@ describe('AI SDK provider mocks', () => {
 
     const completed = await runGenImages({ genImageIds: rows.map((row) => row.id) });
 
-    expect(completed).toHaveLength(1);
+    expect(completed.outcome).toBe('completed');
     expect(imageModelGenerateMock).toHaveBeenCalledTimes(1);
     expect(uploadObjectBufferMock).toHaveBeenCalledTimes(1);
   });

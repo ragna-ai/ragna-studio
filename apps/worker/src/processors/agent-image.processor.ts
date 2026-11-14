@@ -1,6 +1,6 @@
 import { logger } from '@repo/logger';
-import { shrinkAgentImage } from '@repo/media';
 import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
+import { shrinkAgentImage } from '../services/agent-image.service';
 import {
   AGENT_IMAGE_QUEUE,
   createWorker,

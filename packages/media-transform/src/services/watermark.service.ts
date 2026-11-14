@@ -1,17 +1,13 @@
-// packages/media/src/services/watermark.service.ts
+// packages/media-transform/src/services/watermark.service.ts
 //
 // Visible AI-disclosure badge (EU AI Act Art. 50(4)):
 // burns a small "AI generated" badge into an output's bottom-right corner.
-// Provider-independent, used by both imagen.service.ts and
-// videogen.service.ts (@repo/ai) after generation, before upload. Never sent
-// to a provider: this only touches what we store.
+// Provider-independent: callers apply it after generation, before upload.
 //
 // Best-effort by design: a
 // failed watermark must never lose a paid generation, so this module throws
 // on failure rather than swallowing errors, and deliberately does not depend
-// on @repo/logger. The caller decides what "best-effort" means (log a
-// warning, fall back to the raw bytes, flip visibleWatermark), not this
-// package.
+// on a logger. The caller decides what "best-effort" means.
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';

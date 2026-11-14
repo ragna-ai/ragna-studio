@@ -1,0 +1,30 @@
+{
+  "name": "@repo/media-transform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "image and video transforms: resize, visible AI watermark (sharp, system ffmpeg)",
+  "license": "AGPL-3.0-only",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@repo/ts-config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

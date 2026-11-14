@@ -48,6 +48,7 @@ work first, shipped reference and dead/historical docs last.
 | [Agent Defaults & Settings](./agent/agent-default-and-settings.md) | implemented, verified |
 | [Agent memory](./agent/agent-memory.md) | implemented (Phase 1, 2026-07-18) |
 | [Remove the default agent (PRD)](./agent/remove-default-agent-prd.md) | implemented (2026-10-23, PR #138) |
+| [AI labeling: label in its own job, image tools out of the api (PRD)](./ai-labeling/394-watermark-job/prd.md) | implemented (2026-11-14, PR #396) |
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
 | [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | implemented (PR #90, 2026-10-08) |

@@ -14,6 +14,7 @@ export interface SeedGenImageBatchParams {
   resolution?: GenImage['resolution'];
   aspectRatio?: GenImage['aspectRatio'];
   seed?: number;
+  visibleWatermark?: boolean;
 }
 
 export interface SeedGenImageBatchResult {
@@ -29,6 +30,7 @@ export async function seedGenImageBatch({
   resolution,
   aspectRatio,
   seed,
+  visibleWatermark,
 }: SeedGenImageBatchParams = {}): Promise<SeedGenImageBatchResult> {
   const { userId, workspaceId } = await seedAuthenticatedUser();
   const records = Array.from({ length: count }, () => ({
@@ -40,6 +42,7 @@ export async function seedGenImageBatch({
     resolution,
     aspectRatio,
     seed,
+    visibleWatermark,
   }));
   const rows = await createGenImageRecords(records);
   return { userId, workspaceId, rows };
@@ -47,6 +50,9 @@ export async function seedGenImageBatch({
 
 export interface SeedGenVideoParams {
   withAuthor?: boolean;
+  visibleWatermark?: boolean;
+  isDraft?: boolean;
+  status?: GenVideo['status'];
 }
 
 export interface SeedGenVideoResult {
@@ -57,6 +63,9 @@ export interface SeedGenVideoResult {
 
 export async function seedGenVideo({
   withAuthor = true,
+  visibleWatermark,
+  isDraft,
+  status,
 }: SeedGenVideoParams = {}): Promise<SeedGenVideoResult> {
   const { userId, workspaceId } = await seedAuthenticatedUser();
   const row = await createGenVideoRecord({
@@ -65,6 +74,9 @@ export async function seedGenVideo({
     prompt: 'a drone shot over a city',
     provider: 'bfl',
     model: 'flux-3-video',
+    visibleWatermark,
+    isDraft,
+    status,
   });
   return { userId, workspaceId, row };
 }

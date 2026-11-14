@@ -14,8 +14,13 @@ import {
 } from '@repo/database';
 import type { AiModel, GenImageReferenceOrigin } from '@repo/database/schema';
 import { logger } from '@repo/logger';
-import { applyImageWatermark } from '@repo/media';
-import { GEN_IMAGES_JOB, genImagesJobSchema, queue } from '@repo/queue';
+import {
+  APPLY_VISIBLE_WATERMARK_JOB,
+  GEN_IMAGES_JOB,
+  genImagesJobSchema,
+  queue,
+  visibleWatermarkJobSchema,
+} from '@repo/queue';
 import {
   toPublicMediaUrl,
   downloadObjectBuffer,
@@ -27,6 +32,7 @@ import { generateImage } from 'ai';
 import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
 import { getImageModel } from '../factories';
+import { toUnlabeledPrefix } from './unlabeled-storage-key.service';
 
 export const imageGenProviders = ['bfl', 'google-vertex', 'openai'] as const;
 export const imageGenAspectRatios = ['1:1', '4:3', '16:9'] as const;
@@ -69,8 +75,7 @@ export const generateImagesSchema = z.object({
     .max(4)
     .optional(),
   // EU AI Act Art. 50(4) visible-disclosure toggle.
-  // Default off; applied after generation, before upload, by
-  // applyImageWatermark below.
+  // Default off; applied by the visible-watermark job after the raw output is stored.
   visibleWatermark: z.boolean().optional(),
 });
 
@@ -390,13 +395,16 @@ function isGeneratedMediaType(mediaType: string): mediaType is GeneratedMediaTyp
 }
 
 interface GeneratedImageUpload {
+  bucket: string;
   storageKey: string;
   mimeType: GeneratedMediaType;
   size: number;
-  // The actual outcome of this image's upload, not the request: true only
-  // when the watermark attempt below both ran and succeeded.
-  // RunGenImages persists
-  // this onto that image's own gen_images.visibleWatermark.
+}
+
+export interface StoredGenImage {
+  storageKey: string;
+  mimeType: string;
+  size: number;
   visibleWatermark: boolean;
 }
 
@@ -497,12 +505,11 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
 
   const { images: genImages } = imageGenResult;
 
-  // Best-effort, per image: a
-  // generated image is always saved, the watermark is an addon. A failed
-  // attempt falls back to the raw bytes for that image only, rather than
-  // failing the whole batch; the resulting `visibleWatermark` becomes that
-  // row's stored value below, recording the outcome, not the request.
-  const watermarkResults = await Promise.all(
+  const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
+  // Labeled outputs are stored under an internal key first, the watermark job moves them.
+  const keyPrefix = visibleWatermark ? toUnlabeledPrefix(prefix) : prefix;
+
+  return Promise.all(
     genImages.map(async (image) => {
       const buffer = Buffer.from(image.uint8Array);
       const { mediaType } = image;
@@ -511,56 +518,105 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         throw new Error(`Unsupported generated image type: ${mediaType}`);
       }
 
-      if (!visibleWatermark) {
-        return { buffer, mimeType: mediaType, applied: false };
-      }
-
-      const { error, data } = await tryCatch(() =>
-        applyImageWatermark({ buffer, mimeType: mediaType }),
-      );
-
-      if (error !== null || !data) {
-        logger.warn('Visible watermark failed, storing raw image instead', { error });
-        return { buffer, mimeType: mediaType, applied: false };
-      }
-
-      return { buffer: data.buffer, mimeType: mediaType, applied: true };
-    }),
-  );
-
-  const { bucketName, prefix } = getImgGenBucketNameForUser(userId);
-
-  const uploads = await Promise.all(
-    watermarkResults.map(async ({ buffer, mimeType, applied }) => {
       const { key } = await uploadObjectBuffer({
         bucketName,
-        key: `${prefix}/${randomUUID()}.${fileExtensionByMediaType[mimeType]}`,
+        key: `${keyPrefix}/${randomUUID()}.${fileExtensionByMediaType[mediaType]}`,
         buffer,
-        contentType: mimeType,
+        contentType: mediaType,
       });
 
-      return { storageKey: key, mimeType, size: buffer.byteLength, visibleWatermark: applied };
+      return { bucket: bucketName, storageKey: key, mimeType: mediaType, size: buffer.byteLength };
     }),
   );
+}
 
-  return uploads;
+export interface CompleteGenImagesParams {
+  rows: GenImageWithMedia[];
+  images: StoredGenImage[];
 }
 
 /**
- * Run side: loads the
- * batch's rows, flips them all to processing, runs the provider call and
- * uploads every output, creates a media row per output, then flips each row
- * to completed pointing at its own media (or, on any failure, flips every
- * row in the batch to failed with the same message and rethrows, since the
- * provider call is all-or-nothing). Called from the gen-images processor
- * (async path) and the inline workflow path (createGenImagesWithDefaultModel
- * below). Notification enqueueing happens only in the processor, never here.
+ * Creates one media row per stored output, then flips each row to completed
+ * pointing at its own media. `visibleWatermark` is the actual outcome, not the request.
+ */
+export async function completeGenImages({
+  rows,
+  images,
+}: CompleteGenImagesParams): Promise<GenImageWithMedia[]> {
+  const mediaRows = await Promise.all(
+    images.map((image, index) =>
+      createMedia({
+        ownerWorkspaceId: rows[index].workspaceId,
+        bucket: config.s3ImagesBucketName,
+        storageKey: image.storageKey,
+        filename: image.storageKey.split('/').pop() ?? image.storageKey,
+        mimeType: image.mimeType,
+        size: image.size,
+        origin: 'generated',
+      }),
+    ),
+  );
+
+  const updated = await Promise.all(
+    rows.map((row, index) =>
+      updateGenImageStatus({
+        id: row.id,
+        status: 'completed',
+        mediaId: mediaRows[index].id,
+        visibleWatermark: images[index].visibleWatermark,
+      }),
+    ),
+  );
+
+  return updated.map((record, index) => ({
+    ...record,
+    media: mediaRows[index],
+    references: rows[index].references,
+  }));
+}
+
+export interface GenImagesCompleted {
+  outcome: 'completed';
+  images: GenImageWithMedia[];
+}
+
+export interface GenImagesWatermarking {
+  outcome: 'watermarking';
+}
+
+export type RunGenImagesResult = GenImagesCompleted | GenImagesWatermarking;
+
+async function enqueueVisibleWatermarkForImages(
+  genImageIds: string[],
+  uploads: GeneratedImageUpload[],
+): Promise<void> {
+  const data = visibleWatermarkJobSchema.parse({
+    kind: 'image',
+    genImageIds,
+    outputs: uploads.map((upload, index) => ({
+      genImageId: genImageIds[index],
+      bucket: upload.bucket,
+      storageKey: upload.storageKey,
+      mimeType: upload.mimeType,
+      size: upload.size,
+    })),
+  });
+
+  await queue.visibleWatermark().add(APPLY_VISIBLE_WATERMARK_JOB, data, { attempts: 3 });
+}
+
+/**
+ * Run side: loads the batch's rows, flips them to processing, runs the provider
+ * call and uploads every output. Without the label the rows complete here. With
+ * it, the rows stay processing and the visible-watermark job completes them.
+ * Any failure flips every row to failed (the provider call is all-or-nothing)
+ * and rethrows. Notifications are sent by the processors, never here.
  */
 export async function runGenImages({
   genImageIds,
 }: {
   genImageIds: string[];
-}): Promise<GenImageWithMedia[]> {
+}): Promise<RunGenImagesResult> {
   const rows = await getGenImageRowsByIds({ ids: genImageIds });
 
   if (rows.length === 0) {
@@ -581,43 +637,32 @@ export async function runGenImages({
     throw error ?? new Error('Image generation failed');
   }
 
-  // One media row per generated output,
-  // minted before the gen_images rows are flipped to completed
-  // so each row's update can point at its own media.id.
-  const mediaRows = await Promise.all(
-    uploads.map((upload, index) =>
-      createMedia({
-        ownerWorkspaceId: rows[index].workspaceId,
-        bucket: config.s3ImagesBucketName,
-        storageKey: upload.storageKey,
-        filename: upload.storageKey.split('/').pop() ?? upload.storageKey,
-        mimeType: upload.mimeType,
-        size: upload.size,
-        origin: 'generated',
-      }),
-    ),
-  );
+  if (rows[0].visibleWatermark) {
+    const { error: enqueueError } = await tryCatch(() =>
+      enqueueVisibleWatermarkForImages(genImageIds, uploads),
+    );
 
-  const updated = await Promise.all(
-    rows.map((row, index) =>
-      updateGenImageStatus({
-        id: row.id,
-        status: 'completed',
-        mediaId: mediaRows[index].id,
-        // Actual outcome, not the request:
-        // overwrites the row's requested value with what the
-        // upload actually stored, flipping it to false if the watermark
-        // attempt failed for that image.
-        visibleWatermark: uploads[index].visibleWatermark,
-      }),
-    ),
-  );
+    if (enqueueError === null) {
+      return { outcome: 'watermarking' };
+    }
 
-  return updated.map((record, index) => ({
-    ...record,
-    media: mediaRows[index],
-    references: rows[index].references,
-  }));
+    logger.error('Failed to enqueue visible-watermark job, storing raw images', {
+      error: enqueueError,
+      genImageIds,
+    });
+  }
+
+  const images = await completeGenImages({
+    rows,
+    images: uploads.map((upload) => ({
+      storageKey: upload.storageKey,
+      mimeType: upload.mimeType,
+      size: upload.size,
+      visibleWatermark: false,
+    })),
+  });
+
+  return { outcome: 'completed', images };
 }
 
 type CreateImagesWithDefaultModelParams = {
@@ -685,7 +730,13 @@ export async function createGenImagesWithDefaultModel(
     model,
   });
 
-  return runGenImages({ genImageIds: rows.map((row) => row.id) });
+  const result = await runGenImages({ genImageIds: rows.map((row) => row.id) });
+
+  if (result.outcome !== 'completed') {
+    throw new Error('Inline image generation cannot wait for the visible watermark');
+  }
+
+  return result.images;
 }
 
 /**

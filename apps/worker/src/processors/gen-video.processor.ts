@@ -1,15 +1,9 @@
 import { runGenVideo } from '@repo/ai';
-import { getGenVideoById } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
-import {
-  createWorker,
-  enqueueNotification,
-  GEN_VIDEO_JOB,
-  GEN_VIDEOS_QUEUE,
-  genVideoJobSchema,
-} from '@repo/queue';
+import { createWorker, GEN_VIDEO_JOB, GEN_VIDEOS_QUEUE, genVideoJobSchema } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
+import { notifyVideoGenerationBestEffort } from '../services/generation-notifications';
 
 // Veo renders take 1-6 minutes. The
 // default 30s lock would let BullMQ's stalled checker reclaim an in-flight
@@ -57,53 +51,17 @@ export async function processGenVideoJob(job: ProcessorJob): Promise<ProcessorSu
 // it rethrows, so this only needs to notify and propagate. The enqueuer
 // (requestGenVideo in @repo/ai) never sets a retry count above the BullMQ
 // default of one attempt: a failed multi-minute render must surface as a
-// failed job, not silently re-render and double the cost.
+// failed job, not silently re-render and double the cost. A labeled video is
+// notified by the visible-watermark job once it completes.
 async function processGenVideo(genVideoId: string): Promise<void> {
-  const { error } = await tryCatch(() => runGenVideo({ genVideoId }));
+  const { error, data: result } = await tryCatch(() => runGenVideo({ genVideoId }));
 
   if (error !== null) {
-    await notifyBestEffort({ genVideoId, type: 'video_generation_failed' });
+    await notifyVideoGenerationBestEffort({ genVideoId, type: 'video_generation_failed' });
     throw error;
   }
 
-  await notifyBestEffort({ genVideoId, type: 'video_generation_succeeded' });
-}
-
-// Best-effort by design: a notification failure must never mask the job's
-// real outcome (the row and the rethrown/absent error already carry that),
-// so every failure here is logged and swallowed.
-async function notifyBestEffort({
-  genVideoId,
-  type,
-}: {
-  genVideoId: string;
-  type: 'video_generation_succeeded' | 'video_generation_failed';
-}): Promise<void> {
-  try {
-    const record = await getGenVideoById({ id: genVideoId });
-    if (!record) {
-      logger.error(`Gen video ${genVideoId} not found, skipping notification`);
-      return;
-    }
-
-    if (!record.userId) {
-      logger.info(`Gen video ${genVideoId} has no author, skipping notification`);
-      return;
-    }
-
-    await enqueueNotification({
-      userId: record.userId,
-      type,
-      data: {
-        genVideoId: record.id,
-        workspaceId: record.workspaceId,
-        prompt: record.prompt,
-      },
-    });
-  } catch (notifyError) {
-    logger.error(
-      `Failed to enqueue ${type} notification for gen video ${genVideoId}:`,
-      notifyError,
-    );
+  if (result?.outcome === 'completed') {
+    await notifyVideoGenerationBestEffort({ genVideoId, type: 'video_generation_succeeded' });
   }
 }

@@ -10,6 +10,7 @@ import {
   NOTIFICATIONS_QUEUE,
   ONBOARDINGS_QUEUE,
   PURGE_QUEUE,
+  VISIBLE_WATERMARK_QUEUE,
   WORKFLOWS_QUEUE,
 } from '../constants';
 import type { QueueOptions } from 'bullmq';
@@ -45,4 +46,5 @@ export const queue = {
   emailClassify: () => getOrCreateQueue({ name: EMAIL_CLASSIFY_QUEUE, opts: emailQueueOpts }),
   emailDraft: () => getOrCreateQueue({ name: EMAIL_DRAFT_QUEUE, opts: emailQueueOpts }),
   purge: () => getOrCreateQueue({ name: PURGE_QUEUE }),
+  visibleWatermark: () => getOrCreateQueue({ name: VISIBLE_WATERMARK_QUEUE }),
 } as const;
