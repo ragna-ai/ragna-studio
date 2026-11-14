@@ -55,30 +55,44 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
   pnpm --filter @repo/api deploy --prod /prod/api --store-dir /var/cache/pnpm
 
 # ============================================================
-# Runner — Bun on Debian (src/index.ts uses Bun.serve). The alpine tag
-# can't load anydoc's glibc-linked binary, hence oven/bun:debian, the same
-# runner apps/webbrowser uses and for the same glibc reason.
+# C++ runtime — sharp's libvips needs libstdc++ and libgcc_s, which the
+# distroless base lacks. Copy exactly the Debian 13 package files plus
+# their dpkg status entries, so image scanners still track them.
 # ============================================================
-FROM oven/bun:1.4.4-debian@sha256:93d5032fe06d163427822dc1598f420363759bb18155c9cc90eb1be05a64a19e AS runner
+FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS cxx-runtime
+
+# Install, not just copy: picks up Debian security updates newer than the base image.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /rootfs/var/lib/dpkg/status.d \
+  && for pkg in libstdc++6 libgcc-s1; do \
+    dpkg -L "$pkg" | grep '^/usr/lib/.*\.so' | xargs cp -a --parents -t /rootfs; \
+    dpkg -s "$pkg" > "/rootfs/var/lib/dpkg/status.d/$pkg"; \
+  done
+
+# ============================================================
+# Runner — Bun distroless (src/index.ts uses Bun.serve). Debian-based,
+# so anydoc's glibc-linked binary loads; no shell, no package manager.
+# Numeric UID: distroless has no user 1000, but prod runs as 1000.
+# ============================================================
+FROM oven/bun:1.4.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS runner
 
 WORKDIR /app
-
-# wget for the HEALTHCHECK below: unlike the old alpine/busybox image,
-# Debian's base ships neither wget nor curl.
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends wget \
-  && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV API_PORT=3010
 
-COPY --from=builder --chown=bun:bun /prod/api .
+COPY --from=cxx-runtime /rootfs /
+COPY --from=builder --chown=1000:1000 /prod/api .
 
-USER bun
+USER 1000:1000
 
 EXPOSE 3010
 
+# Exec form with a fetch: distroless has no shell and no wget.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- "http://localhost:${API_PORT}/health" || exit 1
+  CMD ["bun", "-e", "fetch(`http://localhost:${process.env.API_PORT}/health`).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 
+ENTRYPOINT []
 CMD ["bun", "dist/index.mjs"]

@@ -288,3 +288,12 @@ Standalone scraping/browser-automation service (`apps/webbrowser`, port
 closed after 5 min idle; `tini` reaps its orphaned helper processes.
 → [specs/webbrowser/prd.md](./webbrowser/prd.md),
 [zombie-reaping-prd.md](./webbrowser/zombie-reaping-prd.md)
+
+### Runtime images
+
+Every service image runs on Bun. migrate, backend, frontend and worker use
+Bun's distroless image (no shell, no package manager); webbrowser stays on
+Debian for Chromium. The worker ships its own minimal ffmpeg build. CI builds
+and smoke-tests each affected image on every pull request.
+→ [specs/docker-deploy/392-bun-runtime/prd.md](./docker-deploy/392-bun-runtime/prd.md),
+[design.md](./docker-deploy/392-bun-runtime/design.md)

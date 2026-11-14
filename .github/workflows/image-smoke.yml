@@ -1,0 +1,60 @@
+name: Image smoke
+
+# Builds images without pushing them and runs scripts/image-smoke/run.sh on each.
+# Called by ci.yml (legs a pull request's packaging changes select) and by
+# image-smoke-label.yml (every image, both arches).
+on:
+  workflow_call:
+    inputs:
+      legs:
+        description: JSON list from scripts/image-smoke/select-legs.sh.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: ${{ matrix.image }} (${{ matrix.slug }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.legs) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The worker only boots on a migrated database.
+      - if: matrix.image == 'worker'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: packages/database/Dockerfile
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: ragna-studio-migrate:smoke
+          # Read-only: only releases write the cache they reuse.
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-migrate:buildcache-${{ matrix.slug }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: ragna-studio-${{ matrix.image }}:smoke
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}:buildcache-${{ matrix.slug }}
+
+      - name: Smoke test
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: |
+          migrate_ref=""
+          if [ "$IMAGE" = worker ]; then migrate_ref=ragna-studio-migrate:smoke; fi
+          scripts/image-smoke/run.sh "$IMAGE" "ragna-studio-$IMAGE:smoke" $migrate_ref

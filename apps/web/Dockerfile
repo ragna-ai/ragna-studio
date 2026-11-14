@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# Base — node + pnpm + turbo
+# Base — node + pnpm + turbo. Debian slim, not Alpine: the build
+# traces sharp (for @nuxt/image) into .output, and the runner below
+# is glibc, so the traced binary must be glibc too.
 # ============================================================
-FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS base
+FROM node:26.13.1-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -16,7 +18,9 @@ WORKDIR /app
 # "packageManager" field — read it instead of hardcoding it here.
 COPY package.json ./
 
-RUN apk add --no-cache libc6-compat curl \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
   && PNPM_VERSION="$(sed -n 's/.*"packageManager": *"pnpm@\([0-9][0-9.]*\).*/\1/p' package.json)" \
   && curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION="$PNPM_VERSION" SHELL=/bin/sh ENV="$HOME/.shrc" sh - \
   && npm install -g turbo
@@ -43,32 +47,53 @@ COPY --from=pruner /app/out/full .
 ARG APP_VERSION
 ENV NODE_ENV=production
 ENV VITE_APP_VERSION=$APP_VERSION
+# The runner is Bun. node-server output only traces files for the "node"
+# export condition, so packages with a "bun" export would be missing.
+ENV NITRO_PRESET=bun
 # postinstall ran `nuxt prepare` before app/ existed; nuxt build reuses those stale tsconfigs.
 RUN rm -rf apps/web/.nuxt && pnpm turbo build --filter=@repo/web
 
 # ============================================================
-# Runner — minimal image, only .output is needed
+# C++ runtime — sharp's libvips needs libstdc++ and libgcc_s, which the
+# distroless base lacks. Copy exactly the Debian 13 package files plus
+# their dpkg status entries, so image scanners still track them.
 # ============================================================
-FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runner
+FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS cxx-runtime
 
-# npm is unused at runtime and its bundled deps carry CVEs.
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nuxt \
-  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+# Install, not just copy: picks up Debian security updates newer than the base image.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /rootfs/var/lib/dpkg/status.d \
+  && for pkg in libstdc++6 libgcc-s1; do \
+    dpkg -L "$pkg" | grep '^/usr/lib/.*\.so' | xargs cp -a --parents -t /rootfs; \
+    dpkg -s "$pkg" > "/rootfs/var/lib/dpkg/status.d/$pkg"; \
+  done
+
+# ============================================================
+# Runner — Bun distroless runs Nitro's node-server output; only
+# .output is needed. Numeric UID: distroless has no user 1001, but
+# prod runs as 1001.
+# ============================================================
+FROM oven/bun:1.4.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS runner
 
 WORKDIR /app
 
-COPY --from=builder --chown=nuxt:nodejs /app/apps/web/.output ./.output
+COPY --from=cxx-runtime /rootfs /
+COPY --from=builder --chown=1001:1001 /app/apps/web/.output ./.output
+COPY --from=builder --chown=1001:1001 /app/apps/web/docker-entry.mjs ./.output/docker-entry.mjs
 
-USER nuxt
+USER 1001:1001
 
 ENV NODE_ENV=production
-ENV NUXT_HOST=0.0.0.0
-ENV NUXT_PORT=3000
+ENV NITRO_HOST=0.0.0.0
+ENV NITRO_PORT=3000
 
 EXPOSE 3000
 
+# Exec form with a fetch: distroless has no shell and no wget.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3000/ || exit 1
+  CMD ["bun", "-e", "fetch(`http://localhost:${process.env.NITRO_PORT}/`).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 
-CMD ["node", ".output/server/index.mjs"]
+ENTRYPOINT []
+CMD ["bun", ".output/docker-entry.mjs"]

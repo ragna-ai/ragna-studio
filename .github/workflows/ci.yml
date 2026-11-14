@@ -23,6 +23,7 @@ jobs:
       code: ${{ steps.detect.outputs.code }}
       tests: ${{ steps.detect.outputs.tests }}
       e2e: ${{ steps.detect.outputs.e2e }}
+      image-legs: ${{ steps.detect.outputs.image-legs }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,6 +44,7 @@ jobs:
       - id: detect
         env:
           BASE: origin/${{ github.base_ref }}
+          BUILD_IMAGES_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'build-images') }}
         run: |
           # Each step fails the job on error: an empty result would silently skip CI.
           turbo_version=$(jq -r .devDependencies.turbo package.json)
@@ -63,10 +65,19 @@ jobs:
           if [ "$root_changed" = true ] || echo "$affected" | grep -qxE '@repo/api|@repo/worker'; then tests=true; fi
           if [ "$root_changed" = true ] || echo "$affected" | grep -qxE '@repo/api|@repo/web'; then e2e=true; fi
 
+          # Packaging changes only; the label forces every image on both arches.
+          if [ "$BUILD_IMAGES_LABEL" = true ]; then
+            image_legs=$(scripts/image-smoke/select-legs.sh --all)
+          else
+            image_legs=$(AFFECTED_PACKAGES="$affected" scripts/image-smoke/select-legs.sh)
+          fi
+
           echo "Affected packages: ${affected:-none}, root files changed: $root_changed"
+          echo "Image legs: $(echo "$image_legs" | jq -c 'map(.image + " " + .slug)')"
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "tests=$tests" >> "$GITHUB_OUTPUT"
           echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
+          echo "image-legs=$image_legs" >> "$GITHUB_OUTPUT"
 
   build-and-check:
     needs: changes
@@ -231,3 +242,28 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # Image-only breaks (packaging, native libraries, base images) that the host build
+  # can't see. Releases smoke-test every image again before tagging it.
+  image-smoke:
+    needs: changes
+    if: needs.changes.outputs.image-legs != '[]'
+    uses: ./.github/workflows/image-smoke.yml
+    with:
+      legs: ${{ needs.changes.outputs.image-legs }}
+
+  # The one image check to require. A matrix skipped as a whole is reported without
+  # its leg names, so a required leg would wait forever; this job always reports.
+  images:
+    needs: [changes, image-smoke]
+    if: ${{ always() && !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every image leg passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          case " $RESULTS " in
+            *" failure "* | *" cancelled "*) echo "::error::An image smoke leg failed."; exit 1 ;;
+          esac
