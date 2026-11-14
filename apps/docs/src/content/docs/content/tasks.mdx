@@ -13,64 +13,43 @@ Open **Tasks** in the sidebar. Each task gets an ID like `TSK-12`, numbered per 
 
 Switch between **Board** and **List** in the toolbar. RAGNA Studio remembers the choice.
 
-- **Board** shows one column per status, with the number of tasks in each. Drag a card to another column or to a new position. The board scrolls sideways when the columns don't fit.
-- **List** shows a table grouped by status. It lists priority, ID, **Title**, **Labels**, **Due date** and **Assignee**. Click a row to open the task.
+- **Board** shows one column per status. Drag a card to another column or to a new position.
+- **List** shows a table grouped by status.
 
-Use the filters **Priority** and **Label** to narrow down what is shown. The list also filters by **Status**. On the board the columns already are the statuses, so switching to the board clears the status filter.
+Filter by **Status**, **Priority** and **Label**. Both views share the filters.
 
-Choose **New task** to create a task in **Backlog**. To create it in a given status, choose **+** in that column's header or in that group's row of the list. The new task window takes a title, a description and the status, priority, assignee, labels and due date. Press **Cmd+Enter** (**Ctrl+Enter** on Windows) or choose **Create task**. Turn on **Create more** to add several tasks in a row: the window stays open and keeps the properties. Cards show the priority, ID, title, labels, due date (overdue dates are highlighted), subtask progress such as `2/5` and the assignee.
+Choose **New task** to create a task in **Backlog**. To create it in a given status, choose **+** in that column's header or in that group's row of the list. Press **Cmd+Enter** (**Ctrl+Enter** on Windows) or choose **Create task**. Turn on **Create more** to add several tasks in a row: the window stays open and keeps the properties.
 
 ## Status columns
 
-The columns are fixed. They cannot be added or renamed.
-
-| Status          | Use it for                   |
-| --------------- | ---------------------------- |
-| **Backlog**     | Ideas and later work.        |
-| **Todo**        | Work that is ready to start. |
-| **In Progress** | Work that is underway.       |
-| **In Review**   | Work that waits for a check. |
-| **Done**        | Finished work.               |
-| **Canceled**    | Dropped work.                |
+The columns are **Backlog**, **Todo**, **In Progress**, **In Review**, **Done** and **Canceled**. They are fixed and cannot be added or renamed.
 
 ## Task details
 
-Click a card to open the task page. The title and description are editable in place. The description uses the same editor as [Documents](/content/documents#the-editor), including the selection menu, the `/` command menu and Markdown shortcuts. It saves on its own. The side panel holds the properties:
+Click a card to open the task page. The description uses the same editor as [Documents](/content/documents#the-editor) and saves on its own. The side panel holds the properties, such as priority, due date and labels.
 
-- **Priority:** **No priority**, **Low**, **Medium**, **High** or **Urgent**.
-- **Due date:** pick a date or choose **Clear due date**.
 - **Assignee:** assign the task to one of the workspace's agents. Assignment is a label only. The agent does not start working on its own.
-- **Labels:** tick one or more labels.
-- **Remind me:** see below.
+- **Remind me:** see [Reminders](#reminders).
 
 Use **Delete task** to remove a task. Its subtasks stay and become top-level tasks.
 
 ## Labels
 
-Labels belong to the workspace. Choose **Labels** on the tasks page, or **Manage labels** in the labels picker of a new task, to create, rename, recolour and delete them. Each label has one of eight colours, shown as a dot. Deleting a label removes it from every task. It does not delete any task. Agents can attach existing labels but cannot create new ones.
+Labels belong to the workspace. Choose **Labels** on the tasks page, or **Manage labels** in the labels picker of a new task, to create, rename, recolour and delete them. Deleting a label removes it from every task. It does not delete any task. Agents can attach existing labels but cannot create new ones.
 
 ## Subtasks
 
-Add subtasks under **Subtasks** on the task page. Enter a title and confirm. Subtasks go one level deep: a subtask cannot have subtasks of its own. Open a subtask and use **Back to parent task** to return. The parent card shows how many subtasks are done.
+Add subtasks under **Subtasks** on the task page. Subtasks go one level deep: a subtask cannot have subtasks of its own. Open a subtask and use **Back to parent task** to return. The parent card shows how many subtasks are done.
 
 ## Reminders
 
-Set a due date, then choose a value under **Remind me**:
-
-- **On due date**
-- **1 day before**
-- **2 days before**
-- **1 week before**
-- **Custom** (a number of days)
-- **Off**
-
-Without a due date the option is disabled. RAGNA Studio sends one in-app notification, titled **Task reminder**, to the bell. The reminder moves with the due date. If the due date changes, the reminder is armed again. A task in **Done** or **Canceled** sends no reminder.
+Set a due date, then choose a value under **Remind me**: from **On due date** up to **1 week before**, or **Custom** for a number of days. Without a due date the option is disabled. RAGNA Studio sends one in-app notification, titled **Task reminder**, to the bell. The reminder moves with the due date. If the due date changes, the reminder is armed again. A task in **Done** or **Canceled** sends no reminder.
 
 The notification goes to the organization owners. See [Organizations](/workspaces/organizations).
 
 ## Attachments
 
-Choose **Add files** under **Attachments** on the task page, or drop files onto it. Subtasks can have attachments too. Click a file to download it.
+Choose **Add files** under **Attachments** on the task page, or drop files onto it. Subtasks can have attachments too.
 
 | Limit            | Value                                                          |
 | ---------------- | -------------------------------------------------------------- |

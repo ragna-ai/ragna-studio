@@ -65,13 +65,6 @@ const isFullHeightBoard = computed(
   () => isBoard.value && !hasNoTasksAtAll.value,
 );
 
-// A hidden filter must not empty the board's columns.
-watch(isBoard, (nowBoard) => {
-  if (nowBoard) {
-    statusFilter.value = null;
-  }
-});
-
 // Functions
 function openCreateDialog(status: TaskStatus) {
   createStatus.value = status;
@@ -152,7 +145,6 @@ function clearFilters() {
               :priority="priorityFilter"
               :task-label-id="taskLabelIdFilter"
               :labels="labels"
-              :hide-status="isBoard"
               @update:status="(v) => (statusFilter = v)"
               @update:priority="(v) => (priorityFilter = v)"
               @update:task-label-id="(v) => (taskLabelIdFilter = v)"
