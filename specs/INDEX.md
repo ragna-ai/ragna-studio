@@ -30,7 +30,6 @@ work first, shipped reference and dead/historical docs last.
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
-| [Runtime images: Bun everywhere, distroless where possible (PRD)](./docker-deploy/392-bun-runtime/prd.md) | proposed (2026-11-14) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
@@ -65,6 +64,7 @@ work first, shipped reference and dead/historical docs last.
 | [Dataset sheet view: a spreadsheet-style grid with sort, filter and display (PRD)](./datasets/248-sheet-view/prd.md) | implemented (2026-10-31, PR #252) |
 | [Datasets: shared structured state for humans and agents](./datasets/datasets.md) | implemented (2026-07-17) |
 | [Export (datasets and documents) and manual dataset row reorder](./datasets/export-and-row-reorder.md) | implemented (2026-07-22); user verification and commit pending |
+| [Runtime images: Bun everywhere, distroless where possible (PRD)](./docker-deploy/392-bun-runtime/prd.md) | implemented (2026-11-14, PR #393) |
 | [Per-service memory and CPU limits](./docker-deploy/resource-limits.md) | implemented (2026-09-23) |
 | [Documents: Drive-style folder navigation (PRD)](./documents/263-folder-navigation/prd.md) | implemented (2026-11-04, PR #266) |
 | [Documents Feature (PRD)](./documents/prd.md) | implemented (branch `feat/documents`, 2026-07-18) |

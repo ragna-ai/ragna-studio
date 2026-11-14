@@ -1,6 +1,6 @@
 # Runtime images: Bun everywhere, distroless where possible (PRD)
 
-> **Status: proposed** (2026-11-14). Issue #392. Follows #391 (Node 26, npm removed from runners).
+> **Status: implemented** (2026-11-14, PR #393). Issue #392. Follows #391 (Node 26, npm removed from runners).
 > Also covers #259 (build images in CI) and #160 (migrations on a fresh Postgres in CI).
 
 The runtime images ship OS packages they never use, and Trivy reports them as HIGH findings. This PRD
