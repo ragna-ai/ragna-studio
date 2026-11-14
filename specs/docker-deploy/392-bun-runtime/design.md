@@ -84,8 +84,18 @@ and Redis on a private Docker network and removes everything on exit.
 | worker     | no shell, `worker.mjs` (PDF extraction, watermark of mp4 and webm fixtures, BullMQ round trip), boot on a migrated database, clean stop |
 | webbrowser | healthy                                                                                                                                 |
 
-The CI `image-smoke` job is a matrix over the affected images, amd64 only and never pushed. The
-`changes` job picks an image when turbo marks its package as affected. Root files, the lockfile,
-`scripts/image-smoke/`, `docker/` and `release.yml` select all images. Builds read the release's
-registry cache (`buildcache-linux-amd64`) and never write it. The worker leg also builds the migrate
-image, so the full worker can boot.
+Two layers run it. The rules and their reasons are in
+`specs/ci-cd/reference/image-ci-recommendation-2026-11-14.md`.
+
+- **Release gate (`release.yml`):** each build leg smoke-tests the digest it just pushed, on its own
+  native runner. `merge` needs every leg, so one failing image means no version tag for any image.
+- **Pull requests (`ci.yml`):** `scripts/image-smoke/select-legs.sh` picks the legs from packaging
+  changes only (Dockerfiles, `package.json` and build configs, the lockfile through turbo, migrations,
+  shared build files). amd64 for every selected image, arm64 as well when the image's Dockerfile, the
+  smoke scripts or the image workflows change. The reusable `image-smoke.yml` runs the legs.
+- **Required check:** only the `images` job. It always reports and fails when a leg failed or was
+  cancelled.
+- **Label:** `build-images` runs every image on both arches, through `image-smoke-label.yml` when the
+  label is added and through `ci.yml` on later pushes.
+- **Cache:** pull request builds read the release's registry cache (`buildcache-<arch>`) and never
+  write it. The worker leg also builds the migrate image, so the full worker can boot.

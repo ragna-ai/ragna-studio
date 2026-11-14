@@ -1,0 +1,30 @@
+name: Image smoke (label)
+
+# The `build-images` label smoke-tests every image on both arches, for changes
+# whose runtime effect the packaging filter in ci.yml can't see. Own workflow:
+# a `labeled` trigger in ci.yml would rerun and cancel the whole CI per label.
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  legs:
+    if: github.event.label.name == 'build-images' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    outputs:
+      legs: ${{ steps.select.outputs.legs }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: select
+        run: echo "legs=$(scripts/image-smoke/select-legs.sh --all)" >> "$GITHUB_OUTPUT"
+
+  image-smoke:
+    needs: legs
+    uses: ./.github/workflows/image-smoke.yml
+    with:
+      legs: ${{ needs.legs.outputs.legs }}

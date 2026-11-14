@@ -72,6 +72,27 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}:buildcache-${{ matrix.platform-slug }},mode=max
           outputs: type=image,name=ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
 
+      # Gate: the exact digest that gets tagged must pass the smoke test on its own arch.
+      # A failing leg fails this job, and `merge` then tags no image at all.
+      - if: matrix.image == 'worker'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: packages/database/Dockerfile
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: ragna-studio-migrate:smoke
+          cache-from: type=registry,ref=ghcr.io/ragna-ai/ragna-studio-migrate:buildcache-${{ matrix.platform-slug }}
+
+      - name: Smoke test the pushed image
+        env:
+          IMAGE: ${{ matrix.image }}
+          IMAGE_REF: ghcr.io/ragna-ai/ragna-studio-${{ matrix.image }}@${{ steps.build.outputs.digest }}
+        run: |
+          migrate_ref=""
+          if [ "$IMAGE" = worker ]; then migrate_ref=ragna-studio-migrate:smoke; fi
+          scripts/image-smoke/run.sh "$IMAGE" "$IMAGE_REF" $migrate_ref
+
       - name: Export digest
         env:
           DIGEST: ${{ steps.build.outputs.digest }}

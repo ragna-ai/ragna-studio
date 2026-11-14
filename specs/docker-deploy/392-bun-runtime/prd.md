@@ -91,33 +91,37 @@ without `exec sh`.
 As a platform admin, I want every pull request that touches an image to build and boot it, so that a
 broken image fails the pull request instead of the release.
 
-- **US-5.1** Given a pull request that changes an image's package, one of its dependencies, the
-  lockfile or a Dockerfile, when CI runs, then that image is built and smoke-tested.
+- **US-5.1** Given a pull request that changes how an image is packaged (its Dockerfile, a package
+  manifest or build config it bundles, the lockfile or a migration), when CI runs, then that image is
+  built and smoke-tested. A pull request that only changes source code builds no image.
 - **US-5.2** Given a change that breaks an image's build, boot or health check, when CI runs, then
   the pull request's image check fails.
 - **US-5.3** Given a fresh Postgres, when the migrate image runs, then every migration applies and the
   seed exits 0.
 - **US-5.4** Given a running service, when it receives SIGTERM, then it exits 0 without waiting for
   the kill timeout.
+- **US-5.5** Given a release whose image fails the smoke test on either architecture, when the
+  release runs, then no image of that release gets a version tag.
 
 ## Testing
 
 `scripts/image-smoke/run.sh` runs the same checks locally and in the CI `image-smoke` job.
 
-| Criterion      | Level                                 | Where                      |
-| -------------- | ------------------------------------- | -------------------------- |
-| US-1.1, US-1.3 | Trivy scan per image                  | PR body                    |
-| US-1.2         | image smoke (no shell)                | `scripts/image-smoke/`     |
-| US-2.1, US-5.3 | image smoke (migrate + seed)          | `scripts/image-smoke/`     |
-| US-2.2, US-2.3 | image smoke (worker script, fixtures) | `scripts/image-smoke/`     |
-| US-2.4         | image smoke (health status)           | `scripts/image-smoke/`     |
-| US-2.5         | health check against a dead port      | local, by hand             |
-| US-2.6         | prod deploy                           | Sven, after release        |
-| web in browser | visual review (OAuth login)           | Sven                       |
-| US-3.1, US-3.2 | upgrade from previous release         | local compose              |
-| US-4.1         | follow the docs recipe                | local, by hand             |
-| US-5.1, US-5.2 | CI `image-smoke` job                  | `.github/workflows/ci.yml` |
-| US-5.4         | image smoke (clean stop)              | `scripts/image-smoke/`     |
+| Criterion      | Level                                 | Where                           |
+| -------------- | ------------------------------------- | ------------------------------- |
+| US-1.1, US-1.3 | Trivy scan per image                  | PR body                         |
+| US-1.2         | image smoke (no shell)                | `scripts/image-smoke/`          |
+| US-2.1, US-5.3 | image smoke (migrate + seed)          | `scripts/image-smoke/`          |
+| US-2.2, US-2.3 | image smoke (worker script, fixtures) | `scripts/image-smoke/`          |
+| US-2.4         | image smoke (health status)           | `scripts/image-smoke/`          |
+| US-2.5         | health check against a dead port      | local, by hand                  |
+| US-2.6         | prod deploy                           | Sven, after release             |
+| web in browser | visual review (OAuth login)           | Sven                            |
+| US-3.1, US-3.2 | upgrade from previous release         | local compose                   |
+| US-4.1         | follow the docs recipe                | local, by hand                  |
+| US-5.1, US-5.2 | CI `image-smoke` job                  | `.github/workflows/ci.yml`      |
+| US-5.4         | image smoke (clean stop)              | `scripts/image-smoke/`          |
+| US-5.5         | release smoke gate                    | `.github/workflows/release.yml` |
 
 ## Standards checklist
 
