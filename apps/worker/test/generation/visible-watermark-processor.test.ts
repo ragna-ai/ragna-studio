@@ -313,7 +313,6 @@ describe('visible watermark job', () => {
         data: {
           kind: 'video',
           genVideoId: row.id,
-          bucket: 'bucket',
           storageKey: rawKey,
           mimeType: 'video/mp4',
           size: 9,

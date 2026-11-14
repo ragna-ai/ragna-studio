@@ -1,3 +1,4 @@
+import { config } from '@repo/config';
 import { completeGenImages, completeGenVideo, toLabeledStorageKey } from '@repo/ai';
 import type { StoredGenImage } from '@repo/ai';
 import { getGenImageRowsByIds, getGenVideoById } from '@repo/database';
@@ -32,12 +33,12 @@ interface LabeledOutput {
   rawKey: string | null;
 }
 
-async function deleteRawObjects(bucket: string, keys: string[]): Promise<void> {
+async function deleteRawObjects(keys: string[]): Promise<void> {
   if (keys.length === 0) return;
 
-  const { error } = await tryCatch(() => deleteObjects(bucket, keys));
+  const { error } = await tryCatch(() => deleteObjects(config.s3ImagesBucketName, keys));
   if (error !== null) {
-    logger.warn('Failed to delete unlabeled objects', { error, bucket, keys });
+    logger.warn('Failed to delete unlabeled objects', { error, keys });
   }
 }
 
@@ -45,14 +46,14 @@ async function labelImage(
   output: VisibleWatermarkImageOutput,
   transforms: WatermarkTransforms,
 ): Promise<StoredGenImage> {
-  const raw = await downloadObjectBuffer(output.bucket, output.storageKey);
+  const raw = await downloadObjectBuffer(config.s3ImagesBucketName, output.storageKey);
   const labeled = await transforms.applyImageWatermark({
     buffer: raw.buffer,
     mimeType: output.mimeType,
   });
 
   const { key } = await uploadObjectBuffer({
-    bucketName: output.bucket,
+    bucketName: config.s3ImagesBucketName,
     key: toLabeledStorageKey(output.storageKey),
     buffer: labeled.buffer,
     contentType: output.mimeType,
@@ -118,11 +119,8 @@ export async function watermarkGenImages({
 
   await completeGenImages({ rows: pending, images: results.map((result) => result.image) });
 
-  const [first] = data.outputs;
   const rawKeys = results.flatMap((result) => (result.rawKey ? [result.rawKey] : []));
-  if (first) {
-    await deleteRawObjects(first.bucket, rawKeys);
-  }
+  await deleteRawObjects(rawKeys);
 
   return { completed: true };
 }
@@ -131,11 +129,11 @@ async function labelVideo(
   data: WatermarkStepParams<'video'>['data'],
   transforms: WatermarkTransforms,
 ): Promise<{ storageKey: string; size: number }> {
-  const raw = await downloadObjectBuffer(data.bucket, data.storageKey);
+  const raw = await downloadObjectBuffer(config.s3ImagesBucketName, data.storageKey);
   const labeled = await transforms.applyVideoWatermark({ buffer: raw.buffer });
 
   const { key } = await uploadObjectBuffer({
-    bucketName: data.bucket,
+    bucketName: config.s3ImagesBucketName,
     key: toLabeledStorageKey(data.storageKey),
     buffer: labeled.buffer,
     contentType: data.mimeType,
@@ -174,7 +172,7 @@ export async function watermarkGenVideo({
       draftCacheKey: data.draftCacheKey,
       visibleWatermark: true,
     });
-    await deleteRawObjects(data.bucket, [data.storageKey]);
+    await deleteRawObjects([data.storageKey]);
     return { completed: true };
   }
 

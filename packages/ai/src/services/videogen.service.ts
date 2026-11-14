@@ -464,7 +464,6 @@ const toProviderOptions = (opts: unknown): GenerateVideoProviderOptions =>
   opts as GenerateVideoProviderOptions;
 
 interface UploadGeneratedVideoResult {
-  bucket: string;
   storageKey: string;
   size: number;
 }
@@ -497,7 +496,7 @@ async function uploadGeneratedVideo(
     contentType: video.mediaType || 'video/mp4',
   });
 
-  return { bucket: bucketName, storageKey: key, size: buffer.byteLength };
+  return { storageKey: key, size: buffer.byteLength };
 }
 
 // Narrows the loosely-typed providerMetadata (Record<string, JSONObject>)
@@ -560,7 +559,6 @@ async function persistDraftCache(
 // The result of the run side's provider call: the uploaded mp4's location and
 // size, and the draft bundle's key when the row is a draft (null otherwise).
 export interface GenerateAndUploadVideoResult {
-  bucket: string;
   storageKey: string;
   size: number;
   draftCacheKey: string | null;
@@ -614,15 +612,15 @@ async function generateBflVideo(record: GenVideoWithMedia): Promise<GenerateAndU
     throw new Error('Video generation returned no videos');
   }
 
-  const { bucket, storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size } = await uploadGeneratedVideo(record, video);
 
   if (!record.isDraft) {
-    return { bucket, storageKey, size, draftCacheKey: null };
+    return { storageKey, size, draftCacheKey: null };
   }
 
   const draftCacheKey = await persistDraftCache(requireAuthorId(record), result.providerMetadata);
 
-  return { bucket, storageKey, size, draftCacheKey };
+  return { storageKey, size, draftCacheKey };
 }
 
 /**
@@ -664,9 +662,9 @@ async function generateEnhanceVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { bucket, storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size } = await uploadGeneratedVideo(record, video);
 
-  return { bucket, storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null };
 }
 
 /**
@@ -708,9 +706,9 @@ async function generateVertexVideo(
     throw new Error('Video generation returned no videos');
   }
 
-  const { bucket, storageKey, size } = await uploadGeneratedVideo(record, video);
+  const { storageKey, size } = await uploadGeneratedVideo(record, video);
 
-  return { bucket, storageKey, size, draftCacheKey: null };
+  return { storageKey, size, draftCacheKey: null };
 }
 
 /**
@@ -799,7 +797,6 @@ async function enqueueVisibleWatermarkForVideo(
   const data = visibleWatermarkJobSchema.parse({
     kind: 'video',
     genVideoId,
-    bucket: result.bucket,
     storageKey: result.storageKey,
     mimeType: 'video/mp4',
     size: result.size,

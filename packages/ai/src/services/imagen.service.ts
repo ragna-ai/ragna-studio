@@ -395,7 +395,6 @@ function isGeneratedMediaType(mediaType: string): mediaType is GeneratedMediaTyp
 }
 
 interface GeneratedImageUpload {
-  bucket: string;
   storageKey: string;
   mimeType: GeneratedMediaType;
   size: number;
@@ -525,7 +524,7 @@ async function generateAndUploadBatch(rows: GenImageWithMedia[]): Promise<Genera
         contentType: mediaType,
       });
 
-      return { bucket: bucketName, storageKey: key, mimeType: mediaType, size: buffer.byteLength };
+      return { storageKey: key, mimeType: mediaType, size: buffer.byteLength };
     }),
   );
 }
@@ -595,7 +594,6 @@ async function enqueueVisibleWatermarkForImages(
     genImageIds,
     outputs: uploads.map((upload, index) => ({
       genImageId: genImageIds[index],
-      bucket: upload.bucket,
       storageKey: upload.storageKey,
       mimeType: upload.mimeType,
       size: upload.size,
