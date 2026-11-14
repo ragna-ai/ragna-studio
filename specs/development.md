@@ -4,7 +4,7 @@ Reference doc, not a PRD: no `Status:` line.
 
 ## Run from source
 
-Requirements: Node.js 24+, pnpm, Bun (seed scripts and tests), Docker.
+Requirements: Node.js 26+, pnpm, Bun (seed scripts and tests), Docker.
 
 ```bash
 pnpm install
