@@ -61,6 +61,9 @@ const hasNoTasksAtAll = computed(
 const hasNoResults = computed(
   () => !!tasksData.value && tasks.value.length === 0 && hasFilters.value,
 );
+const isFullHeightBoard = computed(
+  () => isBoard.value && !hasNoTasksAtAll.value,
+);
 
 // A hidden filter must not empty the board's columns.
 watch(isBoard, (nowBoard) => {
@@ -83,10 +86,8 @@ function clearFilters() {
 </script>
 
 <template>
-  <PagePanel>
-    <SectionWrapper
-      :class="{ 'h-full overflow-hidden': isBoard && !hasNoTasksAtAll }"
-    >
+  <PagePanel :fill="isFullHeightBoard">
+    <SectionWrapper :class="{ 'h-full': isFullHeightBoard }">
       <Heading>
         <template #top>
           <HeadingTitle

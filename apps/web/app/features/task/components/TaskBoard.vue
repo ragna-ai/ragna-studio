@@ -103,7 +103,7 @@ function handleDragEnd(event: DraggableEvent<TaskWithBoardInfo>) {
     <div
       v-for="column in STATUS_COLUMNS"
       :key="column.value"
-      class="flex min-h-0 w-66 shrink-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-none pb-6"
+      class="relative flex min-h-0 w-84 shrink-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-none pb-6"
     >
       <div class="flex flex-col rounded-lg bg-surface-subtle px-2 pb-2">
         <TaskBoardColumnHeader

@@ -1,5 +1,11 @@
 <script setup lang="ts">
-defineProps<{ crumbs?: PageCrumb[] }>();
+interface PagePanelProps {
+  crumbs?: PageCrumb[];
+  /** The page fills the panel and scrolls its own regions; the panel never scrolls. */
+  fill?: boolean;
+}
+
+defineProps<PagePanelProps>();
 </script>
 
 <template>
@@ -9,7 +15,8 @@ defineProps<{ crumbs?: PageCrumb[] }>();
     </slot>
     <main
       id="main"
-      class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+      class="relative min-h-0 flex-1"
+      :class="fill ? 'overflow-clip' : 'overflow-x-hidden overflow-y-auto'"
     >
       <slot />
     </main>
