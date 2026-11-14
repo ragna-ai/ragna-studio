@@ -3,7 +3,7 @@
 # ============================================================
 # Base — node + pnpm + turbo
 # ============================================================
-FROM node:24.22.2-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS base
+FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -48,10 +48,12 @@ RUN pnpm turbo build --filter=@repo/web
 # ============================================================
 # Runner — minimal image, only .output is needed
 # ============================================================
-FROM node:24.22.2-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS runner
+FROM node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runner
 
+# npm is unused at runtime and its bundled deps carry CVEs.
 RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nuxt
+  && adduser --system --uid 1001 nuxt \
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 WORKDIR /app
 
