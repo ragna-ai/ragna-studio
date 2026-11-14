@@ -229,8 +229,10 @@ Text-to-video via BFL FLUX 3, with draft and enhance modes.
 ### AI content labeling
 
 Automatically tags AI-generated media with a provenance badge, best-effort
-(doesn't block generation if labeling fails).
-→ [specs/ai-labeling/prd.md](./ai-labeling/prd.md)
+(doesn't block generation if labeling fails). The badge is applied by its own retried worker job
+before the output is shown; the image tools live in `@repo/media-transform`, outside the api.
+→ [specs/ai-labeling/prd.md](./ai-labeling/prd.md),
+[394-watermark-job/prd.md](./ai-labeling/394-watermark-job/prd.md)
 
 ### Email client
 

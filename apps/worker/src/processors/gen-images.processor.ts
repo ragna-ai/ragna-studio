@@ -1,15 +1,9 @@
 import { runGenImages } from '@repo/ai';
-import { getGenImageRowsByIds } from '@repo/database';
 import { logger } from '@repo/logger';
 import type { ProcessorJob, ProcessorSuccess, Worker } from '@repo/queue';
-import {
-  createWorker,
-  enqueueNotification,
-  GEN_IMAGES_JOB,
-  GEN_IMAGES_QUEUE,
-  genImagesJobSchema,
-} from '@repo/queue';
+import { createWorker, GEN_IMAGES_JOB, GEN_IMAGES_QUEUE, genImagesJobSchema } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
+import { notifyImageGenerationBestEffort } from '../services/generation-notifications';
 
 // A batch normally finishes in a few seconds, well under gen-video's
 // multi-minute renders, but the lock is stretched the same way
@@ -58,55 +52,17 @@ export async function processGenImagesJob(job: ProcessorJob): Promise<ProcessorS
 // message before it rethrows, so this only needs to notify and propagate.
 // The enqueuer (requestGenImages in @repo/ai) never sets a retry count above
 // the BullMQ default of one attempt: a failed batch must surface as a failed
-// job, not silently re-render and double the cost.
+// job, not silently re-render and double the cost. A labeled batch is
+// notified by the visible-watermark job once it completes.
 async function processGenImages(genImageIds: string[]): Promise<void> {
-  const { error } = await tryCatch(() => runGenImages({ genImageIds }));
+  const { error, data: result } = await tryCatch(() => runGenImages({ genImageIds }));
 
-  if (error === null) {
-    await notifyBestEffort({ genImageIds, type: 'image_generation_succeeded' });
-    return;
+  if (error !== null) {
+    await notifyImageGenerationBestEffort({ genImageIds, type: 'image_generation_failed' });
+    throw error;
   }
 
-  await notifyBestEffort({ genImageIds, type: 'image_generation_failed' });
-  throw error;
-}
-
-// Best-effort by design: a notification failure must never mask the job's
-// real outcome (the rows and the rethrown/absent error already carry that),
-// so every failure here is logged and swallowed. One notification per batch,
-// not per row.
-async function notifyBestEffort({
-  genImageIds,
-  type,
-}: {
-  genImageIds: string[];
-  type: 'image_generation_succeeded' | 'image_generation_failed';
-}): Promise<void> {
-  try {
-    const [record] = await getGenImageRowsByIds({ ids: genImageIds });
-    if (!record) {
-      logger.error(`Gen images ${genImageIds.join(', ')} not found, skipping notification`);
-      return;
-    }
-
-    if (!record.userId) {
-      logger.info(`Gen images ${genImageIds.join(', ')} have no author, skipping notification`);
-      return;
-    }
-
-    await enqueueNotification({
-      userId: record.userId,
-      type,
-      data: {
-        genImageIds,
-        workspaceId: record.workspaceId,
-        prompt: record.prompt,
-      },
-    });
-  } catch (notifyError) {
-    logger.error(
-      `Failed to enqueue ${type} notification for gen images ${genImageIds.join(', ')}:`,
-      notifyError,
-    );
+  if (result?.outcome === 'completed') {
+    await notifyImageGenerationBestEffort({ genImageIds, type: 'image_generation_succeeded' });
   }
 }

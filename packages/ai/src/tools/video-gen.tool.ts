@@ -124,7 +124,11 @@ export function videoGenToolDefinition({
 
       if (runsInWorker) {
         const record = await createGenVideoRecord(params);
-        const completed = await runGenVideo({ genVideoId: record.id });
+        const result = await runGenVideo({ genVideoId: record.id });
+        if (result.outcome !== 'completed') {
+          throw new Error('Inline video generation cannot wait for the visible watermark');
+        }
+        const completed = result.video;
         const videoUrl = completed.media ? toPublicMediaUrl(completed.media.storageKey) : undefined;
         return { video: { id: completed.id, status: 'completed', videoUrl } };
       }

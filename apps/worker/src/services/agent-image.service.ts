@@ -1,18 +1,15 @@
-// packages/media/src/services/agent-image.service.ts
 import { getMediaById, updateMediaStorage } from '@repo/database';
 import { logger } from '@repo/logger';
+import { deleteMediaObjectsByKeys, getAgentImageKey, MIME_TYPE_BY_MEDIA_KIND } from '@repo/media';
+import { resizeImageToSquareWebp } from '@repo/media-transform';
 import { downloadObjectBuffer, uploadObjectBuffer } from '@repo/storage';
 import { tryCatch } from '@repo/utils';
-import sharp from 'sharp';
-import { getAgentImageKey } from '../lib/media-keys';
-import { MIME_TYPE_BY_MEDIA_KIND } from '../types';
-import { deleteMediaObjectsByKeys } from './media.service';
 
 /** Edge length of an agent's uploaded mark image. */
 const AGENT_IMAGE_SIZE_PX = 80;
 
 /**
- * Replaces an uploaded agent image with its 80 x 80 PNG version under a new key and points the
+ * Replaces an uploaded agent image with its 80 x 80 lossless WebP under a new key and points the
  * same media row at it, then deletes the original object. Idempotent: a row already at the new
  * key is left alone. A missing row (deleted while the job waited) is skipped.
  */
@@ -35,10 +32,10 @@ export async function shrinkAgentImage({ mediaId }: { mediaId: string }): Promis
   }
 
   const original = await downloadObjectBuffer(mediaRow.bucket, mediaRow.storageKey);
-  const resized = await sharp(original.buffer)
-    .resize(AGENT_IMAGE_SIZE_PX, AGENT_IMAGE_SIZE_PX, { fit: 'cover', position: 'centre' })
-    .webp({ lossless: true })
-    .toBuffer();
+  const resized = await resizeImageToSquareWebp({
+    buffer: original.buffer,
+    size: AGENT_IMAGE_SIZE_PX,
+  });
   const mimeType = MIME_TYPE_BY_MEDIA_KIND.webp;
 
   await uploadObjectBuffer({

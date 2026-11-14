@@ -55,21 +55,19 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
   pnpm --filter @repo/api deploy --prod /prod/api --store-dir /var/cache/pnpm
 
 # ============================================================
-# C++ runtime — sharp's libvips needs libstdc++ and libgcc_s, which the
-# distroless base lacks. Copy exactly the Debian 13 package files plus
-# their dpkg status entries, so image scanners still track them.
+# GCC runtime: anydoc's Rust binary links libgcc_s, which the distroless
+# base lacks. Copy exactly the Debian 13 package files plus their dpkg
+# status entry, so image scanners still track them.
 # ============================================================
-FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS cxx-runtime
+FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS gcc-runtime
 
 # Install, not just copy: picks up Debian security updates newer than the base image.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 \
+  && apt-get install -y --no-install-recommends libgcc-s1 \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /rootfs/var/lib/dpkg/status.d \
-  && for pkg in libstdc++6 libgcc-s1; do \
-    dpkg -L "$pkg" | grep '^/usr/lib/.*\.so' | xargs cp -a --parents -t /rootfs; \
-    dpkg -s "$pkg" > "/rootfs/var/lib/dpkg/status.d/$pkg"; \
-  done
+  && dpkg -L libgcc-s1 | grep '^/usr/lib/.*\.so' | xargs cp -a --parents -t /rootfs \
+  && dpkg -s libgcc-s1 > /rootfs/var/lib/dpkg/status.d/libgcc-s1
 
 # ============================================================
 # Runner — Bun distroless (src/index.ts uses Bun.serve). Debian-based,
@@ -83,7 +81,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV API_PORT=3010
 
-COPY --from=cxx-runtime /rootfs /
+COPY --from=gcc-runtime /rootfs /
 COPY --from=builder --chown=1000:1000 /prod/api .
 
 USER 1000:1000

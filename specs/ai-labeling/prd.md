@@ -4,6 +4,10 @@
 > (2026-08-06). Covers generated images and videos. Motivated by EU AI Act
 > Art. 50, applicable since 2026-08-02.
 >
+> **Processing and failure semantics superseded** by
+> [394-watermark-job](./394-watermark-job/prd.md) (issue #394): the watermark runs in its own
+> retried job, and the code lives in `@repo/media-transform`.
+>
 > **Revision 1** reworks the processing layer after Docker testing exposed a
 > black-video bug: (1) the watermark service, sharp, and the badge asset move
 > into the existing `@repo/media` package (already home to the media-library

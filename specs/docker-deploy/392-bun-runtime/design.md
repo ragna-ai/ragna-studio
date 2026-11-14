@@ -5,7 +5,7 @@
 | Image      | Runner                            | Extra                                                                          |
 | ---------- | --------------------------------- | ------------------------------------------------------------------------------ |
 | migrate    | `oven/bun:<v>-distroless`         | `USER 1000:1000`                                                               |
-| api        | `oven/bun:<v>-distroless`         | `USER 1000:1000`, libstdc++ and libgcc_s                                       |
+| api        | `oven/bun:<v>-distroless`         | `USER 1000:1000`, libgcc_s                                                     |
 | web        | `oven/bun:<v>-distroless`         | Nitro bun preset, `docker-entry.mjs`, `USER 1001:1001`, libstdc++ and libgcc_s |
 | worker     | `oven/bun:<v>-distroless`         | own ffmpeg, `USER 1000:1000`, libstdc++, libgcc_s and zlib                     |
 | webbrowser | `oven/bun:<v>-debian` (unchanged) | chromium, tini, wget                                                           |
@@ -26,8 +26,8 @@
 
 ## Native libraries
 
-sharp's libvips needs `libstdc++.so.6` and `libgcc_s.so.1`, which the distroless base lacks. anydoc
-loads on plain glibc. A `debian:13-slim` stage `apt-get install`s the packages, so it picks up
+sharp's libvips needs `libstdc++.so.6` and `libgcc_s.so.1`, which the distroless base lacks. anydoc's
+Rust binary needs `libgcc_s.so.1`. The api ships no sharp since #394, so it installs only `libgcc-s1`. A `debian:13-slim` stage `apt-get install`s the packages, so it picks up
 Debian security updates newer than the base image. It then copies exactly the packages' `.so` files
 (`dpkg -L`) plus a `var/lib/dpkg/status.d/<pkg>` entry per package into a rootfs folder. The runner
 copies that folder. Trivy reads `status.d`, so the libraries stay visible to scans. `dpkg -L` paths

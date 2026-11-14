@@ -117,6 +117,7 @@ type QueueMockOverrides = {
     emailClassify: () => ReturnType<typeof fakeQueue>;
     emailDraft: () => ReturnType<typeof fakeQueue>;
     purge: () => ReturnType<typeof fakeQueue>;
+    visibleWatermark: () => ReturnType<typeof fakeQueue>;
   };
   upsertQueueJobScheduler: typeof upsertQueueJobSchedulerMock;
   removeQueueJobScheduler: typeof removeQueueJobSchedulerMock;
@@ -146,6 +147,7 @@ export const queueModuleMock: Omit<typeof queuePackage, keyof QueueMockOverrides
     emailClassify: () => fakeQueue(queuePackage.EMAIL_CLASSIFY_QUEUE),
     emailDraft: () => fakeQueue(queuePackage.EMAIL_DRAFT_QUEUE),
     purge: () => fakeQueue(queuePackage.PURGE_QUEUE),
+    visibleWatermark: () => fakeQueue(queuePackage.VISIBLE_WATERMARK_QUEUE),
   },
   upsertQueueJobScheduler: upsertQueueJobSchedulerMock,
   removeQueueJobScheduler: removeQueueJobSchedulerMock,

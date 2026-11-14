@@ -3,8 +3,7 @@
 // @repo/media: the media domain.
 // Owns the media type registry (kinds, mime types, magic-byte sniffing,
 // extractable flags), the extraction engine, storage placement, media row
-// creation, refcounted deletion, and the visible
-// AI-disclosure watermark and its native deps (sharp, system ffmpeg).
+// creation and refcounted deletion.
 // Dependency direction: database/storage -> media -> (ai, apps). Nothing in
 // @repo/media may depend on an app.
 
@@ -22,8 +21,6 @@ export {
   getMediaDocumentKey,
 } from './lib/media-keys';
 
-export { shrinkAgentImage } from './services/agent-image.service';
-
 export {
   createMediaForObject,
   deleteMediaIfUnreferenced,
@@ -38,14 +35,3 @@ export type {
   StoreMediaInput,
   SweepUnreferencedMediaResult,
 } from './services/media.service';
-
-// Visible AI-disclosure watermark (EU AI Act Art. 50(4)).
-export { applyImageWatermark, applyVideoWatermark } from './services/watermark.service';
-export type {
-  ApplyImageWatermarkParams,
-  ApplyImageWatermarkResult,
-  ApplyVideoWatermarkParams,
-  ApplyVideoWatermarkResult,
-} from './services/watermark.service';
-export { buildWatermarkFfmpegArgs, probeVideoDimensions } from './lib/watermark-ffmpeg.util';
-export type { BuildWatermarkFfmpegArgsParams, VideoDimensions } from './lib/watermark-ffmpeg.util';
