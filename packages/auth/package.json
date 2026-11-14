@@ -24,16 +24,16 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/cimd": "^1.7.16",
-    "@better-auth/mcp": "^1.7.16",
-    "@better-auth/oauth-provider": "^1.7.16",
+    "@better-auth/cimd": "^1.7.20",
+    "@better-auth/mcp": "^1.7.20",
+    "@better-auth/oauth-provider": "^1.7.20",
     "@repo/config": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/integrations": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/queue": "workspace:*",
-    "better-auth": "^1.7.16",
-    "jose": "^6.2.13"
+    "better-auth": "^1.7.20",
+    "jose": "^6.2.17"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

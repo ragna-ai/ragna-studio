@@ -26,7 +26,8 @@ interface PdfMakeVirtualFileSystem {
   writeFileSync(fileName: string, content: string, encoding: 'base64'): void;
 }
 
-const virtualFileSystem = (pdfMake as unknown as { virtualfs: PdfMakeVirtualFileSystem }).virtualfs;
+const virtualFileSystem = (pdfMake as unknown as { sharedVirtualfs: PdfMakeVirtualFileSystem })
+  .sharedVirtualfs;
 
 const ROBOTO_FONT_FILES = {
   normal: 'Roboto-Regular.ttf',

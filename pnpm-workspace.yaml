@@ -26,19 +26,13 @@ pmOnFail: ignore
 # security fix, add its exact version (never a name pattern) to minimumReleaseAgeExclude
 # and remove it once it's older than 3 days.
 minimumReleaseAge: 4320
-minimumReleaseAgeExclude:
-  - better-auth@1.7.16
-  - '@better-auth/cimd@1.7.16'
-  - '@better-auth/core@1.7.16'
-  - '@better-auth/drizzle-adapter@1.7.16'
-  - '@better-auth/kysely-adapter@1.7.16'
-  - '@better-auth/mcp@1.7.16'
-  - '@better-auth/memory-adapter@1.7.16'
-  - '@better-auth/mongo-adapter@1.7.16'
-  - '@better-auth/oauth-provider@1.7.16'
-  - '@better-auth/prisma-adapter@1.7.16'
-  - '@better-auth/telemetry@1.7.16'
-  - better-call@1.4.5
+
+# astro2tsx pins @emnapi/core 1.x but leaves @emnapi/runtime as a peer; without this pnpm
+# picks the 2.0 beta that rolldown brings in, and `astro check` crashes on the mismatch.
+packageExtensions:
+  '@astrojs/astro2tsx':
+    dependencies:
+      '@emnapi/runtime': 1.11.3
 
 allowBuilds:
   '@parcel/watcher': false
@@ -53,14 +47,14 @@ allowBuilds:
 catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@types/node': 24.19.2
-  tailwindcss: ^4.3.3
-  tsdown: ^0.23.4
+  tailwindcss: ^4.3.5
+  tsdown: ^0.23.7
   typescript: 6.0.3
   zod: 4.6.7
-  oxfmt: ^0.75.0
-  oxlint: ^1.90.0
-  ai: ^7.0.154
-  mdream: 2.0.3
+  oxfmt: ^0.78.0
+  oxlint: ^1.93.0
+  ai: ^7.0.169
+  mdream: 2.1.0
   oauth4webapi: 3.8.8
 
 updateConfig:
