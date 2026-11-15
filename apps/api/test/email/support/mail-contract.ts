@@ -6,6 +6,7 @@
 import { getEmailDraftById, getEmailMessageById } from '@repo/database';
 import {
   failVendorEndpoint,
+  overrideVendorRoute,
   MAILBOX_ALICE,
   MAILBOX_ATTACHMENT,
   MAILBOX_FIRST_MESSAGE,
@@ -28,6 +29,11 @@ import * as z from 'zod';
 import { app } from '../../../src/app';
 import type { ConnectedGmailAccount } from './email-fixtures';
 import { resetEmailQueueMock } from './email-queue.mock';
+
+export interface ForbiddenRateLimitCase {
+  name: string;
+  body: unknown;
+}
 
 export interface ContractMailbox {
   emailAddress: string;
@@ -63,8 +69,8 @@ export interface MailContractVendor {
   mailbox: ContractMailbox;
   endpoints: ContractEndpoints;
   notFoundBody: unknown;
-  /** A 403 body the vendor uses to signal a rate limit, for vendors that do not answer 429. */
-  forbiddenRateLimitBody?: unknown;
+  /** 403 bodies the vendor uses to signal a rate limit, for vendors that do not answer 429. */
+  forbiddenRateLimitBodies?: readonly ForbiddenRateLimitCase[];
   /** The search text as the vendor received it, unwrapped from the vendor's query syntax. */
   readSearchQuery: (request: VendorRequest) => string | null;
   /** What the vendor was asked to send, read from the recorded vendor requests. */
@@ -283,8 +289,6 @@ export function runMailContract(vendor: MailContractVendor): void {
       expect(sent.recipients).toEqual([MAILBOX_ALICE.address]);
     });
 
-    const hasForbiddenRateLimit = vendor.forbiddenRateLimitBody !== undefined;
-
     async function postSend() {
       const { cookieHeader } = await connectMailbox();
       return app.request('/email/send', {
@@ -404,38 +408,41 @@ export function runMailContract(vendor: MailContractVendor): void {
       expect(vendorRequestsTo(vendor.endpoints.thread)).toHaveLength(1);
     });
 
-    test.if(hasForbiddenRateLimit)(
-      'retries a call the vendor rejects with a 403 rate limit',
-      async () => {
+    for (const { name, body } of vendor.forbiddenRateLimitBodies ?? []) {
+      test(`retries a call the vendor rejects with a 403 rate limit (${name})`, async () => {
         const openThread = await openThreadWithMissingBody();
-        failVendorEndpoint(vendor.endpoints.thread, {
-          status: 403,
-          body: vendor.forbiddenRateLimitBody,
-          times: 1,
-        });
+        failVendorEndpoint(vendor.endpoints.thread, { status: 403, body, times: 1 });
 
         const response = await openThread();
 
         expect(response.status).toBe(StatusCodes.OK);
         expect(vendorRequestsTo(vendor.endpoints.thread)).toHaveLength(2);
-      },
-    );
+      });
 
-    test.if(hasForbiddenRateLimit)(
-      'retries a send the vendor rejects with a 403 rate limit',
-      async () => {
-        failVendorEndpoint(vendor.endpoints.send, {
-          status: 403,
-          body: vendor.forbiddenRateLimitBody,
-          times: 1,
-        });
+      test(`retries a send the vendor rejects with a 403 rate limit (${name})`, async () => {
+        failVendorEndpoint(vendor.endpoints.send, { status: 403, body, times: 1 });
 
         const response = await postSend();
 
         expect(response.status).toBe(StatusCodes.CREATED);
         expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(2);
-      },
-    );
+      });
+    }
+
+    test('attempts a send once when the network fails', async () => {
+      overrideVendorRoute({
+        ...vendor.endpoints.send,
+        respond: () => {
+          throw new TypeError('fetch failed');
+        },
+      });
+
+      const response = await postSend();
+
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(1);
+      expect(vendorHttp.sleeps).toEqual([]);
+    });
 
     test('retries a rejected token before reporting the failure', async () => {
       const openThread = await openThreadWithMissingBody();

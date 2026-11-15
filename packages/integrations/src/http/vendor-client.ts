@@ -28,25 +28,22 @@ export interface VendorClientOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-export interface VendorRequestOptions {
-  method?: VendorHttpMethod;
-  body?: string;
+export interface VendorRetryOptions {
   /** True when repeating the call can't duplicate an effect, so a POST or PATCH may retry on 5xx and 401. */
   idempotent?: boolean;
-  /** Defaults to 30 s. */
-  timeoutMs?: number;
 }
 
-export interface VendorRawRequestOptions {
+export interface VendorRequestOptions extends VendorRetryOptions {
+  method?: VendorHttpMethod;
+  body?: string;
+}
+
+export interface VendorRawRequestOptions extends VendorRetryOptions {
   method: VendorHttpMethod;
   body?: RequestInit['body'];
   headers?: Readonly<Record<string, string>>;
   /** False for pre-authenticated URLs (upload sessions) that reject an Authorization header. */
   authorize: boolean;
-  /** True when repeating the call can't duplicate an effect, so a POST or PATCH may retry on 5xx and 401. */
-  idempotent?: boolean;
-  /** Defaults to 30 s. */
-  timeoutMs?: number;
 }
 
 export interface VendorClient {
@@ -70,9 +67,8 @@ export function parseRetryAfterMs(value: string | null): number | undefined {
   return Number.isNaN(dateMs) ? undefined : Math.max(0, dateMs - Date.now());
 }
 
-interface RetryPolicy {
+interface RetryPolicy extends VendorRetryOptions {
   method: VendorHttpMethod;
-  idempotent?: boolean;
 }
 
 function isRetryable(error: unknown, policy: RetryPolicy): error is VendorApiError {
@@ -167,7 +163,6 @@ class HttpVendorClient implements VendorClient {
     return this.fetchChecked(path, {
       method: options.method ?? 'GET',
       body: options.body,
-      timeoutMs: options.timeoutMs,
       headers: { 'Content-Type': 'application/json' },
       authorize: true,
     });
@@ -188,7 +183,7 @@ class HttpVendorClient implements VendorClient {
       method: options.method,
       body: options.body,
       headers,
-      signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {

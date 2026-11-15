@@ -47,9 +47,34 @@ runMailContract({
     deleteDraft: GMAIL_ENDPOINTS.deleteDraft,
   },
   notFoundBody: GMAIL_NOT_FOUND_BODY,
-  forbiddenRateLimitBody: {
-    error: { errors: [{ reason: 'userRateLimitExceeded' }], status: 'PERMISSION_DENIED' },
-  },
+  forbiddenRateLimitBodies: [
+    {
+      name: 'first reason',
+      body: {
+        error: { errors: [{ reason: 'userRateLimitExceeded' }], status: 'PERMISSION_DENIED' },
+      },
+    },
+    {
+      name: 'later reason',
+      body: {
+        error: {
+          errors: [{ reason: 'forbidden' }, { reason: 'rateLimitExceeded' }],
+          status: 'PERMISSION_DENIED',
+        },
+      },
+    },
+    {
+      name: 'error details',
+      body: {
+        error: {
+          status: 'PERMISSION_DENIED',
+          details: [
+            { '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'RATE_LIMIT_EXCEEDED' },
+          ],
+        },
+      },
+    },
+  ],
   readSearchQuery,
   readSentMessage,
 });

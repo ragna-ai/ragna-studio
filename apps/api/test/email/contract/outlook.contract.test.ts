@@ -2,6 +2,7 @@ import {
   GRAPH_ENDPOINTS,
   GRAPH_MAILBOX,
   GRAPH_NOT_FOUND_BODY,
+  failVendorEndpoint,
   MAILBOX_ALICE,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -100,5 +101,25 @@ describe('Outlook (Microsoft Graph) only', () => {
     ]);
     expect(chunks.every((chunk) => !chunk.headers.has('Authorization'))).toBe(true);
     expect(vendorRequestsTo(GRAPH_ENDPOINTS.send)).toHaveLength(1);
+  });
+
+  test('retries adding an inline attachment after a server error', async () => {
+    const { userId, cookieHeader } = await seedAuthenticatedUser();
+    await seedConnectedMicrosoftAccount({ userId, cookieHeader });
+    failVendorEndpoint(GRAPH_ENDPOINTS.addAttachment, { status: 503, times: 1 });
+    const form = new FormData();
+    form.append('to', MAILBOX_ALICE.address);
+    form.append('subject', 'Small attachment');
+    form.append('html', '<p>See the note.</p>');
+    form.append('files', new File(['note'], 'note.txt', { type: 'text/plain' }));
+
+    const response = await app.request('/email/send', {
+      method: 'POST',
+      headers: { cookie: cookieHeader },
+      body: form,
+    });
+
+    expect(response.status).toBe(StatusCodes.CREATED);
+    expect(vendorRequestsTo(GRAPH_ENDPOINTS.addAttachment)).toHaveLength(2);
   });
 });

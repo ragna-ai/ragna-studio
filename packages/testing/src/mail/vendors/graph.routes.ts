@@ -85,6 +85,11 @@ export const GRAPH_ENDPOINTS = {
   send: { method: 'POST', host: HOST, path: new RegExp(`^${BASE}/messages/([^/]+)/send$`) },
   move: { method: 'POST', host: HOST, path: new RegExp(`^${BASE}/messages/([^/]+)/move$`) },
   deleteMessage: { method: 'DELETE', host: HOST, path: new RegExp(`^${BASE}/messages/([^/]+)$`) },
+  addAttachment: {
+    method: 'POST',
+    host: HOST,
+    path: new RegExp(`^${BASE}/messages/([^/]+)/attachments$`),
+  },
   deleteAttachment: {
     method: 'DELETE',
     host: HOST,
@@ -423,6 +428,9 @@ export const GRAPH_MAILBOX_ROUTES: readonly VendorRoute[] = [
   vendorRoute(GRAPH_ENDPOINTS.send, () => vendorEmpty(202)),
   vendorRoute(GRAPH_ENDPOINTS.move, answerMove),
   vendorRoute(GRAPH_ENDPOINTS.deleteMessage, () => vendorEmpty(204)),
+  vendorRoute(GRAPH_ENDPOINTS.addAttachment, () =>
+    vendorJson(attachmentMetadata(), { status: 201 }),
+  ),
   vendorRoute(GRAPH_ENDPOINTS.deleteAttachment, () => vendorEmpty(204)),
   vendorRoute(GRAPH_ENDPOINTS.createUploadSession, answerCreateUploadSession),
   vendorRoute(GRAPH_ENDPOINTS.uploadChunk, answerUploadChunk),

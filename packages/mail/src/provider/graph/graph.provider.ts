@@ -488,8 +488,10 @@ export class GraphProvider implements MailProvider {
       contentBytes: attachment.content.toString('base64'),
       ...(attachment.contentId ? { contentId: attachment.contentId, isInline: true } : {}),
     };
+    // Repeatable: reconcileAttachments replaces all attachments, so a duplicate is removed on the next save.
     await this.request<FileAttachment>(`me/messages/${messageId}/attachments`, {
       method: 'POST',
+      idempotent: true,
       body: JSON.stringify(body),
     });
   }
