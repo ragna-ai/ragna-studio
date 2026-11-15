@@ -27,6 +27,8 @@ All phases below shipped on 2026-07-14. Only the open points at the bottom remai
 
 ### Phase 0: Account connection
 
+LinkedIn sign-in was removed in #425. The connection moved to `@repo/integrations` in #224.
+
 - Add `linkedin` to `socialProviders` in `packages/auth/src/server/auth.ts`. Credentials come from `@repo/config` (`LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_SCOPES`).
 - Enable account linking with `allowDifferentEmails`, since the LinkedIn email may differ from the sign-in email.
 - Connected-accounts UI on the account page: list, connect (`linkSocial`), disconnect (`unlinkAccount`). Port of the v2 `user-social-settings.tsx`, rebuilt in Vue.
