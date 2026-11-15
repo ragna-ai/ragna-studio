@@ -155,6 +155,22 @@ one also notifies. `publishSocialPost` calls it on a `LinkedinPublishError` of k
   `publisher.uploadImage` per item. `PublishableImage` and `UploadPostMediaResult` go away.
 - Inline parameter object types become named interfaces.
 
+## Other consumers
+
+Publishing to LinkedIn happens only in `apps/api` (`publishSocialPost`). Nothing else changes:
+
+- **Agent tool `linkedinDraft`** (`packages/ai`): writes draft rows only, no token and no LinkedIn
+  call. It stays a builtin agent tool, not an integration agent tool: drafting must work without a
+  connection, and agents never publish.
+- **Workflows and `apps/worker`:** agent nodes run `linkedinDraft` through the agent's tool grants,
+  same DB-only path. `WORKFLOW_TOOLS` no longer has a LinkedIn tool node. The worker has no LinkedIn
+  code.
+- **Reconnect notification:** `integration_needs_reauth` in `@repo/queue` and the web notification
+  type already accept provider `linkedin`. US-1.4 needs no schema change.
+- **Later, not built:** the worker already depends on `@repo/integrations`. Once the publisher lives
+  there, a scheduled or agent-triggered publish could run as a worker job. That needs its own PRD
+  and the claim guard of #405.
+
 ## Tests
 
 - Delete `packages/testing/src/mocks/linkedin-provider.mock.ts`, its re-export in
@@ -189,6 +205,7 @@ one also notifies. `publishSocialPost` calls it on a `LinkedinPublishError` of k
 
 - `specs/glossary.md`: add **social post**.
 - `specs/architecture.md`: drop `linkedin/` from the package tree.
-- `specs/linkedin-strategy.md`: point to `@repo/integrations/social` instead of `@repo/linkedin`.
+- `specs/linkedin-strategy.md`: point to `@repo/integrations/social` instead of `@repo/linkedin`, and
+  drop the stale claim that `linkedinDraft` is a workflow tool node.
 - `apps/docs/src/content/docs/errors/linkedin-not-connected.mdx`: add the new causes.
 - `apps/docs/src/content/docs/integrations/social-posts.mdx`: **Failed** row.
