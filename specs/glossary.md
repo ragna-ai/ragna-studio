@@ -28,6 +28,7 @@ Role names are always qualified. The full table, with storage and code identifie
 | integration catalog | The list of integrations, `INTEGRATION_CATALOG` in `@repo/integrations/catalog`.                                                   | catalog (unqualified)                                      |
 | connection          | A user's or workspace's linked external account at a provider, with its tokens. Table `integration_connections`.                   | account (that is better-auth's login account), integration |
 | account             | A better-auth login method of a user (Google, Microsoft, Apple sign-in). Table `account`.                                          | connection                                                 |
+| passkey             | A WebAuthn credential on a user's device that signs them in. A user can have several. Table `passkey`.                             | security key, account                                      |
 
 ## Agents and AI
 
