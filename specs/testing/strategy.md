@@ -112,7 +112,7 @@ reuses in Phase 2.
   to process rows that only exist in `studio_test`. Real queue/worker
   mechanics (a job actually being picked up and processed) is apps/worker's
   concern, out of scope for Phase 1.
-- **AI providers, R2 storage, LinkedIn:** faked with Bun's `mock.module()`,
+- **AI providers, R2 storage:** faked with Bun's `mock.module()`,
   registered in `packages/testing/src/mocks/` and detailed in
   `apps/api/test/README.md`'s "External-provider mocks" section. Not
   literally `@repo/ai` at the package boundary as originally planned here:
@@ -121,9 +121,10 @@ reuses in Phase 2.
   mocked instead (an external, unbundled import even after `@repo/ai` is
   built), which has the added benefit of keeping `@repo/ai`'s own real
   orchestration — including DB persistence — under test, not faked away.
-  `@repo/storage` and `@repo/linkedin` are mocked at the package boundary as
-  originally planned, since apps/api imports them directly and they're thin
-  wrappers with no internal logic worth preserving. `@repo/mail` turned out
+  `@repo/storage` is mocked at the package boundary as originally planned,
+  since apps/api imports it directly and it's a thin wrapper with no internal
+  logic worth preserving. LinkedIn runs the real publisher against the vendor
+  HTTP fake (`packages/testing/src/vendor-http`), like mail and cloud drive. `@repo/mail` turned out
   to need no mock: nothing in `apps/api/src` imports it directly.
 
 ### Priorities

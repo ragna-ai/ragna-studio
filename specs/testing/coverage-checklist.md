@@ -28,13 +28,13 @@ appending.
 - [x] **videogen** — list, create, frame-upload. No AI-provider mock needed:
       `POST /` only inserts a pending row and enqueues a real BullMQ job,
       the actual provider call happens in `apps/worker`'s processor
-- [x] **social-post** — CRUD (no mock needed) + `/publish` (faked
-      `@repo/linkedin` client, including a proven failure-path override)
+- [x] **social-post** — CRUD (no mock needed) + `/publish` (real LinkedIn
+      publisher against the vendor HTTP fake, including retry and failure paths)
 - [x] **agent-context-document** — upload/list/rename/retry/delete (faked
       R2 upload)
 
 External-provider mocks (AI provider factories, `@repo/storage`,
-`@repo/linkedin`, via Bun's `mock.module()`) live in
+via Bun's `mock.module()`) live in
 `packages/testing/src/mocks/`, documented in full in
 `apps/api/test/README.md`'s "External-provider mocks" section.
 

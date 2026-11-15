@@ -1,7 +1,7 @@
 // packages/testing/src/mocks/provider-mocks.ts
 //
 // Registers the external-provider mocks (see ai-sdk-provider.mock.ts,
-// storage-provider.mock.ts, linkedin-provider.mock.ts) and exposes one
+// storage-provider.mock.ts) and exposes one
 // combined reset for a consuming app's test `beforeEach`, alongside
 // `truncateAllTables()`. Resetting matters because a test may install a
 // one-off failure via `mockImplementationOnce` (or a full
@@ -10,7 +10,7 @@
 //
 // Any test file that exercises a mocked boundary must import this (or
 // `@repo/testing` as a whole) before its own import of anything that
-// transitively reaches the real `ai`/`@repo/storage`/`@repo/linkedin`
+// transitively reaches the real `ai`/`@repo/storage`
 // modules (e.g. the app entrypoint). No dedicated preload is needed for
 // this ordering: Bun finishes importing every test file — running each
 // one's top-level code, this mock registration included — before executing
@@ -20,20 +20,17 @@ import { resetProviderHttpMock } from '../integrations/provider-http.mock';
 import { resetVendorHttpMock } from '../vendor-http/vendor-http.mock';
 import { resetAiSdkProviderMock } from './ai-sdk-provider.mock';
 import { resetMailProviderMock } from '../mail/mail-provider.mock';
-import { resetLinkedinProviderMock } from './linkedin-provider.mock';
 import { resetMailSenderMock } from './mail-sender.mock';
 import { resetQueueMock } from './queue-provider.mock';
 import { resetStorageProviderMock } from './storage-provider.mock';
 
 export * from './ai-sdk-provider.mock';
-export * from './linkedin-provider.mock';
 export * from './mail-sender.mock';
 export * from './queue-provider.mock';
 export * from './storage-provider.mock';
 
 export function resetProviderMocks(): void {
   resetStorageProviderMock();
-  resetLinkedinProviderMock();
   resetQueueMock();
   resetAiSdkProviderMock();
   resetMailSenderMock();

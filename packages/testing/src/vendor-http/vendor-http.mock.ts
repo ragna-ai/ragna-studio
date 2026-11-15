@@ -7,6 +7,7 @@
 import { GOOGLE_DRIVE_ROUTES } from '../cloud-drive/vendors/google-drive.routes';
 import { GMAIL_MAILBOX_ROUTES } from '../mail/vendors/gmail.routes';
 import { GRAPH_MAILBOX_ROUTES } from '../mail/vendors/graph.routes';
+import { LINKEDIN_ROUTES } from '../social/vendors/linkedin.routes';
 import {
   VENDOR_HOSTS,
   vendorJson,
@@ -20,6 +21,7 @@ import {
 const BASE_ROUTES: readonly VendorRoute[] = GMAIL_MAILBOX_ROUTES.concat(
   GRAPH_MAILBOX_ROUTES,
   GOOGLE_DRIVE_ROUTES,
+  LINKEDIN_ROUTES,
 );
 
 const HTTP_METHODS: readonly VendorHttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];

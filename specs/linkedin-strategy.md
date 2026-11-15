@@ -12,7 +12,7 @@ Reasons:
 - LinkedIn is a built-in better-auth social provider. Connecting an account for a signed-in user is covered by account linking (`authClient.linkSocial`). Tokens land in the existing `account` table. No new schema.
 - `auth.api.getAccessToken({ providerId: 'linkedin', userId })` returns a valid token server-side and refreshes it when possible. This also works from `apps/worker`, since `@repo/auth/server` is a plain package.
 
-The only part of the old v2 package worth keeping is the API client (`linkedin-api-client.ts`). It is orthogonal to token acquisition and will be ported later into a small `@repo/linkedin` package that takes an access token.
+The only part of the old v2 package worth keeping is the API client (`linkedin-api-client.ts`). It is orthogonal to token acquisition. It lives in `@repo/integrations/social` (`LinkedinPublisher`), built on the shared vendor client (#404).
 
 ## Constraints (LinkedIn platform)
 
@@ -54,9 +54,9 @@ Design agreed 2026-07-14. Text-only posts. Media support comes in a later phase.
 - Follows the `image-gen.tool.ts` pattern: Zod input schema, transient `data-linkedinDraft` writer event, returns only `{ id, status }` to the model.
 - Registered in `agent.tools.ts` and added to the `AgentTool` union in `agent.schema.ts` so it is toggleable per agent.
 - Drafting needs no LinkedIn token. It is a pure DB write.
-- Also available in workflows: agent nodes inherit it via `activeTools`, and it is a selectable tool node (`WORKFLOW_TOOLS`). Tool nodes always create a new draft. The 1-3000 char limit is enforced in `social-post.service.ts`, which covers both paths.
+- Also available in workflows: agent nodes inherit it via `activeTools`. `WORKFLOW_TOOLS` has no LinkedIn tool node. The 1-3000 char limit is enforced in `social-post.service.ts`, which covers both paths.
 
-**`@repo/linkedin` package** (new):
+**`@repo/integrations/social`** (publisher):
 
 - Port of the v2 API client, rebuilt on the versioned `/rest/posts` API (not legacy `/v2/ugcPosts`). Requires the `LinkedIn-Version` header.
 - v1 exposes only `createTextPost`. Author URN is `urn:li:person:{account.accountId}`. better-auth stores the LinkedIn `sub` in `account.accountId`, so no `/userinfo` call is needed.
@@ -66,7 +66,7 @@ Design agreed 2026-07-14. Text-only posts. Media support comes in a later phase.
 - `GET /social-posts`: list the user's posts
 - `PATCH /social-posts/:id`: edit draft content
 - `DELETE /social-posts/:id`
-- `POST /social-posts/:id/publish`: `getAccessToken({ providerId: 'linkedin', userId })` → `@repo/linkedin` `createTextPost` → update row to `published` (URN, URL, timestamp) or `failed` (error). Runs synchronously in the request. No worker job unless scheduling is added later.
+- `POST /social-posts/:id/publish`: `resolveUserLinkedinPublisher` → `LinkedinPublisher.publishPost` → update row to `published` (URN, URL, timestamp) or `failed` (error). Runs synchronously in the request. No worker job unless scheduling is added later.
 - Publishing is user-triggered only. The agent drafts, the user publishes.
 
 **Web UI** (minimal for v1):
@@ -110,10 +110,10 @@ Design agreed 2026-07-14. Images only. Video and documents use different LinkedI
 - Load media rows → per image: fetch from R2 → `initializeUpload` → `PUT` → wait for `AVAILABLE` (poll with timeout) → build post with `media` or `multiImage`.
 - Stays synchronous in the request. Move to a worker job only when scheduling arrives.
 
-**`@repo/linkedin` additions**:
+**Publisher additions**:
 
-- `initializeImageUpload`, `uploadImageBinary`, `waitForImageAvailable`.
-- `createTextPost` grows into `createPost({ text, imageUrns })`.
+- `LinkedinPublisher.uploadImage` registers the upload, PUTs the bytes and waits for `AVAILABLE`.
+- `publishPost({ text, images })` builds a text, `media` or `multiImage` post.
 
 ### Phase 3: Manual drafting and page structure
 

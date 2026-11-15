@@ -22,3 +22,5 @@ export * from './cloud-drive/google-drive-connection';
 export * from './cloud-drive/vendors/drive.fixture';
 export * from './cloud-drive/vendors/google-drive.routes';
 export * from './auth/software-authenticator';
+export * from './social/vendors/linkedin.fixture';
+export * from './social/vendors/linkedin.routes';

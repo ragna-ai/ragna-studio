@@ -1,7 +1,7 @@
 # @repo/testing
 
 Shared test helpers: DB seeding/truncation fixtures and the external-provider
-mocks (`ai`, `@repo/storage`, `@repo/linkedin`) registered via Bun's
+mocks (`ai`, `@repo/storage`) registered via Bun's
 `mock.module()`. Ships raw `src/` (no build step); consumers import the
 TypeScript directly.
 
@@ -25,5 +25,5 @@ Symptoms of a stale copy: a change has no effect, or a new export fails
 with `Export named 'X' not found in module ...node_modules/.pnpm/@repo+testing...`.
 If the sync doesn't cut it, the fallback is `pnpm clean` + `pnpm install`.
 
-Full background, including why the LinkedIn mock needs re-registration from
+Full background, including why the queue mock needs re-registration from
 `apps/api/test/preload.ts`: `specs/docker-deploy/injected-workspace-packages.md`.

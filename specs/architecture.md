@@ -40,7 +40,7 @@ packages/
   queue/        BullMQ queues, job DTOs
   workflow/     Workflow definitions, validation, cron helpers
   editor/       Tiptap v3 editor kit
-  mail/ media/ storage/ export/ linkedin/ logger/ config/ utils/ testing/
+  mail/ media/ storage/ export/ logger/ config/ utils/ testing/
 ```
 
 ## Stack

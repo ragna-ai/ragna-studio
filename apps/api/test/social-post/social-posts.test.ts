@@ -3,14 +3,15 @@ import { buildAgentToolset } from '@repo/ai';
 import { createGenImageRecords, createMedia, db } from '@repo/database';
 import { account } from '@repo/database/schema';
 import {
-  createPostMock,
+  expireConnectionAccessToken,
+  failVendorEndpoint,
+  LINKEDIN_ENDPOINTS,
+  rejectProviderRefresh,
   resetProviderMocks,
   seedAuthenticatedUser,
-  createLinkedinClientMock,
-  expireConnectionAccessToken,
-  rejectProviderRefresh,
   seedLinkedinConnection,
   truncateAllTables,
+  vendorRequestsTo,
 } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
@@ -22,8 +23,8 @@ import { stubToolExecutionOptions } from '../stub-tool-execution-options';
 // Auth/authorization are covered exhaustively in test/auth/
 // and test/workspace/workspace-authorization.test.ts; this file only checks
 // the social-post feature's own behavior. CRUD needs no mock at all;
-// `/publish` needs the LinkedIn client faked (@repo/testing's
-// linkedin-provider.mock.ts).
+// `/publish` runs the real LinkedIn publisher against the vendor HTTP fake
+// (@repo/testing's linkedin.routes.ts).
 
 // Every route (list/get/create/PATCH/publish) now returns `toPostResponse`'s
 // shape (social-post.service.ts): `media` is always present, and
@@ -54,6 +55,8 @@ const postSchema = z
       .nullable(),
   })
   .strict();
+
+const postBodySchema = z.object({ commentary: z.string(), author: z.string() });
 
 const postResponseSchema = z.object({ post: postSchema });
 const listResponseSchema = z.object({
@@ -195,10 +198,10 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     const body = problemDetailsSchema.parse(await response.json());
     expect(body.type).toBe(problemTypeUri('linkedin-not-connected'));
-    expect(createPostMock).not.toHaveBeenCalled();
+    expect(vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost)).toHaveLength(0);
   });
 
-  test('publishes through the faked LinkedIn client and flips the post to published', async () => {
+  test('publishes the text through LinkedIn and flips the post to published', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     await seedLinkedinConnection({ userId });
     const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
@@ -211,8 +214,11 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     expect(response.status).toBe(StatusCodes.OK);
     const body = postResponseSchema.parse(await response.json());
     expect(body.post.status).toBe('published');
-    expect(createPostMock).toHaveBeenCalledTimes(1);
-    expect(createPostMock.mock.calls[0]?.[0]).toMatchObject({ text: 'Ready to publish' });
+    const [createRequest] = vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost);
+    expect(vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost)).toHaveLength(1);
+    expect(
+      createRequest ? postBodySchema.parse(JSON.parse(createRequest.body ?? '{}')) : null,
+    ).toMatchObject({ commentary: 'Ready to publish' });
   });
 
   test('publishes with the token and profile of the LinkedIn connection and records the account used', async () => {
@@ -229,10 +235,12 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(createLinkedinClientMock.mock.calls[0]?.[0]).toBe(accessToken);
-    expect(createPostMock.mock.calls[0]?.[0]).toMatchObject({
-      authorId: connection.externalAccountId,
-    });
+    const [createRequest] = vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost);
+    expect(createRequest?.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    expect(createRequest?.headers.get('LinkedIn-Version')).toMatch(/^\d{6}$/);
+    expect(
+      createRequest ? postBodySchema.parse(JSON.parse(createRequest.body ?? '{}')) : null,
+    ).toMatchObject({ author: `urn:li:person:${connection.externalAccountId}` });
     const body = postResponseSchema.parse(await response.json());
     expect(body.post.connection).toEqual({
       id: connection.id,
@@ -259,7 +267,8 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(createLinkedinClientMock.mock.calls[0]?.[0]).toBe('refreshed-access-token');
+    const [createRequest] = vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost);
+    expect(createRequest?.headers.get('Authorization')).toBe('Bearer refreshed-access-token');
   });
 
   test('asks to connect LinkedIn again when the connection is rejected and keeps the draft', async () => {
@@ -277,7 +286,7 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     const body = problemDetailsSchema.parse(await response.json());
     expect(body.type).toBe(problemTypeUri('linkedin-not-connected'));
-    expect(createPostMock).not.toHaveBeenCalled();
+    expect(vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost)).toHaveLength(0);
     const getResponse = await app.request(`/workspace/${workspaceId}/social-post/${created.id}`, {
       headers: { cookie: cookieHeader },
     });
@@ -303,7 +312,7 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    expect(createPostMock).not.toHaveBeenCalled();
+    expect(vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost)).toHaveLength(0);
   });
 
   test('rejects publishing a draft with empty content', async () => {
@@ -317,17 +326,15 @@ describe('POST /workspace/:workspaceId/social-post/:socialPostId/publish', () =>
     );
 
     expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-    expect(createPostMock).not.toHaveBeenCalled();
+    expect(vendorRequestsTo(LINKEDIN_ENDPOINTS.createPost)).toHaveLength(0);
   });
 
-  test('marks the post failed when the faked LinkedIn client rejects', async () => {
+  test('marks the post failed when LinkedIn rejects the post', async () => {
     const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
     await seedLinkedinConnection({ userId });
     const created = await createDraft(cookieHeader, workspaceId, 'Ready to publish');
 
-    createPostMock.mockImplementationOnce(() => {
-      throw new Error('LinkedIn is down');
-    });
+    failVendorEndpoint(LINKEDIN_ENDPOINTS.createPost, { status: 400 });
 
     const publishResponse = await app.request(
       `/workspace/${workspaceId}/social-post/${created.id}/publish`,
