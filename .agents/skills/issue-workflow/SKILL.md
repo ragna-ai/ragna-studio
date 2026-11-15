@@ -36,6 +36,8 @@ If unsure whether a skill applies, load it. Say which skills you loaded.
   skill.
 - Present two or three options with honest trade-offs and a recommendation. Use the question tool when the
   choice is clear-cut.
+- A "should we" question gets a recommendation from best practice first, with a short why. What the repo does
+  today is context, not the argument. Read code only where the answer depends on it.
 - A question from the developer ("could we use X?") is not a decision. Don't edit a PRD or code until they pick.
 
 ## 4. Branch, PRD, draft PR
