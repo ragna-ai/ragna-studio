@@ -4,11 +4,21 @@ import { PASSKEY_ADDED_EMAIL_JOB, passkeyAddedEmailJobSchema, queue } from '@rep
 import { APIError, getSessionFromCtx } from 'better-auth/api';
 import * as z from 'zod';
 import { passkeyNameSchema } from '../client/passkeys';
-import type { AuthHookContext } from './auth-hooks';
+import type { AuthHookContext, AuthHookResult } from './auth-hooks';
 
 const passkeyNameBodySchema = z.object({ name: passkeyNameSchema });
 
 const createdPasskeySchema = z.object({ name: passkeyNameSchema.nullish() });
+
+/**
+ * The plugin turns a requested passkey name into the WebAuthn username, so password managers would
+ * list the account under the device label. An empty name makes it fall back to the email. Hook
+ * results are merged into the request, so the key is blanked, not removed. The name still reaches
+ * verify-registration and is stored as the label.
+ */
+export async function keepPasskeyNameOutOfUsername(): Promise<AuthHookResult> {
+  return { context: { query: { name: '' } } };
+}
 
 /** Every passkey needs a name, on add and on rename. */
 export async function requirePasskeyName(ctx: AuthHookContext): Promise<void> {

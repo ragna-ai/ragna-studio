@@ -60,7 +60,7 @@ context; nothing holds state between calls.
 `ctx.path`. Handlers don't check the path themselves.
 
 - before: `/organization/invite-member` → `rejectInvitingRemovedMember` (path check removed),
-  `/passkey/verify-registration` and `/passkey/update-passkey` → name limit.
+  `/passkey/verify-registration` and `/passkey/update-passkey` → name limit. `/passkey/generate-register-options` → blank the `name` query key: the plugin would use the passkey name as the WebAuthn username, so password managers would list the account under the device label instead of the email.
 - after: `/passkey/verify-registration` → `enqueuePasskeyAddedEmail` when the route succeeded.
 
 The name handler parses the body with `passkeyNameSchema` via `safeParse` (no casts) and throws

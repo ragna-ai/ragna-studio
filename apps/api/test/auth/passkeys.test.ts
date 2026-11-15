@@ -22,6 +22,11 @@ const creationOptionsSchema = z.looseObject({
   challenge: z.string(),
   user: z.looseObject({ id: z.string() }),
 });
+const registrationUserSchema = z.strictObject({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+});
 const requestOptionsSchema = z.looseObject({ challenge: z.string() });
 
 const passkeySchema = z.strictObject({
@@ -152,6 +157,33 @@ describe('adding a passkey', () => {
     const passkey = passkeySchema.parse(await response.json());
     expect(passkey.name).toBe('Work laptop');
     expect(passkey.userId).toBe(owner.userId);
+  });
+
+  test('identifies the account by email to the authenticator, not by the passkey name', async () => {
+    const owner = await seedAuthenticatedUser({ email: 'owner@example.com' });
+    const authenticator = newAuthenticator();
+
+    const optionsResponse = await authRequest(
+      `generate-register-options?name=${encodeURIComponent('Local laptop')}`,
+      'GET',
+      owner.cookieHeader,
+    );
+
+    expect(optionsResponse.status).toBe(StatusCodes.OK);
+    const options = creationOptionsSchema.parse(await optionsResponse.json());
+    expect(registrationUserSchema.parse(options.user)).toEqual({
+      id: expect.any(String),
+      name: 'owner@example.com',
+      displayName: 'owner@example.com',
+    });
+
+    const verifyResponse = await authRequest(
+      'verify-registration',
+      'POST',
+      joinCookies(owner.cookieHeader, cookiesOf(optionsResponse)),
+      { response: authenticator.register(options), name: 'Local laptop' },
+    );
+    expect(passkeySchema.parse(await verifyResponse.json()).name).toBe('Local laptop');
   });
 
   test('lists the passkeys of the signed-in user', async () => {
