@@ -24,6 +24,7 @@ TRUSTED_ORIGINS="https://app.example.com"
 COOKIE_DOMAIN=".example.com"
 ```
 
+- `APP_URL` must be a full `http` or `https` URL. RAGNA Studio doesn't start with any other value.
 - `NUXT_PUBLIC_API_BASE_URL` must be the public **https** API URL. The frontend derives the `wss://` WebSocket URL from it.
 - `COOKIE_DOMAIN` is the parent domain. It is needed because app and api are separate hosts.
 - `TRUSTED_ORIGINS` is a comma-separated list of allowed origins.

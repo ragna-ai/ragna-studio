@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-const RP_ID = new URL(config.appUrl).hostname;
+const RP_ID = config.appHostname;
 const BANNED_MESSAGE = 'You were removed from your organization.';
 
 const creationOptionsSchema = z.looseObject({
@@ -106,7 +106,7 @@ function authRequest(path: string, method: 'GET' | 'POST', cookie: string, body?
 }
 
 function newAuthenticator(): SoftwareAuthenticator {
-  return createSoftwareAuthenticator({ origin: new URL(config.appUrl).origin, rpID: RP_ID });
+  return createSoftwareAuthenticator({ origin: config.appOrigin, rpID: RP_ID });
 }
 
 async function addPasskey(

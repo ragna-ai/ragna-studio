@@ -95,9 +95,9 @@ export const auth = betterAuth({
     admin({ bannedUserMessage: bannedUserMessageFor }),
     lastLoginMethod(),
     passkey({
-      rpID: new URL(config.appUrl).hostname,
+      rpID: config.appHostname,
       rpName: 'RAGNA Studio',
-      origin: new URL(config.appUrl).origin,
+      origin: config.appOrigin,
       authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
     }),
     organization({
@@ -138,7 +138,7 @@ export const auth = betterAuth({
   ],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
-  trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
+  trustedOrigins: [...config.trustedOrigins, config.appOrigin, 'https://appleid.apple.com'],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
