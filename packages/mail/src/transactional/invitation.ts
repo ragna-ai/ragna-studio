@@ -15,6 +15,7 @@ export const invitationContent = {
       heading: intro,
       paragraphs: ['Sign in with this email address to join.'],
       action: { label: `Join ${organizationName}`, url },
+      footerReason: `because ${inviterName} invited you. If you didn't expect an invitation, you can ignore it.`,
     };
   },
   de: ({ inviterName, organizationName, url }) => {
@@ -25,6 +26,7 @@ export const invitationContent = {
       heading: intro,
       paragraphs: ['Melde dich mit dieser E-Mail-Adresse an.'],
       action: { label: `${organizationName} beitreten`, url },
+      footerReason: `weil ${inviterName} dich eingeladen hat. Wenn du keine Einladung erwartet hast, kannst du sie ignorieren.`,
     };
   },
 } satisfies LocalizedContent<InvitationVariables>;

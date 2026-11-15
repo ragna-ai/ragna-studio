@@ -78,6 +78,7 @@ work first, shipped reference and dead/historical docs last.
 | [Transactional emails in the user's language (design)](./email/413-email-language/design.md) | implemented (2026-11-15, PR #416) |
 | [Transactional emails: send them in the user's language (PRD)](./email/413-email-language/prd.md) | implemented (2026-11-15, PR #416) |
 | [Transactional emails in the user's language (slices)](./email/413-email-language/slices.md) | implemented (2026-11-15, PR #416) |
+| [Transactional emails: brand v2 design (PRD)](./email/414-email-design/prd.md) | implemented (2026-11-15, PR #423) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | implemented (2026-08-15, PR #21) |
 | [Gmail Sync: Detect and Surface Dead Credentials (change request)](./email/gmail-reauth-change-request.md) | implemented (raised, decided, and built 2026-08-30; commit left to Sven per repo convention) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | implemented (2026-08-15, PR #21) |

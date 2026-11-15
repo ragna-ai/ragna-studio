@@ -1,6 +1,6 @@
 # Transactional emails: brand v2 design (PRD)
 
-> **Status: proposed** (2026-11-15). Issue #414, part of Epic #412. Extends #413.
+> **Status: implemented** (2026-11-15, PR #423). Issue #414, part of Epic #412. Extends #413.
 
 RAGNA Studio's transactional emails (welcome, invitation, passkey added) use plain Tailwind greys.
 They don't look like RAGNA. #413 moved all three onto one shared template. This PRD restyles that
