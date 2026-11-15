@@ -22,6 +22,10 @@
       "types": "./dist/cloud-drive/index.d.mts",
       "import": "./dist/cloud-drive/index.mjs"
     },
+    "./social": {
+      "types": "./dist/social/index.d.mts",
+      "import": "./dist/social/index.mjs"
+    },
     "./http": {
       "types": "./dist/http/index.d.mts",
       "import": "./dist/http/index.mjs"

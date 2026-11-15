@@ -73,9 +73,9 @@ Tests are grouped by domain folder, one folder per feature area:
   job), so this domain needs the storage mock (for `frame-upload`) but not
   the AI one.
 - `test/social-post/` — social post CRUD needs no mock; `/publish` fakes
-  `@repo/linkedin`'s client, including a `mockImplementationOnce` override
-  proving the failure path (a rejected `createPost`) marks the post
-  `failed` rather than leaving it stuck.
+  runs the real LinkedIn publisher against the vendor HTTP fake (assert on
+  `vendorRequestsTo(LINKEDIN_ENDPOINTS...)`); a server error on the create
+  request proves the failure path marks the post `failed`.
 - `test/agent-context-document/` — upload/rename/retry/delete for an
   agent's context documents. Every document is created via a real R2
   upload, faked the same way `test/imagegen/`'s reference-upload is.
@@ -175,14 +175,14 @@ bun test
 ## External-provider mocks
 
 `specs/testing/strategy.md`'s "External boundaries" (AI providers, R2
-storage, LinkedIn, Redis/BullMQ) are faked with Bun's `mock.module()`,
+storage, Redis/BullMQ) are faked with Bun's `mock.module()`,
 registered by `packages/testing/src/mocks/` (`ai-sdk-provider.mock.ts`,
-`storage-provider.mock.ts`, `linkedin-provider.mock.ts`,
+`storage-provider.mock.ts`,
 `queue-provider.mock.ts`, combined by `provider-mocks.ts`). Registration
 happens in two places:
 
 - `test/preload.ts`, wired via `bunfig.toml`'s `[test].preload`,
-  re-registers the `@repo/linkedin` and `@repo/queue` mocks from apps/api's
+  re-registers the `@repo/queue` mocks from apps/api's
   own resolution context. This is required: with
   `injectWorkspacePackages: true`, `@repo/testing` can be materialized as a
   frozen copy under `node_modules/.pnpm/`, and a `mock.module(...)` call
@@ -198,7 +198,7 @@ happens in two places:
   `ai` and `@repo/storage` mocks, which currently resolve to the same
   virtual-store slot from both contexts. If one of them ever silently
   stops mocking after a lockfile change, re-register it in
-  `test/preload.ts` the same way as `@repo/linkedin`/`@repo/queue`.
+  `test/preload.ts` the same way as `@repo/queue`.
 
 `test/auth/route-sweep.test.ts` and `test/smoke/health.test.ts` are the
 only files that skip the `@repo/testing` import, and neither needs it:
@@ -219,9 +219,6 @@ exports, so everything else the package exports keeps working unmocked:
   `deleteObjects` are faked; pure functions with no I/O (`buildImageUrls`,
   bucket-name helpers, ...) stay real. Unlike `@repo/ai`, apps/api imports
   this directly, so mocking the whole package is the right boundary.
-- **`@repo/linkedin`** — `createLinkedinClient` is faked; `LinkedinApiError`
-  is spread through real so `instanceof` checks in
-  `social-post-media.service.ts` still work against the fake's errors.
 - **`@repo/queue`** — the `queue` factory (`queue.workflow()`,
   `queue.genImages()`, ...) and the job-scheduler functions
   (`upsertQueueJobScheduler`/`removeQueueJobScheduler`/
@@ -241,7 +238,7 @@ Every mock exposes a `reset*ProviderMock()` (combined as
 `resetProviderMocks()`), which every test file using a mock calls in
 `beforeEach` alongside `truncateAllTables()` — a test that overrides a
 mock's behavior with `mockImplementationOnce` (e.g. `test/social-post/`'s
-"faked LinkedIn client rejects" case) would otherwise leak that override
+"LinkedIn answers a server error" case) would otherwise leak that override
 into the next test in the file.
 
 Lives in `@repo/testing` rather than app-local so `apps/worker`'s future

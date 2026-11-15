@@ -11,7 +11,7 @@
 // edits). This file plugs the gap locally, purely additive (every existing
 // queue name keeps resolving to the original shared queueAddMock from
 // @repo/testing), using the exact mechanism apps/api/test/preload.ts
-// already uses for '@repo/linkedin'/'@repo/queue': one more
+// already uses for '@repo/queue': one more
 // `mock.module('@repo/queue', ...)` call, registered from a file inside
 // apps/api itself. Since preload.ts always runs before any test file (bunfig
 // .toml's `[test].preload`) and this file is only ever imported by this

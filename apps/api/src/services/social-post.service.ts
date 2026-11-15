@@ -13,7 +13,6 @@ import {
   createSocialPostMediaRecords,
   deleteSocialPostById,
   deleteSocialPostMediaById,
-  getUserConnectionByProvider,
   getAllSocialPostsByWorkspaceId,
   getSocialPostById,
   getSocialPostCountByWorkspaceId,
@@ -22,8 +21,12 @@ import {
   updateSocialPostContent,
   updateSocialPostMediaAltText,
 } from '@repo/database';
-import { ConnectionNeedsReauthError, getConnectionAccessToken } from '@repo/integrations';
-import { createLinkedinClient } from '@repo/linkedin';
+import { ConnectionNeedsReauthError, flagConnectionNeedsReauth } from '@repo/integrations';
+import {
+  LinkedinPublishError,
+  resolveUserLinkedinPublisher,
+  type LinkedinPublisherOptions,
+} from '@repo/integrations/social';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
 import { toPublicMediaUrl, uploadObjectBuffer } from '@repo/storage';
@@ -35,7 +38,7 @@ import {
   NotFoundException,
 } from '../exceptions';
 import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MB } from '../utils/upload-limits';
-import { uploadPostMediaToLinkedIn } from './social-post-media.service';
+import { uploadSocialPostImages } from './social-post-media.service';
 
 // Same bucket packages/ai's imagen.service.ts uploads generated images to
 // (config.s3ImagesBucketName). User uploads live under a `social/{userId}/`
@@ -490,6 +493,14 @@ export type PublishSocialPostResult =
   | { linkedinNotConnected: true }
   | { linkedinNotConnected: false; post: SocialPostResponse };
 
+export interface PublishSocialPostParams {
+  workspaceId: string;
+  socialPostId: string;
+  userId: string;
+  /** Waits between LinkedIn retries and status polls. Tests pass a recorder. */
+  sleep?: LinkedinPublisherOptions['sleep'];
+}
+
 /**
  * [POST] /workspace/:workspaceId/social-post/:socialPostId/publish
  * Publishes a draft (or retries a failed post) to LinkedIn. Synchronous:
@@ -500,11 +511,8 @@ export async function publishSocialPost({
   workspaceId,
   socialPostId,
   userId,
-}: {
-  workspaceId: string;
-  socialPostId: string;
-  userId: string;
-}): Promise<PublishSocialPostResult> {
+  sleep,
+}: PublishSocialPostParams): Promise<PublishSocialPostResult> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
 
   if (post.status !== 'draft' && post.status !== 'failed') {
@@ -517,62 +525,36 @@ export async function publishSocialPost({
     throw new BadRequestException('Add some content before publishing');
   }
 
-  const { error: connectionError, data: connection } = await tryCatch(() =>
-    getUserConnectionByProvider({ userId, provider: 'linkedin' }),
+  const { error: resolveError, data: resolved } = await tryCatch(() =>
+    resolveUserLinkedinPublisher({ userId, sleep }),
   );
 
-  if (connectionError !== null) {
-    logger.error('Failed to load the LinkedIn connection', connectionError);
+  if (resolveError !== null || !resolved) {
+    logger.error('Failed to load the LinkedIn connection', resolveError);
     throw new InternalServerErrorException('Failed to load the LinkedIn connection');
   }
 
-  if (!connection || connection.status === 'needs_reauth') {
+  if (resolved.status !== 'ready') {
     return { linkedinNotConnected: true };
   }
 
-  const { error: tokenError, data: accessToken } = await tryCatch(() =>
-    getConnectionAccessToken({ connectionId: connection.id }),
-  );
+  const { publisher, connection } = resolved;
 
-  if (tokenError instanceof ConnectionNeedsReauthError) {
-    return { linkedinNotConnected: true };
-  }
-
-  if (tokenError !== null || !accessToken) {
-    logger.error('Failed to get a valid LinkedIn access token', tokenError);
-    await tryCatch(() =>
-      markSocialPostFailed({
-        id: socialPostId,
-        workspaceId,
-        publishError: 'Failed to get a valid LinkedIn access token',
-      }),
-    );
-    throw new InternalServerErrorException('Failed to get a valid LinkedIn access token');
-  }
-
-  const mediaResult = await uploadPostMediaToLinkedIn({
-    media: post.media,
-    accessToken,
-    authorId: connection.externalAccountId,
+  const { error: publishError, data: published } = await tryCatch(async () => {
+    const images = await uploadSocialPostImages({ publisher, media: post.media });
+    return publisher.publishPost({ text: post.content, images });
   });
 
-  if ('error' in mediaResult) {
-    logger.error('Failed to upload post media to LinkedIn', mediaResult.error);
-    await tryCatch(() =>
-      markSocialPostFailed({ id: socialPostId, workspaceId, publishError: mediaResult.error }),
-    );
-    throw new InternalServerErrorException('Failed to publish to LinkedIn');
+  if (publishError instanceof ConnectionNeedsReauthError) {
+    return { linkedinNotConnected: true };
   }
 
-  const linkedin = createLinkedinClient(accessToken);
-
-  const { error: publishError, data: published } = await tryCatch(() =>
-    linkedin.createPost({
-      authorId: connection.externalAccountId,
-      text: post.content,
-      imageUrns: mediaResult.imageUrns,
-    }),
-  );
+  if (publishError instanceof LinkedinPublishError && publishError.kind === 'auth') {
+    await tryCatch(() =>
+      flagConnectionNeedsReauth({ connectionId: connection.id, reason: 'access_rejected' }),
+    );
+    return { linkedinNotConnected: true };
+  }
 
   if (publishError !== null || !published) {
     logger.error('Failed to publish to LinkedIn', publishError);
@@ -580,7 +562,10 @@ export async function publishSocialPost({
       markSocialPostFailed({
         id: socialPostId,
         workspaceId,
-        publishError: publishError?.message ?? 'Failed to publish to LinkedIn',
+        publishError:
+          publishError instanceof LinkedinPublishError
+            ? publishError.message
+            : 'Failed to publish to LinkedIn',
       }),
     );
     throw new InternalServerErrorException('Failed to publish to LinkedIn');
@@ -591,7 +576,7 @@ export async function publishSocialPost({
       id: socialPostId,
       workspaceId,
       connectionId: connection.id,
-      externalId: published.urn,
+      externalId: published.id,
       externalUrl: published.url,
     }),
   );

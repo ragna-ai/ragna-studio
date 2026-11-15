@@ -290,6 +290,16 @@ chat. OneDrive follows in its own PR.
 [design.md](./integrations/265-cloud-drive/design.md),
 [slices.md](./integrations/265-cloud-drive/slices.md)
 
+### LinkedIn publishing
+
+Social posts publish to the user's LinkedIn profile through the shared connection layer
+(`@repo/integrations/social`). Publishing checks that LinkedIn posting is turned on for the
+connection, retries rate limits without posting twice, and flags the connection for reconnect when
+LinkedIn rejects the access. Drafting needs no connection.
+→ [prd.md](./integrations/404-linkedin-publisher/prd.md),
+[design.md](./integrations/404-linkedin-publisher/design.md),
+[linkedin-strategy.md](./linkedin-strategy.md)
+
 ### MCP server
 
 Remote MCP server in `apps/api` that lets Claude Desktop read and write

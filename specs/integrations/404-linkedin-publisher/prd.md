@@ -1,6 +1,6 @@
 # Integrations: LinkedIn publishing on the shared connection layer (PRD)
 
-> **Status: proposed** (2026-11-15). Issue #404. Extends #224, depends on #403.
+> **Status: implemented** (2026-11-15, PR #407). Issue #404. Extends #224, depends on #403.
 
 Publishing a social post talks to LinkedIn through its own client, outside the integration
 connection layer. It ignores whether LinkedIn posting is turned on for the connection, has no

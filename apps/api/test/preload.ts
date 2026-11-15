@@ -1,11 +1,11 @@
 // apps/api/test/preload.ts (registered in bunfig.toml [test].preload)
 //
-// Re-registers the LinkedIn and queue mocks from apps/api's own module-
+// Re-registers the queue mocks from apps/api's own module-
 // resolution context. With injectWorkspacePackages on, @repo/testing is
 // materialized as a frozen copy under node_modules/.pnpm/, and a
 // mock.module call made inside that copy keys on a different resolved path
 // than the one this app's code imports (the mock file resolves it to the
-// injected .pnpm slot, the app to the packages/linkedin or packages/queue
+// injected .pnpm slot, the app to the packages/queue
 // symlink). Calling mock.module from a file inside apps/api covers the
 // app's path; the mock file's own registration still covers the frozen
 // copy's path (which @repo/ai's build of '@repo/queue' also resolves
@@ -13,16 +13,10 @@
 // contexts resolve them to the same virtual-store slot, but if one of them
 // silently stops mocking after a lockfile change, this is the place to
 // re-register it. See specs/docker-deploy/injected-workspace-packages.md.
-import {
-  acquireTestSuiteLock,
-  linkedinModuleMock,
-  mailProviderModuleMock,
-  queueModuleMock,
-} from '@repo/testing';
+import { acquireTestSuiteLock, mailProviderModuleMock, queueModuleMock } from '@repo/testing';
 import { mock } from 'bun:test';
 import { emailQueueModuleMock } from './email/support/email-queue.mock';
 
-mock.module('@repo/linkedin', () => linkedinModuleMock);
 mock.module('@repo/queue', () => queueModuleMock);
 
 // email.service.ts / email-provider.service.ts are imported unconditionally

@@ -7,7 +7,12 @@ description: A LinkedIn action was requested but the user has no LinkedIn connec
 
 ## When it happens
 
-A request needs the LinkedIn account of the user, for example to publish a social post. The user has not connected LinkedIn.
+A request needs the LinkedIn account of the user, for example to publish a social post. One of these applies:
+
+- The user has not connected LinkedIn.
+- The connection has LinkedIn posting turned off.
+- The connection lacks the permission to post.
+- The connection needs to be reconnected, or LinkedIn rejected the stored access. In the second case RAGNA Studio marks the connection as **Needs reconnect** and notifies the user. The post keeps its status.
 
 ## Response
 
@@ -28,4 +33,4 @@ No extension members.
 
 ## What the client can do
 
-Send the user to the connection settings to connect LinkedIn. See [Connections](/integrations/connections). Then send the request again.
+Send the user to the connection settings to connect LinkedIn, turn on LinkedIn posting, or reconnect. See [Connections](/integrations/connections). Then send the request again.

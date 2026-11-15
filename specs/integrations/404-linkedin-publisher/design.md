@@ -61,6 +61,7 @@ export interface LinkedinPublisherOptions {
   getAccessToken: () => Promise<string>;
   /** LinkedIn person id: the connection's `externalAccountId`. */
   authorId: string;
+  /** Waits between retries and image status polls. Tests pass a recorder so nothing really waits. */
   sleep?: (ms: number) => Promise<void>;
 }
 

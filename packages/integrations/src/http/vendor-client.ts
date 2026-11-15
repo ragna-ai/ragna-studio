@@ -33,12 +33,17 @@ export interface VendorRetryOptions {
   idempotent?: boolean;
 }
 
-export interface VendorRequestOptions extends VendorRetryOptions {
+export interface VendorTimeoutOptions {
+  /** Positive integer, in milliseconds. Defaults to 30 s. */
+  timeoutMs?: number;
+}
+
+export interface VendorRequestOptions extends VendorRetryOptions, VendorTimeoutOptions {
   method?: VendorHttpMethod;
   body?: string;
 }
 
-export interface VendorRawRequestOptions extends VendorRetryOptions {
+export interface VendorRawRequestOptions extends VendorRetryOptions, VendorTimeoutOptions {
   method: VendorHttpMethod;
   body?: RequestInit['body'];
   headers?: Readonly<Record<string, string>>;
@@ -103,6 +108,14 @@ async function withRetries<T>(
   }
 }
 
+function resolveTimeoutMs(timeoutMs: number | undefined): number {
+  if (timeoutMs === undefined) return REQUEST_TIMEOUT_MS;
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
+    throw new RangeError(`timeoutMs must be a positive integer, got ${timeoutMs}`);
+  }
+  return timeoutMs;
+}
+
 function toRequestUrl(api: VendorApi, path: string): string {
   return path.startsWith('https://') ? path : `${api.baseUrl}/${path}`;
 }
@@ -163,6 +176,7 @@ class HttpVendorClient implements VendorClient {
     return this.fetchChecked(path, {
       method: options.method ?? 'GET',
       body: options.body,
+      timeoutMs: options.timeoutMs,
       headers: { 'Content-Type': 'application/json' },
       authorize: true,
     });
@@ -183,7 +197,7 @@ class HttpVendorClient implements VendorClient {
       method: options.method,
       body: options.body,
       headers,
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(resolveTimeoutMs(options.timeoutMs)),
     });
 
     if (!response.ok) {

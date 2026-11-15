@@ -19,6 +19,8 @@ export interface SeedIntegrationConnectionParams {
   scopes?: string[];
   /** Exactly these integrations are enabled. Default scopes are the union of their catalog scopes. */
   integrationIds?: IntegrationId[];
+  /** What the connection has switched on, regardless of the grant. `[]` is a connected account with every integration off. */
+  enabledIntegrations?: IntegrationId[];
   externalEmail?: string | null;
   accessToken?: string;
   refreshToken?: string | null;
@@ -76,10 +78,11 @@ export async function seedIntegrationConnection(
     },
   });
 
-  if (params.integrationIds) {
+  const enabledIntegrations = params.enabledIntegrations ?? params.integrationIds;
+  if (enabledIntegrations) {
     await db
       .update(integrationConnection)
-      .set({ enabledIntegrations: params.integrationIds })
+      .set({ enabledIntegrations })
       .where(sql`${integrationConnection.id} = ${saved.id}`);
   }
 
@@ -143,6 +146,8 @@ export function seedLinkedinConnection(
     userId: params.userId,
     provider: 'linkedin',
     scopes: params.scopes ?? ['openid', 'profile', 'email', 'w_member_social'],
+    integrationIds: params.integrationIds,
+    enabledIntegrations: params.enabledIntegrations,
     externalEmail: params.externalEmail,
     accessToken: params.accessToken,
     refreshToken: params.refreshToken,

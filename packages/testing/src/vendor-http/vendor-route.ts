@@ -1,9 +1,11 @@
 // packages/testing/src/vendor-http/vendor-route.ts
 
 export const VENDOR_HOSTS = [
+  'api.linkedin.com',
   'gmail.googleapis.com',
   'graph.microsoft.com',
   'www.googleapis.com',
+  'www.linkedin.com',
 ] as const;
 
 export type VendorHost = (typeof VENDOR_HOSTS)[number];

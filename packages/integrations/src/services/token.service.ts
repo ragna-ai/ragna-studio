@@ -98,6 +98,24 @@ async function flagNeedsReauth(connection: IntegrationConnection, reason: string
   }
 }
 
+export interface FlagConnectionNeedsReauthParams {
+  connectionId: string;
+  reason: string;
+}
+
+/**
+ * Flags a connection the vendor rejected and notifies its owner, once per change. Unlike
+ * `markConnectionNeedsReauth` in `@repo/database`, which only writes the row, it also notifies.
+ */
+export async function flagConnectionNeedsReauth({
+  connectionId,
+  reason,
+}: FlagConnectionNeedsReauthParams): Promise<void> {
+  const connection = await getConnectionById({ id: connectionId });
+  if (!connection) return;
+  await flagNeedsReauth(connection, reason);
+}
+
 export interface GetConnectionAccessTokenParams {
   connectionId: string;
 }
