@@ -214,9 +214,7 @@ export class GmailProvider implements MailProvider {
     if (trashed) {
       const result = await this.request<GmailMessageResource>(
         `users/me/messages/${messageId}/trash`,
-        {
-          method: 'POST',
-        },
+        { method: 'POST', idempotent: true },
       );
       return toMailActionResult(result);
     }
@@ -226,6 +224,7 @@ export class GmailProvider implements MailProvider {
     // its response is the authoritative final label state.
     await this.request<GmailMessageResource>(`users/me/messages/${messageId}/untrash`, {
       method: 'POST',
+      idempotent: true,
     });
     return this.modifyMessage(messageId, [LABEL_INBOX], []);
   }
@@ -404,6 +403,7 @@ export class GmailProvider implements MailProvider {
       `users/me/messages/${messageId}/modify`,
       {
         method: 'POST',
+        idempotent: true,
         body: JSON.stringify({ addLabelIds, removeLabelIds }),
       },
     );

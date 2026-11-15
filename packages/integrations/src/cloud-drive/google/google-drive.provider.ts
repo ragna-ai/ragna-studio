@@ -39,6 +39,7 @@ interface UploadRequest {
   method: 'POST' | 'PATCH';
   headers: Readonly<Record<string, string>>;
   body: string;
+  idempotent?: boolean;
 }
 
 function buildMultipartBody(metadata: object, mimeType: string, content: string): string {
@@ -130,6 +131,7 @@ export function createGoogleDriveProvider(options: CloudDriveProviderOptions): C
         body: init.body,
         headers: init.headers,
         authorize: true,
+        idempotent: init.idempotent,
       }),
     );
     return parseDriveFile(await response.json());
@@ -172,6 +174,7 @@ export function createGoogleDriveProvider(options: CloudDriveProviderOptions): C
     });
     return sendUpload(`${UPLOAD_API}/files/${encodeURIComponent(itemId)}?${params}`, {
       method: 'PATCH',
+      idempotent: true,
       headers: { 'Content-Type': mimeType },
       body: content,
     });

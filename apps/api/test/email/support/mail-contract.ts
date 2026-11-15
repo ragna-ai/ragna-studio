@@ -6,6 +6,7 @@
 import { getEmailDraftById, getEmailMessageById } from '@repo/database';
 import {
   failVendorEndpoint,
+  overrideVendorRoute,
   MAILBOX_ALICE,
   MAILBOX_ATTACHMENT,
   MAILBOX_FIRST_MESSAGE,
@@ -29,6 +30,11 @@ import { app } from '../../../src/app';
 import type { ConnectedGmailAccount } from './email-fixtures';
 import { resetEmailQueueMock } from './email-queue.mock';
 
+export interface ForbiddenRateLimitCase {
+  name: string;
+  body: unknown;
+}
+
 export interface ContractMailbox {
   emailAddress: string;
   threadId: string;
@@ -42,6 +48,8 @@ export interface ContractEndpoints {
   thread: VendorEndpoint;
   search: VendorEndpoint;
   star: VendorEndpoint;
+  /** The call that sends a message, never safe to repeat. */
+  send: VendorEndpoint;
   deleteDraft: VendorEndpoint;
 }
 
@@ -61,6 +69,8 @@ export interface MailContractVendor {
   mailbox: ContractMailbox;
   endpoints: ContractEndpoints;
   notFoundBody: unknown;
+  /** 403 bodies the vendor uses to signal a rate limit, for vendors that do not answer 429. */
+  forbiddenRateLimitBodies?: readonly ForbiddenRateLimitCase[];
   /** The search text as the vendor received it, unwrapped from the vendor's query syntax. */
   readSearchQuery: (request: VendorRequest) => string | null;
   /** What the vendor was asked to send, read from the recorded vendor requests. */
@@ -279,6 +289,64 @@ export function runMailContract(vendor: MailContractVendor): void {
       expect(sent.recipients).toEqual([MAILBOX_ALICE.address]);
     });
 
+    async function postSend() {
+      const { cookieHeader } = await connectMailbox();
+      return app.request('/email/send', {
+        method: 'POST',
+        headers: { cookie: cookieHeader },
+        body: buildFormData({
+          to: MAILBOX_ALICE.address,
+          subject: 'Retry send',
+          html: '<p>Retry.</p>',
+        }),
+      });
+    }
+
+    test('does not repeat a send the vendor answered with a server error', async () => {
+      failVendorEndpoint(vendor.endpoints.send, { status: 503 });
+
+      const response = await postSend();
+
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(1);
+      expect(vendorHttp.sleeps).toEqual([]);
+    });
+
+    test('retries a rate-limited send after the delay the vendor asks for', async () => {
+      failVendorEndpoint(vendor.endpoints.send, {
+        status: 429,
+        headers: { 'Retry-After': '2' },
+        times: 1,
+      });
+
+      const response = await postSend();
+
+      expect(response.status).toBe(StatusCodes.CREATED);
+      expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(2);
+      expect(vendorHttp.sleeps).toEqual([2000]);
+    });
+
+    test('retries a repeatable write after a server error', async () => {
+      const { cookieHeader, accountId } = await connectMailbox();
+      const { messageId } = await seedEmailThreadWithMessage({
+        accountId,
+        providerThreadId: vendor.mailbox.threadId,
+        providerMessageId: vendor.mailbox.firstMessageId,
+        isStarred: false,
+      });
+      failVendorEndpoint(vendor.endpoints.star, { status: 503, times: 1 });
+
+      const response = await app.request(`/email/message/${messageId}/star`, {
+        method: 'POST',
+        headers: { cookie: cookieHeader, 'content-type': 'application/json' },
+        body: JSON.stringify({ starred: true }),
+      });
+
+      expect(response.status).toBe(StatusCodes.OK);
+      expect(vendorRequestsTo(vendor.endpoints.star)).toHaveLength(2);
+      expect(vendorHttp.sleeps).toEqual([500]);
+    });
+
     async function openThreadWithMissingBody() {
       const { cookieHeader, accountId } = await connectMailbox();
       const seeded = await seedEmailThreadWithMessage({
@@ -327,6 +395,52 @@ export function runMailContract(vendor: MailContractVendor): void {
 
       expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(vendorRequestsTo(vendor.endpoints.thread)).toHaveLength(1);
+      expect(vendorHttp.sleeps).toEqual([]);
+    });
+
+    test('does not retry a forbidden call', async () => {
+      const openThread = await openThreadWithMissingBody();
+      failVendorEndpoint(vendor.endpoints.thread, { status: 403 });
+
+      const response = await openThread();
+
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(vendorRequestsTo(vendor.endpoints.thread)).toHaveLength(1);
+    });
+
+    for (const { name, body } of vendor.forbiddenRateLimitBodies ?? []) {
+      test(`retries a call the vendor rejects with a 403 rate limit (${name})`, async () => {
+        const openThread = await openThreadWithMissingBody();
+        failVendorEndpoint(vendor.endpoints.thread, { status: 403, body, times: 1 });
+
+        const response = await openThread();
+
+        expect(response.status).toBe(StatusCodes.OK);
+        expect(vendorRequestsTo(vendor.endpoints.thread)).toHaveLength(2);
+      });
+
+      test(`retries a send the vendor rejects with a 403 rate limit (${name})`, async () => {
+        failVendorEndpoint(vendor.endpoints.send, { status: 403, body, times: 1 });
+
+        const response = await postSend();
+
+        expect(response.status).toBe(StatusCodes.CREATED);
+        expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(2);
+      });
+    }
+
+    test('attempts a send once when the network fails', async () => {
+      overrideVendorRoute({
+        ...vendor.endpoints.send,
+        respond: () => {
+          throw new TypeError('fetch failed');
+        },
+      });
+
+      const response = await postSend();
+
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(vendorRequestsTo(vendor.endpoints.send)).toHaveLength(1);
       expect(vendorHttp.sleeps).toEqual([]);
     });
 

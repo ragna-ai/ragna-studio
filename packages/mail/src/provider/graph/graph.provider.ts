@@ -424,6 +424,7 @@ export class GraphProvider implements MailProvider {
   private patchMessage(messageId: MailProviderId, patch: Partial<Message>): Promise<Message> {
     return this.request<Message>(`me/messages/${messageId}`, {
       method: 'PATCH',
+      idempotent: true,
       body: JSON.stringify(patch),
     });
   }
@@ -487,8 +488,10 @@ export class GraphProvider implements MailProvider {
       contentBytes: attachment.content.toString('base64'),
       ...(attachment.contentId ? { contentId: attachment.contentId, isInline: true } : {}),
     };
+    // Repeatable: reconcileAttachments replaces all attachments, so a duplicate is removed on the next save.
     await this.request<FileAttachment>(`me/messages/${messageId}/attachments`, {
       method: 'POST',
+      idempotent: true,
       body: JSON.stringify(body),
     });
   }
@@ -510,6 +513,7 @@ export class GraphProvider implements MailProvider {
       `me/messages/${messageId}/attachments/createUploadSession`,
       {
         method: 'POST',
+        idempotent: true,
         body: JSON.stringify(requestBody),
       },
     );
