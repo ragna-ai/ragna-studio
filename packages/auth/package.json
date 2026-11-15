@@ -33,6 +33,7 @@
     "@repo/integrations": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/queue": "workspace:*",
+    "@repo/utils": "workspace:*",
     "better-auth": "^1.7.20",
     "jose": "^6.2.17",
     "zod": "catalog:"

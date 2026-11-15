@@ -1,4 +1,5 @@
-import { getOrganizationIdByUserId } from '@repo/database';
+import { db, getOrganizationIdByUserId, inArray } from '@repo/database';
+import { user } from '@repo/database/schema';
 import {
   seedAuthenticatedUser,
   seedOrganizationMember,
@@ -17,7 +18,8 @@ interface SeedResult {
 /**
  * Resets the test database and seeds one signed-in user with a language
  * model and a funded credit account, plus an organization member without
- * a management role. Prints the result.
+ * a management role. Both users have no stored language, like accounts
+ * that existed before it was introduced. Prints the result.
  */
 async function seed(): Promise<SeedResult> {
   await truncateAllTables();
@@ -27,6 +29,10 @@ async function seed(): Promise<SeedResult> {
   const organizationId = await getOrganizationIdByUserId({ userId });
   if (!organizationId) throw new Error('Seeded user has no organization.');
   const member = await seedOrganizationMember({ organizationId, role: 'member' });
+  await db
+    .update(user)
+    .set({ locale: null })
+    .where(inArray(user.id, [userId, member.userId]));
   return {
     cookieHeader,
     workspaceId,

@@ -90,7 +90,15 @@ export type AuthClient = Omit<ReturnType<typeof createAuthClient>, 'hydrateSessi
     consent: (data: { accept: boolean }) => Promise<OAuthConsentAcceptResponse>;
   };
 };
-export type AuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Session'];
+type BaseAuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Session'];
+
+/**
+ * The portable base type above knows no server additional fields, so `locale` (the user's
+ * language, `users.locale`) is added by hand. `null` until the user's language is known.
+ */
+export type AuthSession = BaseAuthSession & {
+  user: BaseAuthSession['user'] & { locale?: string | null };
+};
 
 // Build a configured client. The caller supplies baseURL + fetchOptions so the
 // same instance is used for sign-in, session reads, and sign-out. This keeps

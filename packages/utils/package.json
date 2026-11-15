@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@repo/config": "workspace:*",
-    "uuid": "^14.0.3"
+    "uuid": "^14.0.3",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",

@@ -2,7 +2,7 @@
 import { MailIcon, UserIcon } from '@lucide/vue';
 import { useForm } from '@tanstack/vue-form';
 import { z } from 'zod';
-import useUserApi from '~/features/user/composables/useUserApi.js';
+import { useUpdateUserProfile } from '~/features/user/composables/useUserProfileApi';
 import UserAvatar from './UserAvatar.vue';
 
 // Props
@@ -14,8 +14,7 @@ const props = defineProps<{
 // Refs
 
 // Composables
-const { updateUserProfile } = useUserApi();
-const { isPending, mutate } = updateUserProfile();
+const { isPending, mutate } = useUpdateUserProfile();
 const { t } = useI18n();
 
 // Functions

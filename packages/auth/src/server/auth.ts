@@ -15,7 +15,7 @@ import * as schema from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
 import { betterAuth } from 'better-auth';
-import { APIError } from 'better-auth/api';
+import { APIError, getOAuthState } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
 import { passkey } from '@better-auth/passkey';
@@ -27,6 +27,7 @@ import {
   validateInvitation,
 } from './organization-invitations';
 import { prepareUserRemoval } from './organization-removal';
+import { pickUserLocale, readStoredLocale } from './user-locale';
 
 // Real permissions come from mcp_settings; offline_access
 // is only here because OAuth Provider gates refresh-token issuance on it.
@@ -171,6 +172,10 @@ export const auth = betterAuth({
   // MIDDLEWARE
   hooks: { before: beforeAuthHook, after: afterAuthHook },
   user: {
+    // Read-only for clients: the language changes through PATCH /user/profile.
+    additionalFields: {
+      locale: { type: 'string', required: false, input: false },
+    },
     // Runs on every sign-up, account link, and OAuth sign-in (with the fresh
     // provider email each time), so removing an email from the allowlist
     // locks out an already-registered user on their next login too.
@@ -197,6 +202,19 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Only sign-up runs this, so later sign-ins never overwrite the stored language.
+        before: async (user, context) => {
+          const oauthState = context ? await getOAuthState() : null;
+          const acceptLanguage =
+            context?.request?.headers.get('accept-language') ??
+            context?.headers?.get('accept-language');
+          return {
+            data: {
+              ...user,
+              locale: pickUserLocale({ requested: oauthState?.locale, acceptLanguage }),
+            },
+          };
+        },
         after: async (user) => {
           // Everyone belongs to exactly one organization with a workspace
           // (workspaceId is a required container): the inviting one, or their own.
@@ -209,12 +227,14 @@ export const auth = betterAuth({
           }
 
           try {
-            await queue
-              .email()
-              .add(
-                WELCOME_EMAIL_JOB,
-                welcomeEmailJobSchema.parse({ email: user.email, name: user.name }),
-              );
+            await queue.email().add(
+              WELCOME_EMAIL_JOB,
+              welcomeEmailJobSchema.parse({
+                email: user.email,
+                name: user.name,
+                locale: readStoredLocale(user.locale),
+              }),
+            );
           } catch (error) {
             logger.error('Failed to enqueue welcome email', { userId: user.id, error });
           }

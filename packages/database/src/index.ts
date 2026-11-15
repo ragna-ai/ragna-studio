@@ -8,4 +8,4 @@ export * from './zod';
 // drizzle-orm dependency: a second copy at a different version would build
 // query fragments (sql``) against a different drizzle-orm than the one this
 // package's `db` instance uses, which drizzle doesn't support.
-export { sql } from 'drizzle-orm';
+export { inArray, sql } from 'drizzle-orm';

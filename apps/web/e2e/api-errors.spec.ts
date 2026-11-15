@@ -53,10 +53,18 @@ function fulfillProblem(route: Route, problem: ProblemStub) {
   });
 }
 
+async function setAccountLocale(context: BrowserContext, locale: 'en' | 'de') {
+  const response = await context.request.patch(`${API_URL}/user/profile`, {
+    data: { locale },
+  });
+  expect(response.ok()).toBe(true);
+}
+
 async function useGermanUi(context: BrowserContext) {
   await context.addCookies([
     { name: 'i18n_redirected', value: 'de', url: WEB_URL },
   ]);
+  await setAccountLocale(context, 'de');
 }
 
 async function stubTaskCreate(
@@ -78,6 +86,10 @@ async function createTaskNamed(page: Page, title: string) {
 test.describe('error messages in the German UI', () => {
   test.beforeEach(async ({ context }) => {
     await useGermanUi(context);
+  });
+
+  test.afterEach(async ({ context }) => {
+    await setAccountLocale(context, 'en');
   });
 
   test('shows the feature message for a server error, never server text', async ({

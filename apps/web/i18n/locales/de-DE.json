@@ -1012,7 +1012,8 @@
   "user": {
     "toast": {
       "profileUpdated": "Profil aktualisiert",
-      "profileUpdateFailed": "Profil konnte nicht aktualisiert werden"
+      "profileUpdateFailed": "Profil konnte nicht aktualisiert werden",
+      "languageUpdateFailed": "Sprache konnte nicht aktualisiert werden"
     },
     "validation": {
       "nameMinLength": "Der Name muss mindestens 4 Zeichen lang sein.",
@@ -1026,7 +1027,7 @@
     },
     "language": {
       "title": "Sprache",
-      "subtitle": "Wähle die Sprache für die Benutzeroberfläche."
+      "subtitle": "Wähle die Sprache für die Benutzeroberfläche und E-Mails."
     },
     "profile": {
       "title": "Mein Profil",
@@ -2160,7 +2161,7 @@
     "sections": {
       "language": {
         "title": "Sprache",
-        "subtitle": "Wähle die Sprache der Benutzeroberfläche."
+        "subtitle": "Wähle die Sprache für die Benutzeroberfläche und E-Mails."
       },
       "credits": {
         "title": "Credits",

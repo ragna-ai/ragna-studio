@@ -75,6 +75,9 @@ work first, shipped reference and dead/historical docs last.
 | [Prompt editor: implementation slices](./editor/284-prompt-editor/slices.md) | implemented (2026-11-05, PR #285) |
 | [Rich text editor: one shared editor with inline controls (PRD)](./editor/prd.md) | implemented (2026-10-21, PR #127) |
 | [Rich text editor: implementation slices](./editor/slices.md) | implemented (2026-10-21, PR #127) |
+| [Transactional emails in the user's language (design)](./email/413-email-language/design.md) | implemented (2026-11-15, PR #416) |
+| [Transactional emails: send them in the user's language (PRD)](./email/413-email-language/prd.md) | implemented (2026-11-15, PR #416) |
+| [Transactional emails in the user's language (slices)](./email/413-email-language/slices.md) | implemented (2026-11-15, PR #416) |
 | [Email Drafts (change request to the Email Client PRD)](./email/drafts-change-request.md) | implemented (2026-08-15, PR #21) |
 | [Gmail Sync: Detect and Surface Dead Credentials (change request)](./email/gmail-reauth-change-request.md) | implemented (raised, decided, and built 2026-08-30; commit left to Sven per repo convention) |
 | [Email Content: HTML/Text Instead of Markdown (change request)](./email/html-content-change-request.md) | implemented (2026-08-15, PR #21) |

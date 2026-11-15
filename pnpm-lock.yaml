@@ -618,6 +618,9 @@ importers:
       '@repo/queue':
         specifier: workspace:*
         version: link:../queue
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
       better-auth:
         specifier: ^1.7.20
         version: 1.7.20(drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7))(pg@8.23.1)(solid-js@1.9.17)(vue@3.5.45(typescript@6.0.3))
@@ -1022,6 +1025,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
       bullmq:
         specifier: ^6.7.4
         version: 6.7.4(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)
@@ -1126,6 +1132,9 @@ importers:
       uuid:
         specifier: ^14.0.3
         version: 14.0.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
@@ -14149,6 +14158,7 @@ snapshots:
     dependencies:
       '@repo/config': file:packages/config
       '@repo/logger': file:packages/logger
+      '@repo/utils': file:packages/utils
       bullmq: 6.7.4(ioredis@5.11.1(supports-color@10.2.2))(pg@8.23.1)
       zod: 4.6.7
     transitivePeerDependencies:
@@ -14161,6 +14171,7 @@ snapshots:
     dependencies:
       '@repo/config': file:packages/config
       uuid: 14.0.3
+      zod: 4.6.7
 
   '@repo/workflow@file:packages/workflow':
     dependencies:

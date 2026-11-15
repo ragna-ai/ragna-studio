@@ -20,6 +20,7 @@
   "dependencies": {
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/utils": "workspace:*",
     "bullmq": "^6.7.4",
     "zod": "catalog:"
   },

@@ -4,6 +4,7 @@ import { PASSKEY_ADDED_EMAIL_JOB, passkeyAddedEmailJobSchema, queue } from '@rep
 import { APIError, getSessionFromCtx } from 'better-auth/api';
 import * as z from 'zod';
 import { passkeyNameSchema } from '../client/passkeys';
+import { readStoredLocale } from './user-locale';
 import type { AuthHookContext, AuthHookResult } from './auth-hooks';
 
 const passkeyNameBodySchema = z.object({ name: passkeyNameSchema });
@@ -48,6 +49,7 @@ export async function enqueuePasskeyAddedEmail(ctx: AuthHookContext): Promise<vo
         email: session.user.email,
         userName: session.user.name,
         passkeyName: created.data.name ?? 'Passkey',
+        locale: readStoredLocale(session.user.locale),
         settingsUrl: `${config.appUrl}/settings/sign-in/passkeys`,
       }),
     );

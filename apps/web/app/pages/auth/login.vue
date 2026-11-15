@@ -15,7 +15,7 @@ const SOCIAL_PROVIDERS: SocialProviderOption[] = [
 
 definePageMeta({ layout: 'auth' });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
@@ -65,6 +65,7 @@ async function signIn(provider: SocialProvider) {
       provider,
       callbackURL: resolveSignInTarget(),
       errorCallbackURL: resolveSignInErrorTarget(),
+      additionalData: { locale: locale.value },
     });
     if (error) {
       errorMessage.value = error.message ?? t('auth.login.genericError');

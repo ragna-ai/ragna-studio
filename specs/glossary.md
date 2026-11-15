@@ -50,3 +50,10 @@ Role names are always qualified. The full table, with storage and code identifie
 | ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | tone       | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
 | task label | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+
+## Users and emails
+
+| Term                | Meaning                                                                                                     | _Avoid_                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| language            | The language a user sees the app and gets emails in: `en` or `de`. `locale` in code, column `users.locale`. | lang, translation (for the setting)   |
+| transactional email | An email RAGNA Studio sends on an event in the user's account: welcome, invitation, passkey added.          | notification (that is the in-app one) |

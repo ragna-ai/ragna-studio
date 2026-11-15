@@ -1,25 +1,23 @@
 import { config } from '@repo/config';
-import { renderEmail } from './render-email';
+import type { UserLocale } from '@repo/utils';
+import type { TransactionalEmail } from '../transactional';
+import { renderTransactionalEmail } from './render-email';
 import { getTransporter } from './transporter';
 
-export async function sendEmail({
-  templateId,
-  variables,
-  to,
-  subject,
-}: {
-  templateId: string;
-  variables: Record<string, unknown>;
+export interface SendEmailInput {
   to: string;
-  subject: string;
-}) {
+  locale: UserLocale;
+  email: TransactionalEmail;
+}
+
+export async function sendEmail({ to, locale, email }: SendEmailInput) {
   const transporter = await getTransporter();
 
   if (!transporter) {
     throw new Error('Email transporter is not configured');
   }
 
-  const { html, plaintext } = await renderEmail(templateId, variables);
+  const { subject, html, plaintext } = await renderTransactionalEmail(locale, email);
 
   return transporter.sendMail({
     from: config.mailFrom,

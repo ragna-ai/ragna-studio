@@ -1,3 +1,4 @@
+import type { UserLocale } from '@repo/utils';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { primaryIdColumn } from './common.schema';
 
@@ -10,6 +11,7 @@ export const user = pgTable(
     emailVerified: boolean('email_verified').default(false).notNull(),
     image: text('image'),
     role: text('role'),
+    locale: text('locale').$type<UserLocale>(),
     banned: boolean('banned').default(false),
     banReason: text('ban_reason'),
     banExpires: timestamp('ban_expires'),

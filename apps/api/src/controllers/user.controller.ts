@@ -24,9 +24,9 @@ export const userController = new Hono()
    */
   .patch('/profile', validUpdateUserProfileBody, async (c) => {
     const user = c.get('user');
-    const { name } = c.req.valid('json');
+    const { name, locale } = c.req.valid('json');
 
-    const { error, data } = await tryCatch(() => updateUser({ id: user.id, name }));
+    const { error, data } = await tryCatch(() => updateUser({ id: user.id, name, locale }));
 
     if (error !== null) {
       logError('Update User Profile', error);

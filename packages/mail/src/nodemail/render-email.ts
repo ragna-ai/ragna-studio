@@ -1,8 +1,12 @@
 import { render } from '@maizzle/framework';
+import type { UserLocale } from '@repo/utils';
 import { readFile } from 'node:fs/promises';
-import { getTemplate } from '../templates';
+import { resolve } from 'node:path';
+import { TRANSACTIONAL_TEMPLATE_FILE, templatesDir } from '../templates';
+import { buildTransactionalContent, type TransactionalEmail } from '../transactional';
 
 export interface RenderedEmail {
+  subject: string;
   html: string;
   plaintext: string | undefined;
 }
@@ -10,13 +14,13 @@ export interface RenderedEmail {
 // Maizzle's auto-import plugin skips files under node_modules, so a template
 // path inside an installed package fails with "defineConfig is not defined".
 // Render the SFC source instead.
-export async function renderEmail(
-  templateId: string,
-  variables: Record<string, unknown>,
-  templatesDir?: string,
+export async function renderTransactionalEmail(
+  locale: UserLocale,
+  email: TransactionalEmail,
+  dir: string = templatesDir,
 ): Promise<RenderedEmail> {
-  const { path, vars } = getTemplate(templateId, variables, templatesDir);
-  const source = await readFile(path, 'utf8');
-  const { html, plaintext } = await render(source, { plaintext: true, ...vars });
-  return { html, plaintext };
+  const { subject, ...props } = buildTransactionalContent(locale, email);
+  const source = await readFile(resolve(dir, TRANSACTIONAL_TEMPLATE_FILE), 'utf8');
+  const { html, plaintext } = await render(source, { plaintext: true, locale, ...props });
+  return { subject, html, plaintext };
 }
