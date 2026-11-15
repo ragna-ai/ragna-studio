@@ -17,7 +17,7 @@ Each provider is enabled by its own env vars. The [environment variables](/refer
 
 ## Connections
 
-Mail and LinkedIn posting use [connections](/integrations/connections), which reuse the OAuth apps used for sign-in (`GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID`, `LINKEDIN_CLIENT_ID`). Two more steps are needed:
+Mail and LinkedIn posting use [connections](/integrations/connections), which reuse the Google and Microsoft OAuth apps used for sign-in (`GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID`). LinkedIn uses its own app (`LINKEDIN_CLIENT_ID`). Two more steps are needed:
 
 1. Set `APP_KEY`, the key that encrypts stored connection tokens. See [Setting APP_KEY](#setting-app_key). Without it, connecting fails with "APP_KEY is not set".
 2. Add this redirect URI to each provider app, with `API_BASE_URL` as the host:
@@ -49,7 +49,7 @@ kubectl create secret generic ragna-app-key --from-literal=APP_KEY="$APP_KEY"
 
 To rotate the key, set the new value as `APP_KEY` and move the old one to `APP_PREVIOUS_KEYS`. Existing connections keep working.
 
-Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`). Sign-in itself asks only for `openid`, `profile` and `email`. `LINKEDIN_SCOPES` is deprecated and ignored.
+Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`).
 
 ### Google Drive
 

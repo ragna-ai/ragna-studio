@@ -280,16 +280,6 @@ const ConfigSchema = z.object({
   CHAT_TITLE_MODEL_PROVIDER: z.string().default('anthropic'),
   CHAT_TITLE_MODEL: z.string().default('claude-haiku-4-5'),
 
-  LINKEDIN_SCOPES: z
-    .string()
-    .optional()
-    .default('')
-    .transform((val) =>
-      val
-        .split(',')
-        .map((scope) => scope.trim())
-        .filter((scope) => scope.length > 0),
-    ),
   LINKEDIN_CLIENT_ID: z.string().optional().default(''),
   LINKEDIN_CLIENT_SECRET: z.string().optional().default(''),
 
@@ -632,10 +622,6 @@ export class ConfigService {
 
   get allowedLoginEmails(): string[] {
     return this._config.ALLOWED_LOGIN_EMAILS;
-  }
-
-  get linkedInScopes(): string[] {
-    return this._config.LINKEDIN_SCOPES;
   }
 
   get linkedInClientId(): string {
