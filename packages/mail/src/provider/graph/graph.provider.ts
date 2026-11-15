@@ -424,6 +424,7 @@ export class GraphProvider implements MailProvider {
   private patchMessage(messageId: MailProviderId, patch: Partial<Message>): Promise<Message> {
     return this.request<Message>(`me/messages/${messageId}`, {
       method: 'PATCH',
+      idempotent: true,
       body: JSON.stringify(patch),
     });
   }
@@ -510,6 +511,7 @@ export class GraphProvider implements MailProvider {
       `me/messages/${messageId}/attachments/createUploadSession`,
       {
         method: 'POST',
+        idempotent: true,
         body: JSON.stringify(requestBody),
       },
     );

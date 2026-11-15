@@ -56,6 +56,7 @@ runMailContract({
     thread: GRAPH_ENDPOINTS.messages,
     search: GRAPH_ENDPOINTS.messages,
     star: GRAPH_ENDPOINTS.patchMessage,
+    send: GRAPH_ENDPOINTS.send,
     deleteDraft: GRAPH_ENDPOINTS.deleteMessage,
   },
   notFoundBody: GRAPH_NOT_FOUND_BODY,

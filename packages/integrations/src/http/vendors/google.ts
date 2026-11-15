@@ -8,6 +8,12 @@ const googleErrorBodySchema = z.object({
   }),
 });
 
+const GOOGLE_RATE_LIMIT_CODES: readonly string[] = [
+  'rateLimitExceeded',
+  'userRateLimitExceeded',
+  'sharingRateLimitExceeded',
+];
+
 /** Prefers the specific reason (`rateLimitExceeded`) over the generic status (`PERMISSION_DENIED`). */
 function parseGoogleErrorCode(body: string): string | undefined {
   try {
@@ -26,5 +32,10 @@ export interface GoogleApiParams {
 
 /** Google REST APIs share one error format but each product has its own base URL. */
 export function googleApi({ name, baseUrl }: GoogleApiParams): VendorApi {
-  return { name, baseUrl, parseErrorCode: parseGoogleErrorCode };
+  return {
+    name,
+    baseUrl,
+    parseErrorCode: parseGoogleErrorCode,
+    rateLimitCodes: GOOGLE_RATE_LIMIT_CODES,
+  };
 }

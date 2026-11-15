@@ -43,9 +43,13 @@ runMailContract({
     thread: GMAIL_ENDPOINTS.thread,
     search: GMAIL_ENDPOINTS.threadList,
     star: GMAIL_ENDPOINTS.modify,
+    send: GMAIL_ENDPOINTS.send,
     deleteDraft: GMAIL_ENDPOINTS.deleteDraft,
   },
   notFoundBody: GMAIL_NOT_FOUND_BODY,
+  forbiddenRateLimitBody: {
+    error: { errors: [{ reason: 'userRateLimitExceeded' }], status: 'PERMISSION_DENIED' },
+  },
   readSearchQuery,
   readSentMessage,
 });

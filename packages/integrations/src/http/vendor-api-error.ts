@@ -6,11 +6,14 @@ export interface VendorApiErrorParams {
   /** The vendor's machine-readable error code, never its message or body. */
   code?: string;
   retryAfterMs?: number;
+  /** The vendor signals a rate limit by something other than status 429. */
+  rateLimited?: boolean;
   /** Where it happened, e.g. `GET /me/messages`. Never a query string, token or body. */
   detail?: string;
 }
 
-function toErrorKind(status: number): VendorErrorKind {
+function toErrorKind(status: number, rateLimited: boolean): VendorErrorKind {
+  if (rateLimited) return 'rate_limited';
   if (status === 401 || status === 403) return 'auth';
   if (status === 404) return 'not_found';
   if (status === 410) return 'gone';
@@ -38,7 +41,7 @@ export class VendorApiError extends Error {
     this.name = 'VendorApiError';
     this.vendor = params.vendor;
     this.status = params.status;
-    this.kind = toErrorKind(params.status);
+    this.kind = toErrorKind(params.status, params.rateLimited ?? false);
     this.code = params.code;
     this.retryAfterMs = params.retryAfterMs;
   }

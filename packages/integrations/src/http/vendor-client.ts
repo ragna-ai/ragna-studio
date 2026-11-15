@@ -15,6 +15,8 @@ export interface VendorApi {
   baseUrl: string;
   /** Reads the vendor's machine-readable error code from an error response body. */
   parseErrorCode: (body: string) => string | undefined;
+  /** Error codes the vendor sends instead of 429 when a caller is rate limited. */
+  rateLimitCodes?: readonly string[];
 }
 
 export interface VendorClientOptions {
@@ -29,6 +31,10 @@ export interface VendorClientOptions {
 export interface VendorRequestOptions {
   method?: VendorHttpMethod;
   body?: string;
+  /** True when repeating the call can't duplicate an effect, so a POST or PATCH may retry on 5xx and 401. */
+  idempotent?: boolean;
+  /** Defaults to 30 s. */
+  timeoutMs?: number;
 }
 
 export interface VendorRawRequestOptions {
@@ -37,6 +43,10 @@ export interface VendorRawRequestOptions {
   headers?: Readonly<Record<string, string>>;
   /** False for pre-authenticated URLs (upload sessions) that reject an Authorization header. */
   authorize: boolean;
+  /** True when repeating the call can't duplicate an effect, so a POST or PATCH may retry on 5xx and 401. */
+  idempotent?: boolean;
+  /** Defaults to 30 s. */
+  timeoutMs?: number;
 }
 
 export interface VendorClient {
@@ -60,15 +70,21 @@ export function parseRetryAfterMs(value: string | null): number | undefined {
   return Number.isNaN(dateMs) ? undefined : Math.max(0, dateMs - Date.now());
 }
 
-function isRetryable(error: unknown): error is VendorApiError {
-  return (
-    error instanceof VendorApiError &&
-    (error.kind === 'rate_limited' || error.kind === 'server' || error.kind === 'auth')
-  );
+interface RetryPolicy {
+  method: VendorHttpMethod;
+  idempotent?: boolean;
 }
 
-function retryDelayMs(error: unknown, attempt: number): number | null {
-  if (attempt >= MAX_RETRIES || !isRetryable(error)) return null;
+function isRetryable(error: unknown, policy: RetryPolicy): error is VendorApiError {
+  if (!(error instanceof VendorApiError)) return false;
+  if (error.kind === 'rate_limited') return true;
+  if (error.status === 403) return false;
+  const repeatable = policy.idempotent ?? (policy.method !== 'POST' && policy.method !== 'PATCH');
+  return repeatable && (error.kind === 'server' || error.kind === 'auth');
+}
+
+function retryDelayMs(error: unknown, attempt: number, policy: RetryPolicy): number | null {
+  if (attempt >= MAX_RETRIES || !isRetryable(error, policy)) return null;
   if (error.retryAfterMs === undefined) {
     return Math.min(INITIAL_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
   }
@@ -78,12 +94,13 @@ function retryDelayMs(error: unknown, attempt: number): number | null {
 async function withRetries<T>(
   perform: () => Promise<T>,
   sleep: (ms: number) => Promise<void>,
+  policy: RetryPolicy,
 ): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await perform();
     } catch (error) {
-      const delay = retryDelayMs(error, attempt);
+      const delay = retryDelayMs(error, attempt, policy);
       if (delay === null) throw error;
       await sleep(delay);
     }
@@ -101,10 +118,12 @@ async function toVendorApiError(
   url: string,
 ): Promise<VendorApiError> {
   const body = await response.text();
+  const code = api.parseErrorCode(body);
   return new VendorApiError({
     vendor: api.name,
     status: response.status,
-    code: api.parseErrorCode(body),
+    code,
+    rateLimited: code !== undefined && (api.rateLimitCodes?.includes(code) ?? false),
     retryAfterMs: parseRetryAfterMs(response.headers.get('Retry-After')),
     detail: `${method} ${new URL(url).pathname}`,
   });
@@ -121,26 +140,34 @@ class HttpVendorClient implements VendorClient {
   }
 
   async request<T>(path: string, options: VendorRequestOptions = {}): Promise<T> {
-    return withRetries(async () => {
-      const response = await this.fetchAuthorizedJson(path, options);
-      const body: unknown = await response.json();
-      // Wire types follow the vendor's documented shape; the adapters' parse step reads them defensively.
-      return body as T;
-    }, this.sleep);
+    return withRetries(
+      async () => {
+        const response = await this.fetchAuthorizedJson(path, options);
+        const body: unknown = await response.json();
+        // Wire types follow the vendor's documented shape; the adapters' parse step reads them defensively.
+        return body as T;
+      },
+      this.sleep,
+      { method: options.method ?? 'GET', idempotent: options.idempotent },
+    );
   }
 
   async requestVoid(path: string, options: VendorRequestOptions = {}): Promise<void> {
-    await withRetries(() => this.fetchAuthorizedJson(path, options), this.sleep);
+    await withRetries(() => this.fetchAuthorizedJson(path, options), this.sleep, {
+      method: options.method ?? 'GET',
+      idempotent: options.idempotent,
+    });
   }
 
   requestRaw(path: string, options: VendorRawRequestOptions): Promise<Response> {
-    return withRetries(() => this.fetchChecked(path, options), this.sleep);
+    return withRetries(() => this.fetchChecked(path, options), this.sleep, options);
   }
 
   private fetchAuthorizedJson(path: string, options: VendorRequestOptions): Promise<Response> {
     return this.fetchChecked(path, {
       method: options.method ?? 'GET',
       body: options.body,
+      timeoutMs: options.timeoutMs,
       headers: { 'Content-Type': 'application/json' },
       authorize: true,
     });
@@ -161,7 +188,7 @@ class HttpVendorClient implements VendorClient {
       method: options.method,
       body: options.body,
       headers,
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {

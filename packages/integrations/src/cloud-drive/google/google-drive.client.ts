@@ -7,11 +7,6 @@ const GOOGLE_DRIVE_API = googleApi({
   baseUrl: 'https://www.googleapis.com/drive/v3',
 });
 
-const RATE_LIMIT_REASONS = [
-  'rateLimitExceeded',
-  'userRateLimitExceeded',
-  'sharingRateLimitExceeded',
-];
 const READ_ONLY_REASONS = ['appNotAuthorizedToFile', 'insufficientFilePermissions'];
 const TOO_LARGE_REASONS = ['exportSizeLimitExceeded'];
 
@@ -27,10 +22,9 @@ function toCloudDriveError(error: VendorApiError): CloudDriveError | null {
   const code = error.code ?? '';
   if (error.status === 404 || error.status === 410)
     return new CloudDriveError('not_found', message);
-  if (error.status === 429) return new CloudDriveError('rate_limited', message);
+  if (error.kind === 'rate_limited') return new CloudDriveError('rate_limited', message);
   if (error.status === 401) return new CloudDriveError('auth', message);
   if (error.status !== 403) return null;
-  if (RATE_LIMIT_REASONS.includes(code)) return new CloudDriveError('rate_limited', message);
   if (READ_ONLY_REASONS.includes(code)) return new CloudDriveError('read_only', message);
   if (TOO_LARGE_REASONS.includes(code)) return new CloudDriveError('too_large', message);
   return new CloudDriveError('auth', message);
