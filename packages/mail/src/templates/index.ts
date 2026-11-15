@@ -5,17 +5,17 @@ import { fileURLToPath } from 'node:url';
 // dist/templates/ copy placed there by tsdown.config.ts's `copy` option.
 const emailsDir = resolve(dirname(fileURLToPath(import.meta.url)), 'templates');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const templates: Record<string, (vars: any) => { path: string; vars: Record<string, unknown> }> = {
-  welcome: (vars) => ({ path: resolve(emailsDir, 'welcome.vue'), vars }),
-  invitation: (vars) => ({ path: resolve(emailsDir, 'invitation.vue'), vars }),
+const templateFiles: Record<string, string> = {
+  welcome: 'welcome.vue',
+  invitation: 'invitation.vue',
 };
 
 export function getTemplate(
   templateId: string,
   variables: Record<string, unknown>,
+  dir: string = emailsDir,
 ): { path: string; vars: Record<string, unknown> } {
-  const fn = templates[templateId];
-  if (!fn) throw new Error(`Unknown email template: ${templateId}`);
-  return fn(variables);
+  const file = templateFiles[templateId];
+  if (!file) throw new Error(`Unknown email template: ${templateId}`);
+  return { path: resolve(dir, file), vars: variables };
 }
