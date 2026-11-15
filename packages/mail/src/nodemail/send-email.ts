@@ -1,6 +1,5 @@
-import { render } from '@maizzle/framework';
 import { config } from '@repo/config';
-import { getTemplate } from '../templates';
+import { renderEmail } from './render-email';
 import { getTransporter } from './transporter';
 
 export async function sendEmail({
@@ -20,11 +19,7 @@ export async function sendEmail({
     throw new Error('Email transporter is not configured');
   }
 
-  const { path, vars } = getTemplate(templateId, variables);
-  const { html, plaintext } = await render(path, {
-    plaintext: true,
-    ...vars,
-  });
+  const { html, plaintext } = await renderEmail(templateId, variables);
 
   return transporter.sendMail({
     from: config.mailFrom,
