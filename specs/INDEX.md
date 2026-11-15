@@ -30,6 +30,9 @@ work first, shipped reference and dead/historical docs last.
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
+| [Transactional emails in the user's language (design)](./email/413-email-language/design.md) | proposed (2026-11-15) |
+| [Transactional emails: send them in the user's language (PRD)](./email/413-email-language/prd.md) | proposed (2026-11-15) |
+| [Transactional emails in the user's language (slices)](./email/413-email-language/slices.md) | proposed (2026-11-15) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
