@@ -11,9 +11,10 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
+const errorBodySchema = z.strictObject({ code: z.string(), message: z.string() });
 const authUrlSchema = z.object({ url: z.string() });
 
-type SignInProvider = 'google' | 'microsoft' | 'linkedin';
+type SignInProvider = 'google' | 'microsoft';
 
 function jsonPost(path: string, body: object, cookieHeader?: string) {
   const headers: Record<string, string> = {
@@ -88,11 +89,14 @@ describe('sign-in permissions', () => {
     expect(scopesOf(url).some((scope) => scope.toLowerCase().startsWith('mail.'))).toBe(false);
   });
 
-  test('LinkedIn sign-in asks for no posting permission', async () => {
-    const url = await startSignIn('linkedin');
+  test('LinkedIn is not a sign-in provider', async () => {
+    const response = await jsonPost('/auth/sign-in/social', {
+      provider: 'linkedin',
+      callbackURL: `${config.appUrl}/`,
+    });
 
-    expect(scopesOf(url)).not.toContain('w_member_social');
-    expect(scopesOf(url).sort()).toEqual(['email', 'openid', 'profile']);
+    expect(response.status).toBe(404);
+    expect(errorBodySchema.parse(await response.json()).code).toBe('PROVIDER_NOT_FOUND');
   });
 });
 

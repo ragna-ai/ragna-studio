@@ -33,15 +33,6 @@ import { pickUserLocale, readStoredLocale } from './user-locale';
 // is only here because OAuth Provider gates refresh-token issuance on it.
 const MCP_SCOPES = ['mcp', 'offline_access'] as const;
 
-// Sign-in only identifies the user. Feature permissions are granted when an integration is connected.
-const LINKEDIN_SIGN_IN_SCOPES = ['openid', 'profile', 'email'];
-
-if (config.linkedInScopes.length > 0) {
-  logger.warn(
-    'LINKEDIN_SCOPES is deprecated and ignored: sign-in always requests openid profile email',
-  );
-}
-
 // import { importPKCS8, SignJWT } from 'jose';
 // async function generateAppleClientSecret() {
 //   const privateKey = await importPKCS8(config.getSecret('APPLE_PRIVATE_KEY'), 'ES256');
@@ -157,12 +148,6 @@ export const auth = betterAuth({
       tenantId: config.microsoftTenantId,
       // Entra sends no email_verified; xms_edov (optional ID-token claim in the app registration) is Microsoft's nOAuth-safe signal.
       mapProfileToUser: (profile) => ({ emailVerified: profile.xms_edov === true }),
-    },
-    linkedin: {
-      clientId: config.linkedInClientId,
-      clientSecret: config.getSecret('LINKEDIN_CLIENT_SECRET'),
-      disableDefaultScope: true,
-      scope: LINKEDIN_SIGN_IN_SCOPES,
     },
     // apple: async () => ({
     //   clientId: config.appleClientId,

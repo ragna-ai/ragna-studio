@@ -73,8 +73,8 @@ with LinkedIn never grants posting rights.
   connect LinkedIn and the post stays a draft.
 - **US-3.2** Given a user with a LinkedIn connection, when they publish, then the post appears on
   that profile and the post history shows the account used.
-- **US-3.3** Given a user who signs in with LinkedIn, when they sign in, then LinkedIn asks for no
-  posting permission.
+- **US-3.3** ~~Given a user who signs in with LinkedIn, when they sign in, then LinkedIn asks for
+  no posting permission.~~ Dropped in #425: LinkedIn is no longer a sign-in provider.
 
 ### US-4 Manage my connections (P1)
 
@@ -105,15 +105,15 @@ sign-in account clearly belongs to me.
 
 ## Testing
 
-| Criterion                      | Level  | Folder                        |
-| ------------------------------ | ------ | ----------------------------- |
-| US-1.1 to US-1.5               | API    | `apps/api/test/integration/`  |
-| US-2.1, US-2.2                 | worker | `apps/worker/test/email/`     |
-| US-2.3, US-3.3, US-5.1, US-5.2 | API    | `apps/api/test/auth/`         |
-| US-2.4                         | API    | `apps/api/test/email/`        |
-| US-3.1, US-3.2                 | API    | `apps/api/test/social-post/`  |
-| US-4.1 to US-4.4               | API    | `apps/api/test/integration/`  |
-| US-4.5                         | API    | `apps/api/test/organization/` |
+| Criterion              | Level  | Folder                        |
+| ---------------------- | ------ | ----------------------------- |
+| US-1.1 to US-1.5       | API    | `apps/api/test/integration/`  |
+| US-2.1, US-2.2         | worker | `apps/worker/test/email/`     |
+| US-2.3, US-5.1, US-5.2 | API    | `apps/api/test/auth/`         |
+| US-2.4                 | API    | `apps/api/test/email/`        |
+| US-3.1, US-3.2         | API    | `apps/api/test/social-post/`  |
+| US-4.1 to US-4.4       | API    | `apps/api/test/integration/`  |
+| US-4.5                 | API    | `apps/api/test/organization/` |
 
 ## Standards checklist
 

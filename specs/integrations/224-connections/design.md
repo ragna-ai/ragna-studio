@@ -160,8 +160,9 @@ deletes the user's connections (US-4.5) and replaces `revokeProviderGrants` /
 
 - `accountLinking.allowDifferentEmails: false`.
 - Unique index on `account (user_id, provider_id)`.
-- Sign-in scopes: `openid profile email` for Google, Microsoft and LinkedIn (US-2.3, US-3.3).
-- `LINKEDIN_SCOPES` is deprecated: logged as ignored for one release, then removed.
+- Sign-in scopes: `openid profile email` for Google and Microsoft (US-2.3). LinkedIn sign-in was
+  removed in #425.
+- `LINKEDIN_SCOPES` is deprecated: logged as ignored for one release, then removed (#425).
 - `getAccountByUserIdAndProvider`, `listAccountsByUserIdAndProvider` and
   `clearAccountTokensByUserIdAndProviders` are deleted.
 
