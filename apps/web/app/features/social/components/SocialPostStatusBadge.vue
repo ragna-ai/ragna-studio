@@ -12,6 +12,7 @@ const props = defineProps<{
 // Computed
 const variantByStatus: Record<SocialPostStatus, BadgeVariants['variant']> = {
   draft: 'outline',
+  publishing: 'outline',
   published: 'outline',
   failed: 'destructive',
 };

@@ -1,5 +1,6 @@
 import { config } from '@repo/config';
 import type {
+  IntegrationConnection,
   Media,
   SocialPost,
   SocialPostMedia,
@@ -10,6 +11,7 @@ import type { SocialPlatform, SocialPostSource, SocialPostStatus } from '@repo/d
 import {
   createMedia,
   createSocialPost,
+  claimSocialPostForPublishing,
   createSocialPostMediaRecords,
   deleteSocialPostById,
   deleteSocialPostMediaById,
@@ -18,6 +20,7 @@ import {
   getSocialPostCountByWorkspaceId,
   markSocialPostFailed,
   markSocialPostPublished,
+  releaseSocialPostClaim,
   updateSocialPostContent,
   updateSocialPostMediaAltText,
 } from '@repo/database';
@@ -25,6 +28,7 @@ import { ConnectionNeedsReauthError, flagConnectionNeedsReauth } from '@repo/int
 import {
   LinkedinPublishError,
   resolveUserLinkedinPublisher,
+  type LinkedinPost,
   type LinkedinPublisherOptions,
 } from '@repo/integrations/social';
 import { logger } from '@repo/logger';
@@ -36,6 +40,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  SocialPostPublishingException,
 } from '../exceptions';
 import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MB } from '../utils/upload-limits';
 import { uploadSocialPostImages } from './social-post-media.service';
@@ -44,6 +49,9 @@ import { uploadSocialPostImages } from './social-post-media.service';
 // (config.s3ImagesBucketName). User uploads live under a `social/{userId}/`
 // prefix so they don't collide with generated-image keys.
 const MAX_MEDIA_PER_POST = 9;
+
+// A `publishing` post untouched this long is a crashed publish and may be claimed again.
+const PUBLISH_CLAIM_STALE_AFTER_MS = 15 * 60 * 1000;
 
 const MEDIA_EXTENSION_BY_MIME_TYPE = {
   'image/jpeg': 'jpg',
@@ -309,6 +317,10 @@ export async function deleteSocialPost({
     throw new InternalServerErrorException('Failed to load social post');
   }
 
+  if (post?.status === 'publishing') {
+    throw new SocialPostPublishingException();
+  }
+
   const mediaIds = post?.media.map((item) => item.mediaId) ?? [];
 
   await deleteSocialPostById({ id: socialPostId, workspaceId });
@@ -515,15 +527,87 @@ export async function publishSocialPost({
 }: PublishSocialPostParams): Promise<PublishSocialPostResult> {
   const post = await loadOwnedPost({ workspaceId, socialPostId });
 
-  if (post.status !== 'draft' && post.status !== 'failed') {
-    throw new BadRequestException(
-      `Only draft or failed posts can be published (current status: ${post.status})`,
-    );
+  if (post.status === 'published') {
+    throw new BadRequestException('Only draft or failed posts can be published');
   }
 
   if (post.content.trim().length === 0) {
     throw new BadRequestException('Add some content before publishing');
   }
+
+  const claimed = await claimSocialPostForPublishing({
+    id: socialPostId,
+    workspaceId,
+    staleBefore: new Date(Date.now() - PUBLISH_CLAIM_STALE_AFTER_MS),
+  });
+
+  if (!claimed) {
+    throw new SocialPostPublishingException();
+  }
+
+  const previousStatus = post.status === 'publishing' ? 'failed' : post.status;
+  const restoreStatus = () =>
+    tryCatch(() =>
+      releaseSocialPostClaim({ id: socialPostId, workspaceId, status: previousStatus }),
+    );
+
+  const sent = await sendPostToLinkedin({ post, userId, sleep }).catch(async (error: unknown) => {
+    await restoreStatus();
+    throw error;
+  });
+
+  if (sent.linkedinNotConnected) {
+    await restoreStatus();
+    return { linkedinNotConnected: true };
+  }
+
+  // LinkedIn has the post now: the claim is never released from here on, or a second publish would post it twice.
+  const { error: markError, data: publishedPost } = await tryCatch(() =>
+    markSocialPostPublished({
+      id: socialPostId,
+      workspaceId,
+      connectionId: sent.connection.id,
+      externalId: sent.published.id,
+      externalUrl: sent.published.url,
+    }),
+  );
+
+  if (markError !== null || !publishedPost) {
+    logger.error('Post was published to LinkedIn but failed to save', {
+      socialPostId,
+      linkedinPostId: sent.published.id,
+      linkedinPostUrl: sent.published.url,
+      error: markError,
+    });
+    throw new InternalServerErrorException('Post was published but failed to save');
+  }
+
+  // Publishing only changes status/externalId/externalUrl/publishedAt; it
+  // never touches social_post_media, so the media already loaded at the top
+  // of this function (`post.media`) is still accurate, no re-read needed.
+  return {
+    linkedinNotConnected: false,
+    post: toPostResponse(publishedPost, post.media, sent.connection),
+  };
+}
+
+type SendPostOutcome =
+  | { linkedinNotConnected: true }
+  | { linkedinNotConnected: false; published: LinkedinPost; connection: IntegrationConnection };
+
+interface SendPostToLinkedinParams {
+  post: SocialPostWithMedia;
+  userId: string;
+  sleep: PublishSocialPostParams['sleep'];
+}
+
+/** Everything up to LinkedIn accepting the post. Anything thrown here happened before LinkedIn had it. */
+async function sendPostToLinkedin({
+  post,
+  userId,
+  sleep,
+}: SendPostToLinkedinParams): Promise<SendPostOutcome> {
+  const { id: socialPostId, workspaceId } = post;
 
   const { error: resolveError, data: resolved } = await tryCatch(() =>
     resolveUserLinkedinPublisher({ userId, sleep }),
@@ -571,26 +655,5 @@ export async function publishSocialPost({
     throw new InternalServerErrorException('Failed to publish to LinkedIn');
   }
 
-  const { error: markError, data: publishedPost } = await tryCatch(() =>
-    markSocialPostPublished({
-      id: socialPostId,
-      workspaceId,
-      connectionId: connection.id,
-      externalId: published.id,
-      externalUrl: published.url,
-    }),
-  );
-
-  if (markError !== null || !publishedPost) {
-    logger.error('Post was published to LinkedIn but failed to save', markError);
-    throw new InternalServerErrorException('Post was published but failed to save');
-  }
-
-  // Publishing only changes status/externalId/externalUrl/publishedAt; it
-  // never touches social_post_media, so the media already loaded at the top
-  // of this function (`post.media`) is still accurate, no re-read needed.
-  return {
-    linkedinNotConnected: false,
-    post: toPostResponse(publishedPost, post.media, connection),
-  };
+  return { linkedinNotConnected: false, published, connection };
 }

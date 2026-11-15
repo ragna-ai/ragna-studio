@@ -7,6 +7,7 @@ export const problemTypeSchema = z.enum([
   'linkedin-not-connected',
   'workflow-invalid',
   'email-draft-exists',
+  'social-post-publishing',
 ]);
 
 export type ProblemType = z.infer<typeof problemTypeSchema>;
@@ -18,6 +19,7 @@ export const PROBLEM_TITLES: Record<ProblemType, string> = {
   'linkedin-not-connected': 'LinkedIn not connected',
   'workflow-invalid': 'Workflow is invalid',
   'email-draft-exists': 'Email draft already exists',
+  'social-post-publishing': 'Social post is being published',
 };
 
 export const ABOUT_BLANK = 'about:blank';

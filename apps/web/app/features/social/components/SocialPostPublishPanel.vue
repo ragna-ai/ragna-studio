@@ -24,8 +24,10 @@ const { t } = useI18n();
 // Computed
 const canPublish = computed(
   () =>
-    (props.post.status === 'draft' || props.post.status === 'failed') &&
-    props.post.content.trim().length > 0,
+    props.post.status !== 'published' && props.post.content.trim().length > 0,
+);
+const isBusy = computed(
+  () => props.isPublishing || props.post.status === 'publishing',
 );
 
 // Functions
@@ -72,9 +74,9 @@ function handlePublish() {
     </a>
 
     <Button
-      :loading="isPublishing"
+      :loading="isBusy"
       v-if="canPublish"
-      :disabled="isPublishing"
+      :disabled="isBusy"
       @click="handlePublish"
     >
       {{ t('common.publish') }}

@@ -25,7 +25,7 @@ export const socialPostKeys = {
   mediaUpload: () => ['social-posts', 'media', 'upload'] as const,
 };
 
-export type SocialPostStatus = 'draft' | 'published' | 'failed';
+export type SocialPostStatus = 'draft' | 'publishing' | 'published' | 'failed';
 
 // Client-side mirror of the API's limits (apps/api/src/services/social-post.service.ts),
 // so invalid attachments are rejected before a request is even sent.

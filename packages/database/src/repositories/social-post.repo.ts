@@ -1,10 +1,11 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, lt, or } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   NewSocialPost,
   NewSocialPostMedia,
   SocialPost,
   SocialPostMedia,
+  SocialPostStatus,
   SocialPostWithMedia,
 } from '../schema';
 import { socialPost, socialPostMedia } from '../schema';
@@ -115,6 +116,61 @@ export async function deleteSocialPostById({
   await db
     .delete(socialPost)
     .where(and(eq(socialPost.id, id), eq(socialPost.workspaceId, workspaceId)));
+}
+
+export interface ClaimSocialPostForPublishingParams {
+  id: string;
+  workspaceId: string;
+  /** A `publishing` post last touched before this is a crashed publish and may be claimed again. */
+  staleBefore: Date;
+}
+
+/** One conditional update, so only one of several concurrent requests gets the post. */
+export async function claimSocialPostForPublishing({
+  id,
+  workspaceId,
+  staleBefore,
+}: ClaimSocialPostForPublishingParams): Promise<SocialPost | null> {
+  const [claimed] = await db
+    .update(socialPost)
+    .set({ status: 'publishing' })
+    .where(
+      and(
+        eq(socialPost.id, id),
+        eq(socialPost.workspaceId, workspaceId),
+        or(
+          inArray(socialPost.status, ['draft', 'failed']),
+          and(eq(socialPost.status, 'publishing'), lt(socialPost.updatedAt, staleBefore)),
+        ),
+      ),
+    )
+    .returning();
+
+  return claimed ?? null;
+}
+
+export interface ReleaseSocialPostClaimParams {
+  id: string;
+  workspaceId: string;
+  status: SocialPostStatus;
+}
+
+/** Puts the status back when a publish ends without a result. No-op once the post is published or failed. */
+export async function releaseSocialPostClaim({
+  id,
+  workspaceId,
+  status,
+}: ReleaseSocialPostClaimParams): Promise<void> {
+  await db
+    .update(socialPost)
+    .set({ status })
+    .where(
+      and(
+        eq(socialPost.id, id),
+        eq(socialPost.workspaceId, workspaceId),
+        eq(socialPost.status, 'publishing'),
+      ),
+    );
 }
 
 export async function markSocialPostPublished({

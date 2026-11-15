@@ -1063,6 +1063,7 @@
     },
     "status": {
       "draft": "Draft",
+      "publishing": "Publishing",
       "published": "Published",
       "failed": "Failed"
     },
@@ -1097,6 +1098,7 @@
       "publishSuccess": "Post published.",
       "publishError": "Failed to publish the post.",
       "linkedinNotConnected": "No LinkedIn account connected. Connect LinkedIn to publish.",
+      "alreadyPublishing": "This post is already being published.",
       "createError": "Failed to create the post.",
       "mediaUploadError": "Failed to upload the image.",
       "mediaAltTextError": "Failed to save the alt text.",
