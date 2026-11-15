@@ -29,6 +29,7 @@ Role names are always qualified. The full table, with storage and code identifie
 | connection          | A user's or workspace's linked external account at a provider, with its tokens. Table `integration_connections`.                   | account (that is better-auth's login account), integration |
 | account             | A better-auth login method of a user (Google, Microsoft, Apple sign-in). Table `account`.                                          | connection                                                 |
 | passkey             | A WebAuthn credential on a user's device that signs them in. A user can have several. Table `passkeys`.                            | security key, account                                      |
+| social post         | A post a user or agent writes in RAGNA Studio and publishes to a social network. Draft, published or failed. Table `social_posts`. | post (unqualified), share                                  |
 
 ## Agents and AI
 
