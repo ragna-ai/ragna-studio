@@ -64,8 +64,9 @@ RAGNA sends the text and images to LinkedIn. A post cannot be empty. When it wor
 
 ## Post statuses
 
-| Status        | Meaning                                                                                                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Draft**     | Saved in RAGNA, not on LinkedIn. It can be edited and published.                                                                                                                             |
-| **Published** | Live on LinkedIn.                                                                                                                                                                            |
-| **Failed**    | LinkedIn rejected the post, could not process an image, or was unavailable. RAGNA Studio retries a busy LinkedIn but never sends a post twice. Fix the cause, then choose **Publish** again. |
+| Status         | Meaning                                                                                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Draft**      | Saved in RAGNA, not on LinkedIn. It can be edited and published.                                                                                                                             |
+| **Publishing** | RAGNA Studio is sending the post to LinkedIn. It cannot be published again or deleted until it finishes.                                                                                     |
+| **Published**  | Live on LinkedIn.                                                                                                                                                                            |
+| **Failed**     | LinkedIn rejected the post, could not process an image, or was unavailable. RAGNA Studio retries a busy LinkedIn but never sends a post twice. Fix the cause, then choose **Publish** again. |

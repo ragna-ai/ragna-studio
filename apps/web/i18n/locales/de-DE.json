@@ -1066,6 +1066,7 @@
     },
     "status": {
       "draft": "Entwurf",
+      "publishing": "Wird veröffentlicht",
       "published": "Veröffentlicht",
       "failed": "Fehlgeschlagen"
     },
@@ -1100,6 +1101,7 @@
       "publishSuccess": "Post veröffentlicht.",
       "publishError": "Veröffentlichung fehlgeschlagen.",
       "linkedinNotConnected": "Kein LinkedIn-Konto verbunden. Verbinde LinkedIn, um zu veröffentlichen.",
+      "alreadyPublishing": "Dieser Post wird bereits veröffentlicht.",
       "createError": "Post konnte nicht erstellt werden.",
       "mediaUploadError": "Bild konnte nicht hochgeladen werden.",
       "mediaAltTextError": "Alt-Text konnte nicht gespeichert werden.",

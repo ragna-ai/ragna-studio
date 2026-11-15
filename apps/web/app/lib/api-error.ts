@@ -25,6 +25,7 @@ export const PROBLEM_MESSAGE_KEYS: Record<ProblemType, MessageKey> = {
   'linkedin-not-connected': 'social.toast.linkedinNotConnected',
   'workflow-invalid': 'problem.type.workflowInvalid',
   'email-draft-exists': 'problem.type.emailDraftExists',
+  'social-post-publishing': 'social.toast.alreadyPublishing',
 };
 
 export const WORKFLOW_RULE_MESSAGE_KEYS: Record<WorkflowRule, MessageKey> = {

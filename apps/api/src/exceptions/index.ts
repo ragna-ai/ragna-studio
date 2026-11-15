@@ -133,6 +133,16 @@ export class EmailDraftExistsException extends ProblemException {
   }
 }
 
+// Conflict (409) when a social post is already being published
+export class SocialPostPublishingException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'social-post-publishing',
+      message: 'Social post is already being published',
+    });
+  }
+}
+
 // Bad Request (400) when publishing without a connected LinkedIn account
 export class LinkedinNotConnectedException extends ProblemException {
   constructor() {

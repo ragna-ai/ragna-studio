@@ -1,0 +1,33 @@
+---
+title: social-post-publishing
+description: A social post is already being published, so the request was refused.
+---
+
+`https://docs.ragna.io/errors/social-post-publishing`
+
+## When it happens
+
+A request publishes or deletes a social post while another publish of the same post is running. Only one publish runs at a time, so a post is never sent to LinkedIn twice.
+
+A publish that stops without finishing, for example when the server restarts, releases the post after 15 minutes. After that the post can be published again.
+
+## Response
+
+| Member   | Value                          |
+| -------- | ------------------------------ |
+| `status` | 409                            |
+| `title`  | Social post is being published |
+
+No extension members.
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/social-post-publishing",
+  "title": "Social post is being published",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Wait for the running publish to finish, then read the post. Its status is **Published** or **Failed**. See [Social posts](/integrations/social-posts).

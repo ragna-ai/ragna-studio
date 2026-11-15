@@ -61,6 +61,10 @@ const exceptionFactories: Record<string, { create: ExceptionFactory; type: strin
     create: () => new exceptions.EmailDraftExistsException({ id: 'draft-1' }),
     type: problemTypeUri('email-draft-exists'),
   },
+  SocialPostPublishingException: {
+    create: () => new exceptions.SocialPostPublishingException(),
+    type: problemTypeUri('social-post-publishing'),
+  },
   LinkedinNotConnectedException: {
     create: () => new exceptions.LinkedinNotConnectedException(),
     type: problemTypeUri('linkedin-not-connected'),

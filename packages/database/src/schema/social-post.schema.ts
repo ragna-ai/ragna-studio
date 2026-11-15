@@ -8,7 +8,7 @@ import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 export type SocialPlatform = 'linkedin';
-export type SocialPostStatus = 'draft' | 'published' | 'failed';
+export type SocialPostStatus = 'draft' | 'publishing' | 'published' | 'failed';
 export type SocialPostSource = 'agent' | 'user';
 export type SocialPostMediaOrigin = 'upload' | 'genImage';
 
