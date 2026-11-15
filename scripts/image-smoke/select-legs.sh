@@ -41,9 +41,15 @@ else
   if [ -n "$config_dirs" ]; then
     turbo_version=$(jq -r .devDependencies.turbo package.json)
     filters=()
-    for dir in $config_dirs; do filters+=(--filter "...{./$dir}"); done
-    packaging_packages=$(npx --yes "turbo@$turbo_version" ls "${filters[@]}" --output=json |
-      jq -re '.packages.items[].name')
+    for dir in $config_dirs; do
+      # A removed package is bundled into no image, and its dependents' manifests changed too.
+      [ -d "$dir" ] || continue
+      filters+=(--filter "...{./$dir}")
+    done
+    if [ "${#filters[@]}" -gt 0 ]; then
+      packaging_packages=$(npx --yes "turbo@$turbo_version" ls "${filters[@]}" --output=json |
+        jq -re '.packages.items[].name')
+    fi
   fi
 
   # turbo maps a lockfile change to the packages whose dependencies changed.
