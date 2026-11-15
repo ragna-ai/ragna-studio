@@ -6,6 +6,7 @@ import {
   createOrganizationForUser,
   db,
   getOrganizationIdByUserId,
+  getUserById,
   joinOrganizationFromPendingInvitation,
   MEMBER_REMOVED_BAN_REASON,
   ORGANIZATION_DELETED_BAN_REASON,
@@ -14,11 +15,14 @@ import * as schema from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import { queue, WELCOME_EMAIL_JOB, welcomeEmailJobSchema } from '@repo/queue';
 import { betterAuth } from 'better-auth';
+import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, jwt, lastLoginMethod, organization, testUtils } from 'better-auth/plugins';
+import { passkey } from '@better-auth/passkey';
+import { afterAuthHook, beforeAuthHook } from './auth-hooks';
+import { isLoginEmailAllowed } from './login-allowlist';
 import {
   enqueueInvitationEmail,
-  rejectInvitingRemovedMember,
   rejectOwnerRoleChange,
   validateInvitation,
 } from './organization-invitations';
@@ -63,6 +67,23 @@ function bannedUserMessageFor({ banReason }: { banReason?: string | null }): str
   return (banReason ? BANNED_MESSAGES[banReason] : undefined) ?? DEFAULT_BANNED_MESSAGE;
 }
 
+interface SessionToCreate {
+  userId: string;
+}
+
+// Runs for every sign-in method, so the allowlist also covers passkeys.
+async function prepareSession<T extends SessionToCreate>(session: T) {
+  const user = await getUserById({ userId: session.userId });
+  if (!isLoginEmailAllowed(user?.email)) {
+    throw new APIError('FORBIDDEN', {
+      message: 'This email is not permitted to sign in.',
+      code: 'email_not_allowed',
+    });
+  }
+  const activeOrganizationId = await getOrganizationIdByUserId({ userId: session.userId });
+  return { data: { ...session, activeOrganizationId } };
+}
+
 export const auth = betterAuth({
   // testUtils has no HTTP routes; it only adds ctx.test, the seam
   // packages/testing/src/auth/auth-seed.ts uses to mint session cookies for
@@ -73,6 +94,12 @@ export const auth = betterAuth({
     ...(config.isTest ? [testUtils()] : []),
     admin({ bannedUserMessage: bannedUserMessageFor }),
     lastLoginMethod(),
+    passkey({
+      rpID: config.appHostname,
+      rpName: 'RAGNA Studio',
+      origin: config.appOrigin,
+      authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+    }),
     organization({
       allowUserToCreateOrganization: false,
       disableOrganizationDeletion: true,
@@ -111,7 +138,7 @@ export const auth = betterAuth({
   ],
   baseURL: config.apiBaseUrl.replace(/\/$/, ''),
   basePath: '/auth',
-  trustedOrigins: [...config.trustedOrigins, config.appUrl, 'https://appleid.apple.com'],
+  trustedOrigins: [...config.trustedOrigins, config.appOrigin, 'https://appleid.apple.com'],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
@@ -142,7 +169,7 @@ export const auth = betterAuth({
     // }),
   },
   // MIDDLEWARE
-  hooks: { before: rejectInvitingRemovedMember },
+  hooks: { before: beforeAuthHook, after: afterAuthHook },
   user: {
     // Runs on every sign-up, account link, and OAuth sign-in (with the fresh
     // provider email each time), so removing an email from the allowlist
@@ -151,7 +178,7 @@ export const auth = betterAuth({
     validateUserInfo:
       config.allowedLoginEmails.length > 0
         ? ({ user }) => {
-            if (config.allowedLoginEmails.includes(user.email?.toLowerCase() ?? '')) return;
+            if (isLoginEmailAllowed(user.email)) return;
             return {
               error: 'email_not_allowed',
               errorDescription: 'This email is not permitted to sign in.',
@@ -201,10 +228,7 @@ export const auth = betterAuth({
     },
     session: {
       create: {
-        before: async (session) => {
-          const activeOrganizationId = await getOrganizationIdByUserId({ userId: session.userId });
-          return { data: { ...session, activeOrganizationId } };
-        },
+        before: prepareSession,
       },
     },
   },

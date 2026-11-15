@@ -18,6 +18,7 @@ Go through this list before sharing RAGNA Studio.
 
 - **Restrict who can sign in.** By default, every user with an account at the OAuth provider can sign in. Set `ALLOWED_LOGIN_EMAILS`, see [Configuration](/self-hosting/configuration#restricting-sign-up).
 - **Serve both domains over https.** `NUXT_PUBLIC_API_BASE_URL` must be the https API URL.
+- **Passkeys skip the provider.** A user disabled at Google or Microsoft can still sign in with a passkey. Remove them from the organization or from `ALLOWED_LOGIN_EMAILS`, see [Sign in](/getting-started/sign-in#who-can-sign-in).
 
 ## Secrets
 

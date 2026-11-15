@@ -20,11 +20,10 @@ useHead({ title: t('auth.login.pageTitle') });
 
 const authClient = useAuth();
 const route = useRoute();
-const {
-  public: { apiBaseUrl },
-} = useRuntimeConfig();
+const { resolveSignInTarget, resolveSignInErrorTarget } = useSignInRedirect();
 const errorMessage = ref<string | null>(null);
 const signingIn = ref<SocialProvider | null>(null);
+const passkeyBusy = ref(false);
 
 // The OAuth callback (e.g. a rejected email allowlist check) redirects back
 // here with these query params instead of resolving signIn.social() directly.
@@ -33,13 +32,6 @@ if (typeof route.query.error === 'string') {
 }
 
 const hasInvitation = typeof route.query.invitation === 'string';
-
-// A pending MCP authorize request: resume it instead of the normal home page.
-const isOAuthAuthorizeResume = computed(
-  () =>
-    typeof route.query.client_id === 'string' &&
-    typeof route.query.sig === 'string',
-);
 
 // The server's error descriptions are English only, so known codes get translated text.
 const translatedCallbackErrors: Record<string, string> = {
@@ -55,20 +47,24 @@ function callbackErrorMessage(error: string): string {
   return t('auth.login.genericError');
 }
 
+function onPasskeyBusy(busy: boolean) {
+  passkeyBusy.value = busy;
+  if (busy) errorMessage.value = null;
+}
+
+function onPasskeyError(code: string | null) {
+  const translationKey = code ? translatedCallbackErrors[code] : undefined;
+  errorMessage.value = t(translationKey ?? 'auth.login.passkeyError');
+}
+
 async function signIn(provider: SocialProvider) {
   errorMessage.value = null;
   signingIn.value = provider;
-  // Absolute URLs back to this web app. A relative path would resolve against
-  // the API origin (baseURL) and land the user on the API, not the app.
-  const appOrigin = window.location.origin;
-  const pendingAuthorizeQuery = window.location.search;
   try {
     const { error } = await authClient.signIn.social({
       provider,
-      callbackURL: isOAuthAuthorizeResume.value
-        ? `${apiBaseUrl}/auth/oauth2/authorize${pendingAuthorizeQuery}`
-        : `${appOrigin}/`,
-      errorCallbackURL: `${appOrigin}/auth/login${pendingAuthorizeQuery}`,
+      callbackURL: resolveSignInTarget(),
+      errorCallbackURL: resolveSignInErrorTarget(),
     });
     if (error) {
       errorMessage.value = error.message ?? t('auth.login.genericError');
@@ -120,9 +116,15 @@ async function signIn(provider: SocialProvider) {
           :icon="option.icon"
           :label="$t(`auth.login.providers.${option.provider}`)"
           :loading="signingIn === option.provider"
-          :disabled="signingIn !== null"
+          :disabled="signingIn !== null || passkeyBusy"
           :last-used="authClient.isLastUsedLoginMethod(option.provider)"
           @click="signIn(option.provider)"
+        />
+        <AuthPasskeySignInButton
+          :disabled="signingIn !== null"
+          :last-used="authClient.isLastUsedLoginMethod('passkey')"
+          @busy="onPasskeyBusy"
+          @error="onPasskeyError"
         />
       </div>
 

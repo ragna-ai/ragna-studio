@@ -8,6 +8,7 @@ const emailsDir = resolve(dirname(fileURLToPath(import.meta.url)), 'templates');
 const templateFiles: Record<string, string> = {
   welcome: 'welcome.vue',
   invitation: 'invitation.vue',
+  'passkey-added': 'passkey-added.vue',
 };
 
 export function getTemplate(

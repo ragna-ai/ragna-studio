@@ -1,0 +1,52 @@
+---
+title: Sign in
+description: Sign in to RAGNA Studio with Google, Microsoft or a passkey.
+sidebar:
+  order: 3
+---
+
+RAGNA Studio has no passwords. Users sign in with an account at Google or Microsoft, or with a passkey they added to their RAGNA Studio account.
+
+## Sign in with a provider
+
+On the sign-in page, choose **Continue with Google** or **Continue with Microsoft** and pick the account at the provider. The first sign-in creates the RAGNA Studio account.
+
+## Passkeys
+
+A passkey signs the user in with the fingerprint, face or PIN of their device. No provider page opens. A passkey is an extra way in: the account is always created with a provider first, and the provider sign-in keeps working.
+
+### Add a passkey
+
+1. Open **Settings** and choose **Passkeys** under **Sign-in**.
+2. Choose **Add a passkey**.
+3. Enter a name for the device, for example `Work laptop`. A name has 1 to 64 characters.
+4. Confirm on the device.
+
+The passkey appears in the list with its name and the date it was added. RAGNA Studio sends the user an email for every new passkey. An unexpected email means another user added a passkey to the account: delete it right away (see below).
+
+A user can add several passkeys, one per device or password manager. Some password managers sync a passkey across the user's devices.
+
+### Sign in with a passkey
+
+On the sign-in page, choose **Sign in with a passkey** and confirm on the device. The button only shows in browsers that support passkeys.
+
+When the user cancels the prompt, or the device holds no passkey for RAGNA Studio, the sign-in page shows an error and nothing else changes.
+
+### Rename or delete a passkey
+
+In **Settings > Sign-in > Passkeys**, choose **Rename** or **Delete** next to the passkey. A deleted passkey can no longer sign in. Other ways to sign in keep working.
+
+Deleting a passkey doesn't sign out sessions that were started with it. They end when they expire.
+
+## Who can sign in
+
+The same rules apply to every sign-in method:
+
+- A user removed from their organization can't sign in, with a provider or a passkey. See [Organizations](/workspaces/organizations#manage-members).
+- On a self-hosted instance with a list of allowed sign-in emails, only those emails can sign in. Removing an email from the list also blocks that user's passkeys. See [Configuration](/self-hosting/configuration#restricting-sign-up).
+
+<Aside type="caution" title="Turning off a user at the provider">
+  A passkey doesn't go through Google or Microsoft. Disabling a user's account at the provider stops
+  their provider sign-in, but not their passkeys. To take away access, remove the user from the
+  organization.
+</Aside>

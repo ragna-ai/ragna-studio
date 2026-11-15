@@ -24,9 +24,11 @@ TRUSTED_ORIGINS="https://app.example.com"
 COOKIE_DOMAIN=".example.com"
 ```
 
+- `APP_URL` must be a full `http` or `https` URL. RAGNA Studio doesn't start with any other value.
 - `NUXT_PUBLIC_API_BASE_URL` must be the public **https** API URL. The frontend derives the `wss://` WebSocket URL from it.
 - `COOKIE_DOMAIN` is the parent domain. It is needed because app and api are separate hosts.
 - `TRUSTED_ORIGINS` is a comma-separated list of allowed origins.
+- Passkeys are bound to the host of `APP_URL`. Changing that host later makes every existing passkey stop working. Users then sign in with their provider and add new passkeys.
 
 ## Secrets
 
@@ -73,6 +75,8 @@ ALLOWED_LOGIN_EMAILS="you@example.com,teammate@example.com"
 ```
 
 An empty value allows every user.
+
+The list applies to every sign-in, including [passkeys](/getting-started/sign-in#passkeys). Removing an email blocks that user on their next sign-in.
 
 ## Language base URL
 

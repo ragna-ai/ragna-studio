@@ -600,6 +600,9 @@ importers:
       '@better-auth/oauth-provider':
         specifier: ^1.7.20
         version: 1.7.20(@better-auth/core@1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5))(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-auth@1.7.20(drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7))(pg@8.23.1)(solid-js@1.9.17)(vue@3.5.45(typescript@6.0.3)))(better-call@1.4.5(zod@4.6.7))
+      '@better-auth/passkey':
+        specifier: 1.7.20
+        version: 1.7.20(@better-auth/core@1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5))(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-auth@1.7.20(drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7))(pg@8.23.1)(solid-js@1.9.17)(vue@3.5.45(typescript@6.0.3)))(better-call@1.4.5(zod@4.6.7))(nanostores@1.5.5)
       '@repo/config':
         specifier: workspace:*
         version: link:../config
@@ -621,6 +624,9 @@ importers:
       jose:
         specifier: ^6.2.17
         version: 6.2.17
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
     devDependencies:
       '@repo/ts-config':
         specifier: workspace:*
@@ -1087,6 +1093,9 @@ importers:
       '@repo/storage':
         specifier: workspace:*
         version: link:../storage
+      '@simplewebauthn/server':
+        specifier: ^13.3.3
+        version: 13.3.3
       ai:
         specifier: 'catalog:'
         version: 7.0.169(zod@4.6.7)
@@ -1581,6 +1590,16 @@ packages:
       '@better-fetch/fetch': 1.3.3
       better-auth: ^1.7.20
       better-call: 1.4.5
+
+  '@better-auth/passkey@1.7.20':
+    resolution: {integrity: sha512-rA6eP787/1uTmWw+lPWWH6OEwSnU7hZJ6z54u4qb7jsKX3uIiAJuLuzTkcVIauZq9ag511H/M517pJiS9/29gA==}
+    peerDependencies:
+      '@better-auth/core': ^1.7.20
+      '@better-auth/utils': ^0.4.2 || ^0.5.0
+      '@better-fetch/fetch': 1.3.3
+      better-auth: ^1.7.20
+      better-call: 1.4.5
+      nanostores: ^1.0.1
 
   '@better-auth/prisma-adapter@1.7.20':
     resolution: {integrity: sha512-iT1D6oDLkV8L2tlgnP/fZkUH30bEkBhb5v6gO3zRDRmtGZVZMy/uUZFEbYk4yZ2mHDH15qW1DvlVqBquRuSVzg==}
@@ -2332,6 +2351,9 @@ packages:
   '@fontsource/stix-two-math@5.3.0':
     resolution: {integrity: sha512-negoeozw6VSXjZMozwKRSm/dhCQT62csZcuea9I8KYqPaZq/8KbbBBrA02ZHF7AyuR5mVML/p+q0bwFuSIf2GQ==}
 
+  '@hexagon/base64@1.1.28':
+    resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
+
   '@hono/bun@1.0.1':
     resolution: {integrity: sha512-74m9j/JY6sPhjOnZZSSPFDRWWRVqO8jI7cDTrcjXP+qnlCMOu0BCLnjq31LrKsWGWW7SsRWDzqrf9vDfnwtStA==}
     engines: {node: '>=16.9.0'}
@@ -2791,6 +2813,9 @@ packages:
     resolution: {integrity: sha512-jRVXr+zsVHxzDXRoh+CDeXzvCsFJ6uiHhqqNQ26Cw9ZsZ3D6nqPUBt1gGVtj2ZPmRL3a9Uk1v8D1aJ8/I12Dow==}
     peerDependencies:
       solid-js: ^1.8.8
+
+  '@levischuck/tiny-cbor@0.2.11':
+    resolution: {integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==}
 
   '@lucide/vue@1.72.0':
     resolution: {integrity: sha512-BPcYejGErv+kg4ilXyPU7j6YdA0kQaMiBnlcCElTsoLdQgD+6aoquA/0I4amN5yzkJrZgpULvpDonXui94ez8A==}
@@ -3951,6 +3976,57 @@ packages:
     bundledDependencies:
       - napi-wasm
 
+  '@peculiar/asn1-android@2.11.1':
+    resolution: {integrity: sha512-AuUBRDNdWrgtnuJGXARa0Xdtq6OAD8GqezDQz6Qka7kyynMo9fzkcrtpBEHuX984uEB570BrhMZfJfkUDfpQfw==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-cms@2.11.1':
+    resolution: {integrity: sha512-Bk+oatE62dW0Tzzpfk6vdQxfGGEfvuGdWgmijnKjcv7HqZCJISs85z4zw2uDArrk+R1Oel1wts/BBl7HHrtAcA==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-csr@2.11.1':
+    resolution: {integrity: sha512-KVfbXaKng8886/tOPG55t5K1XkTkGbR4amjIJzytXWobFU5nZgw/sKnSpa1hxP17nUSsrOF/7Mt9WUYeyLsi6Q==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-ecc@2.11.1':
+    resolution: {integrity: sha512-7MSNji77fQa/oN3WAfwagMy8EoJFg50sW4hZ1dtr0zU1BSugit0I2DGpIdPhvkNplopQhz5bogxpn1077eaamA==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-pfx@2.11.1':
+    resolution: {integrity: sha512-2SN2z8qkc2hk/GgTYA8RN54wtsCDZShg9gI2Mq1vLhdj1adcv5fhTbiEmExZUaAMqlizxiEpULQDfHM5iYtn1g==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-pkcs8@2.11.1':
+    resolution: {integrity: sha512-HqsSrnpQghRp9SM9QSmR6fa4z/BNktnKq7928+oq4qF0VAnuHZ4cyePKvcxh9fP4taBCP/WHNItlVNsYaQm2qw==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-pkcs9@2.11.1':
+    resolution: {integrity: sha512-OHFkTg8D2zYafILqFE4KPbqX8srpvd3diGDc2h2cduumawc765mOHGcuFMGvLWlL2bbCMWMmMSCtlXptsOuiPA==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-rsa@2.11.1':
+    resolution: {integrity: sha512-6KwKGjulF489CpidZqkogNgLj6oGzgC4BL2FClM8PuJQ4t5NqT4q4a6A4vrSxBIBhMnL8hGYkLOpbVw0Vq38Tw==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-schema@2.11.1':
+    resolution: {integrity: sha512-jaU9OaCcbZUdyXx9hMETZB9xoNmxTGjOGFqd3cOwKFkpKnyKd9WxF3uqj4PvX4cyOMP9bSdHg5YyML2qtx/d/g==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-x509-attr@2.11.1':
+    resolution: {integrity: sha512-n7RKFrbTzt8pGBlZ90kmKEn1qsLTTyw7lrvHMK0xsA42kQugPk/GXYpNbEcl7DkkdVsU/one5UX7KQPfxLj8vQ==}
+    engines: {node: '>=14'}
+
+  '@peculiar/asn1-x509@2.11.1':
+    resolution: {integrity: sha512-SXU4/X6B3FquqQAN6ARI0bFDUV7+L1WlvPEPMKzEMkstd2D7UyM0r93fv241+OjdhqAKYGx5MvV3gzZMAp0APA==}
+    engines: {node: '>=14'}
+
+  '@peculiar/utils@2.0.3':
+    resolution: {integrity: sha512-+oL3HPFRIZ1St2K50lWCXiioIgSoxzz7R1J3uF6neO2yl1sgmpgY6XXJH4BdpoDkMWznQTeYF6oWNDZLCdQ4eQ==}
+
+  '@peculiar/x509@1.14.3':
+    resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
+    engines: {node: '>=20.0.0'}
+
   '@pinia/nuxt@1.0.3':
     resolution: {integrity: sha512-riI5CHfiQUNqFJjY+KuopkOtxSiex2CQYEHdQHiZRhS20ebtkiXQXtYbL/ecni3vhOJvW1PyVfPT7j5SzwvpLQ==}
     peerDependencies:
@@ -4522,6 +4598,13 @@ packages:
 
   '@shikijs/vscode-textmate@10.1.0':
     resolution: {integrity: sha512-cVBuhDQjBZaNMTwBquYfPydrUP+E3hE6oYGasx8h6ZrODIM7/r+gxLDXdd66oszbrggZHEntdE6j+5gYIVyMWQ==}
+
+  '@simplewebauthn/browser@13.3.0':
+    resolution: {integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==}
+
+  '@simplewebauthn/server@13.3.3':
+    resolution: {integrity: sha512-LelX/lcy5cjc15A86i/aNxHhB5eU7dd20QsbP0VLAf9e38+SLlsnqCCyecx3xqfGofhmX05h1J9fKRYWxw+luA==}
+    engines: {node: '>=20.0.0'}
 
   '@sindresorhus/is@7.2.0':
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
@@ -5764,6 +5847,10 @@ packages:
   arrayiffy-if-string@5.2.3:
     resolution: {integrity: sha512-Qf6UpE9my1L+h1/noSH7T3g6XpHCE69dEEnsfHMi6uA4DrA/UmocIbwApcwOXI9RIdARwJZNHr4RJ2lw/Hfv3w==}
     engines: {node: '>=18.20.8'}
+
+  asn1js@3.1.0:
+    resolution: {integrity: sha512-HWYi1THkOqguCiO+vwj09ZkQFD2kKEsejYHAYCtX0D80WVdoDnvRc9IukXX/jeb0T9NRWJnRtqwdbHltnFjwXA==}
+    engines: {node: '>=12.0.0'}
 
   ast-kit@2.2.0:
     resolution: {integrity: sha512-m1Q/RaVOnTp9JxPX+F+Zn7IcLYMzM8kZofDImfsKZd8MbR+ikdOzTeztStWqfrqIxZnYWryyI9ePm3NGjnZgGw==}
@@ -9027,6 +9114,13 @@ packages:
     engines: {node: '>=22.12.0'}
     hasBin: true
 
+  pvtsutils@1.3.6:
+    resolution: {integrity: sha512-PLgQXQ6H2FWCaeRak8vvk1GW462lMxB5s3Jm673N82zI4vqtVUPuZdffdZbPDFRoU8kAhItWFtPCWiPpp4/EDg==}
+
+  pvutils@1.2.0:
+    resolution: {integrity: sha512-BbubeCEyTuQjVMakvJQ/Sxbc93F2pwmbsxONT/ZRrwU7Ua38d8unYTwXpTVLAKJ4BDuH9IGztCjQcd/N/39Dvg==}
+    engines: {node: '>=16.0.0'}
+
   quansync@0.2.11:
     resolution: {integrity: sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==}
 
@@ -9091,6 +9185,9 @@ packages:
   redis-parser@3.0.0:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
+
+  reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
   regex-empty-conditional-comments@3.2.3:
     resolution: {integrity: sha512-quXj2jb8gOQLhbdhfFwUdF37AMAqDtmLuOseKJhSInRymU3nJRKeVhqXd2uwLI0UpOqiyvoaehtWus1S0NFGSQ==}
@@ -9774,8 +9871,15 @@ packages:
       unrun:
         optional: true
 
+  tslib@1.14.1:
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
+
   tslib@2.9.1:
     resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
+
+  tsyringe@4.10.0:
+    resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
+    engines: {node: '>= 6.0.0'}
 
   turbo@2.11.10:
     resolution: {integrity: sha512-3GJYwig8ygEI89oaOZdduJX8/aw6O9eRPYHoIt6T3FZl9hkKjiyIspufJoVgqXihPoJu8M5CSV0DlZvzfohBCw==}
@@ -11193,6 +11297,18 @@ snapshots:
       jose: 6.2.17
       zod: 4.6.7
 
+  '@better-auth/passkey@1.7.20(@better-auth/core@1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5))(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-auth@1.7.20(drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7))(pg@8.23.1)(solid-js@1.9.17)(vue@3.5.45(typescript@6.0.3)))(better-call@1.4.5(zod@4.6.7))(nanostores@1.5.5)':
+    dependencies:
+      '@better-auth/core': 1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5)
+      '@better-auth/utils': 0.5.1
+      '@better-fetch/fetch': 1.3.3
+      '@simplewebauthn/browser': 13.3.0
+      '@simplewebauthn/server': 13.3.3
+      better-auth: 1.7.20(drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7)))(drizzle-orm@1.0.0-rc.5(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)(zod@4.6.7))(pg@8.23.1)(solid-js@1.9.17)(vue@3.5.45(typescript@6.0.3))
+      better-call: 1.4.5(zod@4.6.7)
+      nanostores: 1.5.5
+      zod: 4.6.7
+
   '@better-auth/prisma-adapter@1.7.20(@better-auth/core@1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5))(@better-auth/utils@0.5.1)':
     dependencies:
       '@better-auth/core': 1.7.20(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(better-call@1.4.5(zod@4.6.7))(jose@6.2.17)(kysely@0.29.7)(nanostores@1.5.5)
@@ -11777,6 +11893,8 @@ snapshots:
 
   '@fontsource/stix-two-math@5.3.0': {}
 
+  '@hexagon/base64@1.1.28': {}
+
   '@hono/bun@1.0.1(hono@4.13.18)':
     dependencies:
       hono: 4.13.18
@@ -12199,6 +12317,8 @@ snapshots:
       '@solid-primitives/refs': 1.1.4(solid-js@1.9.17)
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.17)
       solid-js: 1.9.17
+
+  '@levischuck/tiny-cbor@0.2.11': {}
 
   '@lucide/vue@1.72.0(vue@3.5.45(typescript@6.0.3))':
     dependencies:
@@ -13614,6 +13734,106 @@ snapshots:
       is-glob: 4.0.3
       picomatch: 4.0.7
 
+  '@peculiar/asn1-android@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-cms@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      '@peculiar/asn1-x509-attr': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-csr@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-ecc@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-pfx@2.11.1':
+    dependencies:
+      '@peculiar/asn1-cms': 2.11.1
+      '@peculiar/asn1-pkcs8': 2.11.1
+      '@peculiar/asn1-rsa': 2.11.1
+      '@peculiar/asn1-schema': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-pkcs8@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-pkcs9@2.11.1':
+    dependencies:
+      '@peculiar/asn1-cms': 2.11.1
+      '@peculiar/asn1-pfx': 2.11.1
+      '@peculiar/asn1-pkcs8': 2.11.1
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      '@peculiar/asn1-x509-attr': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-rsa@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-schema@2.11.1':
+    dependencies:
+      '@peculiar/utils': 2.0.3
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-x509-attr@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/asn1-x509@2.11.1':
+    dependencies:
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/utils': 2.0.3
+      asn1js: 3.1.0
+      tslib: 2.9.1
+
+  '@peculiar/utils@2.0.3':
+    dependencies:
+      tslib: 2.9.1
+
+  '@peculiar/x509@1.14.3':
+    dependencies:
+      '@peculiar/asn1-cms': 2.11.1
+      '@peculiar/asn1-csr': 2.11.1
+      '@peculiar/asn1-ecc': 2.11.1
+      '@peculiar/asn1-pkcs9': 2.11.1
+      '@peculiar/asn1-rsa': 2.11.1
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      pvtsutils: 1.3.6
+      reflect-metadata: 0.2.2
+      tslib: 2.9.1
+      tsyringe: 4.10.0
+
   '@pinia/nuxt@1.0.3(@nuxt/schema@4.6.4)(confbox@0.2.4)(dotenv@18.0.10)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.141.0)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.45(typescript@6.0.3)))(rolldown@1.2.19)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.19)(rollup@4.68.2)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))':
     dependencies:
       '@nuxt/kit': 4.6.4(@nuxt/schema@4.6.4)(confbox@0.2.4)(dotenv@18.0.10)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.141.0)(rolldown@1.2.19)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.19)(rollup@4.68.2)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
@@ -14273,6 +14493,19 @@ snapshots:
       '@types/hast': 3.0.5
 
   '@shikijs/vscode-textmate@10.1.0': {}
+
+  '@simplewebauthn/browser@13.3.0': {}
+
+  '@simplewebauthn/server@13.3.3':
+    dependencies:
+      '@hexagon/base64': 1.1.28
+      '@levischuck/tiny-cbor': 0.2.11
+      '@peculiar/asn1-android': 2.11.1
+      '@peculiar/asn1-ecc': 2.11.1
+      '@peculiar/asn1-rsa': 2.11.1
+      '@peculiar/asn1-schema': 2.11.1
+      '@peculiar/asn1-x509': 2.11.1
+      '@peculiar/x509': 1.14.3
 
   '@sindresorhus/is@7.2.0': {}
 
@@ -15681,6 +15914,12 @@ snapshots:
       codsen-utils: 1.10.3
 
   arrayiffy-if-string@5.2.3: {}
+
+  asn1js@3.1.0:
+    dependencies:
+      pvtsutils: 1.3.6
+      pvutils: 1.2.0
+      tslib: 2.9.1
 
   ast-kit@2.2.0:
     dependencies:
@@ -19492,6 +19731,12 @@ snapshots:
       - utf-8-validate
       - yauzl
 
+  pvtsutils@1.3.6:
+    dependencies:
+      tslib: 2.9.1
+
+  pvutils@1.2.0: {}
+
   quansync@0.2.11: {}
 
   quansync@1.0.0: {}
@@ -19564,6 +19809,8 @@ snapshots:
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
+
+  reflect-metadata@0.2.2: {}
 
   regex-empty-conditional-comments@3.2.3: {}
 
@@ -20363,7 +20610,13 @@ snapshots:
       - tsrs
       - vue-tsc
 
+  tslib@1.14.1: {}
+
   tslib@2.9.1: {}
+
+  tsyringe@4.10.0:
+    dependencies:
+      tslib: 1.14.1
 
   turbo@2.11.10:
     optionalDependencies:

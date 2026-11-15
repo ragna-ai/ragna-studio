@@ -163,8 +163,8 @@ describe('creating invitations', () => {
   });
 
   test('an email outside the login allowlist is rejected', async () => {
-    overrideAllowedLoginEmails(['listed@example.com']);
-    const owner = await seedAuthenticatedUser();
+    overrideAllowedLoginEmails(['owner@example.com', 'listed@example.com']);
+    const owner = await seedAuthenticatedUser({ email: 'owner@example.com' });
     const organizationId = await activeOrganizationId(owner.cookieHeader);
 
     const rejected = await inviteMember(

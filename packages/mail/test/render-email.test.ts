@@ -33,4 +33,22 @@ describe('renderEmail', () => {
     expect(html).toContain('https://app.example.test/invite/1');
     expect(plaintext).toContain('Ada invited you to join Acme.');
   });
+
+  test('passkey-added substitutes user, passkey and settings url', async () => {
+    const { html, plaintext } = await renderEmail(
+      'passkey-added',
+      {
+        userName: 'Ada',
+        passkeyName: 'MacBook',
+        settingsUrl: 'https://app.example.test/settings/profile',
+      },
+      installedTemplates,
+    );
+
+    for (const output of [html, plaintext]) {
+      expect(output).toContain('Ada');
+      expect(output).toContain('MacBook');
+      expect(output).toContain('https://app.example.test/settings/profile');
+    }
+  });
 });

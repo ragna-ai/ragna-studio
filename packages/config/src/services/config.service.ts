@@ -99,7 +99,10 @@ const ConfigSchema = z.object({
       if (val) return val;
       const port = process.env.APP_PORT || '3000';
       return `http://localhost:${port}`;
-    }),
+    })
+    .pipe(z.url({ protocol: /^https?$/ }))
+    // Without a trailing slash, so callers append paths as `${appUrl}/path`.
+    .transform((val) => val.replace(/\/+$/, '')),
   API_BASE_URL: z.string().optional(),
   // Shared parent domain (e.g. ".ragna.io") for better-auth cookies.
   COOKIE_DOMAIN: z.string().optional(),
@@ -455,6 +458,15 @@ export class ConfigService {
 
   get appUrl(): string {
     return this._config.APP_URL;
+  }
+
+  /** Scheme, host and port of the web app, e.g. for origin checks. */
+  get appOrigin(): string {
+    return new URL(this._config.APP_URL).origin;
+  }
+
+  get appHostname(): string {
+    return new URL(this._config.APP_URL).hostname;
   }
 
   get apiBaseUrl(): string {

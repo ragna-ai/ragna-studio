@@ -71,6 +71,13 @@ export function useSettingsNavItems() {
         ],
       },
       {
+        id: 'signIn',
+        label: t('settings.groups.signIn'),
+        items: [
+          item('passkeys', '/settings/sign-in/passkeys', 'fingerprint-scan'),
+        ],
+      },
+      {
         id: 'organization',
         label: t('settings.groups.organization'),
         items: organizationItems,

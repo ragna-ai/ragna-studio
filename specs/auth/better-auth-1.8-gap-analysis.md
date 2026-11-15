@@ -42,6 +42,10 @@ Non-breaking items worth knowing: the CIMD fix for documents that declare at lea
 grant (#10731) helps us. Token exchange, front-channel logout, acr/amr claims, CIBA and the DPoP
 polling fix are not needed today.
 
+Passkeys (#399, checked 2026-11-15 against `1.8.0-beta.9`): the `@better-auth/passkey` schema,
+options and client API match 1.7.20. Only origin handling for wildcard `allowedHosts` changed,
+which we don't use. User verification on sign-in is already enforced in 1.7.20.
+
 ## Relation to the OAuth/MCP hardening
 
 None of the four hardening items needs a better-auth change, and none depends on 1.8. Keep them

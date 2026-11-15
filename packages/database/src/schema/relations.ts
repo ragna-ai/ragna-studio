@@ -35,6 +35,7 @@ import {
   oauthRefreshToken,
   oauthResource,
 } from './oauth-provider.schema';
+import { passkey } from './passkey.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
 import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
@@ -48,6 +49,7 @@ const schema = {
   user,
   account,
   session,
+  passkey,
   verification,
   aiModel,
   agent,
@@ -110,6 +112,7 @@ export const relations = defineRelations(schema, (r) => ({
   user: {
     accounts: r.many.account(),
     sessions: r.many.session(),
+    passkeys: r.many.passkey(),
     agents: r.many.agent(),
     chats: r.many.chat(),
     genImages: r.many.genImage(),
@@ -179,6 +182,13 @@ export const relations = defineRelations(schema, (r) => ({
   session: {
     user: r.one.user({
       from: r.session.userId,
+      to: r.user.id,
+      optional: false,
+    }),
+  },
+  passkey: {
+    user: r.one.user({
+      from: r.passkey.userId,
       to: r.user.id,
       optional: false,
     }),

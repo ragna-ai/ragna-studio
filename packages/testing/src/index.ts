@@ -21,3 +21,4 @@ export * from './mail/vendors/graph.routes';
 export * from './cloud-drive/google-drive-connection';
 export * from './cloud-drive/vendors/drive.fixture';
 export * from './cloud-drive/vendors/google-drive.routes';
+export * from './auth/software-authenticator';
