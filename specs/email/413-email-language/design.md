@@ -1,6 +1,6 @@
 # Transactional emails in the user's language (design)
 
-> **Status: proposed** (2026-11-15). Issue #413. Requirements in [prd.md](./prd.md).
+> **Status: implemented** (2026-11-15, PR #416). Issue #413. Requirements in [prd.md](./prd.md).
 
 ## Locale list (US-1, US-3.5)
 
@@ -41,16 +41,19 @@ the web auth client gets `inferAdditionalFields` so the type knows it.
 ## API
 
 `PATCH /user/profile` accepts `{ name?, locale? }`. `locale` is parsed with `userLocaleSchema`.
-Anything else answers `400` (problem+json, as every validation error). `GET /user/profile` and the
+Anything else answers `422` (problem+json, as every validation error). `GET /user/profile` and the
 session return `locale` (`'en' | 'de' | null`).
 
 ## Web
 
 - **Settings > Language:** `setLocale()` plus `PATCH /user/profile { locale }`. On error the
   interface switches back and shows a toast.
-- **Sync on app load** (one composable, called once in the signed-in layout): if the session's
-  `locale` is `null`, store the current i18n locale (US-1.4). If it differs from the current one,
-  `setLocale(sessionLocale)` (US-1.3).
+- **Sync on app load:** global route middleware `02.account-locale.global.ts`, ordered after
+  `01.auth.global.ts` by its number prefix, so the session is known. Once per user: if the
+  session's `locale` differs from the current one, it awaits `setLocale(sessionLocale)` (US-1.3).
+  The first navigation runs before the app mounts, so the first render is already in the right
+  language. If the session's `locale` is `null`, it stores the current i18n locale without blocking
+  navigation (US-1.4).
 - The settings subtitle mentions emails: "Choose the language for the interface and emails." /
   "Wähle die Sprache für die Benutzeroberfläche und E-Mails."
 

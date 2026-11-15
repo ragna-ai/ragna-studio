@@ -1,8 +1,10 @@
+import { DEFAULT_USER_LOCALE, userLocaleSchema } from '@repo/utils';
 import { z } from 'zod';
 
 export const welcomeEmailJobSchema = z.object({
   email: z.email(),
   name: z.string().trim().min(1),
+  locale: userLocaleSchema.default(DEFAULT_USER_LOCALE),
 });
 
 export type WelcomeEmailJobData = z.infer<typeof welcomeEmailJobSchema>;
@@ -14,6 +16,7 @@ export const invitationEmailJobSchema = z.object({
   inviterName: z.string().trim().min(1),
   organizationName: z.string().trim().min(1),
   url: z.string().trim().min(1),
+  locale: userLocaleSchema.default(DEFAULT_USER_LOCALE),
 });
 
 export type InvitationEmailJobData = z.infer<typeof invitationEmailJobSchema>;
@@ -25,6 +28,7 @@ export const passkeyAddedEmailJobSchema = z.object({
   userName: z.string().trim().min(1),
   passkeyName: z.string().trim().min(1),
   settingsUrl: z.url(),
+  locale: userLocaleSchema.default(DEFAULT_USER_LOCALE),
 });
 
 export type PasskeyAddedEmailJobData = z.infer<typeof passkeyAddedEmailJobSchema>;

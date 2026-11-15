@@ -1,5 +1,6 @@
 import { config } from '@repo/config';
-import { db } from '@repo/database';
+import { db, sql } from '@repo/database';
+import { user as userTable } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import {
   INVITATION_EMAIL_JOB,
@@ -58,6 +59,21 @@ describe('invitation email', () => {
     });
   });
 
+  test('creating an invitation writes the email in the language of the inviter', async () => {
+    const owner = await seedAuthenticatedUser();
+    await db
+      .update(userTable)
+      .set({ locale: 'en' })
+      .where(sql`${userTable.id} = ${owner.userId}`);
+    const organizationId = await activeOrganizationId(owner.cookieHeader);
+
+    await inviteMember(owner.cookieHeader, organizationId, 'member');
+
+    expect(invitationEmailJobSchema.parse(enqueuedJobs(INVITATION_EMAIL_JOB)[0]?.[1]).locale).toBe(
+      'en',
+    );
+  });
+
   test('a rejected invitation enqueues nothing', async () => {
     const owner = await seedAuthenticatedUser();
     const organizationId = await activeOrganizationId(owner.cookieHeader);
@@ -91,6 +107,12 @@ describe('welcome email', () => {
     const jobs = enqueuedJobs(WELCOME_EMAIL_JOB);
     expect(jobs).toHaveLength(1);
     expect(welcomeEmailJobSchema.parse(jobs[0]?.[1]).email).toBe('welcome@example.com');
+  });
+
+  test('the welcome email carries the language the new user was given', async () => {
+    await seedAuthenticatedUser({ email: 'welcome@example.com' });
+
+    expect(welcomeEmailJobSchema.parse(enqueuedJobs(WELCOME_EMAIL_JOB)[0]?.[1]).locale).toBe('de');
   });
 
   test('an enqueue failure is logged and the user is still created', async () => {

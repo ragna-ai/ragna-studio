@@ -63,6 +63,16 @@ Sign-in settings, bound to the app host, and subject to bans and the email
 allowlist like OAuth.
 → [specs/auth/399-passkeys/prd.md](./auth/399-passkeys/prd.md)
 
+### Language and transactional emails
+
+A user's language (`en` or `de`) is stored on the account. A new account starts
+in the language of the login page, then the browser's, then German. Settings >
+Language changes it, and the app follows it on every device. Welcome,
+invitation and passkey added emails are sent in the recipient's language. An
+invitation uses the inviter's language. All emails render through one shared
+layout in `@repo/mail`.
+→ [specs/email/413-email-language/prd.md](./email/413-email-language/prd.md)
+
 ### Credits
 
 Usage-based credit ledger for metered AI operations (chat, imagegen,

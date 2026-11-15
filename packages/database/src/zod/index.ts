@@ -1,4 +1,5 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod';
+import { userLocaleSchema } from '@repo/utils';
 import z from 'zod';
 import { agent, agentReasoningEffortValues, aiModel, chat, chatMessage } from '../schema';
 import { user } from '../schema/user.schema';
@@ -6,11 +7,12 @@ import { user } from '../schema/user.schema';
 // USER
 export const userSelectSchema = createSelectSchema(user);
 export type UserSelectSchema = z.infer<typeof userSelectSchema>;
-export const userCreateSchema = createInsertSchema(user);
+export const userCreateSchema = createInsertSchema(user, { locale: userLocaleSchema.nullish() });
 export type UserCreateSchema = z.infer<typeof userCreateSchema>;
 export type ICreateUser = Omit<UserCreateSchema, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
 export const userUpdateSchema = createUpdateSchema(user, {
   name: (s) => s.min(4).max(32),
+  locale: userLocaleSchema.optional(),
 });
 export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
 export type IUpdateUser = Partial<UserUpdateSchema>;

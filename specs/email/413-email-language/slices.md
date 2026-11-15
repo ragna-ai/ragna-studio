@@ -1,6 +1,6 @@
 # Transactional emails in the user's language (slices)
 
-> **Status: proposed** (2026-11-15). Issue #413. [prd.md](./prd.md), [design.md](./design.md).
+> **Status: implemented** (2026-11-15, PR #416). Issue #413. [prd.md](./prd.md), [design.md](./design.md).
 
 Every slice follows AGENTS.md and loads the clean-code skill, plus tdd for `apps/api`.
 

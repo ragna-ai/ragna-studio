@@ -30,43 +30,37 @@ export async function processSendEmailJob(job: ProcessorJob): Promise<ProcessorS
 
   switch (job.name) {
     case WELCOME_EMAIL_JOB: {
-      const { email, name } = welcomeEmailJobSchema.parse(job.data);
+      const { email, name, locale } = welcomeEmailJobSchema.parse(job.data);
 
       await sendEmail({
         to: email,
-        subject: 'Welcome to SaaS App!',
-        templateId: 'welcome',
-        variables: {
-          name,
-        },
+        locale,
+        email: { id: 'welcome', variables: { name } },
       });
 
       break;
     }
     case INVITATION_EMAIL_JOB: {
-      const { email, inviterName, organizationName, url } = invitationEmailJobSchema.parse(
+      const { email, inviterName, organizationName, url, locale } = invitationEmailJobSchema.parse(
         job.data,
       );
 
       await sendEmail({
         to: email,
-        subject: `${inviterName} invited you to ${organizationName}`,
-        templateId: 'invitation',
-        variables: { inviterName, organizationName, url },
+        locale,
+        email: { id: 'invitation', variables: { inviterName, organizationName, url } },
       });
 
       break;
     }
     case PASSKEY_ADDED_EMAIL_JOB: {
-      const { email, userName, passkeyName, settingsUrl } = passkeyAddedEmailJobSchema.parse(
-        job.data,
-      );
+      const { email, userName, passkeyName, settingsUrl, locale } =
+        passkeyAddedEmailJobSchema.parse(job.data);
 
       await sendEmail({
         to: email,
-        subject: 'A passkey was added to your RAGNA Studio account',
-        templateId: 'passkey-added',
-        variables: { userName, passkeyName, settingsUrl },
+        locale,
+        email: { id: 'passkey-added', variables: { userName, passkeyName, settingsUrl } },
       });
 
       break;

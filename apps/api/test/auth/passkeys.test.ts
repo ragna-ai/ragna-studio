@@ -67,6 +67,7 @@ const signedInSchema = z.strictObject({
     emailVerified: z.boolean(),
     image: z.string().nullish(),
     role: z.string().nullish(),
+    locale: z.string().nullish(),
     banned: z.boolean().nullish(),
     banReason: z.string().nullish(),
     banExpires: z.string().nullish(),
@@ -208,9 +209,22 @@ describe('adding a passkey', () => {
       email: 'owner@example.com',
       userName: expect.any(String),
       passkeyName: 'Work laptop',
+      locale: 'de',
       settingsUrl: `${config.appUrl}/settings/sign-in/passkeys`,
     });
     expect(enqueuedPasskeyEmails()).toHaveLength(1);
+  });
+
+  test('writes the passkey email in the language of the signed-in user', async () => {
+    const owner = await seedAuthenticatedUser();
+    await db
+      .update(userTable)
+      .set({ locale: 'en' })
+      .where(sql`${userTable.id} = ${owner.userId}`);
+
+    await addPasskey(owner.cookieHeader, newAuthenticator(), 'Work laptop');
+
+    expect(enqueuedPasskeyEmails()[0]?.[1]).toMatchObject({ locale: 'en' });
   });
 
   test.each([

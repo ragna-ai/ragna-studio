@@ -1,6 +1,6 @@
 # Transactional emails: send them in the user's language (PRD)
 
-> **Status: proposed** (2026-11-15). Issue #413, part of Epic #412.
+> **Status: implemented** (2026-11-15, PR #416). Issue #413, part of Epic #412.
 
 RAGNA Studio sends every transactional email in English: welcome, organization invitation and
 passkey added. The app itself defaults to German. This PRD stores the user's language on the
@@ -42,7 +42,7 @@ and my emails use it on every device.
 - **US-1.1** Given a user, when they choose German in settings, then their profile returns German
   as their language.
 - **US-1.2** Given a user, when they send a language other than English or German, then the request
-  is rejected with `400` and their language stays unchanged.
+  is rejected with `422` and their language stays unchanged.
 - **US-1.3** Given a user whose account language is German, when they open the app on a device that
   shows English, then the app switches to German.
 - **US-1.4** Given an existing user with no stored language, when they open the app, then the

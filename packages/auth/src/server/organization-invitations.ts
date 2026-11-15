@@ -3,6 +3,7 @@ import {
   getMembershipByUserId,
   getOrganizationIdByUserId,
   getUserByEmail,
+  getUserById,
   hasOrganizationRole,
   ORGANIZATION_ADMIN_ROLE,
   ORGANIZATION_OWNER_ROLE,
@@ -10,6 +11,7 @@ import {
 import { logger } from '@repo/logger';
 import { INVITATION_EMAIL_JOB, invitationEmailJobSchema, queue } from '@repo/queue';
 import { APIError, getSessionFromCtx } from 'better-auth/api';
+import { readStoredLocale } from './user-locale';
 import type { AuthHookContext } from './auth-hooks';
 import { isLoginEmailAllowed } from './login-allowlist';
 
@@ -25,7 +27,7 @@ interface InvitationToValidate {
 interface InvitationEmailInput {
   id: string;
   email: string;
-  inviter: { user: { name: string } };
+  inviter: { user: { id: string; name: string } };
   organization: { name: string };
 }
 
@@ -108,12 +110,15 @@ export async function enqueueInvitationEmail({
   organization,
 }: InvitationEmailInput): Promise<void> {
   try {
+    // Loaded by id: the plugin's inviter user is not guaranteed to carry additional fields.
+    const inviterUser = await getUserById({ userId: inviter.user.id });
     await queue.email().add(
       INVITATION_EMAIL_JOB,
       invitationEmailJobSchema.parse({
         email,
         inviterName: inviter.user.name,
         organizationName: organization.name,
+        locale: readStoredLocale(inviterUser?.locale),
         url: `${config.appUrl}/auth/login?invitation=${id}`,
       }),
     );

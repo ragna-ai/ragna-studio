@@ -14,17 +14,29 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 
-// Refs
+import { toast } from '~/lib/toast';
+import { useUpdateUserLocale } from '~/features/user/composables/useUserProfileApi';
 
 // Composables
-const { locale, locales, setLocale } = useI18n();
+const { t, locale, locales, setLocale } = useI18n();
+const { mutateAsync: saveLocale } = useUpdateUserLocale();
 
 // Computed
 const localeOptions = computed(() => locales.value);
 
 // Functions
-function handleLocaleChange(value: any) {
-  setLocale(value);
+async function handleLocaleChange(value: unknown) {
+  const next = localeOptions.value.find((option) => option.code === value);
+  if (!next || next.code === locale.value) return;
+
+  const previous = locale.value;
+  await setLocale(next.code);
+  try {
+    await saveLocale(next.code);
+  } catch {
+    await setLocale(previous);
+    toast.error(t('user.toast.languageUpdateFailed'));
+  }
 }
 </script>
 

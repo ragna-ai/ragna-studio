@@ -9,22 +9,24 @@ describe('processSendEmailJob', () => {
     resetProviderMocks();
   });
 
-  test('welcome job sends the welcome template with the name', async () => {
+  test('welcome job sends the welcome email in the job locale', async () => {
     const result = await processSendEmailJob(
-      buildJob({ name: WELCOME_EMAIL_JOB, data: { email: 'ada@example.test', name: 'Ada' } }),
+      buildJob({
+        name: WELCOME_EMAIL_JOB,
+        data: { email: 'ada@example.test', name: 'Ada', locale: 'en' },
+      }),
     );
 
     expect(result).toEqual({ success: true });
     expect(sendEmailMock).toHaveBeenCalledTimes(1);
     expect(sendEmailMock).toHaveBeenCalledWith({
       to: 'ada@example.test',
-      subject: 'Welcome to SaaS App!',
-      templateId: 'welcome',
-      variables: { name: 'Ada' },
+      locale: 'en',
+      email: { id: 'welcome', variables: { name: 'Ada' } },
     });
   });
 
-  test('invitation job sends the invitation template with inviter, organization and url', async () => {
+  test('invitation job sends the invitation email in the job locale', async () => {
     await processSendEmailJob(
       buildJob({
         name: INVITATION_EMAIL_JOB,
@@ -33,23 +35,26 @@ describe('processSendEmailJob', () => {
           inviterName: 'Ada',
           organizationName: 'Acme',
           url: 'https://app.example.test/invite/1',
+          locale: 'de',
         },
       }),
     );
 
     expect(sendEmailMock).toHaveBeenCalledWith({
       to: 'bob@example.test',
-      subject: 'Ada invited you to Acme',
-      templateId: 'invitation',
-      variables: {
-        inviterName: 'Ada',
-        organizationName: 'Acme',
-        url: 'https://app.example.test/invite/1',
+      locale: 'de',
+      email: {
+        id: 'invitation',
+        variables: {
+          inviterName: 'Ada',
+          organizationName: 'Acme',
+          url: 'https://app.example.test/invite/1',
+        },
       },
     });
   });
 
-  test('passkey-added job sends the passkey-added template with user, passkey and settings url', async () => {
+  test('passkey-added job sends the passkey-added email in the job locale', async () => {
     await processSendEmailJob(
       buildJob({
         name: PASSKEY_ADDED_EMAIL_JOB,
@@ -57,20 +62,35 @@ describe('processSendEmailJob', () => {
           email: 'ada@example.test',
           userName: 'Ada',
           passkeyName: 'MacBook',
-          settingsUrl: 'https://app.example.test/settings/profile',
+          settingsUrl: 'https://app.example.test/settings/passkeys',
+          locale: 'en',
         },
       }),
     );
 
     expect(sendEmailMock).toHaveBeenCalledWith({
       to: 'ada@example.test',
-      subject: 'A passkey was added to your RAGNA Studio account',
-      templateId: 'passkey-added',
-      variables: {
-        userName: 'Ada',
-        passkeyName: 'MacBook',
-        settingsUrl: 'https://app.example.test/settings/profile',
+      locale: 'en',
+      email: {
+        id: 'passkey-added',
+        variables: {
+          userName: 'Ada',
+          passkeyName: 'MacBook',
+          settingsUrl: 'https://app.example.test/settings/passkeys',
+        },
       },
+    });
+  });
+
+  test('a job queued without a locale is sent in German', async () => {
+    await processSendEmailJob(
+      buildJob({ name: WELCOME_EMAIL_JOB, data: { email: 'ada@example.test', name: 'Ada' } }),
+    );
+
+    expect(sendEmailMock).toHaveBeenCalledWith({
+      to: 'ada@example.test',
+      locale: 'de',
+      email: { id: 'welcome', variables: { name: 'Ada' } },
     });
   });
 
