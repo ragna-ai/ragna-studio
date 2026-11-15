@@ -93,6 +93,9 @@ client sends `LinkedIn-Version` and `X-Restli-Protocol-Version: 2.0.0` on every 
 
 The upload URL is absolute and needs the bearer token (`requestRaw` with `authorize: true`).
 
+The shared client gets a per-request `timeoutMs` in this PR, with the upload as its first caller.
+It must be a positive integer (a zero would abort every request); the default stays 30 s.
+
 Check `LINKEDIN_API_VERSION` (`202506`) against LinkedIn's version support window and bump it in
 this PR if needed.
 
