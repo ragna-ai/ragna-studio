@@ -6,6 +6,8 @@ import {
   EMAILS_QUEUE,
   INVITATION_EMAIL_JOB,
   invitationEmailJobSchema,
+  PASSKEY_ADDED_EMAIL_JOB,
+  passkeyAddedEmailJobSchema,
   WELCOME_EMAIL_JOB,
   welcomeEmailJobSchema,
 } from '@repo/queue';
@@ -51,6 +53,20 @@ export async function processSendEmailJob(job: ProcessorJob): Promise<ProcessorS
         subject: `${inviterName} invited you to ${organizationName}`,
         templateId: 'invitation',
         variables: { inviterName, organizationName, url },
+      });
+
+      break;
+    }
+    case PASSKEY_ADDED_EMAIL_JOB: {
+      const { email, userName, passkeyName, settingsUrl } = passkeyAddedEmailJobSchema.parse(
+        job.data,
+      );
+
+      await sendEmail({
+        to: email,
+        subject: 'A passkey was added to your RAGNA Studio account',
+        templateId: 'passkey-added',
+        variables: { userName, passkeyName, settingsUrl },
       });
 
       break;

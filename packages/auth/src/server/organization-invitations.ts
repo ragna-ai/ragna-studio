@@ -9,7 +9,9 @@ import {
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { INVITATION_EMAIL_JOB, invitationEmailJobSchema, queue } from '@repo/queue';
-import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
+import { APIError, getSessionFromCtx } from 'better-auth/api';
+import type { AuthHookContext } from './auth-hooks';
+import { isLoginEmailAllowed } from './login-allowlist';
 
 interface CreatedInvitation {
   email: string;
@@ -46,8 +48,7 @@ export async function validateInvitation({ invitation }: InvitationToValidate): 
   rejectOwnerRole(invitation.role);
 
   const email = invitation.email.toLowerCase();
-  const allowedEmails = config.allowedLoginEmails;
-  if (allowedEmails.length > 0 && !allowedEmails.includes(email)) {
+  if (!isLoginEmailAllowed(email)) {
     rejectInvitation('This email is not permitted to sign in.');
   }
 
@@ -76,9 +77,7 @@ function readInviteMemberBody(body: unknown): InviteMemberBody | null {
  * so the removed-member hint has to come from a hook ahead of the route.
  * Only owners and admins of that organization see it.
  */
-export const rejectInvitingRemovedMember = createAuthMiddleware(async (ctx) => {
-  if (ctx.path !== '/organization/invite-member') return;
-
+export async function rejectInvitingRemovedMember(ctx: AuthHookContext): Promise<void> {
   const body = readInviteMemberBody(ctx.body);
   const session = await getSessionFromCtx(ctx);
   if (!body || !session) return;
@@ -96,7 +95,7 @@ export const rejectInvitingRemovedMember = createAuthMiddleware(async (ctx) => {
   if ((await getOrganizationIdByUserId({ userId: invitee.id })) !== organizationId) return;
 
   rejectInvitation('This person was removed. Restore them in the member list.');
-});
+}
 
 export async function rejectOwnerRoleChange({ newRole }: RoleChange): Promise<void> {
   rejectOwnerRole(newRole);

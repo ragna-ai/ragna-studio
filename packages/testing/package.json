@@ -23,6 +23,7 @@
     "@repo/mail": "workspace:*",
     "@repo/queue": "workspace:*",
     "@repo/storage": "workspace:*",
+    "@simplewebauthn/server": "^13.3.3",
     "ai": "catalog:",
     "better-auth": "^1.7.20"
   },

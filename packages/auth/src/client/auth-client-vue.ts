@@ -1,6 +1,8 @@
 import { oauthProviderClient } from '@better-auth/oauth-provider/client';
+import { passkeyClient } from '@better-auth/passkey/client';
 import { adminClient, lastLoginMethodClient, organizationClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/vue';
+import type { PasskeyActions, PasskeySignIn } from './passkeys';
 
 // Hand-typed like AuthClient below (oauthProviderClient()'s own type isn't
 // portable either): POST /oauth2/consent. The installed dist declares this
@@ -82,6 +84,8 @@ export type AuthClient = Omit<ReturnType<typeof createAuthClient>, 'hydrateSessi
   isLastUsedLoginMethod: (method: string) => boolean;
   clearLastUsedLoginMethod: () => void;
   organization: OrganizationActions;
+  passkey: PasskeyActions;
+  signIn: ReturnType<typeof createAuthClient>['signIn'] & PasskeySignIn;
   oauth2: {
     consent: (data: { accept: boolean }) => Promise<OAuthConsentAcceptResponse>;
   };
@@ -94,6 +98,12 @@ export type AuthSession = ReturnType<typeof createAppAuthClient>['$Infer']['Sess
 export function createAppAuthClient(options?: Parameters<typeof createAuthClient>[0]): AuthClient {
   return createAuthClient({
     ...options,
-    plugins: [adminClient(), lastLoginMethodClient(), oauthProviderClient(), organizationClient()],
+    plugins: [
+      adminClient(),
+      lastLoginMethodClient(),
+      oauthProviderClient(),
+      organizationClient(),
+      passkeyClient(),
+    ],
   });
 }

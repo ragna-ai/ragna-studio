@@ -1,4 +1,4 @@
-import { INVITATION_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
+import { INVITATION_EMAIL_JOB, PASSKEY_ADDED_EMAIL_JOB, WELCOME_EMAIL_JOB } from '@repo/queue';
 import { resetProviderMocks, sendEmailMock } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { processSendEmailJob } from '../../src/processors/email.processor';
@@ -47,6 +47,41 @@ describe('processSendEmailJob', () => {
         url: 'https://app.example.test/invite/1',
       },
     });
+  });
+
+  test('passkey-added job sends the passkey-added template with user, passkey and settings url', async () => {
+    await processSendEmailJob(
+      buildJob({
+        name: PASSKEY_ADDED_EMAIL_JOB,
+        data: {
+          email: 'ada@example.test',
+          userName: 'Ada',
+          passkeyName: 'MacBook',
+          settingsUrl: 'https://app.example.test/settings/profile',
+        },
+      }),
+    );
+
+    expect(sendEmailMock).toHaveBeenCalledWith({
+      to: 'ada@example.test',
+      subject: 'A passkey was added to your RAGNA Studio account',
+      templateId: 'passkey-added',
+      variables: {
+        userName: 'Ada',
+        passkeyName: 'MacBook',
+        settingsUrl: 'https://app.example.test/settings/profile',
+      },
+    });
+  });
+
+  test('passkey-added job with an invalid payload rejects without sending', async () => {
+    const job = buildJob({
+      name: PASSKEY_ADDED_EMAIL_JOB,
+      data: { email: 'ada@example.test', userName: 'Ada' },
+    });
+
+    await expect(processSendEmailJob(job)).rejects.toThrow();
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
   test('the removed verify job name is rejected without sending', async () => {

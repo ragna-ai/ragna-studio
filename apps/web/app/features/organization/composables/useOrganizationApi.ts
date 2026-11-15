@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type {
-  AuthResult,
   OrganizationAssignableRole,
   OrganizationInvitationRecord,
 } from '@repo/auth/client';
@@ -11,6 +10,7 @@ import type {
   OrganizationUsageResponse,
 } from '~/features/organization/types';
 import type { RestrictedWorkspacesResponse } from '~/features/workspace/types';
+import { unwrapAuthResult } from '~/lib/auth-result';
 import { toErrorMessage } from '~/lib/api-error';
 
 export const organizationKeys = {
@@ -21,17 +21,6 @@ export const organizationKeys = {
   usage: ['organization', 'usage'] as const,
   restrictedWorkspaces: ['organization', 'workspaces'] as const,
 };
-
-/** Turns a better-auth `{ data, error }` result into a value or a thrown error with the server message. */
-function unwrapAuthResult<T>(result: AuthResult<T>): T {
-  if (result.error || result.data === null) {
-    throw new Error(
-      result.error?.message ??
-        useNuxtApp().$i18n.t('organization.requestFailed'),
-    );
-  }
-  return result.data;
-}
 
 export function organizationErrorMessage(
   error: unknown,
@@ -69,10 +58,14 @@ export function useGetOrganizationInvitations(
   enabled: MaybeRefOrGetter<boolean>,
 ) {
   const authClient = useAuth();
+  const { t } = useI18n();
   return useQuery<OrganizationInvitationRecord[]>({
     queryKey: organizationKeys.invitations,
     queryFn: async () =>
-      unwrapAuthResult(await authClient.organization.listInvitations()),
+      unwrapAuthResult(
+        await authClient.organization.listInvitations(),
+        t('organization.requestFailed'),
+      ),
     enabled,
   });
 }
@@ -122,10 +115,12 @@ function useOrganizationMutation<TVariables>(
 
 export function useRenameOrganization() {
   const authClient = useAuth();
+  const { t } = useI18n();
   return useOrganizationMutation(
     async (name: string) =>
       unwrapAuthResult(
         await authClient.organization.update({ data: { name } }),
+        t('organization.requestFailed'),
       ),
     [organizationKeys.detail],
   );
@@ -133,19 +128,25 @@ export function useRenameOrganization() {
 
 export function useInviteMember() {
   const authClient = useAuth();
+  const { t } = useI18n();
   return useOrganizationMutation(
     async (input: { email: string; role: OrganizationAssignableRole }) =>
-      unwrapAuthResult(await authClient.organization.inviteMember(input)),
+      unwrapAuthResult(
+        await authClient.organization.inviteMember(input),
+        t('organization.requestFailed'),
+      ),
     [organizationKeys.invitations],
   );
 }
 
 export function useCancelInvitation() {
   const authClient = useAuth();
+  const { t } = useI18n();
   return useOrganizationMutation(
     async (invitationId: string) =>
       unwrapAuthResult(
         await authClient.organization.cancelInvitation({ invitationId }),
+        t('organization.requestFailed'),
       ),
     [organizationKeys.invitations],
   );
@@ -153,9 +154,13 @@ export function useCancelInvitation() {
 
 export function useUpdateMemberRole() {
   const authClient = useAuth();
+  const { t } = useI18n();
   return useOrganizationMutation(
     async (input: { memberId: string; role: OrganizationAssignableRole }) =>
-      unwrapAuthResult(await authClient.organization.updateMemberRole(input)),
+      unwrapAuthResult(
+        await authClient.organization.updateMemberRole(input),
+        t('organization.requestFailed'),
+      ),
     [organizationKeys.members],
   );
 }

@@ -19,7 +19,6 @@ work first, shipped reference and dead/historical docs last.
 | Doc | Status |
 | --- | --- |
 | [Agent media models (PRD)](./agent/agent-media-models-prd.md) | decided (2026-10-23) |
-| [Passkeys: sign in without an OAuth round trip (PRD)](./auth/399-passkeys/prd.md) | decided (2026-11-15) |
 | [0001 · UI components: reuse first, own deliberately](./decisions/0001-ui-components-reuse-first.md) | decided (2026-11-10) |
 | [0002 · One side panel: the Sheet with options](./decisions/0002-one-side-panel-sheet.md) | decided (2026-11-10, widths renamed 2026-11-11) |
 | [Organizations: AI model selection (PRD)](./organizations/ai-models-prd.md) | decided (2026-10-23) |
@@ -53,6 +52,7 @@ work first, shipped reference and dead/historical docs last.
 | [AI-generated content labeling (PRD)](./ai-labeling/prd.md) | implemented (2026-08-05, PR #18), revision 1 implemented (2026-08-06) |
 | [API Standards: workspace-contained resources](./api-standards/prd.md) | implemented (`feat: migrate api to workspace container model`, merged 2026-07-19) |
 | [Resource guard: workspace-scoped references](./api-standards/resource-guard.md) | implemented (PR #90, 2026-10-08) |
+| [Passkeys: sign in without an OAuth round trip (PRD)](./auth/399-passkeys/prd.md) | implemented (2026-11-15, PR #402) |
 | [Better Auth 1.7 upgrade](./auth/better-auth-1.7-upgrade-prd.md) | implemented (2026-08-20, commit 89147fa6 on main, no PR) |
 | [Chat redesign: start page, conversation, composer and history (PRD)](./chat/315-chat-redesign/prd.md) | implemented (2026-11-08, PR #316) |
 | [Chat branching (PRD)](./chat/branching.md) | implemented (2026-08-08) |

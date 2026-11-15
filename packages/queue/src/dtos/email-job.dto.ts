@@ -19,3 +19,14 @@ export const invitationEmailJobSchema = z.object({
 export type InvitationEmailJobData = z.infer<typeof invitationEmailJobSchema>;
 
 export const INVITATION_EMAIL_JOB = 'send-invitation-email-job';
+
+export const passkeyAddedEmailJobSchema = z.object({
+  email: z.email(),
+  userName: z.string().trim().min(1),
+  passkeyName: z.string().trim().min(1),
+  settingsUrl: z.url(),
+});
+
+export type PasskeyAddedEmailJobData = z.infer<typeof passkeyAddedEmailJobSchema>;
+
+export const PASSKEY_ADDED_EMAIL_JOB = 'send-passkey-added-email-job';

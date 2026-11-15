@@ -80,6 +80,7 @@
       "title": "Welcome back",
       "subtitle": "Sign in to your account to continue",
       "genericError": "Sign in failed. Please try again.",
+      "passkeyError": "Passkey sign in failed or was cancelled. Please try again.",
       "bannedError": "Your access has been disabled. Please contact your organization's owner.",
       "emailNotAllowedError": "This email address is not permitted to sign in.",
       "providers": {
@@ -87,6 +88,7 @@
         "microsoft": "Continue with Microsoft",
         "apple": "Continue with Apple"
       },
+      "passkey": "Sign in with a passkey",
       "lastUsed": "Last used",
       "termsAgreement": "By continuing, you agree to our {terms} and {privacy}.",
       "termsLink": "Terms of Service",
@@ -1029,6 +1031,34 @@
       "avatar": "Avatar",
       "change": "Change",
       "email": "Email"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in with your fingerprint, face or device PIN instead of a third-party account.",
+      "empty": "You have no passkeys yet.",
+      "add": "Add passkey",
+      "addFirst": "Add a passkey",
+      "addTitle": "Add a passkey",
+      "addDescription": "Name this passkey so you can recognise the device later.",
+      "namePlaceholder": "e.g. Work laptop",
+      "unnamed": "Unnamed passkey",
+      "created": "Added {date}",
+      "rename": "Rename",
+      "renameTitle": "Rename passkey",
+      "renameDescription": "Choose a new name for this passkey.",
+      "renameLabel": "Rename {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirm": {
+        "title": "Delete passkey \"{name}\"?",
+        "message": "You can no longer sign in with it. Other ways to sign in keep working."
+      },
+      "added": "Passkey added",
+      "renamed": "Passkey renamed",
+      "deleted": "Passkey deleted",
+      "deleteError": "Failed to delete the passkey",
+      "loadError": "Failed to load your passkeys.",
+      "requestFailed": "The request failed. Please try again.",
+      "unsupported": "This browser does not support passkeys."
     }
   },
   "social": {

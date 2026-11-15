@@ -136,6 +136,7 @@
       "title": "Willkommen zurück",
       "subtitle": "Melde dich an, um fortzufahren",
       "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "passkeyError": "Die Anmeldung mit dem Passkey ist fehlgeschlagen oder wurde abgebrochen. Bitte versuche es erneut.",
       "bannedError": "Dein Zugang wurde deaktiviert. Bitte wende dich an den Inhaber deiner Organisation.",
       "emailNotAllowedError": "Diese E-Mail-Adresse ist für die Anmeldung nicht freigegeben.",
       "providers": {
@@ -143,6 +144,7 @@
         "microsoft": "Mit Microsoft fortfahren",
         "apple": "Mit Apple fortfahren"
       },
+      "passkey": "Mit Passkey anmelden",
       "lastUsed": "Zuletzt verwendet",
       "termsAgreement": "Mit der Fortsetzung stimmst du unseren {terms} und unserer {privacy} zu.",
       "termsLink": "Nutzungsbedingungen",
@@ -1032,6 +1034,34 @@
       "avatar": "Avatar",
       "change": "Ändern",
       "email": "E-Mail"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Melde dich mit Fingerabdruck, Gesicht oder Geräte-PIN an statt mit einem Drittanbieter-Konto.",
+      "empty": "Du hast noch keine Passkeys.",
+      "add": "Passkey hinzufügen",
+      "addFirst": "Passkey hinzufügen",
+      "addTitle": "Passkey hinzufügen",
+      "addDescription": "Gib dem Passkey einen Namen, damit du das Gerät später erkennst.",
+      "namePlaceholder": "z. B. Arbeitslaptop",
+      "unnamed": "Passkey ohne Namen",
+      "created": "Hinzugefügt am {date}",
+      "rename": "Umbenennen",
+      "renameTitle": "Passkey umbenennen",
+      "renameDescription": "Wähle einen neuen Namen für diesen Passkey.",
+      "renameLabel": "{name} umbenennen",
+      "deleteLabel": "{name} löschen",
+      "deleteConfirm": {
+        "title": "Passkey \"{name}\" löschen?",
+        "message": "Du kannst dich damit nicht mehr anmelden. Andere Anmeldearten funktionieren weiter."
+      },
+      "added": "Passkey hinzugefügt",
+      "renamed": "Passkey umbenannt",
+      "deleted": "Passkey gelöscht",
+      "deleteError": "Der Passkey konnte nicht gelöscht werden",
+      "loadError": "Deine Passkeys konnten nicht geladen werden.",
+      "requestFailed": "Die Anfrage ist fehlgeschlagen. Bitte versuche es erneut.",
+      "unsupported": "Dieser Browser unterstützt keine Passkeys."
     }
   },
   "social": {

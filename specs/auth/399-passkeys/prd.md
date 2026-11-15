@@ -1,6 +1,6 @@
 # Passkeys: sign in without an OAuth round trip (PRD)
 
-> **Status: decided** (2026-11-15). Issue #399.
+> **Status: implemented** (2026-11-15, PR #402). Issue #399.
 
 Users can only sign in through Google, Microsoft or LinkedIn today. This PRD adds passkeys as a
 second way in for users who already have an account. A user adds a passkey once, then signs in with
