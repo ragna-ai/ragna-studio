@@ -17,7 +17,7 @@ export async function sendEmail({ to, locale, email }: SendEmailInput) {
     throw new Error('Email transporter is not configured');
   }
 
-  const { subject, html, plaintext } = await renderTransactionalEmail(locale, email);
+  const { subject, html, plaintext } = await renderTransactionalEmail({ to, locale, email });
 
   return transporter.sendMail({
     from: config.mailFrom,

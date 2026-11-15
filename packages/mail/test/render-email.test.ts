@@ -16,6 +16,8 @@ await cp(sourceTemplates, installedTemplates, { recursive: true });
 
 afterAll(() => rm(scratch, { recursive: true, force: true }));
 
+const to = 'ada@example.test';
+
 const welcome: TransactionalEmail = { id: 'welcome', variables: { name: 'Ada' } };
 const invitation: TransactionalEmail = {
   id: 'invitation',
@@ -40,6 +42,7 @@ interface ExpectedCopy {
   subject: string;
   heading: string;
   paragraph: string;
+  recipientLine: string;
   actionUrl?: string;
 }
 
@@ -50,6 +53,8 @@ const cases: ExpectedCopy[] = [
     subject: 'Welcome to RAGNA Studio',
     heading: 'Welcome, Ada.',
     paragraph: 'Thanks for joining RAGNA Studio.',
+    recipientLine:
+      'This email was sent to ada@example.test because you created a RAGNA Studio account.',
   },
   {
     email: welcome,
@@ -57,6 +62,8 @@ const cases: ExpectedCopy[] = [
     subject: 'Willkommen bei RAGNA Studio',
     heading: 'Willkommen, Ada.',
     paragraph: 'Schön, dass du bei RAGNA Studio bist.',
+    recipientLine:
+      'Diese E-Mail wurde an ada@example.test gesendet, weil du ein Konto bei RAGNA Studio erstellt hast.',
   },
   {
     email: invitation,
@@ -64,6 +71,8 @@ const cases: ExpectedCopy[] = [
     subject: 'Ada invited you to Acme',
     heading: 'Ada invited you to join Acme.',
     paragraph: 'Sign in with this email address to join.',
+    recipientLine:
+      "This email was sent to ada@example.test because Ada invited you. If you didn't expect an invitation, you can ignore it.",
     actionUrl: 'https://app.example.test/invite/1',
   },
   {
@@ -72,6 +81,8 @@ const cases: ExpectedCopy[] = [
     subject: 'Ada hat dich zu Acme eingeladen',
     heading: 'Ada hat dich eingeladen, Acme beizutreten.',
     paragraph: 'Melde dich mit dieser E-Mail-Adresse an.',
+    recipientLine:
+      'Diese E-Mail wurde an ada@example.test gesendet, weil Ada dich eingeladen hat. Wenn du keine Einladung erwartet hast, kannst du sie ignorieren.',
     actionUrl: 'https://app.example.test/invite/1',
   },
   {
@@ -80,6 +91,8 @@ const cases: ExpectedCopy[] = [
     subject: 'A passkey was added to your RAGNA Studio account',
     heading: 'Hi Ada,',
     paragraph: 'A passkey named MacBook was added to your account.',
+    recipientLine:
+      'This email was sent to ada@example.test to let you know about an important change to your account.',
     actionUrl: 'https://app.example.test/settings/passkeys',
   },
   {
@@ -88,6 +101,8 @@ const cases: ExpectedCopy[] = [
     subject: 'Neuer Passkey in deinem Konto bei RAGNA Studio',
     heading: 'Hallo Ada,',
     paragraph: 'Ein Passkey namens MacBook wurde zu deinem Konto hinzugefügt.',
+    recipientLine:
+      'Diese E-Mail wurde an ada@example.test gesendet, um dich über eine wichtige Änderung an deinem Konto zu informieren.',
     actionUrl: 'https://app.example.test/settings/passkeys',
   },
 ];
@@ -95,8 +110,7 @@ const cases: ExpectedCopy[] = [
 describe('renderTransactionalEmail', () => {
   test.each(cases)('$email.id in $locale', async (expected) => {
     const { subject, html, plaintext } = await renderTransactionalEmail(
-      expected.locale,
-      expected.email,
+      { to, locale: expected.locale, email: expected.email },
       installedTemplates,
     );
 
@@ -106,6 +120,7 @@ describe('renderTransactionalEmail', () => {
       expect(output).toContain(expected.heading);
       expect(output).toContain(expected.paragraph);
     }
+    expect(plaintext).toContain(expected.recipientLine);
     if (expected.actionUrl) {
       expect(html).toContain(expected.actionUrl);
     }
@@ -113,12 +128,41 @@ describe('renderTransactionalEmail', () => {
 
   test('escapes HTML in names', async () => {
     const { html } = await renderTransactionalEmail(
-      'en',
-      { id: 'welcome', variables: { name: '<b>Ada</b>' } },
+      { to, locale: 'en', email: { id: 'welcome', variables: { name: '<b>Ada</b>' } } },
       installedTemplates,
     );
 
     expect(html).toContain('&lt;b&gt;Ada&lt;/b&gt;');
     expect(html).not.toContain('<b>Ada</b>');
+  });
+
+  test('escapes HTML in the recipient address', async () => {
+    const { html } = await renderTransactionalEmail(
+      { to: '<b>ada</b>@example.test', locale: 'en', email: welcome },
+      installedTemplates,
+    );
+
+    expect(html).toContain('&lt;b&gt;ada&lt;/b&gt;@example.test');
+    expect(html).not.toContain('<b>ada</b>');
+  });
+
+  test.each(cases)('$email.id in $locale loads no remote files', async (expected) => {
+    const { html } = await renderTransactionalEmail(
+      { to, locale: expected.locale, email: expected.email },
+      installedTemplates,
+    );
+
+    expect(html).not.toMatch(/<img|<link|@font-face|url\(|\ssrc=/i);
+  });
+
+  test.each(cases)('$email.id in $locale uses hex colours and stays small', async (expected) => {
+    const { html } = await renderTransactionalEmail(
+      { to, locale: expected.locale, email: expected.email },
+      installedTemplates,
+    );
+
+    expect(html).not.toMatch(/oklch\(|oklab\(|rgba?\(|hsla?\(|color-mix\(/i);
+    // Gmail clips messages above about 102 KB.
+    expect(new TextEncoder().encode(html).length).toBeLessThan(30_000);
   });
 });

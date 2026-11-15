@@ -70,8 +70,10 @@ in the language of the login page, then the browser's, then German. Settings >
 Language changes it, and the app follows it on every device. Welcome,
 invitation and passkey added emails are sent in the recipient's language. An
 invitation uses the inviter's language. All emails render through one shared
-layout in `@repo/mail`.
-→ [specs/email/413-email-language/prd.md](./email/413-email-language/prd.md)
+layout in `@repo/mail`, styled in brand v2. The layout loads no images or web
+fonts, and its footer names the recipient's address and why the email was sent.
+→ [specs/email/413-email-language/prd.md](./email/413-email-language/prd.md),
+[brand v2 design](./email/414-email-design/prd.md)
 
 ### Credits
 

@@ -15,6 +15,7 @@ export const passkeyAddedContent = {
       heading: `Hi ${userName},`,
       paragraphs: [added, "If this wasn't you, remove it in your passkey settings and sign out."],
       action: { label: 'Open passkey settings', url: settingsUrl },
+      footerReason: 'to let you know about an important change to your account.',
     };
   },
   de: ({ userName, passkeyName, settingsUrl }) => {
@@ -28,6 +29,7 @@ export const passkeyAddedContent = {
         'Warst du das nicht? Entferne ihn in deinen Passkey-Einstellungen und melde dich ab.',
       ],
       action: { label: 'Passkey-Einstellungen öffnen', url: settingsUrl },
+      footerReason: 'um dich über eine wichtige Änderung an deinem Konto zu informieren.',
     };
   },
 } satisfies LocalizedContent<PasskeyAddedVariables>;

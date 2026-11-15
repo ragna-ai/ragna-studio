@@ -12,6 +12,8 @@ export interface TransactionalContent {
   heading: string;
   paragraphs: string[];
   action?: TransactionalAction;
+  /** Why the recipient got this email. Completes "This email was sent to {address} …". */
+  footerReason: string;
 }
 
 /** One content function per locale, so a missing language fails type-check. */
