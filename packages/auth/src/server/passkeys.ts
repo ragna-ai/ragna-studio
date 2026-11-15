@@ -38,7 +38,7 @@ export async function enqueuePasskeyAddedEmail(ctx: AuthHookContext): Promise<vo
         email: session.user.email,
         userName: session.user.name,
         passkeyName: created.data.name ?? 'Passkey',
-        settingsUrl: `${config.appUrl}/settings/profile`,
+        settingsUrl: `${config.appUrl}/settings/sign-in/passkeys`,
       }),
     );
   } catch (error) {

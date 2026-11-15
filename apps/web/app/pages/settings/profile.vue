@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AccountDeletionCard from '~/features/organization/components/AccountDeletionCard.vue';
-import UserPasskeysCard from '~/features/user/components/UserPasskeysCard.vue';
 import UserProfileSettings from '~/features/user/components/UserProfileSettings.vue';
 
 definePageMeta({ layout: 'settings' });
@@ -22,7 +21,6 @@ useHead({ title: t('user.profile.title') });
 
     <div class="space-y-6 px-page pt-6 pb-10">
       <UserProfileSettings />
-      <UserPasskeysCard />
       <AccountDeletionCard />
     </div>
   </SectionWrapper>

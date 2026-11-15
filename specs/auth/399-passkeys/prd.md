@@ -42,7 +42,7 @@ Roles: user.
 As a user, I want to add a passkey to my account, so that I can sign in without going through a
 provider.
 
-- **US-1.1** Given a signed-in user in their profile settings, when they add a passkey and confirm
+- **US-1.1** Given a signed-in user in their sign-in settings, when they add a passkey and confirm
   on their device, then the passkey appears in their list with its name and creation date.
 - **US-1.2** Given a signed-in user adding a passkey, when they cancel the device prompt, then no
   passkey is added and they see that adding was cancelled.
@@ -77,7 +77,7 @@ one I lost.
   in with it is rejected.
 - **US-3.3** Given another user's passkey, when a user tries to rename or delete it, then the
   request is rejected and the passkey is unchanged.
-- **US-3.4** Given a user without passkeys, when they open their profile settings, then they see an
+- **US-3.4** Given a user without passkeys, when they open their sign-in settings, then they see an
   empty state that offers to add one.
 
 ## Testing

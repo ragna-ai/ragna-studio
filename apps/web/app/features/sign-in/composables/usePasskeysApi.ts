@@ -24,7 +24,7 @@ export function useGetPasskeys() {
     queryFn: async () =>
       unwrapAuthResult(
         await authClient.passkey.listUserPasskeys(),
-        t('user.passkeys.requestFailed'),
+        t('signIn.passkeys.requestFailed'),
       ),
   });
 }
@@ -37,7 +37,7 @@ export function useAddPasskey() {
     mutationFn: async (name) =>
       unwrapAuthResult(
         await authClient.passkey.addPasskey({ name }),
-        t('user.passkeys.requestFailed'),
+        t('signIn.passkeys.requestFailed'),
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: passkeyKeys.all }),
@@ -52,7 +52,7 @@ export function useRenamePasskey() {
     mutationFn: async (input) =>
       unwrapAuthResult(
         await authClient.passkey.updatePasskey(input),
-        t('user.passkeys.requestFailed'),
+        t('signIn.passkeys.requestFailed'),
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: passkeyKeys.all }),
@@ -67,7 +67,7 @@ export function useDeletePasskey() {
     mutationFn: async (id) =>
       unwrapAuthResult(
         await authClient.passkey.deletePasskey({ id }),
-        t('user.passkeys.requestFailed'),
+        t('signIn.passkeys.requestFailed'),
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: passkeyKeys.all }),

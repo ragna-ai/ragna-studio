@@ -37,7 +37,7 @@ const form = useForm({
       serverError.value =
         error instanceof Error && error.message
           ? error.message
-          : t('user.passkeys.requestFailed');
+          : t('signIn.passkeys.requestFailed');
     }
   },
 });
@@ -65,7 +65,7 @@ watch(open, (isOpen) => {
               <Input
                 :id="nameInputId"
                 :model-value="state.value"
-                :placeholder="t('user.passkeys.namePlaceholder')"
+                :placeholder="t('signIn.passkeys.namePlaceholder')"
                 @update:model-value="
                   (v: string | number) => field.handleChange(String(v))
                 "

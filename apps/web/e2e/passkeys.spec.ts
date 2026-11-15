@@ -19,13 +19,24 @@ async function addVirtualAuthenticator(page: Page): Promise<void> {
   });
 }
 
+async function openPasskeysSettings(page: Page): Promise<void> {
+  await page.goto('/settings/profile');
+  await page
+    .getByRole('navigation', { name: 'Settings' })
+    .getByRole('link', { name: 'Passkeys' })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Passkeys', level: 1 }),
+  ).toBeVisible();
+}
+
 test.describe('passkeys', () => {
   test('adds a passkey, signs in with it, renames and deletes it', async ({
     page,
   }) => {
     await addVirtualAuthenticator(page);
 
-    await page.goto('/settings/profile');
+    await openPasskeysSettings(page);
     await expect(page.getByText('You have no passkeys yet.')).toBeVisible();
     await page.getByRole('button', { name: 'Add a passkey' }).click();
     await page.getByRole('dialog').getByLabel('Name').fill(PASSKEY_NAME);
@@ -42,7 +53,7 @@ test.describe('passkeys', () => {
     await page.getByRole('button', { name: 'Sign in with a passkey' }).click();
     await expect(page).toHaveURL(/localhost:3100\/$/);
 
-    await page.goto('/settings/profile');
+    await openPasskeysSettings(page);
     await page.getByRole('button', { name: `Rename ${PASSKEY_NAME}` }).click();
     await page
       .getByRole('dialog')

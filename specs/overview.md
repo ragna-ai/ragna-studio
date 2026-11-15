@@ -58,8 +58,8 @@ Sign-in accounts are for sign-in only: one per provider, with the login
 email, and no feature scopes. Feature tokens live in integration
 connections (see Integrations).
 
-Passkeys are an extra sign-in for existing users: added in profile
-settings, bound to the app host, and subject to bans and the email
+Passkeys are an extra sign-in for existing users: added in the
+Sign-in settings, bound to the app host, and subject to bans and the email
 allowlist like OAuth.
 → [specs/auth/399-passkeys/prd.md](./auth/399-passkeys/prd.md)
 

@@ -176,7 +176,7 @@ describe('adding a passkey', () => {
       email: 'owner@example.com',
       userName: expect.any(String),
       passkeyName: 'Work laptop',
-      settingsUrl: `${config.appUrl}/settings/profile`,
+      settingsUrl: `${config.appUrl}/settings/sign-in/passkeys`,
     });
     expect(enqueuedPasskeyEmails()).toHaveLength(1);
   });

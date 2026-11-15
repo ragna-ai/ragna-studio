@@ -1034,34 +1034,6 @@
       "avatar": "Avatar",
       "change": "Ändern",
       "email": "E-Mail"
-    },
-    "passkeys": {
-      "title": "Passkeys",
-      "description": "Melde dich mit Fingerabdruck, Gesicht oder Geräte-PIN an statt mit einem Drittanbieter-Konto.",
-      "empty": "Du hast noch keine Passkeys.",
-      "add": "Passkey hinzufügen",
-      "addFirst": "Passkey hinzufügen",
-      "addTitle": "Passkey hinzufügen",
-      "addDescription": "Gib dem Passkey einen Namen, damit du das Gerät später erkennst.",
-      "namePlaceholder": "z. B. Arbeitslaptop",
-      "unnamed": "Passkey ohne Namen",
-      "created": "Hinzugefügt am {date}",
-      "rename": "Umbenennen",
-      "renameTitle": "Passkey umbenennen",
-      "renameDescription": "Wähle einen neuen Namen für diesen Passkey.",
-      "renameLabel": "{name} umbenennen",
-      "deleteLabel": "{name} löschen",
-      "deleteConfirm": {
-        "title": "Passkey \"{name}\" löschen?",
-        "message": "Du kannst dich damit nicht mehr anmelden. Andere Anmeldearten funktionieren weiter."
-      },
-      "added": "Passkey hinzugefügt",
-      "renamed": "Passkey umbenannt",
-      "deleted": "Passkey gelöscht",
-      "deleteError": "Der Passkey konnte nicht gelöscht werden",
-      "loadError": "Deine Passkeys konnten nicht geladen werden.",
-      "requestFailed": "Die Anfrage ist fehlgeschlagen. Bitte versuche es erneut.",
-      "unsupported": "Dieser Browser unterstützt keine Passkeys."
     }
   },
   "social": {
@@ -2166,6 +2138,7 @@
     "backToApp": "Zurück zur App",
     "groups": {
       "account": "Konto",
+      "signIn": "Anmeldung",
       "organization": "Organisation",
       "integrations": "Integrationen",
       "email": "E-Mail"
@@ -2174,6 +2147,7 @@
       "profile": "Profil",
       "language": "Sprache",
       "credits": "Credits",
+      "passkeys": "Passkeys",
       "general": "Allgemein",
       "members": "Mitglieder",
       "workspaces": "Arbeitsbereiche",
@@ -2207,6 +2181,10 @@
       "usage": {
         "title": "Nutzung",
         "subtitle": "Credit-Nutzung pro Mitglied."
+      },
+      "passkeys": {
+        "title": "Passkeys",
+        "subtitle": "Melde dich mit Fingerabdruck, Gesicht oder Geräte-PIN an."
       }
     }
   },
@@ -2222,6 +2200,36 @@
       "unknownEdgeNode": "Eine Verbindung zeigt auf einen Schritt, den es nicht gibt.",
       "conditionHandle": "Eine Bedingung hat eine Verbindung, die keiner ihrer Ausgänge ist.",
       "cycle": "Der Workflow enthält eine Schleife. Entferne sie, um fortzufahren."
+    }
+  },
+  "signIn": {
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Melde dich mit Fingerabdruck, Gesicht oder Geräte-PIN an statt mit einem Drittanbieter-Konto.",
+      "empty": "Du hast noch keine Passkeys.",
+      "add": "Passkey hinzufügen",
+      "addFirst": "Passkey hinzufügen",
+      "addTitle": "Passkey hinzufügen",
+      "addDescription": "Gib dem Passkey einen Namen, damit du das Gerät später erkennst.",
+      "namePlaceholder": "z. B. Arbeitslaptop",
+      "unnamed": "Passkey ohne Namen",
+      "created": "Hinzugefügt am {date}",
+      "rename": "Umbenennen",
+      "renameTitle": "Passkey umbenennen",
+      "renameDescription": "Wähle einen neuen Namen für diesen Passkey.",
+      "renameLabel": "{name} umbenennen",
+      "deleteLabel": "{name} löschen",
+      "deleteConfirm": {
+        "title": "Passkey \"{name}\" löschen?",
+        "message": "Du kannst dich damit nicht mehr anmelden. Andere Anmeldearten funktionieren weiter."
+      },
+      "added": "Passkey hinzugefügt",
+      "renamed": "Passkey umbenannt",
+      "deleted": "Passkey gelöscht",
+      "deleteError": "Der Passkey konnte nicht gelöscht werden",
+      "loadError": "Deine Passkeys konnten nicht geladen werden.",
+      "requestFailed": "Die Anfrage ist fehlgeschlagen. Bitte versuche es erneut.",
+      "unsupported": "Dieser Browser unterstützt keine Passkeys."
     }
   }
 }

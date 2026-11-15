@@ -38,22 +38,22 @@ which we don't use. 1.8's "user verification also on sign-in" is already in 1.7.
 Functions, no classes, like `organization-invitations.ts`. better-auth calls config and hooks with a
 context; nothing holds state between calls.
 
-| File                                                         | Holds                                                                                                                   |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `packages/auth/src/server/auth.ts`                           | Wiring only: `passkey(passkeyOptions)`, `hooks: { before, after }`, the session hook.                                   |
-| `packages/auth/src/server/passkeys.ts`                       | `passkeyOptions`, the name-limit handler, `enqueuePasskeyAddedEmail`.                                                   |
-| `packages/auth/src/server/login-allowlist.ts`                | `isLoginEmailAllowed(email)`, used by `validateUserInfo`, `validateInvitation`, session hook.                           |
-| `packages/auth/src/server/auth-hooks.ts`                     | `beforeHooks` and `afterHooks`: one middleware each, dispatching by path (see below).                                   |
-| `packages/auth/src/client/passkeys.ts`                       | `passkeyNameSchema` (1 to 64 chars), `PasskeyActions` type. Client-safe, used by server + web.                          |
-| `packages/database/src/schema/passkey.schema.ts`             | `passkeys` table, `user_id` FK `on delete cascade`, unique `credential_id`, in `relations.ts`, migration `db:generate`. |
-| `packages/queue/src/dtos/email-job.dto.ts`                   | `passkeyAddedEmailJobSchema`, `PASSKEY_ADDED_EMAIL_JOB`.                                                                |
-| `packages/mail/src/templates/passkey-added.vue`              | The mail: passkey name, date, link to profile settings.                                                                 |
-| `apps/worker/src/processors/email.processor.ts`              | One new `case`.                                                                                                         |
-| `packages/testing/src/auth/software-authenticator.ts`        | `SoftwareAuthenticator` (see Tests).                                                                                    |
-| `apps/web/app/composables/useSignInRedirect.ts`              | The post-sign-in target (home or MCP authorize resume), moved out of `login.vue`.                                       |
-| `apps/web/app/features/user/composables/usePasskeysApi.ts`   | vue-query over `authClient.passkey.*`, with `unwrapAuthResult`.                                                         |
-| `apps/web/app/features/user/components/UserPasskeysCard.vue` | List, add, rename (dialog), delete. On the profile settings page.                                                       |
-| `apps/web/app/components/auth/AuthPasskeySignInButton.vue`   | Login button; hidden without `'PublicKeyCredential' in window`.                                                         |
+| File                                                          | Holds                                                                                                                   |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `packages/auth/src/server/auth.ts`                            | Wiring only: `passkey(passkeyOptions)`, `hooks: { before, after }`, the session hook.                                   |
+| `packages/auth/src/server/passkeys.ts`                        | `passkeyOptions`, the name-limit handler, `enqueuePasskeyAddedEmail`.                                                   |
+| `packages/auth/src/server/login-allowlist.ts`                 | `isLoginEmailAllowed(email)`, used by `validateUserInfo`, `validateInvitation`, session hook.                           |
+| `packages/auth/src/server/auth-hooks.ts`                      | `beforeHooks` and `afterHooks`: one middleware each, dispatching by path (see below).                                   |
+| `packages/auth/src/client/passkeys.ts`                        | `passkeyNameSchema` (1 to 64 chars), `PasskeyActions` type. Client-safe, used by server + web.                          |
+| `packages/database/src/schema/passkey.schema.ts`              | `passkeys` table, `user_id` FK `on delete cascade`, unique `credential_id`, in `relations.ts`, migration `db:generate`. |
+| `packages/queue/src/dtos/email-job.dto.ts`                    | `passkeyAddedEmailJobSchema`, `PASSKEY_ADDED_EMAIL_JOB`.                                                                |
+| `packages/mail/src/templates/passkey-added.vue`               | The mail: passkey name, date, link to the passkey settings.                                                             |
+| `apps/worker/src/processors/email.processor.ts`               | One new `case`.                                                                                                         |
+| `packages/testing/src/auth/software-authenticator.ts`         | `SoftwareAuthenticator` (see Tests).                                                                                    |
+| `apps/web/app/composables/useSignInRedirect.ts`               | The post-sign-in target (home or MCP authorize resume), moved out of `login.vue`.                                       |
+| `apps/web/app/features/sign-in/composables/usePasskeysApi.ts` | vue-query over `authClient.passkey.*`, with `unwrapAuthResult`.                                                         |
+| `apps/web/app/features/sign-in/components/PasskeysCard.vue`   | List, add, rename (dialog), delete. Page `settings/sign-in/passkeys` in the **Sign-in** settings group.                 |
+| `apps/web/app/components/auth/AuthPasskeySignInButton.vue`    | Login button; hidden without `'PublicKeyCredential' in window`.                                                         |
 
 **Hooks by path.** better-auth takes exactly one `hooks.before` and one `hooks.after` middleware.
 `auth-hooks.ts` holds a typed map from path to handler and one middleware that looks up
