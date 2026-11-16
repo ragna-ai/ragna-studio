@@ -39,7 +39,7 @@ withDefaults(defineProps<HomeOverviewCardProps>(), {
           :to="viewAllTo"
           variant="ghost"
           size="sm"
-          class="text-muted-foreground"
+          class="-mr-1.5 text-muted-foreground"
           trailing-icon="hugeicons:arrow-right-01"
         >
           {{ actionLabel }}

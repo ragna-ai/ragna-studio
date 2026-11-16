@@ -38,10 +38,16 @@ export const buttonVariants = cva(
         true: '',
         false: '',
       },
+      trailing: {
+        true: '',
+        false: '',
+      },
     },
     compoundVariants: [
       { size: 'default', leading: true, class: 'pl-2.5' },
       { size: 'sm', leading: true, class: 'pl-2' },
+      { size: 'default', trailing: true, class: 'pr-2' },
+      { size: 'sm', trailing: true, class: 'pr-1.5' },
     ],
     defaultVariants: {
       variant: 'default',

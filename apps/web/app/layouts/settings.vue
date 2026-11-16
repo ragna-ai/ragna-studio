@@ -40,7 +40,7 @@ const { navGroups } = useSettingsNavItems();
           </nav>
         </SidebarShell>
         <div
-          class="box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
+          class="@container/main box-border flex min-w-0 grow flex-col overflow-hidden rounded-lg border bg-background shadow-xs"
         >
           <main
             id="main"

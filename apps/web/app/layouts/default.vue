@@ -26,7 +26,7 @@ const hasNoWorkspace = computed(
       <div v-else class="flex h-screen overflow-hidden p-shell pl-0">
         <NavSidebar />
         <div
-          class="box-border flex min-w-0 grow overflow-hidden rounded-lg border bg-background shadow-xs"
+          class="@container/main box-border flex min-w-0 grow overflow-hidden rounded-lg border bg-background shadow-xs"
         >
           <SidePanelHost />
           <div class="flex min-w-0 flex-1 flex-col">
