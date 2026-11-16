@@ -162,7 +162,7 @@ watch(isLinkFormOpen, (isOpen) => {
                 trailing-icon="hugeicons:arrow-down-01"
                 variant="ghost"
                 size="sm"
-                class="gap-1 px-2"
+                class="gap-1 pl-2"
                 :aria-label="t('editor.blockType.label')"
               >
                 {{ displayedBlockTypeLabel }}

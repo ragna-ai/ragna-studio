@@ -26,6 +26,7 @@ const slots = useSlots();
 const hasLeading = computed(
   () => props.loading || !!props.leadingIcon || !!slots.leading,
 );
+const hasTrailing = computed(() => !!props.trailingIcon);
 const isDisabled = computed(
   () => props.as === 'button' && (props.disabled || props.loading),
 );
@@ -42,7 +43,15 @@ const iconClass = computed(() => buttonIconClasses[props.size ?? 'default']);
     :disabled="isDisabled || undefined"
     :aria-busy="loading || undefined"
     :class="
-      cn(buttonVariants({ variant, size, leading: hasLeading }), props.class)
+      cn(
+        buttonVariants({
+          variant,
+          size,
+          leading: hasLeading,
+          trailing: hasTrailing,
+        }),
+        props.class,
+      )
     "
   >
     <Icon

@@ -76,7 +76,7 @@ function handleOpenChange(isOpen: boolean) {
         <DialogTitle>{{ t('dataset.rowPanel.title') }}</DialogTitle>
       </DialogHeader>
 
-      <div class="flex flex-col gap-4 overflow-y-auto">
+      <div class="flex flex-col gap-4 overflow-y-auto *:shrink-0">
         <div v-for="column in columns" :key="column.id" class="space-y-1">
           <Label class="text-xs text-muted-foreground">{{ column.name }}</Label>
           <Select

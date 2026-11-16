@@ -127,14 +127,6 @@
   --spacing-topbar-x: calc(var(--spacing-page) - --spacing(2));
 }
 
-@layer base {
-  :root {
-    @variant max-xl {
-      --spacing-page: 2rem;
-    }
-  }
-}
-
 .dark {
   --background: oklch(0.147 0.004 49.25);
   --foreground: oklch(0.985 0.001 106.423);

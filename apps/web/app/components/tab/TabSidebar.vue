@@ -66,7 +66,9 @@ const activeTab = defineModel<string>({ required: true });
               : 'hidden'
           "
         >
-          <div class="flex min-h-0 w-full max-w-160 flex-1 flex-col gap-8">
+          <div
+            class="flex min-h-0 w-full max-w-160 flex-1 flex-col gap-8 *:shrink-0"
+          >
             <slot :name="tab.id" />
           </div>
         </div>
