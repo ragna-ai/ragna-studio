@@ -33,7 +33,7 @@ const { t } = useI18n();
 
 <template>
   <aside
-    class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4"
+    class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4 *:shrink-0"
   >
     <div class="flex items-center justify-between">
       <Badge variant="outline">{{ t(NODE_TYPE_LABEL_KEYS[node.type]) }}</Badge>

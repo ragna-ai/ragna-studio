@@ -104,7 +104,7 @@ function openFullSearch() {
 
     <div
       v-else
-      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2"
+      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2 *:shrink-0"
     >
       <template v-for="group in groups" :key="group.key">
         <div
