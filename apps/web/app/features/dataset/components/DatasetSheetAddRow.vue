@@ -39,7 +39,7 @@ function dataColumnIdOf(column: SheetColumn) {
 
 <template>
   <div
-    class="group flex h-9 flex-none cursor-pointer border-b border-stone-200 hover:bg-stone-100"
+    class="group flex h-10 flex-none cursor-pointer hover:bg-surface-subtle"
     @click="handleAdd()"
   >
     <div
@@ -47,7 +47,7 @@ function dataColumnIdOf(column: SheetColumn) {
       :key="column.id"
       :class="
         cn(
-          'flex flex-none items-center justify-center border-r border-stone-200 bg-stone-50 group-hover:bg-stone-100',
+          'flex flex-none items-center justify-center border-r bg-background group-hover:bg-surface-subtle',
           pinnedClass(column),
         )
       "
@@ -62,10 +62,10 @@ function dataColumnIdOf(column: SheetColumn) {
         :aria-label="t('dataset.sheet.addRow')"
       >
         <PlusIcon
-          class="size-4 stroke-1.5 text-stone-500 group-hover:text-stone-700"
+          class="size-4 stroke-1.5 text-icon group-hover:text-foreground"
         />
       </Button>
     </div>
-    <div class="w-11 flex-none bg-stone-50 group-hover:bg-stone-100" />
+    <div class="w-11 flex-none" />
   </div>
 </template>

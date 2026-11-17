@@ -326,8 +326,10 @@ test('US-4 runs row actions', async ({ page, request }) => {
   await page.getByRole('menuitem', { name: 'Move up' }).click();
   await expectColumnTexts(page, NAME_COLUMN, ['Alice', 'Carol', 'Bob']);
 
-  const addRowButtons = page.getByRole('button', { name: 'Add row' });
-  await page.getByRole('grid').getByRole('button', { name: 'Add row' }).click();
+  const addRowButton = page
+    .getByRole('grid')
+    .getByRole('button', { name: 'Add row' });
+  await addRowButton.click();
   await expect(dataRows(page)).toHaveCount(4);
   await page.keyboard.type('Zed');
   await page.keyboard.press('Enter');
@@ -335,7 +337,7 @@ test('US-4 runs row actions', async ({ page, request }) => {
   await page.reload();
   await expect(cellAt(page, 3, NAME_COLUMN)).toHaveText('Zed');
 
-  await addRowButtons.last().click();
+  await addRowButton.click();
   await expect(dataRows(page)).toHaveCount(5);
   await page.keyboard.press('Escape');
 
@@ -492,4 +494,42 @@ test('US-9 adds a column from the sheet', async ({ page, request }) => {
     page.getByRole('columnheader', { name: /^Notes/ }),
   ).toBeVisible();
   await expect(page.getByText('3 rows · 5 columns')).toBeVisible();
+});
+
+test('renames a dataset in its settings', async ({ page, request }) => {
+  const dataset = await seedPeople(request);
+  await openDataset(page, dataset);
+
+  await page.getByRole('button', { name: 'Dataset settings' }).click();
+  const settings = page.getByRole('dialog', { name: 'Dataset settings' });
+  await settings.getByLabel('Name').fill('Contacts');
+  await settings.getByLabel('Description').fill('People we work with.');
+  await settings.getByRole('button', { name: 'Save' }).click();
+
+  await expect(settings).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Contacts' })).toBeVisible();
+  await expect(page.getByText('People we work with.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Contacts' })).toBeVisible();
+});
+
+test('picks a date from the calendar', async ({ page, request }) => {
+  const dataset = await seedPeople(request);
+  await openDataset(page, dataset);
+  const bornColumn = 2;
+
+  await cellAt(page, 0, bornColumn).dblclick();
+  const calendar = page.getByRole('dialog');
+  await expect(calendar.getByText('March 2026').first()).toBeVisible();
+  await calendar.getByText('15', { exact: true }).click();
+
+  await expect(calendar).toBeHidden();
+  await expect(cellAt(page, 0, bornColumn)).toContainText('15');
+  await page.reload();
+  await expect(cellAt(page, 0, bornColumn)).toContainText('15');
+
+  await cellAt(page, 0, bornColumn).dblclick();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(cellAt(page, 0, bornColumn)).toContainText('15');
 });

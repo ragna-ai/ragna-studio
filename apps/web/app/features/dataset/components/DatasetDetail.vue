@@ -2,6 +2,9 @@
 import type { NewColumnInput } from '~/features/dataset/components/DatasetSheetAddColumnPopover.vue';
 import DatasetColumnManager from '~/features/dataset/components/DatasetColumnManager.vue';
 import DatasetRowPanel from '~/features/dataset/components/DatasetRowPanel.vue';
+import DatasetSettingsSheet, {
+  type DatasetSettingsValue,
+} from '~/features/dataset/components/DatasetSettingsSheet.vue';
 import DatasetSheet from '~/features/dataset/components/DatasetSheet.vue';
 import {
   useCreateDatasetRow,
@@ -39,26 +42,7 @@ const selectedRow = computed(
   () => props.rows.find((row) => row.id === selectedRowId.value) ?? null,
 );
 
-// The settings panel and the column manager are asides on this page; only
-// one shows at a time. The row panel is a modal (it overlays instead of
-// taking layout space) but stays part of the same mutual-exclusion rule so
-// two detail surfaces don't fight for attention. Opening one (from the
-// page's header buttons) closes the others...
-watch(columnManagerOpen, (isOpen) => {
-  if (isOpen) {
-    settingsOpen.value = false;
-    selectedRowId.value = null;
-  }
-});
-
-watch(settingsOpen, (isOpen) => {
-  if (isOpen) {
-    columnManagerOpen.value = false;
-    selectedRowId.value = null;
-  }
-});
-
-// ...and a row disappearing from under the panel (deleted elsewhere, e.g. a
+// A row disappearing from under the panel (deleted elsewhere, e.g. a
 // concurrent edit) closes it gracefully instead of showing a stale/blank form.
 watch(
   () => props.rows,
@@ -79,7 +63,7 @@ const { t } = useI18n();
 // composable in this app (see useGetWorkflow/useGetDataset). The dataset
 // already carries its own workspaceId, so there's no need for a separate prop.
 const datasetId = computed(() => props.dataset.id);
-const { mutateAsync: updateDataset, isPending: isSavingColumns } =
+const { mutateAsync: updateDataset, isPending: isUpdatingDataset } =
   useUpdateDataset();
 const { mutateAsync: createRow } = useCreateDatasetRow(datasetId);
 const { mutateAsync: updateRow } = useUpdateDatasetRow(datasetId);
@@ -95,15 +79,13 @@ async function handleSaveColumns(columns: DatasetColumn[]) {
 }
 
 // A cleared description is persisted as null, not an empty string.
-async function handleSaveSettings(value: {
-  name: string;
-  description: string;
-}) {
+async function handleSaveSettings(value: DatasetSettingsValue) {
   await updateDataset({
     datasetId: props.dataset.id,
     name: value.name,
     description: value.description || null,
   });
+  settingsOpen.value = false;
 }
 
 async function handleAddColumn(column: NewColumnInput) {
@@ -142,9 +124,6 @@ function handleExpandRow(rowId: string) {
     return;
   }
   selectedRowId.value = rowId;
-  // ...and opening the row panel (from the grid) closes the header asides.
-  columnManagerOpen.value = false;
-  settingsOpen.value = false;
 }
 
 // Moving up means "place this row after the one two positions above it"
@@ -187,46 +166,37 @@ async function handleDeleteRow(rowId: string) {
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1">
-    <div
-      class="flex min-h-0 min-w-0 flex-1 flex-col bg-stone-50 px-4 pt-2 pb-4"
-    >
-      <DatasetSheet
-        v-model:column-manager-open="columnManagerOpen"
-        :dataset="dataset"
-        :rows="rows"
-        :is-moving-row="isMovingRow"
-        :expanded-row-id="selectedRowId"
-        :update-cell="handleUpdateCell"
-        :add-row="handleAddRow"
-        @add-column="handleAddColumn"
-        @delete-row="handleDeleteRow"
-        @expand-row="handleExpandRow"
-        @move-row-up="handleMoveRowUp"
-        @move-row-down="handleMoveRowDown"
-      />
-    </div>
-
-    <SettingsAside
-      v-if="settingsOpen"
-      :name="dataset.name"
-      :description="dataset.description ?? ''"
-      :title="t('dataset.detail.settings')"
-      :name-label="t('common.name')"
-      :description-label="t('common.description')"
-      :description-placeholder="t('dataset.detail.descriptionPlaceholder')"
-      :close-label="t('dataset.detail.closeSettings')"
-      @save="handleSaveSettings"
-      @close="settingsOpen = false"
-    />
-    <DatasetColumnManager
-      v-else-if="columnManagerOpen"
-      :columns="dataset.columns"
-      :is-saving="isSavingColumns"
-      @save="handleSaveColumns"
-      @close="columnManagerOpen = false"
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col px-page pt-6">
+    <DatasetSheet
+      v-model:column-manager-open="columnManagerOpen"
+      :dataset="dataset"
+      :rows="rows"
+      :is-moving-row="isMovingRow"
+      :expanded-row-id="selectedRowId"
+      :update-cell="handleUpdateCell"
+      :add-row="handleAddRow"
+      @add-column="handleAddColumn"
+      @delete-row="handleDeleteRow"
+      @expand-row="handleExpandRow"
+      @move-row-up="handleMoveRowUp"
+      @move-row-down="handleMoveRowDown"
     />
   </div>
+
+  <DatasetColumnManager
+    v-model:open="columnManagerOpen"
+    :columns="dataset.columns"
+    :is-saving="isUpdatingDataset"
+    @save="handleSaveColumns"
+  />
+
+  <DatasetSettingsSheet
+    v-model:open="settingsOpen"
+    :name="dataset.name"
+    :description="dataset.description ?? ''"
+    :is-saving="isUpdatingDataset"
+    @save="handleSaveSettings"
+  />
 
   <DatasetRowPanel
     v-if="selectedRow"

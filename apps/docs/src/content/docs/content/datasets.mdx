@@ -32,9 +32,9 @@ Use the up and down buttons to reorder columns. Choose **Save columns** to apply
 
 ## Edit rows in the sheet
 
-A dataset opens as a sheet. Each row has a number, each cell shows its value as plain text, and select values show as a pill. An icon in each column header shows the column type. The row numbers stay in place when the sheet scrolls sideways. The header stays in place when it scrolls down. A heading bar above the sheet shows the dataset name, and a line below it shows the number of rows and columns.
+A dataset opens as a sheet. Each row has a number, each cell shows its value as plain text, and select values show as a pill. An icon in each column header shows the column type. The row numbers stay in place when the sheet scrolls sideways. The header stays in place when it scrolls down. The page header shows the dataset name and description, and a line below the sheet shows the number of rows and columns. To rename the dataset or change its description, open the settings (the gear icon in the page header).
 
-Click a cell to make it active. The active cell has a ring. Nothing opens until the user starts to edit. Click anywhere outside the grid, including the heading bar or the footer, to clear the active cell.
+Click a cell to make it active. The active cell has a ring. Nothing opens until the user starts to edit. Click anywhere outside the grid, including the page header or the footer, to clear the active cell.
 
 | Key                               | Action                                                                  |
 | --------------------------------- | ----------------------------------------------------------------------- |
@@ -48,7 +48,7 @@ Click a cell to make it active. The active cell has a ring. Nothing opens until 
 | **Delete** or **Backspace**       | Clear the value and save at once.                                       |
 | **Shift+F10** or **ContextMenu**  | Open the row menu of the active cell.                                   |
 
-Moving past the edge of the sheet keeps the active cell where it is. If the server rejects a save, the cell shows its old value again and an error message appears.
+A date cell opens a calendar on the month of its date. Pick a day to save it, or press **Escape** to keep the old date. Moving past the edge of the sheet keeps the active cell where it is. If the server rejects a save, the cell shows its old value again and an error message appears.
 
 ### Row menu
 
@@ -60,7 +60,7 @@ Hover the number of a row to open its menu.
 
 While a sort or a filter is active, the row menu shows the hint **Clear sort and filters to move rows**, and moving is not available.
 
-The last row of the sheet has a **+** in its number column. Choose it (**Add row**) to add an empty row above it. The first cell of the new row becomes active. The **Add row** button in the footer below the sheet does the same. A dataset with no columns shows **Add columns** instead, which opens the column manager.
+The last row of the sheet has a **+** in its number column. Choose it (**Add row**) to add an empty row above it. The first cell of the new row becomes active. A dataset with no columns shows **Add columns** instead, which opens the column manager.
 
 The last column header is a **+** button (**Add column**). It opens a small form with a name, a type and, for select columns, the options. An empty name is not saved. The button is disabled when the dataset has 20 columns.
 
@@ -123,7 +123,7 @@ The agent sees the error and can correct itself. Bad data never lands silently i
 
 ## Export
 
-Choose **Export** on the dataset page and pick a format: **CSV**, **Excel**, **PDF** or **Markdown**. The file downloads at once. It holds every column and every row in saved order. Sort, filters and hidden columns do not apply to the export. Dates appear as `dd.mm.yyyy`.
+Choose **Export** (the download icon in the page header) and pick a format: **CSV**, **Excel**, **PDF** or **Markdown**. The file downloads at once. It holds every column and every row in saved order. Sort, filters and hidden columns do not apply to the export. Dates appear as `dd.mm.yyyy`.
 
 ## How agents use datasets
 
