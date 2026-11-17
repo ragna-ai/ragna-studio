@@ -199,16 +199,14 @@ function columnTypeIcon(column: SheetColumn) {
 
 <template>
   <TooltipProvider>
-    <div
-      class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white"
-    >
-      <div class="flex-none border-b border-stone-200">
+    <div class="flex min-h-0 flex-1 flex-col">
+      <div class="flex-none border-b">
         <DatasetSheetToolbar :table="table" :row-count="totalRowCount" />
       </div>
 
       <div
         v-if="!hasColumns"
-        class="flex flex-col items-center justify-center gap-3 p-8 text-sm text-stone-500"
+        class="flex flex-col items-center justify-center gap-3 p-8 text-sm text-muted-foreground"
       >
         <p>{{ t('dataset.sheet.empty.noColumns') }}</p>
         <Button variant="outline" @click="columnManagerOpen = true">
@@ -223,7 +221,7 @@ function columnTypeIcon(column: SheetColumn) {
           :aria-rowcount="sheetRows.length + 2"
           :aria-colcount="headers.length"
           :tabindex="focusedCell ? -1 : 0"
-          class="min-h-0 flex-1 scroll-pt-9 overflow-auto outline-none"
+          class="min-h-0 flex-1 scroll-pt-10 overflow-auto outline-none"
           :style="scrollPaddingStyle"
           @focus.self="handleGridFocus"
           @keydown="handleCellKeydown"
@@ -231,7 +229,7 @@ function columnTypeIcon(column: SheetColumn) {
           <div :style="totalWidthStyle">
             <div
               role="row"
-              class="sticky top-0 z-20 flex h-9 flex-none border-b border-stone-200 bg-stone-50"
+              class="sticky top-0 z-20 flex h-10 flex-none border-b bg-background"
             >
               <div
                 v-for="header in headers"
@@ -246,7 +244,7 @@ function columnTypeIcon(column: SheetColumn) {
                 "
                 :class="
                   cn(
-                    'relative flex flex-none items-center gap-1.5 border-r border-stone-200 bg-stone-50 px-3 text-sm text-stone-600',
+                    'relative flex flex-none items-center gap-1.5 border-r bg-background px-3 text-small text-muted-foreground',
                     pinnedClass(header.column),
                     header.column.getCanSort() && 'cursor-pointer select-none',
                   )
@@ -260,7 +258,7 @@ function columnTypeIcon(column: SheetColumn) {
                 <template v-else>
                   <component
                     :is="columnTypeIcon(header.column)"
-                    class="size-4 shrink-0 stroke-1.5 text-stone-500"
+                    class="size-4 shrink-0 stroke-1.5 text-icon"
                   />
                   <span class="min-w-0 truncate">
                     {{ header.column.columnDef.meta?.column.name }}
@@ -268,7 +266,7 @@ function columnTypeIcon(column: SheetColumn) {
                   <component
                     :is="headerSortIcon(header)"
                     v-if="headerSortIcon(header)"
-                    class="ml-auto size-3.5 shrink-0 stroke-1.5 text-stone-500"
+                    class="ml-auto size-3.5 shrink-0 stroke-1.5 text-icon"
                   />
                 </template>
                 <div
@@ -280,8 +278,8 @@ function columnTypeIcon(column: SheetColumn) {
                       column: header.column.columnDef.meta?.column.name,
                     })
                   "
-                  class="absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none hover:bg-stone-300"
-                  :class="{ 'bg-stone-400': header.column.getIsResizing() }"
+                  class="absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none hover:bg-border-strong"
+                  :class="{ 'bg-border-strong': header.column.getIsResizing() }"
                   @click.stop
                   @mousedown.stop="header.getResizeHandler()($event)"
                   @touchstart.stop="header.getResizeHandler()($event)"
@@ -289,7 +287,7 @@ function columnTypeIcon(column: SheetColumn) {
               </div>
               <div
                 role="columnheader"
-                class="flex w-11 flex-none items-center justify-center bg-stone-50 hover:bg-stone-100"
+                class="flex w-11 flex-none items-center justify-center bg-background hover:bg-surface-subtle"
               >
                 <DatasetSheetAddColumnPopover
                   :disabled="dataset.columns.length >= MAX_COLUMNS_PER_DATASET"
@@ -301,7 +299,7 @@ function columnTypeIcon(column: SheetColumn) {
 
             <div
               v-if="sheetRows.length === 0 && totalRowCount > 0"
-              class="flex flex-none flex-col items-center gap-3 p-8 text-sm text-stone-500"
+              class="flex flex-none flex-col items-center gap-3 p-8 text-sm text-muted-foreground"
             >
               <p>{{ t('dataset.sheet.noMatches') }}</p>
               <Button variant="outline" size="sm" @click="clearView">
@@ -314,7 +312,7 @@ function columnTypeIcon(column: SheetColumn) {
               :key="row.id"
               role="row"
               :aria-rowindex="rowIndex + 2"
-              class="group/row flex h-9 flex-none border-b border-stone-200"
+              class="group/row flex h-10 flex-none border-b"
             >
               <template v-for="cell in row.getVisibleCells()" :key="cell.id">
                 <div
@@ -322,7 +320,7 @@ function columnTypeIcon(column: SheetColumn) {
                   role="rowheader"
                   :class="
                     cn(
-                      'flex flex-none items-center border-r border-stone-200 bg-white group-hover/row:bg-stone-50',
+                      'flex flex-none items-center border-r bg-background group-hover/row:bg-surface-subtle',
                       pinnedClass(cell.column),
                     )
                   "
@@ -352,11 +350,11 @@ function columnTypeIcon(column: SheetColumn) {
                   :tabindex="cell.getTabIndex()"
                   :class="
                     cn(
-                      'relative flex flex-none items-center border-r border-stone-200 px-3 text-sm outline-none group-hover/row:bg-stone-50',
+                      'relative flex flex-none items-center border-r px-3 text-sm outline-none group-hover/row:bg-surface-subtle',
                       pinnedClass(cell.column),
                       cell.getIsFocused()
-                        ? 'bg-stone-50 ring-1 ring-stone-500 ring-inset'
-                        : 'bg-white',
+                        ? 'bg-background ring-2 ring-foreground ring-inset'
+                        : 'bg-background',
                       isEditingCell({
                         rowId: row.id,
                         columnId: cell.column.id,
@@ -387,7 +385,7 @@ function columnTypeIcon(column: SheetColumn) {
                   />
                 </div>
               </template>
-              <div class="w-11 flex-none bg-stone-50 hover:bg-stone-100" />
+              <div class="w-11 flex-none" />
             </div>
 
             <DatasetSheetAddRow
@@ -398,18 +396,7 @@ function columnTypeIcon(column: SheetColumn) {
           </div>
         </div>
 
-        <div
-          class="flex h-12 flex-none items-center justify-between border-t border-stone-200 px-3"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            leading-icon="hugeicons:plus-sign"
-            :loading="isAddingRow"
-            @click="addRowAndEdit()"
-          >
-            {{ t('dataset.sheet.addRow') }}
-          </Button>
+        <div class="flex h-12 flex-none items-center justify-end border-t">
           <span
             class="font-mono text-label font-medium text-muted-foreground uppercase"
           >

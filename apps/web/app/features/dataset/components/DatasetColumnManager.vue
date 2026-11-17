@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownIcon, ArrowUpIcon, Trash2Icon, XIcon } from '@lucide/vue';
+import { ArrowDownIcon, ArrowUpIcon, Trash2Icon } from '@lucide/vue';
 import type {
   DatasetColumn,
   DatasetColumnType,
@@ -16,8 +16,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'save', columns: DatasetColumn[]): void;
-  (e: 'close'): void;
 }>();
+
+const open = defineModel<boolean>('open', { required: true });
 
 // Composables
 const { t } = useI18n();
@@ -26,7 +27,7 @@ const { t } = useI18n();
 // A local draft, edited freely and only pushed back to the server on Save.
 // Retyping a column (e.g. select -> text) leaves existing row values
 // untouched; this panel only ever edits the schema.
-const draft = ref<DatasetColumn[]>(structuredClone(toRaw(props.columns)));
+const draft = ref<DatasetColumn[]>(cloneColumns());
 
 const columnTypes: DatasetColumnType[] = ['text', 'number', 'date', 'select'];
 
@@ -75,115 +76,131 @@ function setOptionsFromText(column: DatasetColumn, text: string) {
     .filter((option) => option.length > 0);
 }
 
+function cloneColumns(): DatasetColumn[] {
+  return structuredClone(toRaw(props.columns));
+}
+
 function handleSave() {
   emit('save', draft.value);
 }
+
+// Hooks
+// Every opening starts from the saved columns, so a cancelled edit never reappears.
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    return;
+  }
+  draft.value = cloneColumns();
+});
 </script>
 
 <template>
-  <aside
-    class="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-l bg-card p-4 *:shrink-0"
-  >
-    <div class="flex items-center justify-between">
-      <p class="text-sm font-semibold">
-        {{ t('dataset.columnManager.title') }}
-      </p>
-      <Button
-        variant="ghost"
-        size="icon"
-        :aria-label="t('common.close')"
-        @click="emit('close')"
-      >
-        <XIcon class="size-4 stroke-1.5" />
-      </Button>
-    </div>
+  <Sheet v-model:open="open">
+    <SheetContent side="right" class="gap-0 p-0">
+      <SheetHeader>
+        <SheetTitle>{{ t('dataset.columnManager.title') }}</SheetTitle>
+        <SheetDescription class="sr-only">
+          {{ t('dataset.columnManager.title') }}
+        </SheetDescription>
+      </SheetHeader>
+      <div class="min-h-0 flex-1 overflow-y-auto p-6">
+        <div class="flex flex-col gap-4">
+          <div
+            v-for="(column, index) in draft"
+            :key="column.id"
+            class="space-y-2 rounded-lg border p-3"
+          >
+            <div class="flex items-center justify-between gap-1">
+              <Input
+                v-model="column.name"
+                :placeholder="t('dataset.columnManager.namePlaceholder')"
+              />
+              <div class="flex shrink-0 items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  :disabled="index === 0"
+                  :aria-label="t('dataset.columnManager.moveUp')"
+                  @click="moveColumn(index, -1)"
+                >
+                  <ArrowUpIcon class="size-4 stroke-1.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  :disabled="index === draft.length - 1"
+                  :aria-label="t('dataset.columnManager.moveDown')"
+                  @click="moveColumn(index, 1)"
+                >
+                  <ArrowDownIcon class="size-4 stroke-1.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  :aria-label="t('dataset.columnManager.removeColumn')"
+                  @click="removeColumn(index)"
+                >
+                  <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
+                </Button>
+              </div>
+            </div>
 
-    <div class="flex flex-col gap-4">
-      <div
-        v-for="(column, index) in draft"
-        :key="column.id"
-        class="space-y-2 rounded-lg border p-3"
-      >
-        <div class="flex items-center justify-between gap-1">
-          <Input
-            v-model="column.name"
-            :placeholder="t('dataset.columnManager.namePlaceholder')"
-          />
-          <div class="flex shrink-0 items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              :disabled="index === 0"
-              :aria-label="t('dataset.columnManager.moveUp')"
-              @click="moveColumn(index, -1)"
+            <Select
+              :model-value="column.type"
+              @update:model-value="
+                (v) => setColumnType(column, v as DatasetColumnType)
+              "
             >
-              <ArrowUpIcon class="size-4 stroke-1.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              :disabled="index === draft.length - 1"
-              :aria-label="t('dataset.columnManager.moveDown')"
-              @click="moveColumn(index, 1)"
-            >
-              <ArrowDownIcon class="size-4 stroke-1.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              :aria-label="t('dataset.columnManager.removeColumn')"
-              @click="removeColumn(index)"
-            >
-              <Trash2Icon class="size-4 stroke-1.5 text-destructive" />
-            </Button>
+              <SelectTrigger class="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="type in columnTypes"
+                  :key="type"
+                  :value="type"
+                >
+                  {{ t(`dataset.columnManager.type.${type}`) }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div v-if="column.type === 'select'">
+              <Label class="mb-1 block text-xs text-muted-foreground">
+                {{ t('dataset.columnManager.optionsLabel') }}
+              </Label>
+              <Input
+                :model-value="optionsText(column)"
+                :placeholder="t('dataset.columnManager.optionsPlaceholder')"
+                @change="
+                  (e: Event) =>
+                    setOptionsFromText(
+                      column,
+                      (e.target as HTMLInputElement).value,
+                    )
+                "
+              />
+            </div>
           </div>
-        </div>
 
-        <Select
-          :model-value="column.type"
-          @update:model-value="
-            (v) => setColumnType(column, v as DatasetColumnType)
-          "
-        >
-          <SelectTrigger class="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="type in columnTypes" :key="type" :value="type">
-              {{ t(`dataset.columnManager.type.${type}`) }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div v-if="column.type === 'select'">
-          <Label class="mb-1 block text-xs text-muted-foreground">
-            {{ t('dataset.columnManager.optionsLabel') }}
-          </Label>
-          <Input
-            :model-value="optionsText(column)"
-            :placeholder="t('dataset.columnManager.optionsPlaceholder')"
-            @change="
-              (e: Event) =>
-                setOptionsFromText(column, (e.target as HTMLInputElement).value)
-            "
-          />
+          <Button
+            variant="outline"
+            class="w-full"
+            leading-icon="hugeicons:add-01"
+            @click="addColumn"
+          >
+            {{ t('dataset.columnManager.addColumn') }}
+          </Button>
         </div>
       </div>
-
-      <Button
-        variant="outline"
-        class="w-full"
-        leading-icon="hugeicons:add-01"
-        @click="addColumn"
-      >
-        {{ t('dataset.columnManager.addColumn') }}
-      </Button>
-    </div>
-
-    <Separator />
-
-    <Button :disabled="isSaving" :loading="isSaving" @click="handleSave">
-      {{ t('dataset.columnManager.save') }}
-    </Button>
-  </aside>
+      <SheetFooter class="justify-end">
+        <Button variant="outline" @click="open = false">
+          {{ t('common.cancel') }}
+        </Button>
+        <Button :disabled="isSaving" :loading="isSaving" @click="handleSave">
+          {{ t('dataset.columnManager.save') }}
+        </Button>
+      </SheetFooter>
+    </SheetContent>
+  </Sheet>
 </template>

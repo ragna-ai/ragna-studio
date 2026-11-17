@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CircleAlertIcon } from '@lucide/vue';
 import type { CellSelectionDirection } from '@tanstack/vue-table';
+import DatasetSheetDateEditor from '~/features/dataset/components/DatasetSheetDateEditor.vue';
 import type { DatasetColumn } from '~/features/dataset/types';
 import { formatNumber } from '~/features/dataset/utils/formatNumber';
 import type { ParsedCellValue } from '~/features/dataset/utils/parseCellValue';
@@ -132,11 +133,17 @@ watch(
         </SelectItem>
       </SelectContent>
     </Select>
+    <DatasetSheetDateEditor
+      v-else-if="column.type === 'date'"
+      v-model:draft="draft"
+      @commit="emit('commit', null)"
+      @cancel="emit('cancel')"
+    />
     <Input
-      v-else-if="column.type === 'number' || column.type === 'date'"
+      v-else-if="column.type === 'number'"
       ref="editorRef"
       v-model="draft"
-      :type="column.type"
+      type="number"
       :placeholder="mismatchRaw"
       class="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
       @keydown="handleEditorKeydown"

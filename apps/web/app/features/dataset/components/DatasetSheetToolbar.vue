@@ -18,7 +18,7 @@ const searchText = ref('');
 </script>
 
 <template>
-  <div class="flex h-11 items-center justify-between gap-2 px-3">
+  <div class="flex h-11 items-center justify-between gap-2">
     <ListSearch
       v-model="searchText"
       :placeholder="t('dataset.sheet.search', { count: rowCount })"

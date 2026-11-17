@@ -69,9 +69,7 @@ function datasetPath(dataset: DatasetListItem): string {
             </ListTitleCell>
           </TableCell>
           <TableCell>
-            <Badge
-              :variant="dataset.origin === 'user' ? 'outline' : 'secondary'"
-            >
+            <Badge variant="secondary">
               {{ t(`dataset.origin.${dataset.origin}`) }}
             </Badge>
           </TableCell>
