@@ -20,6 +20,9 @@ export const buttonVariants = cva(
           'border bg-background shadow-xs hover:bg-surface-subtle dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         ghost:
           'hover:bg-surface-subtle data-[state=open]:bg-surface-subtle aria-expanded:bg-surface-subtle dark:hover:bg-accent/50',
+        /** Ghost on a grey surface (a hovered table row): lifts to the page background with an outline when hovered or open. */
+        'ghost-raised':
+          'border border-transparent hover:border-border hover:bg-background data-[state=open]:border-border data-[state=open]:bg-background dark:hover:border-input dark:hover:bg-input/50 dark:data-[state=open]:border-input dark:data-[state=open]:bg-input/50',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {

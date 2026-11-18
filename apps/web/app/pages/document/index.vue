@@ -5,6 +5,7 @@ import DocumentCreateDialog from '~/features/document/components/DocumentCreateD
 import DocumentTable, {
   type MoveDocumentPayload,
 } from '~/features/document/components/DocumentTable.vue';
+import DocumentRenameDialog from '~/features/document/components/DocumentRenameDialog.vue';
 import FolderNameDialog from '~/features/document/components/FolderNameDialog.vue';
 import { ROOT_FOLDER_FILTER } from '~/features/document/composables/queryKeys';
 import {
@@ -17,7 +18,7 @@ import {
   useGetFolder,
   useGetFolders,
 } from '~/features/document/composables/useFolderApi';
-import type { Folder } from '~/features/document/types';
+import type { Document, Folder } from '~/features/document/types';
 import { isNotFoundError } from '~/lib/api-error';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 
@@ -26,6 +27,8 @@ const isCreateDialogOpen = ref(false);
 const isCreateFolderOpen = ref(false);
 const folderToRename = ref<Folder | null>(null);
 const isRenameFolderOpen = ref(false);
+const documentToRename = ref<Document | null>(null);
+const isRenameDocumentOpen = ref(false);
 
 // Composables
 // A workspace is always active: activeWorkspaceId
@@ -41,8 +44,12 @@ const openFolderId = computed(() => {
 });
 const documentFilter = computed(() => openFolderId.value ?? ROOT_FOLDER_FILTER);
 
-const { data: documentsData, error: documentsError } =
-  useGetDocumentsInFolder(documentFilter);
+const {
+  data: documentsData,
+  error: documentsError,
+  isPending: isDocumentsPending,
+  refetch,
+} = useGetDocumentsInFolder(documentFilter);
 const { data: foldersData } = useGetFolders();
 const { data: openFolderData, error: openFolderError } =
   useGetFolder(openFolderId);
@@ -81,6 +88,11 @@ function openFolder(folderId: string) {
 function startRenameFolder(folder: Folder) {
   folderToRename.value = folder;
   isRenameFolderOpen.value = true;
+}
+
+function startRenameDocument(document: Document) {
+  documentToRename.value = document;
+  isRenameDocumentOpen.value = true;
 }
 
 async function handleDeleteFolder(folder: Folder) {
@@ -138,8 +150,8 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
                   {{ t('folder.newFolder') }}
                 </Button>
                 <Button
-                  variant="outline"
                   :disabled="!activeWorkspaceId"
+                  leading-icon="hugeicons:plus-sign"
                   @click="isCreateDialogOpen = true"
                 >
                   {{ t('document.list.newDocument') }}
@@ -150,11 +162,8 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
         </template>
       </Heading>
 
-      <div class="space-y-4 px-page pt-6">
-        <div
-          v-if="!activeWorkspaceId"
-          class="rounded-lg border p-6 text-sm text-muted-foreground"
-        >
+      <div class="px-page pt-6">
+        <div v-if="!activeWorkspaceId" class="text-small text-muted-foreground">
           {{ t('document.list.loading') }}
         </div>
 
@@ -169,49 +178,62 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
           </Button>
         </div>
 
-        <template v-else-if="documentsData">
-          <div
-            v-if="isListEmpty"
-            class="space-y-3 rounded-lg border p-6 text-sm text-muted-foreground"
-          >
-            <p>
+        <ListErrorAlert
+          v-else-if="documentsError && !documentsData"
+          :title="t('document.list.loadError.title')"
+          :description="t('document.list.loadError.description')"
+          @retry="refetch()"
+        />
+
+        <Empty v-else-if="documentsData && isListEmpty">
+          <EmptyMedia variant="icon">
+            <Icon name="hugeicons:file-02" />
+          </EmptyMedia>
+          <EmptyHeader>
+            <EmptyTitle>
               {{
                 openFolderId
                   ? t('folder.emptyFolder')
                   : t('document.list.emptyWorkspace')
               }}
-            </p>
+            </EmptyTitle>
+            <EmptyDescription>
+              {{ t('document.list.emptyDescription') }}
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
             <div class="flex gap-2">
-              <Button variant="outline" @click="isCreateDialogOpen = true">
+              <Button
+                leading-icon="hugeicons:plus-sign"
+                @click="isCreateDialogOpen = true"
+              >
                 {{ t('document.list.newDocument') }}
               </Button>
               <Button
                 v-if="!openFolderId"
                 variant="outline"
+                leading-icon="hugeicons:folder-add"
                 @click="isCreateFolderOpen = true"
               >
                 {{ t('folder.newFolder') }}
               </Button>
             </div>
-          </div>
-          <DocumentTable
-            v-else
-            :documents="documents"
-            :folder-rows="folderRows"
-            :move-targets="folders"
-            @open-folder="openFolder"
-            @rename-folder="startRenameFolder"
-            @delete-folder="handleDeleteFolder"
-            @delete-document="handleDeleteDocument"
-            @move-document="handleMoveDocument"
-          />
-        </template>
+          </EmptyContent>
+        </Empty>
 
-        <div v-else-if="documentsError">
-          <p class="text-sm text-stone-500">
-            {{ documentsError.message || t('document.list.loadError') }}
-          </p>
-        </div>
+        <DocumentTable
+          v-else
+          :documents="documents"
+          :folder-rows="folderRows"
+          :move-targets="folders"
+          :is-loading="isDocumentsPending"
+          @open-folder="openFolder"
+          @rename-folder="startRenameFolder"
+          @rename-document="startRenameDocument"
+          @delete-folder="handleDeleteFolder"
+          @delete-document="handleDeleteDocument"
+          @move-document="handleMoveDocument"
+        />
       </div>
 
       <template v-if="activeWorkspaceId">
@@ -224,6 +246,10 @@ function handleMoveDocument(payload: MoveDocumentPayload) {
         <FolderNameDialog
           v-model:open="isRenameFolderOpen"
           :folder="folderToRename ?? undefined"
+        />
+        <DocumentRenameDialog
+          v-model:open="isRenameDocumentOpen"
+          :document="documentToRename"
         />
       </template>
     </SectionWrapper>

@@ -40,7 +40,7 @@ useHead({
       v-if="!activeWorkspaceId"
       class="flex h-full items-center justify-center"
     >
-      <p class="text-sm text-stone-500">
+      <p class="text-sm text-muted-foreground">
         {{ t('document.list.loading') }}
       </p>
     </div>
@@ -48,7 +48,7 @@ useHead({
       v-else-if="documentError"
       class="flex h-full items-center justify-center"
     >
-      <p class="text-sm text-stone-500">
+      <p class="text-sm text-muted-foreground">
         {{ documentError.message || t('document.editor.loadError') }}
       </p>
     </div>

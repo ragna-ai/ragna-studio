@@ -75,15 +75,6 @@ onScopeDispose(() => chatStore.setChat());
         </template>
         <template #right>
           <ChatAgentChip v-if="chatAgent" :agent="chatAgent" />
-          <Button
-            variant="ghost"
-            size="icon"
-            class="text-icon"
-            aria-disabled="true"
-            :aria-label="$t('nav.topBar.moreActions')"
-          >
-            <Icon name="hugeicons:more-horizontal" class="size-4" />
-          </Button>
         </template>
       </NavTopBar>
     </template>

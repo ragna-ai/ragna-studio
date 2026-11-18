@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { CornerUpLeftIcon, SaveCheckIcon, SavePenIcon } from '@lucide/vue';
+import { CornerUpLeftIcon } from '@lucide/vue';
+import SaveStatusButton, {
+  type SaveStatus,
+} from '~/components/SaveStatusButton.vue';
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
@@ -22,7 +25,8 @@ const taskId = computed(() => route.params.taskId as string);
 // Refs
 const title = ref('');
 const isTitleDirty = ref(false);
-const descriptionSaveStatus = ref<'saved' | 'saving'>('saved');
+const hasTitleSaveFailed = ref(false);
+const descriptionSaveStatus = ref<SaveStatus>('saved');
 const descriptionEditorRef = useTemplateRef('descriptionEditorRef');
 
 // Composables
@@ -36,6 +40,19 @@ const { mutateAsync: deleteTask } = useDeleteTask();
 
 // Computed
 const task = computed(() => taskData.value?.task);
+const titleSaveStatus = computed<SaveStatus>(() => {
+  if (hasTitleSaveFailed.value) {
+    return 'failed';
+  }
+  return isTitleDirty.value ? 'saving' : 'saved';
+});
+const saveStatus = computed<SaveStatus>(() => {
+  const statuses = [titleSaveStatus.value, descriptionSaveStatus.value];
+  if (statuses.includes('failed')) {
+    return 'failed';
+  }
+  return statuses.includes('saving') ? 'saving' : 'saved';
+});
 const labels = computed(() => labelsData.value?.taskLabels ?? []);
 
 // Reads from the `title` ref (not `task.value.title`) so the trail stays live
@@ -64,43 +81,54 @@ useHead({
 });
 
 // Functions
-// Same debounced/blur autosave contract as the description editor: keeps
-// typing feeling instant while the title field never has a separate
-// edit/view toggle to invoke first.
-const debouncedSaveTitle = useDebounceFn(() => {
-  if (!task.value) {
+// Same autosave contract as the description editor: keeps typing feeling
+// instant while the title field never has a separate edit/view toggle.
+const { start: scheduleTitleSave, stop: cancelScheduledTitleSave } =
+  useTimeoutFn(saveTitle, 1000, { immediate: false });
+
+function saveTitle() {
+  cancelScheduledTitleSave();
+  if (!task.value || !isTitleDirty.value) {
     return;
   }
+  const savedTitle = title.value;
   updateTask(
-    { taskId: task.value.id, title: title.value },
-    { onSuccess: () => (isTitleDirty.value = false) },
+    { taskId: task.value.id, title: savedTitle },
+    {
+      onSuccess: () => {
+        hasTitleSaveFailed.value = false;
+        if (title.value === savedTitle) {
+          isTitleDirty.value = false;
+        }
+      },
+      onError: () => {
+        hasTitleSaveFailed.value = true;
+      },
+    },
   );
-}, 1000);
+}
+
+function saveAll() {
+  saveTitle();
+  descriptionEditorRef.value?.saveNow();
+}
 
 function handleTitleInput(event: Event) {
   title.value = (event.target as HTMLInputElement).value;
   isTitleDirty.value = true;
-  debouncedSaveTitle();
-}
-
-function commitTitleNow() {
-  if (!task.value || !isTitleDirty.value) {
-    return;
-  }
-  updateTask(
-    { taskId: task.value.id, title: title.value },
-    { onSuccess: () => (isTitleDirty.value = false) },
-  );
+  hasTitleSaveFailed.value = false;
+  scheduleTitleSave();
 }
 
 function handleTitleEnter() {
-  commitTitleNow();
+  saveTitle();
   descriptionEditorRef.value?.focus();
 }
 
 // Flushes a pending title edit immediately on navigation away instead of
 // losing it to the still-pending debounce (document editor pattern).
 onBeforeUnmount(() => {
+  cancelScheduledTitleSave();
   if (isTitleDirty.value && task.value) {
     updateTask({ taskId: task.value.id, title: title.value });
   }
@@ -126,18 +154,15 @@ async function handleDelete() {
 </script>
 
 <template>
-  <PagePanel :crumbs="crumbs">
+  <PagePanel>
+    <template #header>
+      <NavTopBar :crumbs="crumbs">
+        <template #right>
+          <SaveStatusButton v-if="task" :status="saveStatus" @save="saveAll" />
+        </template>
+      </NavTopBar>
+    </template>
     <div v-if="task" class="flex h-full flex-col">
-      <header class="flex items-center justify-end border-b p-4">
-        <div class="shrink-0 text-muted-foreground">
-          <SavePenIcon
-            v-if="descriptionSaveStatus === 'saving'"
-            class="size-4 stroke-1.5"
-          />
-          <SaveCheckIcon v-else class="size-4 stroke-1.5" />
-        </div>
-      </header>
-
       <div class="flex min-h-0 flex-1 overflow-hidden">
         <div class="min-h-0 flex-1 overflow-y-auto p-6">
           <div class="mx-auto max-w-3xl space-y-4">
@@ -161,7 +186,7 @@ async function handleDelete() {
                 :aria-label="t('task.detail.rename')"
                 class="w-full truncate rounded-sm border-none bg-transparent p-0 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
                 @input="handleTitleInput"
-                @blur="commitTitleNow"
+                @blur="saveTitle"
                 @keydown.enter.prevent="handleTitleEnter"
               />
             </h1>
@@ -193,12 +218,14 @@ async function handleDelete() {
       </div>
     </div>
     <div v-else-if="taskError" class="flex h-full items-center justify-center">
-      <p class="text-sm text-stone-500">
+      <p class="text-sm text-muted-foreground">
         {{ taskError.message || t('task.detail.loadError') }}
       </p>
     </div>
     <div v-else class="flex h-full items-center justify-center">
-      <p class="text-sm text-stone-500">{{ t('task.detail.loading') }}</p>
+      <p class="text-sm text-muted-foreground">
+        {{ t('task.detail.loading') }}
+      </p>
     </div>
   </PagePanel>
 </template>

@@ -14,7 +14,7 @@ const props = defineProps<ListTableProps>();
   <Table
     :class="
       cn(
-        '[&_td:first-child]:pl-0 [&_td:last-child]:pr-0 [&_th:first-child]:pl-0 [&_th:last-child]:pr-0',
+        'table-fixed [&_td:first-child]:pl-0 [&_td:last-child]:pr-0 [&_th:first-child]:pl-0 [&_th:last-child]:pr-0',
         props.class,
       )
     "

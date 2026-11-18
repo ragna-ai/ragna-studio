@@ -36,7 +36,7 @@ const { t } = useI18n();
       <Tooltip v-if="primaryAction">
         <TooltipTrigger as-child>
           <Button
-            variant="ghost"
+            variant="ghost-raised"
             size="icon-sm"
             :leading-icon="primaryAction.icon"
             :aria-label="primaryAction.label"
@@ -49,7 +49,7 @@ const { t } = useI18n();
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
         <Button
-          variant="ghost"
+          variant="ghost-raised"
           size="icon-sm"
           leading-icon="hugeicons:more-vertical"
           :aria-label="t('common.actions')"

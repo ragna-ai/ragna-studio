@@ -208,3 +208,37 @@ test('creates a document in no folder from the top level', async ({
   const created = await fetchDocument(request, documentIdFromUrl(page));
   expect(created.folderId).toBeNull();
 });
+
+test('renames a document from the list', async ({ page, request }) => {
+  const title = uniqueName('Before');
+  const newTitle = uniqueName('After');
+  await seedDocument(request, title, null);
+  await page.goto('/document');
+
+  const row = page.getByRole('row').filter({ hasText: title });
+  await row.getByRole('button', { name: 'Actions' }).click();
+  await page.getByRole('menuitem', { name: 'Rename document' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name').fill(newTitle);
+  await dialog.getByRole('button', { name: 'Save' }).click();
+
+  await expect(page.getByText(newTitle)).toBeVisible();
+  await expect(page.getByText(title)).toHaveCount(0);
+});
+
+test('renames a folder from the list', async ({ page, request }) => {
+  const name = uniqueName('Before');
+  const newName = uniqueName('After');
+  await seedFolder(request, name);
+  await page.goto('/document');
+
+  const row = page.getByRole('row').filter({ hasText: name });
+  await row.getByRole('button', { name: 'Actions' }).click();
+  await page.getByRole('menuitem', { name: 'Rename folder' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name').fill(newName);
+  await dialog.getByRole('button', { name: 'Save' }).click();
+
+  await expect(page.getByText(newName)).toBeVisible();
+  await expect(page.getByText(name)).toHaveCount(0);
+});

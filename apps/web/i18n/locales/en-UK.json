@@ -1,5 +1,10 @@
 {
   "common": {
+    "saveStatus": {
+      "saved": "Saved",
+      "saving": "Saving...",
+      "failed": "Not saved. Click to retry."
+    },
     "settings": "Settings",
     "descriptionPlaceholder": "Add a description...",
     "dismiss": "Dismiss",
@@ -58,7 +63,6 @@
     "search": "Search",
     "topBar": {
       "label": "Top bar",
-      "favorite": "Add to favourites",
       "moreActions": "More actions"
     },
     "userMenu": {
@@ -693,7 +697,11 @@
       "newWorkflow": "New workflow",
       "scheduled": "Scheduled: {cron} ({timezone})",
       "empty": "No workflows yet.",
-      "loadError": "An error occurred while fetching the workflows.",
+      "loadError": {
+        "title": "Workflows couldn't be loaded",
+        "description": "Something went wrong while loading your workflows. Try again."
+      },
+      "emptyDescription": "Create a workflow to automate multi-step tasks.",
       "status": {
         "published": "Published",
         "draft": "Draft"
@@ -1359,14 +1367,19 @@
       "saveFailed": "Failed to save document",
       "deleted": "Document deleted",
       "deleteFailed": "Failed to delete document",
-      "exportFailed": "Failed to export document"
+      "exportFailed": "Failed to export document",
+      "renamed": "Document renamed"
     },
     "list": {
       "title": "Documents",
       "subtitle": "Notes you and your agents can create and edit.",
       "newDocument": "New document",
       "selectWorkspace": "Select a workspace above to view its documents.",
-      "loadError": "Failed to load documents.",
+      "loadError": {
+        "title": "Documents couldn't be loaded",
+        "description": "Something went wrong while loading your documents. Try again."
+      },
+      "emptyDescription": "Create a document or a folder to get started.",
       "loading": "Loading documents...",
       "noFolder": "No folder",
       "table": {
@@ -1389,15 +1402,18 @@
       "namePlaceholder": "Untitled document",
       "folderNone": "No folder"
     },
+    "renameDialog": {
+      "title": "Rename document"
+    },
     "editor": {
       "title": "Document",
       "loadError": "Failed to load the document.",
       "loading": "Loading document...",
       "rename": "Rename document",
       "contentPlaceholder": "Start writing, or type / for commands",
-      "saveStatus": {
-        "saved": "Saved",
-        "saving": "Saving..."
+      "actions": {
+        "rename": "Rename…",
+        "download": "Download"
       },
       "export": {
         "button": "Export",
@@ -1417,6 +1433,7 @@
       "deleted": "Folder deleted",
       "deleteFailed": "Failed to delete folder"
     },
+    "documentCount": "No documents | 1 document | {count} documents",
     "newFolder": "New folder",
     "rename": "Rename folder",
     "delete": "Delete folder",

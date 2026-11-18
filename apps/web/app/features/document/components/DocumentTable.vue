@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  FileTextIcon,
-  FolderIcon,
-  FolderInputIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  Trash2Icon,
-} from '@lucide/vue';
+import DocumentMoveSubmenu from '~/features/document/components/DocumentMoveSubmenu.vue';
 import type { Document, Folder } from '~/features/document/types';
 
 export interface MoveDocumentPayload {
@@ -21,6 +14,7 @@ interface Props {
   folderRows: Folder[];
   /** Targets offered by the "Move to folder" menu. */
   moveTargets: Folder[];
+  isLoading: boolean;
 }
 defineProps<Props>();
 
@@ -28,6 +22,7 @@ defineProps<Props>();
 interface Emits {
   'open-folder': [folderId: string];
   'rename-folder': [folder: Folder];
+  'rename-document': [document: Document];
   'delete-folder': [folder: Folder];
   'delete-document': [documentId: string];
   'move-document': [payload: MoveDocumentPayload];
@@ -46,53 +41,56 @@ function authorName(document: Document): string {
     t('organization.formerMember')
   );
 }
+
+function documentPath(document: Document): string {
+  return `/document/${document.id}`;
+}
 </script>
 
 <template>
-  <Table>
+  <ListTable>
     <TableHeader>
-      <TableRow>
-        <TableHead class="w-12">&nbsp;</TableHead>
+      <TableRow class="hover:bg-transparent">
         <TableHead>{{ t('common.name') }}</TableHead>
-        <TableHead>{{ t('document.list.table.author') }}</TableHead>
-        <TableHead>{{ t('common.updated') }}</TableHead>
-        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
+        <TableHead class="w-45">{{
+          t('document.list.table.author')
+        }}</TableHead>
+        <TableHead class="w-45">{{ t('common.updated') }}</TableHead>
+        <TableHead class="w-10">
+          <span class="sr-only">{{ t('common.actions') }}</span>
+        </TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableRow
-        v-for="folder in folderRows"
-        :key="folder.id"
-        class="cursor-pointer"
-        @click="emit('open-folder', folder.id)"
-      >
-        <TableCell class="w-12">
-          <FolderIcon class="size-4 stroke-1.5" />
-        </TableCell>
-        <TableCell>
-          <span class="text-sm font-semibold">{{ folder.name }}</span>
-          <span class="ml-2 text-xs text-muted-foreground">{{
-            folder.documentCount
-          }}</span>
-        </TableCell>
-        <TableCell />
-        <TableCell class="whitespace-nowrap">{{
-          formatDateTime(folder.updatedAt)
-        }}</TableCell>
-        <TableCell class="text-right whitespace-nowrap" @click.stop>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                :aria-label="t('folder.actions', { name: folder.name })"
-              >
-                <MoreVerticalIcon class="size-4 stroke-1.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent size="sm" align="end">
+      <ListSkeletonRows
+        v-if="isLoading"
+        :columns="['title', 'bar', 'bar', 'none']"
+      />
+      <template v-else>
+        <TableRow
+          v-for="folder in folderRows"
+          :key="folder.id"
+          class="h-14 cursor-pointer"
+          @click="emit('open-folder', folder.id)"
+        >
+          <TableCell>
+            <ListTitleCell
+              :title="folder.name"
+              :description="t('folder.documentCount', folder.documentCount)"
+            >
+              <template #lead>
+                <Icon name="hugeicons:folder-01" class="size-4 text-icon" />
+              </template>
+            </ListTitleCell>
+          </TableCell>
+          <TableCell />
+          <TableCell class="text-small text-muted-foreground">
+            {{ formatDateTime(folder.updatedAt) }}
+          </TableCell>
+          <TableCell>
+            <ListRowActions>
               <DropdownMenuItem @click="emit('rename-folder', folder)">
-                <PencilIcon class="stroke-1.5" />
+                <Icon name="hugeicons:pencil-edit-02" />
                 {{ t('folder.rename') }}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -100,90 +98,61 @@ function authorName(document: Document): string {
                 variant="destructive"
                 @click="emit('delete-folder', folder)"
               >
-                <Trash2Icon class="stroke-1.5" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('folder.delete') }}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
+            </ListRowActions>
+          </TableCell>
+        </TableRow>
 
-      <TableRow
-        v-for="document in documents"
-        :key="document.id"
-        class="cursor-pointer"
-        @click="navigateTo(`/document/${document.id}`)"
-      >
-        <TableCell class="w-12">
-          <FileTextIcon class="size-4 stroke-1.5" />
-        </TableCell>
-        <TableCell>
-          <span class="text-sm font-semibold">{{ document.title }}</span>
-        </TableCell>
-        <TableCell class="text-sm whitespace-nowrap">{{
-          authorName(document)
-        }}</TableCell>
-        <TableCell class="whitespace-nowrap">{{
-          formatDateTime(document.updatedAt)
-        }}</TableCell>
-        <TableCell class="text-right whitespace-nowrap" @click.stop>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                :aria-label="
-                  t('document.list.item.actions', { title: document.title })
+        <TableRow
+          v-for="document in documents"
+          :key="document.id"
+          class="h-14 cursor-pointer"
+          @click="navigateTo(documentPath(document))"
+        >
+          <TableCell>
+            <ListTitleCell :title="document.title" :to="documentPath(document)">
+              <template #lead>
+                <Icon name="hugeicons:file-02" class="size-4 text-icon" />
+              </template>
+            </ListTitleCell>
+          </TableCell>
+          <TableCell class="text-small text-muted-foreground">
+            {{ authorName(document) }}
+          </TableCell>
+          <TableCell class="text-small text-muted-foreground">
+            {{ formatDateTime(document.updatedAt) }}
+          </TableCell>
+          <TableCell>
+            <ListRowActions>
+              <DropdownMenuItem @click="emit('rename-document', document)">
+                <Icon name="hugeicons:pencil-edit-02" />
+                {{ t('document.editor.rename') }}
+              </DropdownMenuItem>
+              <DocumentMoveSubmenu
+                :current-folder-id="document.folderId"
+                :folders="moveTargets"
+                @move="
+                  (folderId) =>
+                    emit('move-document', {
+                      documentId: document.id,
+                      folderId,
+                    })
                 "
-              >
-                <MoreVerticalIcon class="size-4 stroke-1.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent size="sm" align="end">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <FolderInputIcon class="stroke-1.5" />
-                  {{ t('document.list.item.moveToFolder') }}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem
-                    :disabled="document.folderId === null"
-                    @click="
-                      emit('move-document', {
-                        documentId: document.id,
-                        folderId: null,
-                      })
-                    "
-                  >
-                    {{ t('document.list.noFolder') }}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    v-for="target in moveTargets"
-                    :key="target.id"
-                    :disabled="document.folderId === target.id"
-                    @click="
-                      emit('move-document', {
-                        documentId: document.id,
-                        folderId: target.id,
-                      })
-                    "
-                  >
-                    {{ target.name }}
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+              />
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
                 @click="emit('delete-document', document.id)"
               >
-                <Trash2Icon class="stroke-1.5" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('document.list.item.delete') }}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
+            </ListRowActions>
+          </TableCell>
+        </TableRow>
+      </template>
     </TableBody>
-  </Table>
+  </ListTable>
 </template>
