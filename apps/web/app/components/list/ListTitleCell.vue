@@ -11,7 +11,9 @@ defineProps<ListTitleCellProps>();
 
 <template>
   <div class="flex min-w-0 items-center gap-3">
-    <slot name="lead" />
+    <span v-if="$slots.lead" class="flex shrink-0">
+      <slot name="lead" />
+    </span>
     <div class="flex min-w-0 flex-col">
       <NuxtLinkLocale
         v-if="to"

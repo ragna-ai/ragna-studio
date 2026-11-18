@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import {
-  ClockIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  Trash2Icon,
-  WorkflowIcon,
-} from '@lucide/vue';
 import WorkflowSchedulePausedBadge from '~/features/workflow/components/WorkflowSchedulePausedBadge.vue';
 import type { Workflow } from '~/features/workflow/types';
 
-// Imports
-
 interface Props {
   workflows: Workflow[];
+  isLoading: boolean;
 }
 
 // Props
@@ -23,122 +15,118 @@ const emit = defineEmits<{
   (e: 'delete-workflow', workflowId: string): void;
 }>();
 
-// Refs
-
 // Composables
 const { t } = useI18n();
 const { formatDateTime } = useDateTimeFormat();
 
-// Computed
-
 // Functions
-
-// Hooks
+function workflowPath(workflow: Workflow): string {
+  return `/workflow/${workflow.id}`;
+}
 </script>
 
 <template>
-  <Table>
+  <ListTable>
     <TableHeader>
-      <TableRow>
-        <TableHead>&nbsp;</TableHead>
+      <TableRow class="hover:bg-transparent">
         <TableHead>{{ t('common.name') }}</TableHead>
-        <TableHead>{{ t('common.status') }}</TableHead>
-        <TableHead>{{ t('common.updated') }}</TableHead>
-        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
+        <TableHead class="w-70">{{ t('common.status') }}</TableHead>
+        <TableHead class="w-45">{{ t('common.updated') }}</TableHead>
+        <TableHead class="w-10">
+          <span class="sr-only">{{ t('common.actions') }}</span>
+        </TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <ListEmptyRow v-if="workflows.length === 0" :colspan="5">
-        {{ t('workflow.list.empty') }}
-      </ListEmptyRow>
-      <TableRow
-        v-for="workflow in workflows"
-        :key="workflow.id"
-        class="cursor-pointer"
-        @click="navigateTo(`/workflow/${workflow.id}`)"
-      >
-        <TableCell class="w-12">
-          <WorkflowIcon class="size-4 stroke-1.5" />
-        </TableCell>
-        <TableCell>
-          <div class="text-sm font-semibold">
-            {{ workflow.name }}
-          </div>
-          <div
-            v-if="workflow.description"
-            class="max-w-80 truncate text-xs text-muted-foreground"
-          >
-            {{ workflow.description }}
-          </div>
-        </TableCell>
-        <TableCell>
-          <div class="flex items-center gap-1.5">
-            <Badge
-              :variant="workflow.publishedDefinition ? 'default' : 'secondary'"
+      <ListSkeletonRows
+        v-if="isLoading"
+        :columns="['title', 'bar', 'bar', 'none']"
+        tall
+      />
+      <template v-else>
+        <TableRow
+          v-for="workflow in workflows"
+          :key="workflow.id"
+          class="h-14 cursor-pointer"
+          @click="navigateTo(workflowPath(workflow))"
+        >
+          <TableCell>
+            <ListTitleCell
+              :title="workflow.name"
+              :description="workflow.description ?? undefined"
+              :to="workflowPath(workflow)"
             >
-              {{
-                workflow.publishedDefinition
-                  ? t('workflow.list.status.published')
-                  : t('workflow.list.status.draft')
-              }}
-            </Badge>
-            <TooltipProvider v-if="workflow.scheduleCron">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Badge variant="outline" class="gap-1">
-                    <ClockIcon class="size-3" />
-                    {{ workflow.scheduleCron }}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {{
-                      t('workflow.list.scheduled', {
-                        cron: workflow.scheduleCron,
-                        timezone: workflow.scheduleTimezone,
-                      })
-                    }}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <WorkflowSchedulePausedBadge v-if="workflow.schedulePaused" />
-          </div>
-        </TableCell>
-        <TableCell class="whitespace-nowrap">
-          {{ formatDateTime(workflow.updatedAt) }}
-        </TableCell>
-        <!-- Actions -->
-        <TableCell class="text-right whitespace-nowrap" @click.stop>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                :aria-label="t('common.actions')"
+              <template #lead>
+                <Icon
+                  name="hugeicons:workflow-square-10"
+                  class="size-4 text-icon"
+                />
+              </template>
+            </ListTitleCell>
+          </TableCell>
+          <TableCell>
+            <div class="flex min-w-0 items-center gap-1.5">
+              <Badge
+                class="shrink-0"
+                :variant="
+                  workflow.publishedDefinition ? 'default' : 'secondary'
+                "
               >
-                <MoreVerticalIcon class="size-4 stroke-1.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent size="sm" align="end">
+                {{
+                  workflow.publishedDefinition
+                    ? t('workflow.list.status.published')
+                    : t('workflow.list.status.draft')
+                }}
+              </Badge>
+              <TooltipProvider v-if="workflow.scheduleCron">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Badge variant="outline" class="min-w-0 gap-1">
+                      <Icon name="hugeicons:clock-01" class="size-3 shrink-0" />
+                      <span class="truncate">{{ workflow.scheduleCron }}</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {{
+                        t('workflow.list.scheduled', {
+                          cron: workflow.scheduleCron,
+                          timezone: workflow.scheduleTimezone,
+                        })
+                      }}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <WorkflowSchedulePausedBadge
+                v-if="workflow.schedulePaused"
+                class="shrink-0"
+              />
+            </div>
+          </TableCell>
+          <TableCell class="text-small text-muted-foreground">
+            {{ formatDateTime(workflow.updatedAt) }}
+          </TableCell>
+          <TableCell>
+            <ListRowActions>
               <DropdownMenuItem as-child>
-                <NuxtLinkLocale :to="`/workflow/${workflow.id}`">
-                  <PencilIcon class="stroke-1.5" />
+                <NuxtLinkLocale :to="workflowPath(workflow)">
+                  <Icon name="hugeicons:pencil-edit-02" />
                   {{ t('common.edit') }}
                 </NuxtLinkLocale>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                @click="() => emit('delete-workflow', workflow.id)"
+                @click="emit('delete-workflow', workflow.id)"
               >
-                <Trash2Icon class="stroke-1.5" />
+                <Icon name="hugeicons:delete-02" />
                 {{ t('common.delete') }}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
+            </ListRowActions>
+          </TableCell>
+        </TableRow>
+      </template>
     </TableBody>
-  </Table>
+  </ListTable>
 </template>

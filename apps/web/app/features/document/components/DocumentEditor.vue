@@ -1,27 +1,47 @@
 <script setup lang="ts">
-import { SaveCheckIcon, SavePenIcon } from '@lucide/vue';
+import SaveStatusButton, {
+  type SaveStatus,
+} from '~/components/SaveStatusButton.vue';
 import RichTextEditor from '~/components/editor/RichTextEditor.vue';
 import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
+import DocumentActionsMenu from '~/features/document/components/DocumentActionsMenu.vue';
+import DocumentRenameDialog from '~/features/document/components/DocumentRenameDialog.vue';
 import {
+  useDeleteDocument,
   useExportDocument,
   useUpdateDocument,
 } from '~/features/document/composables/useDocumentApi';
+import { useGetFolders } from '~/features/document/composables/useFolderApi';
 import type { Document, DocumentExportFormat } from '~/features/document/types';
+import { toast } from '~/lib/toast';
+
+const AUTOSAVE_DELAY_MS = 1000;
 
 // Props
 const props = defineProps<{ document: Document }>();
 
 // Refs
-const title = ref(props.document.title);
 const latestContent = ref(props.document.content);
 const isDirty = ref(false);
+const hasSaveFailed = ref(false);
+const isDeleted = ref(false);
+const isRenameOpen = ref(false);
 
 // Composables
 const { t } = useI18n();
+const { confirm } = useConfirmDialog();
+const { data: foldersData } = useGetFolders();
 const { mutate: saveDocument } = useUpdateDocument();
+const { mutate: moveDocument } = useUpdateDocument();
+const { mutateAsync: deleteDocument } = useDeleteDocument();
 const { mutate: exportDocument, isPending: isExporting } = useExportDocument(
   () => props.document.id,
-  title,
+  () => props.document.title,
+);
+const { start: scheduleSave, stop: cancelScheduledSave } = useTimeoutFn(
+  saveNow,
+  AUTOSAVE_DELAY_MS,
+  { immediate: false },
 );
 
 const controller = useRichTextEditor({
@@ -32,52 +52,100 @@ const controller = useRichTextEditor({
   onUpdate: (markdown) => {
     latestContent.value = markdown;
     isDirty.value = true;
-    debouncedSave();
+    hasSaveFailed.value = false;
+    scheduleSave();
   },
 });
 
 // Computed
-const saveStatus = computed<'saved' | 'saving'>(() =>
-  isDirty.value ? 'saving' : 'saved',
-);
+const saveStatus = computed<SaveStatus>(() => {
+  if (hasSaveFailed.value) {
+    return 'failed';
+  }
+  return isDirty.value ? 'saving' : 'saved';
+});
 
-const crumbs = computed<PageCrumb[]>(() => [
-  { label: t('document.list.title'), to: '/document' },
-  { label: title.value },
-]);
+const folders = computed(() => foldersData.value?.folders ?? []);
+
+const crumbs = computed<PageCrumb[]>(() => {
+  const { folderId, folderName, title } = props.document;
+  const folderCrumbs: PageCrumb[] = folderId
+    ? [{ label: folderName ?? '', to: `/document?folder=${folderId}` }]
+    : [];
+  return [
+    { label: t('document.list.title'), to: '/document' },
+    ...folderCrumbs,
+    { label: title },
+  ];
+});
 
 // Functions
-// Content edits (onUpdate above) and title edits (InlineNameField's `save`,
-// which only fires on a real committed change) share one debounced PATCH so
-// they never race each other with separate in-flight requests.
-const debouncedSave = useDebounceFn(() => {
+// Sends the content only, so a save never overwrites a title renamed
+// through the dialog.
+function saveNow() {
+  cancelScheduledSave();
+  if (!isDirty.value) {
+    return;
+  }
+  const content = latestContent.value;
   saveDocument(
+    { documentId: props.document.id, content },
     {
-      documentId: props.document.id,
-      title: title.value,
-      content: latestContent.value,
+      onSuccess: () => {
+        hasSaveFailed.value = false;
+        if (latestContent.value === content) {
+          isDirty.value = false;
+        }
+      },
+      onError: () => {
+        hasSaveFailed.value = true;
+      },
     },
-    { onSuccess: () => (isDirty.value = false) },
   );
-}, 1000);
-
-function handleTitleSave() {
-  isDirty.value = true;
-  debouncedSave();
 }
 
 function handleExport(format: DocumentExportFormat) {
   exportDocument({ format });
 }
 
+function handleMove(folderId: string | null) {
+  moveDocument(
+    { documentId: props.document.id, folderId },
+    { onSuccess: () => toast.success(t('document.list.item.moveSuccess')) },
+  );
+}
+
+async function handleDelete() {
+  const confirmed = await confirm({
+    title: t('document.deleteConfirm.title'),
+    message: t('document.deleteConfirm.message'),
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (!confirmed) {
+    return;
+  }
+  const { id, folderId } = props.document;
+  isDeleted.value = true;
+  cancelScheduledSave();
+  try {
+    await deleteDocument(id);
+  } catch {
+    isDeleted.value = false;
+    return;
+  }
+  await navigateTo(folderId ? `/document?folder=${folderId}` : '/document');
+}
+
 // Hooks
 // Flushes a pending edit immediately on navigation away, instead of losing
-// it to the still-pending 1s debounce.
+// it to the still-pending autosave delay.
 onBeforeUnmount(() => {
-  if (isDirty.value) {
+  cancelScheduledSave();
+  if (isDirty.value && !isDeleted.value) {
     saveDocument({
       documentId: props.document.id,
-      title: title.value,
       content: latestContent.value,
     });
   }
@@ -85,57 +153,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <PagePanel :crumbs="crumbs">
-    <div class="flex h-full flex-col">
-      <header class="flex items-center justify-between border-b px-4 py-2">
-        <InlineNameField
-          v-model:name="title"
-          :label="t('document.editor.rename')"
-          class="min-w-0"
-          @save="handleTitleSave"
-        />
-        <div class="flex shrink-0 items-center gap-3">
-          <div class="text-muted-foreground">
-            <SavePenIcon
-              v-if="saveStatus === 'saving'"
-              class="size-4 stroke-1.5"
-            />
-            <SaveCheckIcon v-else class="size-4 stroke-1.5" />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                leading-icon="hugeicons:download-01"
-                :aria-label="t('document.editor.export.button')"
-                :disabled="isExporting"
-                :loading="isExporting"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem @click="handleExport('md')">
-                {{ t('document.editor.export.markdown') }}
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleExport('txt')">
-                {{ t('document.editor.export.text') }}
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleExport('pdf')">
-                {{ t('document.editor.export.pdf') }}
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleExport('docx')">
-                {{ t('document.editor.export.word') }}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-      <div class="min-h-0 flex-1 overflow-y-auto bg-stone-50 pb-10">
-        <RichTextEditor
-          :controller="controller"
-          class="mx-auto mt-8 flex min-h-full max-w-4xl flex-col rounded-sm border bg-white px-16 py-12 shadow-md"
-        />
-      </div>
+  <PagePanel>
+    <template #header>
+      <NavTopBar :crumbs="crumbs">
+        <template #right>
+          <SaveStatusButton :status="saveStatus" @save="saveNow" />
+          <DocumentActionsMenu
+            :folder-id="document.folderId"
+            :folders="folders"
+            :is-exporting="isExporting"
+            @rename="isRenameOpen = true"
+            @export="handleExport"
+            @move="handleMove"
+            @delete="handleDelete"
+          />
+        </template>
+      </NavTopBar>
+    </template>
+    <div class="h-full min-h-0 overflow-y-auto bg-canvas pb-10">
+      <RichTextEditor
+        :controller="controller"
+        class="mx-auto mt-8 flex min-h-full max-w-4xl flex-col rounded-sm border bg-background px-16 py-12 shadow-md"
+      />
     </div>
+    <DocumentRenameDialog v-model:open="isRenameOpen" :document="document" />
   </PagePanel>
 </template>

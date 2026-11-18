@@ -1,5 +1,10 @@
 {
   "common": {
+    "saveStatus": {
+      "saved": "Gespeichert",
+      "saving": "Speichert...",
+      "failed": "Nicht gespeichert. Zum Wiederholen klicken."
+    },
     "settings": "Einstellungen",
     "descriptionPlaceholder": "Beschreibung hinzufügen...",
     "dismiss": "Ausblenden",
@@ -58,7 +63,6 @@
     "search": "Suchen",
     "topBar": {
       "label": "Kopfleiste",
-      "favorite": "Zu Favoriten hinzufügen",
       "moreActions": "Weitere Aktionen"
     },
     "userMenu": {
@@ -696,7 +700,11 @@
       "newWorkflow": "Workflow erstellen",
       "scheduled": "Geplant: {cron} ({timezone})",
       "empty": "Noch keine Workflows.",
-      "loadError": "Workflows konnten nicht geladen werden.",
+      "loadError": {
+        "title": "Workflows konnten nicht geladen werden",
+        "description": "Beim Laden deiner Workflows ist etwas schiefgelaufen. Versuche es erneut."
+      },
+      "emptyDescription": "Erstelle einen Workflow, um mehrstufige Aufgaben zu automatisieren.",
       "status": {
         "published": "Veröffentlicht",
         "draft": "Entwurf"
@@ -1362,14 +1370,19 @@
       "saveFailed": "Dokument konnte nicht gespeichert werden",
       "deleted": "Dokument gelöscht",
       "deleteFailed": "Dokument konnte nicht gelöscht werden",
-      "exportFailed": "Dokument konnte nicht exportiert werden"
+      "exportFailed": "Dokument konnte nicht exportiert werden",
+      "renamed": "Dokument umbenannt"
     },
     "list": {
       "title": "Dokumente",
       "subtitle": "Notizen, die du und deine Agenten erstellen und bearbeiten könnt.",
       "newDocument": "Neues Dokument",
       "selectWorkspace": "Wähle oben einen Arbeitsbereich, um dessen Dokumente zu sehen.",
-      "loadError": "Dokumente konnten nicht geladen werden.",
+      "loadError": {
+        "title": "Dokumente konnten nicht geladen werden",
+        "description": "Beim Laden deiner Dokumente ist etwas schiefgelaufen. Versuche es erneut."
+      },
+      "emptyDescription": "Erstelle ein Dokument oder einen Ordner, um loszulegen.",
       "loading": "Dokumente werden geladen...",
       "noFolder": "Kein Ordner",
       "table": {
@@ -1392,15 +1405,18 @@
       "namePlaceholder": "Unbenanntes Dokument",
       "folderNone": "Kein Ordner"
     },
+    "renameDialog": {
+      "title": "Dokument umbenennen"
+    },
     "editor": {
       "title": "Dokument",
       "loadError": "Dokument konnte nicht geladen werden.",
       "loading": "Dokument wird geladen...",
       "rename": "Dokument umbenennen",
       "contentPlaceholder": "Schreib los oder tippe / für Befehle",
-      "saveStatus": {
-        "saved": "Gespeichert",
-        "saving": "Speichert..."
+      "actions": {
+        "rename": "Umbenennen…",
+        "download": "Herunterladen"
       },
       "export": {
         "button": "Exportieren",
@@ -1420,6 +1436,7 @@
       "deleted": "Ordner gelöscht",
       "deleteFailed": "Ordner konnte nicht gelöscht werden"
     },
+    "documentCount": "Keine Dokumente | 1 Dokument | {count} Dokumente",
     "newFolder": "Neuer Ordner",
     "rename": "Ordner umbenennen",
     "delete": "Ordner löschen",
