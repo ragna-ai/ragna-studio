@@ -471,6 +471,10 @@
       }
     },
     "context": {
+      "renameDialog": {
+        "title": "Rename document"
+      },
+      "renamed": "Document renamed",
       "hint": "Their extracted text joins the context. Up to {max} documents.",
       "uploadedAt": "Uploaded {date}",
       "uploading": "Uploading...",
@@ -653,9 +657,11 @@
       "caseSensitive": "Case sensitive",
       "clear": "Clear search",
       "minLengthHint": "Type at least {min} characters to search.",
-      "loading": "Searching...",
       "empty": "No chats match your search.",
-      "error": "An error occurred while searching."
+      "loadError": {
+        "title": "Couldn't load your search results.",
+        "description": "Check your connection and try again."
+      }
     }
   },
   "workflow": {
@@ -1076,8 +1082,12 @@
       "failed": "Failed"
     },
     "viewOnLinkedIn": "View on LinkedIn",
-    "loadError": "Failed to load posts.",
-    "empty": "No posts yet. Ask your agent to draft a LinkedIn post.",
+    "loadError": {
+      "title": "Posts couldn't be loaded",
+      "description": "Something went wrong while loading your posts. Try again."
+    },
+    "empty": "No posts yet",
+    "emptyDescription": "Draft a LinkedIn post here, or ask your agent to write one.",
     "deleteConfirm": {
       "title": "Delete post",
       "message": "Are you sure you want to delete this post?"
@@ -1909,10 +1919,9 @@
         "empty": "No connected apps yet.",
         "table": {
           "client": "App",
-          "workspace": "Workspace",
-          "connected": "Connected",
           "lastUsed": "Last used"
         },
+        "connectedIn": "{workspace} · connected {date}",
         "neverUsed": "Never",
         "revoke": "Revoke",
         "revokeConfirm": {

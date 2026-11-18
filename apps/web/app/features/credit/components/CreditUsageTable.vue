@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { CreditUsage } from '~/features/credit/types';
 
-// Imports
-
 interface Props {
   usages: CreditUsage[];
 }
@@ -10,41 +8,37 @@ interface Props {
 // Props
 defineProps<Props>();
 
-// Emits
-
-// Refs
-
 // Composables
 const { formatDateTime } = useDateTimeFormat();
 const { t } = useI18n();
-
-// Computed
 
 // Functions
 function featureLabel(feature: CreditUsage['feature']): string {
   return t(`credit.usage.feature.${feature}`);
 }
-
-// Hooks
 </script>
 
 <template>
-  <Table>
+  <ListTable>
     <TableHeader>
-      <TableRow>
+      <TableRow class="hover:bg-transparent">
         <TableHead>{{ t('credit.usage.table.model') }}</TableHead>
-        <TableHead>{{ t('credit.usage.table.provider') }}</TableHead>
-        <TableHead>{{ t('credit.usage.table.feature') }}</TableHead>
-        <TableHead class="text-right">
+        <TableHead class="w-28">{{
+          t('credit.usage.table.provider')
+        }}</TableHead>
+        <TableHead class="w-32">{{
+          t('credit.usage.table.feature')
+        }}</TableHead>
+        <TableHead class="w-24 text-right">
           {{ t('credit.usage.table.inputTokens') }}
         </TableHead>
-        <TableHead class="text-right">
+        <TableHead class="w-24 text-right">
           {{ t('credit.usage.table.outputTokens') }}
         </TableHead>
-        <TableHead class="text-right">
+        <TableHead class="w-24 text-right">
           {{ t('credit.usage.table.credits') }}
         </TableHead>
-        <TableHead>{{ t('credit.usage.table.date') }}</TableHead>
+        <TableHead class="w-45">{{ t('credit.usage.table.date') }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
@@ -52,26 +46,28 @@ function featureLabel(feature: CreditUsage['feature']): string {
         {{ t('credit.usage.empty') }}
       </ListEmptyRow>
       <TableRow v-for="usage in usages" :key="usage.id">
-        <TableCell class="font-medium">{{ usage.modelDisplayName }}</TableCell>
-        <TableCell class="whitespace-nowrap">
+        <TableCell class="truncate font-medium">{{
+          usage.modelDisplayName
+        }}</TableCell>
+        <TableCell>
           <Badge variant="secondary">{{ usage.provider }}</Badge>
         </TableCell>
-        <TableCell class="whitespace-nowrap">
+        <TableCell class="truncate">
           {{ featureLabel(usage.feature) }}
         </TableCell>
-        <TableCell class="text-right whitespace-nowrap">
+        <TableCell class="text-right tabular-nums">
           {{ usage.inputTokens }}
         </TableCell>
-        <TableCell class="text-right whitespace-nowrap">
+        <TableCell class="text-right tabular-nums">
           {{ usage.outputTokens }}
         </TableCell>
-        <TableCell class="text-right whitespace-nowrap">
+        <TableCell class="text-right tabular-nums">
           {{ usage.credits }}
         </TableCell>
-        <TableCell class="whitespace-nowrap">
+        <TableCell class="text-small text-muted-foreground">
           {{ formatDateTime(usage.createdAt) }}
         </TableCell>
       </TableRow>
     </TableBody>
-  </Table>
+  </ListTable>
 </template>

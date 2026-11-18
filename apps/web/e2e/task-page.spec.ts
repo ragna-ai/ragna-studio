@@ -56,3 +56,30 @@ test('saves an edited title from the top bar save button', async ({
     newTitle,
   );
 });
+
+test('keeps the last column of the task list visible for a very long title', async ({
+  page,
+  request,
+}) => {
+  const title = `Long ${crypto.randomUUID().slice(0, 8)} ${'verylongtitle'.repeat(18)}`;
+  const response = await request.post(
+    `${API_URL}/workspace/${readWorkspaceId()}/task`,
+    { data: { title } },
+  );
+  expect(response.ok()).toBe(true);
+
+  await page.goto('/tasks');
+  await page.getByRole('tab', { name: 'List' }).click();
+
+  await expect(
+    page.getByRole('columnheader', { name: 'Assignee' }),
+  ).toBeVisible();
+  const overflow = await page
+    .getByRole('table')
+    .evaluate(
+      (element) =>
+        element.scrollWidth -
+        (element.parentElement?.clientWidth ?? element.scrollWidth),
+    );
+  expect(overflow).toBeLessThanOrEqual(0);
+});

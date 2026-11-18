@@ -48,7 +48,7 @@ const crumbs = computed<PageCrumb[]>(() => [
           v-else-if="isError"
           class="py-12 text-center text-sm text-destructive"
         >
-          {{ t('social.loadError') }}
+          {{ t('social.loadError.title') }}
         </p>
         <p v-else class="py-12 text-center text-sm text-muted-foreground">
           {{ t('social.editor.notFound') }}

@@ -39,18 +39,20 @@ const groups = computed(() =>
 
 <template>
   <Table
-    class="[&_td:first-child]:pl-page [&_td:last-child]:pr-page [&_th:first-child]:pl-page [&_th:last-child]:pr-page"
+    class="table-fixed [&_td:first-child]:pl-page [&_td:last-child]:pr-page [&_th:first-child]:pl-page [&_th:last-child]:pr-page"
   >
     <TableHeader>
       <TableRow class="hover:bg-transparent">
-        <TableHead class="w-px pr-0">
+        <TableHead class="w-[calc(var(--spacing-page)+1.5rem)] pr-0">
           <span class="sr-only">{{ t('task.list.table.priority') }}</span>
         </TableHead>
         <TableHead class="w-18">{{ t('task.list.table.id') }}</TableHead>
         <TableHead>{{ t('common.title') }}</TableHead>
         <TableHead class="w-40">{{ t('task.list.table.labels') }}</TableHead>
         <TableHead class="w-28">{{ t('task.list.table.dueDate') }}</TableHead>
-        <TableHead class="w-50">{{ t('task.list.table.assignee') }}</TableHead>
+        <TableHead class="w-[calc(var(--spacing-page)+12.5rem)]">{{
+          t('task.list.table.assignee')
+        }}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
@@ -75,7 +77,7 @@ const groups = computed(() =>
           class="cursor-pointer"
           @click="navigateTo(`/tasks/${task.id}`)"
         >
-          <TableCell class="w-px pr-0">
+          <TableCell class="pr-0">
             <Icon
               :name="priorityOption(task.priority).icon"
               :class="
@@ -88,13 +90,13 @@ const groups = computed(() =>
           <TableCell class="text-mono text-muted-foreground">
             {{ formatTaskDisplayId(task.number) }}
           </TableCell>
-          <TableCell class="max-w-0 truncate font-medium">
+          <TableCell class="truncate font-medium">
             <NuxtLinkLocale :to="`/tasks/${task.id}`">{{
               task.title
             }}</NuxtLinkLocale>
           </TableCell>
           <TableCell>
-            <div class="flex gap-1 overflow-hidden">
+            <div class="flex min-w-0 gap-1 overflow-hidden">
               <Tag
                 v-for="label in task.labels"
                 :key="label.id"
@@ -122,7 +124,10 @@ const groups = computed(() =>
             </template>
           </TableCell>
           <TableCell>
-            <div v-if="task.assignedAgent" class="flex items-center gap-2">
+            <div
+              v-if="task.assignedAgent"
+              class="flex min-w-0 items-center gap-2"
+            >
               <Icon
                 name="hugeicons:user"
                 class="size-3.5 shrink-0 text-icon"

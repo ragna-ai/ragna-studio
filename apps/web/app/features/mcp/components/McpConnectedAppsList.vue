@@ -27,35 +27,39 @@ function displayName(connection: McpConnection): string {
 </script>
 
 <template>
-  <Table>
+  <ListTable>
     <TableHeader>
-      <TableRow>
+      <TableRow class="hover:bg-transparent">
         <TableHead>{{ t('mcp.settings.connections.table.client') }}</TableHead>
-        <TableHead>{{
-          t('mcp.settings.connections.table.workspace')
-        }}</TableHead>
-        <TableHead>{{
-          t('mcp.settings.connections.table.connected')
-        }}</TableHead>
-        <TableHead>{{
-          t('mcp.settings.connections.table.lastUsed')
-        }}</TableHead>
-        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
+        <TableHead class="w-36">
+          {{ t('mcp.settings.connections.table.lastUsed') }}
+        </TableHead>
+        <TableHead class="w-28">
+          <span class="sr-only">{{ t('common.actions') }}</span>
+        </TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <ListEmptyRow v-if="connections.length === 0" :colspan="5">
+      <ListEmptyRow v-if="connections.length === 0" :colspan="3">
         {{ t('mcp.settings.connections.empty') }}
       </ListEmptyRow>
-      <TableRow v-for="connection in connections" :key="connection.id">
-        <TableCell class="text-sm font-medium">
-          {{ displayName(connection) }}
+      <TableRow
+        v-for="connection in connections"
+        :key="connection.id"
+        class="h-14"
+      >
+        <TableCell>
+          <ListTitleCell
+            :title="displayName(connection)"
+            :description="
+              t('mcp.settings.connections.connectedIn', {
+                workspace: connection.workspaceName,
+                date: formatDateTime(connection.createdAt),
+              })
+            "
+          />
         </TableCell>
-        <TableCell class="text-sm">{{ connection.workspaceName }}</TableCell>
-        <TableCell class="text-sm whitespace-nowrap">
-          {{ formatDateTime(connection.createdAt) }}
-        </TableCell>
-        <TableCell class="text-sm whitespace-nowrap">
+        <TableCell class="truncate text-small text-muted-foreground">
           {{
             connection.lastUsedAt
               ? formatDateTime(connection.lastUsedAt)
@@ -74,5 +78,5 @@ function displayName(connection: McpConnection): string {
         </TableCell>
       </TableRow>
     </TableBody>
-  </Table>
+  </ListTable>
 </template>
