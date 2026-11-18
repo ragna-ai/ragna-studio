@@ -471,6 +471,10 @@
       }
     },
     "context": {
+      "renameDialog": {
+        "title": "Dokument umbenennen"
+      },
+      "renamed": "Dokument umbenannt",
       "hint": "Ihr extrahierter Text fließt in den Kontext ein. Bis zu {max} Dokumente.",
       "uploadedAt": "Hochgeladen am {date}",
       "uploading": "Wird hochgeladen...",
@@ -656,9 +660,11 @@
       "caseSensitive": "Groß-/Kleinschreibung beachten",
       "clear": "Suche löschen",
       "minLengthHint": "Gib mindestens {min} Zeichen ein, um zu suchen.",
-      "loading": "Suche läuft...",
       "empty": "Keine Chats gefunden.",
-      "error": "Beim Durchsuchen ist ein Fehler aufgetreten."
+      "loadError": {
+        "title": "Suchergebnisse konnten nicht geladen werden.",
+        "description": "Prüfe deine Verbindung und versuche es erneut."
+      }
     }
   },
   "workflow": {
@@ -1079,8 +1085,12 @@
       "failed": "Fehlgeschlagen"
     },
     "viewOnLinkedIn": "Auf LinkedIn ansehen",
-    "loadError": "Posts konnten nicht geladen werden.",
-    "empty": "Noch keine Posts. Bitte den Agenten, einen LinkedIn-Entwurf zu schreiben.",
+    "loadError": {
+      "title": "Posts konnten nicht geladen werden",
+      "description": "Beim Laden deiner Posts ist etwas schiefgelaufen. Versuche es erneut."
+    },
+    "empty": "Noch keine Posts",
+    "emptyDescription": "Schreibe hier einen LinkedIn-Post oder bitte deinen Agenten, einen zu verfassen.",
     "deleteConfirm": {
       "title": "Post löschen",
       "message": "Möchtest du diesen Post wirklich löschen?"
@@ -1912,10 +1922,9 @@
         "empty": "Noch keine verbundenen Apps.",
         "table": {
           "client": "App",
-          "workspace": "Arbeitsbereich",
-          "connected": "Verbunden",
           "lastUsed": "Zuletzt genutzt"
         },
+        "connectedIn": "{workspace} · verbunden {date}",
         "neverUsed": "Nie",
         "revoke": "Trennen",
         "revokeConfirm": {

@@ -33,7 +33,7 @@ const snippetsPerChat = ref(3);
 // Composables
 const { t } = useI18n();
 const { caseSensitive } = storeToRefs(useChatSearchSettingsStore());
-const { data, isLoading, isFetching, error } = useChatSearchApi({
+const { data, isLoading, isFetching, error, refetch } = useChatSearchApi({
   query,
   page,
   limit,
@@ -156,13 +156,20 @@ watch([query, page, limit], ([q, p, l]) => {
            already resolves to an empty result set (not stale data) once the
            query drops below the enabled threshold, so this renders the
            table's normal empty state rather than leftover results. -->
-        <template v-if="data && data.results.length > 0">
+        <ListErrorAlert
+          v-if="error && !data"
+          :title="t('chat.search.loadError.title')"
+          :description="t('chat.search.loadError.description')"
+          @retry="refetch()"
+        />
+        <template v-else>
           <ChatSearchResultsTable
-            :results="data.results"
+            :results="data?.results ?? []"
             :query="query"
+            :is-loading="isLoading"
             :class="{ 'opacity-60': isFetching }"
           />
-          <div class="pb-10">
+          <div v-if="data && data.results.length > 0" class="pb-10">
             <ListPagination
               v-model:page="page"
               v-model:limit="limit"
@@ -171,15 +178,6 @@ watch([query, page, limit], ([q, p, l]) => {
             />
           </div>
         </template>
-        <p
-          v-else-if="isLoading"
-          class="mx-auto max-w-md text-center text-body text-muted-foreground"
-        >
-          {{ t('chat.search.loading') }}
-        </p>
-        <p v-else-if="error" class="text-body text-muted-foreground">
-          {{ error.message || t('chat.search.error') }}
-        </p>
       </div>
     </SectionWrapper>
   </PagePanel>

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // Imports
 import { toast } from '~/lib/toast';
+import AgentContextDocumentRenameDialog from '~/features/agent/components/AgentContextDocumentRenameDialog.vue';
 import {
   AGENT_CONTEXT_DOCUMENT_ACCEPT,
   AGENT_CONTEXT_DOCUMENT_MAX_FILE_BYTES,
   AGENT_CONTEXT_DOCUMENT_MAX_FILES,
   useDeleteAgentContextDocument,
   useGetAgentContextDocuments,
-  useRenameAgentContextDocument,
   useReplaceAgentContextDocumentFile,
   useRetryAgentContextDocument,
   useUploadAgentContextDocuments,
@@ -36,8 +36,8 @@ const dropZoneRef = useTemplateRef('dropZoneRef');
 const uploadInputRef = useTemplateRef('uploadInputRef');
 const replaceInputRef = useTemplateRef('replaceInputRef');
 const replaceTargetId = ref<string | null>(null);
-const renamingDocumentId = ref<string | null>(null);
-const renameValue = ref('');
+const renameTarget = ref<AgentContextDocument | null>(null);
+const isRenameOpen = ref(false);
 
 // Composables
 const { t, n, d } = useI18n();
@@ -46,7 +46,6 @@ const { data, isPending: isLoading } = useGetAgentContextDocuments(
 );
 const { isPending: isUploading, mutate: uploadDocuments } =
   useUploadAgentContextDocuments();
-const { mutate: renameDocument } = useRenameAgentContextDocument();
 const { mutate: replaceDocumentFile } = useReplaceAgentContextDocumentFile();
 const { mutate: retryDocument } = useRetryAgentContextDocument();
 const { mutate: deleteDocument } = useDeleteAgentContextDocument();
@@ -76,6 +75,15 @@ function formatUploadedAt(document: AgentContextDocument): string {
     month: 'short',
     day: 'numeric',
   });
+}
+
+function uploadedAtLabel(document: AgentContextDocument): string {
+  const uploadedAt = t('agent.context.uploadedAt', {
+    date: formatUploadedAt(document),
+  });
+  return document.isTruncated
+    ? `${uploadedAt} · ${t('agent.context.truncated')}`
+    : uploadedAt;
 }
 
 // Client-side mirror of the API's validation, so an obviously invalid batch
@@ -123,21 +131,8 @@ function handleUploadInputChange(event: Event) {
 }
 
 function startRename(document: AgentContextDocument) {
-  renamingDocumentId.value = document.id;
-  renameValue.value = document.name;
-}
-
-function cancelRename() {
-  renamingDocumentId.value = null;
-}
-
-function commitRename(document: AgentContextDocument) {
-  const name = renameValue.value.trim();
-  renamingDocumentId.value = null;
-
-  if (name.length === 0 || name === document.name) return;
-
-  renameDocument({ agentId: props.agentId, documentId: document.id, name });
+  renameTarget.value = document;
+  isRenameOpen.value = true;
 }
 
 function openReplacePicker(document: AgentContextDocument) {
@@ -184,10 +179,10 @@ function handleDelete(document: AgentContextDocument) {
     >
       <Icon name="hugeicons:upload-04" class="size-6 text-icon" />
       <p class="text-sm">
-        {{ $t('agent.context.dropzone.prompt') }}
+        {{ t('agent.context.dropzone.prompt') }}
       </p>
       <p class="text-xs text-muted-foreground">
-        {{ $t('agent.context.dropzone.formats', { size: maxFileSizeLabel }) }}
+        {{ t('agent.context.dropzone.formats', { size: maxFileSizeLabel }) }}
       </p>
     </div>
     <p
@@ -195,66 +190,43 @@ function handleDelete(document: AgentContextDocument) {
       class="flex items-center gap-2 text-sm text-muted-foreground"
     >
       <Spinner class="size-4" />
-      {{ $t('agent.context.uploading') }}
+      {{ t('agent.context.uploading') }}
     </p>
 
     <div>
       <div v-if="isLoading" class="flex items-center justify-center py-8">
         <Spinner />
       </div>
-      <Table v-else-if="documents.length > 0">
+      <ListTable v-else-if="documents.length > 0">
         <TableHeader>
-          <TableRow>
+          <TableRow class="hover:bg-transparent">
             <TableHead class="text-sm text-muted-foreground">
-              {{ $t('common.name') }}
+              {{ t('common.name') }}
             </TableHead>
-            <TableHead class="text-sm text-muted-foreground">
-              {{ $t('common.status') }}
+            <TableHead class="w-36 text-sm text-muted-foreground">
+              {{ t('common.status') }}
             </TableHead>
-            <TableHead class="text-right text-sm text-muted-foreground">
-              {{ $t('agent.context.tableSize') }}
+            <TableHead class="w-24 text-right text-sm text-muted-foreground">
+              {{ t('agent.context.tableSize') }}
             </TableHead>
             <TableHead class="w-10">
-              <span class="sr-only">{{ $t('common.actions') }}</span>
+              <span class="sr-only">{{ t('common.actions') }}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="document in documents" :key="document.id">
-            <TableCell class="max-w-xs">
-              <div class="flex items-center gap-3">
-                <Icon
-                  name="hugeicons:file-02"
-                  class="size-4 shrink-0 text-icon"
-                />
-                <div class="min-w-0">
-                  <Input
-                    v-if="renamingDocumentId === document.id"
-                    v-model="renameValue"
-                    autofocus
-                    autocomplete="off"
-                    @keydown.enter="commitRename(document)"
-                    @keydown.escape="cancelRename"
-                    @blur="commitRename(document)"
-                  />
-                  <p v-else class="truncate text-sm">{{ document.name }}</p>
-                  <p class="text-xs text-muted-foreground">
-                    {{
-                      $t('agent.context.uploadedAt', {
-                        date: formatUploadedAt(document),
-                      })
-                    }}
-                  </p>
-                  <p
-                    v-if="document.isTruncated"
-                    class="text-xs text-muted-foreground"
-                  >
-                    {{ $t('agent.context.truncated') }}
-                  </p>
-                </div>
-              </div>
-            </TableCell>
             <TableCell>
+              <ListTitleCell
+                :title="document.name"
+                :description="uploadedAtLabel(document)"
+              >
+                <template #lead>
+                  <Icon name="hugeicons:file-02" class="size-4 text-icon" />
+                </template>
+              </ListTitleCell>
+            </TableCell>
+            <TableCell class="whitespace-nowrap">
               <TooltipProvider
                 v-if="document.status === 'failed' && document.errorMessage"
               >
@@ -283,51 +255,45 @@ function handleDelete(document: AgentContextDocument) {
             >
               {{ formatFileSize(document.fileSize) }}
             </TableCell>
-            <TableCell class="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    :aria-label="$t('common.actions')"
-                  >
-                    <Icon name="hugeicons:more-vertical" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  size="sm"
-                  align="end"
-                  @close-auto-focus.prevent
+            <TableCell>
+              <ListRowActions>
+                <DropdownMenuItem @click="startRename(document)">
+                  <Icon name="hugeicons:pencil-edit-02" />
+                  {{ t('agent.context.actions.rename') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem @click="openReplacePicker(document)">
+                  <Icon name="hugeicons:file-sync" />
+                  {{ t('agent.context.actions.replace') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  v-if="document.status === 'failed'"
+                  @click="handleRetry(document)"
                 >
-                  <DropdownMenuItem @select="startRename(document)">
-                    {{ $t('agent.context.actions.rename') }}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem @select="openReplacePicker(document)">
-                    {{ $t('agent.context.actions.replace') }}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    v-if="document.status === 'failed'"
-                    @select="handleRetry(document)"
-                  >
-                    {{ $t('agent.context.actions.retry') }}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    variant="destructive"
-                    @select="handleDelete(document)"
-                  >
-                    {{ $t('agent.context.actions.delete') }}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <Icon name="hugeicons:reload" />
+                  {{ t('agent.context.actions.retry') }}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  @click="handleDelete(document)"
+                >
+                  <Icon name="hugeicons:delete-02" />
+                  {{ t('agent.context.actions.delete') }}
+                </DropdownMenuItem>
+              </ListRowActions>
             </TableCell>
           </TableRow>
         </TableBody>
-      </Table>
+      </ListTable>
       <p class="pt-2 text-small text-muted-foreground">
-        {{ $t('agent.context.hint', { max: maxFiles }) }}
+        {{ t('agent.context.hint', { max: maxFiles }) }}
       </p>
     </div>
+    <AgentContextDocumentRenameDialog
+      v-model:open="isRenameOpen"
+      :agent-id="agentId"
+      :document="renameTarget"
+    />
     <!-- Hidden inputs stay outside the dropzone/rows they belong to, so a
          file input is never nested inside another interactive element. -->
     <input

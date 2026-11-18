@@ -11,7 +11,11 @@ const { data, isPending, error } = useGetOrganizationUsage(true);
       <CardTitle>{{ t('organization.usage.title') }}</CardTitle>
     </CardHeader>
     <CardContent>
-      <Skeleton v-if="isPending" class="h-16 w-full" />
+      <ListTable v-if="isPending">
+        <TableBody>
+          <ListSkeletonRows :columns="['bar', 'bar', 'bar']" :rows="3" />
+        </TableBody>
+      </ListTable>
       <p v-else-if="error" class="text-sm text-destructive">
         {{ t('organization.usage.loadError') }}
       </p>
@@ -21,14 +25,14 @@ const { data, isPending, error } = useGetOrganizationUsage(true);
       >
         {{ t('organization.usage.empty') }}
       </p>
-      <Table v-else>
+      <ListTable v-else>
         <TableHeader>
           <TableRow>
             <TableHead>{{ t('common.name') }}</TableHead>
-            <TableHead class="text-right">{{
+            <TableHead class="w-24 text-right">{{
               t('organization.usage.events')
             }}</TableHead>
-            <TableHead class="text-right">{{
+            <TableHead class="w-24 text-right">{{
               t('organization.usage.credits')
             }}</TableHead>
           </TableRow>
@@ -38,16 +42,18 @@ const { data, isPending, error } = useGetOrganizationUsage(true);
             v-for="member in data.members"
             :key="member.userId ?? 'former-member'"
           >
-            <TableCell>{{
+            <TableCell class="truncate">{{
               member.name ?? t('organization.formerMember')
             }}</TableCell>
-            <TableCell class="text-right">{{ member.eventCount }}</TableCell>
-            <TableCell class="text-right">
+            <TableCell class="text-right tabular-nums">{{
+              member.eventCount
+            }}</TableCell>
+            <TableCell class="text-right tabular-nums">
               {{ n(member.credits, { maximumFractionDigits: 2 }) }}
             </TableCell>
           </TableRow>
         </TableBody>
-      </Table>
+      </ListTable>
     </CardContent>
   </SettingsCard>
 </template>
