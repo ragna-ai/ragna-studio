@@ -70,7 +70,7 @@ function formatFileSize(bytes: number): string {
 }
 
 function formatUploadedAt(document: AgentContextDocument): string {
-  return d(new Date(document.updatedAt), {
+  return d(new Date(document.createdAt), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -2,7 +2,6 @@
 import ChatConversation from '~/features/chat/components/ChatConversation.vue';
 import ChatHistoryToggle from '~/features/chat/components/ChatHistoryToggle.vue';
 import { useSidePanelStore } from '~/stores/sidepanel.store';
-import ChatSearchButton from '~/features/chat/components/ChatSearchButton.vue';
 
 // Composables
 const sidePanel = useSidePanelStore();
@@ -24,9 +23,6 @@ const crumbs = computed<PageCrumb[]>(() => [{ label: t('chat.newChat') }]);
         <template v-if="!isHistoryOpen" #left>
           <ChatHistoryToggle />
           <div class="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
-        </template>
-        <template #right>
-          <ChatSearchButton />
         </template>
       </NavTopBar>
     </template>

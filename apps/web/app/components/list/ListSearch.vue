@@ -12,6 +12,8 @@ interface ListSearchProps {
 
 defineProps<ListSearchProps>();
 
+const emit = defineEmits<{ submit: [text: string] }>();
+
 const searchText = defineModel<string>({ default: '' });
 
 const { t } = useI18n();
@@ -26,6 +28,7 @@ const { t } = useI18n();
       v-model="searchText"
       :placeholder="placeholder"
       :aria-label="placeholder"
+      @keydown.enter.prevent="emit('submit', searchText.trim())"
     />
     <InputGroupAddon v-if="searchText" align="inline-end">
       <Button

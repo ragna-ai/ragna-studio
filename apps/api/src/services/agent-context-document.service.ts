@@ -263,6 +263,7 @@ export interface AgentContextDocumentResponse {
   status: AgentContextDocumentStatus;
   isTruncated: boolean;
   errorMessage: string | null;
+  createdAt: Date;
   updatedAt: Date;
   charCount: number;
 }
@@ -280,6 +281,7 @@ function toDocumentResponse(document: AgentContextDocument): AgentContextDocumen
     status: document.status,
     isTruncated: document.isTruncated,
     errorMessage: document.errorMessage,
+    createdAt: document.createdAt,
     updatedAt: document.updatedAt,
     charCount: document.extractedText?.length ?? 0,
   };

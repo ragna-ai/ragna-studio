@@ -8,7 +8,8 @@ import useAgentList from '~/features/agent/composables/useAgentList';
 // Emits
 
 // Composables
-const { page, limit, useGetAllAgents } = useAgentList();
+const { page, limit, searchQuery, setSearchQuery, useGetAllAgents } =
+  useAgentList();
 const { data, error, isPending, refetch } = useGetAllAgents();
 const { mutateAsync: deleteAgent } = useDeleteAgent();
 const { confirm } = useConfirmDialog();
@@ -19,13 +20,24 @@ useHead({
 });
 
 // Refs
-const searchText = ref('');
+const searchText = ref(searchQuery.value);
 
 // Computed
 const meta = computed(() => data.value?.meta ?? { totalCount: 0 });
-const hasNoAgentsAtAll = computed(() => data.value?.meta.totalCount === 0);
+const hasNoAgentsAtAll = computed(
+  () => data.value?.meta.totalCount === 0 && !searchQuery.value,
+);
+const hasNoSearchMatches = computed(
+  () => data.value?.meta.totalCount === 0 && !!searchQuery.value,
+);
+
+// Watchers
+watch(searchText, (text) => setSearchQuery(text.trim()));
 
 // Functions
+const clearSearch = () => {
+  searchText.value = '';
+};
 const handleDeleteAgent = async (agentId: string) => {
   const agentName =
     data.value?.agents.find((agent) => agent.id === agentId)?.name ?? '';
@@ -98,7 +110,26 @@ const handleDeleteAgent = async (agentId: string) => {
               :placeholder="t('agent.list.search')"
             />
           </div>
+          <Empty v-if="hasNoSearchMatches">
+            <EmptyMedia variant="icon">
+              <Icon name="hugeicons:search-01" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>{{ t('agent.list.noMatches.title') }}</EmptyTitle>
+              <EmptyDescription>
+                {{
+                  t('agent.list.noMatches.description', { query: searchQuery })
+                }}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button variant="outline" @click="clearSearch">
+                {{ t('agent.list.noMatches.clear') }}
+              </Button>
+            </EmptyContent>
+          </Empty>
           <AgentManyTable
+            v-else
             :agents="data?.agents ?? []"
             :is-loading="isPending"
             @delete-agent="handleDeleteAgent"

@@ -8,12 +8,14 @@ export interface ConfirmDialogOptions {
 
 interface ConfirmDialogState {
   open: boolean;
+  openCount: number;
   options: ConfirmDialogOptions;
   resolve: ((value: boolean) => void) | null;
 }
 
 const state = ref<ConfirmDialogState>({
   open: false,
+  openCount: 0,
   options: { title: '' },
   resolve: null,
 });
@@ -21,7 +23,12 @@ const state = ref<ConfirmDialogState>({
 export function useConfirmDialog() {
   function confirm(options: ConfirmDialogOptions): Promise<boolean> {
     return new Promise((resolve) => {
-      state.value = { open: true, options, resolve };
+      state.value = {
+        open: true,
+        openCount: state.value.openCount + 1,
+        options,
+        resolve,
+      };
     });
   }
 

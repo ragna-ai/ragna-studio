@@ -2,7 +2,10 @@
 import { storeToRefs } from 'pinia';
 import ChatSearchResultsTable from '~/features/chat/components/ChatSearchResultsTable.vue';
 import { useChatSearchApi } from '~/features/chat/composables/useChatSearchApi';
-import { parseChatSearchQuery } from '~/features/chat/lib/chat-search-query';
+import {
+  parseChatSearchQuery,
+  type ChatSearchQuery,
+} from '~/features/chat/lib/chat-search-query';
 import { useChatSearchSettingsStore } from '~/features/chat/stores/chatsearchsettings.store';
 import { cn } from '~/lib/utils';
 
@@ -12,20 +15,48 @@ import { cn } from '~/lib/utils';
 // Refs
 const route = useRoute();
 const router = useRouter();
-// Restores search text/page/page-size from the URL (e.g. after navigating back from a chat),
-// falling back to defaults for a fresh visit or a malformed/tampered query string.
-const initialQuery = parseChatSearchQuery(route.query);
+// The URL is the single source of truth, so a new `?q=` (sidebar search,
+// back/forward) re-runs the search. A malformed/tampered query string falls
+// back to defaults.
+const searchState = computed(() => parseChatSearchQuery(route.query));
+const searchInput = ref(searchState.value.q);
+const searchInputRef =
+  useTemplateRef<ComponentPublicInstance>('searchInputRef');
 
-const searchInput = ref(initialQuery.q);
-const query = ref(initialQuery.q);
-const page = ref(initialQuery.page);
-// 10, not the API's documented default of 20
-// - `limit` is always sent explicitly below, so that default only
-// matters when the param is omitted, and `ListPagination`' page-size
-// `Select` only offers 10/25/50/100. A value outside that list (e.g. 20)
-// leaves the select bound to a value with no matching `SelectItem`, which
-// Radix/shadcn renders blank instead of falling back to the first option.
-const limit = ref(initialQuery.limit);
+// Writes within one tick are merged into a single `replace`: `route.query`
+// only updates after navigation, so separate calls would overwrite each other.
+// `replace`, not `push`, so neither keystrokes nor paging pile up history entries.
+let pendingQueryPatch: Partial<ChatSearchQuery> = {};
+function updateSearchQuery(patch: Partial<ChatSearchQuery>) {
+  const isFirstPatch = Object.keys(pendingQueryPatch).length === 0;
+  pendingQueryPatch = { ...pendingQueryPatch, ...patch };
+  if (!isFirstPatch) return;
+  queueMicrotask(() => {
+    const merged = { ...searchState.value, ...pendingQueryPatch };
+    pendingQueryPatch = {};
+    router.replace({
+      query: {
+        ...route.query,
+        q: merged.q || undefined,
+        page: merged.page,
+        limit: merged.limit,
+      },
+    });
+  });
+}
+
+const query = computed(() => searchState.value.q);
+const page = computed({
+  get: () => searchState.value.page,
+  set: (value) => updateSearchQuery({ page: value }),
+});
+// `limit` is always sent explicitly, and `ListPagination`' page-size `Select` only
+// offers 10/25/50/100. A value outside that list (e.g. 20) leaves the select
+// bound to a value with no matching `SelectItem`, which Radix/shadcn renders blank.
+const limit = computed({
+  get: () => searchState.value.limit,
+  set: (value) => updateSearchQuery({ limit: value }),
+});
 // Snippets-per-chat-row is a fixed v1 default,
 // independent of the page/limit pagination above.
 const snippetsPerChat = ref(3);
@@ -50,8 +81,8 @@ const meta = computed(() => ({ totalCount: data.value?.totalCount ?? 0 }));
 
 // Functions
 const applySearch = useDebounceFn((value: string) => {
-  query.value = value.trim();
-  page.value = 1; // reset to first page on a new search
+  if (value.trim() === query.value) return;
+  updateSearchQuery({ q: value.trim(), page: 1 }); // new search starts on page 1
 }, 250);
 
 function toggleCaseSensitive() {
@@ -60,24 +91,25 @@ function toggleCaseSensitive() {
 
 function clearSearch() {
   searchInput.value = '';
-  query.value = '';
-  page.value = 1;
+  updateSearchQuery({ q: '', page: 1 });
 }
 
 // Hooks
+onMounted(() => {
+  const input = searchInputRef.value?.$el;
+  if (!(input instanceof HTMLInputElement)) return;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+});
 watch(searchInput, applySearch);
 watch(caseSensitive, () => {
   page.value = 1; // reset to first page, same as a new search
 });
 
-// Mirrors search text/page/page-size into the URL so they survive a
-// back-navigation (e.g. from a chat opened out of the results). `replace`,
-// not `push`, so neither keystrokes nor paging pile up browser history
-// entries - the address bar just tracks the current state.
-watch([query, page, limit], ([q, p, l]) => {
-  router.replace({
-    query: { ...route.query, q: q || undefined, page: p, limit: l },
-  });
+// Keeps the input in sync when the URL changes elsewhere; the trim check
+// avoids undoing a trailing space the user just typed.
+watch(query, (q) => {
+  if (searchInput.value.trim() !== q) searchInput.value = q;
 });
 </script>
 
@@ -100,6 +132,7 @@ watch([query, page, limit], ([q, p, l]) => {
             class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-icon"
           />
           <Input
+            ref="searchInputRef"
             v-model="searchInput"
             class="h-11 py-2.5 pr-[4.5rem] pl-9"
             :placeholder="t('chat.search.placeholder')"

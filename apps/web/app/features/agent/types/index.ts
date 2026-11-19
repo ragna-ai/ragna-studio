@@ -112,6 +112,7 @@ export interface AgentContextDocument {
   status: AgentContextDocumentStatus;
   isTruncated: boolean;
   errorMessage: string | null;
+  createdAt: string;
   updatedAt: string;
 }
 
