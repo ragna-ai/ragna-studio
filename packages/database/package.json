@@ -2,6 +2,7 @@
   "name": "@repo/database",
   "version": "0.0.0",
   "private": true,
+  "description": "Drizzle ORM on PostgreSQL: schema, relations, migrations, repositories, seed",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

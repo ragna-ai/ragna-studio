@@ -26,6 +26,8 @@ late review and can overturn the advice.
 | A new npm package, or a feature a package may solve | dependency-choice                  |
 | A PRD, design doc or slices doc                    | spec-writing                        |
 | A page in `apps/docs`                              | docs-writing                        |
+| `apps/web` e2e tests                               | read `apps/web/e2e/README.md`       |
+| `apps/worker`                                      | tdd, read `apps/worker/test/README.md` |
 
 If unsure whether a skill applies, load it. Say which skills you loaded.
 
@@ -56,15 +58,17 @@ approval to build.
 ## 6. Implement
 
 - Small, single-area work: implement it yourself.
-- Larger or parallel work: the lead delegates. Spawn worker agents on a cheaper model; in Claude Code that is
-  `general-purpose` with `model: "sonnet"`, set explicitly on every call.
+- Larger or parallel work: the lead delegates to `repo-worker` agents (`subagent_type: "repo-worker"`). The
+  definition in `.claude/agents/repo-worker.md` sets the model (Sonnet), preloads clean-code and holds the worker
+  rules. Don't pass `model` (it overrides the definition) or `isolation: "worktree"` (that starts from `main`, not
+  from the lead's branch).
 - Split into slices that touch separate files. Parallel only when slices are independent.
+- One slice owns each shared local resource: `db:push`, rebuilds of a shared `@repo/*` package, and the e2e run.
+  Name the owner in the briefs. The others wait for the integration pass.
 - **De-risk before dispatching.** Read the key files of each slice yourself. Put landmines you found into the
   brief as "already verified, don't rediscover".
-- **Every brief contains:** goal and the PRD section, files to touch, the skills to load (package skills by file
-  path, e.g. `packages/mail/.claude/skills/maizzle/SKILL.md`: they are directory-scoped), one or two existing
-  files as house style, the tests to write and run, `pnpm check-types` before reporting done, and "don't
-  commit".
+- **Write every brief from [brief-template.md](./brief-template.md).** The worker sees AGENTS.md and its
+  definition, not this conversation: the brief carries the intent and everything decided so far.
 - Reuse an idle worker for follow-ups in its area. If the design shifts mid-flight, tell the worker which
   earlier instructions are superseded.
 

@@ -5,92 +5,68 @@ This file provides guidance to AI coding agents (Claude Code, Codex, and others)
 ## Commands
 
 ```bash
-# Development (runs all apps and packages in parallel via Turborepo)
-pnpm dev
-
-# Build everything
+pnpm dev                       # all apps and packages via Turborepo
 pnpm build
-
-# Lint (oxlint)
-pnpm lint
-
-# Format (oxfmt) / verify formatting like CI does
-pnpm format
-pnpm format:check
-
-# Type-check
+pnpm lint                      # oxlint
+pnpm format                    # oxfmt (single quotes); CI runs pnpm format:check
 pnpm check-types
+pnpm check:web-type-graph      # after check-types: fails if the web type-check loads a server-only package
+pnpm check:agents-md           # fails if the map below misses an app or package
+pnpm gen package --args my-pkg "short description"   # scaffold a new @repo/* package
 
-# Fail if the web type-check loads a server-only package (drizzle, @repo/database, ...); run after check-types
-pnpm check:web-type-graph
+pnpm --filter @repo/database db:generate   # migration from schema changes
+pnpm --filter @repo/database db:push       # push schema to the dev DB (dev only)
 
-# Scaffold a new @repo/* package (interactive or non-interactive)
-pnpm gen package
-pnpm gen package --args my-pkg "short description"
+pnpm test:api                  # apps/api/test/README.md; one-time: pnpm --filter @repo/api test:setup
+pnpm test:worker               # apps/worker/test/README.md; same test:setup
+pnpm test:e2e                  # Playwright, apps/web/e2e/README.md
 
-# Database (run from packages/database)
-pnpm --filter @repo/database db:generate   # generate migration from schema changes
-pnpm --filter @repo/database db:push       # push schema directly to DB (dev only)
-pnpm --filter @repo/database db:pull       # introspect DB into schema
-
-# API integration tests (see apps/api/test/README.md; one-time `pnpm --filter @repo/api test:setup` first)
-pnpm test:api
-
-# Web end-to-end tests (Playwright; see apps/web/e2e/README.md)
-pnpm test:e2e
-
-# Worker tests (see apps/worker/test/README.md; same test:setup)
-pnpm test:worker
-
-# Run a specific app or package task
-pnpm --filter @repo/web dev
-pnpm --filter @repo/worker dev
-
-# Upgrade Nuxt via its own CLI (run from apps/web), never by editing the version in package.json
-pnpm exec nuxt upgrade --dedupe --channel stable
-
-# After editing any @repo/* package (including @repo/testing, whose build is a no-op sync trigger),
-# rebuild it through pnpm — this also re-syncs the frozen .pnpm copies that injected consumers resolve
-# (syncInjectedDepsAfterScripts in pnpm-workspace.yaml; see packages/testing/README.md)
+# After editing any @repo/* package (including @repo/testing), rebuild it through pnpm. This also re-syncs the
+# injected copies consumers resolve (syncInjectedDepsAfterScripts; see packages/testing/README.md).
 pnpm --filter @repo/<pkg> build
 
-# Clean install (wipes node_modules workspace-wide via pnpm's built-in command, not a package.json
-# script). Fallback if something still resolves stale code after a rebuild.
-pnpm clean
-pnpm install
-```
+# Upgrade Nuxt from apps/web with its CLI, never by editing package.json
+pnpm exec nuxt upgrade --dedupe --channel stable
 
-Formatting uses **oxfmt** (single quotes). Linting uses **oxlint**.
+# Last resort if stale code still resolves after a rebuild (pnpm built-in, wipes node_modules workspace-wide)
+pnpm clean && pnpm install
+```
 
 ## Architecture
 
-This is a **pnpm + Turborepo monorepo** with two apps and several shared packages. All packages are compiled with **tsdown** (Rolldown-based TypeScript bundler) and exported as ESM (`.mjs`).
+A **pnpm + Turborepo monorepo**. Packages are compiled with **tsdown** and exported as ESM (`.mjs`). The API, worker
+and webbrowser run on **Bun**. Every package states its purpose in the `description` of its `package.json`.
+`pnpm check:agents-md` fails when an app or package below is missing or no longer exists.
 
-### Apps
-
-- **`apps/web`** — Nuxt 4 SPA (`ssr: false`). Uses shadcn-vue (New York style, stone base, Tailwind v4), `@tanstack/vue-form` + Zod for forms, `@vueuse/nuxt`, `vue-sonner` for toasts, and `@nuxt/icon` / `@nuxt/fonts` / `@nuxt/image`.
-- **`apps/docs`**: public product docs at `docs.ragna.io`. Static Astro site scaffolded with Nimbus (`@cloudflare/nimbus-docs`). See `apps/docs/AGENT.md`. Deployed to Cloudflare Workers by Workers Builds, not part of the Docker release.
-- **`apps/worker`** — standalone Node.js process (compiled via tsdown). Consumes BullMQ queues and runs cron jobs. Entry point: `src/index.ts` → connects to Redis, registers processors from `src/processors/`, optionally starts cron jobs from `src/crons/`.
-
-### Shared Packages (`packages/`)
-
-| Package           | Purpose                                                                                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@repo/config`    | Singleton `ConfigService` wrapping env vars; loaded via `dotenv` pointing to root `.env`. All other packages use `config.getSecret(...)` or direct properties.                             |
-| `@repo/database`  | Drizzle ORM + better-sqlite3. Schema lives in `src/schema/`. Migrations in `drizzle/`. Uses `snake_case` column naming.                                                                    |
-| `@repo/auth`      | better-auth with Drizzle adapter. Has **two export paths**: `@repo/auth/server` (auth instance, event handler) and `@repo/auth/client` (browser auth client). Google OAuth + admin plugin. |
-| `@repo/queue`     | BullMQ wrapper. Defines queue/worker/cron factories in `src/services/bullmq.service.ts`. Queue names and job constants in `src/constants/`. Job DTOs in `src/dtos/`.                       |
-| `@repo/mail`      | Nodemailer + MJML + Brevo transport. Template-based `sendEmail()` with `templateId` and `variables`.                                                                                       |
-| `@repo/ai`        | Vercel AI SDK configured for Anthropic, OpenAI, Google, and Black Forest Labs models. Exports factories and tool definitions.                                                              |
-| `@repo/storage`   | `s3mini` (lightweight S3-compatible client) pointed at Cloudflare R2 (`BucketService`).                                                                                                    |
-| `@repo/editor`    | Tiptap v3 rich-text editor (Vue 3 extensions).                                                                                                                                             |
-| `@repo/logger`    | Consola-based structured logger. Log level controlled by `config.logLevel`.                                                                                                                |
-| `@repo/utils`     | Tiny utilities: `tryCatch` (async error handling) and `retryExpoBackoff`.                                                                                                                  |
-| `@repo/ts-config` | Shared `tsconfig/base.json` extended by all packages.                                                                                                                                      |
+| To change                                      | Look in                                                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| REST routes, request validation, WebSocket     | `apps/api` (Hono): `src/controllers` (routes only), `src/services` (logic), `src/validation`, `src/ws` |
+| Pages, components, composables                 | `apps/web` (Nuxt 4 SPA, shadcn-vue, Tailwind v4, TanStack Form + Zod)                                  |
+| Background jobs and crons                      | `apps/worker` (`src/processors`, `src/crons`) and `@repo/queue` (queue names, job DTOs)                |
+| Web scraping and browser automation            | `apps/webbrowser` (Hono + Puppeteer, internal only)                                                    |
+| User docs at docs.ragna.io                     | `apps/docs` (Astro + Nimbus, see `apps/docs/AGENT.md`; deployed by Cloudflare Workers Builds)          |
+| Schema, migrations, repositories               | `@repo/database` (Drizzle ORM on PostgreSQL, `snake_case` columns)                                     |
+| Sign-in, sessions, OAuth provider              | `@repo/auth` (better-auth; `@repo/auth/server` and `@repo/auth/client`)                                |
+| AI models, agent tools, usage                  | `@repo/ai` (Vercel AI SDK)                                                                             |
+| Vendor connections and connectors              | `@repo/integrations`, `@repo/mail` (mail templates and providers)                                      |
+| Files and media                                | `@repo/storage` (S3-compatible), `@repo/media`, `@repo/media-transform` (worker only), `@repo/export`  |
+| Rich-text editor                               | `@repo/editor` (Tiptap v3)                                                                             |
+| Workflows                                      | `@repo/workflow`                                                                                       |
+| Env vars, secrets, encryption, logging, errors | `@repo/config`, `@repo/crypto`, `@repo/logger`, `@repo/api-errors` (RFC 9457 problem details)          |
+| Shared helpers, test helpers, tsconfig         | `@repo/utils`, `@repo/testing`, `@repo/ts-config`                                                      |
 
 ### Key patterns
 
-**Queue/Worker pattern**: To add a new background job — (1) add a queue name constant in `@repo/queue/src/constants/`, (2) add a DTO in `@repo/queue/src/dtos/`, (3) add a processor in `apps/worker/src/processors/`, (4) register it in `apps/worker/src/processors/index.ts`.
+**API layers**: controllers in `apps/api` only declare routes, validate input and call a service. Logic, helpers and
+their interfaces live in the service file.
+
+**AI tool schemas**: an agent tool's `inputSchema` is a flat `z.object` at the top level. A top-level union or
+discriminated union makes Anthropic reject the request (`input_schema.type: Field required`).
+
+**New packages**: look like their siblings. Module folders, subpath exports, a client-safe entry when the web uses it,
+DTOs as zod schemas. Load the system-design skill first: a new package needs a reason.
+
+**Queue/Worker pattern**: To add a new background job: (1) add a queue name constant in `@repo/queue/src/constants/`, (2) add a DTO in `@repo/queue/src/dtos/`, (3) add a processor in `apps/worker/src/processors/`, (4) register it in `apps/worker/src/processors/index.ts`.
 
 **Config/secrets**: All env vars route through `@repo/config`. Sensitive values use `config.getSecret('KEY')` (redacted from logs, not encrypted); non-sensitive ones are direct properties.
 
@@ -107,8 +83,9 @@ use `focus-visible:ring-0 focus-visible:ring-offset-0`: in Tailwind v4 the offse
 
 **migrations**: Local dev: push schema directly to DB with `db:push`, don't hand-write SQL. Anything destined for
 production goes through `db:generate` (commits SQL under `packages/database/drizzle/`) and is applied by the
-`migrate` service — see `packages/database/src/scripts/migrate.ts` and the `migrate` entry in `docker/docker-compose.yml`.
-`db:push` must never run against a production database.
+`migrate` service (`packages/database/src/scripts/migrate.ts` and the `migrate` entry in `docker/docker-compose.yml`).
+`db:push` must never run against a production database, and never with `--force`: it can drop tables the local
+schema doesn't know, including those of another branch.
 
 **new DB tables**: Register every new table in `packages/database/src/schema/relations.ts` (add it to the `defineRelations` `schema` object plus its FK relations), not just export it from `schema/index.ts`. The `db` instance is built with `drizzle({ relations })`, so a table missing from that graph throws a runtime "database relation is missing" error, even for plain query-builder calls.
 
@@ -119,6 +96,9 @@ production goes through `db:generate` (commits SQL under `packages/database/driz
 - **SMTP** (localhost:2525): Mailpit or similar for local email testing.
 - **Web dev server**: runs on port **3000** (`http://localhost:3000`).
 - **API dev server**: runs on port **3010** (`http://localhost:3010`).
+- **e2e servers**: Playwright starts its own API and web on ports 3100 and 3110, next to `pnpm dev`.
+
+Agents never run docker commands. The developer owns the containers. If Postgres or Redis is down, stop and report it.
 
 ### Typescript
 
@@ -156,24 +136,30 @@ Skills live in the root `.agents/skills` (`.claude/skills` links to it), includi
 load in every worktree. Skills in a package folder (`packages/*/.claude/skills`) are directory-scoped: they only load
 after you open a file in that folder. Read them by path instead: `packages/<pkg>/.claude/skills/<name>/SKILL.md`.
 Third-party skills are tracked in the root `skills-lock.json`. Our copy of shadcn-vue runs its CLI with
-`--cwd .../apps/web`: re-apply that after `npx skills update`.
+`--cwd .../apps/web`: re-apply that after `npx skills update`. Remove a third-party skill with `npx skills remove`,
+never by deleting its folder: the next update reinstalls anything still in the lock.
 
-**Branches and worktrees**: start every task on a new branch from `origin/main`. If the checkout has uncommitted
-changes or another agent works in it, create a worktree instead: `wt switch --create <branch> --base origin/main`
-([worktrunk](https://worktrunk.dev)). Its hooks in `.config/wt.toml` copy `.env` and the turbo cache, install
-and build the packages. If `wt` asks to approve hooks, stop and ask the user; never pass `-y`. Only one worktree can run `pnpm dev` at a time (fixed ports 3000/3010), and all share the
+**House rules win.** Where a third-party skill disagrees with AGENTS.md or the house skills (clean-code, tdd,
+system-design, spec-writing, ...), follow the house rule. Known clashes in the Vue and Tailwind skills: no scoped
+CSS, `withDefaults` instead of props destructuring, `~` imports instead of `@`, no inline `style` for static values,
+design tokens instead of Tailwind's default colours and `px` values.
+
+**Lead and worker agents.** The lead is the agent the developer talks to. A worker is an agent the lead spawned,
+normally `repo-worker` (`.claude/agents/repo-worker.md`). The next paragraph is for the lead only. A worker stays on
+the branch and checkout it was started in, never creates branches or worktrees, never commits, pushes or opens PRs,
+and runs `db:push`, shared package rebuilds and e2e only when its brief says so.
+
+**Branches and worktrees (lead only)**: start every task on a new branch from `origin/main`. If the checkout has
+uncommitted changes or another agent works in it, create a worktree instead:
+`wt switch --create <branch> --base origin/main` ([worktrunk](https://worktrunk.dev)). Its hooks in `.config/wt.toml`
+copy `.env` and the turbo cache, install and build the packages. If `wt` asks to approve hooks, stop and ask the
+user; never pass `-y`. Only one worktree can run `pnpm dev` at a time (fixed ports 3000/3010), and all share the
 local Postgres and Redis, so never `db:push` from two worktrees with different schemas.
 
-**Skip self-verification of changes** unless explicitly asked, means:
-
-- no visual confirmation,
-- no git status/diff check,
-- no git commit,
-- no browser verification
-
-The user handles verification and commits. Two exceptions: agents run the tests for what they change
-(see TDD below), and run `pnpm check-types` before reporting done (it also covers `apps/api`'s
-test files, which `bun test` doesn't type-check).
+**Skip self-verification of changes** unless explicitly asked: no visual or browser confirmation, no git status/diff
+check, no git commit. The user handles verification and commits. Two exceptions: agents run the tests for what they
+change (see TDD below), and run `pnpm check-types` before reporting done (it also covers `apps/api`'s test files,
+which `bun test` doesn't type-check).
 
 ### TDD (apps/api)
 
@@ -206,10 +192,7 @@ Split bundled work into sub-issues (`--parent N`). Exploitable security findings
 
 Open every PR as a draft (`gh pr create --draft`). The user marks it ready after review.
 
-# Browser use
+### Browser use and bug fixes
 
-Login requires OAuth (Google/Microsoft/Apple) so you can't easily automate because you don't have credentials. Ask the user to share images or details if required.
-
-# BugFix
-
-Typecast is not a bugfix.
+Login requires OAuth (Google, Microsoft, Apple), so agents can't sign in to automate the browser. Ask the user for
+screenshots or details instead. A typecast is not a bug fix.

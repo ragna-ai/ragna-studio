@@ -2,5 +2,6 @@
   "name": "@repo/ts-config",
   "version": "0.0.0",
   "private": true,
+  "description": "Shared tsconfig base files",
   "license": "AGPL-3.0-only"
 }

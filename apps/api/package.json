@@ -2,6 +2,7 @@
   "name": "@repo/api",
   "version": "0.0.1",
   "private": true,
+  "description": "REST and WebSocket API (Hono on Bun)",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

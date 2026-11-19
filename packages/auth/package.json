@@ -2,6 +2,7 @@
   "name": "@repo/auth",
   "version": "0.0.0",
   "private": true,
+  "description": "better-auth setup: server instance and browser client (sign-in, sessions, passkeys, OAuth provider)",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

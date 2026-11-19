@@ -15,11 +15,10 @@ Write code the next person can read and change without asking you. Assume that p
 6. **Don't build for "later" (YAGNI).** Solve the current requirement. Speculative variants get no abstraction. A known next variant (named in an issue, PRD or by the user) does get a seam now, with only the first implementation built. Load the system-design skill for that.
 7. **Validate at the boundary.** Parse and check external input (request, env, third-party response) before using it.
 8. **Handle the unhappy path.** Loading, empty, and error states. Don't swallow errors silently.
-9. **Comment _why_, not _what_.** The code shows what. A comment explains a non-obvious reason or trade-off. Delete comments that just restate the line.
+9. **Comment only when the code can't say it.** Default to no comment. If one is needed, one line that explains _why_ (a non-obvious reason or trade-off), never _what_. Prefer a docstring for functions and types over `//`. Delete comments that restate the line or no longer hold.
 10. **Leave it cleaner.** Remove dead code, unused imports, and stray console logs you touch.
 11. **Prefer early returns.** Guard invalid cases up front and return. Avoid deep `if/else` nesting or `state ? :` chains; keep the happy path at the left margin.
-12. **Comment only if otherwise unclear.** If the code is clear, no comment is needed. Barely use `//` comments; prefer a docstring for functions and types. If you must comment, explain _why_, not _what_. Prefer to not comment at all and feel free to cleanup (delete) no longer needed comments.
-13. **No spec references in code.** Never cite `specs/...` files, PRD section names or decision numbers in comments, test names or strings. Write the reason itself; specs are snapshots that drift, and the commit or PR is where code links to its spec. CI fails on `specs/` in code files (see the allowlist in `.github/workflows/ci.yml`).
+12. **No spec references in code.** Never cite `specs/...` files, PRD section names or decision numbers in comments, test names or strings. Write the reason itself; specs are snapshots that drift, and the commit or PR is where code links to its spec. CI fails on `specs/` in code files (see the allowlist in `.github/workflows/ci.yml`).
 
 ## Naming
 
@@ -35,7 +34,7 @@ Applies to every name another file or person sees: exported functions, types and
 ## TypeScript
 
 1. **No `any`.** Use a real type, a generic, or `unknown` + a narrowing check. Avoid `as` casts; if you must, comment why.
-2. **Name your types.** Define named `type`/`interface` for object shapes and reuse them. No inline object types in function signatures or props.
+2. **Name your types.** Define named `type`/`interface` for object shapes and reuse them. No inline object types in function signatures, return types or props: a function that returns an object returns an exported, named interface.
 3. **Infer return types for simple functions; annotate public/exported ones.** A reader should see the contract without running the code.
 4. **Parse, don't assume.** Validate external data with Zod (already used here) and derive the type with `z.infer`. Don't hand-write a type that can drift from the schema.
 5. **Prefer `type` unions and discriminated unions** over enums or loose strings for fixed sets of values.
@@ -66,8 +65,9 @@ Applies to every name another file or person sees: exported functions, types and
 11. **No `v-if` on the same element as `v-for`.** Wrap the `v-for` in a `<template>` or `<div>` and put the `v-if` on that wrapper.
 12. **No inline styles.** Use Tailwind classes or shadcn-vue variants. No `style="..."` attributes.
 13. **No scoped CSS.** Use Tailwind classes, shadcn-vue variants, or add custom classes. Pure utility classes with no `<style>` block or inline styles are preferred. If you must add a `<style>` block, use global styles and avoid `scoped`.
-14. **Translations.** In components and composables, take `const { t } = useI18n()` at the top level and use `t` in callbacks through the closure. Never call `useI18n()` inside a callback, a watcher, after an `await`, or in a plain function: it throws at runtime. Code without a setup context (lib functions, classes, plugins, middleware) uses `useNuxtApp().$i18n`, or better, takes `t` or the finished message as a parameter.
-15. **A composable returns what it names.** One composable, one reactive thing, returned directly, e.g. one `useQuery`/`useMutation` per composable. No composable that returns factories for more composables. Logic that needs no setup context (requests, parsing, mapping) stays a plain function, so middleware, plugins and tests can use it too.
+14. **Layout in CSS, not JS.** Size and scroll areas with flex or grid and a `min-h-0` / `min-w-0` chain down to the scroll container. Never measure elements in JS to set a height or width with `:style`.
+15. **Translations.** In components and composables, take `const { t } = useI18n()` at the top level and use `t` in callbacks through the closure. Never call `useI18n()` inside a callback, a watcher, after an `await`, or in a plain function: it throws at runtime. Code without a setup context (lib functions, classes, plugins, middleware) uses `useNuxtApp().$i18n`, or better, takes `t` or the finished message as a parameter.
+16. **A composable returns what it names.** One composable, one reactive thing, returned directly, e.g. one `useQuery`/`useMutation` per composable. No composable that returns factories for more composables. Logic that needs no setup context (requests, parsing, mapping) stays a plain function, so middleware, plugins and tests can use it too.
 
 ## shadcn-vue
 
@@ -76,11 +76,12 @@ Applies to every name another file or person sees: exported functions, types and
 3. **Use variants, not custom styles.** Reach for the component's props (`variant`, `size`, etc.) before adding classes. Extend variants in the component's `cva` config rather than overriding with one-off Tailwind.
 4. **Compose, don't fork.** Build app-specific components by wrapping shadcn primitives. Don't edit the generated `ui/` files except to add shared variants.
 5. **Style with `cn()` + Tailwind tokens.** Merge classes via the `cn()` helper and use the theme tokens, not hard-coded colors.
-6. **Design tokens are utilities.** A design value (colour, size, spacing) lives in `@theme` in `main.css` and is used as its generated utility (`px-page`, `w-sidebar`, `bg-canvas`). Never `p-(--token)` or `[var(--token)]` for our tokens; `(--var)` is only for values set at runtime.
+6. **Popover inside a Tooltip.** Put the `Popover` inside the `TooltipTrigger` (wrapped in a `span`), never a `PopoverTrigger` inside a `Tooltip`: reka anchors the popover to the tooltip otherwise.
+7. **Design tokens are utilities.** A design value (colour, size, spacing) lives in `@theme` in `main.css` and is used as its generated utility (`px-page`, `w-sidebar`, `bg-canvas`). Never `p-(--token)` or `[var(--token)]` for our tokens; `(--var)` is only for values set at runtime.
 
 ## Looking up library details
 
-When you need to understand how a library or package works, prefer official documentation (docs site, README, JSDoc comments in source headers) over reading deeply into `node_modules/` internals. Use `WebFetch` or `WebSearch` to find the relevant docs page. Only read `node_modules/` code if the docs don't cover the specific detail you need.
+Check the installed version first: `pnpm why <pkg>`, or the `version` in the package's `node_modules/<name>/package.json`. For API shape (names, parameters, types) read the package's bundled `.d.ts` files and README: they match that version exactly. For guides and concepts use the official docs for that version, never a page for another major. If a docs page names a different version, trust the installed types. Example: `drizzle-orm` here is v1 (`defineRelations()`), and most Drizzle pages on the web still show v0 `relations()`.
 
 ## Before finishing
 
