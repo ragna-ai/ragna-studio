@@ -39,12 +39,9 @@ const isRenameOpen = computed({
 
 // Functions
 const openFullSearch = (text: string) => {
-  if (!text) {
-    return;
-  }
   navigateTo({
     path: localePath('/chat/search'),
-    query: { q: text, page: 1, limit: 10 },
+    query: text ? { q: text, page: 1, limit: 10 } : {},
   });
 };
 
@@ -116,6 +113,7 @@ const handleDeleteChat = async (chatId: string) => {
             <ListSearch
               v-model="searchText"
               :placeholder="t('chat.history.search')"
+              submit-on-icon-click
               @submit="openFullSearch"
             />
           </div>
