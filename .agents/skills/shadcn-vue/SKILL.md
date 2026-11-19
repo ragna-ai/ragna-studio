@@ -22,7 +22,7 @@ The JSON above has two keys: `project` (detected framework, Tailwind setup, pack
 ## Principles
 
 1. **Use existing components first.** Use `npx shadcn-vue@latest search` to check registries before writing custom UI. Check community registries too.
-2. **Compose, don't reinvent.** For example: Settings page = Tabs + Card + form controls. Dashboard = Sidebar + Card + Chart + Table.
+2. **Compose, don't reinvent.** Settings page = Tabs + Card + form controls. Dashboard = Sidebar + Card + Chart + Table.
 3. **Use built-in variants before custom styles.** `variant="outline"`, `size="sm"`, etc.
 4. **Use semantic colors.** `bg-primary`, `text-muted-foreground` — never raw values like `bg-blue-500`.
 
