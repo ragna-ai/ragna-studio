@@ -1,6 +1,6 @@
 import { getMemoryByAgentId, upsertMemory } from '@repo/database';
 import * as z from 'zod';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { ToolDefinition, ToolFailure, ToolOutput } from './tool-definition';
 
 // A flat object schema (not a discriminated union): Anthropic's tool
 // `input_schema` must have a top-level `type: "object"`, but a zod union
@@ -30,9 +30,12 @@ const memoryInputSchema = z.object({
     .describe('For `replace`: the replacement text. Leave empty to delete the matched text.'),
 });
 
+const memoryOutputSchema = z.strictObject({ ok: z.literal(true) });
+
 type MemoryInput = z.infer<typeof memoryInputSchema>;
-type MemoryFailure = ToolFailure<'invalid_input' | 'not_found' | 'ambiguous'>;
-type MemoryOutput = { ok: true } | MemoryFailure;
+type MemoryFailureStatus = 'invalid_input' | 'not_found' | 'ambiguous';
+type MemoryFailure = ToolFailure<MemoryFailureStatus>;
+type MemoryOutput = ToolOutput<typeof memoryOutputSchema, MemoryFailureStatus>;
 type Edit = { content: string } | MemoryFailure;
 
 export interface MemoryToolOptions {
@@ -41,11 +44,16 @@ export interface MemoryToolOptions {
 
 export const memoryToolDefinition = ({
   agentId,
-}: MemoryToolOptions): ToolDefinition<typeof memoryInputSchema, MemoryOutput> => ({
+}: MemoryToolOptions): ToolDefinition<
+  typeof memoryInputSchema,
+  typeof memoryOutputSchema,
+  MemoryFailureStatus
+> => ({
   name: 'memory',
   description:
     'Use this tool to save or update durable, long-term facts about the user or their work in your persistent memory. The whole document is shown to you again at the start of every future conversation. `append` adds a new fact; `replace` edits or removes one you saved earlier.',
   inputSchema: memoryInputSchema,
+  outputSchema: memoryOutputSchema,
   access: 'write',
   execute: (input) => applyMemoryEdit(agentId, input),
 });

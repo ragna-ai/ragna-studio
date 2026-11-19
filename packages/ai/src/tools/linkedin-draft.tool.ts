@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { draftLinkedInPost } from '../services/social-post.service';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { ToolDefinition } from './tool-definition';
 
 const linkedinDraftInputSchema = z.object({
   text: z
@@ -23,21 +23,18 @@ const linkedinDraftInputSchema = z.object({
     ),
 });
 
-interface LinkedinDraftSaved {
-  id: string;
-  status: string;
-}
-
-type LinkedinDraftOutput = LinkedinDraftSaved | ToolFailure<'rejected'>;
+const linkedinDraftOutputSchema = z.strictObject({ id: z.string(), status: z.string() });
 
 export const linkedinDraftToolDefinition: ToolDefinition<
   typeof linkedinDraftInputSchema,
-  LinkedinDraftOutput
+  typeof linkedinDraftOutputSchema,
+  'rejected'
 > = {
   name: 'linkedinDraft',
   description:
     'Use this tool to create or revise a LinkedIn post draft for the user. It only saves the draft; it never publishes to LinkedIn. The user reviews and publishes drafts themselves. Pass imageIds to attach up to 9 images that were generated earlier with the imageGen tool.',
   inputSchema: linkedinDraftInputSchema,
+  outputSchema: linkedinDraftOutputSchema,
   access: 'write',
   execute: async ({ text, draftId, imageIds }, { userId, workspaceId }) => {
     const result = await draftLinkedInPost({ userId, text, draftId, imageIds, workspaceId });

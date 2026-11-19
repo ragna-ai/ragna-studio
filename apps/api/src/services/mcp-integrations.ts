@@ -1,14 +1,10 @@
 import type { McpAccess, McpIntegrationId } from '@repo/database';
-import type { ToolDefinition } from '@repo/ai';
+import type { AnyToolDefinition } from '@repo/ai';
 import { datasetToolDefinitions, filterByAccess } from '@repo/ai';
-import type * as z from 'zod';
 
 // The integration registry: datasets
 // today, more resource types register here as they become MCP integrations.
-export const mcpIntegrationDefinitions: Record<
-  McpIntegrationId,
-  ToolDefinition<z.ZodObject, unknown>[]
-> = {
+export const mcpIntegrationDefinitions: Record<McpIntegrationId, AnyToolDefinition[]> = {
   datasets: datasetToolDefinitions,
 };
 
@@ -18,10 +14,8 @@ export const mcpIntegrationDefinitions: Record<
  * contributes all of its tools (write implies read). `off` or missing
  * contributes none.
  */
-export function getAllowedToolDefinitions(
-  access: McpAccess,
-): ToolDefinition<z.ZodObject, unknown>[] {
-  const allowed: ToolDefinition<z.ZodObject, unknown>[] = [];
+export function getAllowedToolDefinitions(access: McpAccess): AnyToolDefinition[] {
+  const allowed: AnyToolDefinition[] = [];
 
   for (const integrationId of Object.keys(mcpIntegrationDefinitions) as McpIntegrationId[]) {
     const level = access[integrationId] ?? 'off';

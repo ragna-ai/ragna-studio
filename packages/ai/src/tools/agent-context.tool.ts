@@ -11,15 +11,11 @@ const searchContextDocumentsInputSchema = z.object({
   query: z.string().describe("What to search for in the agent's background documents."),
 });
 
-interface SearchContextDocumentsResult {
-  documentName: string;
-  content: string;
-  distance: number;
-}
-
-interface SearchContextDocumentsOutput {
-  results: SearchContextDocumentsResult[];
-}
+const searchContextDocumentsOutputSchema = z.strictObject({
+  results: z.array(
+    z.strictObject({ documentName: z.string(), content: z.string(), distance: z.number() }),
+  ),
+});
 
 export interface SearchContextDocumentsToolOptions {
   agentId: string;
@@ -29,12 +25,13 @@ export const searchContextDocumentsToolDefinition = ({
   agentId,
 }: SearchContextDocumentsToolOptions): ToolDefinition<
   typeof searchContextDocumentsInputSchema,
-  SearchContextDocumentsOutput
+  typeof searchContextDocumentsOutputSchema
 > => ({
   name: 'searchContextDocuments',
   description:
     "Search your own background documents (uploaded to you as context) for passages relevant to a query. These are your knowledge base, not the user's workspace documents. Use this whenever the conversation might benefit from something in them.",
   inputSchema: searchContextDocumentsInputSchema,
+  outputSchema: searchContextDocumentsOutputSchema,
   access: 'read',
   execute: async ({ query }) => {
     const queryEmbedding = await embedQuery(query);

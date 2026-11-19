@@ -7,7 +7,7 @@ import {
 } from '@repo/database';
 import * as z from 'zod';
 import { failOnForeignReference } from './foreign-reference-failure';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
 import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a document always belongs to a workspace, and every
@@ -23,11 +23,13 @@ export interface DocumentToolDefinitionsOptions {
   agentId: string;
 }
 
-interface DocumentSummary {
-  id: string;
-  title: string;
-  folderName: string | null;
-}
+const documentSummarySchema = z.strictObject({
+  id: z.string(),
+  title: z.string(),
+  folderName: z.string().nullable(),
+});
+
+type DocumentSummary = z.infer<typeof documentSummarySchema>;
 
 function toDocumentSummary(documentRecord: DocumentWithRelations): DocumentSummary {
   return {
@@ -46,18 +48,17 @@ const DOCUMENT_NOT_FOUND: ToolFailure<'not_found'> = {
 
 const listDocumentsInputSchema = z.object({});
 
-interface ListDocumentsOutput {
-  documents: DocumentSummary[];
-}
+const listDocumentsOutputSchema = z.strictObject({ documents: z.array(documentSummarySchema) });
 
 const listDocumentsDefinition: ToolDefinition<
   typeof listDocumentsInputSchema,
-  ListDocumentsOutput
+  typeof listDocumentsOutputSchema
 > = {
   name: 'listDocuments',
   description:
     "List the documents in the current workspace, with each one's id, title, and folder name (if filed into one). Use this to find a document before reading or editing it.",
   inputSchema: listDocumentsInputSchema,
+  outputSchema: listDocumentsOutputSchema,
   access: 'read',
   execute: async (_input, { workspaceId }) => {
     const documents = await getDocumentsByWorkspaceId({
@@ -74,18 +75,17 @@ const readDocumentInputSchema = z.object({
   documentId: z.string().describe('The id of the document to read.'),
 });
 
-interface ReadDocumentOutput {
-  title: string;
-  content: string;
-}
+const readDocumentOutputSchema = z.strictObject({ title: z.string(), content: z.string() });
 
 const readDocumentDefinition: ToolDefinition<
   typeof readDocumentInputSchema,
-  ReadDocumentOutput | ToolFailure<'not_found'>
+  typeof readDocumentOutputSchema,
+  'not_found'
 > = {
   name: 'readDocument',
   description: "Read a document's title and full markdown content by its id.",
   inputSchema: readDocumentInputSchema,
+  outputSchema: readDocumentOutputSchema,
   access: 'read',
   execute: async ({ documentId }, { workspaceId }) => {
     const documentRecord = await getDocumentById({ documentId, workspaceId });
@@ -106,22 +106,21 @@ const createDocumentInputSchema = z.object({
   ),
 });
 
-interface CreateDocumentOutput {
-  id: string;
-  title: string;
-}
+const createDocumentOutputSchema = z.strictObject({ id: z.string(), title: z.string() });
 
 function createDocumentDefinition({
   agentId,
 }: DocumentToolDefinitionsOptions): ToolDefinition<
   typeof createDocumentInputSchema,
-  CreateDocumentOutput | ToolFailure<'not_found'>
+  typeof createDocumentOutputSchema,
+  'not_found'
 > {
   return {
     name: 'createDocument',
     description:
       'Create a new markdown document in the current workspace, optionally filed into an existing folder. Documents you create are marked as agent-created.',
     inputSchema: createDocumentInputSchema,
+    outputSchema: createDocumentOutputSchema,
     access: 'write',
     execute: ({ title, content, folderId }, { workspaceId }) =>
       failOnForeignReference(async () => {
@@ -163,7 +162,7 @@ const editDocumentInputSchema = z.object({
 });
 
 type EditDocumentFailure = ToolFailure<'not_found' | 'invalid_input' | 'ambiguous_match'>;
-type EditDocumentOutput = { ok: true } | EditDocumentFailure;
+const editDocumentOutputSchema = z.strictObject({ ok: z.literal(true) });
 type TextEdit = { content: string } | EditDocumentFailure;
 
 function appendText(content: string, text: string): TextEdit {
@@ -218,11 +217,16 @@ function applyEdit(content: string, input: z.infer<typeof editDocumentInputSchem
 // Read-modify-write, same shape as the memory tool (memory.tool.ts): safe
 // because tool calls within a turn run sequentially, so the workspace-scoped
 // update below is the only last-writer-wins boundary.
-const editDocumentDefinition: ToolDefinition<typeof editDocumentInputSchema, EditDocumentOutput> = {
+const editDocumentDefinition: ToolDefinition<
+  typeof editDocumentInputSchema,
+  typeof editDocumentOutputSchema,
+  'not_found' | 'invalid_input' | 'ambiguous_match'
+> = {
   name: 'editDocument',
   description:
     "Edit a document's markdown content. `append` adds new text to the end; `replace` edits or removes existing text.",
   inputSchema: editDocumentInputSchema,
+  outputSchema: editDocumentOutputSchema,
   access: 'write',
   execute: async (input, { workspaceId }) => {
     const { documentId } = input;
@@ -251,7 +255,7 @@ const editDocumentDefinition: ToolDefinition<typeof editDocumentInputSchema, Edi
 /** The document tools of one agent. */
 export function documentToolDefinitions(
   options: DocumentToolDefinitionsOptions,
-): ToolDefinition<z.ZodObject, unknown>[] {
+): AnyToolDefinition[] {
   return [
     listDocumentsDefinition,
     readDocumentDefinition,

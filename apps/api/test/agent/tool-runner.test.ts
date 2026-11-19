@@ -1,6 +1,7 @@
 import {
   toAgentTools,
   ToolExecutionError,
+  type AnyToolDefinition,
   type ToolDefinition,
   type UIMessageStreamWriter,
 } from '@repo/ai';
@@ -14,24 +15,46 @@ const INTERNAL_ERROR_TEXT = 'relation "internal_table" does not exist';
 
 const echoInputSchema = z.object({ text: z.string() });
 
-const failingDefinition: ToolDefinition<typeof echoInputSchema, never> = {
+const echoOutputSchema = z.strictObject({ text: z.string() });
+
+const failingDefinition: ToolDefinition<typeof echoInputSchema, typeof echoOutputSchema> = {
   name: 'failingTool',
   description: 'Always throws.',
   inputSchema: echoInputSchema,
+  outputSchema: echoOutputSchema,
   access: 'read',
   execute: async () => {
     throw new Error(INTERNAL_ERROR_TEXT);
   },
 };
 
-const announcingDefinition: ToolDefinition<typeof echoInputSchema, { text: string }> = {
+const announcingDefinition: ToolDefinition<typeof echoInputSchema, typeof echoOutputSchema> = {
   name: 'announcingTool',
   description: 'Echoes its input and announces the call.',
   inputSchema: echoInputSchema,
+  outputSchema: echoOutputSchema,
   access: 'read',
   uiEvent: ({ text }) => ({ type: 'data-announcing', data: { text } }),
   execute: async ({ text }) => ({ text }),
 };
+
+const LEAKED_FIELD_VALUE = 'secret-value';
+
+const statusOutputSchema = z.object({ status: z.literal('ok'), text: z.string() });
+
+function definitionReturning(
+  output: Record<string, unknown>,
+  outputSchema: z.ZodObject = echoOutputSchema,
+): AnyToolDefinition {
+  return {
+    name: 'returningTool',
+    description: 'Returns a fixed output.',
+    inputSchema: echoInputSchema,
+    outputSchema,
+    access: 'read',
+    execute: async () => output,
+  };
+}
 
 const toolContext = { userId: 'user-1', workspaceId: 'workspace-1', origin: 'agent' as const };
 
@@ -95,5 +118,76 @@ describe('tool runner', () => {
     );
 
     expect(output).toEqual({ text: 'hi' });
+  });
+
+  test('an output that matches the declared shape is returned unchanged', async () => {
+    const tools = toAgentTools([definitionReturning({ text: 'hi' })], { toolContext });
+
+    const output = await executeOf(tools, 'returningTool')(
+      { text: 'hi' },
+      stubToolExecutionOptions,
+    );
+
+    expect(output).toEqual({ text: 'hi' });
+  });
+
+  test('an output with an extra field fails and does not leak the field', async () => {
+    const tools = toAgentTools([definitionReturning({ text: 'hi', leaked: LEAKED_FIELD_VALUE })], {
+      toolContext,
+    });
+    const call = Promise.resolve(
+      executeOf(tools, 'returningTool')({ text: 'hi' }, stubToolExecutionOptions),
+    );
+
+    await expect(call).rejects.toBeInstanceOf(ToolExecutionError);
+    const error = await call.catch((caught: unknown) => caught);
+    expect(String(error)).not.toContain(LEAKED_FIELD_VALUE);
+  });
+
+  test('an output with a wrong-typed field fails', async () => {
+    const tools = toAgentTools([definitionReturning({ text: 42 })], { toolContext });
+    const call = Promise.resolve(
+      executeOf(tools, 'returningTool')({ text: 'hi' }, stubToolExecutionOptions),
+    );
+
+    await expect(call).rejects.toBeInstanceOf(ToolExecutionError);
+  });
+
+  test('an expected failure passes through as the output', async () => {
+    const failure = { status: 'not_found', message: 'Nothing here.' };
+    const tools = toAgentTools([definitionReturning(failure)], { toolContext });
+
+    const output = await executeOf(tools, 'returningTool')(
+      { text: 'hi' },
+      stubToolExecutionOptions,
+    );
+
+    expect(output).toEqual(failure);
+  });
+
+  test('a success output that carries a status field is not taken for a failure', async () => {
+    const success = { status: 'ok', text: 'hi' };
+    const tools = toAgentTools([definitionReturning(success, statusOutputSchema)], {
+      toolContext,
+    });
+
+    const output = await executeOf(tools, 'returningTool')(
+      { text: 'hi' },
+      stubToolExecutionOptions,
+    );
+
+    expect(output).toEqual(success);
+  });
+
+  test('a failure with an extra field is rejected', async () => {
+    const tools = toAgentTools(
+      [definitionReturning({ status: 'not_found', message: 'Nothing here.', leaked: 'x' })],
+      { toolContext },
+    );
+    const call = Promise.resolve(
+      executeOf(tools, 'returningTool')({ text: 'hi' }, stubToolExecutionOptions),
+    );
+
+    await expect(call).rejects.toBeInstanceOf(ToolExecutionError);
   });
 });

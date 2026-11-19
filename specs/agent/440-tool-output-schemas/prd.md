@@ -1,6 +1,6 @@
 # Agent tools: declared output schemas (PRD)
 
-> **Status: proposed** (2026-11-19). Issue #440. Extends #438.
+> **Status: implemented** (2026-11-19, PR #441). Issue #440. Extends #438.
 
 Every agent tool declares the shape of its successful output as a zod schema. The tool runner
 checks each output against it, and MCP clients see it in `tools/list`. The output type is derived
