@@ -26,7 +26,7 @@ When the change has a PRD, its acceptance criteria are the test list. Take the c
 
 - Test at the HTTP boundary (`app.request()`), grouped by domain folder (`test/chat/`, `test/task/`), not by middleware.
 - Assert behavior, not internals.
-- **Response schemas are strict.** Parse responses with `z.strictObject` and list every field the API returns, nested objects included. Plain `z.object` silently strips unknown keys, so a leaked or reintroduced field passes unnoticed. Never loosen with `.passthrough()` or `.catchall()`. Applies to every new or touched test.
+- **Response schemas are strict.** Parse responses with `z.strictObject` and list every field the API returns, nested objects included. Plain `z.object` silently strips unknown keys, so a leaked or reintroduced field passes unnoticed. Never loosen with `.passthrough()` or `.catchall()`, and never import the schema under test from `src` or a package: an imported schema changes with the code and guards nothing. Applies to every new or touched test.
 - Mock only external services (AI providers, storage, mail, LinkedIn) at the package boundary, never our own code. Pure helpers from a mocked package stay real.
 - **Fakes are typed against the contract they replace.** A contract change must break the fake at compile time, not drift silently.
 - **A package-level fake is not coverage of that package.** Code behind a faked boundary (parsing, retry, error mapping) needs a test that runs it, e.g. with the vendor's HTTP faked instead. New external adapters inject their deps through the factory options object (token getter, sleep for retry delays), so tests pass fakes without `mock.module`.

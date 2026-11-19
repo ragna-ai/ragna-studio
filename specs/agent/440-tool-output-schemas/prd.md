@@ -1,15 +1,13 @@
-# Agent tools: declared output schemas, one pattern for sharing schemas (PRD)
+# Agent tools: declared output schemas (PRD)
 
 > **Status: proposed** (2026-11-19). Issue #440. Extends #438.
 
 Every agent tool declares the shape of its successful output as a zod schema. The tool runner
-checks each output against it, and MCP clients see it in `tools/list`. A shape gets one
-definition, and every consumer reads it from there.
+checks each output against it, and MCP clients see it in `tools/list`. The output type is derived
+from the schema, so the two can't drift.
 
 Today a tool's output is a hand-written TypeScript type at best. Nothing checks it at runtime, so
-a renamed or leaked field reaches the model and MCP clients unnoticed. The repo also shares
-schemas in several ways (zod DTOs, `z.infer`, parallel interfaces, test-only schemas), and each
-copy can drift.
+a renamed or leaked field reaches the model and MCP clients unnoticed.
 
 ## Problem
 
@@ -17,22 +15,22 @@ copy can drift.
   declare one (#438), and nothing uses it at runtime.
 - The MCP server returns `structuredContent` without registering an `outputSchema`, so clients
   can't know the shape in advance.
-- No written rule says where a shared schema lives, how its type is derived, or how tests guard
-  it. AGENTS.md and the clean-code skill each cover a part.
 
 ## Goals
 
 - Every tool output is checked against one declared schema before it reaches the model or an
   MCP client.
 - MCP clients can read each tool's output shape from `tools/list`.
-- One documented pattern for sharing a schema across API, worker, web, MCP and tools.
 - **Success signal:** a field added to a tool's output without updating its schema fails the API
   tests.
 
 ## Non-goals
 
 - Validating stored chat history against the schemas. Old messages keep their old shapes.
-- Moving REST response DTOs to shared schemas. The pattern applies to new and touched code.
+- A new repo-wide rule for sharing schemas. The clean-code skill (`z.infer`, never a parallel
+  type), AGENTS.md (client-safe entry, DTOs as zod schemas) and the tdd skill (strict test
+  schemas) already cover it. The tdd skill gains one sentence: a test never imports the schema it
+  tests.
 - Output schemas for tools from external MCP servers. Every `ToolDefinition` today is ours.
 
 ## User stories
@@ -66,26 +64,17 @@ structured result without guessing.
 - **US-2.3** Given a dataset tool call for a dataset that doesn't exist, when the client calls
   it, then the result is an error with the failure message and no structured content.
 
-### US-3 One pattern for shared schemas (P2)
-
-As a developer, I want one written rule for where a shared schema lives and how it is consumed,
-so that a shape has one definition and the copies can't drift.
-
-- **US-3.1** Rule: AGENTS.md (key patterns) and the clean-code skill state the pattern in the
-  Design section below.
-
 ## Testing
 
-| Criterion | Level  | Folder                               |
-| --------- | ------ | ------------------------------------ |
-| US-1.1    | API    | `apps/api/test/agent/` (tool runner) |
-| US-1.2    | API    | `apps/api/test/agent/` (tool runner) |
-| US-1.3    | API    | `apps/api/test/agent/` (tool runner) |
-| US-1.4    | types  | `pnpm check-types`                   |
-| US-2.1    | API    | `apps/api/test/mcp/`                 |
-| US-2.2    | API    | `apps/api/test/mcp/`                 |
-| US-2.3    | API    | `apps/api/test/mcp/`                 |
-| US-3.1    | review | PR review                            |
+| Criterion | Level | Folder                               |
+| --------- | ----- | ------------------------------------ |
+| US-1.1    | API   | `apps/api/test/agent/` (tool runner) |
+| US-1.2    | API   | `apps/api/test/agent/` (tool runner) |
+| US-1.3    | API   | `apps/api/test/agent/` (tool runner) |
+| US-1.4    | types | `pnpm check-types`                   |
+| US-2.1    | API   | `apps/api/test/mcp/`                 |
+| US-2.2    | API   | `apps/api/test/mcp/`                 |
+| US-2.3    | API   | `apps/api/test/mcp/`                 |
 
 Existing per-tool API tests keep their own strict schemas and must stay green after the move.
 
@@ -130,15 +119,6 @@ and throws `ToolExecutionError`.
 **Moving the tools.** Each tool file declares `<tool>OutputSchema` next to its input schema, as
 `webSearch` does. Nested shapes reuse existing zod DTOs where one exists. `imageGen`'s output
 type stays exported from `@repo/ai/client` as `z.infer`.
-
-**Schema-sharing pattern** (goes into AGENTS.md and the clean-code skill):
-
-1. A schema lives in the package that owns the data, next to the code that produces it.
-2. Its type is `z.infer<typeof schema>`. Never a parallel interface.
-3. The web imports it from the package's client-safe entry (`@repo/<pkg>/client`); server code
-   from the main entry.
-4. API responses, worker job DTOs, tool outputs and MCP schemas all import that one schema.
-5. Tests guard the shape with their own strict schemas and never import the schema they test.
 
 ## Extension points
 
