@@ -2,6 +2,7 @@
   "name": "@repo/ai",
   "version": "0.0.0",
   "private": true,
+  "description": "AI models and providers on the Vercel AI SDK: model factories, agent tools, usage tracking",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

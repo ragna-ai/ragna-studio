@@ -2,6 +2,7 @@
   "name": "@repo/worker",
   "version": "0.0.1",
   "private": true,
+  "description": "Background job and cron worker (BullMQ on Bun)",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"

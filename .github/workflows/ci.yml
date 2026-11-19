@@ -108,6 +108,7 @@ jobs:
       - run: pnpm build --filter='!@repo/docs'
       - run: pnpm check-types
       - run: pnpm check:web-type-graph
+      - run: pnpm check:agents-md
       - run: pnpm --filter @repo/editor test
       - run: pnpm --filter @repo/mail test
       - run: pnpm lint

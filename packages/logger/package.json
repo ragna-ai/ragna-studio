@@ -2,6 +2,7 @@
   "name": "@repo/logger",
   "version": "0.0.0",
   "private": true,
+  "description": "Consola-based structured logger",
   "license": "AGPL-3.0-only",
   "files": [
     "dist"
