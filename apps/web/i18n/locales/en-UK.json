@@ -243,6 +243,11 @@
         "title": "No agents yet",
         "description": "Agents do recurring work for you, like checking invoices or writing reminders."
       },
+      "noMatches": {
+        "title": "No agents match",
+        "description": "Nothing matches \"{query}\". Try a different name or description.",
+        "clear": "Clear search"
+      },
       "loadError": {
         "title": "Couldn't load your agents.",
         "description": "Check your connection and try again."

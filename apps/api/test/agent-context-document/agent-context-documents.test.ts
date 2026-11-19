@@ -20,7 +20,7 @@ import { app } from '../../src/app';
 // (apps/worker/src/processors/agent-context-document.processor.ts), out
 // of scope here.
 
-const documentSchema = z.object({
+const documentSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
   mimeType: z.string(),
@@ -28,10 +28,21 @@ const documentSchema = z.object({
   status: z.enum(['pending', 'processing', 'completed', 'failed']),
   isTruncated: z.boolean(),
   errorMessage: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  charCount: z.number(),
 });
 
-const documentResponseSchema = z.object({ document: documentSchema });
-const documentListResponseSchema = z.object({ documents: z.array(documentSchema) });
+const documentResponseSchema = z.strictObject({ document: documentSchema });
+const documentListResponseSchema = z.strictObject({
+  documents: z.array(documentSchema),
+  summary: z.strictObject({
+    totalReadyChars: z.number(),
+    injectionThreshold: z.number(),
+    mode: z.enum(['inject', 'retrieval']),
+  }),
+});
+const uploadResponseSchema = z.strictObject({ documents: z.array(documentSchema) });
 
 async function createAgent(cookieHeader: string, workspaceId: string, aiModelId: string) {
   const response = await app.request(`/workspace/${workspaceId}/agent`, {
@@ -81,7 +92,7 @@ async function uploadDocument(
     // A rejected upload (e.g. an unsniffable file type) returns the plain
     // error envelope, not `{ documents }`, so this only validates the
     // shape on success; callers asserting a rejection just check `status`.
-    documents: response.ok ? documentListResponseSchema.parse(json).documents : [],
+    documents: response.ok ? uploadResponseSchema.parse(json).documents : [],
   };
 }
 

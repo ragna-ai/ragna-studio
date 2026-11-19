@@ -243,6 +243,11 @@
         "title": "Noch keine Agenten",
         "description": "Agenten erledigen wiederkehrende Aufgaben für dich, etwa Rechnungen prüfen oder Erinnerungen schreiben."
       },
+      "noMatches": {
+        "title": "Keine passenden Agenten",
+        "description": "Nichts passt zu \"{query}\". Versuche einen anderen Namen oder eine andere Beschreibung.",
+        "clear": "Suche zurücksetzen"
+      },
       "loadError": {
         "title": "Deine Agenten konnten nicht geladen werden.",
         "description": "Prüfe deine Verbindung und versuche es erneut."

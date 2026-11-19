@@ -10,6 +10,7 @@ import useChatList from '~/features/chat/composables/useChatList';
 // Emits
 
 // Composables
+const localePath = useLocalePath();
 const { page, limit, useGetAllChats } = useChatList();
 const { data, error, isPending, refetch } = useGetAllChats();
 const { mutateAsync: deleteChat } = useDeleteChat();
@@ -37,6 +38,13 @@ const isRenameOpen = computed({
 });
 
 // Functions
+const openFullSearch = (text: string) => {
+  navigateTo({
+    path: localePath('/chat/search'),
+    query: text ? { q: text, page: 1, limit: 10 } : {},
+  });
+};
+
 const handleDeleteChat = async (chatId: string) => {
   const confirmed = await confirm({
     title: t('chat.deleteConfirm.title'),
@@ -105,6 +113,8 @@ const handleDeleteChat = async (chatId: string) => {
             <ListSearch
               v-model="searchText"
               :placeholder="t('chat.history.search')"
+              submit-on-icon-click
+              @submit="openFullSearch"
             />
           </div>
           <ChatManyTable

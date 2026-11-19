@@ -92,16 +92,18 @@ export async function listAgentsForWorkspace({
   page,
   limit,
   sort,
+  searchQuery,
 }: {
   workspaceId: string;
   page: number;
   limit: number;
   sort: 'asc' | 'desc';
+  searchQuery?: string;
 }): Promise<AgentListResponse> {
   const offset = (page - 1) * limit;
 
   const { error: countError, data: totalCount } = await tryCatch(() =>
-    getAgentCountByWorkspaceId({ workspaceId }),
+    getAgentCountByWorkspaceId({ workspaceId, searchQuery }),
   );
 
   if (countError !== null || totalCount === null) {
@@ -110,7 +112,7 @@ export async function listAgentsForWorkspace({
   }
 
   const { error, data: agents } = await tryCatch(() =>
-    getAgentsByWorkspaceId({ workspaceId, limit, sort, offset }),
+    getAgentsByWorkspaceId({ workspaceId, limit, sort, offset, searchQuery }),
   );
 
   if (error !== null || !agents) {

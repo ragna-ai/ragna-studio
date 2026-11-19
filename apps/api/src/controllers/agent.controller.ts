@@ -20,7 +20,7 @@ import {
   validAgentIdParam,
   validAgentMemoryBody,
   validCreateAgentBody,
-  validPaginationQuery,
+  validAgentListQuery,
   validUpdateAgentBody,
 } from '../validation';
 
@@ -32,7 +32,7 @@ export const agentController = new Hono()
    * [GET] /workspace/:workspaceId/agent
    * List a workspace's agents, paginated.
    */
-  .get('/', validPaginationQuery, async (c) => {
+  .get('/', validAgentListQuery, async (c) => {
     const workspace = c.get('workspace');
     const query = c.req.valid('query');
 
@@ -41,6 +41,7 @@ export const agentController = new Hono()
       page: query.page,
       limit: query.limit,
       sort: query.sort,
+      searchQuery: query.searchQuery,
     });
 
     return c.json({ agents, meta: { totalCount } });

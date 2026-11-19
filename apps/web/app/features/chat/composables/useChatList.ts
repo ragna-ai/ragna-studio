@@ -1,6 +1,5 @@
 import { DEFAULT_LIST_PAGE_SIZE } from '~/lib/pagination-pages';
 import { useQuery, type UseQueryOptions } from '@tanstack/vue-query';
-import { useDebounceFn } from '@vueuse/core';
 import {
   chatKeys,
   type ChatHistoryResponse,
@@ -12,17 +11,11 @@ export default function useChatList() {
   const { $api } = useNuxtApp();
   const workspaceId = useActiveWorkspaceId();
 
-  // useState -> single shared instance keyed by name, so pagination/search is
+  // useState -> single shared instance keyed by name, so pagination is
   // owned once instead of per-caller (the old clustered composable gave each
   // caller its own independent state).
   const page = useState('chat-list:page', () => 1);
   const limit = useState('chat-list:limit', () => DEFAULT_LIST_PAGE_SIZE);
-  const searchQuery = useState('chat-list:search', () => '');
-
-  const setSearchQuery = useDebounceFn((newSearchQuery: string) => {
-    searchQuery.value = newSearchQuery;
-    page.value = 1; // reset to first page on a new search
-  }, 300);
 
   function setPage(newPage: number) {
     page.value = newPage;
@@ -30,14 +23,13 @@ export default function useChatList() {
 
   function useGetAllChats(options: QueryOpts = {}) {
     return useQuery<ChatHistoryResponse>({
-      queryKey: chatKeys.list(workspaceId, page, limit, searchQuery),
+      queryKey: chatKeys.list(workspaceId, page, limit),
       queryFn: ({ signal }) =>
         $api<ChatHistoryResponse>(`/workspace/${toValue(workspaceId)}/chat`, {
           method: 'GET',
           query: {
             page: page.value,
             limit: limit.value,
-            searchQuery: searchQuery.value,
           },
           signal,
         }),
@@ -50,9 +42,7 @@ export default function useChatList() {
   return {
     page,
     limit,
-    searchQuery,
     setPage,
-    setSearchQuery,
     useGetAllChats,
   };
 }

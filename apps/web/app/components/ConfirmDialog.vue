@@ -6,16 +6,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+} from '~/components/ui/alert-dialog';
+import { Button } from '~/components/ui/button';
 
 const { t } = useI18n();
 const { state, onConfirm, onCancel } = useConfirmDialog();
 </script>
 
 <template>
-  <AlertDialog :open="state.open" @update:open="(v) => !v && onCancel()">
-    <AlertDialogContent class="z-51">
+  <AlertDialog
+    :key="state.openCount"
+    :open="state.open"
+    @update:open="(v) => !v && onCancel()"
+  >
+    <AlertDialogContent>
       <AlertDialogHeader>
         <AlertDialogTitle>{{ state.options.title }}</AlertDialogTitle>
         <AlertDialogDescription v-if="state.options.message">

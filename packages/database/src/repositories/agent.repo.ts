@@ -1,4 +1,5 @@
-import { and, eq } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { and, eq, ilike, or, sql } from 'drizzle-orm';
 import { db } from '../db';
 import type { Agent } from '../schema';
 import { agent, task } from '../schema';
@@ -82,10 +83,31 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
 
 export async function getAgentCountByWorkspaceId({
   workspaceId,
+  searchQuery,
 }: {
   workspaceId: string;
+  searchQuery?: string;
 }): Promise<number> {
-  return db.$count(agent, eq(agent.workspaceId, workspaceId));
+  return db.$count(agent, agentListFilter(agent, { workspaceId, searchQuery }));
+}
+
+function escapeLikePattern(term: string): string {
+  return term.replace(/[\\%_]/g, '\\$&');
+}
+
+/** Every whitespace-separated term must match the agent's name or description, case-insensitively. */
+function agentListFilter(
+  columns: Pick<typeof agent, 'workspaceId' | 'name' | 'description'>,
+  { workspaceId, searchQuery }: { workspaceId: string; searchQuery?: string },
+): SQL | undefined {
+  const searchTerms = searchQuery?.split(/\s+/).filter((term) => term.length > 0) ?? [];
+  return and(
+    eq(columns.workspaceId, workspaceId),
+    ...searchTerms.map((term) => {
+      const pattern = `%${escapeLikePattern(term)}%`;
+      return or(ilike(columns.name, pattern), ilike(columns.description, pattern));
+    }),
+  );
 }
 
 // Plain lookup by id (with its model and mark image), scoped by workspace only: the workspace guard already
@@ -165,8 +187,10 @@ export async function getAgentsByWorkspaceId({
   limit,
   sort = 'desc',
   offset,
+  searchQuery,
 }: {
   workspaceId: string;
+  searchQuery?: string;
   limit?: number;
   sort?: 'asc' | 'desc';
   offset?: number;
@@ -182,7 +206,7 @@ export async function getAgentsByWorkspaceId({
       createdAt: true,
       updatedAt: true,
     },
-    where: { workspaceId },
+    where: { RAW: (table) => agentListFilter(table, { workspaceId, searchQuery }) ?? sql`true` },
     with: {
       ...agentImageMediaWith,
       aiModel: {

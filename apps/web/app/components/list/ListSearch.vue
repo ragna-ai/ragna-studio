@@ -8,9 +8,13 @@ import {
 
 interface ListSearchProps {
   placeholder: string;
+  /** Turns the search icon into a button that emits `submit`, like Enter. */
+  submitOnIconClick?: boolean;
 }
 
-defineProps<ListSearchProps>();
+withDefaults(defineProps<ListSearchProps>(), { submitOnIconClick: false });
+
+const emit = defineEmits<{ submit: [text: string] }>();
 
 const searchText = defineModel<string>({ default: '' });
 
@@ -20,12 +24,21 @@ const { t } = useI18n();
 <template>
   <InputGroup size="sm" class="w-60">
     <InputGroupAddon>
-      <Icon name="hugeicons:search-01" class="size-4" />
+      <Button
+        v-if="submitOnIconClick"
+        variant="ghost"
+        size="icon-2xs"
+        leading-icon="hugeicons:search-01"
+        :aria-label="placeholder"
+        @click="emit('submit', searchText.trim())"
+      />
+      <Icon v-else name="hugeicons:search-01" class="size-4" />
     </InputGroupAddon>
     <InputGroupInput
       v-model="searchText"
       :placeholder="placeholder"
       :aria-label="placeholder"
+      @keydown.enter.prevent="emit('submit', searchText.trim())"
     />
     <InputGroupAddon v-if="searchText" align="inline-end">
       <Button

@@ -18,8 +18,7 @@ export const chatKeys = {
     workspaceId: WorkspaceId,
     page: MaybeRefOrGetter<number>,
     limit: MaybeRefOrGetter<number>,
-    searchQuery: MaybeRefOrGetter<string>,
-  ) => ['chats', workspaceId, 'list', page, limit, searchQuery] as const,
+  ) => ['chats', workspaceId, 'list', page, limit] as const,
   detail: (workspaceId: WorkspaceId, chatId: MaybeRefOrGetter<string>) =>
     ['chats', workspaceId, 'detail', chatId] as const,
   history: (workspaceId: WorkspaceId) =>

@@ -7,9 +7,19 @@ import {
 } from '@repo/ai';
 import { agentSettingsSchema } from '@repo/database';
 import * as z from 'zod';
+import { paginationSchema } from './pagination.schema';
 import { myzValidator } from '../utils/validator-wrapper';
 
 const primaryId = z.uuidv7();
+
+const AGENT_SEARCH_QUERY_MAX_LENGTH = 200;
+
+export const validAgentListQuery = myzValidator(
+  'query',
+  paginationSchema.extend({
+    searchQuery: z.string().trim().max(AGENT_SEARCH_QUERY_MAX_LENGTH).optional(),
+  }),
+);
 
 export const validAgentIdParam = myzValidator(
   'param',

@@ -22,14 +22,8 @@ const { data, isPending: isLoading } = useGetChatHistory();
 const search = ref('');
 
 // Computed
-const filteredChats = computed<ChatHistoryItem[]>(() => {
-  const needle = search.value.trim().toLowerCase();
-  const chats = data.value?.chats ?? [];
-  if (!needle) return chats;
-  return chats.filter((chat) => chat.title.toLowerCase().includes(needle));
-});
 const groups = computed<ChatHistoryGroup<ChatHistoryItem>[]>(() =>
-  groupChatsByRecency(filteredChats.value),
+  groupChatsByRecency(data.value?.chats ?? []),
 );
 
 // Functions
@@ -39,7 +33,10 @@ function isActiveChat(chatId: string): boolean {
 
 function openFullSearch() {
   const q = search.value.trim();
-  navigateTo({ path: localePath('/chat/search'), query: q ? { q } : {} });
+  navigateTo({
+    path: localePath('/chat/search'),
+    query: q ? { q, page: 1, limit: 10 } : {},
+  });
 }
 </script>
 
@@ -72,10 +69,17 @@ function openFullSearch() {
     </div>
 
     <div class="px-3 pb-2">
-      <label
-        class="flex h-8 items-center gap-2 rounded-md border bg-background px-2.5 focus-within:ring-2 focus-within:ring-ring"
+      <div
+        class="flex h-8 items-center gap-1 rounded-md border bg-background pr-2.5 pl-1 focus-within:ring-2 focus-within:ring-ring"
       >
-        <Icon name="hugeicons:search-01" class="size-4 shrink-0 text-icon" />
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          class="shrink-0 text-icon"
+          leading-icon="hugeicons:search-01"
+          :aria-label="t('chat.history.search')"
+          @click="openFullSearch"
+        />
         <input
           v-model="search"
           type="search"
@@ -84,7 +88,7 @@ function openFullSearch() {
           :aria-label="t('chat.history.search')"
           @keydown.enter.prevent="openFullSearch"
         />
-      </label>
+      </div>
     </div>
 
     <div v-if="isLoading" class="flex flex-col gap-3 px-4 py-3">

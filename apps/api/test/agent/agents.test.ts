@@ -122,6 +122,135 @@ describe('GET /workspace/:workspaceId/agent', () => {
   });
 });
 
+describe('GET /workspace/:workspaceId/agent with searchQuery', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  async function seedAgents(
+    agents: { name: string; description?: string }[],
+  ): Promise<{ workspaceId: string; cookieHeader: string }> {
+    const { workspaceId, cookieHeader } = await seedAuthenticatedUser();
+    const { aiModelId } = await seedTokenPricedAiModel();
+    for (const agent of agents) {
+      await createAgent(cookieHeader, workspaceId, {
+        ...agent,
+        aiModelId,
+        systemPrompt: 'You are helpful.',
+      });
+    }
+    return { workspaceId, cookieHeader };
+  }
+
+  async function searchAgents(
+    workspaceId: string,
+    cookieHeader: string,
+    searchQuery: string,
+    extraQuery = '',
+  ) {
+    const response = await app.request(
+      `/workspace/${workspaceId}/agent?searchQuery=${encodeURIComponent(searchQuery)}${extraQuery}`,
+      { headers: { cookie: cookieHeader } },
+    );
+    return { status: response.status, body: agentListResponseSchema.parse(await response.json()) };
+  }
+
+  test('finds agents by name, ignoring case', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: 'Support bot' },
+      { name: 'Sales helper' },
+    ]);
+
+    const { body } = await searchAgents(workspaceId, cookieHeader, 'SUPPORT');
+
+    expect(body.agents.map((agent) => agent.name)).toEqual(['Support bot']);
+  });
+
+  test('finds agents by description', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: 'Alpha', description: 'Answers invoice questions' },
+      { name: 'Beta', description: 'Writes poems' },
+    ]);
+
+    const { body } = await searchAgents(workspaceId, cookieHeader, 'invoice');
+
+    expect(body.agents.map((agent) => agent.name)).toEqual(['Alpha']);
+  });
+
+  test('requires every term to match the name or the description', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: 'Alpha', description: 'Answers invoice questions' },
+      { name: 'Alpha two', description: 'Writes poems' },
+      { name: 'Gamma', description: 'Answers invoice questions' },
+    ]);
+
+    const { body } = await searchAgents(workspaceId, cookieHeader, 'alpha  invoice');
+
+    expect(body.agents.map((agent) => agent.name)).toEqual(['Alpha']);
+  });
+
+  test('matches percent and underscore literally', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: '100% sure' },
+      { name: 'a_b' },
+      { name: 'axb' },
+      { name: 'plain' },
+    ]);
+
+    const percent = await searchAgents(workspaceId, cookieHeader, '%');
+    const underscore = await searchAgents(workspaceId, cookieHeader, 'a_b');
+
+    expect(percent.body.agents.map((agent) => agent.name)).toEqual(['100% sure']);
+    expect(underscore.body.agents.map((agent) => agent.name)).toEqual(['a_b']);
+  });
+
+  test('matches a backslash literally', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: 'path\\to' },
+      { name: 'plain' },
+    ]);
+
+    const { body } = await searchAgents(workspaceId, cookieHeader, '\\');
+
+    expect(body.agents.map((agent) => agent.name)).toEqual(['path\\to']);
+  });
+
+  test('counts only the matching agents so pagination totals stay right', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([
+      { name: 'Match one' },
+      { name: 'Match two' },
+      { name: 'Match three' },
+      { name: 'Other' },
+    ]);
+
+    const { body } = await searchAgents(workspaceId, cookieHeader, 'match', '&limit=2');
+
+    expect(body.agents).toHaveLength(2);
+    expect(body.meta.totalCount).toBe(3);
+  });
+
+  test('returns every agent for an empty or blank query', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([{ name: 'One' }, { name: 'Two' }]);
+
+    const empty = await searchAgents(workspaceId, cookieHeader, '');
+    const blank = await searchAgents(workspaceId, cookieHeader, '   ');
+
+    expect(empty.body.meta.totalCount).toBe(2);
+    expect(blank.body.meta.totalCount).toBe(2);
+  });
+
+  test('rejects a query longer than 200 characters', async () => {
+    const { workspaceId, cookieHeader } = await seedAgents([]);
+
+    const response = await app.request(
+      `/workspace/${workspaceId}/agent?searchQuery=${'a'.repeat(201)}`,
+      { headers: { cookie: cookieHeader } },
+    );
+
+    expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
+  });
+});
+
 describe('POST /workspace/:workspaceId/agent', () => {
   beforeEach(async () => {
     await truncateAllTables();
