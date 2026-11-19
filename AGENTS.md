@@ -132,10 +132,8 @@ variants or a new abstraction, load the system-design skill; for a vendor connec
 Before adding a dependency, load the dependency-choice skill. For PRDs, design
 docs and slices in `specs/`, load the spec-writing skill.
 
-Skills live in the root `.agents/skills` (`.claude/skills` links to it), including the `apps/web` ones, so they
-load in every worktree. Skills in a package folder (`packages/*/.claude/skills`) are directory-scoped: they only load
-after you open a file in that folder. Read them by path instead: `packages/<pkg>/.claude/skills/<name>/SKILL.md`.
-Third-party skills are tracked in the root `skills-lock.json`. Our copy of shadcn-vue runs its CLI with
+All skills live in the root `.agents/skills` (`.claude/skills` links to it), never in an app or package folder:
+skills in a subfolder don't load for worker agents. Third-party skills are tracked in the root `skills-lock.json`. Our copy of shadcn-vue runs its CLI with
 `--cwd .../apps/web`: re-apply that after `npx skills update`. Remove a third-party skill with `npx skills remove`,
 never by deleting its folder: the next update reinstalls anything still in the lock.
 

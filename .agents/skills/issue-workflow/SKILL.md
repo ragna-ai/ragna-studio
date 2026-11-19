@@ -26,6 +26,8 @@ late review and can overturn the advice.
 | A new npm package, or a feature a package may solve | dependency-choice                  |
 | A PRD, design doc or slices doc                    | spec-writing                        |
 | A page in `apps/docs`                              | docs-writing                        |
+| Email templates in `packages/mail`                 | maizzle                             |
+| The rich-text editor in `packages/editor`          | tiptap                              |
 | `apps/web` e2e tests                               | read `apps/web/e2e/README.md`       |
 | `apps/worker`                                      | tdd, read `apps/worker/test/README.md` |
 
