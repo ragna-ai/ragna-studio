@@ -24,12 +24,15 @@ const scrapeResponseSchema = z.object({
 const BROWSER_BUSY_STATUS = 503;
 const SCRAPE_TIMEOUT_MS = 30_000;
 
-interface WebBrowserPage {
-  meta: null;
-  body: string;
+/** What a successful page visit returns to the model. */
+export const webBrowserOutputSchema = z.strictObject({
+  meta: z.null(),
+  body: z.string(),
   /** True when the page was longer than the browser's limit and got cut off. */
-  truncated: boolean;
-}
+  truncated: z.boolean(),
+});
+
+export type WebBrowserPage = z.infer<typeof webBrowserOutputSchema>;
 
 type WebBrowserOutput = WebBrowserPage | ToolFailure<'invalid_url' | 'busy' | 'unreachable'>;
 

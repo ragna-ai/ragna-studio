@@ -45,6 +45,7 @@ async function search(input: SearchInput) {
 
 const failureSchema = z.strictObject({ status: z.string(), message: z.string() });
 const resultsSchema = z.strictObject({
+  answer: z.string().nullable(),
   results: z.array(
     z.strictObject({
       title: z.string(),
@@ -102,6 +103,53 @@ describe('webSearch tool', () => {
     const result = resultsSchema.parse(await search({ query: 'no hits anywhere' }));
 
     expect(result.results).toEqual([]);
+  });
+
+  test.each([
+    [
+      'a direct answer',
+      { answer_box: { answer: '3.9 million', snippet: 'Berlin has…' } },
+      '3.9 million',
+    ],
+    ['a calculator result', { answer_box: { result: '42' } }, '42'],
+    [
+      'an answer box snippet',
+      { answer_box: { snippet: 'Berlin is the capital.' } },
+      'Berlin is the capital.',
+    ],
+    [
+      'a knowledge graph description',
+      { knowledge_graph: { description: 'Capital of Germany.' } },
+      'Capital of Germany.',
+    ],
+  ])('returns the answer from %s', async (_label, block, expected) => {
+    respondWith(Response.json({ ...SERPAPI_RESPONSE, ...block }));
+
+    const result = resultsSchema.parse(await search({ query: 'population of berlin' }));
+
+    expect(result.answer).toBe(expected);
+  });
+
+  test('prefers the answer box over the knowledge graph', async () => {
+    respondWith(
+      Response.json({
+        ...SERPAPI_RESPONSE,
+        answer_box: { answer: '3.9 million' },
+        knowledge_graph: { description: 'Capital of Germany.' },
+      }),
+    );
+
+    const result = resultsSchema.parse(await search({ query: 'population of berlin' }));
+
+    expect(result.answer).toBe('3.9 million');
+  });
+
+  test('returns no answer when Google shows none', async () => {
+    respondWith(Response.json(SERPAPI_RESPONSE));
+
+    const result = resultsSchema.parse(await search({ query: 'ragna studio' }));
+
+    expect(result.answer).toBeNull();
   });
 
   test('sends no location unless the agent asks for one', async () => {

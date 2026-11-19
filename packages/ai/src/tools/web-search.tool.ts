@@ -29,21 +29,39 @@ const organicResultSchema = z.object({
   date: z.string().optional(),
 });
 
+// Google's direct answer, e.g. a fact, a calculation or a definition.
+const answerBoxSchema = z.object({
+  answer: z.string().optional(),
+  result: z.string().optional(),
+  snippet: z.string().optional(),
+});
+
+const knowledgeGraphSchema = z.object({ description: z.string().optional() });
+
 // SerpAPI omits organic_results when Google found nothing.
 const searchResponseSchema = z.object({
+  answer_box: answerBoxSchema.optional(),
+  knowledge_graph: knowledgeGraphSchema.optional(),
   organic_results: z.array(organicResultSchema).optional().default([]),
 });
 
-interface WebSearchResult {
-  title: string;
-  url: string;
-  snippet: string | null;
-  date: string | null;
-}
+type SearchResponse = z.infer<typeof searchResponseSchema>;
 
-interface WebSearchResults {
-  results: WebSearchResult[];
-}
+const webSearchResultSchema = z.strictObject({
+  title: z.string(),
+  url: z.string(),
+  snippet: z.string().nullable(),
+  date: z.string().nullable(),
+});
+
+/** What a successful web search returns to the model. */
+export const webSearchOutputSchema = z.strictObject({
+  /** Google's direct answer when it shows one, so the model needn't open a page for a simple fact. */
+  answer: z.string().nullable(),
+  results: z.array(webSearchResultSchema),
+});
+
+export type WebSearchResults = z.infer<typeof webSearchOutputSchema>;
 
 type WebSearchOutput = WebSearchResults | ToolFailure<'invalid_location' | 'unavailable'>;
 
@@ -51,6 +69,16 @@ const unavailable: ToolFailure<'unavailable'> = {
   status: 'unavailable',
   message: 'Web search is currently unavailable. Continue without it.',
 };
+
+function toAnswer({ answer_box: answerBox, knowledge_graph: knowledgeGraph }: SearchResponse) {
+  return (
+    answerBox?.answer ??
+    answerBox?.result ??
+    answerBox?.snippet ??
+    knowledgeGraph?.description ??
+    null
+  );
+}
 
 function toSearchUrl({ query, location }: WebSearchInput): string {
   const searchParams = new URLSearchParams({
@@ -94,14 +122,14 @@ async function search(input: WebSearchInput): Promise<WebSearchOutput> {
     snippet: result.snippet ?? null,
     date: result.date ?? null,
   }));
-  return { results };
+  return { answer: toAnswer(parsed.data), results };
 }
 
 export const webSearchToolDefinition: ToolDefinition<typeof webSearchInputSchema, WebSearchOutput> =
   {
     name: 'webSearch',
     description:
-      'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need. Returns the title, URL, snippet and date of each result.',
+      'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need. Returns the direct answer Google shows, if any, and the title, URL, snippet and date of each result.',
     inputSchema: webSearchInputSchema,
     access: 'read',
     execute: async (input) => {
