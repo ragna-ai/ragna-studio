@@ -325,7 +325,7 @@ export async function deleteSocialPost({
 
   await deleteSocialPostById({ id: socialPostId, workspaceId });
 
-  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
+  await deleteMediaIfUnreferenced({ mediaIds });
 }
 
 /**
@@ -498,7 +498,7 @@ export async function removeSocialPostMedia({
   }
 
   await deleteSocialPostMediaById({ id: mediaId, socialPostId: post.id });
-  await deleteMediaIfUnreferenced({ mediaId: media.mediaId });
+  await deleteMediaIfUnreferenced({ mediaIds: [media.mediaId] });
 }
 
 export type PublishSocialPostResult =

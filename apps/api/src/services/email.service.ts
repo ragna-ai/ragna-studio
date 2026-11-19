@@ -33,7 +33,7 @@ import {
   getEmailMessageById,
   getEmailMessageWithBodyById,
   getEmailThreadById,
-  getEmailThreadByProviderThreadId,
+  getEmailThreadsByProviderThreadIds,
   getMediaInPersonalWorkspace,
   isUniqueViolationError,
   listEmailAutoDraftSenders,
@@ -91,7 +91,7 @@ import {
   queue,
 } from '@repo/queue';
 import { downloadObjectBuffer } from '@repo/storage';
-import { tryCatch } from '@repo/utils';
+import { mapSettledWithConcurrency, tryCatch } from '@repo/utils';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -672,7 +672,7 @@ export interface EmailThreadSummary {
   messageCount: number;
 }
 
-async function hydrateThreadSummary({
+function hydrateThreadSummary({
   thread,
   messages,
 }: {
@@ -683,26 +683,11 @@ async function hydrateThreadSummary({
     lastMessageAt: Date | null;
     participants: EmailParticipant[];
   };
-  messages?: EmailMessage[];
-}): Promise<EmailThreadSummary> {
-  let threadMessages = messages;
-
-  if (!threadMessages) {
-    const { error, data } = await tryCatch(() =>
-      listEmailMessagesByThreadId({ threadId: thread.id }),
-    );
-
-    if (error !== null || !data) {
-      logger.error('Failed to load thread messages', error);
-      throw new InternalServerErrorException('Failed to load thread');
-    }
-
-    threadMessages = data;
-  }
-
-  const labelIds = Array.from(new Set(threadMessages.flatMap((message) => message.labelIds)));
-  const isUnread = threadMessages.some((message) => message.isUnread);
-  const isStarred = threadMessages.some((message) => message.isStarred);
+  messages: EmailMessage[];
+}): EmailThreadSummary {
+  const labelIds = Array.from(new Set(messages.flatMap((message) => message.labelIds)));
+  const isUnread = messages.some((message) => message.isUnread);
+  const isStarred = messages.some((message) => message.isStarred);
   // Most recent *classified* message's category represents the thread in
   // the list/detail views; classification runs per-message but a thread
   // reads as "one card". Scanning back from the newest message (rather than
@@ -712,7 +697,7 @@ async function hydrateThreadSummary({
   // that message's categoryId is permanently null, which would otherwise
   // hide an earlier message's real classification.
   const categoryId =
-    threadMessages.findLast((message) => message.categoryId !== null)?.categoryId ?? null;
+    messages.findLast((message) => message.categoryId !== null)?.categoryId ?? null;
 
   return {
     id: thread.id,
@@ -724,8 +709,18 @@ async function hydrateThreadSummary({
     categoryId,
     isUnread,
     isStarred,
-    messageCount: threadMessages.length,
+    messageCount: messages.length,
   };
+}
+
+function groupMessagesByThreadId(messages: EmailMessage[]): Map<string, EmailMessage[]> {
+  const messagesByThreadId = new Map<string, EmailMessage[]>();
+  for (const message of messages) {
+    const threadMessages = messagesByThreadId.get(message.threadId) ?? [];
+    threadMessages.push(message);
+    messagesByThreadId.set(message.threadId, threadMessages);
+  }
+  return messagesByThreadId;
 }
 
 export interface EmailThreadListResponse {
@@ -796,20 +791,10 @@ export async function listEmailThreadsForUser({
     throw new InternalServerErrorException('Failed to load thread');
   }
 
-  const messagesByThreadId = new Map<string, EmailMessage[]>();
-  for (const message of pageMessages) {
-    const threadMessages = messagesByThreadId.get(message.threadId) ?? [];
-    threadMessages.push(message);
-    messagesByThreadId.set(message.threadId, threadMessages);
-  }
+  const messagesByThreadId = groupMessagesByThreadId(pageMessages);
 
-  const threads = await Promise.all(
-    pageRows.map((thread) =>
-      hydrateThreadSummary({
-        thread,
-        messages: messagesByThreadId.get(thread.id) ?? [],
-      }),
-    ),
+  const threads = pageRows.map((thread) =>
+    hydrateThreadSummary({ thread, messages: messagesByThreadId.get(thread.id) ?? [] }),
   );
 
   return { threads, hasMore };
@@ -903,7 +888,7 @@ export async function getEmailThreadDetailForUser({
   // endpoint mutate state on an incidental refetch, silently undoing an
   // explicit "mark unread". Marking read is the client's job, through the
   // existing POST /email/thread/:threadId/read.
-  const threadSummary = await hydrateThreadSummary({ thread, messages });
+  const threadSummary = hydrateThreadSummary({ thread, messages });
 
   return {
     thread: threadSummary,
@@ -1099,44 +1084,105 @@ export async function searchEmailForUser({
     throw new InternalServerErrorException('Failed to search email');
   }
 
-  const threads = await Promise.all(
-    result.threadIds.map((providerThreadId) =>
-      resolveSearchThread({ account, provider, providerThreadId }),
-    ),
-  );
+  const threads = await hydrateSearchThreads({
+    account,
+    provider,
+    providerThreadIds: result.threadIds,
+  });
 
   return { threads, nextPageToken: result.nextPageToken };
 }
 
-async function resolveSearchThread({
+// Indexed threads and their messages load in two queries for the whole page.
+// Only threads missing from the index are live-fetched, one provider call each, a few at a time.
+async function hydrateSearchThreads({
   account,
   provider,
-  providerThreadId,
+  providerThreadIds,
 }: {
   account: EmailAccount;
   provider: MailProvider;
-  providerThreadId: MailProviderId;
-}): Promise<EmailThreadSummary> {
-  const { data: local } = await tryCatch(() =>
-    getEmailThreadByProviderThreadId({ accountId: account.id, providerThreadId }),
-  );
+  providerThreadIds: MailProviderId[];
+}): Promise<EmailThreadSummary[]> {
+  const { error, data: indexed } = await tryCatch(async () => {
+    const localThreads = await getEmailThreadsByProviderThreadIds({
+      accountId: account.id,
+      providerThreadIds,
+    });
+    const localMessages = await listEmailMessagesByThreadIds({
+      threadIds: localThreads.map((thread) => thread.id),
+    });
+    return { localThreads, localMessages };
+  });
 
-  if (local) {
-    return hydrateThreadSummary({ thread: local });
-  }
-
-  const { error, data: liveThread } = await tryCatch(() => provider.fetchThread(providerThreadId));
-
-  if (error !== null || !liveThread) {
-    logger.error(`Failed to live-fetch search result thread ${providerThreadId}`, error);
+  if (error !== null || !indexed) {
+    logger.error('Failed to load indexed search results', error);
     throw new InternalServerErrorException('Failed to load a search result');
   }
 
-  const persisted = await persistFetchedThread({ accountId: account.id, mailThread: liveThread });
-  return hydrateThreadSummary({
-    thread: persisted,
-    messages: persisted.messages,
+  const messagesByThreadId = groupMessagesByThreadId(indexed.localMessages);
+  const localByProviderThreadId = new Map(
+    indexed.localThreads.map((thread) => [thread.providerThreadId, thread]),
+  );
+
+  const missingProviderThreadIds = providerThreadIds.filter(
+    (providerThreadId) => !localByProviderThreadId.has(providerThreadId),
+  );
+  const liveByProviderThreadId = await liveFetchSearchThreads({
+    account,
+    provider,
+    providerThreadIds: missingProviderThreadIds,
   });
+
+  return providerThreadIds.flatMap((providerThreadId) => {
+    const local = localByProviderThreadId.get(providerThreadId);
+    if (local) {
+      return [
+        hydrateThreadSummary({ thread: local, messages: messagesByThreadId.get(local.id) ?? [] }),
+      ];
+    }
+    const live = liveByProviderThreadId.get(providerThreadId);
+    return live ? [live] : [];
+  });
+}
+
+// Graph allows 4 concurrent requests per mailbox.
+const SEARCH_LIVE_FETCH_CONCURRENCY = 4;
+
+// A thread whose live fetch or persist fails is logged and left out, so one failure doesn't fail the page.
+async function liveFetchSearchThreads({
+  account,
+  provider,
+  providerThreadIds,
+}: {
+  account: EmailAccount;
+  provider: MailProvider;
+  providerThreadIds: MailProviderId[];
+}): Promise<Map<MailProviderId, EmailThreadSummary>> {
+  const results = await mapSettledWithConcurrency(
+    providerThreadIds,
+    SEARCH_LIVE_FETCH_CONCURRENCY,
+    async (providerThreadId) => {
+      const liveThread = await provider.fetchThread(providerThreadId);
+      const persisted = await persistFetchedThread({
+        accountId: account.id,
+        mailThread: liveThread,
+      });
+      return hydrateThreadSummary({ thread: persisted, messages: persisted.messages });
+    },
+  );
+
+  const summaries = new Map<MailProviderId, EmailThreadSummary>();
+  results.forEach((result, index) => {
+    const providerThreadId = providerThreadIds[index];
+    if (providerThreadId === undefined) return;
+    if (result.status === 'rejected') {
+      logger.error(`Failed to live-fetch search result thread ${providerThreadId}`, result.reason);
+      return;
+    }
+    summaries.set(providerThreadId, result.value);
+  });
+  return summaries;
 }
 
 // --- Mailbox actions --------------------------------------------------

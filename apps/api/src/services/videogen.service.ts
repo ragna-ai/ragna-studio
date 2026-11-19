@@ -352,7 +352,7 @@ export async function deleteGenVideo({
     (mediaId): mediaId is string => mediaId !== null,
   );
 
-  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
+  await deleteMediaIfUnreferenced({ mediaIds });
 }
 
 /**

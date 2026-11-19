@@ -158,7 +158,7 @@ async function reviseDraft({
 // before this package existed, which is why this used to be duplicated
 // here rather than shared.
 async function refcountDeleteMedia(mediaIds: string[]): Promise<void> {
-  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
+  await deleteMediaIfUnreferenced({ mediaIds });
 }
 
 /**

@@ -394,11 +394,8 @@ describe('DELETE /workspace/:workspaceId/gen-video/:genVideoId', () => {
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    // Each media row is refcount-deleted independently,
-    // so the output and
-    // the frame come off in two separate deleteObjects calls, not one
-    // combined call.
-    expect(deleteObjectsMock).toHaveBeenCalledTimes(2);
+    // Both media live in one bucket, so they come off in a single batched deleteObjects call.
+    expect(deleteObjectsMock).toHaveBeenCalledTimes(1);
     const deletedKeys = deleteObjectsMock.mock.calls.flatMap(([calledBucket, keys]) => {
       expect(calledBucket).toBe(bucketName);
       return keys;

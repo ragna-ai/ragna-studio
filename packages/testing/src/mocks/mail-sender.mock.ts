@@ -15,7 +15,7 @@ function defaultSendEmailImpl(_params: SendEmailParams): Promise<void> {
 export const sendEmailMock = mock(defaultSendEmailImpl);
 
 export function resetMailSenderMock(): void {
-  sendEmailMock.mockClear();
+  sendEmailMock.mockReset();
   sendEmailMock.mockImplementation(defaultSendEmailImpl);
 }
 

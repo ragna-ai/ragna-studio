@@ -34,8 +34,35 @@ async function connectAccount() {
   return { userId, cookieHeader, accountId };
 }
 
-const searchResponseSchema = z.object({
-  threads: z.array(z.object({ id: z.string() })),
+// The thread's subject is its provider id, so tests can tell threads apart.
+function buildSubjectedThread(providerThreadId: string) {
+  return buildFakeMailThread({
+    id: providerThreadId,
+    messages: [
+      buildFakeMailMessage({
+        id: `message-${providerThreadId}`,
+        threadId: providerThreadId,
+        subject: providerThreadId,
+      }),
+    ],
+  });
+}
+
+const threadSummarySchema = z.strictObject({
+  id: z.string(),
+  subject: z.string().nullable(),
+  snippet: z.string().nullable(),
+  lastMessageAt: z.string().nullable(),
+  participants: z.array(z.strictObject({ name: z.string().nullable(), email: z.string() })),
+  labelIds: z.array(z.string()),
+  categoryId: z.string().nullable(),
+  isUnread: z.boolean(),
+  isStarred: z.boolean(),
+  messageCount: z.number(),
+});
+
+const searchResponseSchema = z.strictObject({
+  threads: z.array(threadSummarySchema),
   nextPageToken: z.string().nullable(),
 });
 
@@ -93,6 +120,57 @@ describe('GET /email/search', () => {
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
   });
 
+  test('hydrates a mix of indexed and unindexed threads in provider order', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const multiMessage = await seedEmailThreadWithMessage({
+      accountId,
+      isUnread: false,
+      labelIds: ['INBOX'],
+    });
+    await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: multiMessage.providerThreadId,
+      isUnread: true,
+      isStarred: true,
+      labelIds: ['STARRED'],
+    });
+    const single = await seedEmailThreadWithMessage({ accountId, isUnread: false });
+    const unknownProviderThreadId = `provider-thread-${crypto.randomUUID()}`;
+
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        threadIds: [
+          single.providerThreadId,
+          unknownProviderThreadId,
+          multiMessage.providerThreadId,
+        ],
+        nextPageToken: null,
+      }),
+    );
+    fetchThreadMock.mockImplementationOnce(() =>
+      Promise.resolve(buildFakeMailThread({ id: unknownProviderThreadId })),
+    );
+
+    const response = await app.request('/email/search?q=mixed', {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads).toHaveLength(3);
+    const [first, second, third] = body.threads;
+    expect(first?.id).toBe(single.thread.id);
+    expect(first?.messageCount).toBe(1);
+    expect(first?.isUnread).toBe(false);
+    expect(second?.id).not.toBe(single.thread.id);
+    expect(third?.id).toBe(multiMessage.thread.id);
+    expect(third?.messageCount).toBe(2);
+    expect(third?.isUnread).toBe(true);
+    expect(third?.isStarred).toBe(true);
+    expect([...(third?.labelIds ?? [])].sort()).toEqual(['INBOX', 'STARRED']);
+    expect(fetchThreadMock).toHaveBeenCalledTimes(1);
+  });
+
   test('persists every message of a live-fetched thread with its body', async () => {
     const { cookieHeader } = await connectAccount();
     const providerThreadId = `provider-thread-${crypto.randomUUID()}`;
@@ -140,6 +218,73 @@ describe('GET /email/search', () => {
     expect(stored.map((message) => message.subject)).toEqual(['First', 'Second']);
     expect(stored.map((message) => message.body?.textBody)).toEqual(['First text', 'Second text']);
     expect(stored.map((message) => message.body?.htmlBody)).toEqual(['<p>First</p>', null]);
+  });
+
+  test('never runs more than 4 live fetches at once and keeps provider order', async () => {
+    const { cookieHeader } = await connectAccount();
+    const providerThreadIds = Array.from(
+      { length: 9 },
+      () => `provider-thread-${crypto.randomUUID()}`,
+    );
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({ threadIds: providerThreadIds, nextPageToken: null }),
+    );
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const release: (() => void)[] = [];
+    fetchThreadMock.mockImplementation((providerThreadId: string) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      return new Promise((resolve) => {
+        release.push(() => {
+          inFlight -= 1;
+          resolve(buildSubjectedThread(providerThreadId));
+        });
+      });
+    });
+
+    const responsePromise = app.request('/email/search?q=many', {
+      headers: { cookie: cookieHeader },
+    });
+    let released = 0;
+    while (released < providerThreadIds.length) {
+      await Bun.sleep(0);
+      const pending = release.splice(0);
+      for (const resolveFetch of pending.reverse()) resolveFetch();
+      released += pending.length;
+    }
+    const response = await responsePromise;
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(maxInFlight).toBeLessThanOrEqual(4);
+    expect(fetchThreadMock).toHaveBeenCalledTimes(providerThreadIds.length);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads).toHaveLength(providerThreadIds.length);
+    expect(body.threads.map((t) => t.subject)).toEqual(providerThreadIds);
+  });
+
+  test('leaves out a thread whose live fetch fails and returns the rest', async () => {
+    const { cookieHeader } = await connectAccount();
+    const [firstId, brokenId, lastId] = [0, 1, 2].map(
+      () => `provider-thread-${crypto.randomUUID()}`,
+    );
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({ threadIds: [firstId, brokenId, lastId], nextPageToken: null }),
+    );
+    fetchThreadMock.mockImplementation((providerThreadId: string) =>
+      providerThreadId === brokenId
+        ? Promise.reject(new Error('provider down'))
+        : Promise.resolve(buildSubjectedThread(providerThreadId)),
+    );
+
+    const response = await app.request('/email/search?q=partial', {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads.map((t) => t.subject)).toEqual([firstId, lastId]);
   });
 
   test('rejects a missing query', async () => {

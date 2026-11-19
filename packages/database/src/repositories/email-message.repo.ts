@@ -1,6 +1,11 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../db';
-import type { EmailMessage, EmailMessageBody, NewEmailMessage } from '../schema';
+import type {
+  EmailMessage,
+  EmailMessageBody,
+  EmailMessageFolder,
+  NewEmailMessage,
+} from '../schema';
 import { emailMessage } from '../schema';
 import { chunkRows, dedupeKeepLast } from '../utils/batch-write';
 
@@ -176,6 +181,45 @@ export async function updateEmailMessageFlags({
   return updated ?? null;
 }
 
+export interface EmailMessageFlagsUpdate {
+  id: string;
+  isUnread: boolean;
+  isStarred: boolean;
+  folder: EmailMessageFolder;
+  labelIds: string[];
+}
+
+// Batch variant of updateEmailMessageFlags for the sync job: every message
+// gets its own flag values in one statement.
+export async function updateEmailMessagesFlags({
+  updates,
+}: {
+  updates: EmailMessageFlagsUpdate[];
+}): Promise<void> {
+  // UPDATE ... FROM picks an arbitrary row when an id repeats; the latest change must win.
+  const latestUpdates = dedupeKeepLast(updates, (update) => update.id);
+
+  for (const chunk of chunkRows(latestUpdates)) {
+    const rows = sql.join(
+      chunk.map(
+        (update) =>
+          sql`(${update.id}, ${update.isUnread}::boolean, ${update.isStarred}::boolean, ${update.folder}, ${JSON.stringify(update.labelIds)}::jsonb)`,
+      ),
+      sql`, `,
+    );
+
+    await db.execute(sql`
+      UPDATE ${emailMessage}
+      SET is_unread = v.is_unread,
+          is_starred = v.is_starred,
+          folder = v.folder,
+          label_ids = v.label_ids
+      FROM (VALUES ${rows}) AS v(id, is_unread, is_starred, folder, label_ids)
+      WHERE ${emailMessage.id} = v.id
+    `);
+  }
+}
+
 // Written by the classifier job. Accepts
 // null so a message can be explicitly uncategorized.
 export async function setEmailMessageCategory({
@@ -237,50 +281,28 @@ export async function updateEmailMessageClassification({
   return updated;
 }
 
-// Sync's deletion path: purges the local
-// row, its body cascades away with it (email_message_bodies.messageId FK is
-// onDelete: 'cascade'). Returns the deleted row (or null if it was already
-// gone) so the caller can read its threadId back, e.g. to follow up with
-// deleteEmailThreadIfEmpty.
-export async function deleteEmailMessageByProviderMessageId({
-  accountId,
-  providerMessageId,
-}: {
-  accountId: string;
-  providerMessageId: string;
-}): Promise<EmailMessage | null> {
-  const [deleted] = await db
-    .delete(emailMessage)
-    .where(
-      and(
-        eq(emailMessage.accountId, accountId),
-        eq(emailMessage.providerMessageId, providerMessageId),
-      ),
-    )
-    .returning();
-
-  return deleted ?? null;
-}
-
-// Batch variant, for a history.list page that reports several deletions at
-// once.
+// Sync's deletion path, for a history.list page that reports several
+// deletions at once. Bodies cascade away with the rows (email_message_bodies.messageId FK
+// is onDelete: 'cascade'). Returns the deleted rows so the caller can read their threadIds
+// back, e.g. to follow up with deleteEmailThreadsIfEmpty.
 export async function deleteEmailMessagesByProviderMessageIds({
   accountId,
   providerMessageIds,
 }: {
   accountId: string;
   providerMessageIds: string[];
-}): Promise<void> {
+}): Promise<EmailMessage[]> {
   if (providerMessageIds.length === 0) {
-    return;
+    return [];
   }
 
-  await db
+  return db
     .delete(emailMessage)
     .where(
       and(
         eq(emailMessage.accountId, accountId),
         inArray(emailMessage.providerMessageId, providerMessageIds),
       ),
-    );
+    )
+    .returning();
 }

@@ -55,11 +55,11 @@ export const downloadObjectBufferMock = mock<DownloadObjectBufferFn>(
 export const deleteObjectsMock = mock<DeleteObjectsFn>(defaultDeleteObjectsImpl);
 
 export function resetStorageProviderMock(): void {
-  uploadObjectBufferMock.mockClear();
+  uploadObjectBufferMock.mockReset();
   uploadObjectBufferMock.mockImplementation(defaultUploadObjectBufferImpl);
-  downloadObjectBufferMock.mockClear();
+  downloadObjectBufferMock.mockReset();
   downloadObjectBufferMock.mockImplementation(defaultDownloadObjectBufferImpl);
-  deleteObjectsMock.mockClear();
+  deleteObjectsMock.mockReset();
   deleteObjectsMock.mockImplementation(defaultDeleteObjectsImpl);
 }
 

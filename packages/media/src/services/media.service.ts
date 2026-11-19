@@ -7,14 +7,14 @@
 // apps map failures onto their own HTTP layer.
 
 import {
-  countMediaReferences,
   createMedia,
-  deleteMediaById,
+  deleteMediaByIds,
+  findUnreferencedMediaByIds,
   findUnreferencedMediaOlderThan,
-  getMediaById,
   getMediaByWorkspaceId,
   type Media,
   type MediaOrigin,
+  type UnreferencedMedia,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { deleteObjects, getObjectStat, uploadObjectBuffer } from '@repo/storage';
@@ -133,20 +133,19 @@ export async function createMediaForObject({
 
 // DELETION
 
-/** Returns true only when every object was confirmed deleted. Never throws. */
-async function deleteMediaObjects(
-  objects: { bucket: string; storageKey: string }[],
-): Promise<boolean> {
-  if (objects.length === 0) {
-    return true;
-  }
+function objectId(bucket: string, storageKey: string): string {
+  return `${bucket}/${storageKey}`;
+}
 
+/** Deletes the objects, one call per bucket. Returns the `bucket/key` pairs not confirmed deleted. Never throws. */
+async function deleteMediaObjectsReportingFailures(
+  objects: { bucket: string; storageKey: string }[],
+): Promise<Set<string>> {
+  const failedKeys = new Set<string>();
   const storageKeysByBucket: Record<string, string[]> = {};
   for (const { bucket, storageKey } of objects) {
     (storageKeysByBucket[bucket] ??= []).push(storageKey);
   }
-
-  let allDeleted = true;
 
   for (const bucket of Object.keys(storageKeysByBucket)) {
     const storageKeys = storageKeysByBucket[bucket];
@@ -154,17 +153,25 @@ async function deleteMediaObjects(
 
     if (error !== null || !data) {
       logger.error('Failed to delete media objects from R2', { error, bucket, storageKeys });
-      allDeleted = false;
+      storageKeys.forEach((key) => failedKeys.add(objectId(bucket, key)));
       continue;
     }
 
     if (data.errors.length > 0) {
       logger.error('Failed to delete some media objects from R2', { bucket, keys: data.errors });
-      allDeleted = false;
+      data.errors.forEach((key) => failedKeys.add(objectId(bucket, key)));
     }
   }
 
-  return allDeleted;
+  return failedKeys;
+}
+
+/** Returns true only when every object was confirmed deleted. Never throws. */
+async function deleteMediaObjects(
+  objects: { bucket: string; storageKey: string }[],
+): Promise<boolean> {
+  const failedKeys = await deleteMediaObjectsReportingFailures(objects);
+  return failedKeys.size === 0;
 }
 
 export interface MediaObjectRef {
@@ -206,72 +213,75 @@ export async function deleteWorkspaceMediaObjects({
 }
 
 /**
- * Deletes a media row and its R2 object once nothing references it anymore.
- * The single place every link table's refcount must be added to, via
- * `countMediaReferences` (`@repo/database`). Called from every detach point
- * across every consumer, plus the worker sweep cron (`sweepUnreferencedMedia`
- * below). Best effort on the R2 side, mirroring the pre-existing
- * `deleteAgentContextDocumentObjects` pattern: a stray object is logged, not
- * thrown, so it never blocks the action that triggered it.
+ * Deletes media rows and their R2 objects once nothing references them anymore, in a fixed
+ * number of queries however many ids come in. The refcount lives in
+ * `findUnreferencedMediaByIds` (`@repo/database`). Called from every detach point across every
+ * consumer, plus the worker sweep cron (`sweepUnreferencedMedia` below). Best effort: a failed
+ * count or R2 delete is logged, not thrown, so it never blocks the action that triggered it.
+ * A row whose object could not be deleted stays, so the sweep retries it.
  */
-export async function deleteMediaIfUnreferenced({ mediaId }: { mediaId: string }): Promise<void> {
-  const { error: countError, data: referenceCount } = await tryCatch(() =>
-    countMediaReferences({ mediaId }),
+export async function deleteMediaIfUnreferenced({
+  mediaIds,
+}: {
+  mediaIds: string[];
+}): Promise<void> {
+  if (mediaIds.length === 0) {
+    return;
+  }
+
+  const { error, data: unreferenced } = await tryCatch(() =>
+    findUnreferencedMediaByIds({ ids: mediaIds }),
   );
 
-  // referenceCount can legitimately be 0, so the check must be against
-  // `=== null`, not falsy, or a genuinely unreferenced media row would be
-  // skipped here.
-  if (countError !== null || referenceCount === null) {
-    logger.error(`Failed to count references for media ${mediaId}`, countError);
+  if (error !== null || !unreferenced) {
+    logger.error('Failed to find unreferenced media for deletion', { error, mediaIds });
     return;
   }
 
-  if (referenceCount > 0) {
+  await deleteUnreferencedMedia(unreferenced);
+}
+
+async function deleteUnreferencedMedia(rows: UnreferencedMedia[]): Promise<void> {
+  if (rows.length === 0) {
     return;
   }
 
-  const { error: mediaError, data: mediaRow } = await tryCatch(() => getMediaById({ id: mediaId }));
+  const failedKeys = await deleteMediaObjectsReportingFailures(rows);
+  const deletableIds = rows
+    .filter((row) => !failedKeys.has(objectId(row.bucket, row.storageKey)))
+    .map((row) => row.id);
 
-  if (mediaError !== null || !mediaRow) {
-    logger.error(`Failed to load media ${mediaId} for deletion`, mediaError);
-    return;
+  const { error } = await tryCatch(() => deleteMediaByIds({ ids: deletableIds }));
+  if (error !== null) {
+    logger.error('Failed to delete media rows', { error, ids: deletableIds });
   }
-
-  const objectsDeleted = await deleteMediaObjects([
-    { bucket: mediaRow.bucket, storageKey: mediaRow.storageKey },
-  ]);
-
-  // Keep the row so the sweep retries; dropping it would orphan the object.
-  if (!objectsDeleted) {
-    return;
-  }
-
-  await deleteMediaById({ id: mediaId });
 }
 
 export interface SweepUnreferencedMediaResult {
-  // Candidates the sweep found and re-checked, not a guaranteed delete
-  // count: `deleteMediaIfUnreferenced` re-verifies the refcount for each
-  // one and silently skips anything that picked up a reference since the
-  // query ran.
+  // Candidates the sweep found, not a guaranteed delete count: a candidate that picked up a
+  // reference since the query ran is skipped, and so is one whose R2 delete failed.
   candidateCount: number;
 }
 
+// S3 DeleteObjects accepts at most 1000 keys per call.
+export const SWEEP_CANDIDATE_LIMIT = 1000;
+
 /**
  * Safety net for the worker cron:
- * finds media with zero references older than `olderThanHours` and runs the
- * same deletion path every detach point uses. Covers races and failed
- * best-effort R2 deletes.
+ * finds the oldest media with zero references older than `olderThanHours` (at most `limit`
+ * per run, the rest waits for the next run) and deletes them like every detach point does.
+ * Covers races and failed best-effort R2 deletes.
  */
 export async function sweepUnreferencedMedia({
   olderThanHours,
+  limit = SWEEP_CANDIDATE_LIMIT,
 }: {
   olderThanHours: number;
+  limit?: number;
 }): Promise<SweepUnreferencedMediaResult> {
-  const staleMedia = await findUnreferencedMediaOlderThan({ hours: olderThanHours });
+  const staleMedia = await findUnreferencedMediaOlderThan({ hours: olderThanHours, limit });
 
-  await Promise.all(staleMedia.map((row) => deleteMediaIfUnreferenced({ mediaId: row.id })));
+  await deleteMediaIfUnreferenced({ mediaIds: staleMedia.map((row) => row.id) });
 
   return { candidateCount: staleMedia.length };
 }
