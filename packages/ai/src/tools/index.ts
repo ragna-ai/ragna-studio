@@ -10,3 +10,5 @@ export * from './memory.tool';
 export * from './task.tools';
 export * from './tool-definition';
 export * from './video-gen.tool';
+export * from './web-browser.tool';
+export * from './web-search.tool';

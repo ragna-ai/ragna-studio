@@ -31,15 +31,31 @@ async function visit(url: string) {
 }
 
 const failureSchema = z.strictObject({ status: z.string(), message: z.string() });
-const pageSchema = z.strictObject({ meta: z.null(), body: z.string() });
+const pageSchema = z.strictObject({ meta: z.null(), body: z.string(), truncated: z.boolean() });
 
 describe('webBrowser tool', () => {
   test('returns the scraped body', async () => {
+    respondWith(Response.json({ meta: {}, body: '# Example', truncated: false }));
+
+    const result = pageSchema.parse(await visit('https://example.com'));
+
+    expect(result).toEqual({ meta: null, body: '# Example', truncated: false });
+  });
+
+  test('tells the agent when the page was cut off', async () => {
+    respondWith(Response.json({ meta: {}, body: '# Long page', truncated: true }));
+
+    const result = pageSchema.parse(await visit('https://example.com'));
+
+    expect(result.truncated).toBe(true);
+  });
+
+  test('treats a service response without the truncated flag as complete', async () => {
     respondWith(Response.json({ meta: {}, body: '# Example' }));
 
     const result = pageSchema.parse(await visit('https://example.com'));
 
-    expect(result).toEqual({ meta: null, body: '# Example' });
+    expect(result.truncated).toBe(false);
   });
 
   test('tells the agent to retry when the browser is busy', async () => {

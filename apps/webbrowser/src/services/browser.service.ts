@@ -57,6 +57,7 @@ export type PageMeta = Record<string, string | null>;
 export type ScrapeResult = {
   meta: PageMeta;
   body: string;
+  truncated: boolean;
 };
 
 /** Scrapes a page; `signal` cancels it when the caller has gone away. */
@@ -65,7 +66,8 @@ export async function scrapePage(url: string, signal: AbortSignal): Promise<Scra
   try {
     return await scrapeSlots.withLock(async () => {
       const { bodyHtml, meta } = await getPageContents(url, signal);
-      return { meta, body: toMarkdown(bodyHtml) };
+      const { markdown, truncated } = toMarkdown(bodyHtml);
+      return { meta, body: markdown, truncated };
     }, signal);
   } finally {
     markScrapeFinished();

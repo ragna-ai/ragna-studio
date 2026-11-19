@@ -41,7 +41,6 @@
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "ai": "catalog:",
-    "serpapi": "^2.2.1",
     "zod": "catalog:"
   },
   "devDependencies": {

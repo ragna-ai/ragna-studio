@@ -14,16 +14,25 @@ const webBrowserInputSchema = z.object({
     .describe('The valid HTTPS URL of the website to visit.'),
 });
 
-const scrapeResponseSchema = z.object({ body: z.string() });
+// `truncated` defaults to false for a webbrowser service from before it reported the flag.
+const scrapeResponseSchema = z.object({
+  body: z.string(),
+  truncated: z.boolean().optional().default(false),
+});
 
 // Matches the webbrowser service's response when its scrape queue is full.
 const BROWSER_BUSY_STATUS = 503;
 const SCRAPE_TIMEOUT_MS = 30_000;
 
-interface WebBrowserPage {
-  meta: null;
-  body: string;
-}
+/** What a successful page visit returns to the model. */
+export const webBrowserOutputSchema = z.strictObject({
+  meta: z.null(),
+  body: z.string(),
+  /** True when the page was longer than the browser's limit and got cut off. */
+  truncated: z.boolean(),
+});
+
+export type WebBrowserPage = z.infer<typeof webBrowserOutputSchema>;
 
 type WebBrowserOutput = WebBrowserPage | ToolFailure<'invalid_url' | 'busy' | 'unreachable'>;
 
@@ -55,7 +64,7 @@ async function scrape(targetUrl: string): Promise<WebBrowserOutput> {
     return unreachable;
   }
 
-  return { meta: null, body: parsed.data.body };
+  return { meta: null, body: parsed.data.body, truncated: parsed.data.truncated };
 }
 
 export const webBrowserToolDefinition: ToolDefinition<
@@ -63,7 +72,8 @@ export const webBrowserToolDefinition: ToolDefinition<
   WebBrowserOutput
 > = {
   name: 'webBrowser',
-  description: 'Use this tool to browse the web and retrieve the content of a webpage.',
+  description:
+    'Use this tool to browse the web and retrieve the content of a webpage as markdown. Long pages are cut off and marked truncated.',
   inputSchema: webBrowserInputSchema,
   access: 'read',
   execute: async ({ url }) => {
