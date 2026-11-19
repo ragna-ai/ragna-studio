@@ -1,7 +1,7 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import * as z from 'zod';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { ToolDefinition, ToolFailure, ToolOutput } from './tool-definition';
 
 const SERPAPI_SEARCH_URL = 'https://serpapi.com/search.json';
 const SEARCH_TIMEOUT_MS = 30_000;
@@ -63,7 +63,8 @@ export const webSearchOutputSchema = z.strictObject({
 
 export type WebSearchResults = z.infer<typeof webSearchOutputSchema>;
 
-type WebSearchOutput = WebSearchResults | ToolFailure<'invalid_location' | 'unavailable'>;
+type WebSearchFailureStatus = 'invalid_location' | 'unavailable';
+type WebSearchOutput = ToolOutput<typeof webSearchOutputSchema, WebSearchFailureStatus>;
 
 const unavailable: ToolFailure<'unavailable'> = {
   status: 'unavailable',
@@ -125,19 +126,23 @@ async function search(input: WebSearchInput): Promise<WebSearchOutput> {
   return { answer: toAnswer(parsed.data), results };
 }
 
-export const webSearchToolDefinition: ToolDefinition<typeof webSearchInputSchema, WebSearchOutput> =
-  {
-    name: 'webSearch',
-    description:
-      'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need. Returns the direct answer Google shows, if any, and the title, URL, snippet and date of each result.',
-    inputSchema: webSearchInputSchema,
-    access: 'read',
-    execute: async (input) => {
-      try {
-        return await search(input);
-      } catch (error) {
-        logger.warn('Web search failed', error);
-        return unavailable;
-      }
-    },
-  };
+export const webSearchToolDefinition: ToolDefinition<
+  typeof webSearchInputSchema,
+  typeof webSearchOutputSchema,
+  WebSearchFailureStatus
+> = {
+  name: 'webSearch',
+  description:
+    'Use this tool to perform a web search for up-to-date information. Provide relevant keywords or phrases to find the information you need. Returns the direct answer Google shows, if any, and the title, URL, snippet and date of each result.',
+  inputSchema: webSearchInputSchema,
+  outputSchema: webSearchOutputSchema,
+  access: 'read',
+  execute: async (input) => {
+    try {
+      return await search(input);
+    } catch (error) {
+      logger.warn('Web search failed', error);
+      return unavailable;
+    }
+  },
+};

@@ -15,7 +15,7 @@ import {
 } from '@repo/database';
 import * as z from 'zod';
 import { failOnForeignReference } from './foreign-reference-failure';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
 import { optionalNonEmptyString } from './zod-helpers';
 
 // Workspace-scoped: a task always belongs to a workspace (the workspace is
@@ -62,7 +62,59 @@ const TASK_NOT_FOUND: ToolFailure<'not_found'> = {
   message: 'Task not found.',
 };
 
-function toTaskSummary(taskRecord: TaskWithBoardInfo) {
+const taskStatusSchema = z.enum(TASK_STATUSES);
+const taskPrioritySchema = z.enum(TASK_PRIORITIES);
+
+const taskBriefSchema = z.strictObject({
+  id: z.string(),
+  displayId: z.string(),
+  title: z.string(),
+  status: taskStatusSchema,
+  priority: taskPrioritySchema,
+});
+
+const taskSummarySchema = z.strictObject({
+  id: z.string(),
+  displayId: z.string(),
+  title: z.string(),
+  status: taskStatusSchema,
+  priority: taskPrioritySchema,
+  dueDate: z.string().nullable(),
+  remindDaysBeforeDue: z.number().nullable(),
+  labels: z.array(z.string()),
+  parentTaskId: z.string().nullable(),
+  assignedAgent: z.string().nullable(),
+  subtaskCount: z.number(),
+});
+
+const subtaskSummarySchema = z.strictObject({
+  id: z.string(),
+  displayId: z.string(),
+  title: z.string(),
+  status: taskStatusSchema,
+});
+
+const taskDetailSchema = z.strictObject({
+  id: z.string(),
+  displayId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  status: taskStatusSchema,
+  priority: taskPrioritySchema,
+  dueDate: z.string().nullable(),
+  remindDaysBeforeDue: z.number().nullable(),
+  labels: z.array(z.string()),
+  parentTaskId: z.string().nullable(),
+  assignedAgent: z.string().nullable(),
+  subtasks: z.array(subtaskSummarySchema),
+});
+
+type TaskBrief = z.infer<typeof taskBriefSchema>;
+type TaskSummary = z.infer<typeof taskSummarySchema>;
+type SubtaskSummary = z.infer<typeof subtaskSummarySchema>;
+type TaskDetail = z.infer<typeof taskDetailSchema>;
+
+function toTaskSummary(taskRecord: TaskWithBoardInfo): TaskSummary {
   return {
     id: taskRecord.id,
     displayId: toTaskDisplayId(taskRecord.number),
@@ -78,7 +130,7 @@ function toTaskSummary(taskRecord: TaskWithBoardInfo) {
   };
 }
 
-function toSubtaskSummary(subtask: Task) {
+function toSubtaskSummary(subtask: Task): SubtaskSummary {
   return {
     id: subtask.id,
     displayId: toTaskDisplayId(subtask.number),
@@ -87,7 +139,7 @@ function toSubtaskSummary(subtask: Task) {
   };
 }
 
-function toTaskDetail(taskRecord: TaskWithDetails) {
+function toTaskDetail(taskRecord: TaskWithDetails): TaskDetail {
   return {
     id: taskRecord.id,
     displayId: toTaskDisplayId(taskRecord.number),
@@ -104,7 +156,7 @@ function toTaskDetail(taskRecord: TaskWithDetails) {
   };
 }
 
-function toTaskBrief(taskRecord: Task) {
+function toTaskBrief(taskRecord: Task): TaskBrief {
   return {
     id: taskRecord.id,
     displayId: toTaskDisplayId(taskRecord.number),
@@ -191,15 +243,17 @@ const listTasksInputSchema = z.object({
     .describe('Only return tasks in this status column. Omit to return every status.'),
 });
 
-interface ListTasksOutput {
-  tasks: ReturnType<typeof toTaskSummary>[];
-}
+const listTasksOutputSchema = z.strictObject({ tasks: z.array(taskSummarySchema) });
 
-const listTasksDefinition: ToolDefinition<typeof listTasksInputSchema, ListTasksOutput> = {
+const listTasksDefinition: ToolDefinition<
+  typeof listTasksInputSchema,
+  typeof listTasksOutputSchema
+> = {
   name: 'listTasks',
   description:
     "List the tasks on the current workspace's board: display id (TSK-<number>), id, title, status, priority, due date, reminder offset, labels, parent task, assigned agent, and subtask count. Optionally filter by status.",
   inputSchema: listTasksInputSchema,
+  outputSchema: listTasksOutputSchema,
   access: 'read',
   execute: async ({ status }, { workspaceId }) => {
     const tasks = await listTasks({ workspaceId, status });
@@ -213,18 +267,18 @@ const readTaskInputSchema = z.object({
   id: z.string().describe('The id of the task to read.'),
 });
 
-interface ReadTaskOutput {
-  task: ReturnType<typeof toTaskDetail>;
-}
+const readTaskOutputSchema = z.strictObject({ task: taskDetailSchema });
 
 const readTaskDefinition: ToolDefinition<
   typeof readTaskInputSchema,
-  ReadTaskOutput | ToolFailure<'not_found'>
+  typeof readTaskOutputSchema,
+  'not_found'
 > = {
   name: 'readTask',
   description:
     'Read a single task in full by its id, including its markdown description and its subtasks.',
   inputSchema: readTaskInputSchema,
+  outputSchema: readTaskOutputSchema,
   access: 'read',
   execute: async ({ id }, { workspaceId }) => {
     const taskRecord = await getTaskById({ id, workspaceId });
@@ -262,23 +316,24 @@ const createTaskInputSchema = z.object({
     ),
 });
 
-interface TaskBriefOutput {
-  task: ReturnType<typeof toTaskBrief>;
-}
+const taskBriefOutputSchema = z.strictObject({ task: taskBriefSchema });
 
+type TaskBriefOutput = z.infer<typeof taskBriefOutputSchema>;
 type TaskWriteFailure = ToolFailure<'not_found' | 'invalid_input'>;
 
 function createTaskDefinition({
   agentId,
 }: TaskToolDefinitionsOptions): ToolDefinition<
   typeof createTaskInputSchema,
-  TaskBriefOutput | TaskWriteFailure
+  typeof taskBriefOutputSchema,
+  'not_found' | 'invalid_input'
 > {
   return {
     name: 'createTask',
     description:
       "Create a new task on the current workspace's board. Tasks you create are marked as agent-created.",
     inputSchema: createTaskInputSchema,
+    outputSchema: taskBriefOutputSchema,
     access: 'write',
     execute: (input, { workspaceId }) =>
       failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
@@ -382,12 +437,14 @@ const updateTaskInputSchema = z.object({
 
 const updateTaskDefinition: ToolDefinition<
   typeof updateTaskInputSchema,
-  TaskBriefOutput | TaskWriteFailure
+  typeof taskBriefOutputSchema,
+  'not_found' | 'invalid_input'
 > = {
   name: 'updateTask',
   description:
     'Partially update a task: only the given fields change. Changing the due date or reminder offset re-arms the reminder. Does not change status; use moveTask for that.',
   inputSchema: updateTaskInputSchema,
+  outputSchema: taskBriefOutputSchema,
   access: 'write',
   execute: (input, { workspaceId }) =>
     failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
@@ -498,11 +555,13 @@ async function resolveAfterTaskId({
 
 const moveTaskDefinition: ToolDefinition<
   typeof moveTaskInputSchema,
-  TaskBriefOutput | ToolFailure<'not_found'>
+  typeof taskBriefOutputSchema,
+  'not_found'
 > = {
   name: 'moveTask',
   description: 'Move a task to a different status column, at the top or bottom of it.',
   inputSchema: moveTaskInputSchema,
+  outputSchema: taskBriefOutputSchema,
   access: 'write',
   execute: async ({ id, status, position }, { workspaceId }) => {
     const afterTaskId = await resolveAfterTaskId({ taskId: id, workspaceId, status, position });
@@ -515,9 +574,7 @@ const moveTaskDefinition: ToolDefinition<
 };
 
 /** The task tools of one agent. */
-export function taskToolDefinitions(
-  options: TaskToolDefinitionsOptions,
-): ToolDefinition<z.ZodObject, unknown>[] {
+export function taskToolDefinitions(options: TaskToolDefinitionsOptions): AnyToolDefinition[] {
   return [
     listTasksDefinition,
     readTaskDefinition,

@@ -200,6 +200,93 @@ describe('POST /mcp: tools/list follows settings', () => {
   });
 });
 
+const toolListSchema = z.object({
+  result: z.object({
+    tools: z.array(
+      z.object({
+        name: z.string(),
+        outputSchema: z.object({ type: z.literal('object') }).optional(),
+      }),
+    ),
+  }),
+});
+
+const appendedRowResultSchema = z.object({
+  result: z.strictObject({
+    resultType: z.string(),
+    _meta: z.record(z.string(), z.unknown()).optional(),
+    content: z.array(z.strictObject({ type: z.literal('text'), text: z.string() })),
+    structuredContent: z.strictObject({
+      row: z.strictObject({
+        id: z.string(),
+        data: z.record(z.string(), z.unknown()),
+        writtenBy: z.string(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+      }),
+    }),
+  }),
+});
+
+const notFoundResultSchema = z.object({
+  result: z.strictObject({
+    resultType: z.string(),
+    _meta: z.record(z.string(), z.unknown()).optional(),
+    isError: z.literal(true),
+    content: z.array(z.strictObject({ type: z.literal('text'), text: z.string() })),
+  }),
+});
+
+describe('POST /mcp: tool output schemas', () => {
+  test('every listed tool advertises an output schema', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    await seedMcpConnection({ userId, workspaceId, access: { datasets: 'write' } });
+    const token = await mintMcpAccessToken({ userId });
+
+    const response = await listTools(token);
+    const body = toolListSchema.parse(await response.json());
+
+    expect(body.result.tools.length).toBeGreaterThan(0);
+    for (const tool of body.result.tools) {
+      expect(tool.outputSchema?.type).toBe('object');
+    }
+  });
+
+  test('a successful call returns structured content in the advertised shape', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    await seedMcpConnection({ userId, workspaceId, access: { datasets: 'write' } });
+    const token = await mintMcpAccessToken({ userId });
+    const dataset = await createDataset({
+      userId,
+      workspaceId,
+      name: 'Shaped',
+      columns: [{ id: 'status', name: 'Status', type: 'text' }],
+    });
+
+    const response = await callTool(token, 'datasetAppendRow', {
+      datasetId: dataset.id,
+      data: { status: 'todo' },
+    });
+
+    const body = appendedRowResultSchema.parse(await response.json());
+    expect(body.result.structuredContent.row.data).toEqual({ status: 'todo' });
+  });
+
+  test('a not-found call is an error without structured content', async () => {
+    const { userId, workspaceId } = await seedAuthenticatedUser();
+    await seedOAuthClient();
+    await seedMcpConnection({ userId, workspaceId, access: { datasets: 'read' } });
+    const token = await mintMcpAccessToken({ userId });
+
+    const response = await callTool(token, 'datasetListRows', { datasetId: 'missing-dataset' });
+
+    const body = notFoundResultSchema.parse(await response.json());
+    expect(body.result.content[0]?.text).toBeTruthy();
+  });
+});
+
 describe('POST /mcp: tools/call', () => {
   test('a write call is not allowed when access is read', async () => {
     const { userId, workspaceId } = await seedAuthenticatedUser();

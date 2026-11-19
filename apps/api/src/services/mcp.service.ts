@@ -6,7 +6,7 @@ import {
   recordMcpToolCall,
   touchMcpConnection,
 } from '@repo/database';
-import { executeTool, toolFailureSchema, type ToolDefinition } from '@repo/ai';
+import { executeTool, toolFailureSchema, type AnyToolDefinition } from '@repo/ai';
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import type { CallToolResult } from '@modelcontextprotocol/server';
@@ -94,7 +94,7 @@ function extractResourceId(input: unknown): string | null {
 // Best-effort: the tool already ran, so a failure here must not surface to the client.
 async function recordMcpToolCallOutcome(
   scope: McpConnectionScope,
-  definition: ToolDefinition<z.ZodObject, unknown>,
+  definition: AnyToolDefinition,
   input: unknown,
   result: CallToolResult,
 ): Promise<void> {
@@ -123,7 +123,7 @@ async function recordMcpToolCallOutcome(
 // connection's last_used_at (P7).
 function registerMcpTool(
   server: McpServer,
-  definition: ToolDefinition<z.ZodObject, unknown>,
+  definition: AnyToolDefinition,
   scope: McpConnectionScope,
 ): void {
   server.registerTool(
@@ -131,6 +131,7 @@ function registerMcpTool(
     {
       description: definition.description,
       inputSchema: definition.inputSchema,
+      outputSchema: definition.outputSchema,
       annotations: definition.annotations,
     },
     async (input) => {

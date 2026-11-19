@@ -37,15 +37,15 @@ const videoGenInputSchema = z.object({
     ),
 });
 
-type GeneratedAgentVideo = {
-  id: string;
-  status: 'pending' | 'completed';
-  videoUrl?: string;
-};
+const videoGenOutputSchema = z.strictObject({
+  video: z.strictObject({
+    id: z.string(),
+    status: z.enum(['pending', 'completed']),
+    videoUrl: z.string().optional(),
+  }),
+});
 
-type VideoGenOutput =
-  | { video: GeneratedAgentVideo }
-  | ToolFailure<'image_not_found' | 'generation_failed'>;
+type VideoGenFailureStatus = 'image_not_found' | 'generation_failed';
 
 // Chat (runsInWorker: false/undefined) enqueues and returns immediately: the
 // multi-minute render never blocks the stream, and a dropped stream can't
@@ -96,11 +96,16 @@ const generationFailedFailure: ToolFailure<'generation_failed'> = {
 
 export function videoGenToolDefinition({
   runsInWorker,
-}: VideoGenToolOptions): ToolDefinition<typeof videoGenInputSchema, VideoGenOutput> {
+}: VideoGenToolOptions): ToolDefinition<
+  typeof videoGenInputSchema,
+  typeof videoGenOutputSchema,
+  VideoGenFailureStatus
+> {
   return {
     name: 'videoGen',
     description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: videoGenInputSchema,
+    outputSchema: videoGenOutputSchema,
     access: 'write',
     uiEvent: (input) => ({ type: 'data-videoGen', data: { prompt: input.prompt } }),
     execute: async (input, { userId, workspaceId }) => {

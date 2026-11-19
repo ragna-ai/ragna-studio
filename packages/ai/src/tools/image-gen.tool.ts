@@ -6,7 +6,7 @@ import {
   imageGenAspectRatios,
   requestGenImagesWithDefaultModel,
 } from '../services/imagen.service';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { ToolDefinition, ToolOutput } from './tool-definition';
 
 const imageGenInputSchema = z.object({
   prompt: z
@@ -45,19 +45,24 @@ const imageGenInputSchema = z.object({
 
 type ImageGenInput = z.infer<typeof imageGenInputSchema>;
 
-export type GeneratedAgentImage = {
-  id: string;
-  imgUrl: string;
-};
+const generatedAgentImageSchema = z.strictObject({ id: z.string(), imgUrl: z.string() });
 
-// The pending branch is the poll-cap fallback: the chat path waited up to POLL_TIMEOUT_MS and
+// The pending key is the poll-cap fallback: the chat path waited up to POLL_TIMEOUT_MS and
 // the batch still hadn't settled, so the ids are handed back instead of a
 // URL the model doesn't have yet, the same degrade-to-pending shape the
-// video tool always returns.
-type ImageGenOutput =
-  | { images: GeneratedAgentImage[] }
-  | { pending: { ids: string[] } }
-  | ToolFailure<'generation_failed'>;
+// video tool always returns. Exactly one of `images` and `pending` is present.
+const imageGenOutputSchema = z
+  .strictObject({
+    images: z.array(generatedAgentImageSchema).optional(),
+    pending: z.strictObject({ ids: z.array(z.string()) }).optional(),
+  })
+  .refine((output) => (output.images === undefined) !== (output.pending === undefined), {
+    message: 'Exactly one of images and pending is present.',
+  });
+
+export type GeneratedAgentImage = z.infer<typeof generatedAgentImageSchema>;
+
+type ImageGenOutput = ToolOutput<typeof imageGenOutputSchema, 'generation_failed'>;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -172,11 +177,16 @@ export interface ImageGenToolOptions {
 
 export function imageGenToolDefinition({
   runsInWorker,
-}: ImageGenToolOptions): ToolDefinition<typeof imageGenInputSchema, ImageGenOutput> {
+}: ImageGenToolOptions): ToolDefinition<
+  typeof imageGenInputSchema,
+  typeof imageGenOutputSchema,
+  'generation_failed'
+> {
   return {
     name: 'imageGen',
     description: runsInWorker ? awaitedDescription : asyncDescription,
     inputSchema: imageGenInputSchema,
+    outputSchema: imageGenOutputSchema,
     access: 'write',
     uiEvent: (input) => ({ type: 'data-imageGen', data: { prompt: input.prompt } }),
     // seed/negativePrompt pass straight through: this tool never sees ai_models.capabilities,
@@ -186,6 +196,4 @@ export function imageGenToolDefinition({
   };
 }
 
-export type getGeneratedImagesOutput = Awaited<
-  ReturnType<ReturnType<typeof imageGenToolDefinition>['execute']>
->;
+export type getGeneratedImagesOutput = ImageGenOutput;

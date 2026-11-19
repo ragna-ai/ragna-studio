@@ -22,7 +22,7 @@ import {
 } from '@repo/database';
 import * as z from 'zod';
 import { createDatasetForAgent } from '../services/dataset.service';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
 
 // Seven tools, one family: the agent tool picker shows a single "Datasets"
 // toggle that expands to all of these (see agent.tools.ts).
@@ -48,7 +48,6 @@ const columnInputSchema = z.object({
     .describe('Allowed values. Required and only meaningful when type is "select".'),
 });
 
-type DatasetToolFailure = ToolFailure<'not_found' | 'invalid_input' | 'limit_reached'>;
 type ScopedDatasetResult = { dataset: Dataset } | ToolFailure<'not_found'>;
 
 function rowNotFound(): ToolFailure<'not_found'> {
@@ -75,27 +74,39 @@ async function loadDatasetInScope({
   return { dataset: datasetRecord };
 }
 
-export interface DatasetColumnOutput {
-  id: string;
-  name: string;
-  type: DatasetColumnType;
-  options?: string[];
-}
+const DATASET_COLUMN_TYPES = [
+  'text',
+  'number',
+  'date',
+  'select',
+] as const satisfies readonly DatasetColumnType[];
+const DATASET_ROW_WRITERS = ['user', 'agent', 'mcp'] as const satisfies readonly DatasetRowWriter[];
 
-export interface DatasetOutput {
-  id: string;
-  name: string;
-  description: string | null;
-  columns: DatasetColumnOutput[];
-}
+const datasetColumnOutputSchema = z.strictObject({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(DATASET_COLUMN_TYPES),
+  options: z.array(z.string()).optional(),
+});
 
-export interface DatasetRowOutput {
-  id: string;
-  data: DatasetRow['data'];
-  writtenBy: DatasetRowWriter;
-  createdAt: string;
-  updatedAt: string;
-}
+const datasetOutputSchema = z.strictObject({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  columns: z.array(datasetColumnOutputSchema),
+});
+
+const datasetRowOutputSchema = z.strictObject({
+  id: z.string(),
+  data: rowDataSchema,
+  writtenBy: z.enum(DATASET_ROW_WRITERS),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type DatasetColumnOutput = z.infer<typeof datasetColumnOutputSchema>;
+export type DatasetOutput = z.infer<typeof datasetOutputSchema>;
+export type DatasetRowOutput = z.infer<typeof datasetRowOutputSchema>;
 
 function toColumnOutput(column: DatasetColumn): DatasetColumnOutput {
   return { id: column.id, name: column.name, type: column.type, options: column.options };
@@ -165,16 +176,18 @@ const datasetCreateInputSchema = z.object({
     .describe('The dataset schema. Give each column a short, unique id.'),
 });
 
-type DatasetCreateOutput = { dataset: DatasetOutput } | ToolFailure<'invalid_input'>;
+const datasetCreateOutputSchema = z.strictObject({ dataset: datasetOutputSchema });
 
 export const datasetCreateDefinition: ToolDefinition<
   typeof datasetCreateInputSchema,
-  DatasetCreateOutput
+  typeof datasetCreateOutputSchema,
+  'invalid_input'
 > = {
   name: 'datasetCreate',
   description:
     'Create a new dataset: a structured table with typed columns (text, number, date, select) that both you and the user can read and edit. Use it to keep durable, structured state, e.g. a task queue or a plan.',
   inputSchema: datasetCreateInputSchema,
+  outputSchema: datasetCreateOutputSchema,
   access: 'write',
   async execute(input, ctx) {
     const columnsValidation = validateColumns(input.columns);
@@ -206,16 +219,20 @@ const datasetFindInputSchema = z.object({
     ),
 });
 
-type DatasetFindOutput = { datasets: DatasetOutput[]; note?: string };
+const datasetFindOutputSchema = z.strictObject({
+  datasets: z.array(datasetOutputSchema),
+  note: z.string().optional(),
+});
 
 export const datasetFindDefinition: ToolDefinition<
   typeof datasetFindInputSchema,
-  DatasetFindOutput
+  typeof datasetFindOutputSchema
 > = {
   name: 'datasetFind',
   description:
     "Find datasets you or the user have created, returning each one's id and column schema so you can then call datasetListRows/datasetAppendRow/datasetUpdateRow. If a default dataset is already pinned for you, its id and schema are in your system prompt and you usually don't need this tool.",
   inputSchema: datasetFindInputSchema,
+  outputSchema: datasetFindOutputSchema,
   access: 'read',
   annotations: { readOnlyHint: true },
   async execute(input, ctx) {
@@ -263,18 +280,18 @@ const datasetListRowsInputSchema = z.object({
     .describe(`Max rows to return, capped at ${MAX_LIST_ROWS_LIMIT}.`),
 });
 
-type DatasetListRowsOutput =
-  | { rows: DatasetRowOutput[] }
-  | ToolFailure<'not_found' | 'invalid_input'>;
+const datasetListRowsOutputSchema = z.strictObject({ rows: z.array(datasetRowOutputSchema) });
 
 export const datasetListRowsDefinition: ToolDefinition<
   typeof datasetListRowsInputSchema,
-  DatasetListRowsOutput
+  typeof datasetListRowsOutputSchema,
+  'not_found' | 'invalid_input'
 > = {
   name: 'datasetListRows',
   description:
     'List the (non-deleted) rows of a dataset, in dataset order (creation order unless rearranged), optionally filtered to rows where one column equals a value, optionally projected to a subset of columns. Use this to find the next item to work on.',
   inputSchema: datasetListRowsInputSchema,
+  outputSchema: datasetListRowsOutputSchema,
   access: 'read',
   annotations: { readOnlyHint: true },
   async execute(input, ctx) {
@@ -314,16 +331,18 @@ const datasetGetRowInputSchema = z.object({
   rowId: z.string(),
 });
 
-type DatasetGetRowOutput = { row: DatasetRowOutput } | ToolFailure<'not_found'>;
+const datasetRowResultSchema = z.strictObject({ row: datasetRowOutputSchema });
 
 export const datasetGetRowDefinition: ToolDefinition<
   typeof datasetGetRowInputSchema,
-  DatasetGetRowOutput
+  typeof datasetRowResultSchema,
+  'not_found'
 > = {
   name: 'datasetGetRow',
   description:
     'Read a single dataset row in full by its id. Use this after a column-projected datasetListRows scan to load the complete data of the row you picked.',
   inputSchema: datasetGetRowInputSchema,
+  outputSchema: datasetRowResultSchema,
   access: 'read',
   annotations: { readOnlyHint: true },
   async execute(input, ctx) {
@@ -351,16 +370,16 @@ const datasetAppendRowInputSchema = z.object({
   data: rowDataSchema,
 });
 
-type DatasetAppendRowOutput = { row: DatasetRowOutput } | DatasetToolFailure;
-
 export const datasetAppendRowDefinition: ToolDefinition<
   typeof datasetAppendRowInputSchema,
-  DatasetAppendRowOutput
+  typeof datasetRowResultSchema,
+  'not_found' | 'invalid_input' | 'limit_reached'
 > = {
   name: 'datasetAppendRow',
   description:
     "Append a new row to a dataset. Values are validated against the dataset's column schema (unknown columns and out-of-range select values are rejected). Note: if a workflow run retries after a failure, this can duplicate a previous append; read the dataset first to check whether the row already exists.",
   inputSchema: datasetAppendRowInputSchema,
+  outputSchema: datasetRowResultSchema,
   access: 'write',
   execute(input, ctx) {
     return withDatasetRowLock(input.datasetId, async () => {
@@ -405,16 +424,16 @@ const datasetUpdateRowInputSchema = z.object({
   data: rowDataSchema.describe('Partial update: only the given columns change.'),
 });
 
-type DatasetUpdateRowOutput = { row: DatasetRowOutput } | DatasetToolFailure;
-
 export const datasetUpdateRowDefinition: ToolDefinition<
   typeof datasetUpdateRowInputSchema,
-  DatasetUpdateRowOutput
+  typeof datasetRowResultSchema,
+  'not_found' | 'invalid_input' | 'limit_reached'
 > = {
   name: 'datasetUpdateRow',
   description:
     'Partially update an existing dataset row, e.g. flipping status from "todo" to "done". Only the given columns change; the rest of the row is left as-is.',
   inputSchema: datasetUpdateRowInputSchema,
+  outputSchema: datasetRowResultSchema,
   access: 'write',
   annotations: { destructiveHint: true },
   async execute(input, ctx) {
@@ -465,16 +484,16 @@ const datasetMoveRowInputSchema = z.object({
     .describe('Id of the row this one should land directly after. Omit to move it to the top.'),
 });
 
-type DatasetMoveRowOutput = { row: DatasetRowOutput } | DatasetToolFailure;
-
 export const datasetMoveRowDefinition: ToolDefinition<
   typeof datasetMoveRowInputSchema,
-  DatasetMoveRowOutput
+  typeof datasetRowResultSchema,
+  'not_found' | 'invalid_input' | 'limit_reached'
 > = {
   name: 'datasetMoveRow',
   description:
     'Reprioritize a dataset row by changing its position, e.g. "move the research step before the drafting step". Omit afterRowId to move the row to the top; otherwise it lands directly after the row with that id.',
   inputSchema: datasetMoveRowInputSchema,
+  outputSchema: datasetRowResultSchema,
   access: 'write',
   annotations: { idempotentHint: true },
   execute(input, ctx) {
@@ -521,7 +540,7 @@ export const datasetMoveRowDefinition: ToolDefinition<
   },
 };
 
-export const datasetToolDefinitions: ToolDefinition<z.ZodObject, unknown>[] = [
+export const datasetToolDefinitions: AnyToolDefinition[] = [
   datasetCreateDefinition,
   datasetFindDefinition,
   datasetListRowsDefinition,

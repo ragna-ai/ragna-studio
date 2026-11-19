@@ -42,7 +42,7 @@ const generatedImages = computed<GeneratedAgentImage[]>(() => {
   }
   // The generic UIMessage type erases per-tool output types.
   const output = props.part.output as getGeneratedImagesOutput;
-  return 'images' in output ? output.images : [];
+  return 'images' in output ? (output.images ?? []) : [];
 });
 </script>
 

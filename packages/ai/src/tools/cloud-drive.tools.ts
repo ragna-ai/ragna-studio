@@ -12,7 +12,7 @@ import { logger } from '@repo/logger';
 import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
 import type { ToolSet } from 'ai';
 import * as z from 'zod';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
 
 export const CLOUD_DRIVE_READ_MAX_BYTES = 20 * 1024 * 1024;
 export const CLOUD_DRIVE_READ_MAX_CHARACTERS = 100_000;
@@ -34,8 +34,7 @@ const EXTRACTABLE_MEDIA_KINDS: readonly MediaKind[] = [
   'md',
 ];
 
-export type CloudDriveToolStatus =
-  | 'ok'
+export type CloudDriveFailureStatus =
   | 'not_connected'
   | 'reconnect'
   | 'not_found'
@@ -44,47 +43,44 @@ export type CloudDriveToolStatus =
   | 'too_large'
   | 'busy';
 
-export type CloudDriveToolFailure = ToolFailure<Exclude<CloudDriveToolStatus, 'ok'>>;
+export type CloudDriveToolFailure = ToolFailure<CloudDriveFailureStatus>;
 
-export interface CloudDriveItemOutput {
-  id: string;
-  name: string;
-  kind: CloudDriveItem['kind'];
-  mimeType: string | null;
-  modifiedAt: string;
-  webUrl: string;
-  sizeBytes: number | null;
-}
+const cloudDriveItemSchema = z.strictObject({
+  id: z.string(),
+  name: z.string(),
+  kind: z.enum(['folder', 'file']),
+  mimeType: z.string().nullable(),
+  modifiedAt: z.string(),
+  webUrl: z.string(),
+  sizeBytes: z.number().nullable(),
+});
 
-export interface CloudDriveListOutput {
-  status: 'ok';
-  items: CloudDriveItemOutput[];
-  nextCursor: string | null;
-}
+const cloudDriveListOutputSchema = z.strictObject({
+  status: z.literal('ok'),
+  items: z.array(cloudDriveItemSchema),
+  nextCursor: z.string().nullable(),
+});
 
-export interface CloudDriveReadFileOutput {
-  status: 'ok';
-  name: string;
-  mimeType: string;
-  webUrl: string;
-  text: string;
-  truncated: boolean;
-}
+const cloudDriveReadFileOutputSchema = z.strictObject({
+  status: z.literal('ok'),
+  name: z.string(),
+  mimeType: z.string(),
+  webUrl: z.string(),
+  text: z.string(),
+  truncated: z.boolean(),
+});
 
-export interface CloudDriveWriteOutput {
-  status: 'ok';
-  id: string;
-  name: string;
-  webUrl: string;
-}
+const cloudDriveWriteOutputSchema = z.strictObject({
+  status: z.literal('ok'),
+  id: z.string(),
+  name: z.string(),
+  webUrl: z.string(),
+});
 
-export type CloudDriveWriteResult = CloudDriveWriteOutput | CloudDriveToolFailure;
-export type CloudDriveListResult = CloudDriveListOutput | CloudDriveToolFailure;
-export type CloudDriveReadFileResult = CloudDriveReadFileOutput | CloudDriveToolFailure;
-export type CloudDriveToolResult =
-  | CloudDriveListResult
-  | CloudDriveReadFileResult
-  | CloudDriveWriteResult;
+export type CloudDriveItemOutput = z.infer<typeof cloudDriveItemSchema>;
+export type CloudDriveListOutput = z.infer<typeof cloudDriveListOutputSchema>;
+export type CloudDriveReadFileOutput = z.infer<typeof cloudDriveReadFileOutputSchema>;
+export type CloudDriveWriteOutput = z.infer<typeof cloudDriveWriteOutputSchema>;
 
 const searchInputSchema = z.object({
   query: z.string().min(1).describe('Words to search for.'),
@@ -132,7 +128,7 @@ function toListOutput(page: CloudDrivePage): CloudDriveListOutput {
   return { status: 'ok', items: page.items.map(toItemOutput), nextCursor: page.nextCursor };
 }
 
-function failureMessages(driveName: string): Record<CloudDriveToolFailure['status'], string> {
+function failureMessages(driveName: string): Record<CloudDriveFailureStatus, string> {
   return {
     not_connected: `${driveName} is not connected for this user. Ask them to connect it in settings.`,
     reconnect: `The ${driveName} connection needs to be renewed. Ask the user to reconnect it in settings.`,
@@ -144,10 +140,7 @@ function failureMessages(driveName: string): Record<CloudDriveToolFailure['statu
   };
 }
 
-const FAILURE_STATUS_BY_ERROR_KIND: Record<
-  CloudDriveError['kind'],
-  CloudDriveToolFailure['status']
-> = {
+const FAILURE_STATUS_BY_ERROR_KIND: Record<CloudDriveError['kind'], CloudDriveFailureStatus> = {
   not_found: 'not_found',
   read_only: 'read_only',
   too_large: 'too_large',
@@ -156,7 +149,7 @@ const FAILURE_STATUS_BY_ERROR_KIND: Record<
   unsupported: 'unsupported',
 };
 
-function toFailureStatus(error: unknown): CloudDriveToolFailure['status'] {
+function toFailureStatus(error: unknown): CloudDriveFailureStatus {
   if (error instanceof CloudDriveError) return FAILURE_STATUS_BY_ERROR_KIND[error.kind];
   if (error instanceof ConnectionIntegrationDisabledError) return 'not_connected';
   if (error instanceof ConnectionNeedsReauthError) return 'reconnect';
@@ -177,7 +170,7 @@ async function runOnDrive<Result>({
   run,
 }: RunOnDriveParams<Result>): Promise<Result | CloudDriveToolFailure> {
   const messages = failureMessages(DRIVE_DISPLAY_NAMES[integrationId]);
-  const failure = (status: CloudDriveToolFailure['status']): CloudDriveToolFailure => ({
+  const failure = (status: CloudDriveFailureStatus): CloudDriveToolFailure => ({
     status,
     message: messages[status],
   });
@@ -238,14 +231,19 @@ function toWriteOutput(item: CloudDriveItem): CloudDriveWriteOutput {
 /** Every tool the given drive offers. */
 export function cloudDriveToolDefinitions(
   integrationId: CloudDriveIntegrationId,
-): ToolDefinition<z.ZodObject, unknown>[] {
+): AnyToolDefinition[] {
   const driveName = DRIVE_DISPLAY_NAMES[integrationId];
   const prefix = toCamelCase(integrationId);
 
-  const searchDefinition: ToolDefinition<typeof searchInputSchema, CloudDriveListResult> = {
+  const searchDefinition: ToolDefinition<
+    typeof searchInputSchema,
+    typeof cloudDriveListOutputSchema,
+    CloudDriveFailureStatus
+  > = {
     name: `${prefix}Search`,
     description: `Search the user's ${driveName} by file name and content. Returns matching files and folders, and a nextCursor when there are more results.`,
     inputSchema: searchInputSchema,
+    outputSchema: cloudDriveListOutputSchema,
     access: 'read',
     annotations: { readOnlyHint: true },
     execute: (input, ctx) =>
@@ -257,10 +255,15 @@ export function cloudDriveToolDefinitions(
       }),
   };
 
-  const listFolderDefinition: ToolDefinition<typeof listFolderInputSchema, CloudDriveListResult> = {
+  const listFolderDefinition: ToolDefinition<
+    typeof listFolderInputSchema,
+    typeof cloudDriveListOutputSchema,
+    CloudDriveFailureStatus
+  > = {
     name: `${prefix}ListFolder`,
     description: `List the files and folders inside one ${driveName} folder. Omit folderId for the top level. Returns a nextCursor when there are more items.`,
     inputSchema: listFolderInputSchema,
+    outputSchema: cloudDriveListOutputSchema,
     access: 'read',
     annotations: { readOnlyHint: true },
     execute: (input, ctx) =>
@@ -274,10 +277,15 @@ export function cloudDriveToolDefinitions(
       }),
   };
 
-  const readFileDefinition: ToolDefinition<typeof readFileInputSchema, CloudDriveReadFileResult> = {
+  const readFileDefinition: ToolDefinition<
+    typeof readFileInputSchema,
+    typeof cloudDriveReadFileOutputSchema,
+    CloudDriveFailureStatus
+  > = {
     name: `${prefix}ReadFile`,
     description: `Read the text of one ${driveName} file. Works for documents, spreadsheets, presentations, PDFs, Word, PowerPoint, Excel, CSV, text and Markdown files. Long files are cut off and marked truncated.`,
     inputSchema: readFileInputSchema,
+    outputSchema: cloudDriveReadFileOutputSchema,
     access: 'read',
     annotations: { readOnlyHint: true },
     execute: async (input, ctx) => {
@@ -294,46 +302,54 @@ export function cloudDriveToolDefinitions(
     },
   };
 
-  const createFileDefinition: ToolDefinition<typeof createFileInputSchema, CloudDriveWriteResult> =
-    {
-      name: `${prefix}CreateFile`,
-      description: `Create a new text, Markdown or CSV file in the user's ${driveName}. In chat the user reviews the file and approves it first. Omit folderId for the top level.`,
-      inputSchema: createFileInputSchema,
-      access: 'write',
-      annotations: { readOnlyHint: false, destructiveHint: false },
-      execute: (input, ctx) =>
-        runOnDrive({
-          integrationId,
-          userId: ctx.userId,
-          run: async (provider) =>
-            toWriteOutput(
-              await provider.createFile({
-                name: input.name,
-                folderId: input.folderId ?? null,
-                format: input.format,
-                content: input.content,
-              }),
-            ),
-        }),
-    };
+  const createFileDefinition: ToolDefinition<
+    typeof createFileInputSchema,
+    typeof cloudDriveWriteOutputSchema,
+    CloudDriveFailureStatus
+  > = {
+    name: `${prefix}CreateFile`,
+    description: `Create a new text, Markdown or CSV file in the user's ${driveName}. In chat the user reviews the file and approves it first. Omit folderId for the top level.`,
+    inputSchema: createFileInputSchema,
+    outputSchema: cloudDriveWriteOutputSchema,
+    access: 'write',
+    annotations: { readOnlyHint: false, destructiveHint: false },
+    execute: (input, ctx) =>
+      runOnDrive({
+        integrationId,
+        userId: ctx.userId,
+        run: async (provider) =>
+          toWriteOutput(
+            await provider.createFile({
+              name: input.name,
+              folderId: input.folderId ?? null,
+              format: input.format,
+              content: input.content,
+            }),
+          ),
+      }),
+  };
 
-  const updateFileDefinition: ToolDefinition<typeof updateFileInputSchema, CloudDriveWriteResult> =
-    {
-      name: `${prefix}UpdateFile`,
-      description: `Replace the content of an existing plain text, Markdown or CSV file in the user's ${driveName}. In chat the user reviews the new content and approves it first. Google Docs and Sheets cannot be updated.`,
-      inputSchema: updateFileInputSchema,
-      access: 'write',
-      annotations: { readOnlyHint: false, destructiveHint: true },
-      execute: (input, ctx) =>
-        runOnDrive({
-          integrationId,
-          userId: ctx.userId,
-          run: async (provider) =>
-            toWriteOutput(
-              await provider.updateFileContent({ itemId: input.fileId, content: input.content }),
-            ),
-        }),
-    };
+  const updateFileDefinition: ToolDefinition<
+    typeof updateFileInputSchema,
+    typeof cloudDriveWriteOutputSchema,
+    CloudDriveFailureStatus
+  > = {
+    name: `${prefix}UpdateFile`,
+    description: `Replace the content of an existing plain text, Markdown or CSV file in the user's ${driveName}. In chat the user reviews the new content and approves it first. Google Docs and Sheets cannot be updated.`,
+    inputSchema: updateFileInputSchema,
+    outputSchema: cloudDriveWriteOutputSchema,
+    access: 'write',
+    annotations: { readOnlyHint: false, destructiveHint: true },
+    execute: (input, ctx) =>
+      runOnDrive({
+        integrationId,
+        userId: ctx.userId,
+        run: async (provider) =>
+          toWriteOutput(
+            await provider.updateFileContent({ itemId: input.fileId, content: input.content }),
+          ),
+      }),
+  };
 
   return [
     searchDefinition,

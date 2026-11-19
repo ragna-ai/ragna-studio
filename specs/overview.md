@@ -147,9 +147,12 @@ Integration tools carry an access level (`read` or `write`) that limits
 which AI SDK tools the model gets. The chat input shows every granted tool.
 Every AI SDK tool is a tool definition shared by chat, workflows and MCP, and
 runs through one runner that logs failures and keeps internal error text out
-of the model and the client.
+of the model and the client. Each tool declares the shape of its output: the
+runner fails a call whose output doesn't match, and MCP clients see the shape
+in `tools/list`.
 → [specs/agent/301-tool-grants/design.md](./agent/301-tool-grants/design.md),
-[specs/agent/305-tool-runner/design.md](./agent/305-tool-runner/design.md)
+[specs/agent/305-tool-runner/design.md](./agent/305-tool-runner/design.md),
+[specs/agent/440-tool-output-schemas/prd.md](./agent/440-tool-output-schemas/prd.md)
 
 ### Agent mark
 

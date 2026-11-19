@@ -2,7 +2,6 @@ import type { StoredAgentToolGrant } from '@repo/database/schema';
 import { logger } from '@repo/logger';
 import type { ToolSet, UIMessageStreamWriter } from 'ai';
 import { searchContextDocumentsToolDefinition } from './agent-context.tool';
-import type * as z from 'zod';
 import { agentToolGrantSchema, type AgentToolGrant, type AgentToolId } from './agent-tool-catalog';
 import { cloudDriveToolDefinitions } from './cloud-drive.tools';
 import { datasetToolDefinitions } from './dataset.tools';
@@ -14,7 +13,7 @@ import { taskToolDefinitions } from './task.tools';
 import { thinkToolDefinition } from './think.tool';
 import { videoGenToolDefinition } from './video-gen.tool';
 import { webBrowserToolDefinition } from './web-browser.tool';
-import { filterByAccess, toAgentTools, type ToolDefinition } from './tool-definition';
+import { filterByAccess, toAgentTools, type AnyToolDefinition } from './tool-definition';
 import { webSearchToolDefinition } from './web-search.tool';
 
 export interface AgentToolContext {
@@ -31,9 +30,7 @@ export interface AgentToolContext {
   writer?: UIMessageStreamWriter;
 }
 
-type AgentToolDefinitions = (
-  ctx: AgentToolContext,
-) => readonly ToolDefinition<z.ZodObject, unknown>[];
+type AgentToolDefinitions = (ctx: AgentToolContext) => readonly AnyToolDefinition[];
 
 /** The tool definitions behind each agent tool id. Only granted ones are built. */
 const agentToolDefinitions = {
@@ -66,7 +63,7 @@ function parseStoredGrants(storedGrants: readonly StoredAgentToolGrant[]): Agent
 function grantedDefinitions(
   grant: AgentToolGrant,
   ctx: AgentToolContext,
-): readonly ToolDefinition<z.ZodObject, unknown>[] {
+): readonly AnyToolDefinition[] {
   const buildDefinitions: AgentToolDefinitions = agentToolDefinitions[grant.id];
   const definitions = buildDefinitions(ctx);
   return 'access' in grant ? filterByAccess(definitions, grant.access) : definitions;

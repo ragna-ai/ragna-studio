@@ -1,7 +1,7 @@
 import { config } from '@repo/config';
 import { logger } from '@repo/logger';
 import * as z from 'zod';
-import type { ToolDefinition, ToolFailure } from './tool-definition';
+import type { ToolDefinition, ToolFailure, ToolOutput } from './tool-definition';
 
 const webBrowserInputSchema = z.object({
   url: z
@@ -34,7 +34,8 @@ export const webBrowserOutputSchema = z.strictObject({
 
 export type WebBrowserPage = z.infer<typeof webBrowserOutputSchema>;
 
-type WebBrowserOutput = WebBrowserPage | ToolFailure<'invalid_url' | 'busy' | 'unreachable'>;
+type WebBrowserFailureStatus = 'invalid_url' | 'busy' | 'unreachable';
+type WebBrowserOutput = ToolOutput<typeof webBrowserOutputSchema, WebBrowserFailureStatus>;
 
 const unreachable: ToolFailure<'unreachable'> = {
   status: 'unreachable',
@@ -69,12 +70,14 @@ async function scrape(targetUrl: string): Promise<WebBrowserOutput> {
 
 export const webBrowserToolDefinition: ToolDefinition<
   typeof webBrowserInputSchema,
-  WebBrowserOutput
+  typeof webBrowserOutputSchema,
+  WebBrowserFailureStatus
 > = {
   name: 'webBrowser',
   description:
     'Use this tool to browse the web and retrieve the content of a webpage as markdown. Long pages are cut off and marked truncated.',
   inputSchema: webBrowserInputSchema,
+  outputSchema: webBrowserOutputSchema,
   access: 'read',
   execute: async ({ url }) => {
     if (!URL.canParse(url)) {

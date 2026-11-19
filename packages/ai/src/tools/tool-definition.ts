@@ -26,8 +26,11 @@ export interface ToolFailure<Status extends string = string> {
   message: string;
 }
 
-/** Recognizes a `ToolFailure` in a tool's output, for adapters that report failures differently. */
-export const toolFailureSchema = z.object({ status: z.string(), message: z.string() });
+/**
+ * Recognizes a `ToolFailure` in a tool's output. Strict, so a success output that happens to carry
+ * a `status` field is never taken for a failure.
+ */
+export const toolFailureSchema = z.strictObject({ status: z.string(), message: z.string() });
 
 /** A transient chat data part announcing a tool call, for UI that reacts before the result. */
 export interface ToolUiEvent {
@@ -35,16 +38,33 @@ export interface ToolUiEvent {
   data: unknown;
 }
 
-export interface ToolDefinition<Schema extends z.ZodObject, Output> {
+/** What a tool's `execute` returns: its declared output, or an expected failure. */
+export type ToolOutput<OutputSchema extends z.ZodObject, FailureStatus extends string = never> =
+  | z.infer<OutputSchema>
+  | ToolFailure<FailureStatus>;
+
+export interface ToolDefinition<
+  InputSchema extends z.ZodObject,
+  OutputSchema extends z.ZodObject,
+  FailureStatus extends string = never,
+> {
   name: string;
   description: string;
-  inputSchema: Schema;
+  inputSchema: InputSchema;
+  /** The shape of a successful output. JSON types only: MCP advertises it as JSON Schema. */
+  outputSchema: OutputSchema;
   access: ToolAccess;
   annotations?: ToolAnnotations;
   // Method syntax: bivariant params let differently-schemaed definitions share one list type.
-  uiEvent?(input: z.infer<Schema>): ToolUiEvent;
-  execute(input: z.infer<Schema>, ctx: ToolContext): Promise<Output>;
+  uiEvent?(input: z.infer<InputSchema>): ToolUiEvent;
+  execute(
+    input: z.infer<InputSchema>,
+    ctx: ToolContext,
+  ): Promise<ToolOutput<OutputSchema, FailureStatus>>;
 }
+
+/** Any tool definition, for lists and adapters that don't need the precise types. */
+export type AnyToolDefinition = ToolDefinition<z.ZodObject, z.ZodObject, string>;
 
 /** Fields that identify the caller in the log line of a failed call, e.g. `agentId`. */
 export type ToolLogFields = Readonly<Record<string, string>>;
@@ -65,16 +85,21 @@ export function filterByAccess<Definition extends { access: ToolAccess }>(
   return definitions.filter((definition) => access === 'write' || definition.access === 'read');
 }
 
-/** Runs one tool call. Logs a thrown error and replaces it with a `ToolExecutionError`. */
-export async function executeTool<Schema extends z.ZodObject, Output>(
-  definition: ToolDefinition<Schema, Output>,
-  input: z.infer<Schema>,
+/**
+ * Runs one tool call and returns its output parsed against the declared schema (or a failure).
+ * Logs a thrown error or a schema mismatch and replaces it with a `ToolExecutionError`.
+ */
+export async function executeTool<
+  InputSchema extends z.ZodObject,
+  OutputSchema extends z.ZodObject,
+  FailureStatus extends string,
+>(
+  definition: ToolDefinition<InputSchema, OutputSchema, FailureStatus>,
+  input: z.infer<InputSchema>,
   ctx: ToolContext,
   logFields: ToolLogFields = {},
-): Promise<Output> {
-  try {
-    return await definition.execute(input, ctx);
-  } catch (error) {
+): Promise<ToolOutput<OutputSchema, FailureStatus>> {
+  const logFailure = (error: unknown) =>
     logger.error(`Tool ${definition.name} failed`, {
       tool: definition.name,
       origin: ctx.origin,
@@ -83,8 +108,22 @@ export async function executeTool<Schema extends z.ZodObject, Output>(
       ...logFields,
       error,
     });
+
+  let output: ToolOutput<OutputSchema, FailureStatus>;
+  try {
+    output = await definition.execute(input, ctx);
+  } catch (error) {
+    logFailure(error);
     throw new ToolExecutionError(definition.name);
   }
+
+  const parsed = definition.outputSchema.or(toolFailureSchema).safeParse(output);
+  if (!parsed.success) {
+    logFailure(parsed.error.issues);
+    throw new ToolExecutionError(definition.name);
+  }
+  // The parsed value is the declared output or a failure, as `execute` promised.
+  return parsed.data as ToolOutput<OutputSchema, FailureStatus>;
 }
 
 export interface AgentToolsOptions {
@@ -96,7 +135,7 @@ export interface AgentToolsOptions {
 
 /** The AI SDK adapter: one AI SDK tool per definition, run through `executeTool`. */
 export function toAgentTools(
-  definitions: readonly ToolDefinition<z.ZodObject, unknown>[],
+  definitions: readonly AnyToolDefinition[],
   { toolContext, writer, logFields }: AgentToolsOptions,
 ): ToolSet {
   const entries = definitions.map((definition): [string, ToolSet[string]] => [
@@ -104,6 +143,7 @@ export function toAgentTools(
     tool({
       description: definition.description,
       inputSchema: definition.inputSchema,
+      outputSchema: definition.outputSchema.or(toolFailureSchema),
       execute: (input) => {
         const event = definition.uiEvent?.(input);
         if (event && writer) {
