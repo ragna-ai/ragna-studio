@@ -35,6 +35,14 @@ wt config shell install       # then restart the shell, so `wt switch` can chang
 wt config approvals add       # run inside the repo: approves the hooks in .config/wt.toml
 ```
 
+On macOS, also install GNU sed. Agents write GNU `sed` syntax, which the BSD `sed` that ships with macOS rejects or silently ignores.
+
+```bash
+brew install gnu-sed
+```
+
+Then put `$(brew --prefix)/opt/gnu-sed/libexec/gnubin` at the front of your `PATH` in your shell's startup file (for example `~/.zshrc` or `~/.bashrc`) and restart the shell. `sed --version` should now print `GNU sed`.
+
 Create a worktree with `wt switch --create <branch> --base origin/main`. Its hooks copy `.env` and the turbo cache (see `.worktreeinclude`), run `pnpm install` and build the packages. Worktrunk asks for approval again whenever the hook commands change.
 
 Limits: only one worktree can run `pnpm dev` at a time (fixed ports 3000 and 3010). All worktrees share the local Postgres and Redis, so don't `db:push` from two worktrees with different schemas.
