@@ -297,47 +297,47 @@ export function useRealMailProviders(): void {
 }
 
 export function resetMailProviderMock(): void {
-  getProfileMock.mockClear();
+  getProfileMock.mockReset();
   getProfileMock.mockImplementation(defaultGetProfileImpl);
-  syncFromCursorMock.mockClear();
+  syncFromCursorMock.mockReset();
   syncFromCursorMock.mockImplementation(defaultSyncFromCursorImpl);
-  fetchThreadMock.mockClear();
+  fetchThreadMock.mockReset();
   fetchThreadMock.mockImplementation(defaultFetchThreadImpl);
-  fetchMessageMock.mockClear();
+  fetchMessageMock.mockReset();
   fetchMessageMock.mockImplementation(defaultFetchMessageImpl);
-  sendMock.mockClear();
+  sendMock.mockReset();
   sendMock.mockImplementation(defaultSendImpl);
-  setArchivedMock.mockClear();
+  setArchivedMock.mockReset();
   setArchivedMock.mockImplementation(defaultSetArchivedImpl);
-  setTrashedMock.mockClear();
+  setTrashedMock.mockReset();
   setTrashedMock.mockImplementation(defaultSetTrashedImpl);
-  setStarredMock.mockClear();
+  setStarredMock.mockReset();
   setStarredMock.mockImplementation(defaultSetStarredImpl);
-  setReadMock.mockClear();
+  setReadMock.mockReset();
   setReadMock.mockImplementation(defaultSetReadImpl);
-  listLabelsMock.mockClear();
+  listLabelsMock.mockReset();
   listLabelsMock.mockImplementation(defaultListLabelsImpl);
-  searchMock.mockClear();
+  searchMock.mockReset();
   searchMock.mockImplementation(defaultSearchImpl);
-  getAttachmentMock.mockClear();
+  getAttachmentMock.mockReset();
   getAttachmentMock.mockImplementation(defaultGetAttachmentImpl);
-  getDraftAttachmentMock.mockClear();
+  getDraftAttachmentMock.mockReset();
   getDraftAttachmentMock.mockImplementation(defaultGetDraftAttachmentImpl);
-  createDraftMock.mockClear();
+  createDraftMock.mockReset();
   createDraftMock.mockImplementation(defaultCreateDraftImpl);
-  updateDraftMock.mockClear();
+  updateDraftMock.mockReset();
   updateDraftMock.mockImplementation(defaultUpdateDraftImpl);
-  getDraftMock.mockClear();
+  getDraftMock.mockReset();
   getDraftMock.mockImplementation(defaultGetDraftImpl);
-  listDraftsMock.mockClear();
+  listDraftsMock.mockReset();
   listDraftsMock.mockImplementation(defaultListDraftsImpl);
-  sendDraftMock.mockClear();
+  sendDraftMock.mockReset();
   sendDraftMock.mockImplementation(defaultSendDraftImpl);
-  deleteDraftMock.mockClear();
+  deleteDraftMock.mockReset();
   deleteDraftMock.mockImplementation(defaultDeleteDraftImpl);
-  listRecentInboxThreadIdsMock.mockClear();
+  listRecentInboxThreadIdsMock.mockReset();
   listRecentInboxThreadIdsMock.mockImplementation(defaultListRecentInboxThreadIdsImpl);
-  createMailProviderMock.mockClear();
+  createMailProviderMock.mockReset();
   createMailProviderMock.mockImplementation(defaultCreateMailProviderImpl);
 }
 

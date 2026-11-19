@@ -166,15 +166,15 @@ export function lastCreatedModel(kind: FakeModelKind): CreatedModel | undefined 
 export function resetAiSdkProviderMock(): void {
   scriptedOutputs.length = 0;
   createdModels.length = 0;
-  languageModelGenerateMock.mockClear();
+  languageModelGenerateMock.mockReset();
   languageModelGenerateMock.mockImplementation(defaultLanguageGenerate);
-  languageModelStreamMock.mockClear();
+  languageModelStreamMock.mockReset();
   languageModelStreamMock.mockImplementation(defaultLanguageStream);
-  imageModelGenerateMock.mockClear();
+  imageModelGenerateMock.mockReset();
   imageModelGenerateMock.mockImplementation(defaultImageGenerate);
-  videoModelGenerateMock.mockClear();
+  videoModelGenerateMock.mockReset();
   videoModelGenerateMock.mockImplementation(defaultVideoGenerate);
-  embeddingModelEmbedMock.mockClear();
+  embeddingModelEmbedMock.mockReset();
   embeddingModelEmbedMock.mockImplementation(defaultEmbed);
 }
 

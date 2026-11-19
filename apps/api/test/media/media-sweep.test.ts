@@ -12,8 +12,21 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 // The media sweep and the batch delete every detach point shares. R2 is faked at the
 // @repo/storage boundary.
 
-async function seedMedia(workspaceId: string, bucket: string, name: string): Promise<Media> {
+const HOUR_MS = 60 * 60 * 1000;
+
+function hoursAgo(hours: number): Date {
+  return new Date(Date.now() - hours * HOUR_MS);
+}
+
+/** Seeds a media row created two hours ago, so a sweep with `olderThanHours: 1` picks it up. */
+async function seedMedia(
+  workspaceId: string,
+  bucket: string,
+  name: string,
+  createdAt: Date = hoursAgo(2),
+): Promise<Media> {
   return createMedia({
+    createdAt,
     ownerWorkspaceId: workspaceId,
     bucket,
     storageKey: `${workspaceId}/media/${name}`,
@@ -48,7 +61,7 @@ describe('media sweep', () => {
     const documents = await seedMedia(workspaceId, 'documents', 'c');
     const all = [...images, documents];
 
-    const result = await sweepUnreferencedMedia({ olderThanHours: 0 });
+    const result = await sweepUnreferencedMedia({ olderThanHours: 1 });
 
     expect(result.candidateCount).toBe(3);
     expect(await existingIds(all.map((row) => row.id))).toEqual([]);
@@ -67,7 +80,7 @@ describe('media sweep', () => {
       }),
     );
 
-    await sweepUnreferencedMedia({ olderThanHours: 0 });
+    await sweepUnreferencedMedia({ olderThanHours: 1 });
 
     expect(await existingIds([stuck.id, fine.id])).toEqual([stuck.id]);
   });
@@ -79,18 +92,18 @@ describe('media sweep', () => {
       throw new Error('R2 is down');
     });
 
-    await sweepUnreferencedMedia({ olderThanHours: 0 });
+    await sweepUnreferencedMedia({ olderThanHours: 1 });
 
     expect(await existingIds([kept.id])).toEqual([kept.id]);
   });
 
   test('processes at most the given limit per run, oldest first', async () => {
     const { workspaceId } = await seedAuthenticatedUser();
-    const oldest = await seedMedia(workspaceId, 'images', 'oldest');
-    const middle = await seedMedia(workspaceId, 'images', 'middle');
-    const newest = await seedMedia(workspaceId, 'images', 'newest');
+    const oldest = await seedMedia(workspaceId, 'images', 'oldest', hoursAgo(4));
+    const middle = await seedMedia(workspaceId, 'images', 'middle', hoursAgo(3));
+    const newest = await seedMedia(workspaceId, 'images', 'newest', hoursAgo(2));
 
-    const result = await sweepUnreferencedMedia({ olderThanHours: 0, limit: 2 });
+    const result = await sweepUnreferencedMedia({ olderThanHours: 1, limit: 2 });
 
     expect(result.candidateCount).toBe(2);
     expect(await existingIds([oldest.id, middle.id, newest.id])).toEqual([newest.id]);

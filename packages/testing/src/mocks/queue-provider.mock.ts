@@ -87,7 +87,7 @@ export function resetQueueMock(): void {
   recordedCronJobs.length = 0;
   createWorkerMock.mockClear();
   addCronJobMock.mockClear();
-  queueAddMock.mockClear();
+  queueAddMock.mockReset();
   queueAddMock.mockImplementation(defaultQueueAddImpl);
   queueAddBulkMock.mockClear();
   upsertQueueJobSchedulerMock.mockClear();

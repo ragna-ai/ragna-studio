@@ -1,5 +1,6 @@
 import { AGENT_MARK_ICONS, AGENT_MARK_TONES } from '@repo/ai';
-import { createMedia, getMediaById } from '@repo/database';
+import { createMedia, db, getMediaById, sql } from '@repo/database';
+import { media } from '@repo/database/schema';
 import { sweepUnreferencedMedia } from '@repo/media';
 import { PROCESS_AGENT_IMAGE_JOB } from '@repo/queue';
 import { toPublicMediaUrl } from '@repo/storage';
@@ -119,6 +120,14 @@ async function uploadAgentImage(
 async function uploadedMediaId(session: Session): Promise<string> {
   const response = await uploadAgentImage(session);
   return uploadResponseSchema.parse(await response.json()).mediaId;
+}
+
+async function backdateMedia(mediaId: string): Promise<void> {
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  await db
+    .update(media)
+    .set({ createdAt: twoHoursAgo })
+    .where(sql`${media.id} = ${mediaId}`);
 }
 
 async function getAgent(session: Session, agentId: string) {
@@ -304,7 +313,8 @@ describe('POST /workspace/:workspaceId/agent mark fields', () => {
     const mediaId = await uploadedMediaId(session);
     await postAgent(session, { imageMediaId: mediaId });
 
-    await sweepUnreferencedMedia({ olderThanHours: 0 });
+    await backdateMedia(mediaId);
+    await sweepUnreferencedMedia({ olderThanHours: 1 });
 
     expect(await getMediaById({ id: mediaId })).not.toBeNull();
   });
@@ -463,7 +473,8 @@ describe('an agent with an image', () => {
     const mediaId = await uploadedMediaId(session);
     await patchAgent(session, agentId, { imageMediaId: mediaId });
 
-    await sweepUnreferencedMedia({ olderThanHours: 0 });
+    await backdateMedia(mediaId);
+    await sweepUnreferencedMedia({ olderThanHours: 1 });
 
     expect(await getMediaById({ id: mediaId })).not.toBeNull();
   });
