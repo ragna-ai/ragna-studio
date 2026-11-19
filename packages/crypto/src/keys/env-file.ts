@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const APP_KEY_LINE = /^APP_KEY=(.*)$/m;
+// Every form dotenv reads: optional indent, optional `export`, spaces around `=`.
+const APP_KEY_LINE = /^[ \t]*(?:export[ \t]+)?APP_KEY[ \t]*=(.*)$/m;
+const OWNER_ONLY_MODE = 0o600;
 const SURROUNDING_QUOTES = /^["']|["']$/g;
 
 export type AppKeyWriteOutcome = 'written' | 'kept';
@@ -31,7 +33,8 @@ export function writeAppKeyToEnvFile({
   const updated = existingLine
     ? content.replace(APP_KEY_LINE, () => keyLine)
     : appendLine(content, keyLine);
-  writeFileSync(envFilePath, updated);
+  // `mode` only applies when the file is created; an existing file keeps its permissions.
+  writeFileSync(envFilePath, updated, { mode: OWNER_ONLY_MODE });
   return 'written';
 }
 

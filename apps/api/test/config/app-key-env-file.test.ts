@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generateAppKey, writeAppKeyToEnvFile } from '@repo/crypto';
@@ -52,6 +52,43 @@ describe('writing APP_KEY into an env file', () => {
 
     expect(outcome).toBe('kept');
     expect(readFileSync(envFilePath, 'utf8')).toBe(`APP_KEY="${EXISTING_KEY}"\n`);
+  });
+
+  test.each([
+    ['an exported line', `export APP_KEY=${EXISTING_KEY}\n`],
+    ['an indented line', `  APP_KEY=${EXISTING_KEY}\n`],
+    ['spaces around the equals sign', `APP_KEY = "${EXISTING_KEY}"\n`],
+    ['an exported, indented line with single quotes', `\texport APP_KEY='${EXISTING_KEY}'\n`],
+  ])('keeps an existing key written as %s', (_label, content) => {
+    writeFileSync(envFilePath, content);
+
+    const outcome = writeAppKeyToEnvFile({ envFilePath, key: NEW_KEY, force: false });
+
+    expect(outcome).toBe('kept');
+    expect(readFileSync(envFilePath, 'utf8')).toBe(content);
+  });
+
+  test('replaces an exported key in place with force', () => {
+    writeFileSync(envFilePath, `APP_PORT=3000\nexport APP_KEY=${EXISTING_KEY}\n`);
+
+    writeAppKeyToEnvFile({ envFilePath, key: NEW_KEY, force: true });
+
+    expect(readFileSync(envFilePath, 'utf8')).toBe(`APP_PORT=3000\nAPP_KEY="${NEW_KEY}"\n`);
+  });
+
+  test('fills an empty exported APP_KEY line instead of adding a second one', () => {
+    writeFileSync(envFilePath, 'export APP_KEY=\n');
+
+    const outcome = writeAppKeyToEnvFile({ envFilePath, key: NEW_KEY, force: false });
+
+    expect(outcome).toBe('written');
+    expect(readFileSync(envFilePath, 'utf8')).toBe(`APP_KEY="${NEW_KEY}"\n`);
+  });
+
+  test('creates a new file readable only by its owner', () => {
+    writeAppKeyToEnvFile({ envFilePath, key: NEW_KEY, force: false });
+
+    expect(statSync(envFilePath).mode & 0o777).toBe(0o600);
   });
 
   test('replaces an existing key with force', () => {

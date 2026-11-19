@@ -1,6 +1,13 @@
 export * from './envelope/envelope';
 export * from './errors';
-export { generateAppKey, getToolApprovalSecret, isAppKeyConfigured } from './keys/app-key';
+export {
+  checkAppKeys,
+  generateAppKey,
+  getToolApprovalSecret,
+  isAppKeyConfigured,
+  type AppKeyCheck,
+  type AppKeyStatus,
+} from './keys/app-key';
 export {
   writeAppKeyToEnvFile,
   type AppKeyWriteOutcome,

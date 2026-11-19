@@ -32,11 +32,11 @@ Mail and LinkedIn posting use [connections](/integrations/connections), which re
 
 `APP_KEY` is generated once and then kept like a database password. Every API and worker process needs the same value. A new key makes every stored connection unreadable, so users have to connect again.
 
-| Setup                      | How to set it                                                                                                |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Quickstart installer       | The installer writes it to `.env`. Nothing else to do.                                                       |
-| Local development          | Run `pnpm key:generate`. It writes the key to `.env` and keeps an existing key unless `--force` is passed.   |
-| Kubernetes, other runtimes | Create the key once and store it in the secret store, then expose it to the API and the worker as `APP_KEY`. |
+| Setup                      | How to set it                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Quickstart installer       | The installer writes it to `.env`. Nothing else to do.                                                                                                 |
+| Local development          | Run `pnpm key:generate`. It writes the key to `.env` and keeps an existing key unless `--force` is passed. A new `.env` is readable only by its owner. |
+| Kubernetes, other runtimes | Create the key once and store it in the secret store, then expose it to the API and the worker as `APP_KEY`.                                           |
 
 For Kubernetes, for example:
 
@@ -48,6 +48,12 @@ kubectl create secret generic ragna-app-key --from-literal=APP_KEY="$APP_KEY"
 `pnpm key:generate --show` prints a new key without writing it. Never generate the key at container start: each restart or replica would get a different one.
 
 To rotate the key, set the new value as `APP_KEY` and move the old one to `APP_PREVIOUS_KEYS`. Existing connections keep working.
+
+The API and the worker check both variables when they start:
+
+- `APP_KEY` not set: they start and log a warning. Connecting integrations is disabled.
+- `APP_KEY` malformed: they refuse to start and log an error. A valid key is `base64:` followed by 32 random bytes.
+- An entry in `APP_PREVIOUS_KEYS` malformed: they start, log its position and ignore it. Connections stored with the current key keep working.
 
 Add the mail scopes (`gmail.modify` for Google, `Mail.ReadWrite` and `Mail.Send` for Microsoft) and for LinkedIn the **Share on LinkedIn** product (`w_member_social`).
 

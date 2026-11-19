@@ -1,3 +1,4 @@
+import { checkAppKeysAtStartup } from '@repo/integrations';
 import { logger } from '@repo/logger';
 import { queueHealthCheck, shutdown, startCronJobs } from '@repo/queue';
 import { registerCronJobs } from './crons';
@@ -6,6 +7,7 @@ import { reconcileSchedules } from './workflow/reconcile-schedules';
 
 async function main() {
   logger.info('Starting worker process...');
+  checkAppKeysAtStartup();
 
   // Check Redis connection
   const isHealthy = await queueHealthCheck();
