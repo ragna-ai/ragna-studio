@@ -1,26 +1,30 @@
 import { describe, expect, test } from 'bun:test';
 import { MAX_MARKDOWN_LENGTH, toMarkdown } from './html-to-markdown';
 
+function markdownOf(html: string): string {
+  return toMarkdown(html).markdown;
+}
+
 describe('toMarkdown', () => {
   test('renders headings as ATX markdown', () => {
-    expect(toMarkdown('<h1>Title</h1><h2>Sub</h2>')).toContain('# Title');
-    expect(toMarkdown('<h2>Sub</h2>')).toContain('## Sub');
+    expect(markdownOf('<h1>Title</h1><h2>Sub</h2>')).toContain('# Title');
+    expect(markdownOf('<h2>Sub</h2>')).toContain('## Sub');
   });
 
   test('renders links as inline markdown links', () => {
-    expect(toMarkdown('<a href="https://example.com/a">Example</a>')).toContain(
+    expect(markdownOf('<a href="https://example.com/a">Example</a>')).toContain(
       '[Example](https://example.com/a)',
     );
   });
 
   test('renders unordered lists', () => {
-    const markdown = toMarkdown('<ul><li>one</li><li>two</li></ul>');
+    const markdown = markdownOf('<ul><li>one</li><li>two</li></ul>');
     expect(markdown).toMatch(/^[-*]\s+one$/m);
     expect(markdown).toMatch(/^[-*]\s+two$/m);
   });
 
   test('renders tables as GFM tables', () => {
-    const markdown = toMarkdown(
+    const markdown = markdownOf(
       '<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>',
     );
     expect(markdown).toMatch(/\|\s*A\s*\|\s*B\s*\|/);
@@ -29,7 +33,7 @@ describe('toMarkdown', () => {
   });
 
   test('drops inline data: images', () => {
-    const markdown = toMarkdown(
+    const markdown = markdownOf(
       '<p>before</p><img src="data:image/png;base64,AAAA" alt="pic"><p>after</p>',
     );
     expect(markdown).not.toContain('base64');
@@ -38,19 +42,24 @@ describe('toMarkdown', () => {
   });
 
   test('keeps images with a regular URL', () => {
-    expect(toMarkdown('<img src="https://example.com/a.png" alt="pic">')).toContain(
+    expect(markdownOf('<img src="https://example.com/a.png" alt="pic">')).toContain(
       'https://example.com/a.png',
     );
   });
 
-  test('caps output at the maximum length', () => {
-    const markdown = toMarkdown('<p>hello world</p>'.repeat(5_000));
+  test('caps output at the maximum length and marks it truncated', () => {
+    const { markdown, truncated } = toMarkdown('<p>hello world</p>'.repeat(5_000));
     expect(markdown.length).toBeLessThanOrEqual(MAX_MARKDOWN_LENGTH);
     expect(markdown.length).toBeGreaterThan(MAX_MARKDOWN_LENGTH / 2);
+    expect(truncated).toBe(true);
+  });
+
+  test('does not mark a page within the maximum length as truncated', () => {
+    expect(toMarkdown('<p>hello world</p>').truncated).toBe(false);
   });
 
   test('removes blank lines', () => {
-    const markdown = toMarkdown('<p>one</p><p>two</p><p>three</p>');
+    const markdown = markdownOf('<p>one</p><p>two</p><p>three</p>');
     expect(markdown).not.toMatch(/\n\s*\n/);
     expect(markdown).toContain('one');
     expect(markdown).toContain('three');

@@ -16,8 +16,10 @@ import {
   DRIVE_SHARED_FILE,
   DRIVE_SHEET,
   DRIVE_SLIDES,
+  failVendorEndpoint,
   GOOGLE_DRIVE_ENDPOINTS,
   GOOGLE_DRIVE_RATE_LIMIT_BODY,
+  GOOGLE_DRIVE_READ_ONLY_BODY,
   recordVendorSleep,
   resetProviderMocks,
   seedAuthenticatedUser,
@@ -67,23 +69,46 @@ runCloudDriveContract({
   endpoints: GOOGLE_DRIVE_ENDPOINTS,
 });
 
-describe('google drive uploads', () => {
+async function connectedProvider() {
+  const { userId } = await seedAuthenticatedUser();
+  await seedGoogleDriveConnection({ userId });
+  const resolved = await resolveUserCloudDrive({
+    userId,
+    integrationId: 'google-drive',
+    sleep: recordVendorSleep,
+  });
+  if (resolved.status !== 'ready') throw new Error(`Drive not ready: ${resolved.status}`);
+  return resolved.provider;
+}
+
+describe('google drive permission errors', () => {
   beforeEach(async () => {
     await truncateAllTables();
     resetProviderMocks();
   });
 
-  async function connectedProvider() {
-    const { userId } = await seedAuthenticatedUser();
-    await seedGoogleDriveConnection({ userId });
-    const resolved = await resolveUserCloudDrive({
-      userId,
-      integrationId: 'google-drive',
-      sleep: recordVendorSleep,
+  test('does not retry a read the vendor answers with a permission 403', async () => {
+    const provider = await connectedProvider();
+    failVendorEndpoint(GOOGLE_DRIVE_ENDPOINTS.export, {
+      status: 403,
+      body: GOOGLE_DRIVE_READ_ONLY_BODY,
     });
-    if (resolved.status !== 'ready') throw new Error(`Drive not ready: ${resolved.status}`);
-    return resolved.provider;
-  }
+
+    const error = await provider.readContent({ itemId: DRIVE_DOC.id, maxBytes: 1_000_000 }).then(
+      () => null,
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toMatchObject({ kind: 'read_only' });
+    expect(vendorRequestsTo(GOOGLE_DRIVE_ENDPOINTS.export)).toHaveLength(1);
+  });
+});
+
+describe('google drive uploads', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+    resetProviderMocks();
+  });
 
   test('creates a file with one multipart upload carrying name, parent and mime type', async () => {
     const provider = await connectedProvider();

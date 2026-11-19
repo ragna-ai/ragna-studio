@@ -547,9 +547,6 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 7.0.172(zod@4.6.7)
-      serpapi:
-        specifier: ^2.2.1
-        version: 2.2.1
       zod:
         specifier: 'catalog:'
         version: 4.6.7
@@ -9420,9 +9417,6 @@ packages:
   seroval@1.8.0:
     resolution: {integrity: sha512-W5N4cMPc58lypAsScCmhGTyZxNZ6gPHvLHtMqtyvDFpfyNDsH1QjU0nI9Lr34+Q5ZLPsWeqOhkgTY5XtaPVQ4A==}
     engines: {node: '>=20'}
-
-  serpapi@2.2.1:
-    resolution: {integrity: sha512-1HXXaIwDmYueFPauAggIkzozMi5P/a4/yRUxB8Z1kad0VQE/7ohf9a6xRQ99aXR252itDChfmJUfBdCA4phCYA==}
 
   serve-placeholder@2.0.2:
     resolution: {integrity: sha512-/TMG8SboeiQbZJWRlfTCqMs2DD3SZgWp0kDQePz9yUuCnDfDh/92gf7/PxGhzXTKBIPASIHxFcZndoNbp6QOLQ==}
@@ -20164,8 +20158,6 @@ snapshots:
   seroval@1.6.11: {}
 
   seroval@1.8.0: {}
-
-  serpapi@2.2.1: {}
 
   serve-placeholder@2.0.2:
     dependencies:
