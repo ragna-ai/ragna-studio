@@ -59,7 +59,7 @@ approval to build.
 
 - Small, single-area work: implement it yourself.
 - Larger or parallel work: the lead delegates to `repo-worker` agents (`subagent_type: "repo-worker"`). The
-  definition in `.claude/agents/repo-worker.md` sets the model (Sonnet), preloads clean-code and holds the worker
+  definition in `.claude/agents/repo-worker.md` sets the model (Sonnet), makes it load clean-code and holds the worker
   rules. Don't pass `model` (it overrides the definition) or `isolation: "worktree"` (that starts from `main`, not
   from the lead's branch).
 - Split into slices that touch separate files. Parallel only when slices are independent.

@@ -26,7 +26,7 @@ Branch `<branch>` in `<absolute path of the checkout>`. Stay there.
 <"You own db:push / the rebuild of @repo/<pkg> / the e2e run." or "You own none: don't run them.">
 
 ## Skills
-<clean-code is preloaded. Add tdd, system-design, ... and package skills by path.>
+<The worker loads clean-code itself. Add tdd, system-design, ... and package skills by path.>
 
 ## Done when
 - Tests: <which tests to write, and the exact command to run them>.

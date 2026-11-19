@@ -20,6 +20,7 @@ AGENTS.md applies to you, except the rules it marks "lead only".
 
 ## Skills
 
+- First load the clean-code skill with the Skill tool, unless its full text is already in your context.
 - Load every skill the brief names before writing code. Load tdd for `apps/api` and the packages it reaches.
 - Directory-scoped skills don't load on their own. Read them by path when the brief names one, e.g.
   `packages/mail/.claude/skills/maizzle/SKILL.md`.
