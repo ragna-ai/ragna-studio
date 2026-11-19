@@ -39,8 +39,9 @@ On macOS, also install GNU sed. Agents write GNU `sed` syntax, which the BSD `se
 
 ```bash
 brew install gnu-sed
-echo 'export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"' >> ~/.zshrc   # then restart the shell
 ```
+
+Then put `$(brew --prefix)/opt/gnu-sed/libexec/gnubin` at the front of your `PATH` in your shell's startup file (for example `~/.zshrc` or `~/.bashrc`) and restart the shell. `sed --version` should now print `GNU sed`.
 
 Create a worktree with `wt switch --create <branch> --base origin/main`. Its hooks copy `.env` and the turbo cache (see `.worktreeinclude`), run `pnpm install` and build the packages. Worktrunk asks for approval again whenever the hook commands change.
 
