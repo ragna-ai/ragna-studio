@@ -4,8 +4,8 @@ import type { EmailAccount, EmailDraft, NewEmailMessageBody } from '@repo/databa
 import {
   createEmailDraft,
   deleteEmailDraft,
-  deleteEmailMessageByProviderMessageId,
-  deleteEmailThreadIfEmpty,
+  deleteEmailMessagesByProviderMessageIds,
+  deleteEmailThreadsIfEmpty,
   findEmailMessagesByProviderIds,
   getEmailAccountById,
   getEmailDraftByProviderDraftId,
@@ -14,7 +14,7 @@ import {
   listEmptyStaleEmailDrafts,
   updateEmailAccountSyncState,
   updateEmailDraft,
-  updateEmailMessageFlags,
+  updateEmailMessagesFlags,
   upsertEmailMessageBodies,
   upsertEmailMessageByProviderMessageId,
   upsertEmailMessagesByProviderMessageId,
@@ -269,25 +269,19 @@ async function applySyncChanges({
   // `drafts.update` (Gmail deletes the old contained message and adds a new
   // one on every save), not a real deletion, and needs no special-casing:
   // that message id was never imported above (isDraftMessage skips it), so
-  // deleteEmailMessageByProviderMessageId below simply finds no local row
-  // and no-ops. What marks a local draft row discarded is it disappearing
-  // from drafts.list(), handled by reconcileDrafts instead.
-  for (const change of deletedChanges) {
-    // Returns the deleted row (or null if it was already gone) so its
-    // threadId is right there for the empty-thread cleanup below;
-    // deleteEmailThreadIfEmpty no-ops on its own if the thread isn't
-    // actually empty, so this is safe to call unconditionally.
-    const deleted = await deleteEmailMessageByProviderMessageId({
-      accountId: account.id,
-      providerMessageId: change.messageId,
-    });
-    if (deleted) {
-      await deleteEmailThreadIfEmpty({ id: deleted.threadId });
-    }
-  }
+  // the delete below simply finds no local row. What marks a local draft
+  // row discarded is it disappearing from drafts.list(), handled by
+  // reconcileDrafts instead.
+  const deleted = await deleteEmailMessagesByProviderMessageIds({
+    accountId: account.id,
+    providerMessageIds: deletedChanges.map((change) => change.messageId),
+  });
+  await deleteEmailThreadsIfEmpty({
+    ids: [...new Set(deleted.map((message) => message.threadId))],
+  });
 }
 
-// updateEmailMessageFlags is keyed by our internal row id, but flagsChanged
+// updateEmailMessagesFlags is keyed by our internal row id, but flagsChanged
 // events arrive keyed by the provider's message id, so every id in this
 // batch is resolved to a local row in one round trip first.
 async function applyFlagsChanges({
@@ -309,21 +303,25 @@ async function applyFlagsChanges({
     existing.map((message) => [message.providerMessageId, message]),
   );
 
-  for (const change of changes) {
+  // A flag change for a message we never indexed (e.g. pre-connect mail
+  // outside the seed window) has nothing local to update and is dropped.
+  const updates = changes.flatMap((change) => {
     const message = existingByProviderId.get(change.messageId);
     if (!message) {
-      // A flag change for a message we never indexed (e.g. pre-connect
-      // mail outside the seed window). Nothing local to update.
-      continue;
+      return [];
     }
-    await updateEmailMessageFlags({
-      id: message.id,
-      isUnread: change.unread,
-      isStarred: change.starred,
-      folder: change.folder,
-      labelIds: change.labelIds,
-    });
-  }
+    return [
+      {
+        id: message.id,
+        isUnread: change.unread,
+        isStarred: change.starred,
+        folder: change.folder,
+        labelIds: change.labelIds,
+      },
+    ];
+  });
+
+  await updateEmailMessagesFlags({ updates });
 }
 
 // Graph delta can't tell "created" from "updated", so an `added` change may

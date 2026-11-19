@@ -446,7 +446,7 @@ export async function deleteChatForWorkspace({
 
   const mediaIds = new Set((attachments ?? []).map((attachment) => attachment.mediaId));
   for (const mediaId of mediaIds) {
-    await deleteMediaIfUnreferenced({ mediaId });
+    await deleteMediaIfUnreferenced({ mediaIds: [mediaId] });
   }
 }
 

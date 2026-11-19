@@ -284,7 +284,7 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
 
   const replacedImageMediaId = previousAgent.imageMediaId;
   if (input.imageMediaId !== undefined && replacedImageMediaId) {
-    await deleteMediaIfUnreferenced({ mediaId: replacedImageMediaId });
+    await deleteMediaIfUnreferenced({ mediaIds: [replacedImageMediaId] });
   }
 
   const { imageMedia } = await loadAgentInWorkspace({ agentId, workspaceId });
@@ -313,7 +313,7 @@ export async function deleteAgentForWorkspace({
   await deleteAgentById({ agentId: agentRecord.id, workspaceId });
 
   if (agentRecord.imageMediaId) {
-    await deleteMediaIfUnreferenced({ mediaId: agentRecord.imageMediaId });
+    await deleteMediaIfUnreferenced({ mediaIds: [agentRecord.imageMediaId] });
   }
 }
 

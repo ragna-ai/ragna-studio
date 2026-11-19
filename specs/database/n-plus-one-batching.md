@@ -1,6 +1,7 @@
 # Batch per-item queries (N+1)
 
-**Status: implemented** (PR #92, 2026-10-08). Open: email search (`resolveSearchThread`) still hydrates per thread. Follows the "Database queries" rule in
+**Status: implemented** (PR #92, 2026-10-08). Leftovers (email search hydration, sync flag updates and deletes,
+media deletion and sweep) batched for #167 (2026-11-19). Follows the "Database queries" rule in
 `AGENTS.md` (PR #91).
 
 ## Problem

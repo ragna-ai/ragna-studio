@@ -269,6 +269,108 @@ describe('processEmailSyncJob', () => {
       expect(removedThread).toBeNull();
     });
 
+    test('several flag changes in one sync each apply their own values', async () => {
+      const { account } = await seedMailUser({ syncCursor: 'cursor-1' });
+      const first = await seedEmailThreadWithMessage({ accountId: account.id, isUnread: true });
+      const second = await seedEmailThreadWithMessage({
+        accountId: account.id,
+        isUnread: false,
+        isStarred: true,
+      });
+      const third = await seedEmailThreadWithMessage({ accountId: account.id });
+      syncFromCursorMock.mockResolvedValueOnce({
+        status: 'ok',
+        changes: [
+          {
+            type: 'flagsChanged',
+            messageId: first.providerMessageId,
+            threadId: first.providerThreadId,
+            labelIds: ['INBOX', 'STARRED'],
+            folder: 'inbox',
+            unread: false,
+            starred: true,
+          },
+          {
+            type: 'flagsChanged',
+            messageId: second.providerMessageId,
+            threadId: second.providerThreadId,
+            labelIds: ['TRASH'],
+            folder: 'trash',
+            unread: true,
+            starred: false,
+          },
+          {
+            type: 'flagsChanged',
+            messageId: 'never-indexed-message',
+            threadId: 'never-indexed-thread',
+            labelIds: ['INBOX'],
+            folder: 'inbox',
+            unread: false,
+            starred: false,
+          },
+        ],
+        nextCursor: 'cursor-2',
+      });
+
+      await processEmailSyncJob(syncJob(account.id));
+
+      const firstRow = await getEmailMessageById({ id: first.messageId });
+      expect(firstRow?.isUnread).toBe(false);
+      expect(firstRow?.isStarred).toBe(true);
+      expect(firstRow?.folder).toBe('inbox');
+      expect(firstRow?.labelIds).toEqual(['INBOX', 'STARRED']);
+      const secondRow = await getEmailMessageById({ id: second.messageId });
+      expect(secondRow?.isUnread).toBe(true);
+      expect(secondRow?.isStarred).toBe(false);
+      expect(secondRow?.folder).toBe('trash');
+      expect(secondRow?.labelIds).toEqual(['TRASH']);
+      const thirdRow = await getEmailMessageById({ id: third.messageId });
+      expect(thirdRow?.isUnread).toBe(true);
+      expect(thirdRow?.folder).toBe('inbox');
+    });
+
+    test('deleting the last message of a thread drops the thread, a thread with messages left stays', async () => {
+      const { account } = await seedMailUser({ syncCursor: 'cursor-1' });
+      const emptied = await seedEmailThreadWithMessage({ accountId: account.id });
+      const partlyDeleted = await seedEmailThreadWithMessage({ accountId: account.id });
+      const survivor = await seedEmailThreadWithMessage({
+        accountId: account.id,
+        providerThreadId: partlyDeleted.providerThreadId,
+      });
+      syncFromCursorMock.mockResolvedValueOnce({
+        status: 'ok',
+        changes: [
+          {
+            type: 'deleted',
+            messageId: emptied.providerMessageId,
+            threadId: emptied.providerThreadId,
+          },
+          {
+            type: 'deleted',
+            messageId: partlyDeleted.providerMessageId,
+            threadId: partlyDeleted.providerThreadId,
+          },
+        ],
+        nextCursor: 'cursor-2',
+      });
+
+      await processEmailSyncJob(syncJob(account.id));
+
+      expect(
+        await getEmailThreadByProviderThreadId({
+          accountId: account.id,
+          providerThreadId: emptied.providerThreadId,
+        }),
+      ).toBeNull();
+      const keptThread = await getEmailThreadByProviderThreadId({
+        accountId: account.id,
+        providerThreadId: partlyDeleted.providerThreadId,
+      });
+      expect(keptThread).not.toBeNull();
+      const remaining = await listEmailMessagesByThreadId({ threadId: keptThread?.id ?? '' });
+      expect(remaining.map((message) => message.id)).toEqual([survivor.messageId]);
+    });
+
     test('an expired cursor falls back to a full reseed with a fresh cursor', async () => {
       const { account } = await seedMailUser({ syncCursor: 'stale-cursor' });
       syncFromCursorMock.mockResolvedValueOnce({ status: 'cursorExpired' });

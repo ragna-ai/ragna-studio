@@ -1,4 +1,4 @@
-import { and, eq, exists, isNull, lt, ne, not, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, exists, inArray, isNull, lt, ne, not, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '../db';
 import type {
   ChatAttachment,
@@ -76,8 +76,12 @@ export async function updateMediaStorage({
   await db.update(media).set({ storageKey, mimeType, size }).where(eq(media.id, id));
 }
 
-export async function deleteMediaById({ id }: { id: string }): Promise<void> {
-  await db.delete(media).where(eq(media.id, id));
+export async function deleteMediaByIds({ ids }: { ids: string[] }): Promise<void> {
+  if (ids.length === 0) {
+    return;
+  }
+
+  await db.delete(media).where(inArray(media.id, ids));
 }
 
 // All media owned by a workspace, for the workspace-delete cleanup path:
@@ -165,9 +169,8 @@ export async function getMediaVisibleToUserById({
 
 // Number of rows still pointing at this media, across every link point in
 // the schema. This and
-// findUnreferencedMediaOlderThan below are the ONLY two places allowed to
-// know the link-point list; every future consumer extends exactly these two
-// functions, nowhere else.
+// selectUnreferencedMedia below are the ONLY two places allowed to know the
+// link-point list; every future consumer extends exactly these two, nowhere else.
 export async function countMediaReferences({ mediaId }: { mediaId: string }): Promise<number> {
   const [
     chatAttachmentCount,
@@ -201,20 +204,15 @@ export async function countMediaReferences({ mediaId }: { mediaId: string }): Pr
   );
 }
 
-// Safety-net query for the worker sweep cron: media unreferenced by every
-// link point above, created more than `hours` ago (covers races and failed
-// best-effort R2 deletes at the detach call sites). See the comment on
-// countMediaReferences: these two functions are the only ones allowed to
-// know the link-point list.
-export async function findUnreferencedMediaOlderThan({
-  hours,
-}: {
-  hours: number;
-}): Promise<Media[]> {
-  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+/** Media row fields needed to delete the stored object. */
+export type UnreferencedMedia = Pick<Media, 'id' | 'bucket' | 'storageKey'>;
 
-  const rows = await db
-    .select({ media })
+// Media matching `condition` that no link point references. With countMediaReferences above,
+// this is the ONLY place allowed to know the link-point list; every future consumer extends
+// exactly these two, nowhere else.
+function selectUnreferencedMedia(condition: SQL | undefined, limit?: number) {
+  const query = db
+    .select({ id: media.id, bucket: media.bucket, storageKey: media.storageKey })
     .from(media)
     .leftJoin(chatAttachment, eq(chatAttachment.mediaId, media.id))
     .leftJoin(taskAttachment, eq(taskAttachment.mediaId, media.id))
@@ -232,11 +230,40 @@ export async function findUnreferencedMediaOlderThan({
         isNull(genVideo.id),
         isNull(socialPostMedia.id),
         isNull(agent.id),
-        lt(media.createdAt, cutoff),
+        condition,
       ),
-    );
+    )
+    .orderBy(asc(media.createdAt));
 
-  return rows.map((row) => row.media);
+  return limit === undefined ? query : query.limit(limit);
+}
+
+// Safety-net query for the worker sweep cron: media unreferenced by every link point, created
+// more than `hours` ago (covers races and failed best-effort R2 deletes at the detach call
+// sites). Oldest first, at most `limit` rows.
+export async function findUnreferencedMediaOlderThan({
+  hours,
+  limit,
+}: {
+  hours: number;
+  limit: number;
+}): Promise<UnreferencedMedia[]> {
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+  return selectUnreferencedMedia(lt(media.createdAt, cutoff), limit);
+}
+
+/** The subset of `ids` that no link point references anymore, in one query. */
+export async function findUnreferencedMediaByIds({
+  ids,
+}: {
+  ids: string[];
+}): Promise<UnreferencedMedia[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  return selectUnreferencedMedia(inArray(media.id, ids));
 }
 
 // CHAT ATTACHMENT

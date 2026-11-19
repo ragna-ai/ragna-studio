@@ -216,7 +216,7 @@ export async function deleteGenImage({
     (mediaId): mediaId is string => mediaId !== null,
   );
 
-  await Promise.all(mediaIds.map((mediaId) => deleteMediaIfUnreferenced({ mediaId })));
+  await deleteMediaIfUnreferenced({ mediaIds });
 }
 
 // Not exported from @repo/ai (it's a private guard for imagen.service.ts's

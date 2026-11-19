@@ -160,9 +160,7 @@ export async function getEmailThreadById({
   return found ?? null;
 }
 
-// Plain lookup by the provider's own thread id, e.g. to hydrate a Gmail
-// search result (search proxies Gmail's q=) back
-// to our local thread row.
+// Plain lookup by the provider's own thread id.
 export async function getEmailThreadByProviderThreadId({
   accountId,
   providerThreadId,
@@ -177,19 +175,40 @@ export async function getEmailThreadByProviderThreadId({
   return found ?? null;
 }
 
+// Batch lookup by the provider's own thread ids, e.g. to hydrate a page of
+// search results back to our local thread rows in one query.
+export async function getEmailThreadsByProviderThreadIds({
+  accountId,
+  providerThreadIds,
+}: {
+  accountId: string;
+  providerThreadIds: string[];
+}): Promise<EmailThread[]> {
+  if (providerThreadIds.length === 0) {
+    return [];
+  }
+
+  return db.query.emailThread.findMany({
+    where: { accountId, providerThreadId: { in: providerThreadIds } },
+  });
+}
+
 // Sync's deletion path (history.list applies deletions and purges the local
-// row) removes messages first, then
-// calls this to drop threads left with none, since a thread with no
-// messages is meaningless.
-export async function deleteEmailThreadIfEmpty({ id }: { id: string }): Promise<void> {
+// rows) removes messages first, then calls this to drop threads left with
+// none, since a thread with no messages is meaningless.
+export async function deleteEmailThreadsIfEmpty({ ids }: { ids: string[] }): Promise<void> {
+  if (ids.length === 0) {
+    return;
+  }
+
   await db.delete(emailThread).where(
     and(
-      eq(emailThread.id, id),
+      inArray(emailThread.id, ids),
       notExists(
         db
           .select({ one: sql`1` })
           .from(emailMessage)
-          .where(eq(emailMessage.threadId, id)),
+          .where(eq(emailMessage.threadId, emailThread.id)),
       ),
     ),
   );

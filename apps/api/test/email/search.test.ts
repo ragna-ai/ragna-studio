@@ -34,8 +34,21 @@ async function connectAccount() {
   return { userId, cookieHeader, accountId };
 }
 
-const searchResponseSchema = z.object({
-  threads: z.array(z.object({ id: z.string() })),
+const threadSummarySchema = z.strictObject({
+  id: z.string(),
+  subject: z.string().nullable(),
+  snippet: z.string().nullable(),
+  lastMessageAt: z.string().nullable(),
+  participants: z.array(z.strictObject({ name: z.string().nullable(), email: z.string() })),
+  labelIds: z.array(z.string()),
+  categoryId: z.string().nullable(),
+  isUnread: z.boolean(),
+  isStarred: z.boolean(),
+  messageCount: z.number(),
+});
+
+const searchResponseSchema = z.strictObject({
+  threads: z.array(threadSummarySchema),
   nextPageToken: z.string().nullable(),
 });
 
@@ -90,6 +103,57 @@ describe('GET /email/search', () => {
     });
     const secondBody = searchResponseSchema.parse(await secondResponse.json());
     expect(secondBody.threads.map((t) => t.id)).toEqual(body.threads.map((t) => t.id));
+    expect(fetchThreadMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('hydrates a mix of indexed and unindexed threads in provider order', async () => {
+    const { cookieHeader, accountId } = await connectAccount();
+    const multiMessage = await seedEmailThreadWithMessage({
+      accountId,
+      isUnread: false,
+      labelIds: ['INBOX'],
+    });
+    await seedEmailThreadWithMessage({
+      accountId,
+      providerThreadId: multiMessage.providerThreadId,
+      isUnread: true,
+      isStarred: true,
+      labelIds: ['STARRED'],
+    });
+    const single = await seedEmailThreadWithMessage({ accountId, isUnread: false });
+    const unknownProviderThreadId = `provider-thread-${crypto.randomUUID()}`;
+
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        threadIds: [
+          single.providerThreadId,
+          unknownProviderThreadId,
+          multiMessage.providerThreadId,
+        ],
+        nextPageToken: null,
+      }),
+    );
+    fetchThreadMock.mockImplementationOnce(() =>
+      Promise.resolve(buildFakeMailThread({ id: unknownProviderThreadId })),
+    );
+
+    const response = await app.request('/email/search?q=mixed', {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads).toHaveLength(3);
+    const [first, second, third] = body.threads;
+    expect(first?.id).toBe(single.thread.id);
+    expect(first?.messageCount).toBe(1);
+    expect(first?.isUnread).toBe(false);
+    expect(second?.id).not.toBe(single.thread.id);
+    expect(third?.id).toBe(multiMessage.thread.id);
+    expect(third?.messageCount).toBe(2);
+    expect(third?.isUnread).toBe(true);
+    expect(third?.isStarred).toBe(true);
+    expect([...(third?.labelIds ?? [])].sort()).toEqual(['INBOX', 'STARRED']);
     expect(fetchThreadMock).toHaveBeenCalledTimes(1);
   });
 

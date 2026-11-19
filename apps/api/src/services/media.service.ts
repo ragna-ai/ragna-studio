@@ -366,7 +366,7 @@ export async function removeChatAttachment({
     throw new InternalServerErrorException('Failed to delete attachment');
   }
 
-  await deleteMediaIfUnreferenced({ mediaId: attachment.mediaId });
+  await deleteMediaIfUnreferenced({ mediaIds: [attachment.mediaId] });
 }
 
 // IMAGE INPUT UPLOAD
