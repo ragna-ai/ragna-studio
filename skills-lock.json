@@ -1,95 +1,124 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
+      "computedHash": "2773c3687f2cf96d659049ebf2d8c86058a33541b09360712df0dc6b1404c403",
+      "commit": "20c9e88a5c007461a703f1c213572b073196113e"
+    },
+    "maizzle": {
+      "source": "maizzle/framework",
+      "sourceType": "github",
+      "skillPath": "skills/maizzle/SKILL.md",
+      "computedHash": "3c6da456db261f5403f09600515f60e0543cd617c9ff79882498622c71e42913",
+      "commit": "66e0f3d12ebe46983f716a6fc287d28ec385644d"
     },
     "multi-stage-dockerfile": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/multi-stage-dockerfile/SKILL.md",
-      "computedHash": "698bf93a84dae18fd7bd0b1d35c21427307fde78fbdf4624be9726f5f98189ca"
+      "computedHash": "c74ad7dbfdc563e9a95308b7ff812882fa79872a097a2950c4f8346c815bdab6",
+      "commit": "1683f50e94c9fd489191f73d7c8f7e2bd871bd0c"
     },
     "nuxt": {
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/nuxt/SKILL.md",
-      "computedHash": "c752b7c2ea40bbc4f4b9c07415128985eb613be46391441f5d282b24621e17f2"
+      "computedHash": "4c10d4e793c1d7f4308a3b66930d55d6531224ea887ae29d9bcc946cea2c8081",
+      "commit": "4a6bb39e7b45e26402eb215393c51ccf5df1ca4c"
     },
     "pinia": {
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/pinia/SKILL.md",
-      "computedHash": "b02c9f6c2e1ec051be0ca5025804d8262815221fd7f5020734b5a9ad87f15617"
+      "computedHash": "4aaaee39fcaa853a2bcdd6105cf22f4237ff0ad56899f53d59fca5b8e39f9058",
+      "commit": "4a6bb39e7b45e26402eb215393c51ccf5df1ca4c"
     },
     "pnpm": {
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/pnpm/SKILL.md",
-      "computedHash": "71fd67de7ced43ff8eab87b46183fa10f09428bb3d9ae44418b506bac858583e"
+      "computedHash": "fb4c2b0f98b1e651fb217f2070e3782f2fa58fd7d9fb2745e9fefaf945b8c60e",
+      "commit": "4a6bb39e7b45e26402eb215393c51ccf5df1ca4c"
     },
     "shadcn-vue": {
       "source": "unovue/shadcn-vue",
       "sourceType": "github",
       "skillPath": "skills/shadcn-vue/SKILL.md",
-      "computedHash": "8f889bee4622048473cab8272b5bbcdf3e0e83929afb1b444adf572fa9c252a3"
+      "computedHash": "a5a9b576670e98117b103e966dccb833386d4a616cd7e42d338ea8fa7c3f32fe",
+      "commit": "d1bf1b3a2d1a824b19f32d7253a28a43797b8253"
     },
     "tailwind-v4": {
       "source": "mastra-ai/mastra",
       "sourceType": "github",
       "skillPath": ".claude/skills/tailwind-v4/SKILL.md",
-      "computedHash": "5a9f44a4151a8020309435f6f7d36e7b8ef1e66b00e0ad962cad677cd5c3155a"
+      "computedHash": "61f740e118caa455132e8c7f6ab992a28217650e5f21e80a79e30b75f1fe1f0e",
+      "commit": "db3b575baba1e0b7a7f99df06fdb3f72c885a2fb"
+    },
+    "tiptap": {
+      "source": "ueberdosis/tiptap",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/tiptap/SKILL.md",
+      "computedHash": "75e80435dd1ff884dc0c7d20f06d593da95b10f836638631e7dc77b926905da3",
+      "commit": "d8fef7e41a4387daa1a240c0e9955c8005f780b9"
     },
     "tsdown": {
       "source": "rolldown/tsdown",
       "sourceType": "github",
       "skillPath": "skills/tsdown/SKILL.md",
-      "computedHash": "c72c24845f4327528050de34baa64bc9507e4bfc970dc5896612a8a7c8c43e30"
+      "computedHash": "3b45a186097cf2bb9fa4ea6b4ae7dbc62951f210fdc0f977f295e54e428de7c9",
+      "commit": "90c6bffea017807e2999b0748f6a2e4eb095b4fa"
     },
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "c83a6ff75c62092f71da91408164ed3426f11749b032fd23ecc855e27c2fb538"
+      "computedHash": "49bb6427015253ce5d93f15dfa6c9ade3f8528f0fbe54769b6da1e1458f058d4",
+      "commit": "d4dfbcf3824133ccbb467ccbac38b125964b3ad0"
     },
     "vite": {
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/vite/SKILL.md",
-      "computedHash": "2dc52cad867c2673ab37f83fe992c25610d19f60587a308a262d091d0f36c1ad"
+      "computedHash": "db9eea82d8bf6ce0f60a4a1d94a626c718df7d97160b5f1d5b150647e0c401b3",
+      "commit": "4a6bb39e7b45e26402eb215393c51ccf5df1ca4c"
     },
     "vue-best-practices": {
       "source": "vuejs-ai/skills",
       "sourceType": "github",
       "skillPath": "skills/vue-best-practices/SKILL.md",
-      "computedHash": "2f4da0a95f19b225e784981413f727ff03bfdec7818a1e5bb0a477aab633095e"
+      "computedHash": "2b4ee45c8b9d77d99896c510ca1c0ecb56914b7bdda84dcbd872f3941d3b9f54",
+      "commit": "198f0cd8f7f9c0a3d9b566ccc16de6677519ee78"
     },
     "vue-testing-best-practices": {
       "source": "vuejs-ai/skills",
       "sourceType": "github",
       "skillPath": "skills/vue-testing-best-practices/SKILL.md",
-      "computedHash": "58d365899f54be9e5fa2c2e455093f9567620600578ae92aaa2f31d9b19a59ad"
+      "computedHash": "f4dc766acbf3883e5840669dbc347d519b084f559db6704ea6257b8e2443cdec",
+      "commit": "198f0cd8f7f9c0a3d9b566ccc16de6677519ee78"
     },
     "vueuse-functions": {
       "source": "vueuse/skills",
       "sourceType": "github",
       "skillPath": "skills/vueuse-functions/SKILL.md",
-      "computedHash": "70b65fb127323568380de490290eaf195b165da23c1f4fa27df10b386ca0dab2"
+      "computedHash": "898b0286e6c5eefab0d5cf010925d3911b2e127ea776adbf17027e2eca059888",
+      "commit": "004812b4aa0815f5745ac30a6a7dc4927aec7b3d"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+      "computedHash": "4f68ae07187fb0d1fb78c88b503d089da4cf5a9d9625d1f2e425b1590bf96d92",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62"
     },
     "zod": {
       "source": "pproenca/dot-skills",
       "sourceType": "github",
       "skillPath": "skills/.curated/zod/SKILL.md",
-      "computedHash": "c69b5133b65643317236707f2cd3e521b4fc6e5ee5fd6c6c00cf62a37dfd0144"
+      "computedHash": "0dda8a9c32affa99f4981924798d7399f0f5bd3ecc37910cfc4b05f260f442cd",
+      "commit": "cf93c57cac89d6fc3e4194686000411567f5caf3"
     }
   }
 }

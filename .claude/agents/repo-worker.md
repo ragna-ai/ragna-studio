@@ -22,8 +22,8 @@ AGENTS.md applies to you, except the rules it marks "lead only".
 
 - First load the clean-code skill with the Skill tool, unless its full text is already in your context.
 - Load every skill the brief names before writing code. Load tdd for `apps/api` and the packages it reaches.
-- Directory-scoped skills don't load on their own. Read them by path when the brief names one, e.g.
-  `packages/mail/.claude/skills/maizzle/SKILL.md`.
+- If your work reaches an area the brief didn't foresee and a skill covers it, load that skill too and say so in
+  the report.
 - House rules win over third-party skills (see AGENTS.md).
 
 ## Shared local resources
@@ -43,5 +43,6 @@ The dev database, Redis, the turbo cache and the e2e ports are shared with other
 Reply with:
 
 1. Files changed, one line each.
-2. Checks run, with their result.
-3. Anything you skipped, guessed or left open, and anything in the brief that looked wrong.
+2. Skills loaded.
+3. Checks run, with their result.
+4. Anything you skipped, guessed or left open, and anything in the brief that looked wrong.
