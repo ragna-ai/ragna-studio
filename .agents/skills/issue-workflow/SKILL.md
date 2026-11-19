@@ -1,6 +1,6 @@
 ---
 name: issue-workflow
-description: "Apply when the developer points at a GitHub issue or feature (\"let's discuss #123\", \"pick up this issue\") or asks to hand implementation to worker agents (\"kick off agents\", \"you're team lead\"). The end-to-end loop for this repo: assess with the right skills loaded, present options, PRD and approval gate, delegate to worker agents, integration pass, hand-over and bookkeeping."
+description: "Apply when the developer points at a GitHub issue or feature (\"let's discuss #123\", \"pick up this issue\"), asks what to work on next (\"what's next?\"), approves a build, or asks to hand implementation to worker agents (\"kick off agents\", \"you're team lead\"). The end-to-end loop for this repo: assess with the right skills loaded, present options, PRD and approval gate, delegate to worker agents, integration pass, hand-over and bookkeeping."
 ---
 
 The usual loop from issue to merged PR. The developer decides, the lead agent (the coding agent the developer
@@ -55,12 +55,16 @@ If unsure whether a skill applies, load it. Say which skills you loaded.
 ## 5. Approval gate
 
 Wait for explicit approval of the PRD or plan. Answers to design questions in chat are input to the PRD, not
-approval to build.
+approval to build. The approval question names the build path from step 6: "Build with 2 repo-workers (tools,
+tests and docs)?" or "Build it myself (one file)?". A plain "Shall I build?" hides the choice.
 
 ## 6. Implement
 
-- Small, single-area work: implement it yourself.
-- Larger or parallel work: the lead delegates to `repo-worker` agents (`subagent_type: "repo-worker"`). The
+- **Default: delegate.** The lead builds itself only when the change stays in one file and adds or removes no
+  dependency, or when the developer says so. Two files, two areas or a dependency change mean workers, even when
+  the work looks quick. Delegation is the developer's standing request, so the built-in "spawn only when the user
+  asks" doesn't apply.
+- The lead delegates to `repo-worker` agents (`subagent_type: "repo-worker"`). The
   definition in `.claude/agents/repo-worker.md` sets the model (Sonnet), makes it load clean-code and holds the worker
   rules. Don't pass `model` (it overrides the definition) or `isolation: "worktree"` (that starts from `main`, not
   from the lead's branch).

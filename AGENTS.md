@@ -154,6 +154,10 @@ copy `.env` and the turbo cache, install and build the packages. If `wt` asks to
 user; never pass `-y`. Only one worktree can run `pnpm dev` at a time (fixed ports 3000/3010), and all share the
 local Postgres and Redis, so never `db:push` from two worktrees with different schemas.
 
+**Delegation (lead only)**: by the developer's standing request, building goes to `repo-worker` agents. The lead
+builds itself only for a change in one file with no dependency change, or when the developer says so. The approval
+question names the path, e.g. "Build with 2 repo-workers?" (details in the issue-workflow skill).
+
 **Skip self-verification of changes** unless explicitly asked: no visual or browser confirmation, no git status/diff
 check, no git commit. The user handles verification and commits. Two exceptions: agents run the tests for what they
 change (see TDD below), and run `pnpm check-types` before reporting done (it also covers `apps/api`'s test files,
