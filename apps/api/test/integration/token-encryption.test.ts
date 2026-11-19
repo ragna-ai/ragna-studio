@@ -69,6 +69,14 @@ describe('stored connection tokens', () => {
     expect(await getConnectionAccessToken({ connectionId: connection.id })).toBe(accessToken);
   });
 
+  test('reads a token stored with the current key when a previous key is malformed', async () => {
+    const { userId } = await seedAuthenticatedUser();
+    const { connection, accessToken } = await seedGmailConnection({ userId });
+    configuredKeys = configureKeys({ current: TEST_APP_KEY, previous: 'base64:dG9vLXNob3J0' });
+
+    expect(await getConnectionAccessToken({ connectionId: connection.id })).toBe(accessToken);
+  });
+
   test('refuses a token stored with a key that is no longer configured', async () => {
     const { userId } = await seedAuthenticatedUser();
     const { connection } = await seedGmailConnection({ userId });
