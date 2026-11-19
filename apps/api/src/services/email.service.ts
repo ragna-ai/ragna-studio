@@ -91,7 +91,7 @@ import {
   queue,
 } from '@repo/queue';
 import { downloadObjectBuffer } from '@repo/storage';
-import { tryCatch } from '@repo/utils';
+import { mapSettledWithConcurrency, tryCatch } from '@repo/utils';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -1094,7 +1094,7 @@ export async function searchEmailForUser({
 }
 
 // Indexed threads and their messages load in two queries for the whole page.
-// Only threads missing from the index are live-fetched, one provider call each.
+// Only threads missing from the index are live-fetched, one provider call each, a few at a time.
 async function hydrateSearchThreads({
   account,
   provider,
@@ -1125,38 +1125,64 @@ async function hydrateSearchThreads({
     indexed.localThreads.map((thread) => [thread.providerThreadId, thread]),
   );
 
-  return Promise.all(
-    providerThreadIds.map(async (providerThreadId) => {
-      const local = localByProviderThreadId.get(providerThreadId);
-      if (local) {
-        return hydrateThreadSummary({
-          thread: local,
-          messages: messagesByThreadId.get(local.id) ?? [],
-        });
-      }
-      return fetchAndHydrateSearchThread({ account, provider, providerThreadId });
-    }),
+  const missingProviderThreadIds = providerThreadIds.filter(
+    (providerThreadId) => !localByProviderThreadId.has(providerThreadId),
   );
+  const liveByProviderThreadId = await liveFetchSearchThreads({
+    account,
+    provider,
+    providerThreadIds: missingProviderThreadIds,
+  });
+
+  return providerThreadIds.flatMap((providerThreadId) => {
+    const local = localByProviderThreadId.get(providerThreadId);
+    if (local) {
+      return [
+        hydrateThreadSummary({ thread: local, messages: messagesByThreadId.get(local.id) ?? [] }),
+      ];
+    }
+    const live = liveByProviderThreadId.get(providerThreadId);
+    return live ? [live] : [];
+  });
 }
 
-async function fetchAndHydrateSearchThread({
+// Graph allows 4 concurrent requests per mailbox.
+const SEARCH_LIVE_FETCH_CONCURRENCY = 4;
+
+// A thread whose live fetch or persist fails is logged and left out, so one failure doesn't fail the page.
+async function liveFetchSearchThreads({
   account,
   provider,
-  providerThreadId,
+  providerThreadIds,
 }: {
   account: EmailAccount;
   provider: MailProvider;
-  providerThreadId: MailProviderId;
-}): Promise<EmailThreadSummary> {
-  const { error, data: liveThread } = await tryCatch(() => provider.fetchThread(providerThreadId));
+  providerThreadIds: MailProviderId[];
+}): Promise<Map<MailProviderId, EmailThreadSummary>> {
+  const results = await mapSettledWithConcurrency(
+    providerThreadIds,
+    SEARCH_LIVE_FETCH_CONCURRENCY,
+    async (providerThreadId) => {
+      const liveThread = await provider.fetchThread(providerThreadId);
+      const persisted = await persistFetchedThread({
+        accountId: account.id,
+        mailThread: liveThread,
+      });
+      return hydrateThreadSummary({ thread: persisted, messages: persisted.messages });
+    },
+  );
 
-  if (error !== null || !liveThread) {
-    logger.error(`Failed to live-fetch search result thread ${providerThreadId}`, error);
-    throw new InternalServerErrorException('Failed to load a search result');
-  }
-
-  const persisted = await persistFetchedThread({ accountId: account.id, mailThread: liveThread });
-  return hydrateThreadSummary({ thread: persisted, messages: persisted.messages });
+  const summaries = new Map<MailProviderId, EmailThreadSummary>();
+  results.forEach((result, index) => {
+    const providerThreadId = providerThreadIds[index];
+    if (providerThreadId === undefined) return;
+    if (result.status === 'rejected') {
+      logger.error(`Failed to live-fetch search result thread ${providerThreadId}`, result.reason);
+      return;
+    }
+    summaries.set(providerThreadId, result.value);
+  });
+  return summaries;
 }
 
 // --- Mailbox actions --------------------------------------------------

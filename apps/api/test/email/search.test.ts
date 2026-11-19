@@ -34,6 +34,20 @@ async function connectAccount() {
   return { userId, cookieHeader, accountId };
 }
 
+// The thread's subject is its provider id, so tests can tell threads apart.
+function buildSubjectedThread(providerThreadId: string) {
+  return buildFakeMailThread({
+    id: providerThreadId,
+    messages: [
+      buildFakeMailMessage({
+        id: `message-${providerThreadId}`,
+        threadId: providerThreadId,
+        subject: providerThreadId,
+      }),
+    ],
+  });
+}
+
 const threadSummarySchema = z.strictObject({
   id: z.string(),
   subject: z.string().nullable(),
@@ -204,6 +218,73 @@ describe('GET /email/search', () => {
     expect(stored.map((message) => message.subject)).toEqual(['First', 'Second']);
     expect(stored.map((message) => message.body?.textBody)).toEqual(['First text', 'Second text']);
     expect(stored.map((message) => message.body?.htmlBody)).toEqual(['<p>First</p>', null]);
+  });
+
+  test('never runs more than 4 live fetches at once and keeps provider order', async () => {
+    const { cookieHeader } = await connectAccount();
+    const providerThreadIds = Array.from(
+      { length: 9 },
+      () => `provider-thread-${crypto.randomUUID()}`,
+    );
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({ threadIds: providerThreadIds, nextPageToken: null }),
+    );
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const release: (() => void)[] = [];
+    fetchThreadMock.mockImplementation((providerThreadId: string) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      return new Promise((resolve) => {
+        release.push(() => {
+          inFlight -= 1;
+          resolve(buildSubjectedThread(providerThreadId));
+        });
+      });
+    });
+
+    const responsePromise = app.request('/email/search?q=many', {
+      headers: { cookie: cookieHeader },
+    });
+    let released = 0;
+    while (released < providerThreadIds.length) {
+      await Bun.sleep(0);
+      const pending = release.splice(0);
+      for (const resolveFetch of pending.reverse()) resolveFetch();
+      released += pending.length;
+    }
+    const response = await responsePromise;
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(maxInFlight).toBeLessThanOrEqual(4);
+    expect(fetchThreadMock).toHaveBeenCalledTimes(providerThreadIds.length);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads).toHaveLength(providerThreadIds.length);
+    expect(body.threads.map((t) => t.subject)).toEqual(providerThreadIds);
+  });
+
+  test('leaves out a thread whose live fetch fails and returns the rest', async () => {
+    const { cookieHeader } = await connectAccount();
+    const [firstId, brokenId, lastId] = [0, 1, 2].map(
+      () => `provider-thread-${crypto.randomUUID()}`,
+    );
+    searchMock.mockImplementationOnce(() =>
+      Promise.resolve({ threadIds: [firstId, brokenId, lastId], nextPageToken: null }),
+    );
+    fetchThreadMock.mockImplementation((providerThreadId: string) =>
+      providerThreadId === brokenId
+        ? Promise.reject(new Error('provider down'))
+        : Promise.resolve(buildSubjectedThread(providerThreadId)),
+    );
+
+    const response = await app.request('/email/search?q=partial', {
+      headers: { cookie: cookieHeader },
+    });
+
+    expect(response.status).toBe(StatusCodes.OK);
+    const body = searchResponseSchema.parse(await response.json());
+    expect(body.threads.map((t) => t.subject)).toEqual([firstId, lastId]);
   });
 
   test('rejects a missing query', async () => {
