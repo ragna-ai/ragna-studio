@@ -54,6 +54,8 @@ As the user who started a run, I want a notification when it ends, so that I don
 - **US-2.1** Given a run a user started, when it completes, fails or asks a question, then that
   user gets a notification linking to the task.
 - **US-2.2** Given a run a user stopped, then no notification is sent.
+- **US-2.3** Given a task assigned to an agent with no run yet, when its due date reminder fires,
+  then the reminder says the agent hasn't started.
 
 ### US-3 The agent proposes subtasks (P2)
 
@@ -74,17 +76,19 @@ can break work down without adding work to the board on its own.
 - **US-3.7** Given a run, when the agent tries to create a task that isn't a subtask of its task,
   then nothing is created and the agent is told why.
 - **US-3.8** Rule: a run proposes at most 10 subtasks.
+- **US-3.9** Given a run, when the agent sets a due date on a proposed subtask, then the subtask is
+  created without one and the agent is told why.
 
 ## Testing
 
-| Criterion              | Level            | Folder                                          |
-| ---------------------- | ---------------- | ----------------------------------------------- |
-| US-1.1 to US-1.3       | worker           | `apps/worker/test/task/`                        |
-| US-2.1, US-2.2         | worker           | `apps/worker/test/task/`                        |
-| US-3.1, US-3.7, US-3.8 | worker           | `apps/worker/test/task/`                        |
-| US-3.2 to US-3.5       | API              | `apps/api/test/task/`                           |
-| US-3.6                 | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
-| US-3.5 (drag)          | e2e (Playwright) | `apps/web/e2e/`                                 |
+| Criterion                | Level            | Folder                                          |
+| ------------------------ | ---------------- | ----------------------------------------------- |
+| US-1.1 to US-1.3         | worker           | `apps/worker/test/task/`                        |
+| US-2.1 to US-2.3         | worker           | `apps/worker/test/task/`                        |
+| US-3.1, US-3.7 to US-3.9 | worker           | `apps/worker/test/task/`                        |
+| US-3.2 to US-3.5         | API              | `apps/api/test/task/`                           |
+| US-3.6                   | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
+| US-3.5 (drag)            | e2e (Playwright) | `apps/web/e2e/`                                 |
 
 ## Standards checklist
 
