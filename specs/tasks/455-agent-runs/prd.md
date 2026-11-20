@@ -36,6 +36,7 @@ sorting files). I want to hand it off like to a colleague, see it come back for 
 working on other things meanwhile."_
 
 Assumption: we have no user reports yet. The table above is the hypothesis this feature tests.
+Examples of good and poor fits: [agent-run-use-cases.md](../reference/agent-run-use-cases.md).
 
 ## Goals
 
@@ -47,6 +48,9 @@ Assumption: we have no user reports yet. The table above is the hypothesis this 
 ## Non-goals
 
 - Starting a run automatically when an agent is assigned. A later setting, opt-in per workspace.
+- Starting a run on a date or a schedule. Workflows own scheduling, for example a later workflow
+  step that picks up tasks with a given label every Monday. It falls under the loop safety rule in
+  the design.
 - Agents running subtasks on their own. Subtasks are context in v1.
 - Agents creating tasks during a run. Proposed subtasks come in phase 2 (#456). Chat stays as
   today: the user is present and asked for them.
@@ -74,6 +78,9 @@ watching.
 - **US-1.4** Given a workspace without credits, when a user starts a run, then it is refused with
   "Not enough credits" and the task keeps its status.
 - **US-1.5** Given an agent changes a task's assignee with its task tools, then no run starts.
+- **US-1.6** Rule: the due date is planning metadata for people. The agent doesn't get it. A date
+  the work depends on belongs in the description.
+- **US-1.7** Rule: the agent knows today's date.
 
 ### US-2 The agent reports back (P1)
 
@@ -127,7 +134,7 @@ hang.
 | ---------------------- | ---------------- | ----------------------------------------------- |
 | US-1.1, US-1.3, US-1.4 | API              | `apps/api/test/task/`                           |
 | US-1.2                 | e2e (Playwright) | `apps/web/e2e/`                                 |
-| US-1.5                 | worker           | `apps/worker/test/task/`                        |
+| US-1.5, US-1.6, US-1.7 | worker           | `apps/worker/test/task/`                        |
 | US-2.1 to US-2.6       | worker           | `apps/worker/test/task/`                        |
 | US-3.1                 | e2e (Playwright) | `apps/web/e2e/`                                 |
 | US-3.2, US-3.3, US-3.4 | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |

@@ -26,6 +26,11 @@ with a new notification type `task-run-finished` (`{ taskId, taskRunId, outcome 
 runs send nothing: the user who stopped it knows (US-2.2). The processor checks
 the user's workspace access first and skips the notification if it is gone.
 
+**Not-started reminder (US-2.3).** `listTasksDueForReminder` also returns whether the task has an
+assigned agent and no `task_run` row, in the same query (a `not exists` subquery, no per-task
+lookup). The reminder notification then carries the agent's name and reads "Assigned to <agent>,
+not started yet". The recipient stays as today until #181.
+
 ## Proposal lock (US-3)
 
 `task` gains three columns:
@@ -48,6 +53,8 @@ task is refused by the start checks (`409 task-locked`).
 **Creating proposals.** In a run, `createTask` gets the run's context (`taskRunId`, `taskId`) and
 only creates subtasks of the run's task, in `backlog`, with `proposed_by_task_run_id` set. It
 replaces phase 1's refusal. The cap is 10 per run, counted by `proposed_by_task_run_id` (US-3.8).
+Due date and reminder inputs are dropped with a note in the tool result: due dates are
+planning metadata for people (phase 1, US-1.6), so the reviewer sets them (US-3.9).
 If the run's task is itself a subtask, `createTask` returns a tool failure (subtasks are one level
 deep) and the agent lists its steps in the summary instead.
 
