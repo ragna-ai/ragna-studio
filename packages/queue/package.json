@@ -22,7 +22,7 @@
     "@repo/config": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/utils": "workspace:*",
-    "bullmq": "^6.7.4",
+    "bullmq": "^6.7.7",
     "zod": "catalog:"
   },
   "devDependencies": {
