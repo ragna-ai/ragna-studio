@@ -47,10 +47,13 @@ Role names are always qualified. The full table, with storage and code identifie
 
 ## Tasks and tones
 
-| Term       | Meaning                                                                                                                    | _Avoid_                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| tone       | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
-| task label | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+| Term          | Meaning                                                                                                                    | _Avoid_                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| tone          | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
+| task label    | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+| task run      | One time the assigned agent works a task in the background, started by a user. Table `task_run`.                           | job (that is the BullMQ job), execution, workflow run  |
+| task comment  | A note on a task by a user or an agent. Agents report their run results as task comments. Table `task_comment`.            | message (that is chat), note                           |
+| proposed task | A subtask an agent created during a task run. Locked until a user accepts it: nobody can move, assign or start it.         | draft task, suggestion, pending task                   |
 
 ## Users and emails
 
