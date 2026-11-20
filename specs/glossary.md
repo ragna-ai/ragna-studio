@@ -56,6 +56,9 @@ Role names are always qualified. The full table, with storage and code identifie
 | task label      | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
 | task comment    | A markdown note on a task, written by a user or an agent. Agent comments can't be edited.                                  | note, reply, message                                   |
 | task attachment | A file a user attached to a task. Agents read its extracted text.                                                          | file (for the link), document, upload                  |
+| -------------   | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| task run        | One time the assigned agent works a task in the background, started by a user. Table `task_run`.                           | job (that is the BullMQ job), execution, workflow run  |
+| proposed task   | A subtask an agent created during a task run. Locked until a user accepts it: nobody can move, assign or start it.         | draft task, suggestion, pending task                   |
 
 ## Users and emails
 
