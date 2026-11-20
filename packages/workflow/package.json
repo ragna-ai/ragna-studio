@@ -19,7 +19,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "cron-parser": "5.10.4",
+    "cron-parser": "5.10.6",
     "zod": "catalog:"
   },
   "devDependencies": {

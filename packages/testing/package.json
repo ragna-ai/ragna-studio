@@ -24,7 +24,7 @@
     "@repo/storage": "workspace:*",
     "@simplewebauthn/server": "^13.3.3",
     "ai": "catalog:",
-    "better-auth": "^1.7.20"
+    "better-auth": "^1.7.25"
   },
   "devDependencies": {
     "@repo/ts-config": "workspace:*",
