@@ -36,7 +36,7 @@
     "@repo/config": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/workflow": "workspace:*",
-    "drizzle-orm": "1.0.0-rc.5",
+    "drizzle-orm": "1.0.0-rc.6",
     "fractional-indexing": "^4.0.0",
     "pg": "^8.23.1",
     "zod": "catalog:"
@@ -45,7 +45,7 @@
     "@repo/ts-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "1.0.0-rc.5",
+    "drizzle-kit": "1.0.0-rc.6",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   }
