@@ -1,6 +1,7 @@
 # Tasks: agents work assigned tasks (PRD)
 
-> **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md).
+> **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md). Blocked by
+> #462 (agent lock).
 
 Today a user can assign a task to an agent, but nothing happens. The assignment is a label on the
 card. This PRD lets a user start the assigned agent on the task. The agent works in the background
@@ -75,12 +76,14 @@ watching.
   start right away, then the run starts as in US-1.1.
 - **US-1.3** Given a task with a run in progress, when a user starts it again, then the request is
   rejected and the running run is unchanged.
-- **US-1.4** Given a workspace without credits, when a user starts a run, then it is refused with
-  "Not enough credits" and the task keeps its status.
+- **US-1.4** Given a workspace whose balance is below the minimum to start, when a user starts a
+  run, then it is refused with "Not enough credits" and the task keeps its status.
 - **US-1.5** Given an agent changes a task's assignee with its task tools, then no run starts.
 - **US-1.6** Rule: the due date is planning metadata for people. The agent doesn't get it. A date
   the work depends on belongs in the description.
 - **US-1.7** Rule: the agent knows today's date.
+- **US-1.8** Given a task whose assigned agent is not approved for unattended runs, when a user
+  starts a run, then it is refused and the user is told the agent needs that approval (#462).
 
 ### US-2 The agent reports back (P1)
 
@@ -110,7 +113,9 @@ As a user, I want to see and stop a running agent, so that I stay in control of 
 - **US-3.3** Given a running task, when a user deletes it or assigns another agent, then the run
   stops.
 - **US-3.4** Given a finished run, when a user opens the task, then they see the run's steps,
-  tool calls, duration and credits used.
+  tool calls, duration, credits used and the agent version it ran with.
+- **US-3.5** Given a running task, when a user tries to change it other than deleting it or
+  assigning another agent, then nothing changes and they are told to stop the run first.
 
 ### US-5 Limits (P1)
 
@@ -127,20 +132,23 @@ hang.
   then every run in the workspace stops as in US-3.2.
 - **US-5.5** Given a workspace editor, when they try to stop all runs, then the request is
   rejected with `403`.
+- **US-5.6** Given a running task, when the workspace balance falls below the allowed overshoot,
+  then the run stops before its next step and reports that credits ran out. The credits it used
+  are still charged.
 
 ## Testing
 
-| Criterion              | Level            | Folder                                          |
-| ---------------------- | ---------------- | ----------------------------------------------- |
-| US-1.1, US-1.3, US-1.4 | API              | `apps/api/test/task/`                           |
-| US-1.2                 | e2e (Playwright) | `apps/web/e2e/`                                 |
-| US-1.5, US-1.6, US-1.7 | worker           | `apps/worker/test/task/`                        |
-| US-2.1 to US-2.6       | worker           | `apps/worker/test/task/`                        |
-| US-3.1                 | e2e (Playwright) | `apps/web/e2e/`                                 |
-| US-3.2, US-3.3, US-3.4 | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
-| US-5.1                 | API              | `apps/api/test/task/`                           |
-| US-5.2, US-5.3         | worker           | `apps/worker/test/task/`                        |
-| US-5.4, US-5.5         | API              | `apps/api/test/task/`                           |
+| Criterion                      | Level            | Folder                                          |
+| ------------------------------ | ---------------- | ----------------------------------------------- |
+| US-1.1, US-1.3, US-1.4, US-1.8 | API              | `apps/api/test/task/`                           |
+| US-1.2                         | e2e (Playwright) | `apps/web/e2e/`                                 |
+| US-1.5, US-1.6, US-1.7         | worker           | `apps/worker/test/task/`                        |
+| US-2.1 to US-2.6               | worker           | `apps/worker/test/task/`                        |
+| US-3.1                         | e2e (Playwright) | `apps/web/e2e/`                                 |
+| US-3.2 to US-3.5               | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
+| US-5.1                         | API              | `apps/api/test/task/`                           |
+| US-5.2, US-5.3, US-5.6         | worker           | `apps/worker/test/task/`                        |
+| US-5.4, US-5.5                 | API              | `apps/api/test/task/`                           |
 
 ## Standards checklist
 
@@ -162,7 +170,17 @@ later on top.
 **No automatic retry after a side effect.** An agent run is not idempotent: a retried run sends
 the email again. The worker retries a run only while no writing tool has finished. After that a
 failure is final and the user runs it again with the previous trace as context. Lost: fully
-automatic recovery, which needs per-step checkpoints (later, if failures show up in practice).
+automatic recovery. Resuming from the last finished step, plus writes that can safely run twice,
+come in #461. Undoing writes is ruled out: users may have edited the data, and outside actions
+can't always be undone.
+
+**Unattended runs need an approved agent.** A workspace manager or org owner or admin locks the
+agent and approves it for unattended runs (#462, shipped before this PR). Locking creates an
+immutable agent version and the approval belongs to that version, so a changed agent must be
+approved again. A run records the version. This answers "which configuration produced this
+result" and "who allowed it to run on its own" without copying the agent into every run. The task
+itself is locked while its run is active; stopping the run unlocks it. Lost: a per-run snapshot of
+task and agent. A full audit trail comes with the audit log standard (#171).
 
 **The agent ends at In Review, never Done.** The run's output is a proposal. A human closes the
 task. Lost: fully unattended completion for trusted routine tasks.
@@ -174,4 +192,5 @@ needs run lineage and budgets first (see the design's loop safety section).
 
 ## Open questions
 
-None.
+- [NEEDS CLARIFICATION: Default for the minimum balance to start a run and for the allowed
+  overshoot. Both are platform settings; they need numbers once credit pricing is seeded.]

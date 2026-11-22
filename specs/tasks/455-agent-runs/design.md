@@ -10,7 +10,7 @@ web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), 
                                   │ enqueue { taskRunId }
                                   ▼
                          worker: task-runs processor
-                           load snapshot ─▶ runAgentUnattended ─▶ outcome
+                           load task + agent version ─▶ runAgentUnattended ─▶ outcome
                                                 │ per step: save trace, check canceled
                                                 ▼
                            task_comment + task status + charge
@@ -20,23 +20,23 @@ web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), 
 
 `task_run`, one row per run. Registered in `relations.ts`.
 
-| Column                                    | Type      | Notes                                                                            |
-| ----------------------------------------- | --------- | -------------------------------------------------------------------------------- |
-| `id`                                      | text      | PK                                                                               |
-| `workspace_id`                            | text      | FK, composite FK with `task_id` like other task children                         |
-| `task_id`                                 | text      | FK → `task.id`, cascade                                                          |
-| `agent_id`                                | text      | FK → `agent.id`, set null (past runs survive agent deletion)                     |
-| `started_by_user_id`                      | text      | FK → `user.id`, set null. The user the run acts as                               |
-| `status`                                  | text      | `TaskRunStatus`, see lifecycle                                                   |
-| `outcome`                                 | text?     | `completed`, `needs_input`, null until finished                                  |
-| `previous_task_status`                    | text      | Restored on failure or stop (US-2.3, US-3.2)                                     |
-| `snapshot`                                | jsonb     | Task title, description, labels, subtasks, attachment ids, agent config at start |
-| `trace`                                   | jsonb     | Steps and tool calls, same shape as `WorkflowAgentTraceStep[]`                   |
-| `side_effects_done`                       | boolean   | True once a writing tool call finished. Drives the retry rule                    |
-| `usage`                                   | jsonb     | Tokens and credits                                                               |
-| `error`                                   | text?     | Problem text for the user                                                        |
-| `attempt`                                 | integer   | BullMQ attempt that last ran                                                     |
-| `created_at`, `started_at`, `finished_at` | timestamp |                                                                                  |
+| Column                                    | Type                      | Notes                                                                 |
+| ----------------------------------------- | ------------------------- | --------------------------------------------------------------------- |
+| `id`                                      | text                      | PK                                                                    |
+| `workspace_id`                            | text                      | FK, composite FK with `task_id` like other task children              |
+| `task_id`                                 | text                      | FK → `task.id`, cascade                                               |
+| `agent_id`                                | text                      | FK → `agent.id`, set null (past runs survive agent deletion)          |
+| `started_by_user_id`                      | text                      | FK → `user.id`, set null. The user the run acts as                    |
+| `status`                                  | pg enum `task_run_status` | See lifecycle                                                         |
+| `outcome`                                 | text?                     | `completed`, `needs_input`, null until finished                       |
+| `previous_task_status`                    | text                      | Restored on failure or stop (US-2.3, US-3.2)                          |
+| `agent_version_id`                        | text                      | FK → `agent_version.id` (#462). The locked configuration the run used |
+| `trace`                                   | jsonb                     | Steps and tool calls, same shape as `WorkflowAgentTraceStep[]`        |
+| `first_write_at`                          | timestamp?                | When the first writing tool call finished. Null means a retry is safe |
+| `usage`                                   | jsonb                     | Tokens and credits                                                    |
+| `error`                                   | text?                     | Problem text for the user                                             |
+| `attempt`                                 | integer                   | BullMQ attempt that last ran                                          |
+| `created_at`, `started_at`, `finished_at` | timestamp                 |                                                                       |
 
 - Partial unique index on `(task_id)` where `status in ('queued', 'running')`: one active run per
   task (US-1.3), enforced by the database, not a read-then-write check.
@@ -50,6 +50,7 @@ timestamps. Users write comments in the web app, too. Phase 2 feeds them into th
 ## Run lifecycle
 
 ```ts
+// pgEnum('task_run_status', [...]); the zod enum and the TS type derive from the same list.
 type TaskRunStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'canceled';
 ```
 
@@ -84,13 +85,20 @@ Start checks, in this order, each with an RFC 9457 problem:
 
 1. User can edit tasks in the workspace (editor or manager), else `403`.
 2. Task has an assigned agent in the same workspace, else `409 task-has-no-agent`.
-3. Credits allowed (`resolveCreditSpendState`), else `402 insufficient-credits` (US-1.4).
-4. Fewer than `taskRunMaxActivePerWorkspace` active runs, else `429 task-run-limit` (US-5.1).
-5. Insert `task_run`. A unique-index violation maps to `409 task-run-active` (US-1.3).
+3. The agent's current version is approved for unattended runs, else
+   `409 agent-not-approved` (US-1.8). The run records that `agent_version_id`.
+4. Balance at least `taskRunMinCredits`, else `402 insufficient-credits` (US-1.4).
+5. Fewer than `taskRunMaxActivePerWorkspace` active runs, else `429 task-run-limit` (US-5.1).
+6. Insert `task_run`. A unique-index violation maps to `409 task-run-active` (US-1.3).
 
-Step 4 counts then inserts. Two parallel starts can both pass. Accepted: the limit is a cost
+Step 5 counts then inserts. Two parallel starts can both pass. Accepted: the limit is a cost
 guard, not an invariant, so one extra run is fine. A `pg_advisory_xact_lock` on the workspace id
 closes it if needed.
+
+**Task lock (US-3.5).** The shared task write path in `@repo/database` refuses changes to a task
+with an active run (`409 task-run-active`), except delete and reassign, which cancel the run in
+the same transaction (US-3.3). The check is the partial unique index's lookup, no extra column.
+Comments stay open during a run.
 
 `GET /task` returns `activeRun: { id, status } | null` per task so the board shows it (US-3.1).
 One query with a join on the partial index, no per-task lookup.
@@ -136,7 +144,7 @@ pays for the tokens it used. Today a failing workflow agent step is never charge
 
 ### Prompt
 
-The snapshot goes in as untrusted content, the same way `email-draft.service.ts` wraps a thread:
+The task goes in as untrusted content, the same way `email-draft.service.ts` wraps a thread:
 
 ```text
 <task> title, description, labels, subtasks, attachment list </task>
@@ -176,19 +184,20 @@ stops without calling it, the final text becomes the summary with outcome `compl
 - The task tools refuse to change status or assignee of the task under run. The runner owns both.
 - In a run, `createTask` returns a tool failure that tells the agent to list its steps in the
   summary instead (US-2.5). Phase 2 replaces this with proposed subtasks.
-- `side_effects_done` turns true after the first finished call of a tool with `access: 'write'`.
+- `first_write_at` is set when the first call of a tool with `access: 'write'` finishes. Writes
+  to our own data count too: a repeated dataset append duplicates rows.
   Tool definitions already carry their access level.
 
 ### Errors and retries
 
-| Class                | Examples                                                     | Handling                                                        |
-| -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------- |
-| Model call transient | 429, 5xx, timeout from the provider                          | AI SDK `maxRetries` inside the call                             |
-| Attempt transient    | DB or Redis blip, worker restart before the first write tool | BullMQ retry, if `!side_effects_done`                           |
-| Permanent            | Agent or task gone, not chargeable, no credits, bad snapshot | `UnrecoverableError`, run `failed`                              |
-| Unsafe to retry      | Any failure after `side_effects_done`                        | `UnrecoverableError`, run `failed`, comment lists actions taken |
-| Budget               | Time limit (`AbortSignal.timeout`), step limit               | Run `failed` with "time limit" or "step limit"                  |
-| Canceled             | Status became `canceled`                                     | Abort, no comment from the agent                                |
+| Class                | Examples                                                           | Handling                                                        |
+| -------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Model call transient | 429, 5xx, timeout from the provider                                | AI SDK `maxRetries` inside the call                             |
+| Attempt transient    | DB or Redis blip, worker restart before the first write tool       | BullMQ retry, if `first_write_at` is null                       |
+| Permanent            | Agent or task gone, not chargeable, no credits, agent version gone | `UnrecoverableError`, run `failed`                              |
+| Unsafe to retry      | Any failure after `first_write_at`                                 | `UnrecoverableError`, run `failed`, comment lists actions taken |
+| Budget               | Time limit (`AbortSignal.timeout`), step limit                     | Run `failed` with "time limit" or "step limit"                  |
+| Canceled             | Status became `canceled`                                           | Abort, no comment from the agent                                |
 
 The processor catches, classifies, then rethrows a plain error (retry) or an `UnrecoverableError`
 (final). On the last attempt it writes the failure comment and restores the task status.
@@ -220,6 +229,8 @@ change them:
 | `taskRunMaxActivePerWorkspace` | 3       | Start check (US-5.1)                           |
 | `taskRunTimeLimitMinutes`      | 30      | `AbortSignal.timeout`, `lockDuration`, sweeper |
 | `taskRunMaxSteps`              | 30      | `stopWhen: stepCountIs` (US-5.2)               |
+| `taskRunMinCredits`            | tbd     | Start check (US-1.4)                           |
+| `taskRunMaxOvershoot`          | tbd     | Credit check between steps (US-5.6)            |
 
 How others set them (November 2026): GitHub's Copilot cloud agent stops a session after 59
 minutes and documents no concurrency limit (about 5 to 7 run at once). Google's Jules allowed 3
@@ -227,6 +238,14 @@ tasks at once and 15 per day on the free plan, 15 and 100 on Pro. Cursor allows 
 at once on Pro, and caps one agent run at 25 tool calls (200 in Max mode). Those agents run code in
 a VM; ours call tools, so 30 minutes is generous and 30 steps matches the tool-call caps. Credits
 are the daily cap, so there is no runs-per-day limit. Limits per plan come with billing.
+
+### Credits during a run
+
+`prepareStep` also compares the balance with `-taskRunMaxOvershoot`, after adding the usage this
+run has not settled yet. Below it, the runner aborts with "credits ran out" (US-5.6). Settlement
+always charges the real usage, even past the overshoot. A negative balance then blocks new starts
+through the minimum. Chat and workflows keep `balance > 0` until the credit system adopts the
+overshoot everywhere.
 
 ### Stuck agent
 
@@ -270,8 +289,11 @@ or accepted, and caps the runs it starts per workflow run.
 
 ## Edge cases
 
-- **Edits during a run.** The run works on its snapshot. Edits apply to the next run.
-- **Agent changed during a run.** Same: the snapshot holds the agent config.
+- **Edits during a run.** The task is locked while its run is active (US-3.5). Unlocking means
+  stopping the run. The lock comes from the active run, not a flag, so a crashed run can't leave it
+  behind: the sweeper ends the run and the lock with it.
+- **Agent unlocked during a run.** The run keeps its agent version. New starts are refused until
+  the agent is locked again (#462). Retries load the same version.
 - **Agent deleted.** The agent delete path cancels the agent's active runs in its transaction. A
   foreign key clears data but can't stop a worker.
 - **Starter loses workspace access.** The processor checks access at pickup. Without access the
