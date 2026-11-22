@@ -197,6 +197,7 @@ export async function publishWorkflow({
     .update(workflow)
     .set({
       publishedDefinition: existingWorkflow.definition,
+      agentIds: getWorkflowAgentIds(existingWorkflow.definition),
       scheduleCron: scheduleCron ?? null,
       scheduleTimezone: scheduleTimezone ?? null,
     })

@@ -1,0 +1,722 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "b169263b-b3b8-4eb0-b94a-e148510942e2",
+  "prevIds": ["89fe9696-daeb-487f-a4ed-2f5347f4f5ba"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|tbl|public.agent_versions",
+        "n|tbl|public.agent_versions",
+        "e|tbl|public.agent_versions",
+        "n|rel|public.agent_versions",
+        "n|type|public.agent_versions",
+        "n|rel|public.agent_versions_pkey",
+        "n|rel|public.agent_versions_workspace_id_unique"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "agents", "locked_version_id"],
+      "writes": [
+        "s|col|public.agents.locked_version_id",
+        "n|col|public.agents.locked_version_id",
+        "e|col|public.agents.locked_version_id"
+      ],
+      "reads": ["n|tbl|public.agents", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "workflows", "agent_ids"],
+      "writes": [
+        "s|col|public.workflows.agent_ids",
+        "n|col|public.workflows.agent_ids",
+        "e|col|public.workflows.agent_ids"
+      ],
+      "reads": ["n|tbl|public.workflows", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "agent_versions", "agentVersion_workspaceId_idx"],
+      "writes": [
+        "s|idx|public.agentVersion_workspaceId_idx",
+        "n|idx|public.agentVersion_workspaceId_idx",
+        "e|idx|public.agentVersion_workspaceId_idx",
+        "n|rel|public.agentVersion_workspaceId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|col|public.agent_versions.workspace_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "agent_versions",
+        "agentVersion_agentId_versionNumber_idx"
+      ],
+      "writes": [
+        "s|idx|public.agentVersion_agentId_versionNumber_idx",
+        "n|idx|public.agentVersion_agentId_versionNumber_idx",
+        "e|idx|public.agentVersion_agentId_versionNumber_idx",
+        "n|rel|public.agentVersion_agentId_versionNumber_idx"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|col|public.agent_versions.agent_id",
+        "n|col|public.agent_versions.version_number"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "workflows", "workflow_agentIds_idx"],
+      "writes": [
+        "s|idx|public.workflow_agentIds_idx",
+        "n|idx|public.workflow_agentIds_idx",
+        "e|idx|public.workflow_agentIds_idx",
+        "n|rel|public.workflow_agentIds_idx"
+      ],
+      "reads": ["n|tbl|public.workflows", "n|sch|public", "n|col|public.workflows.agent_ids"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agents"],
+      "writes": [
+        "s|fk|public.agents.agents_locked_version_workspace_fk",
+        "n|fk|public.agents.agents_locked_version_workspace_fk",
+        "e|fk|public.agents.agents_locked_version_workspace_fk",
+        "n|con|public.agents.agents_locked_version_workspace_fk"
+      ],
+      "reads": [
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|col|public.agents.workspace_id",
+        "n|col|public.agents.locked_version_id",
+        "n|col|public.agent_versions.workspace_id",
+        "n|col|public.agent_versions.id",
+        "e|uniqueness|public.agent_versions.id.workspace_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_workspace_id_workspaces_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_workspace_id_workspaces_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_workspace_id_workspaces_id_fkey",
+        "n|con|public.agent_versions.agent_versions_workspace_id_workspaces_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.workspaces",
+        "n|sch|public",
+        "n|col|public.agent_versions.workspace_id",
+        "n|col|public.workspaces.id",
+        "e|uniqueness|public.workspaces.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_agent_id_agents_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_agent_id_agents_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_agent_id_agents_id_fkey",
+        "n|con|public.agent_versions.agent_versions_agent_id_agents_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.agent_versions.agent_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_locked_by_user_id_users_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_locked_by_user_id_users_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_locked_by_user_id_users_id_fkey",
+        "n|con|public.agent_versions.agent_versions_locked_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.agent_versions.locked_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_approved_by_user_id_users_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_approved_by_user_id_users_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_approved_by_user_id_users_id_fkey",
+        "n|con|public.agent_versions.agent_versions_approved_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.agent_versions.approved_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_revoked_by_user_id_users_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_revoked_by_user_id_users_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_revoked_by_user_id_users_id_fkey",
+        "n|con|public.agent_versions.agent_versions_revoked_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.agent_versions.revoked_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "agent_versions"],
+      "writes": [
+        "s|fk|public.agent_versions.agent_versions_unlocked_by_user_id_users_id_fkey",
+        "n|fk|public.agent_versions.agent_versions_unlocked_by_user_id_users_id_fkey",
+        "e|fk|public.agent_versions.agent_versions_unlocked_by_user_id_users_id_fkey",
+        "n|con|public.agent_versions.agent_versions_unlocked_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.agent_versions.unlocked_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "agent_versions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "locked_version_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "workspace_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "version_number",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "config",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "knowledge_document_ids",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "locked_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "locked_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "approved_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "approved_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "revoked_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "revoked_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "unlocked_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "unlocked_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "created_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "workflows",
+        "name": "agent_ids",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agentVersion_workspaceId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "workspace_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agentVersion_agentId_versionNumber_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "agent_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "version_number",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "workflows",
+        "name": "workflow_agentIds_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "agent_ids",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "gin",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agents",
+        "name": "agents_locked_version_workspace_fk",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "locked_version_id"],
+        "schemaTo": "public",
+        "tableTo": "agent_versions",
+        "columnsTo": ["workspace_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_workspace_id_workspaces_id_fkey",
+        "nameExplicit": false,
+        "columns": ["workspace_id"],
+        "schemaTo": "public",
+        "tableTo": "workspaces",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_agent_id_agents_id_fkey",
+        "nameExplicit": false,
+        "columns": ["agent_id"],
+        "schemaTo": "public",
+        "tableTo": "agents",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_locked_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["locked_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_approved_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["approved_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_revoked_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["revoked_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_unlocked_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["unlocked_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "agent_versions",
+        "name": "agent_versions_workspace_id_unique",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "id"],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    }
+  ]
+}

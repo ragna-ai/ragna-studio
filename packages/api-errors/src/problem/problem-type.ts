@@ -8,6 +8,12 @@ export const problemTypeSchema = z.enum([
   'workflow-invalid',
   'email-draft-exists',
   'social-post-publishing',
+  'agent-locked',
+  'agent-already-locked',
+  'agent-not-locked',
+  'agent-already-approved',
+  'agent-not-approved',
+  'knowledge-files-not-ready',
 ]);
 
 export type ProblemType = z.infer<typeof problemTypeSchema>;
@@ -20,6 +26,12 @@ export const PROBLEM_TITLES: Record<ProblemType, string> = {
   'workflow-invalid': 'Workflow is invalid',
   'email-draft-exists': 'Email draft already exists',
   'social-post-publishing': 'Social post is being published',
+  'agent-locked': 'Agent is locked',
+  'agent-already-locked': 'Agent is already locked',
+  'agent-not-locked': 'Agent is not locked',
+  'agent-already-approved': 'Agent is already approved',
+  'agent-not-approved': 'Agent is not approved',
+  'knowledge-files-not-ready': 'Knowledge files are not ready',
 };
 
 export const ABOUT_BLANK = 'about:blank';

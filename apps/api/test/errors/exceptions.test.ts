@@ -69,6 +69,30 @@ const exceptionFactories: Record<string, { create: ExceptionFactory; type: strin
     create: () => new exceptions.LinkedinNotConnectedException(),
     type: problemTypeUri('linkedin-not-connected'),
   },
+  AgentLockedException: {
+    create: () => new exceptions.AgentLockedException(),
+    type: problemTypeUri('agent-locked'),
+  },
+  AgentAlreadyLockedException: {
+    create: () => new exceptions.AgentAlreadyLockedException(),
+    type: problemTypeUri('agent-already-locked'),
+  },
+  AgentNotLockedException: {
+    create: () => new exceptions.AgentNotLockedException(),
+    type: problemTypeUri('agent-not-locked'),
+  },
+  AgentAlreadyApprovedException: {
+    create: () => new exceptions.AgentAlreadyApprovedException(),
+    type: problemTypeUri('agent-already-approved'),
+  },
+  AgentNotApprovedException: {
+    create: () => new exceptions.AgentNotApprovedException(),
+    type: problemTypeUri('agent-not-approved'),
+  },
+  KnowledgeFilesNotReadyException: {
+    create: () => new exceptions.KnowledgeFilesNotReadyException(),
+    type: problemTypeUri('knowledge-files-not-ready'),
+  },
 };
 
 function isExceptionClass(value: unknown): value is new (...args: never[]) => Error {

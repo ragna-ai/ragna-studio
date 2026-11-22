@@ -6,6 +6,8 @@ import type { RichTextEditorController } from './types';
 // Props
 const props = defineProps<{
   controller: RichTextEditorController;
+  /** Hides the editing menus. */
+  readonly?: boolean;
   class?: string;
 }>();
 
@@ -24,9 +26,11 @@ function focusEditorEnd() {
     @mousedown.self.prevent="focusEditorEnd"
   >
     <EditorContent :editor="editor" class="flex flex-1 flex-col" />
-    <EditorBubbleMenu :controller="controller" />
-    <EditorTableMenu :controller="controller" />
-    <EditorSlashMenu :controller="controller" />
+    <template v-if="!readonly">
+      <EditorBubbleMenu :controller="controller" />
+      <EditorTableMenu :controller="controller" />
+      <EditorSlashMenu :controller="controller" />
+    </template>
   </div>
 </template>
 

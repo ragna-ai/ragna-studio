@@ -17,6 +17,7 @@ const workflowResponseSchema = z.object({
     description: z.string().nullable(),
     definition: z.object({ nodes: z.array(z.unknown()), edges: z.array(z.unknown()) }),
     publishedDefinition: z.unknown(),
+    agentIds: z.array(z.string()),
     scheduleCron: z.string().nullable(),
     scheduleTimezone: z.string().nullable(),
     schedulePaused: z.boolean().optional(),

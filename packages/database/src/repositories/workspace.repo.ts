@@ -1,9 +1,21 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { and, eq, exists, isNotNull, ne, or, sql, type AnyColumn, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  ne,
+  or,
+  sql,
+  type AnyColumn,
+  type SQL,
+} from 'drizzle-orm';
 import { db } from '../db';
 import {
   organization,
   organizationMember,
+  user,
   workspace,
   workspaceMember,
   WORKSPACE_EDITOR_ROLE,
@@ -64,6 +76,11 @@ export interface WorkspaceAccess {
   workspaceRole: WorkspaceRole;
 }
 
+export interface WorkspaceAccessWithOrganizationRole extends WorkspaceAccess {
+  /** The user's raw organization role (comma-separated), for rank checks above the workspace roles. */
+  organizationRole: string;
+}
+
 const accessMember = alias(organizationMember, 'access_member');
 const accessOrganization = alias(organization, 'access_organization');
 const accessWorkspaceMember = alias(workspaceMember, 'access_workspace_member');
@@ -119,16 +136,66 @@ export async function getWorkspaceAccess({
 }: {
   workspaceId: string;
   userId: string;
-}): Promise<WorkspaceAccess | null> {
+}): Promise<WorkspaceAccessWithOrganizationRole | null> {
   const [row] = await db
-    .select({ workspace, workspaceRole: workspaceRoleSql({ userId }) })
+    .select({
+      workspace,
+      workspaceRole: workspaceRoleSql({ userId }),
+      organizationRole: organizationMember.role,
+    })
     .from(workspace)
     .innerJoin(organization, eq(organization.id, workspace.organizationId))
+    .innerJoin(
+      organizationMember,
+      and(
+        eq(organizationMember.organizationId, workspace.organizationId),
+        eq(organizationMember.userId, userId),
+      ),
+    )
     .where(and(eq(workspace.id, workspaceId), workspaceAccessCondition({ userId })))
     .limit(1);
 
   if (!row || !row.workspaceRole) return null;
-  return { workspace: row.workspace, workspaceRole: row.workspaceRole };
+  return {
+    workspace: row.workspace,
+    workspaceRole: row.workspaceRole,
+    organizationRole: row.organizationRole,
+  };
+}
+
+export interface WorkspaceUserRoles {
+  userId: string;
+  /** Null when the user can no longer open the workspace. */
+  workspaceRole: WorkspaceRole | null;
+  organizationRole: string | null;
+}
+
+/** The roles of several users in one workspace, in one query. Users without access get a null role. */
+export async function getWorkspaceUserRoles({
+  workspaceId,
+  userIds,
+}: {
+  workspaceId: string;
+  userIds: string[];
+}): Promise<WorkspaceUserRoles[]> {
+  if (userIds.length === 0) return [];
+
+  return db
+    .select({
+      userId: user.id,
+      workspaceRole: workspaceRoleSql({ userId: user.id }),
+      organizationRole: organizationMember.role,
+    })
+    .from(workspace)
+    .innerJoin(user, inArray(user.id, userIds))
+    .leftJoin(
+      organizationMember,
+      and(
+        eq(organizationMember.organizationId, workspace.organizationId),
+        eq(organizationMember.userId, user.id),
+      ),
+    )
+    .where(eq(workspace.id, workspaceId));
 }
 
 /**

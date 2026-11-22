@@ -152,3 +152,63 @@ export class LinkedinNotConnectedException extends ProblemException {
     });
   }
 }
+
+// Conflict (409) when a locked agent's configuration is changed, or the locked agent is deleted
+export class AgentLockedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-locked',
+      message: 'This agent is locked. Unlock it first.',
+    });
+  }
+}
+
+// Conflict (409) when locking or approving an agent that is already locked
+export class AgentAlreadyLockedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-already-locked',
+      message: 'This agent is already locked.',
+    });
+  }
+}
+
+// Conflict (409) when unlocking an agent that is not locked
+export class AgentNotLockedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-not-locked',
+      message: 'This agent is not locked.',
+    });
+  }
+}
+
+// Conflict (409) when approving an agent whose current version is already approved
+export class AgentAlreadyApprovedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-already-approved',
+      message: 'This agent is already approved for unattended runs.',
+    });
+  }
+}
+
+// Conflict (409) when revoking an approval that does not exist
+export class AgentNotApprovedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-not-approved',
+      message: 'This agent is not approved for unattended runs.',
+    });
+  }
+}
+
+// Conflict (409) when locking or approving while a knowledge file is pending or failed
+export class KnowledgeFilesNotReadyException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'knowledge-files-not-ready',
+      message: 'Every knowledge file must be ready before the agent can be locked.',
+    });
+  }
+}

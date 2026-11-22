@@ -67,6 +67,29 @@ Below it, a closed **Advanced** section holds **Reasoning**, **Temperature** and
 
 Reasoning only has an effect on models that support it. Other models ignore it. **Default** leaves the choice to the model. **Off** switches reasoning off explicitly, which matters for models that reason by default.
 
+## Lock and approve
+
+Locking freezes the agent's configuration as a numbered version. Approving that version lets the agent work without a user watching.
+
+| Action                                  | What it does                                                                                   | Who can do it                                                |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Lock**                                | Freezes the current configuration as the next version.                                         | Workspace editors and above.                                 |
+| **Approve for unattended runs**         | Locks the agent if needed and approves the locked version. The approver is responsible for it. | Workspace managers and above.                                |
+| **Revoke approval for unattended runs** | Removes the approval and keeps the lock.                                                       | The approver, or a user of the same rank or above.           |
+| **Unlock**                              | Opens the configuration for edits again.                                                       | The user who locked it, or a user of the same rank or above. |
+
+An approved version can only be unlocked by a user who may also revoke the approval. The lock actions are in the lock menu in the top bar, behind the lock icon. Hovering the icon shows the lock state. **Versions** is in the **⋯** menu next to it. The lock menu items only show when the signed-in user may use them.
+
+While an agent is locked, a banner names who locked it. An approved agent is always locked too, so approving also locks it. RAGNA Studio then shows it as approved, not as locked: the banner names who approved it. The mark, the banner and the lock menu button show a cloud with a sparkle instead of a lock. The model, instructions, context, tools, default dataset, settings and knowledge files are read-only. Nothing can be changed while the agent is locked, not even the name, description, mark or memory. The agent still adds to its own memory. Chatting works as usual. A locked agent can't be deleted: unlock it first.
+
+An agent can only be locked when all its knowledge files are ready. A file that is still processing, or failed, blocks the lock.
+
+Before approving, a dialog lists the tools the agent can use, with the access level of tools that have one. Knowledge files and data the agent reads can change without a new approval. The approver is responsible for the agent's actions in unattended runs.
+
+Before unlocking, a dialog shows how many workflows use the agent and how many open tasks are assigned to it. For an agent approved for unattended runs, the dialog warns that unlocking also revokes the approval.
+
+Locking again after an unlock creates a new version that is not approved. Approving again after a revoke creates a new version with the same configuration. **Versions** opens the full history, newest first: who locked, approved, revoked and unlocked each version, and when.
+
 ## Next steps
 
 - Add background material in [Knowledge](/agents/knowledge).

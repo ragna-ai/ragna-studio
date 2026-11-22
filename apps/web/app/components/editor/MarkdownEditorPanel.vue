@@ -8,7 +8,7 @@ import {
 
 export type MarkdownEditorPanelProps = Pick<
   MarkdownEditorBoxProps,
-  'profile' | 'placeholder' | 'invalid' | 'maxLength'
+  'profile' | 'placeholder' | 'invalid' | 'readonly' | 'maxLength'
 > & { title: string };
 
 // Props
@@ -35,6 +35,7 @@ const view = useMarkdownFieldView();
           :profile="profile"
           :placeholder="placeholder"
           :invalid="invalid"
+          :readonly="readonly"
           :max-length="maxLength"
           :aria-label="title"
           root-class="gap-1.5"

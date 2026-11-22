@@ -39,6 +39,7 @@ const workflowSchema = z.strictObject({
   description: z.string().nullable(),
   definition: definitionSchema,
   publishedDefinition: definitionSchema.nullable(),
+  agentIds: z.array(z.string()),
   scheduleCron: z.string().nullable(),
   scheduleTimezone: z.string().nullable(),
   schedulePaused: z.boolean(),

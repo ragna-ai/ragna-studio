@@ -26,6 +26,12 @@ export const PROBLEM_MESSAGE_KEYS: Record<ProblemType, MessageKey> = {
   'workflow-invalid': 'problem.type.workflowInvalid',
   'email-draft-exists': 'problem.type.emailDraftExists',
   'social-post-publishing': 'social.toast.alreadyPublishing',
+  'agent-locked': 'problem.type.agentLocked',
+  'agent-already-locked': 'problem.type.agentAlreadyLocked',
+  'agent-not-locked': 'problem.type.agentNotLocked',
+  'agent-already-approved': 'problem.type.agentAlreadyApproved',
+  'agent-not-approved': 'problem.type.agentNotApproved',
+  'knowledge-files-not-ready': 'problem.type.knowledgeFilesNotReady',
 };
 
 export const WORKFLOW_RULE_MESSAGE_KEYS: Record<WorkflowRule, MessageKey> = {

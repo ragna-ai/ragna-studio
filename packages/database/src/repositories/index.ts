@@ -1,6 +1,7 @@
 export * from './agent-context-document-chunk.repo';
 export * from './agent-context-document.repo';
 export * from './agent-template.repo';
+export * from './agent-version.repo';
 export * from './agent.repo';
 export * from './ai-model.repo';
 export * from './chat.repo';

@@ -11,7 +11,12 @@ import {
 
 export interface MarkdownEditorFieldProps extends Pick<
   MarkdownEditorBoxProps,
-  'profile' | 'placeholder' | 'invalid' | 'maxLength' | 'ariaLabelledby'
+  | 'profile'
+  | 'placeholder'
+  | 'invalid'
+  | 'readonly'
+  | 'maxLength'
+  | 'ariaLabelledby'
 > {
   /** Names the expanded side panel. Without it the field has no expand button. */
   panelTitle?: string;
@@ -58,6 +63,7 @@ function emitBlurWhenFocusLeavesField(event: FocusEvent) {
       :profile="profile"
       :placeholder="placeholder"
       :invalid="invalid"
+      :readonly="readonly"
       :max-length="maxLength"
       :aria-labelledby="ariaLabelledby"
       :show-expand="props.panelTitle !== undefined"
@@ -72,6 +78,7 @@ function emitBlurWhenFocusLeavesField(event: FocusEvent) {
       :profile="profile"
       :placeholder="placeholder"
       :invalid="invalid"
+      :readonly="readonly"
       :max-length="maxLength"
     />
   </div>

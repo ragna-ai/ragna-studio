@@ -1,0 +1,29 @@
+---
+title: agent-not-approved
+description: The agent is not approved for unattended runs.
+---
+
+`https://docs.ragna.io/errors/agent-not-approved`
+
+## When it happens
+
+A request revokes an approval, but the current version has no live approval.
+
+## Response
+
+| Member   | Value                 |
+| -------- | --------------------- |
+| `status` | 409                   |
+| `title`  | Agent is not approved |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-not-approved",
+  "title": "Agent is not approved",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Reload the agent. There is nothing to revoke.
