@@ -32,11 +32,13 @@ unattended runs. The approval records who is responsible and pins what they appr
 - Pinning the content of knowledge files. A version pins which files, not what they hold after
   an unlock (see Decisions).
 - "Stop runs and unlock" and the active-run check on unlock ship with #455, which adds runs.
+- Locking memory. Memory stays writable in unattended runs: it is how the agent learns.
 
 ## User stories
 
 Roles: workspace editor, workspace manager, organization owner or admin. "Manager and up" means
-a workspace manager, organization owner or organization admin.
+a workspace manager, organization owner or organization admin. Rank, lowest first: workspace
+editor, workspace manager, organization admin, organization owner.
 
 ### US-1 Lock an agent (P1)
 
@@ -48,7 +50,7 @@ well-tuned agent by accident.
 - **US-1.2** Given a locked agent, when anyone changes its model, system prompt, context, tool
   grants, default dataset, settings or knowledge files, then the change is refused with `409`.
 - **US-1.3** Given a locked agent, when an editor changes its name, description or mark, then
-  the change is saved.
+  the change is saved, also when the save repeats the unchanged locked fields.
 - **US-1.4** Given an agent with a knowledge file that is still processing or failed, when an
   editor locks it, then the lock is refused with `409`.
 - **US-1.5** Given a locked agent, when a user chats with it, then it answers as usual.
@@ -60,33 +62,37 @@ without anyone watching and it is clear who answers for it.
 
 - **US-2.1** Given a manager and up and an unlocked agent, when they approve it, then it is
   locked and approved by them in one step.
-- **US-2.2** Given a locked agent that is not approved, when a manager and up approves it, then
-  its current version is approved and no new version is created.
+- **US-2.2** Given a locked agent whose version was never approved, when a manager and up
+  approves it, then that version is approved and no new version is created.
 - **US-2.3** Given a workspace editor, when they try to approve an agent, then the request is
   refused with `403`.
 - **US-2.4** Given a manager about to approve, when the confirmation opens, then it lists what
   the agent can write to and read from, says that knowledge files and data can change without a
   new approval, and says they are responsible for its unattended runs.
+- **US-2.5** Given an approved agent, when anyone approves it again, then the request is refused
+  with `409`.
 
 ### US-3 Revoke the approval (P1)
 
 As a workspace manager, I want to revoke an approval and keep the lock, so that I can stop
 unattended runs without opening the configuration for edits.
 
-- **US-3.1** Given an approved agent, when the approver or a manager and up revokes it, then the
-  agent is no longer approved and stays locked.
-- **US-3.2** Given a workspace editor who did not approve it, when they try to revoke, then the
-  request is refused with `403`.
+- **US-3.1** Given an approved agent, when the approver or someone of the same rank or above
+  revokes it, then the agent is no longer approved and stays locked.
+- **US-3.2** Given a user ranked below the approver, when they try to revoke, then the request is
+  refused with `403`.
+- **US-3.3** Given a revoked agent, when a manager and up approves it again, then a new version
+  with the same configuration is created and approved, and the revoked one keeps its history.
 
 ### US-4 Unlock an agent (P1)
 
 As the user who locked an agent, I want to unlock it, so that I can fix its configuration after
 it misbehaved.
 
-- **US-4.1** Given a locked agent, when the user who locked it or a manager and up unlocks it,
-  then it can be edited again and it has no approved version.
-- **US-4.2** Given a workspace editor who did not lock it, when they try to unlock, then the
-  request is refused with `403`.
+- **US-4.1** Given a locked agent that is not approved, when the user who locked it or someone of
+  the same rank or above unlocks it, then it can be edited again.
+- **US-4.2** Given an approved agent, when a user ranked below the approver tries to unlock it,
+  then the request is refused with `403`. Unlocking an approved agent needs revoke rights.
 - **US-4.3** Given an agent used by workflows or assigned to tasks, when a user unlocks it, then
   the confirmation shows how many before they confirm.
 - **US-4.4** Given an unlocked agent that was approved before, when it is locked again, then the
@@ -100,7 +106,7 @@ As a workspace manager, I want to see an agent's versions, so that I know who lo
 approved which configuration and when.
 
 - **US-5.1** Given an agent locked three times, when a user opens its versions, then they see
-  three entries, newest first, each with who locked it, who approved it and when.
+  three entries, newest first, each with who locked, approved, revoked and unlocked it, and when.
 - **US-5.2** Given an agent that was never locked, when a user opens its versions, then they see
   an empty state.
 
@@ -116,12 +122,12 @@ doesn't vanish without someone unlocking it first.
 
 ## Testing
 
-| Criterion                                     | Level            | Folder                 |
-| --------------------------------------------- | ---------------- | ---------------------- |
-| US-1.x, US-2.1 to 2.3, US-3.x, US-5.x, US-6.x | API              | `apps/api/test/agent/` |
-| US-4.1 to US-4.4                              | API              | `apps/api/test/agent/` |
-| US-2.4, US-4.3 (dialog)                       | e2e (Playwright) | `apps/web/e2e/`        |
-| US-4.5                                        | API, in #455     | `apps/api/test/task/`  |
+| Criterion                                             | Level            | Folder                 |
+| ----------------------------------------------------- | ---------------- | ---------------------- |
+| US-1.x, US-2.1 to 2.3, US-2.5, US-3.x, US-5.x, US-6.x | API              | `apps/api/test/agent/` |
+| US-4.1 to US-4.4                                      | API              | `apps/api/test/agent/` |
+| US-2.4, US-4.3 (dialog)                               | e2e (Playwright) | `apps/web/e2e/`        |
+| US-4.5                                                | API, in #455     | `apps/api/test/task/`  |
 
 ## Standards checklist
 
@@ -129,8 +135,8 @@ doesn't vanish without someone unlocking it first.
   with their agent; they go with their workspace. `agent_versions` gets the `deleted_record`
   trigger once that standard is implemented.
 - **Retention:** versions are kept as long as their workspace. No expiry: runs reference them.
-- **Erasure:** versions hold user ids (locked by, approved by). User purge nulls them, like other
-  authorship columns.
+- **Erasure:** versions hold user ids (locked, approved, revoked, unlocked by). User purge nulls
+  them, like other authorship columns. An approval stays valid: validity reads the timestamps.
 - **Docs:** `apps/docs/src/content/docs/agents/index.mdx` gets a "Lock and approve" section.
 
 ## Decisions
@@ -140,14 +146,12 @@ A run never sees its configuration change. The issue first allowed unlocking dur
 needed copies of every knowledge file for runs in flight. The user stops the runs first, which
 #455 offers in the same dialog.
 
-**Approvals stay on their version.** Unlock doesn't clear an approval. The old version keeps
-who approved it, because the runs that used it happened under that approval. The agent has no
-current version after unlock, so nothing runs on the old approval.
-
-**Knowledge files by id only.** A version stores the ids of its knowledge files, not their
-content or a hash. Knowledge files are expected to become a tool-based knowledge base, read
-like other data. Then the version pins the grant, not the content. The approval dialog says
-so (US-2.4).
+**History is written once, never cleared.** Lock, approval, revoke and unlock each record who and
+when on the version, once. Revoke and unlock don't erase the approval, because the runs that
+used it happened under it. Re-approving after a revoke creates a new version with the same
+configuration, so each version has at most one approval and the version list is the full
+history. The alternative, clearing the columns and leaving history to the audit log (#171),
+loses who answered for past runs until that log exists.
 
 ## Design
 
