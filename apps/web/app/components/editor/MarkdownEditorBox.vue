@@ -107,6 +107,7 @@ watch(
       :class="
         cn(
           'relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-input bg-transparent pt-2 pr-2 pl-3 shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:ring-destructive/40',
+          readonly && 'cursor-not-allowed opacity-50',
           props.class,
         )
       "

@@ -1,10 +1,21 @@
-import { createTask, createWorkflow, db, publishWorkflow, sql } from '@repo/database';
+import { buildAgentToolset } from '@repo/ai';
+import {
+  createMedia,
+  createTask,
+  createWorkflow,
+  db,
+  getMemoryByAgentId,
+  publishWorkflow,
+  sql,
+  upsertMemory,
+} from '@repo/database';
 import { agentContextDocument, aiModel } from '@repo/database/schema';
 import { resetProviderMocks, seedTokenPricedAiModel, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
+import { stubToolExecutionOptions } from '../stub-tool-execution-options';
 import {
   agentRoutes,
   createAgent,
@@ -84,27 +95,47 @@ describe('editing a locked agent', () => {
     await expectProblem(response, StatusCodes.CONFLICT, 'agent-locked');
   });
 
-  test('saves a new name, description, icon and tone', async () => {
+  test.each([
+    ['name', { name: 'Renamed' }],
+    ['description', { description: 'Now described' }],
+    ['icon', { icon: 'invoice-01' }],
+    ['tone', { tone: 'plum' }],
+  ])('refuses a changed %s and keeps the stored value', async (_label, change) => {
     const { team, agentId, routes } = await seedLockedAgent();
     await lock(routes, team);
+    const before = await storedAgent(agentId);
 
-    const response = await routes.patch(team.editor, {
-      name: 'Renamed',
-      description: 'Now described',
-      icon: 'invoice-01',
-      tone: 'plum',
-    });
+    const response = await routes.patch(team.editor, change);
 
-    expect(response.status).toBe(StatusCodes.OK);
-    const stored = await storedAgent(agentId);
-    expect(stored?.name).toBe('Renamed');
-    expect(stored?.description).toBe('Now described');
-    expect(stored?.icon).toBe('invoice-01');
+    await expectProblem(response, StatusCodes.CONFLICT, 'agent-locked');
+    expect(await storedAgent(agentId)).toEqual(before);
   });
 
-  test('saves a form that repeats every locked field unchanged, with the grants not in id order', async () => {
+  test('refuses a changed image and keeps the stored value', async () => {
+    const { team, agentId, routes } = await seedLockedAgent();
+    await lock(routes, team);
+    const image = await createMedia({
+      ownerWorkspaceId: team.workspaceId,
+      bucket: 'images',
+      storageKey: `${team.workspaceId}/media/mark`,
+      filename: 'mark.png',
+      mimeType: 'image/png',
+      size: 10,
+      origin: 'uploaded',
+    });
+
+    const response = await routes.patch(team.editor, { imageMediaId: image.id });
+
+    await expectProblem(response, StatusCodes.CONFLICT, 'agent-locked');
+    expect((await storedAgent(agentId))?.imageMediaId).toBeNull();
+  });
+
+  test('saves a form that repeats every field unchanged, with the grants not in id order', async () => {
     const grants = [{ id: 'webSearch' }, { id: 'think' }];
     const { team, agentId, routes } = await seedLockedAgent({
+      description: 'Answers questions.',
+      icon: 'bank',
+      tone: 'rose',
       toolGrants: grants,
       context: 'Background.',
       settings: { maxOutputTokens: 800 },
@@ -113,7 +144,10 @@ describe('editing a locked agent', () => {
     const stored = await storedAgent(agentId);
 
     const response = await routes.patch(team.editor, {
-      name: 'Renamed',
+      name: stored?.name,
+      description: stored?.description,
+      icon: stored?.icon,
+      tone: stored?.tone,
       aiModelId: stored?.aiModelId,
       systemPrompt: stored?.systemPrompt,
       context: stored?.context,
@@ -123,7 +157,6 @@ describe('editing a locked agent', () => {
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect((await storedAgent(agentId))?.name).toBe('Renamed');
   });
 
   test('a save racing a lock either lands before it or is refused, never half applied', async () => {
@@ -253,7 +286,7 @@ describe('knowledge files and the lock', () => {
     expect(await db.query.agentContextDocument.findMany({ where: { agentId } })).toHaveLength(1);
   });
 
-  test('a locked agent still lets a knowledge file be renamed', async () => {
+  test('a locked agent refuses renaming a knowledge file', async () => {
     const { team, agentId, routes } = await seedLockedAgent();
     const documentId = await addKnowledgeFile(agentId, 'ready');
     await lock(routes, team);
@@ -264,7 +297,45 @@ describe('knowledge files and the lock', () => {
       body: JSON.stringify({ name: 'renamed.txt' }),
     });
 
-    expect(response.status).toBe(StatusCodes.OK);
+    await expectProblem(response, StatusCodes.CONFLICT, 'agent-locked');
+    const stored = await db.query.agentContextDocument.findFirst({ where: { id: documentId } });
+    expect(stored?.name).toBe('notes.txt');
+  });
+});
+
+describe('agent memory and the lock', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  test('a locked agent refuses a memory replacement and keeps its memory', async () => {
+    const { team, agentId, routes } = await seedLockedAgent();
+    await upsertMemory({ agentId, content: 'Likes tea' });
+    await lock(routes, team);
+
+    const response = await app.request(`/workspace/${team.workspaceId}/agent/${agentId}/memory`, {
+      method: 'PUT',
+      headers: { cookie: team.editor.cookieHeader, 'content-type': 'application/json' },
+      body: JSON.stringify({ content: 'Likes coffee' }),
+    });
+
+    await expectProblem(response, StatusCodes.CONFLICT, 'agent-locked');
+    expect((await getMemoryByAgentId({ agentId }))?.content).toBe('Likes tea');
+  });
+
+  test('the agent itself still adds to its memory while locked', async () => {
+    const { team, agentId, routes } = await seedLockedAgent({ toolGrants: [{ id: 'memory' }] });
+    await lock(routes, team);
+    const execute = buildAgentToolset([{ id: 'memory' }], {
+      userId: team.editor.userId,
+      agentId,
+      workspaceId: team.workspaceId,
+    }).memory?.execute;
+    if (!execute) throw new Error('memory tool has no execute');
+
+    await execute({ action: 'append', text: 'Likes tea' }, stubToolExecutionOptions);
+
+    expect((await getMemoryByAgentId({ agentId }))?.content).toBe('Likes tea');
   });
 });
 

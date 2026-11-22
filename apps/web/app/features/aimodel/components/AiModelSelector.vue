@@ -17,6 +17,8 @@ interface Props {
   class?: HTMLAttributes['class'];
   invalid?: boolean;
   disabled?: boolean;
+  /** Id of the trigger, so a `<Label for>` names the select. */
+  id?: string;
 }
 
 // Props
@@ -49,7 +51,11 @@ const normalizeModelProvider = (provider: string) => {
       {{ $t('aimodel.selector.loadError') }}
     </p>
     <Select v-else v-model="modelValue" :disabled="disabled">
-      <SelectTrigger :class="props.class" :aria-invalid="invalid || undefined">
+      <SelectTrigger
+        :id="id"
+        :class="props.class"
+        :aria-invalid="invalid || undefined"
+      >
         <SelectValue :placeholder="$t('aimodel.selector.placeholder')" />
       </SelectTrigger>
       <SelectContent>

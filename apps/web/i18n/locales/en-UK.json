@@ -511,13 +511,19 @@
         "versions": "Versions",
         "lock": "Lock",
         "approve": "Approve for unattended runs",
-        "revoke": "Revoke approval",
+        "revoke": "Revoke approval for unattended runs",
         "unlock": "Unlock"
+      },
+      "deleteHint": "Unlock the agent first",
+      "state": {
+        "unlocked": "Unlocked",
+        "ariaLocked": "Agent locked",
+        "ariaUnlocked": "Agent unlocked"
       },
       "banner": {
         "locked": "Locked by {user}",
-        "lockedAndApproved": "Locked by {user}, approved for unattended runs by {approver}",
-        "description": "Version {version}. The model, instructions, context, tools, dataset, settings and knowledge files can't be changed. Name, description, mark and memory stay editable."
+        "approved": "Approved for unattended runs by {approver}",
+        "description": "Version {version}. Nothing can be changed until the agent is unlocked."
       },
       "approveDialog": {
         "title": "Approve for unattended runs",
@@ -531,11 +537,14 @@
         "accessWrite": "read and write"
       },
       "unlockDialog": {
+        "approvedTitle": "Approved for unattended runs",
+        "approvedText": "This also revokes the approval for unattended runs.",
         "title": "Unlock agent",
-        "description": "Unlocking opens the configuration for edits. Workflows and tasks that use the agent pick up every change.",
+        "description": "After unlocking, the agent can be edited again. Every change then applies to all workflows and tasks that use this agent.",
         "workflowCount": "No workflow uses this agent. | 1 workflow uses this agent. | {count} workflows use this agent.",
         "assignedTaskCount": "No open task is assigned to this agent. | 1 open task is assigned to this agent. | {count} open tasks are assigned to this agent.",
         "usageFailed": "The usage of this agent couldn't be loaded.",
+        "confirmApproved": "Unlock and revoke approval",
         "confirm": "Unlock"
       },
       "versions": {

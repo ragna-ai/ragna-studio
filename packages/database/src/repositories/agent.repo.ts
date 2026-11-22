@@ -3,7 +3,7 @@ import { and, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { db } from '../db';
 import { AgentLockedError } from '../errors';
-import type { Agent, AgentVersionConfig, StoredAgentToolGrant } from '../schema';
+import type { Agent, StoredAgentToolGrant } from '../schema';
 import { agent, task } from '../schema';
 import type { ICreateAgent } from '../zod';
 
@@ -74,16 +74,21 @@ function unchangedJson(column: AnyPgColumn, value: unknown): SQL | undefined {
     : sql`${column} is not distinct from ${JSON.stringify(value)}::jsonb`;
 }
 
-/** True when every locked field in `fields` already holds that value in the row. */
-function lockedFieldsUnchanged(fields: Partial<AgentVersionConfig>): SQL | undefined {
+/** True when every field in `fields` already holds that value in the row. */
+function fieldsUnchanged(fields: UpdateAgentFields): SQL | undefined {
   const comparisons = {
+    name: unchangedValue(agent.name, fields.name),
+    description: unchangedValue(agent.description, fields.description),
+    icon: unchangedValue(agent.icon, fields.icon),
+    tone: unchangedValue(agent.tone, fields.tone),
+    imageMediaId: unchangedValue(agent.imageMediaId, fields.imageMediaId),
     aiModelId: unchangedValue(agent.aiModelId, fields.aiModelId),
     systemPrompt: unchangedValue(agent.systemPrompt, fields.systemPrompt),
     context: unchangedValue(agent.context, fields.context),
     toolGrants: unchangedJson(agent.toolGrants, fields.toolGrants),
     defaultDatasetId: unchangedValue(agent.defaultDatasetId, fields.defaultDatasetId),
     settings: unchangedJson(agent.settings, fields.settings),
-  } satisfies Record<keyof AgentVersionConfig, SQL | undefined>;
+  } satisfies Record<keyof UpdateAgentFields, SQL | undefined>;
 
   return and(...Object.values(comparisons));
 }
@@ -283,7 +288,7 @@ export async function getAgentsByWorkspaceId({
 // `getAgentByIdAndWorkspaceId()` to check ownership, so a mismatched id can
 // never update a row outside the caller's workspace. Fields left out of
 // `fields` are left untouched (partial update).
-// On a locked agent the same WHERE clause also requires every locked field in `fields` to equal
+// On a locked agent the same WHERE clause also requires every field in `fields` to equal
 // the stored value, so a save that repeats the locked values passes and a change throws.
 export async function updateAgent({
   agentId,
@@ -297,7 +302,7 @@ export async function updateAgent({
     ...fields,
     toolGrants: fields.toolGrants && sortToolGrantsById(fields.toolGrants),
   };
-  const lockGuard = lockedFieldsUnchanged(sortedFields);
+  const lockGuard = fieldsUnchanged(sortedFields);
   const [updatedAgent] = await db
     .update(agent)
     .set(sortedFields)

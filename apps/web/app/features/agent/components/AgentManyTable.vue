@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AgentMark from '~/features/agent/components/AgentMark.vue';
+import AgentMarkWithLock from '~/features/agent/components/AgentMarkWithLock.vue';
 import AgentToolIcons from '~/features/agent/components/AgentToolIcons.vue';
 import type { Agent } from '~/features/agent/types';
 
@@ -63,12 +63,13 @@ function agentPath(agent: Agent): string {
               :to="agentPath(agent)"
             >
               <template #lead>
-                <AgentMark
+                <AgentMarkWithLock
                   :agent-id="agent.id"
                   :icon="agent.icon"
                   :tone="agent.tone"
                   :image-url="agent.imageUrl"
                   :size="24"
+                  :lock="agent.lock"
                 />
               </template>
             </ListTitleCell>
@@ -88,13 +89,30 @@ function agentPath(agent: Agent): string {
                 </NuxtLinkLocale>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                @click="emit('delete-agent', agent.id)"
-              >
-                <Icon name="hugeicons:delete-02" />
-                {{ t('common.delete') }}
-              </DropdownMenuItem>
+              <TooltipProvider>
+                <Tooltip :disabled="!agent.lock">
+                  <TooltipTrigger as-child>
+                    <span class="block">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        :disabled="!!agent.lock"
+                        @click="emit('delete-agent', agent.id)"
+                      >
+                        <Icon name="hugeicons:delete-02" />
+                        {{ t('common.delete') }}
+                        <Icon
+                          v-if="agent.lock"
+                          name="hugeicons:square-lock-02"
+                          class="ml-auto shrink-0 text-muted-foreground"
+                        />
+                      </DropdownMenuItem>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {{ t('agent.lock.deleteHint') }}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </ListRowActions>
           </TableCell>
         </TableRow>

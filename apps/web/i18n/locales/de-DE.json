@@ -511,13 +511,19 @@
         "versions": "Versionen",
         "lock": "Sperren",
         "approve": "Für unbeaufsichtigte Läufe freigeben",
-        "revoke": "Freigabe widerrufen",
+        "revoke": "Freigabe für unbeaufsichtigte Läufe widerrufen",
         "unlock": "Entsperren"
+      },
+      "deleteHint": "Entsperre den Agenten zuerst",
+      "state": {
+        "unlocked": "Entsperrt",
+        "ariaLocked": "Agent gesperrt",
+        "ariaUnlocked": "Agent entsperrt"
       },
       "banner": {
         "locked": "Gesperrt von {user}",
-        "lockedAndApproved": "Gesperrt von {user}, für unbeaufsichtigte Läufe freigegeben von {approver}",
-        "description": "Version {version}. Modell, Anweisungen, Kontext, Tools, Datensatz, Einstellungen und Wissensdateien lassen sich nicht ändern. Name, Beschreibung, Kennzeichen und Gedächtnis bleiben bearbeitbar."
+        "approved": "Für unbeaufsichtigte Läufe freigegeben von {approver}",
+        "description": "Version {version}. Bis der Agent entsperrt ist, lässt sich nichts ändern."
       },
       "approveDialog": {
         "title": "Für unbeaufsichtigte Läufe freigeben",
@@ -531,16 +537,19 @@
         "accessWrite": "lesen und schreiben"
       },
       "unlockDialog": {
+        "approvedTitle": "Für unbeaufsichtigte Läufe freigegeben",
+        "approvedText": "Dadurch wird auch die Freigabe für unbeaufsichtigte Läufe widerrufen.",
         "title": "Agent entsperren",
-        "description": "Beim Entsperren wird die Konfiguration wieder bearbeitbar. Workflows und Aufgaben, die den Agent nutzen, übernehmen jede Änderung.",
-        "workflowCount": "Kein Workflow nutzt diesen Agent. | 1 Workflow nutzt diesen Agent. | {count} Workflows nutzen diesen Agent.",
-        "assignedTaskCount": "Keine offene Aufgabe ist diesem Agent zugewiesen. | 1 offene Aufgabe ist diesem Agent zugewiesen. | {count} offene Aufgaben sind diesem Agent zugewiesen.",
+        "description": "Nach dem Entsperren lässt sich der Agent wieder bearbeiten. Jede Änderung gilt dann für alle Workflows und Aufgaben, die diesen Agenten verwenden.",
+        "workflowCount": "Kein Workflow nutzt diesen Agenten. | 1 Workflow nutzt diesen Agenten. | {count} Workflows nutzen diesen Agenten.",
+        "assignedTaskCount": "Keine offene Aufgabe ist diesem Agenten zugewiesen. | 1 offene Aufgabe ist diesem Agenten zugewiesen. | {count} offene Aufgaben sind diesem Agenten zugewiesen.",
         "usageFailed": "Die Nutzung dieses Agents konnte nicht geladen werden.",
+        "confirmApproved": "Entsperren und Freigabe widerrufen",
         "confirm": "Entsperren"
       },
       "versions": {
         "title": "Versionen",
-        "description": "Jede Sperrung des Agents, die neueste zuerst.",
+        "description": "Jede Sperrung des Agenten, die neueste zuerst.",
         "empty": "Dieser Agent wurde nie gesperrt.",
         "loadFailed": "Die Versionen konnten nicht geladen werden.",
         "version": "Version {number}",

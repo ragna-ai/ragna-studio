@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AgentActionsMenu from '~/features/agent/components/AgentActionsMenu.vue';
+import AgentLockMenu from '~/features/agent/components/AgentLockMenu.vue';
 import AgentUpsertForm from '~/features/agent/components/AgentUpsertForm.vue';
 import { useGetAgent } from '~/features/agent/composables/useAgentApi';
 
@@ -36,7 +38,22 @@ useHead({ title: agentName });
 </script>
 
 <template>
-  <PagePanel :crumbs="crumbs">
+  <PagePanel>
+    <template #header>
+      <NavTopBar :crumbs="crumbs">
+        <template #right>
+          <template v-if="data?.agent">
+            <AgentLockMenu
+              :agent-id="agentId"
+              :lock="data.agent.lock"
+              :lock-actions="data.agent.lockActions"
+              :tool-grants="data.agent.toolGrants ?? []"
+            />
+            <AgentActionsMenu :agent-id="agentId" />
+          </template>
+        </template>
+      </NavTopBar>
+    </template>
     <SectionWrapper class="h-full">
       <div class="flex min-h-0 flex-1 flex-col px-page py-8">
         <AgentUpsertForm v-if="data?.agent" v-bind="data.agent" />

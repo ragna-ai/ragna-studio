@@ -92,7 +92,10 @@ export function useGetAgentVersions(
     queryFn: ({ signal }) =>
       $api<AgentVersionManyResponse>(
         `${agentBasePath(workspaceId)}/${toValue(agentId)}/versions`,
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId) && toValue(enabled),
   });
@@ -110,7 +113,10 @@ export function useGetAgentUsage(
     queryFn: ({ signal }) =>
       $api<AgentUsage>(
         `${agentBasePath(workspaceId)}/${toValue(agentId)}/usage`,
-        { method: 'GET', signal },
+        {
+          method: 'GET',
+          signal,
+        },
       ),
     enabled: () => !!toValue(workspaceId) && toValue(enabled),
     gcTime: 0,

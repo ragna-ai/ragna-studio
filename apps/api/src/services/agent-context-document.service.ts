@@ -562,9 +562,10 @@ export async function renameAgentContextDocument({
   await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const { error, data: updated } = await tryCatch(() =>
-    updateAgentContextDocument({ id: documentId, agentId: agent.id, name }),
+    updateAgentContextDocumentWhileUnlocked({ id: documentId, agentId: agent.id, name }),
   );
 
+  throwIfAgentLocked(error);
   if (error !== null || !updated) {
     logger.error('Failed to rename agent document', error);
     throw new InternalServerErrorException('Failed to rename document');

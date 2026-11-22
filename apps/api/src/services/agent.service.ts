@@ -15,7 +15,7 @@ import {
   getMemoryByAgentId,
   listAgentTemplates,
   updateAgent,
-  upsertMemory,
+  upsertMemoryWhileUnlocked,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
@@ -415,8 +415,11 @@ export async function replaceAgentMemoryForWorkspace({
 }): Promise<string> {
   await loadAgentInWorkspace({ agentId, workspaceId });
 
-  const { error, data: memory } = await tryCatch(() => upsertMemory({ agentId, content }));
+  const { error, data: memory } = await tryCatch(() =>
+    upsertMemoryWhileUnlocked({ agentId, content }),
+  );
 
+  if (error instanceof AgentLockedError) throw new AgentLockedException();
   if (error !== null || !memory) {
     logger.error('Failed to update agent memory', error);
     throw new InternalServerErrorException('Failed to update agent memory');

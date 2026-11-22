@@ -15,10 +15,9 @@ import {
   isFieldErrorVisible,
 } from '~/components/form/field-error';
 import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
-import AgentLockActions from '~/features/agent/components/AgentLockActions.vue';
 import AgentLockBanner from '~/features/agent/components/AgentLockBanner.vue';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
-import AgentMark from '~/features/agent/components/AgentMark.vue';
+import AgentMarkWithLock from '~/features/agent/components/AgentMarkWithLock.vue';
 import AgentMarkField from '~/features/agent/components/AgentMarkField.vue';
 import AgentMemoryPanel from '~/features/agent/components/AgentMemoryPanel.vue';
 import AgentSettingsSectionTitle from '~/features/agent/components/AgentSettingsSectionTitle.vue';
@@ -217,7 +216,6 @@ const hasAdvancedError = computed(() =>
       (meta.isBlurred || submissionAttempts.value > 0),
   ),
 );
-// Name, description, mark and memory stay editable while locked.
 const isLocked = computed(() => !!props.lock);
 const agentLabel = computed(() => props.name || t('agent.upsert.thisAgent'));
 const temperatureText = (temperature: number | null) =>
@@ -333,13 +331,14 @@ watch(hasAdvancedError, (hasError) => {
   >
     <header class="mb-8 flex shrink-0 items-start justify-between gap-4">
       <div class="flex min-w-0 items-start gap-3">
-        <AgentMark
+        <AgentMarkWithLock
           v-if="props.id"
           :agent-id="props.id"
           :icon="props.icon"
           :tone="props.tone"
           :image-url="props.imageUrl"
           :size="28"
+          :lock="props.lock"
         />
         <div class="min-w-0">
           <h1 class="truncate text-lg font-semibold">
@@ -355,16 +354,15 @@ watch(hasAdvancedError, (hasError) => {
         </div>
       </div>
       <div class="flex shrink-0 gap-2">
-        <AgentLockActions
-          v-if="props.id"
-          :agent-id="props.id"
-          :lock-actions="props.lockActions"
-          :tool-grants="props.toolGrants ?? []"
-        />
         <Button as-child variant="outline">
           <NuxtLinkLocale to="/agent">{{ t('common.cancel') }}</NuxtLinkLocale>
         </Button>
-        <Button type="submit" :disabled="isPending" :loading="isPending">
+        <Button
+          v-if="!isLocked"
+          type="submit"
+          :disabled="isPending"
+          :loading="isPending"
+        >
           {{ t('common.save') }}
         </Button>
       </div>
@@ -391,6 +389,7 @@ watch(hasAdvancedError, (hasError) => {
                 <AgentMarkField
                   :agent-id="props.id"
                   :model-value="state.value"
+                  :disabled="isLocked"
                   @update:model-value="field.handleChange"
                 />
                 <FormFieldInfo :field="field" :hint="t('agent.mark.hint')" />
@@ -412,6 +411,7 @@ watch(hasAdvancedError, (hasError) => {
                   "
                   :aria-describedby="fieldMessageId(field)"
                   :model-value="state.value"
+                  :disabled="isLocked"
                   autocomplete="off"
                   @update:model-value="
                     (v: string | number) => field.handleChange(String(v))
@@ -438,6 +438,7 @@ watch(hasAdvancedError, (hasError) => {
                   :aria-describedby="fieldMessageId(field)"
                   rows="3"
                   :model-value="state.value"
+                  :disabled="isLocked"
                   autocomplete="off"
                   @update:model-value="
                     (v: string | number) => field.handleChange(String(v))
@@ -490,11 +491,12 @@ watch(hasAdvancedError, (hasError) => {
         <form.Field name="aiModelId">
           <template v-slot="{ field, state }">
             <div class="flex flex-col gap-2">
-              <Label class="text-sm font-medium">
+              <Label :for="field.name" class="text-sm font-medium">
                 {{ t('agent.upsert.modelLabel') }}
               </Label>
               <div>
                 <AiModelSelector
+                  :id="field.name"
                   :model-value="state.value"
                   modality="text"
                   :disabled="isLocked"
@@ -738,6 +740,7 @@ watch(hasAdvancedError, (hasError) => {
           v-if="props.id"
           v-model="memory"
           :loading="isMemoryLoading"
+          :readonly="isLocked"
         />
         <div v-else class="rounded-lg border p-4 text-sm text-muted-foreground">
           {{ t('agent.upsert.saveFirstMemory') }}

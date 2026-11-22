@@ -26,7 +26,7 @@ const STATUS_TONE: Record<AgentContextDocumentStatus, StatusTone> = {
 
 type AgentContextDocumentPanelProps = {
   agentId: string;
-  /** Hides everything that changes the files. Renaming stays, it only changes the label. */ readonly?: boolean;
+  /** Hides everything that changes the files, renaming included. */ readonly?: boolean;
 };
 
 // Props
@@ -261,7 +261,10 @@ function handleDelete(document: AgentContextDocument) {
             </TableCell>
             <TableCell>
               <ListRowActions>
-                <DropdownMenuItem @click="startRename(document)">
+                <DropdownMenuItem
+                  v-if="!props.readonly"
+                  @click="startRename(document)"
+                >
                   <Icon name="hugeicons:pencil-edit-02" />
                   {{ t('agent.context.actions.rename') }}
                 </DropdownMenuItem>

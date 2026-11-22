@@ -32,7 +32,8 @@ unattended runs. The approval records who is responsible and pins what they appr
 - Pinning the content of knowledge files. A version pins which files, not what they hold after
   an unlock (see Decisions).
 - "Stop runs and unlock" and the active-run check on unlock ship with #455, which adds runs.
-- Locking memory. Memory stays writable in unattended runs: it is how the agent learns.
+- Locking the agent's own memory writes. The agent keeps adding to its memory, also in
+  unattended runs: it is how the agent learns. Users can't edit memory while locked (US-1.3).
 
 ## User stories
 
@@ -47,10 +48,11 @@ well-tuned agent by accident.
 
 - **US-1.1** Given a workspace editor and an unlocked agent, when they lock it, then the agent
   shows as locked by them with the next version number.
-- **US-1.2** Given a locked agent, when anyone changes its model, system prompt, context, tool
-  grants, default dataset, settings or knowledge files, then the change is refused with `409`.
-- **US-1.3** Given a locked agent, when an editor changes its name, description or mark, then
-  the change is saved, also when the save repeats the unchanged locked fields.
+- **US-1.2** Given a locked agent, when a user changes anything about it (model, system prompt,
+  context, tool grants, default dataset, settings, knowledge files, name, description, mark or
+  memory), then the change is refused with `409`.
+- **US-1.3** Given a locked agent, when the agent writes to its memory in a chat or run, then
+  the memory is saved.
 - **US-1.4** Given an agent with a knowledge file that is still processing or failed, when an
   editor locks it, then the lock is refused with `409`.
 - **US-1.5** Given a locked agent, when a user chats with it, then it answers as usual.

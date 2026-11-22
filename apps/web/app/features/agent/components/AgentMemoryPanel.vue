@@ -3,10 +3,11 @@ import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
 
 type AgentMemoryPanelProps = {
   loading: boolean;
+  readonly?: boolean;
 };
 
 // Props
-defineProps<AgentMemoryPanelProps>();
+withDefaults(defineProps<AgentMemoryPanelProps>(), { readonly: false });
 
 // Refs
 const content = defineModel<string>({ required: true });
@@ -22,6 +23,7 @@ const { t } = useI18n();
   <div v-else class="flex min-h-80 flex-col">
     <MarkdownEditorField
       v-model="content"
+      :readonly="readonly"
       aria-labelledby="agent-memory-label"
       :placeholder="t('agent.upsert.memoryPlaceholder')"
       :panel-title="t('agent.upsert.memoryLabel')"

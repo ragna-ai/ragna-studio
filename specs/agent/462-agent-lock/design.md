@@ -73,9 +73,8 @@ A test loads an agent with its locked version and its version list.
 | Problem types (`agent-locked`, ...)   | `@repo/api-errors`                                                            | API, web error mapping                                            |
 
 - The web never re-derives role rules. It renders the buttons from `lockActions`.
-- The web can't import `@repo/database`. It doesn't need the field list: the form marks its
-  configuration sections read-only as a block when `lock` is set, and keeps the identity section
-  (name, description, mark) open.
+- The web can't import `@repo/database`. It doesn't need the field list: the whole form is
+  read-only when `lock` is set.
 
 ## Permissions
 
@@ -97,17 +96,18 @@ is resolved in the same query that loads the agent's lock.
 
 ## Lock check
 
-The agent update path in `@repo/database` refuses a change to a locked field while
-`locked_version_id` is set (`AgentLockedError`, mapped to `409 agent-locked`). User-facing writers
-go through it: the PATCH route and the knowledge file routes (upload, replace, delete, retry).
-Renaming a knowledge file stays open: names are UI only.
+While `locked_version_id` is set, users can't change anything about the agent
+(`AgentLockedError`, mapped to `409 agent-locked`). User-facing writers go through the guard:
+the PATCH route (every field, including name, description and mark), the memory `PUT`, and the
+knowledge file routes (upload, replace, rename, delete, retry). The agent's own memory tool
+doesn't go through it: the agent keeps learning while locked.
 
-| Locked                                                                                 | Open                                         |
-| -------------------------------------------------------------------------------------- | -------------------------------------------- |
-| model, system prompt, context, tool grants, default dataset, settings, knowledge files | name, description, icon, tone, image, memory |
+`agentVersionConfigFields` still names only what a version pins (model, system prompt, context,
+tool grants, default dataset, settings). Name, description and mark are locked for users but not
+part of the version.
 
-- **Unchanged values pass.** The agent form sends every field on each save. The guard refuses
-  only a value that differs: `WHERE locked_version_id IS NULL OR (system_prompt = $1 AND
+- **Unchanged values pass.** A save that only repeats the current values succeeds, so a stale
+  form never errors. The guard refuses only a value that differs: `WHERE locked_version_id IS NULL OR (system_prompt = $1 AND
   tool_grants = $2::jsonb AND ...)`. Tool grants are sorted by id before every save, because
   `jsonb` array equality depends on order.
 - **No extra query.** The condition sits in the `UPDATE`. Postgres re-checks it on the row after
@@ -202,15 +202,23 @@ run permanently with "re-approve the agent".
 
 ## Web
 
-In `AgentUpsertForm.vue` and its header:
-
-- Header actions: Lock, Approve for unattended runs, Unlock, Revoke approval. Each shows when
-  `lockActions` allows it, and is disabled while its request is pending. No role logic in the
-  web.
+- State icon, one mapping (`agentLockStateIconName`): a padlock when locked, `ai-cloud` when
+  approved for unattended runs. Used by the mark badge, the banner and the lock menu button. An
+  unlocked agent shows the open padlock on the button and no badge.
+- State text: "Locked by <user>" when locked, only "Approved for unattended runs by <user>" when
+  approved. Used by the banner title and every tooltip and accessible name of the state.
+- Top bar right on the agent page: `AgentLockMenu` (state icon, tooltip with the state text)
+  with Lock, Approve for unattended runs (`ai-cloud` icon), Revoke approval and Unlock, then
+  `AgentActionsMenu` (⋯) with Versions. Each item shows when `lockActions` allows it and is
+  disabled while its request is pending. No role logic in the web.
+- `AgentMarkWithLock`: the agent mark with the state badge in its corner, used in the edit header
+  and the agent list. `AgentMark` itself has no lock prop. In the list, Delete is disabled for a
+  locked agent, with a padlock and an "Unlock the agent first" tooltip.
 - One composable per mutation (`useLockAgent`, `useUnlockAgent`, ...), each invalidating the
   agent detail query. The banner and the header read the same `lock` object from that query.
 - Banner above the form: "Locked by <user>" plus ", approved for unattended runs by <user>".
-- Configuration sections render read-only as a block. Name, description and mark stay editable.
+- When locked, the whole form is read-only (name, description, mark, every section, memory,
+  knowledge file rename) and the save button is hidden.
 - Approval dialog: the granted tools by name from the tool grants and the agent tool catalog,
   with the grant's access level where the tool has levels. Then the knowledge-files line and
   the responsibility line. No read and write split for built-ins: that is #464.
