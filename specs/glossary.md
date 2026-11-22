@@ -39,6 +39,9 @@ Role names are always qualified. The full table, with storage and code identifie
 | agent tool       | A capability an agent's editor switches on. One agent tool can give the model several AI SDK tools (`datasets` gives seven).             | tool (where AI SDK tools are near) |
 | agent tool grant | One agent tool switched on for an agent, with its access level (`read` or `write`) when the tool has levels. Stored in `tool_grants`.    | integration tool, enabled tool     |
 | agent mark       | An agent's small square sign: its icon on its tone, or its uploaded image. Without either, the robotic icon on a tone from the agent id. | avatar, logo                       |
+| agent version    | An immutable snapshot of an agent's configuration, written when it is locked or approved. Numbered 1, 2, 3 per agent (`agent_versions`). | revision, snapshot                 |
+| agent lock       | An agent whose configuration can't change: it points at its current agent version. Name, description and mark stay editable.             | freeze, read-only                  |
+| unattended run   | A run of an agent with nobody watching: task runs, later workflows. Needs an agent version approved for unattended runs.                 | background run, autonomous run     |
 | AI SDK tool      | One function the model can call, an entry in the AI SDK `ToolSet`.                                                                       | agent tool                         |
 | tool definition  | One AI SDK tool written once for every consumer: name, description, input schema, access and `execute` (`ToolDefinition`).               | tool spec, tool config             |
 | tool failure     | An expected tool outcome returned to the model as `{ status, message }` (`ToolFailure`), such as not connected or too large.             | tool error (for returned outcomes) |
