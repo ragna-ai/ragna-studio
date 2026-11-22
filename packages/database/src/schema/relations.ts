@@ -2,7 +2,7 @@ import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
 import { agentContextDocumentChunk } from './agent-context-document-chunk.schema';
 import { agentContextDocument } from './agent-context-document.schema';
-import { agent, agentTemplate } from './agent.schema';
+import { agent, agentTemplate, agentVersion } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { creditAccount, creditLedger, creditUsageEvent } from './credit.schema';
@@ -54,6 +54,7 @@ const schema = {
   aiModel,
   agent,
   agentTemplate,
+  agentVersion,
   agentMemory,
   agentContextDocument,
   agentContextDocumentChunk,
@@ -381,6 +382,14 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.media.id,
       optional: true,
     }),
+    // Two FKs run between agents and agent_versions, one each way: each side needs an alias.
+    lockedVersion: r.one.agentVersion({
+      from: r.agent.lockedVersionId,
+      to: r.agentVersion.id,
+      optional: true,
+      alias: 'agentLockedVersion',
+    }),
+    versions: r.many.agentVersion({ alias: 'agentVersions' }),
     chats: r.many.chat(),
     memory: r.one.agentMemory(),
     contextDocuments: r.many.agentContextDocument(),
@@ -456,6 +465,39 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.chatMessage.id,
       optional: true,
       alias: 'chatForkedFromMessage',
+    }),
+  },
+  agentVersion: {
+    workspace: r.one.workspace({
+      from: r.agentVersion.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    agent: r.one.agent({
+      from: r.agentVersion.agentId,
+      to: r.agent.id,
+      optional: true,
+      alias: 'agentVersions',
+    }),
+    lockedBy: r.one.user({
+      from: r.agentVersion.lockedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    approvedBy: r.one.user({
+      from: r.agentVersion.approvedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    revokedBy: r.one.user({
+      from: r.agentVersion.revokedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    unlockedBy: r.one.user({
+      from: r.agentVersion.unlockedByUserId,
+      to: r.user.id,
+      optional: true,
     }),
   },
   chatMessage: {

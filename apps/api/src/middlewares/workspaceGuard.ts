@@ -13,6 +13,8 @@ export type WorkspaceGuardEnv = AuthEnv & {
   Variables: AuthEnv['Variables'] & {
     workspace: Workspace;
     workspaceRole: WorkspaceRole;
+    /** The user's raw organization role (comma-separated), for rank checks above the workspace roles. */
+    organizationRole: string;
   };
 };
 
@@ -69,5 +71,6 @@ export const workspaceGuard = createMiddleware<WorkspaceGuardEnv>(async (c, next
 
   c.set('workspace', access.workspace);
   c.set('workspaceRole', access.workspaceRole);
+  c.set('organizationRole', access.organizationRole);
   await next();
 });

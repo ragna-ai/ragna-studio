@@ -1,0 +1,29 @@
+---
+title: agent-already-approved
+description: The agent is already approved for unattended runs.
+---
+
+`https://docs.ragna.io/errors/agent-already-approved`
+
+## When it happens
+
+A request approves a locked version that already has a live approval.
+
+## Response
+
+| Member   | Value                     |
+| -------- | ------------------------- |
+| `status` | 409                       |
+| `title`  | Agent is already approved |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-already-approved",
+  "title": "Agent is already approved",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Reload the agent. The approval is in place.

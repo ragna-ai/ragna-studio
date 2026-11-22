@@ -1,6 +1,6 @@
 # Agent lock: lock an agent and approve it for unattended runs (PRD)
 
-> **Status: proposed** (2026-11-22). Issue #462. Prerequisite for #455.
+> **Status: implemented** (2026-11-22, PR #463). Issue #462. Prerequisite for #455.
 
 Anyone who can edit an agent can change it at any time, also while it is in use. That is fine
 when a person watches the chat. It is not fine when the agent works alone. This PRD lets users
@@ -66,9 +66,10 @@ without anyone watching and it is clear who answers for it.
   approves it, then that version is approved and no new version is created.
 - **US-2.3** Given a workspace editor, when they try to approve an agent, then the request is
   refused with `403`.
-- **US-2.4** Given a manager about to approve, when the confirmation opens, then it lists what
-  the agent can write to and read from, says that knowledge files and data can change without a
-  new approval, and says they are responsible for its unattended runs.
+- **US-2.4** Given a manager about to approve, when the confirmation opens, then it lists the
+  tools the agent can use (with the access level where the tool has one), says that knowledge
+  files and data can change without a new approval, and says they are responsible for its
+  unattended runs. A read and write split for every tool follows in #464.
 - **US-2.5** Given an approved agent, when anyone approves it again, then the request is refused
   with `409`.
 

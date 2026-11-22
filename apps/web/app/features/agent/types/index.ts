@@ -25,6 +25,55 @@ export interface AgentMarkFields {
   imageUrl?: string | null;
 }
 
+export interface AgentLockUser {
+  id: string;
+  name: string;
+}
+
+export interface AgentLockApproval {
+  approvedBy: AgentLockUser | null;
+  approvedAt: string;
+}
+
+/** The agent's current locked version. `null` on the agent means unlocked. */
+export interface AgentLock {
+  versionId: string;
+  versionNumber: number;
+  lockedBy: AgentLockUser | null;
+  lockedAt: string;
+  approval: AgentLockApproval | null;
+}
+
+/** What the signed-in user may do to the agent's lock. The API decides, the web only renders. */
+export interface AgentLockActions {
+  canLock: boolean;
+  canUnlock: boolean;
+  canApprove: boolean;
+  canRevoke: boolean;
+}
+
+export interface AgentVersion {
+  id: string;
+  versionNumber: number;
+  lockedBy: AgentLockUser | null;
+  lockedAt: string;
+  approvedBy: AgentLockUser | null;
+  approvedAt: string | null;
+  revokedBy: AgentLockUser | null;
+  revokedAt: string | null;
+  unlockedBy: AgentLockUser | null;
+  unlockedAt: string | null;
+}
+
+export interface AgentVersionManyResponse {
+  versions: AgentVersion[];
+}
+
+export interface AgentUsage {
+  workflowCount: number;
+  assignedTaskCount: number;
+}
+
 export interface Agent extends AgentMarkFields {
   id: string;
   userId: string | null;
@@ -43,6 +92,9 @@ export interface Agent extends AgentMarkFields {
   defaultDatasetId?: string | null;
   // The uploaded image behind `imageUrl`; saved with the agent.
   imageMediaId?: string | null;
+  lock?: AgentLock | null;
+  // Only on the agent detail.
+  lockActions?: AgentLockActions;
 }
 
 export interface AgentTemplate {
@@ -73,7 +125,13 @@ export interface AgentManyResponse {
 // of one upsert.
 export type CreateAgentRequest = Omit<
   Agent,
-  'id' | 'userId' | 'workspaceId' | 'aiModel' | 'imageUrl'
+  | 'id'
+  | 'userId'
+  | 'workspaceId'
+  | 'aiModel'
+  | 'imageUrl'
+  | 'lock'
+  | 'lockActions'
 >;
 
 export type UpdateAgentRequest = Partial<CreateAgentRequest> &

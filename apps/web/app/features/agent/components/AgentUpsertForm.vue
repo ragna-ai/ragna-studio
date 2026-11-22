@@ -15,6 +15,8 @@ import {
   isFieldErrorVisible,
 } from '~/components/form/field-error';
 import MarkdownEditorField from '~/components/editor/MarkdownEditorField.vue';
+import AgentLockActions from '~/features/agent/components/AgentLockActions.vue';
+import AgentLockBanner from '~/features/agent/components/AgentLockBanner.vue';
 import AgentContextDocumentPanel from '~/features/agent/components/AgentContextDocumentPanel.vue';
 import AgentMark from '~/features/agent/components/AgentMark.vue';
 import AgentMarkField from '~/features/agent/components/AgentMarkField.vue';
@@ -27,7 +29,12 @@ import {
   useUpdateAgent,
   useUpdateAgentMemory,
 } from '~/features/agent/composables/useAgentApi';
-import type { AgentMarkFields, AgentSettings } from '~/features/agent/types';
+import type {
+  AgentLock,
+  AgentLockActions as AgentLockActionsState,
+  AgentMarkFields,
+  AgentSettings,
+} from '~/features/agent/types';
 import AiModelSelector from '~/features/aimodel/components/AiModelSelector.vue';
 
 type UpsertAgentProps = {
@@ -41,6 +48,8 @@ type UpsertAgentProps = {
   toolGrants?: AgentToolGrant[];
   settings?: AgentSettings | null;
   defaultDatasetId?: string | null;
+  lock?: AgentLock | null;
+  lockActions?: AgentLockActionsState;
 } & AgentMarkFields & { imageMediaId?: string | null };
 
 // Slider position when temperature is unset. 0 doubles as the "disabled"
@@ -208,6 +217,8 @@ const hasAdvancedError = computed(() =>
       (meta.isBlurred || submissionAttempts.value > 0),
   ),
 );
+// Name, description, mark and memory stay editable while locked.
+const isLocked = computed(() => !!props.lock);
 const agentLabel = computed(() => props.name || t('agent.upsert.thisAgent'));
 const temperatureText = (temperature: number | null) =>
   temperature ? temperature.toFixed(2) : t('agent.upsert.temperatureDisabled');
@@ -344,6 +355,12 @@ watch(hasAdvancedError, (hasError) => {
         </div>
       </div>
       <div class="flex shrink-0 gap-2">
+        <AgentLockActions
+          v-if="props.id"
+          :agent-id="props.id"
+          :lock-actions="props.lockActions"
+          :tool-grants="props.toolGrants ?? []"
+        />
         <Button as-child variant="outline">
           <NuxtLinkLocale to="/agent">{{ t('common.cancel') }}</NuxtLinkLocale>
         </Button>
@@ -352,6 +369,7 @@ watch(hasAdvancedError, (hasError) => {
         </Button>
       </div>
     </header>
+    <AgentLockBanner v-if="props.lock" :lock="props.lock" />
     <TabSidebar
       v-model="currentTab"
       :tabs="siderBarTabs"
@@ -441,6 +459,7 @@ watch(hasAdvancedError, (hasError) => {
                 :model-value="state.value"
                 :aria-labelledby="`${field.name}-label`"
                 :invalid="isFieldErrorVisible(field, submissionAttempts)"
+                :readonly="isLocked"
                 :max-length="AGENT_INSTRUCTIONS_MAX_LENGTH"
                 :placeholder="t('agent.upsert.systemPromptPlaceholder')"
                 :panel-title="t('agent.upsert.systemPromptLabel')"
@@ -478,6 +497,7 @@ watch(hasAdvancedError, (hasError) => {
                 <AiModelSelector
                   :model-value="state.value"
                   modality="text"
+                  :disabled="isLocked"
                   :invalid="isFieldErrorVisible(field, submissionAttempts)"
                   @update:model-value="
                     (value) => field.handleChange(value ?? '')
@@ -506,6 +526,7 @@ watch(hasAdvancedError, (hasError) => {
                       <div>
                         <Select
                           :model-value="state.value ?? REASONING_DEFAULT"
+                          :disabled="isLocked"
                           @update:model-value="
                             (v) =>
                               field.handleChange(
@@ -565,6 +586,7 @@ watch(hasAdvancedError, (hasError) => {
                         <div class="flex items-center gap-3">
                           <Slider
                             class="w-60"
+                            :disabled="isLocked"
                             :aria-labelledby="`${field.name}-label`"
                             :model-value="[state.value ?? DISABLED_TEMPERATURE]"
                             :min="0"
@@ -601,6 +623,7 @@ watch(hasAdvancedError, (hasError) => {
                           "
                           :aria-describedby="fieldMessageId(field)"
                           type="number"
+                          :disabled="isLocked"
                           min="1"
                           max="64000"
                           class="w-60"
@@ -643,6 +666,7 @@ watch(hasAdvancedError, (hasError) => {
                     :model-value="state.value"
                     :invalid="isFieldErrorVisible(field, submissionAttempts)"
                     :default-dataset-id="datasetState.value"
+                    :disabled="isLocked"
                     @update:model-value="field.handleChange"
                     @update:default-dataset-id="datasetField.handleChange"
                   />
@@ -663,7 +687,11 @@ watch(hasAdvancedError, (hasError) => {
           <Label class="text-sm font-medium">
             {{ t('agent.upsert.documentsLabel') }}
           </Label>
-          <AgentContextDocumentPanel v-if="props.id" :agent-id="props.id" />
+          <AgentContextDocumentPanel
+            v-if="props.id"
+            :agent-id="props.id"
+            :readonly="isLocked"
+          />
           <div
             v-else
             class="rounded-lg border p-4 text-sm text-muted-foreground"
@@ -678,6 +706,7 @@ watch(hasAdvancedError, (hasError) => {
                 :model-value="state.value"
                 :aria-labelledby="`${field.name}-label`"
                 :invalid="isFieldErrorVisible(field, submissionAttempts)"
+                :readonly="isLocked"
                 :max-length="AGENT_CONTEXT_MAX_LENGTH"
                 :placeholder="t('agent.upsert.contextPlaceholder')"
                 :panel-title="t('agent.upsert.contextLabel')"

@@ -6,19 +6,19 @@ Issue #462. Stories in [prd.md](./prd.md).
 
 New table `agent_versions`, registered in `relations.ts`.
 
-| Column                               | Type              | Notes                                                                     |
-| ------------------------------------ | ----------------- | ------------------------------------------------------------------------- |
-| `id`                                 | text              | uuidv7                                                                    |
-| `workspace_id`                       | text              | FK → `workspaces.id`, cascade                                             |
-| `agent_id`                           | text?             | FK `(workspace_id, agent_id)` → `agents`, `ON DELETE SET NULL (agent_id)` |
-| `version_number`                     | integer           | Unique with `agent_id`. 1, 2, 3 per agent                                 |
-| `config`                             | jsonb             | `AgentVersionConfig`, below                                               |
-| `knowledge_document_ids`             | text[]            | Agent context documents at lock time. No FK: files may go later           |
-| `locked_by_user_id`, `locked_at`     | text?, timestamp  | Set on insert                                                             |
-| `approved_by_user_id`, `approved_at` | text?, timestamp? | Set once on approval                                                      |
-| `revoked_by_user_id`, `revoked_at`   | text?, timestamp? | Set once on revoke                                                        |
-| `unlocked_by_user_id`, `unlocked_at` | text?, timestamp? | Set once on unlock                                                        |
-| `created_at`                         | timestamp         |                                                                           |
+| Column                               | Type              | Notes                                                                |
+| ------------------------------------ | ----------------- | -------------------------------------------------------------------- |
+| `id`                                 | text              | uuidv7                                                               |
+| `workspace_id`                       | text              | FK → `workspaces.id`, cascade                                        |
+| `agent_id`                           | text?             | FK → `agents.id`, `ON DELETE SET NULL`. Versions outlive their agent |
+| `version_number`                     | integer           | Unique with `agent_id`. 1, 2, 3 per agent                            |
+| `config`                             | jsonb             | `AgentVersionConfig`, below                                          |
+| `knowledge_document_ids`             | text[]            | Agent context documents at lock time. No FK: files may go later      |
+| `locked_by_user_id`, `locked_at`     | text?, timestamp  | Set on insert                                                        |
+| `approved_by_user_id`, `approved_at` | text?, timestamp? | Set once on approval                                                 |
+| `revoked_by_user_id`, `revoked_at`   | text?, timestamp? | Set once on revoke                                                   |
+| `unlocked_by_user_id`, `unlocked_at` | text?, timestamp? | Set once on unlock                                                   |
+| `created_at`                         | timestamp         |                                                                      |
 
 All user columns are FKs → `users.id`, set null. `agents` gains `locked_version_id` (text?, FK
 `(workspace_id, locked_version_id)` → `agent_versions`, set null). Null means unlocked.
@@ -42,8 +42,9 @@ interface AgentVersionConfig {
 - `agents.locked_version_id` is the source of truth for the current version. The version's
   `unlocked_at` is history. Both are written in the same transaction. The pointer stays on
   `agents` because the lock check is a condition on the agent row itself (see Lock check).
-- `ON DELETE SET NULL (agent_id)` keeps `workspace_id` on the row (Postgres 15+, we run 18).
-  Drizzle can't express the column list, so the FK ships in a custom migration.
+- `agent_id` is a single-column FK, not composite: a composite FK can only null both columns, and
+  `workspace_id` must stay. Versions are only written from an agent loaded in its workspace.
+  Deleting an AI model cascades to its agents; their versions stay with `agent_id` null.
 - The `agent_version_id` FK from `task_run` belongs to #455.
 
 ### Relations
@@ -68,7 +69,7 @@ A test loads an agent with its locked version and its version list.
 | Who may lock, unlock, approve, revoke | `getAgentLockActions(...)` in the API's lock service                          | 403 checks, and `lockActions` in the response                     |
 | Current version                       | `agents.locked_version_id`                                                    | API responses, write guard, #455 start check                      |
 | Where agents sit in a workflow        | `getWorkflowAgentIds` in `@repo/workflow`                                     | workflow save, usage count                                        |
-| What the agent can read and write     | tool grants + agent tool catalog (`@repo/ai/client`)                          | approval dialog, tool grants editor                               |
+| Tools the agent can use               | tool grants + agent tool catalog (`@repo/ai/client`)                          | approval dialog, tool grants editor                               |
 | Problem types (`agent-locked`, ...)   | `@repo/api-errors`                                                            | API, web error mapping                                            |
 
 - The web never re-derives role rules. It renders the buttons from `lockActions`.
@@ -210,8 +211,9 @@ In `AgentUpsertForm.vue` and its header:
   agent detail query. The banner and the header read the same `lock` object from that query.
 - Banner above the form: "Locked by <user>" plus ", approved for unattended runs by <user>".
 - Configuration sections render read-only as a block. Name, description and mark stay editable.
-- Approval dialog: write and read lists from the tool grants and `@repo/ai`'s agent tool catalog
-  (access level per grant), the knowledge-files line and the responsibility line.
+- Approval dialog: the granted tools by name from the tool grants and the agent tool catalog,
+  with the grant's access level where the tool has levels. Then the knowledge-files line and
+  the responsibility line. No read and write split for built-ins: that is #464.
 - Unlock dialog: the counts from `GET /usage`.
 - Versions: a sheet with the version list and its history (US-5).
 

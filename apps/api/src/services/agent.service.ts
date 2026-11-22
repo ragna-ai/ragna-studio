@@ -5,6 +5,7 @@ import type {
   StoredAgentToolGrant,
 } from '@repo/database';
 import {
+  AgentLockedError,
   createAgent,
   createAgentFromTemplate,
   deleteAgentById,
@@ -19,25 +20,66 @@ import {
 import { logger } from '@repo/logger';
 import { deleteMediaIfUnreferenced } from '@repo/media';
 import { tryCatch } from '@repo/utils';
-import { InternalServerErrorException, NotFoundException } from '../exceptions';
+import {
+  AgentLockedException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '../exceptions';
 import { throwIfForeignReference } from '../utils/foreign-reference';
 import { toAgentMarkResponse } from '../utils/agent-mark';
 import { deleteAgentContextDocumentsForAgent } from './agent-context-document.service';
+import {
+  resolveAgentLockActions,
+  toAgentLockResponse,
+  type AgentLockActions,
+  type AgentLockResponse,
+  type AgentLockViewer,
+} from './agent-lock.service';
 import { getOwnedImageMedia } from './media.service';
 
 type AgentWithImageMedia = NonNullable<Awaited<ReturnType<typeof getAgentByIdAndWorkspaceId>>>;
 
-/** An agent as the API returns it: the row plus the public URL of its image, null without one. */
-export type AgentResponse = Agent & { imageUrl: string | null };
+/** The agent row as the API returns it: the lock pointer is exposed as `lock` instead. */
+type AgentFields = Omit<Agent, 'lockedVersionId'>;
 
-/** The detail variant also carries the agent's AI model. */
-export type AgentDetailResponse = Omit<AgentWithImageMedia, 'imageMedia'> & {
+/** An agent as the API returns it: the row plus the public URL of its image, null without one. */
+export type AgentResponse = AgentFields & { imageUrl: string | null };
+
+/** The detail variant also carries the agent's AI model and its lock. */
+export type AgentDetailResponse = Omit<
+  AgentWithImageMedia,
+  'imageMedia' | 'lockedVersion' | 'lockedVersionId'
+> & {
   imageUrl: string | null;
+  lock: AgentLockResponse | null;
+  lockActions: AgentLockActions;
 };
 
-function toAgentDetailResponse(agentRecord: AgentWithImageMedia): AgentDetailResponse {
-  const { imageMedia, ...agentFields } = agentRecord;
+function toAgentResponse(
+  agentRow: Agent,
+  imageMedia: AgentWithImageMedia['imageMedia'],
+): AgentResponse {
+  const { lockedVersionId: _lockedVersionId, ...agentFields } = agentRow;
   return { ...agentFields, imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl };
+}
+
+async function toAgentDetailResponse(
+  agentRecord: AgentWithImageMedia,
+  { viewer, workspaceId }: { viewer: AgentLockViewer; workspaceId: string },
+): Promise<AgentDetailResponse> {
+  const {
+    imageMedia,
+    lockedVersion,
+    lockedVersionId: _lockedVersionId,
+    ...agentFields
+  } = agentRecord;
+  const lockActions = await resolveAgentLockActions({ viewer, workspaceId, lockedVersion });
+  return {
+    ...agentFields,
+    imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl,
+    lock: toAgentLockResponse(lockedVersion),
+    lockActions,
+  };
 }
 
 /**
@@ -70,7 +112,10 @@ async function loadAgentInWorkspace({
 }
 
 type AgentListRow = Awaited<ReturnType<typeof getAgentsByWorkspaceId>>[number];
-export type AgentListItem = Omit<AgentListRow, 'imageMedia'> & { imageUrl: string | null };
+export type AgentListItem = Omit<AgentListRow, 'imageMedia' | 'lockedVersion'> & {
+  imageUrl: string | null;
+  lock: AgentLockResponse | null;
+};
 
 export interface AgentListResponse {
   agents: AgentListItem[];
@@ -78,8 +123,12 @@ export interface AgentListResponse {
 }
 
 function toAgentListItem(agentRow: AgentListRow): AgentListItem {
-  const { imageMedia, ...agentFields } = agentRow;
-  return { ...agentFields, imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl };
+  const { imageMedia, lockedVersion, ...agentFields } = agentRow;
+  return {
+    ...agentFields,
+    imageUrl: toAgentMarkResponse({ ...agentFields, imageMedia }).imageUrl,
+    lock: toAgentLockResponse(lockedVersion),
+  };
 }
 
 /**
@@ -129,12 +178,14 @@ export async function listAgentsForWorkspace({
 export async function getAgentForWorkspace({
   workspaceId,
   agentId,
+  viewer,
 }: {
   workspaceId: string;
   agentId: string;
+  viewer: AgentLockViewer;
 }): Promise<AgentDetailResponse> {
   const agentRecord = await loadAgentInWorkspace({ agentId, workspaceId });
-  return toAgentDetailResponse(agentRecord);
+  return toAgentDetailResponse(agentRecord, { viewer, workspaceId });
 }
 
 export interface CreateAgentInput {
@@ -175,10 +226,7 @@ export async function createAgentForWorkspace(input: CreateAgentInput): Promise<
     throw new InternalServerErrorException('Failed to create agent');
   }
 
-  return {
-    ...createdAgent,
-    imageUrl: toAgentMarkResponse({ ...createdAgent, imageMedia }).imageUrl,
-  };
+  return toAgentResponse(createdAgent, imageMedia);
 }
 
 export interface CreateAgentFromTemplateInput {
@@ -205,7 +253,7 @@ export async function createAgentFromTemplateForWorkspace(
     throw new NotFoundException('Agent template not found');
   }
 
-  return { ...createdAgent, imageUrl: null };
+  return toAgentResponse(createdAgent, null);
 }
 
 export interface AgentTemplateListResponse {
@@ -274,6 +322,10 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
     }),
   );
 
+  if (error instanceof AgentLockedError) {
+    throw new AgentLockedException();
+  }
+
   if (error !== null) {
     throwIfForeignReference(error);
     logger.error('Failed to update agent', error);
@@ -290,10 +342,7 @@ export async function updateAgentForWorkspace(input: UpdateAgentInput): Promise<
   }
 
   const { imageMedia } = await loadAgentInWorkspace({ agentId, workspaceId });
-  return {
-    ...updatedAgent,
-    imageUrl: toAgentMarkResponse({ ...updatedAgent, imageMedia }).imageUrl,
-  };
+  return toAgentResponse(updatedAgent, imageMedia);
 }
 
 /**
@@ -310,9 +359,20 @@ export async function deleteAgentForWorkspace({
   agentId: string;
 }): Promise<void> {
   const agentRecord = await loadAgentInWorkspace({ agentId, workspaceId });
+  if (agentRecord.lockedVersionId) {
+    throw new AgentLockedException();
+  }
 
   await deleteAgentContextDocumentsForAgent({ agentId: agentRecord.id });
-  await deleteAgentById({ agentId: agentRecord.id, workspaceId });
+
+  const { error } = await tryCatch(() => deleteAgentById({ agentId: agentRecord.id, workspaceId }));
+  if (error instanceof AgentLockedError) {
+    throw new AgentLockedException();
+  }
+  if (error !== null) {
+    logger.error('Failed to delete agent', error);
+    throw new InternalServerErrorException('Failed to delete agent');
+  }
 
   if (agentRecord.imageMediaId) {
     await deleteMediaIfUnreferenced({ mediaIds: [agentRecord.imageMediaId] });

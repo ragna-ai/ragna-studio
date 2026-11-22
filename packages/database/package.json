@@ -30,7 +30,8 @@
     "db:migrate": "bun src/scripts/migrate.ts",
     "db:baseline": "bun src/scripts/baseline.ts",
     "db:backup": "bun src/scripts/backup.ts",
-    "credits:grant": "bun src/scripts/grant-credits.ts"
+    "credits:grant": "bun src/scripts/grant-credits.ts",
+    "workflows:backfill-agent-ids": "bun src/scripts/backfill-workflow-agent-ids.ts"
   },
   "dependencies": {
     "@repo/config": "workspace:*",

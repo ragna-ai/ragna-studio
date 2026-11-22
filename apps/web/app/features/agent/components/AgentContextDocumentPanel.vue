@@ -26,10 +26,13 @@ const STATUS_TONE: Record<AgentContextDocumentStatus, StatusTone> = {
 
 type AgentContextDocumentPanelProps = {
   agentId: string;
+  /** Hides everything that changes the files. Renaming stays, it only changes the label. */ readonly?: boolean;
 };
 
 // Props
-const props = defineProps<AgentContextDocumentPanelProps>();
+const props = withDefaults(defineProps<AgentContextDocumentPanelProps>(), {
+  readonly: false,
+});
 
 // Refs
 const dropZoneRef = useTemplateRef('dropZoneRef');
@@ -164,6 +167,7 @@ function handleDelete(document: AgentContextDocument) {
 <template>
   <div class="space-y-4">
     <div
+      v-if="!props.readonly"
       ref="dropZoneRef"
       role="button"
       tabindex="0"
@@ -186,7 +190,7 @@ function handleDelete(document: AgentContextDocument) {
       </p>
     </div>
     <p
-      v-if="isUploading"
+      v-if="isUploading && !props.readonly"
       class="flex items-center gap-2 text-sm text-muted-foreground"
     >
       <Spinner class="size-4" />
@@ -261,19 +265,24 @@ function handleDelete(document: AgentContextDocument) {
                   <Icon name="hugeicons:pencil-edit-02" />
                   {{ t('agent.context.actions.rename') }}
                 </DropdownMenuItem>
-                <DropdownMenuItem @click="openReplacePicker(document)">
+                <DropdownMenuItem
+                  v-if="!props.readonly"
+                  @click="openReplacePicker(document)"
+                >
                   <Icon name="hugeicons:file-sync" />
                   {{ t('agent.context.actions.replace') }}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  v-if="document.status === 'failed'"
+                  v-if="document.status === 'failed' && !props.readonly"
                   @click="handleRetry(document)"
                 >
                   <Icon name="hugeicons:reload" />
                   {{ t('agent.context.actions.retry') }}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
+                <DropdownMenuSeparator
+                  v-if="!props.readonly"
+                /> <DropdownMenuItem
+                  v-if="!props.readonly"
                   variant="destructive"
                   @click="handleDelete(document)"
                 >

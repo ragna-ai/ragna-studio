@@ -504,6 +504,63 @@
         "ready": "Indexed",
         "failed": "Failed"
       }
+    },
+    "lock": {
+      "unknownUser": "a removed user",
+      "actions": {
+        "versions": "Versions",
+        "lock": "Lock",
+        "approve": "Approve for unattended runs",
+        "revoke": "Revoke approval",
+        "unlock": "Unlock"
+      },
+      "banner": {
+        "locked": "Locked by {user}",
+        "lockedAndApproved": "Locked by {user}, approved for unattended runs by {approver}",
+        "description": "Version {version}. The model, instructions, context, tools, dataset, settings and knowledge files can't be changed. Name, description, mark and memory stay editable."
+      },
+      "approveDialog": {
+        "title": "Approve for unattended runs",
+        "description": "The agent is locked in its current configuration. It may then work without anyone watching.",
+        "noTools": "The agent has no tools.",
+        "knowledgeChanges": "Knowledge files and data the agent reads can change without a new approval.",
+        "responsibility": "You are responsible for its actions in unattended runs.",
+        "confirm": "Approve",
+        "canUse": "This agent can use:",
+        "accessRead": "read only",
+        "accessWrite": "read and write"
+      },
+      "unlockDialog": {
+        "title": "Unlock agent",
+        "description": "Unlocking opens the configuration for edits. Workflows and tasks that use the agent pick up every change.",
+        "workflowCount": "No workflow uses this agent. | 1 workflow uses this agent. | {count} workflows use this agent.",
+        "assignedTaskCount": "No open task is assigned to this agent. | 1 open task is assigned to this agent. | {count} open tasks are assigned to this agent.",
+        "usageFailed": "The usage of this agent couldn't be loaded.",
+        "confirm": "Unlock"
+      },
+      "versions": {
+        "title": "Versions",
+        "description": "Every time the agent was locked, newest first.",
+        "empty": "This agent was never locked.",
+        "loadFailed": "The versions couldn't be loaded.",
+        "version": "Version {number}",
+        "event": {
+          "locked": "Locked by {user} on {date}",
+          "approved": "Approved for unattended runs by {user} on {date}",
+          "revoked": "Approval revoked by {user} on {date}",
+          "unlocked": "Unlocked by {user} on {date}"
+        }
+      },
+      "toast": {
+        "locked": "Agent locked",
+        "lockFailed": "Failed to lock agent",
+        "unlocked": "Agent unlocked",
+        "unlockFailed": "Failed to unlock agent",
+        "approved": "Agent approved for unattended runs",
+        "approveFailed": "Failed to approve agent",
+        "revoked": "Approval revoked",
+        "revokeFailed": "Failed to revoke approval"
+      }
     }
   },
   "chat": {
@@ -2223,7 +2280,13 @@
       "validation": "Please check your input and try again.",
       "organizationDeleted": "Your organization is scheduled for deletion. Restore it to continue.",
       "workflowInvalid": "The workflow is invalid. Please check it and try again.",
-      "emailDraftExists": "This thread already has a draft."
+      "emailDraftExists": "This thread already has a draft.",
+      "agentLocked": "This agent is locked. Unlock it to change its configuration.",
+      "agentAlreadyLocked": "This agent is already locked.",
+      "agentNotLocked": "This agent is not locked.",
+      "agentAlreadyApproved": "This agent is already approved for unattended runs.",
+      "agentNotApproved": "This agent is not approved for unattended runs.",
+      "knowledgeFilesNotReady": "A knowledge file is still processing or failed. Wait for it, or remove it, and try again."
     },
     "workflowRule": {
       "triggerCount": "A workflow needs exactly one trigger.",

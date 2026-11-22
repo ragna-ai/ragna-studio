@@ -101,3 +101,11 @@ export function getForeignReferenceResource(error: unknown): ForeignReferenceRes
 
   return FOREIGN_REFERENCE_RESOURCE_BY_CONSTRAINT[cause.constraint] ?? null;
 }
+
+/** Thrown when a write would change the configuration of a locked agent. */
+export class AgentLockedError extends Error {
+  constructor() {
+    super('Agent is locked');
+    this.name = 'AgentLockedError';
+  }
+}

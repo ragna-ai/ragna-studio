@@ -121,6 +121,15 @@ Split a conversation into a new chat at any message, preserving history
 up to that point. Reachable via a hover-revealed menu on each message.
 → [specs/chat/branching.md](./chat/branching.md)
 
+### Agent lock and approval
+
+Users who can edit an agent lock its configuration as an immutable,
+numbered version. Workspace managers and up approve a locked version for
+unattended runs and take responsibility for it. Revoke keeps the lock,
+unlock reopens the editor, and every step stays in the version history.
+Task runs (#455) only start on an approved version.
+→ [specs/agent/462-agent-lock/prd.md](./agent/462-agent-lock/prd.md)
+
 ### Agent selection
 
 Every chat, email auto-draft and workflow node runs on an agent the user

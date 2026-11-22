@@ -11,6 +11,8 @@ export interface MarkdownEditorBoxProps {
   profile?: 'document' | 'prompt';
   placeholder?: string;
   invalid?: boolean;
+  /** Text stays selectable and scrollable, but can't be edited. */
+  readonly?: boolean;
   /** Shows the character count. No count without it. */
   maxLength?: number;
   showExpand?: boolean;
@@ -87,9 +89,9 @@ watch([model, controller.editor], ([value, editor]) => {
 
 // The hidden editor still receives raw edits; read-only keeps its slash menu from opening.
 watch(
-  [() => props.view, controller.editor],
-  ([view, editor]) => {
-    editor?.setEditable(view === 'formatted', false);
+  [() => props.view, () => props.readonly, controller.editor],
+  ([view, readonly, editor]) => {
+    editor?.setEditable(view === 'formatted' && !readonly, false);
   },
   { immediate: true },
 );
@@ -112,6 +114,7 @@ watch(
       <RichTextEditor
         v-show="view === 'formatted'"
         :controller="controller"
+        :readonly="readonly"
         :class="
           cn(
             'document-sheet-compact flex min-h-0 flex-1 flex-col overflow-y-auto pr-1 text-base md:text-sm',
@@ -125,6 +128,7 @@ watch(
         :aria-labelledby="ariaLabelledby"
         :aria-label="ariaLabel"
         :aria-invalid="invalid || undefined"
+        :readonly="readonly"
         :class="
           cn(
             'min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 bg-transparent p-0 pr-1 font-mono text-mono shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-mono dark:bg-transparent',

@@ -33,11 +33,15 @@ export const agentKeys = {
     ['agents', workspaceId, 'memory', agentId] as const,
   documents: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
     ['agents', workspaceId, 'documents', agentId] as const,
+  versions: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
+    ['agents', workspaceId, 'versions', agentId] as const,
+  usage: (workspaceId: WorkspaceId, agentId: MaybeRefOrGetter<string>) =>
+    ['agents', workspaceId, 'usage', agentId] as const,
 };
 
 type QueryOpts = Partial<UseQueryOptions<any>>;
 
-function agentBasePath(workspaceId: WorkspaceId): string {
+export function agentBasePath(workspaceId: WorkspaceId): string {
   return `/workspace/${toValue(workspaceId)}/agent`;
 }
 

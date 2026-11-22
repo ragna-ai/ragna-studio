@@ -16,6 +16,7 @@ type AgentToolListProps = {
   modelValue: AgentToolGrant[];
   invalid?: boolean;
   defaultDatasetId?: string | null;
+  disabled?: boolean;
 };
 
 type AgentToolListEmit = {
@@ -39,6 +40,7 @@ const DEFAULT_ACCESS: ToolAccess = 'read';
 // Props
 const props = withDefaults(defineProps<AgentToolListProps>(), {
   invalid: false,
+  disabled: false,
   defaultDatasetId: null,
 });
 
@@ -148,6 +150,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
           :id="`form-rhf-checkbox-${entry.id}`"
           :name="entry.id"
           :model-value="isGranted(entry.id)"
+          :disabled="props.disabled"
           class="mt-0.5"
           @update:model-value="
             (checked) => handleToggle(entry, Boolean(checked))
@@ -204,6 +207,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
           </Label>
           <Select
             :model-value="grantedAccess(entry.id)"
+            :disabled="props.disabled"
             @update:model-value="
               (v) => handleAccessChange(entry, v === 'write' ? 'write' : 'read')
             "
@@ -233,6 +237,7 @@ function isConnectMissing(entry: AgentToolCatalogEntry): boolean {
           </Label>
           <Select
             :model-value="defaultDatasetId ?? NO_DATASET"
+            :disabled="props.disabled"
             @update:model-value="
               (v) =>
                 emit(

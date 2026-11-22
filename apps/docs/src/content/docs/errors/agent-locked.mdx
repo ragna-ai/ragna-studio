@@ -1,0 +1,29 @@
+---
+title: agent-locked
+description: The agent is locked.
+---
+
+`https://docs.ragna.io/errors/agent-locked`
+
+## When it happens
+
+A request changes the model, instructions, context, tools, default dataset, settings or knowledge files of a locked agent, or deletes a locked agent.
+
+## Response
+
+| Member   | Value           |
+| -------- | --------------- |
+| `status` | 409             |
+| `title`  | Agent is locked |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-locked",
+  "title": "Agent is locked",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Unlock the agent first. Changes to the name, description and mark stay allowed. See [Lock and approve](/agents#lock-and-approve).

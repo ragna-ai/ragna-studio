@@ -27,7 +27,6 @@ work first, shipped reference and dead/historical docs last.
 
 | Doc | Status |
 | --- | --- |
-| [Agent lock: lock an agent and approve it for unattended runs (PRD)](./agent/462-agent-lock/prd.md) | proposed (2026-11-22) |
 | [Copy message text as rich text (proposal)](./chat/copy-rich-text.md) | proposed, not implemented |
 | [Chat regenerate (PRD)](./chat/regenerate.md) | proposed |
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
@@ -44,6 +43,7 @@ work first, shipped reference and dead/historical docs last.
 | [Agents: one tool definition per tool, one runner (design)](./agent/305-tool-runner/design.md) | implemented (2026-11-07, PR #306) |
 | [Agent mark: an icon on a tone, or an uploaded image (PRD)](./agent/361-agent-mark/prd.md) | implemented (2026-11-12, PR #367) |
 | [Agent tools: declared output schemas (PRD)](./agent/440-tool-output-schemas/prd.md) | implemented (2026-11-19, PR #441) |
+| [Agent lock: lock an agent and approve it for unattended runs (PRD)](./agent/462-agent-lock/prd.md) | implemented (2026-11-22, PR #463) |
 | [Agent Context — Phase 2: Documents](./agent/agent-context-documents.md) | implemented (2026-07-17) |
 | [Agent Context — Phase 3: Retrieval](./agent/agent-context-retrieval.md) | implemented (merged via PR #14, 2026-08-02) |
 | [Agent Context — Phase 1: Free-text context](./agent/agent-context.md) | implemented, verified |

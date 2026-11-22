@@ -1,0 +1,29 @@
+---
+title: knowledge-files-not-ready
+description: A knowledge file is not ready.
+---
+
+`https://docs.ragna.io/errors/knowledge-files-not-ready`
+
+## When it happens
+
+A request locks or approves an agent while one of its knowledge files is still processing or failed.
+
+## Response
+
+| Member   | Value                         |
+| -------- | ----------------------------- |
+| `status` | 409                           |
+| `title`  | Knowledge files are not ready |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/knowledge-files-not-ready",
+  "title": "Knowledge files are not ready",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Wait until every file is ready, or remove or retry the failed file, then try again. See [Knowledge](/agents/knowledge).
