@@ -75,7 +75,7 @@ RUN apt-get update \
 # .output is needed. Numeric UID: distroless has no user 1001, but
 # prod runs as 1001.
 # ============================================================
-FROM oven/bun:1.4.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS runner
+FROM oven/bun:1.4.5-distroless@sha256:3a210956422ad81cf7532e1fc1f2eb9275d6ef4c2337a9d25d530f798e80726a AS runner
 
 WORKDIR /app
 
