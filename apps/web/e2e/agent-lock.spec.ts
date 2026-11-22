@@ -225,8 +225,9 @@ test('lists the versions of an agent, and an empty state before the first lock',
   await lockInPage(page);
   await openVersions(page);
 
-  await expect(page.getByText('Version 1')).toBeVisible();
-  await expect(page.getByText(/^Locked by .* on /)).toBeVisible();
+  const versions = page.getByRole('dialog');
+  await expect(versions.getByText('Version 1', { exact: true })).toBeVisible();
+  await expect(versions.getByText(/^Locked by .* on /)).toBeVisible();
 });
 
 test('keeps the memory read-only while the agent is locked', async ({
@@ -247,13 +248,15 @@ test('shows the lock on the agent mark in the list and blocks deleting a locked 
   request,
 }) => {
   const suffix = crypto.randomUUID().slice(0, 8);
-  const lockedId = await seedAgent(request, `Listed locked ${suffix}`);
-  await seedAgent(request, `Listed open ${suffix}`);
+  const lockedName = `Listed locked ${suffix}`;
+  const openName = `Listed open ${suffix}`;
+  const lockedId = await seedAgent(request, lockedName);
+  await seedAgent(request, openName);
   await lockViaApi(request, lockedId);
   await page.goto('/agent');
   await page.getByRole('textbox', { name: 'Search agents' }).fill(suffix);
-  const lockedRow = page.getByRole('row').filter({ hasText: 'Listed locked' });
-  const openRow = page.getByRole('row').filter({ hasText: 'Listed open' });
+  const lockedRow = page.getByRole('row').filter({ hasText: lockedName });
+  const openRow = page.getByRole('row').filter({ hasText: openName });
 
   await expect(
     lockedRow.getByRole('img', { name: /^Locked by / }),
