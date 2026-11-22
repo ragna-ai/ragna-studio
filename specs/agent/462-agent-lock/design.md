@@ -184,8 +184,9 @@ lockActions: { canLock: boolean; canUnlock: boolean; canApprove: boolean; canRev
   `in_progress` or `in_review`.
 - `workflowCount`: workflows whose published definition references the agent. `workflows` gains
   `agent_ids` (text[], GIN index), written by the workflow save path from `getWorkflowAgentIds`
-  on publish. The count is `WHERE agent_ids @> ARRAY[$agentId]`. A one-time backfill script in
-  `apps/api` fills existing rows with the same function. No hand-written JSON path query: it
+  on publish. The count is `WHERE agent_ids @> ARRAY[$agentId]`. Existing rows are filled by the custom
+  migration `20261122153523_workflow_agent_ids_backfill`, a one-time SQL snapshot of that rule.
+  A test checks it against `getWorkflowAgentIds`. No JSON path query on the count path: it
   would copy the rule.
 
 ## Consumer seam for #455
