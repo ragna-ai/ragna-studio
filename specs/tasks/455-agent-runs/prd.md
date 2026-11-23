@@ -1,8 +1,8 @@
 # Tasks: agents work assigned tasks (PRD)
 
 > **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md). Builds on
-> #462 (agent lock and approval, merged in PR #463). Needs #470 (task comments) and #471 (reading
-> task attachments), which both ship first.
+> #462 (agent lock and approval, merged in PR #463) and #470 (task comments, merged in PR #472).
+> Needs #471 (reading task attachments) and #473 (the task comment tool), which both ship first.
 
 Today a user can assign a task to an agent, but nothing happens. The assignment is a label on the
 card. This PRD lets a user start the assigned agent on the task. The agent works in the background
@@ -105,6 +105,10 @@ As a user, I want the agent's result on the task, so that I can review it where 
 - **US-2.7** Given an approved agent whose model, a granted tool or a tool's connection is no
   longer available, when its run starts, then it fails before taking any action and asks for the
   agent to be approved again.
+- **US-2.8** Given a running agent, when it posts a note on the task, then the note appears as an
+  agent comment linked to the run, before the run's result.
+- **US-2.9** Given a running agent, when it tries to comment on another task, then nothing is
+  posted and the agent is told it can only comment on the task it works on.
 
 ### US-3 Follow and stop a run (P1)
 
@@ -142,6 +146,8 @@ hang.
 - **US-5.6** Given a running task, when the workspace balance falls below the allowed overshoot,
   then the run stops before its next step and reports that credits ran out. The credits it used
   are still charged.
+- **US-5.7** Rule: a run posts at most 5 notes. A further note is refused and the agent is told to
+  put it in its result instead. The run goes on.
 
 ## Testing
 
@@ -150,11 +156,11 @@ hang.
 | US-1.1, US-1.3, US-1.4, US-1.8 | API              | `apps/api/test/task/`                           |
 | US-1.2                         | e2e (Playwright) | `apps/web/e2e/`                                 |
 | US-1.5, US-1.6, US-1.7         | worker           | `apps/worker/test/task/`                        |
-| US-2.1 to US-2.7               | worker           | `apps/worker/test/task/`                        |
+| US-2.1 to US-2.9               | worker           | `apps/worker/test/task/`                        |
 | US-3.1                         | e2e (Playwright) | `apps/web/e2e/`                                 |
 | US-3.2 to US-3.6               | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
 | US-5.1                         | API              | `apps/api/test/task/`                           |
-| US-5.2, US-5.3, US-5.6         | worker           | `apps/worker/test/task/`                        |
+| US-5.2, US-5.3, US-5.6, US-5.7 | worker           | `apps/worker/test/task/`                        |
 | US-5.4, US-5.5                 | API              | `apps/api/test/task/`                           |
 
 ## Standards checklist
@@ -192,6 +198,12 @@ task and agent. A full audit trail comes with the audit log standard (#171).
 
 **The agent ends at In Review, never Done.** The run's output is a proposal. A human closes the
 task. Lost: fully unattended completion for trusted routine tasks.
+
+**One write path for agent comments.** The agent posts notes during a run with the shared
+`addTaskComment` tool (#473), the same tool chat agents get. `finishTaskRun` still ends the run,
+because it carries the outcome that moves the task and stops the loop. The runner writes failure
+comments, since the model is gone by then. All three share one write path. Lost: a
+run that ends with exactly one comment. A per-run cap keeps the notes bounded.
 
 **A human gate breaks every loop.** Starting a run is human-only, and in phase 2 so is accepting
 a task an agent proposed. Every other agent action is planning. A loop needs a cycle of automatic
