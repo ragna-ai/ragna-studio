@@ -116,6 +116,7 @@ work first, shipped reference and dead/historical docs last.
 | [Settings area and expandable sidebar: one settings section with its own nav (PRD)](./settings/246-settings-area/prd.md) | implemented (2026-10-31, PR #247) |
 | [API errors standard: RFC 9457 problem details (PRD)](./standards/api-errors/prd.md) | implemented (2026-11-06, PR #296) |
 | [Tasks: comments (PRD)](./tasks/470-comments/prd.md) | implemented (2026-11-23, PR #472) |
+| [Agent tools: comment on a task (PRD)](./tasks/473-comment-tool/prd.md) | implemented (2026-11-23, PR #474) |
 | [Task Attachments (PRD)](./tasks/attachments-prd.md) | implemented (2026-09-02, verified and confirmed by the user) |
 | [Tasks / Kanban Board (PRD)](./tasks/prd.md) | implemented (2026-07-21, verified and approved by the user) |
 | [Live Team Chat over WebSocket (PRD)](./team-chat/prd.md) | implemented (phase 1 only, merged via PR #5, 2026-07-19) |

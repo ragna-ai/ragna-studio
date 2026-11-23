@@ -7,9 +7,12 @@ import type {
 } from '@repo/database';
 import {
   createTask,
+  createTaskComment,
   getTaskById,
   listTasks,
   listTaskLabels,
+  MAX_COMMENTS_PER_TASK,
+  MAX_TASK_COMMENT_BODY_LENGTH,
   moveTask,
   updateTask,
 } from '@repo/database';
@@ -573,6 +576,73 @@ const moveTaskDefinition: ToolDefinition<
   },
 };
 
+// addTaskComment
+
+const addTaskCommentInputSchema = z.object({
+  taskId: z.string().describe('The id of the task to comment on.'),
+  body: z
+    .string()
+    .min(1)
+    .max(MAX_TASK_COMMENT_BODY_LENGTH)
+    .describe('The comment text in markdown.'),
+});
+
+const addTaskCommentOutputSchema = z.strictObject({
+  comment: z.strictObject({ id: z.string(), taskId: z.string(), displayId: z.string() }),
+});
+
+type AddTaskCommentOutput = z.infer<typeof addTaskCommentOutputSchema>;
+type AddTaskCommentFailure = ToolFailure<'not_found' | 'limit_reached'>;
+
+const TASK_COMMENT_LIMIT_REACHED: ToolFailure<'limit_reached'> = {
+  status: 'limit_reached',
+  message: `The task already holds the maximum of ${MAX_COMMENTS_PER_TASK} comments. No comment was added.`,
+};
+
+function addTaskCommentDefinition({
+  agentId,
+}: TaskToolDefinitionsOptions): ToolDefinition<
+  typeof addTaskCommentInputSchema,
+  typeof addTaskCommentOutputSchema,
+  'not_found' | 'limit_reached'
+> {
+  return {
+    name: 'addTaskComment',
+    description: `Add a comment to a task. The comment is shown under your name, appears last on the task and cannot be edited by users. A task holds at most ${MAX_COMMENTS_PER_TASK} comments.`,
+    inputSchema: addTaskCommentInputSchema,
+    outputSchema: addTaskCommentOutputSchema,
+    access: 'write',
+    execute: ({ taskId, body }, { workspaceId }) =>
+      failOnForeignReference<AddTaskCommentOutput | AddTaskCommentFailure>(async () => {
+        const taskRecord = await getTaskById({ id: taskId, workspaceId });
+        if (!taskRecord) {
+          return TASK_NOT_FOUND;
+        }
+
+        const result = await createTaskComment({
+          workspaceId,
+          taskId,
+          author: { kind: 'agent', agentId },
+          body,
+        });
+        if (result.status === 'task-not-found') {
+          return TASK_NOT_FOUND;
+        }
+        if (result.status === 'limit-reached') {
+          return TASK_COMMENT_LIMIT_REACHED;
+        }
+
+        return {
+          comment: {
+            id: result.commentId,
+            taskId,
+            displayId: toTaskDisplayId(taskRecord.number),
+          },
+        };
+      }),
+  };
+}
+
 /** The task tools of one agent. */
 export function taskToolDefinitions(options: TaskToolDefinitionsOptions): AnyToolDefinition[] {
   return [
@@ -581,5 +651,6 @@ export function taskToolDefinitions(options: TaskToolDefinitionsOptions): AnyToo
     createTaskDefinition(options),
     updateTaskDefinition,
     moveTaskDefinition,
+    addTaskCommentDefinition(options),
   ];
 }

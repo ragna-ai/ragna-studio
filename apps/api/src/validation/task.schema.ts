@@ -1,3 +1,4 @@
+import { MAX_TASK_COMMENT_BODY_LENGTH } from '@repo/database';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -32,7 +33,7 @@ export const validTaskCommentParams = myzValidator(
 export const validTaskCommentBody = myzValidator(
   'json',
   z.object({
-    body: z.string().min(1).max(10_000),
+    body: z.string().min(1).max(MAX_TASK_COMMENT_BODY_LENGTH),
   }),
 );
 
