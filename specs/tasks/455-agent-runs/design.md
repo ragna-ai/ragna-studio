@@ -18,7 +18,7 @@ web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), 
 
 ## Data model
 
-`task_run`, one row per run. Registered in `relations.ts`.
+`task_runs`, one row per run. Registered in `relations.ts`.
 
 | Column                                    | Type                      | Notes                                                                    |
 | ----------------------------------------- | ------------------------- | ------------------------------------------------------------------------ |
@@ -43,9 +43,10 @@ web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), 
 - Index on `(workspace_id, status)` for the workspace limit (US-5.1).
 - Index on `(task_id, created_at)` for the run history (US-3.4) and earlier runs in the prompt.
 
-`task_comment`: `id`, `workspace_id`, `task_id` (cascade), `author_user_id` or `author_agent_id`
-(exactly one set, same check as task authorship), `task_run_id` (set null), `body` (markdown),
-timestamps. Users write comments in the web app, too. Phase 2 feeds them into the next run.
+`task_comments` comes from #470, which ships first: user and agent authors (`author_kind`),
+markdown body, agent comments read-only. This feature adds `task_run_id` (FK → `task_runs`, set
+null) in its own migration, and is the first to write agent comments: the runner, never a tool.
+Phase 2 feeds user comments into the next run.
 
 ## Run lifecycle
 
@@ -73,14 +74,13 @@ their status wins: the run only changes the task status if it is still `in_progr
 
 ## API
 
-| Route                                                                       | Does                                                            |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `POST /task/:id/runs`                                                       | Start. Body `{ agentId? }` assigns and starts (US-1.2)          |
-| `POST /task/:id/runs/:runId/cancel`                                         | Stop (US-3.2)                                                   |
-| `POST /task-runs/cancel-all`                                                | Stop all runs in the workspace, workspace manager only (US-5.4) |
-| `DELETE /agent/:id/lock?stopRuns=true`                                      | Stop the agent's active runs, then unlock (US-3.6)              |
-| `GET /task/:id/runs`                                                        | Runs with status, outcome, usage, trace (US-3.4)                |
-| `GET/POST /task/:id/comments`, `PATCH/DELETE /task/:id/comments/:commentId` | Comments                                                        |
+| Route                                  | Does                                                            |
+| -------------------------------------- | --------------------------------------------------------------- |
+| `POST /task/:id/runs`                  | Start. Body `{ agentId? }` assigns and starts (US-1.2)          |
+| `POST /task/:id/runs/:runId/cancel`    | Stop (US-3.2)                                                   |
+| `POST /task-runs/cancel-all`           | Stop all runs in the workspace, workspace manager only (US-5.4) |
+| `DELETE /agent/:id/lock?stopRuns=true` | Stop the agent's active runs, then unlock (US-3.6)              |
+| `GET /task/:id/runs`                   | Runs with status, outcome, usage, trace (US-3.4)                |
 
 Start checks, in this order, each with an RFC 9457 problem:
 
@@ -91,7 +91,7 @@ Start checks, in this order, each with an RFC 9457 problem:
    run records that `agent_version_id`.
 4. Balance at least `taskRunMinCredits`, else `402 insufficient-credits` (US-1.4).
 5. Fewer than `taskRunMaxActivePerWorkspace` active runs, else `429 task-run-limit` (US-5.1).
-6. Insert `task_run`. A unique-index violation maps to `409 task-run-active` (US-1.3).
+6. Insert `task_runs`. A unique-index violation maps to `409 task-run-active` (US-1.3).
 
 Step 5 counts then inserts. Two parallel starts can both pass. Accepted: the limit is a cost
 guard, not an invariant, so one extra run is fine. A `pg_advisory_xact_lock` on the workspace id
@@ -222,7 +222,7 @@ active run in the same transaction.
 
 ### Sweeper
 
-`stale-runs.cron.ts` also fails `task_run` rows `queued` for over 1 hour or `running` for longer
+`stale-runs.cron.ts` also fails `task_runs` rows `queued` for over 1 hour or `running` for longer
 than the time limit plus 15 minutes, writes the failure comment and restores the task status.
 
 ### Visibility
@@ -331,8 +331,9 @@ or accepted, and caps the runs it starts per workflow run.
 
 ## Slices (outline)
 
-1. Database: `task_run`, `task_comment`, transition function, migration via `db:generate`.
+1. Database: `task_runs`, `task_comments.task_run_id`, transition function, migration via
+   `db:generate`.
 2. Worker: runner extraction, processor, prompt, tool policy, limits, sweeper.
-3. API: run and comment routes, `activeRun` on the task list.
-4. Web: start and stop, run status on card, comments, run history panel.
+3. API: run routes, `activeRun` on the task list, run link on agent comments.
+4. Web: start and stop, run status on card, run link on agent comments, run history panel.
 5. Docs: tasks page section, glossary terms.

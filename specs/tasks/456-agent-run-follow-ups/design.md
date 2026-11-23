@@ -1,7 +1,7 @@
 # Tasks: agent runs phase 2 (design)
 
 > Issue #456. Requirements: [prd.md](./prd.md). Story IDs below refer to it. Builds on the
-> [phase 1 design](../455-agent-runs/design.md): `task_run`, `task_comment`, the runner and the
+> [phase 1 design](../455-agent-runs/design.md): `task_runs`, `task_comment`, the runner and the
 > tool policy.
 
 ## Feedback in the prompt (US-1)
@@ -27,7 +27,7 @@ runs send nothing: the user who stopped it knows (US-2.2). The processor checks
 the user's workspace access first and skips the notification if it is gone.
 
 **Not-started reminder (US-2.3).** `listTasksDueForReminder` also returns whether the task has an
-assigned agent and no `task_run` row, in the same query (a `not exists` subquery, no per-task
+assigned agent and no `task_runs` row, in the same query (a `not exists` subquery, no per-task
 lookup). The reminder notification then carries the agent's name and reads "Assigned to <agent>,
 not started yet". The recipient stays as today until #181.
 
@@ -35,11 +35,11 @@ not started yet". The recipient stays as today until #181.
 
 `task` gains three columns:
 
-| Column                    | Type       | Notes                                               |
-| ------------------------- | ---------- | --------------------------------------------------- |
-| `proposed_by_task_run_id` | text?      | FK → `task_run.id`, set null. Which run proposed it |
-| `accepted_by_user_id`     | text?      | FK → `user.id`, set null                            |
-| `accepted_at`             | timestamp? | Null on a proposed task means locked                |
+| Column                    | Type       | Notes                                                |
+| ------------------------- | ---------- | ---------------------------------------------------- |
+| `proposed_by_task_run_id` | text?      | FK → `task_runs.id`, set null. Which run proposed it |
+| `accepted_by_user_id`     | text?      | FK → `user.id`, set null                             |
+| `accepted_at`             | timestamp? | Null on a proposed task means locked                 |
 
 Locked = `proposed_by_task_run_id is not null and accepted_at is null`.
 
