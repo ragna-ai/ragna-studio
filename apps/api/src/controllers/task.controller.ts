@@ -14,6 +14,7 @@ import {
   listTaskComments,
   removeTaskComment,
 } from '../services/task-comment.service';
+import { cancelTaskRun, listTaskRuns, startTaskRunForUser } from '../services/task-run.service';
 import {
   createTaskForUser,
   deleteTaskForUser,
@@ -24,12 +25,14 @@ import {
 } from '../services/task.service';
 import {
   validCreateTaskBody,
+  validStartTaskRunBody,
   validMoveTaskBody,
   validTaskAttachmentParams,
   validTaskCommentBody,
   validTaskCommentParams,
   validTaskIdParam,
   validTaskListQuery,
+  validTaskRunParams,
   validUpdateTaskBody,
 } from '../validation';
 
@@ -195,6 +198,55 @@ export const taskController = new Hono()
     });
 
     return c.json({ message: 'Attachment deleted successfully' });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/task/:taskId/runs
+   * Every agent run of the task, newest first.
+   */
+  .get('/:taskId/runs', validTaskIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const runs = await listTaskRuns({ workspaceId: workspace.id, taskId: param.taskId });
+
+    return c.json({ runs });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/task/:taskId/runs
+   * Starts an agent run. An `agentId` in the body assigns that agent first. Answers 409
+   * task-has-no-agent, agent-not-approved or task-run-active, 402 out-of-credits, 429
+   * task-run-limit-reached and 503 task-runs-disabled.
+   */
+  .post('/:taskId/runs', validTaskIdParam, validStartTaskRunBody, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const run = await startTaskRunForUser({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      userId: user.id,
+      agentId: body.agentId,
+    });
+
+    return c.json({ run }, StatusCodes.CREATED);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/task/:taskId/runs/:taskRunId/cancel
+   * 409 when the run has already finished.
+   */
+  .post('/:taskId/runs/:taskRunId/cancel', validTaskRunParams, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const run = await cancelTaskRun({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      taskRunId: param.taskRunId,
+    });
+
+    return c.json({ run });
   })
   /**
    * [GET] /workspace/:workspaceId/task/:taskId/comments

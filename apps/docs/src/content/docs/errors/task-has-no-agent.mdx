@@ -1,0 +1,29 @@
+---
+title: task-has-no-agent
+description: No agent is assigned to the task.
+---
+
+`https://docs.ragna.io/errors/task-has-no-agent`
+
+## When it happens
+
+A request starts a task run on a task with no assigned agent.
+
+## Response
+
+| Member   | Value             |
+| -------- | ----------------- |
+| `status` | 409               |
+| `title`  | Task has no agent |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-has-no-agent",
+  "title": "Task has no agent",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Assign an agent to the task, or start the run with an agent. See [Tasks](/content/tasks#agents-working-on-tasks).

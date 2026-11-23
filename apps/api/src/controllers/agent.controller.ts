@@ -31,6 +31,7 @@ import {
   validAgentMemoryBody,
   validCreateAgentBody,
   validAgentListQuery,
+  validUnlockAgentQuery,
   validUpdateAgentBody,
 } from '../validation';
 
@@ -202,15 +203,19 @@ export const agentController = new Hono<WorkspaceGuardEnv>()
   })
   /**
    * [DELETE] /workspace/:workspaceId/agent/:agentId/lock
+   * 409 agent-has-active-task-runs while the agent has active task runs, unless ?stopRuns=true
+   * cancels them first.
    */
-  .delete('/:agentId/lock', validAgentIdParam, async (c) => {
+  .delete('/:agentId/lock', validAgentIdParam, validUnlockAgentQuery, async (c) => {
     const workspace = c.get('workspace');
     const param = c.req.valid('param');
+    const query = c.req.valid('query');
 
     const result = await unlockAgentForWorkspace({
       workspaceId: workspace.id,
       agentId: param.agentId,
       viewer: getLockViewer(c),
+      stopRuns: query.stopRuns ?? false,
     });
 
     return c.json(result);

@@ -28,6 +28,16 @@ export const validAgentIdParam = myzValidator(
   }),
 );
 
+export const validUnlockAgentQuery = myzValidator(
+  'query',
+  z.object({
+    stopRuns: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true')
+      .optional(),
+  }),
+);
+
 export const validAgentFromTemplateBody = myzValidator(
   'json',
   z.object({

@@ -210,8 +210,3 @@ run that ends with exactly one comment. A per-run cap keeps the notes bounded.
 a task an agent proposed. Every other agent action is planning. A loop needs a cycle of automatic
 triggers, and with this gate every cycle passes through a person. Lost: agents handing work to agents unattended. That
 needs run lineage and budgets first (see the design's loop safety section).
-
-## Open questions
-
-- [NEEDS CLARIFICATION: Default for the minimum balance to start a run and for the allowed
-  overshoot. Both are platform settings; they need numbers once credit pricing is seeded.]

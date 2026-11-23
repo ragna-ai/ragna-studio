@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TaskBoardColumnHeader from '~/features/task/components/TaskBoardColumnHeader.vue';
+import TaskRunWorkingIndicator from '~/features/task/components/TaskRunWorkingIndicator.vue';
 import { labelTone } from '~/features/task/lib/label-tone';
 import {
   formatTaskDisplayId,
@@ -124,8 +125,13 @@ const groups = computed(() =>
             </template>
           </TableCell>
           <TableCell>
+            <TaskRunWorkingIndicator
+              v-if="task.assignedAgent && task.activeRun"
+              :agent-id="task.assignedAgent.id"
+              :agent-name="task.assignedAgent.name"
+            />
             <div
-              v-if="task.assignedAgent"
+              v-else-if="task.assignedAgent"
               class="flex min-w-0 items-center gap-2"
             >
               <Icon

@@ -23,6 +23,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  TaskRunActiveException,
 } from '../exceptions';
 import {
   MAX_FILES_PER_UPLOAD_REQUEST,
@@ -193,6 +194,12 @@ async function loadOwnedTask({
   return taskRecord;
 }
 
+/** Like `loadOwnedTask`, for writes: an agent run reads the attachments, so they are locked with the task. */
+async function loadTaskOpenForEdit(scope: { workspaceId: string; taskId: string }): Promise<void> {
+  const taskRecord = await loadOwnedTask(scope);
+  if (taskRecord.activeRun) throw new TaskRunActiveException();
+}
+
 export interface UploadTaskAttachmentsResponse {
   attachments: TaskAttachmentResponse[];
 }
@@ -212,7 +219,7 @@ export async function uploadTaskAttachments({
   taskId: string;
   files: File[];
 }): Promise<UploadTaskAttachmentsResponse> {
-  await loadOwnedTask({ workspaceId, taskId });
+  await loadTaskOpenForEdit({ workspaceId, taskId });
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
@@ -317,7 +324,7 @@ export async function removeTaskAttachment({
   taskId: string;
   attachmentId: string;
 }): Promise<void> {
-  await loadOwnedTask({ workspaceId, taskId });
+  await loadTaskOpenForEdit({ workspaceId, taskId });
 
   const { error, data: attachment } = await tryCatch(() =>
     getTaskAttachmentById({ id: attachmentId }),

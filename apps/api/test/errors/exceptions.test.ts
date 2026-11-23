@@ -101,6 +101,26 @@ const exceptionFactories: Record<string, { create: ExceptionFactory; type: strin
     create: () => new exceptions.TaskCommentNotEditableException(),
     type: problemTypeUri('task-comment-not-editable'),
   },
+  TaskHasNoAgentException: {
+    create: () => new exceptions.TaskHasNoAgentException(),
+    type: problemTypeUri('task-has-no-agent'),
+  },
+  TaskRunActiveException: {
+    create: () => new exceptions.TaskRunActiveException(),
+    type: problemTypeUri('task-run-active'),
+  },
+  TaskRunLimitReachedException: {
+    create: () => new exceptions.TaskRunLimitReachedException(),
+    type: problemTypeUri('task-run-limit-reached'),
+  },
+  TaskRunsDisabledException: {
+    create: () => new exceptions.TaskRunsDisabledException(),
+    type: problemTypeUri('task-runs-disabled'),
+  },
+  AgentHasActiveTaskRunsException: {
+    create: () => new exceptions.AgentHasActiveTaskRunsException(),
+    type: problemTypeUri('agent-has-active-task-runs'),
+  },
 };
 
 function isExceptionClass(value: unknown): value is new (...args: never[]) => Error {

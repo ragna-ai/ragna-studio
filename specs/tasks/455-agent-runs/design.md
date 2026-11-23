@@ -251,15 +251,16 @@ The open task polls `GET /task/:id/runs` every 5 s while a run is active. The bo
 ### Limits
 
 Platform settings in `@repo/config`, not hardcoded, so self-hosters and the platform admin can
-change them:
+change them. Credit values are whole credits, compared with the balance in micro-credits. They are
+placeholders until credit pricing is seeded:
 
 | Setting                        | Default | Used by                                        |
 | ------------------------------ | ------- | ---------------------------------------------- |
 | `taskRunMaxActivePerWorkspace` | 3       | Start check (US-5.1)                           |
 | `taskRunTimeLimitMinutes`      | 30      | `AbortSignal.timeout`, `lockDuration`, sweeper |
 | `taskRunMaxSteps`              | 30      | `stopWhen: stepCountIs` (US-5.2)               |
-| `taskRunMinCredits`            | tbd     | Start check (US-1.4)                           |
-| `taskRunMaxOvershoot`          | tbd     | Credit check between steps (US-5.6)            |
+| `taskRunMinCredits`            | 100     | Start check (US-1.4)                           |
+| `taskRunMaxOvershoot`          | 50      | Credit check between steps (US-5.6)            |
 
 How others set them (November 2026): GitHub's Copilot cloud agent stops a session after 59
 minutes and documents no concurrency limit (about 5 to 7 run at once). Google's Jules allowed 3

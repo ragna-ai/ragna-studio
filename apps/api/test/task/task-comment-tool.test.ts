@@ -30,6 +30,7 @@ const userAuthorSchema = z.strictObject({
 const commentSchema = z.strictObject({
   id: z.string(),
   taskId: z.string(),
+  taskRunId: z.string().nullable(),
   body: z.string(),
   editedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),

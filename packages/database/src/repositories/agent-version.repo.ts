@@ -324,3 +324,13 @@ export async function getApprovedAgentVersion({
 
   return row?.version ?? null;
 }
+
+/** The versions with these ids, in one query. Unknown ids are simply absent. */
+export async function listAgentVersionsByIds({
+  versionIds,
+}: {
+  versionIds: string[];
+}): Promise<AgentVersion[]> {
+  if (versionIds.length === 0) return [];
+  return db.select().from(agentVersion).where(inArray(agentVersion.id, versionIds));
+}

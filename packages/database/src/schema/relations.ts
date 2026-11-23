@@ -38,7 +38,14 @@ import {
 import { passkey } from './passkey.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
-import { task, taskAttachment, taskComment, taskLabel, taskToTaskLabel } from './task.schema';
+import {
+  task,
+  taskAttachment,
+  taskComment,
+  taskLabel,
+  taskRun,
+  taskToTaskLabel,
+} from './task.schema';
 import { invitation, organization, organizationMember } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
@@ -89,6 +96,7 @@ const schema = {
   taskAttachment,
   taskComment,
   taskLabel,
+  taskRun,
   taskToTaskLabel,
   workspace,
   workspaceMember,
@@ -908,6 +916,27 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     attachments: r.many.taskAttachment(),
     comments: r.many.taskComment(),
+    runs: r.many.taskRun(),
+  },
+  taskRun: {
+    task: r.one.task({
+      from: [r.taskRun.workspaceId, r.taskRun.taskId],
+      to: [r.task.workspaceId, r.task.id],
+      optional: false,
+    }),
+    agent: r.one.agent({
+      from: [r.taskRun.workspaceId, r.taskRun.agentId],
+      to: [r.agent.workspaceId, r.agent.id],
+    }),
+    agentVersion: r.one.agentVersion({
+      from: [r.taskRun.workspaceId, r.taskRun.agentVersionId],
+      to: [r.agentVersion.workspaceId, r.agentVersion.id],
+      optional: false,
+    }),
+    startedByUser: r.one.user({
+      from: r.taskRun.startedByUserId,
+      to: r.user.id,
+    }),
   },
   taskComment: {
     task: r.one.task({
@@ -922,6 +951,10 @@ export const relations = defineRelations(schema, (r) => ({
     authorAgent: r.one.agent({
       from: [r.taskComment.workspaceId, r.taskComment.authorAgentId],
       to: [r.agent.workspaceId, r.agent.id],
+    }),
+    taskRun: r.one.taskRun({
+      from: r.taskComment.taskRunId,
+      to: r.taskRun.id,
     }),
   },
   taskAttachment: {

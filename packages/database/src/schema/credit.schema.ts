@@ -9,7 +9,7 @@ import { workspace } from './workspace.schema';
 export const creditLedgerKinds = ['grant', 'usage', 'refund', 'adjustment'] as const;
 export type CreditLedgerKind = (typeof creditLedgerKinds)[number];
 
-export const creditUsageFeatures = ['chat', 'workflow', 'team'] as const;
+export const creditUsageFeatures = ['chat', 'workflow', 'team', 'task'] as const;
 export type CreditUsageFeature = (typeof creditUsageFeatures)[number];
 
 // CREDIT ACCOUNT

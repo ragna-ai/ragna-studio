@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TaskRunWorkingIndicator from '~/features/task/components/TaskRunWorkingIndicator.vue';
 import { labelTone } from '~/features/task/lib/label-tone';
 import {
   formatTaskDisplayId,
@@ -96,8 +97,14 @@ const hasMeta = computed(
       </span>
     </div>
 
+    <TaskRunWorkingIndicator
+      v-if="task.assignedAgent && task.activeRun"
+      class="mt-2"
+      :agent-id="task.assignedAgent.id"
+      :agent-name="task.assignedAgent.name"
+    />
     <div
-      v-if="task.assignedAgent"
+      v-else-if="task.assignedAgent"
       class="mt-2 flex items-center gap-1.5 text-caption text-muted-foreground"
     >
       <Icon

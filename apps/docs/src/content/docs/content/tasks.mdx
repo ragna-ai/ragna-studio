@@ -28,7 +28,7 @@ The columns are **Backlog**, **Todo**, **In Progress**, **In Review**, **Done** 
 
 Click a card to open the task page. The description uses the same editor as [Documents](/content/documents#the-editor) and saves on its own, like the title. The save button in the top bar shows **Saved**, **Saving...** or a red icon when a save failed. Click it to save at once or to try again. The side panel holds the properties, such as priority, due date and labels.
 
-- **Assignee:** assign the task to one of the workspace's agents. Assignment is a label only. The agent does not start working on its own.
+- **Assignee:** assign the task to one of the workspace's agents. Assigning alone doesn't start the agent. See [Agents working on tasks](#agents-working-on-tasks).
 - **Remind me:** see [Reminders](#reminders).
 
 Use **Delete task** to remove a task. Its subtasks stay and become top-level tasks.
@@ -66,7 +66,7 @@ Users discuss a task in **Comments** on the task page, below the subtasks. Comme
 Each comment shows its author, when it was written and **(edited)** if it changed later. A comment written by an agent shows the agent's mark. If the author was deleted, the comment shows **Deleted user** or **Deleted agent**.
 
 - Users edit and delete their own comments. A workspace manager can also delete other users' comments.
-- Agents write comments when a user asks them to in a chat. A comment shows the agent as its author, not the user who asked. It is a fixed record and cannot be edited.
+- Agents write comments when a user asks them to in a chat, and during a [task run](#agents-working-on-tasks). A comment shows the agent as its author, not the user who asked. It is a fixed record and cannot be edited.
 - A task holds up to 100 comments, and one comment up to 10,000 characters.
 
 Comments from other users and agents appear after the page reloads. Cards and list rows do not show a comment count.
@@ -75,4 +75,75 @@ Comments from other users and agents appear after the page reloads. Cards and li
 
 Turn on the **Tasks** tool in an agent. It can then list, read, create, update and move tasks in the workspace. It can also assign agents, attach existing labels, add comments and read the text of attachments. A just uploaded attachment is readable once its text is extracted. Until then, the agent is told to try again later. An agent adds a comment without asking the user to approve it first. Agents cannot delete tasks. Use **Canceled** to drop work. See [Agent tools](/agents/tools).
 
-Changes made by an agent show up after the page reloads.
+Changes made by an agent in chat show up after the page reloads.
+
+## Agents working on tasks
+
+A user can hand a task to its assigned agent. The agent works on it in the background, with its agent tools, while the user does other things. This is a **task run**. When it ends, the agent reports on the task and hands it back for review.
+
+<pre class="mermaid">{`
+flowchart LR
+  A[Todo or Backlog] -->|User starts the run| B[In Progress]
+  B -->|Agent finishes| C[In Review]
+  B -->|Agent needs input| D[Todo]
+  B -->|Run fails or is stopped| A
+  C -->|User reviews| E[Done]
+`}</pre>
+
+### Start a run
+
+The agent must be approved for unattended runs. See [Lock and approve](/agents#lock-and-approve). Starting is always a user's action: assigning an agent, by a user or by another agent, never starts a run.
+
+- On a task with an assigned agent, choose **Start** in the side panel.
+- On a task without one, choose **Assign and start** and pick the agent.
+
+The task moves to **In Progress**. The card on the board and the row in the list show **{agent} is working** with the agent's mark, for every user of the workspace.
+
+### What the agent gets
+
+The agent reads the title, description, labels, subtasks and the names of the attachments. It reads attachment text with the **Tasks** tool, so the agent needs that tool for files. It also gets today's date and the results of the last three runs of the task.
+
+The due date and reminder are left out. They are for planning by users. A date the work depends on belongs in the description.
+
+The agent runs with the configuration of its approved version, not with later changes. If the version's model, a granted tool or a tool's connection is no longer available, the run fails before any action and asks for the agent to be approved again.
+
+### During the run
+
+The task is locked while its run is active. Title, description, properties and attachments can't be changed, and the page shows **Stop the run to edit this task.** Comments stay open. Two changes stay possible, and both stop the run: deleting the task, and assigning another agent.
+
+The agent can post up to 5 notes on the task as comments, linked to the run. It can't comment on other tasks, and it can't create tasks during a run. Tools that ask a user for approval in chat, such as writing to a cloud drive, don't run: the agent names the action it needs approved in its report.
+
+### When the run ends
+
+The agent ends with a comment on the task:
+
+| Result      | Task moves to                  | The comment holds                                |
+| ----------- | ------------------------------ | ------------------------------------------------ |
+| Finished    | **In Review**                  | The agent's summary of the work.                 |
+| Needs input | **Todo**                       | The question the agent needs answered.           |
+| Failed      | Its status from before the run | What failed, and which actions already happened. |
+| Stopped     | Its status from before the run | No comment.                                      |
+
+The agent never moves a task to **Done**. A user reviews the result and closes the task. If a user moved the task during the run, the task stays where the user put it.
+
+**Runs** on the task page lists every run, newest first: status, agent and version, who started it, duration, credits used, and each step with its tool calls. Agent comments from a run show **From run**, which jumps to that run.
+
+A failed run is not retried once the agent has taken an action, such as posting a note or writing to a dataset. Retrying would repeat that action. Start the run again instead: the agent then learns which actions already happened.
+
+### Stop a run
+
+- **Stop** in the side panel stops the run of that task. The agent takes no further action, and work it already did stays.
+- **Stop all runs** on the tasks page stops every run in the workspace. Only workspace managers see it.
+- An agent with active task runs can't be unlocked. The unlock dialog offers **Stop runs and unlock**.
+
+### Limits
+
+| Limit                                   | Default     | Setting                             |
+| --------------------------------------- | ----------- | ----------------------------------- |
+| Runs in progress per workspace          | 3           | `TASK_RUN_MAX_ACTIVE_PER_WORKSPACE` |
+| Time per run                            | 30 minutes  | `TASK_RUN_TIME_LIMIT_MINUTES`       |
+| Steps per run                           | 30          | `TASK_RUN_MAX_STEPS`                |
+| Balance needed to start                 | 100 credits | `TASK_RUN_MIN_CREDITS`              |
+| How far a run may go below zero credits | 50 credits  | `TASK_RUN_MAX_OVERSHOOT_CREDITS`    |
+
+A run that hits the time or step limit fails. A run that calls the same tool with the same input three times in a row stops as stuck. A run whose workspace runs out of credits stops before its next step, and the credits it used are still charged. The credit limits apply only when credits are turned on. The operator of a self-hosted instance changes the limits with the settings above, and turns task runs off with `TASK_RUNS_ENABLED=false`.

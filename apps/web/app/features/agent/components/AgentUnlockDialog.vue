@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { agentLockStateIconName } from '~/features/agent/composables/useAgentLockSummary';
 import type { AgentLock } from '~/features/agent/types';
-import { useUnlockAgent } from '~/features/agent/composables/useAgentLockApi';
+import {
+  useUnlockAgent,
+  useUnlockAgentStoppingRuns,
+} from '~/features/agent/composables/useAgentLockApi';
+import { getProblemType } from '~/lib/api-error';
 import { useGetAgentUsage } from '~/features/agent/composables/useAgentLockApi';
 
 interface Props {
@@ -15,8 +19,13 @@ const props = defineProps<Props>();
 // Refs
 const open = defineModel<boolean>('open', { default: false });
 
+const hasActiveTaskRuns = ref(false);
+
 // Composables
-const { mutate: unlockAgent, isPending } = useUnlockAgent();
+const { mutate: unlockAgent, isPending: isUnlocking } = useUnlockAgent();
+const { mutate: unlockAgentStoppingRuns, isPending: isStoppingRuns } =
+  useUnlockAgentStoppingRuns();
+const isPending = computed(() => isUnlocking.value || isStoppingRuns.value);
 const {
   data: usage,
   isPending: isUsageLoading,
@@ -26,6 +35,16 @@ const {
   () => open.value,
 );
 const { t } = useI18n();
+
+// Computed
+const confirmLabel = computed(() => {
+  if (hasActiveTaskRuns.value) {
+    return t('agent.lock.unlockDialog.stopRunsAndUnlock');
+  }
+  return props.lock?.approval
+    ? t('agent.lock.unlockDialog.confirmApproved')
+    : t('agent.lock.unlockDialog.confirm');
+});
 
 // Functions
 interface UsageStatusIcon {
@@ -40,8 +59,24 @@ function usageStatusIcon(count: number): UsageStatusIcon {
     : { name: 'hugeicons:alert-circle', class: 'text-status-warn-fg' };
 }
 
+watch(open, (isOpen) => {
+  if (isOpen) {
+    hasActiveTaskRuns.value = false;
+  }
+});
+
 function handleUnlock() {
-  unlockAgent(props.agentId, { onSuccess: () => (open.value = false) });
+  const mutate = hasActiveTaskRuns.value
+    ? unlockAgentStoppingRuns
+    : unlockAgent;
+  mutate(props.agentId, {
+    onSuccess: () => (open.value = false),
+    onError: (error) => {
+      if (getProblemType(error) === 'agent-has-active-task-runs') {
+        hasActiveTaskRuns.value = true;
+      }
+    },
+  });
 }
 </script>
 
@@ -65,6 +100,15 @@ function handleUnlock() {
         }}</AlertTitle>
         <AlertDescription>
           {{ t('agent.lock.unlockDialog.approvedText') }}
+        </AlertDescription>
+      </Alert>
+      <Alert v-if="hasActiveTaskRuns" variant="warning">
+        <Icon data-slot="alert-icon" name="hugeicons:alert-circle" />
+        <AlertTitle>{{
+          t('agent.lock.unlockDialog.activeRunsTitle')
+        }}</AlertTitle>
+        <AlertDescription>
+          {{ t('agent.lock.unlockDialog.activeRunsText') }}
         </AlertDescription>
       </Alert>
       <div class="text-sm" data-testid="agent-unlock-usage">
@@ -119,11 +163,7 @@ function handleUnlock() {
           :loading="isPending"
           @click="handleUnlock"
         >
-          {{
-            props.lock?.approval
-              ? t('agent.lock.unlockDialog.confirmApproved')
-              : t('agent.lock.unlockDialog.confirm')
-          }}
+          {{ confirmLabel }}
         </Button>
       </DialogFooter>
     </DialogContent>

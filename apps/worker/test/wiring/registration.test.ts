@@ -11,6 +11,7 @@ import {
   MEDIA_TEXT_EXTRACTION_QUEUE,
   NOTIFICATIONS_QUEUE,
   PURGE_QUEUE,
+  TASK_RUNS_QUEUE,
   VISIBLE_WATERMARK_QUEUE,
   WORKFLOW_SCHEDULES_QUEUE,
   WORKFLOWS_QUEUE,
@@ -25,7 +26,7 @@ const TEN_MINUTES_MS = 10 * 60 * 1000;
 
 interface ExpectedWorker {
   queue: string;
-  opts: { concurrency?: number; lockDuration?: number } | undefined;
+  opts: { concurrency?: number; lockDuration?: number; maxStalledCount?: number } | undefined;
 }
 
 const expectedWorkers: ExpectedWorker[] = [
@@ -43,11 +44,20 @@ const expectedWorkers: ExpectedWorker[] = [
   { queue: PURGE_QUEUE, opts: undefined },
   { queue: VISIBLE_WATERMARK_QUEUE, opts: { concurrency: 2, lockDuration: TEN_MINUTES_MS } },
   { queue: MEDIA_TEXT_EXTRACTION_QUEUE, opts: undefined },
+  {
+    queue: TASK_RUNS_QUEUE,
+    opts: {
+      concurrency: 3,
+      lockDuration: config.taskRunTimeLimitMinutes * 60 * 1000 + FIVE_MINUTES_MS,
+      maxStalledCount: 0,
+    },
+  },
 ];
 
 const expectedCrons = [
   { name: 'cleanup', schedule: { pattern: '0 2 * * *' } },
   { name: 'stale-workflow-runs', schedule: { pattern: '*/15 * * * *' } },
+  { name: 'stale-task-runs', schedule: { pattern: '*/15 * * * *' } },
   { name: 'task-reminder', schedule: { pattern: '* * * * *' } },
   { name: 'media-sweep', schedule: { pattern: '0 * * * *' } },
   { name: 'media-text-extraction-sweep', schedule: { pattern: '*/10 * * * *' } },

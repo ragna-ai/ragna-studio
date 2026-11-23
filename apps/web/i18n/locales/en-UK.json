@@ -545,7 +545,10 @@
         "assignedTaskCount": "No open task is assigned to this agent. | 1 open task is assigned to this agent. | {count} open tasks are assigned to this agent.",
         "usageFailed": "The usage of this agent couldn't be loaded.",
         "confirmApproved": "Unlock and revoke approval",
-        "confirm": "Unlock"
+        "confirm": "Unlock",
+        "activeRunsTitle": "This agent is working on tasks",
+        "activeRunsText": "Stop its task runs to unlock it. Work the agent already did stays.",
+        "stopRunsAndUnlock": "Stop runs and unlock"
       },
       "versions": {
         "title": "Versions",
@@ -1629,7 +1632,8 @@
       "noResults": {
         "title": "No tasks match these filters",
         "clearFilters": "Clear filters"
-      }
+      },
+      "moreActions": "More actions"
     },
     "view": {
       "board": "Board",
@@ -1751,6 +1755,37 @@
       "custom": "Custom",
       "needsDueDateHint": "Set a due date to enable reminders.",
       "daysBeforeSuffix": "days before"
+    },
+    "run": {
+      "start": "Start",
+      "stop": "Stop",
+      "assignAndStart": "Assign and start",
+      "working": "{agent} is working",
+      "lockedHint": "Stop the run to edit this task.",
+      "startFailed": "Failed to start the run",
+      "stopFailed": "Failed to stop the run",
+      "stopAll": "Stop all runs",
+      "stopAllConfirmTitle": "Stop all runs",
+      "stopAllConfirmMessage": "Every task run in this workspace stops. Work an agent already did stays.",
+      "stopAllDone": "No run was active. | 1 run stopped. | {count} runs stopped.",
+      "stopAllFailed": "Failed to stop the runs",
+      "historyTitle": "Runs",
+      "fromRun": "From run",
+      "deletedAgent": "Deleted agent",
+      "agentVersion": "Version {number}",
+      "startedBy": "Started by {user}",
+      "credits": "{count} credits",
+      "steps": "Steps ({count})",
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "canceled": "Canceled"
+      },
+      "outcome": {
+        "needs_input": "Needs input"
+      }
     }
   },
   "email": {
@@ -2312,7 +2347,12 @@
       "agentNotApproved": "This agent is not approved for unattended runs.",
       "knowledgeFilesNotReady": "A knowledge file is still processing or failed. Wait for it, or remove it, and try again.",
       "taskCommentLimitReached": "This task has reached the limit of 100 comments.",
-      "taskCommentNotEditable": "This comment can't be edited."
+      "taskCommentNotEditable": "This comment can't be edited.",
+      "taskHasNoAgent": "Assign an agent to this task first.",
+      "taskRunActive": "An agent is working on this task. Stop the run to edit it.",
+      "taskRunLimitReached": "This workspace has reached its limit of active task runs. Wait for one to finish.",
+      "taskRunsDisabled": "Task runs are turned off on this platform.",
+      "agentHasActiveTaskRuns": "This agent is working on tasks. Stop the runs to unlock it."
     },
     "workflowRule": {
       "triggerCount": "A workflow needs exactly one trigger.",

@@ -10,6 +10,7 @@ export * from './get-social-profile.dto';
 export * from './media-text-extraction-job.dto';
 export * from './notify-user.dto';
 export * from './onboard-user.dto';
+export * from './task-run-job.dto';
 export * from './purge-organization-job.dto';
 export * from './delete-media-objects-job.dto';
 export * from './visible-watermark-job.dto';

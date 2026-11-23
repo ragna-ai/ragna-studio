@@ -1,6 +1,8 @@
 import type { AgentUsage, WorkspaceRole } from '@repo/database';
 import {
   approveAgent,
+  cancelActiveTaskRunsOfAgent,
+  countActiveTaskRunsOfAgent,
   getAgentByIdAndWorkspaceId,
   getAgentUsage,
   getWorkspaceUserRoles,
@@ -18,6 +20,7 @@ import { tryCatch } from '@repo/utils';
 import {
   AgentAlreadyApprovedException,
   AgentAlreadyLockedException,
+  AgentHasActiveTaskRunsException,
   AgentNotApprovedException,
   AgentNotLockedException,
   ForbiddenException,
@@ -280,14 +283,27 @@ export async function lockAgentForWorkspace(
   return respondWithCurrentLock({ workspaceId, agentId });
 }
 
+interface UnlockAgentRequest extends AgentLockRequest {
+  /** Cancels the agent's active task runs instead of refusing the unlock. */
+  stopRuns: boolean;
+}
+
 /** [DELETE] /workspace/:workspaceId/agent/:agentId/lock */
-export async function unlockAgentForWorkspace(
-  request: AgentLockRequest,
-): Promise<AgentLockMutationResponse> {
+export async function unlockAgentForWorkspace({
+  stopRuns,
+  ...request
+}: UnlockAgentRequest): Promise<AgentLockMutationResponse> {
   const { workspaceId, agentId, viewer } = request;
   const { lock, actions } = await loadAgentLock(request);
   if (!lock) throw new AgentNotLockedException();
   if (!actions.canUnlock) throw new ForbiddenException();
+
+  if (stopRuns) {
+    await cancelActiveTaskRunsOfAgent({ workspaceId, agentId });
+  } else {
+    const activeRuns = await countActiveTaskRunsOfAgent({ workspaceId, agentId });
+    if (activeRuns > 0) throw new AgentHasActiveTaskRunsException();
+  }
 
   const { error, data: result } = await tryCatch(() =>
     unlockAgent({ agentId, workspaceId, userId: viewer.userId }),

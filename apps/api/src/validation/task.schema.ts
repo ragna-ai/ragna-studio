@@ -30,6 +30,21 @@ export const validTaskCommentParams = myzValidator(
   }),
 );
 
+export const validTaskRunParams = myzValidator(
+  'param',
+  z.object({
+    taskId: primaryId,
+    taskRunId: primaryId,
+  }),
+);
+
+export const validStartTaskRunBody = myzValidator(
+  'json',
+  z.object({
+    agentId: primaryId.optional(),
+  }),
+);
+
 export const validTaskCommentBody = myzValidator(
   'json',
   z.object({

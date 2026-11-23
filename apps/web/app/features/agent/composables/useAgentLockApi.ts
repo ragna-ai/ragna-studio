@@ -15,6 +15,7 @@ type LockPath = 'lock' | 'unattended-approval';
 interface LockMutationOptions {
   path: LockPath;
   method: 'POST' | 'DELETE';
+  query?: Record<string, string>;
   successMessage: string;
   failureMessage: string;
 }
@@ -26,9 +27,10 @@ function useAgentLockMutation(options: LockMutationOptions) {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (agentId) => {
-      const { path, method } = options;
+      const { path, method, query } = options;
       return $api<void>(`${agentBasePath(workspaceId)}/${agentId}/${path}`, {
         method,
+        query,
       });
     },
     onSuccess: () => {
@@ -56,6 +58,18 @@ export function useUnlockAgent() {
   return useAgentLockMutation({
     path: 'lock',
     method: 'DELETE',
+    successMessage: t('agent.lock.toast.unlocked'),
+    failureMessage: t('agent.lock.toast.unlockFailed'),
+  });
+}
+
+/** Cancels the agent's active task runs, then unlocks it. */
+export function useUnlockAgentStoppingRuns() {
+  const { t } = useI18n();
+  return useAgentLockMutation({
+    path: 'lock',
+    method: 'DELETE',
+    query: { stopRuns: 'true' },
     successMessage: t('agent.lock.toast.unlocked'),
     failureMessage: t('agent.lock.toast.unlockFailed'),
   });

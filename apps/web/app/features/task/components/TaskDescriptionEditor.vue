@@ -7,7 +7,11 @@ import { useUpdateTask } from '~/features/task/composables/useTaskApi';
 const AUTOSAVE_DELAY_MS = 1000;
 
 // Props
-const props = defineProps<{ taskId: string; description: string }>();
+const props = defineProps<{
+  taskId: string;
+  description: string;
+  readonly?: boolean;
+}>();
 
 // Models
 const saveStatus = defineModel<SaveStatus>('saveStatus', { default: 'saved' });
@@ -37,6 +41,10 @@ const controller = useRichTextEditor({
     hasSaveFailed.value = false;
     scheduleSave();
   },
+});
+
+watchEffect(() => {
+  controller.editor.value?.setEditable(!props.readonly, false);
 });
 
 watchEffect(() => {

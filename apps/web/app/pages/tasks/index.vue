@@ -5,12 +5,21 @@ import TaskBoard from '~/features/task/components/TaskBoard.vue';
 import TaskCreateDialog from '~/features/task/components/TaskCreateDialog.vue';
 import TaskFilterBar from '~/features/task/components/TaskFilterBar.vue';
 import TaskLabelManageDialog from '~/features/task/components/TaskLabelManageDialog.vue';
+import TaskStopAllRunsMenu from '~/features/task/components/TaskStopAllRunsMenu.vue';
 import TaskListView from '~/features/task/components/TaskListView.vue';
 import { useGetTasks } from '~/features/task/composables/useTaskApi';
 import { useGetTaskLabels } from '~/features/task/composables/useTaskLabelApi';
 import { useWorkspaceScopeStore } from '~/features/workspace/stores/workspacescope.store';
 import { TASK_VIEWS, type TaskView } from '~/features/task/lib/task-views';
-import type { TaskPriority, TaskStatus } from '~/features/task/types';
+import {
+  hasActiveTaskRun,
+  taskRunPollInterval,
+} from '~/features/task/lib/task-run-display';
+import type {
+  TaskListResponse,
+  TaskPriority,
+  TaskStatus,
+} from '~/features/task/types';
 
 // Refs
 // View choice persists across visits;
@@ -32,11 +41,17 @@ const {
   data: tasksData,
   error: tasksError,
   refetch,
-} = useGetTasks({
-  status: statusFilter,
-  priority: priorityFilter,
-  taskLabelId: taskLabelIdFilter,
-});
+} = useGetTasks(
+  {
+    status: statusFilter,
+    priority: priorityFilter,
+    taskLabelId: taskLabelIdFilter,
+  },
+  {
+    refetchInterval: (query: { state: { data?: TaskListResponse } }) =>
+      taskRunPollInterval(hasActiveTaskRun(query.state.data?.tasks ?? [])),
+  },
+);
 const { data: labelsData } = useGetTaskLabels();
 
 useHead({ title: t('task.list.title') });
@@ -88,6 +103,7 @@ function clearFilters() {
             :subtitle="t('task.list.subtitle')"
           >
             <template #button>
+              <TaskStopAllRunsMenu />
               <Button
                 variant="outline"
                 :disabled="!activeWorkspaceId"

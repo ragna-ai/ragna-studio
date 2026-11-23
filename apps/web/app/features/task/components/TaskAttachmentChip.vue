@@ -11,6 +11,7 @@ import type { TaskAttachment } from '~/features/task/composables/useTaskApi';
 // Props
 interface Props {
   attachment: TaskAttachment;
+  readonly?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -74,6 +75,7 @@ function onRemove() {
     </a>
 
     <Button
+      v-if="!readonly"
       type="button"
       size="icon-2xs"
       variant="outline"

@@ -1,0 +1,29 @@
+---
+title: task-runs-disabled
+description: Task runs are switched off on this RAGNA Studio instance.
+---
+
+`https://docs.ragna.io/errors/task-runs-disabled`
+
+## When it happens
+
+A request starts a task run while the operator has switched task runs off with `TASK_RUNS_ENABLED=false`.
+
+## Response
+
+| Member   | Value                  |
+| -------- | ---------------------- |
+| `status` | 503                    |
+| `title`  | Task runs are disabled |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-runs-disabled",
+  "title": "Task runs are disabled",
+  "status": 503
+}
+```
+
+## What the client can do
+
+Try again later. On a self-hosted instance, the operator turns task runs back on. See [Tasks](/content/tasks#limits).
