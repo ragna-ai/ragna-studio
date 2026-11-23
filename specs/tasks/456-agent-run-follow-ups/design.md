@@ -12,7 +12,7 @@ The prompt gains a third block after `<previous_runs>`:
 <comments> user comments created after the last run started, oldest first </comments>
 ```
 
-"After the last run started" uses `task_run.created_at` of the newest earlier run, so comments
+"After the last run started" uses `task_runs.created_at` of the newest earlier run, so comments
 already seen are not repeated (US-1.3). Agent comments are left out: they are already in
 `<previous_runs>`. Like the task text, comments are untrusted content.
 

@@ -6,7 +6,7 @@
 ## Overview
 
 ```text
-web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), task → in_progress
+web ── POST /task/:id/runs ──▶ api: checks, insert task_runs row (queued), task → in_progress
                                   │ enqueue { taskRunId }
                                   ▼
                          worker: task-runs processor
@@ -330,7 +330,7 @@ or accepted, and caps the runs it starts per workflow run.
 - **Starter loses workspace access.** The processor checks access at pickup. Without access the
   run fails permanently.
 - **Attachments.** Listed by name and id in the prompt. The agent reads them with
-  `readTaskAttachment` (#471, ships first), so large files never sit in the prompt. The run needs
+  `readTaskAttachment` (#471, merged), so large files never sit in the prompt. The run needs
   the `tasks` agent tool for that; without it the agent only sees the file names.
 - **Agents creating tasks.** In chat, as today: the user is present. In a run, refused (US-2.5).
   Agents never start runs (US-1.5).
