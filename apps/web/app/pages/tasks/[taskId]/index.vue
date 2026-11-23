@@ -4,6 +4,7 @@ import SaveStatusButton, {
   type SaveStatus,
 } from '~/components/SaveStatusButton.vue';
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
+import TaskComments from '~/features/task/components/TaskComments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
 import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
@@ -206,6 +207,8 @@ async function handleDelete() {
                 :parent-task-id="task.id"
                 :subtasks="task.subtasks"
               />
+
+              <TaskComments :task-id="task.id" />
             </div>
           </div>
         </div>

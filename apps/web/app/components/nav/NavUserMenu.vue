@@ -2,7 +2,7 @@
 import { useGetCreditBalance } from '~/features/credit/composables/useCreditApi';
 import { useGetOrganization } from '~/features/organization/composables/useOrganizationApi';
 import { highestRole } from '~/features/organization/lib/roles';
-import { createInitials } from '~/lib/utils';
+import UserAvatar from '~/features/user/components/UserAvatar.vue';
 
 defineProps<{
   sizeFull: boolean;
@@ -24,7 +24,6 @@ const displayedCredits = computed(() => {
   return credits === undefined ? null : Math.round(credits);
 });
 
-const initials = computed(() => createInitials(session.value?.user?.name));
 const roleLabel = computed(() =>
   organization.value
     ? t(`organization.roles.${highestRole(organization.value.role)}`)
@@ -47,11 +46,7 @@ async function signOut() {
         class="sidebar-menu-row"
         :aria-label="session?.user?.name"
       >
-        <span
-          class="flex size-6 shrink-0 items-center justify-center rounded-full bg-border-strong text-caption font-medium text-foreground"
-        >
-          {{ initials }}
-        </span>
+        <UserAvatar :user-name="session?.user?.name ?? ''" size="sm" />
         <span v-if="sizeFull" class="flex min-w-0 flex-col text-left">
           <span class="truncate text-body font-medium text-foreground">
             {{ session?.user?.name }}
@@ -64,9 +59,7 @@ async function signOut() {
     </DropdownMenuTrigger>
     <DropdownMenuContent side="top" align="start" :side-offset="6">
       <div class="flex h-13 items-center gap-2.5 px-2.5">
-        <Avatar>
-          <AvatarFallback>{{ initials }}</AvatarFallback>
-        </Avatar>
+        <UserAvatar :user-name="session?.user?.name ?? ''" />
         <span class="flex min-w-0 flex-col">
           <span class="truncate text-body font-medium">
             {{ session?.user?.name }}

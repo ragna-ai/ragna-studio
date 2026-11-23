@@ -201,6 +201,9 @@ Linear-style kanban board, one per workspace. Humans manage it via
 drag-and-drop; agents get CRUD tools and can be assigned to tasks
 (assignment is metadata only, no autonomous execution yet).
 → [specs/tasks/prd.md](./tasks/prd.md)
+Task comments: users discuss a task in markdown, up to 100 comments per task;
+agent comments are a read-only record.
+→ [specs/tasks/470-comments/prd.md](./tasks/470-comments/prd.md)
 
 ## Content & generation
 

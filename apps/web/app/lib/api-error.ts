@@ -32,6 +32,8 @@ export const PROBLEM_MESSAGE_KEYS: Record<ProblemType, MessageKey> = {
   'agent-already-approved': 'problem.type.agentAlreadyApproved',
   'agent-not-approved': 'problem.type.agentNotApproved',
   'knowledge-files-not-ready': 'problem.type.knowledgeFilesNotReady',
+  'task-comment-limit-reached': 'problem.type.taskCommentLimitReached',
+  'task-comment-not-editable': 'problem.type.taskCommentNotEditable',
 };
 
 export const WORKFLOW_RULE_MESSAGE_KEYS: Record<WorkflowRule, MessageKey> = {

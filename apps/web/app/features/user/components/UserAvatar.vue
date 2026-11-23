@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // Imports
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { AvatarVariants } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '~/components/ui/avatar';
+import type { AvatarVariants } from '~/components/ui/avatar';
+import { createInitials } from '~/lib/utils';
 import type { HTMLAttributes } from 'vue';
 
 // Props
 interface Props {
   userName: string;
-  imageUrl?: string;
   size?: AvatarVariants['size'];
   class?: HTMLAttributes['class'];
 }
@@ -15,20 +15,14 @@ interface Props {
 const props = defineProps<Props>();
 
 // Computed
-const initials = computed(() => {
-  return props.userName
-    ? props.userName
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-    : 'U';
-});
+const initials = computed(() => createInitials(props.userName));
 </script>
 
 <template>
   <Avatar :size="size" :class="props.class">
-    <AvatarImage v-if="imageUrl" :src="imageUrl" :alt="userName" />
-    <AvatarFallback>
+    <AvatarFallback
+      class="bg-border-strong text-caption font-medium text-foreground"
+    >
       {{ initials }}
     </AvatarFallback>
   </Avatar>

@@ -40,11 +40,14 @@ Comment response:
 
 ```ts
 { id, taskId, body, editedAt, createdAt,
-  author: { kind: 'user', id, name, image } | { kind: 'agent', id, name, icon, tone },
+  author: { kind: 'user', id, name } | { kind: 'agent', id, name, icon, tone },
   canEdit, canDelete }
 ```
 
 - `id`, `name` and the mark fields are null when the author is gone.
+- No user image: the stored one is the sign-in provider's URL, which the CSP blocks and which
+  would send every viewer's IP to that provider. Users show initials (`UserAvatar`), like the
+  user menu.
 - `canEdit` and `canDelete` are computed by the service from the same rules the routes enforce,
   so the web doesn't repeat them.
 - Authors are joined in the list query: no query per comment.

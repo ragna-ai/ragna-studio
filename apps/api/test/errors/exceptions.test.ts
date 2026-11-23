@@ -93,6 +93,14 @@ const exceptionFactories: Record<string, { create: ExceptionFactory; type: strin
     create: () => new exceptions.KnowledgeFilesNotReadyException(),
     type: problemTypeUri('knowledge-files-not-ready'),
   },
+  TaskCommentLimitReachedException: {
+    create: () => new exceptions.TaskCommentLimitReachedException(),
+    type: problemTypeUri('task-comment-limit-reached'),
+  },
+  TaskCommentNotEditableException: {
+    create: () => new exceptions.TaskCommentNotEditableException(),
+    type: problemTypeUri('task-comment-not-editable'),
+  },
 };
 
 function isExceptionClass(value: unknown): value is new (...args: never[]) => Error {

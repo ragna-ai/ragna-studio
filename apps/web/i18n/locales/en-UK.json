@@ -1697,6 +1697,21 @@
       "deleteConfirmTitle": "Delete task",
       "deleteConfirmMessage": "Are you sure you want to delete this task? Its subtasks become top-level tasks."
     },
+    "comment": {
+      "title": "Comments",
+      "placeholder": "Write a comment...",
+      "post": "Comment",
+      "empty": "No comments yet.",
+      "edited": "(edited)",
+      "deletedUser": "Deleted user",
+      "deletedAgent": "Deleted agent",
+      "loadError": "Failed to load comments.",
+      "postFailed": "Failed to post the comment",
+      "saveFailed": "Failed to save the comment",
+      "deleteFailed": "Failed to delete the comment",
+      "deleteConfirmTitle": "Delete comment",
+      "deleteConfirmMessage": "Are you sure you want to delete this comment?"
+    },
     "attachment": {
       "title": "Attachments",
       "add": "Add files",
@@ -2295,7 +2310,9 @@
       "agentNotLocked": "This agent is not locked.",
       "agentAlreadyApproved": "This agent is already approved for unattended runs.",
       "agentNotApproved": "This agent is not approved for unattended runs.",
-      "knowledgeFilesNotReady": "A knowledge file is still processing or failed. Wait for it, or remove it, and try again."
+      "knowledgeFilesNotReady": "A knowledge file is still processing or failed. Wait for it, or remove it, and try again.",
+      "taskCommentLimitReached": "This task has reached the limit of 100 comments.",
+      "taskCommentNotEditable": "This comment can't be edited."
     },
     "workflowRule": {
       "triggerCount": "A workflow needs exactly one trigger.",

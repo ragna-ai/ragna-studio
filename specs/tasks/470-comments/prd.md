@@ -1,6 +1,6 @@
 # Tasks: comments (PRD)
 
-> **Status: proposed** (2026-11-23). Issue #470. Prerequisite for #455.
+> **Status: implemented** (2026-11-23, PR #472). Issue #470. Prerequisite for #455.
 
 Tasks have no comments. People discuss a task in chat or elsewhere, away from the work. This PRD
 adds comments to the task detail view: users write them in markdown, and the data model already

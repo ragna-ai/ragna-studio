@@ -1,0 +1,29 @@
+---
+title: task-comment-limit-reached
+description: A task has reached its comment limit.
+---
+
+`https://docs.ragna.io/errors/task-comment-limit-reached`
+
+## When it happens
+
+A request adds a comment to a task that already has 100 comments.
+
+## Response
+
+| Member   | Value                      |
+| -------- | -------------------------- |
+| `status` | 409                        |
+| `title`  | Task comment limit reached |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-comment-limit-reached",
+  "title": "Task comment limit reached",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Delete a comment that is no longer needed, then try again. See [Tasks](/content/tasks#comments).

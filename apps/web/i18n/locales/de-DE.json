@@ -1700,6 +1700,21 @@
       "deleteConfirmTitle": "Aufgabe löschen",
       "deleteConfirmMessage": "Möchtest du diese Aufgabe wirklich löschen? Ihre Unteraufgaben werden zu eigenständigen Aufgaben."
     },
+    "comment": {
+      "title": "Kommentare",
+      "placeholder": "Kommentar schreiben...",
+      "post": "Kommentieren",
+      "empty": "Noch keine Kommentare.",
+      "edited": "(bearbeitet)",
+      "deletedUser": "Gelöschter Benutzer",
+      "deletedAgent": "Gelöschter Agent",
+      "loadError": "Kommentare konnten nicht geladen werden.",
+      "postFailed": "Kommentar konnte nicht gesendet werden",
+      "saveFailed": "Kommentar konnte nicht gespeichert werden",
+      "deleteFailed": "Kommentar konnte nicht gelöscht werden",
+      "deleteConfirmTitle": "Kommentar löschen",
+      "deleteConfirmMessage": "Soll dieser Kommentar wirklich gelöscht werden?"
+    },
     "attachment": {
       "title": "Anhänge",
       "add": "Dateien hinzufügen",
@@ -2298,7 +2313,9 @@
       "agentNotLocked": "Dieser Agent ist nicht gesperrt.",
       "agentAlreadyApproved": "Dieser Agent ist bereits für unbeaufsichtigte Läufe freigegeben.",
       "agentNotApproved": "Dieser Agent ist nicht für unbeaufsichtigte Läufe freigegeben.",
-      "knowledgeFilesNotReady": "Eine Wissensdatei wird noch verarbeitet oder ist fehlgeschlagen. Warte oder entferne sie und versuche es erneut."
+      "knowledgeFilesNotReady": "Eine Wissensdatei wird noch verarbeitet oder ist fehlgeschlagen. Warte oder entferne sie und versuche es erneut.",
+      "taskCommentLimitReached": "Diese Aufgabe hat das Limit von 100 Kommentaren erreicht.",
+      "taskCommentNotEditable": "Dieser Kommentar kann nicht bearbeitet werden."
     },
     "workflowRule": {
       "triggerCount": "Ein Workflow braucht genau einen Trigger.",

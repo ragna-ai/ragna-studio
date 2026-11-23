@@ -1,8 +1,11 @@
+import { sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
+  check,
   foreignKey,
   index,
   integer,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -167,3 +170,47 @@ export type TaskAttachment = typeof taskAttachment.$inferSelect;
 export type NewTaskAttachment = typeof taskAttachment.$inferInsert;
 
 export type TaskAttachmentWithMedia = TaskAttachment & { media: Media };
+
+// TASK COMMENT
+// A markdown note on a task, written by a user or an agent. `authorKind` outlives the author:
+// purge and agent deletion null the id, and the kind still says "deleted user" vs "deleted agent".
+// authorAgentId has no onDelete action: set null on a composite FK would null workspaceId too, so
+// deleteAgentById clears it explicitly. Length limits are checked by the API.
+export const taskCommentAuthorKinds = ['user', 'agent'] as const;
+export type TaskCommentAuthorKind = (typeof taskCommentAuthorKinds)[number];
+export const taskCommentAuthorKindEnum = pgEnum('task_comment_author_kind', taskCommentAuthorKinds);
+
+export const taskComment = pgTable(
+  'task_comments',
+  {
+    id: primaryIdColumn,
+    workspaceId: text('workspace_id').notNull(),
+    taskId: text('task_id').notNull(),
+    authorKind: taskCommentAuthorKindEnum('author_kind').notNull(),
+    authorUserId: text('author_user_id').references(() => user.id, { onDelete: 'set null' }),
+    authorAgentId: text('author_agent_id'),
+    body: text('body').notNull(),
+    editedAt: timestamp('edited_at', { precision: 3 }),
+    ...timestamps,
+  },
+  (table) => [
+    index('taskComment_taskId_createdAt_idx').on(table.taskId, table.createdAt),
+    foreignKey({
+      columns: [table.workspaceId, table.taskId],
+      foreignColumns: [task.workspaceId, task.id],
+      name: 'task_comments_task_workspace_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [table.workspaceId, table.authorAgentId],
+      foreignColumns: [agent.workspaceId, agent.id],
+      name: 'task_comments_author_agent_workspace_fk',
+    }),
+    check(
+      'taskComment_author_kind_check',
+      sql`(${table.authorKind} = 'user' AND ${table.authorAgentId} IS NULL) OR (${table.authorKind} = 'agent' AND ${table.authorUserId} IS NULL)`,
+    ),
+  ],
+);
+
+export type TaskComment = typeof taskComment.$inferSelect;
+export type NewTaskComment = typeof taskComment.$inferInsert;

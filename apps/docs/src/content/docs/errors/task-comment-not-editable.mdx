@@ -1,0 +1,29 @@
+---
+title: task-comment-not-editable
+description: A task comment cannot be edited.
+---
+
+`https://docs.ragna.io/errors/task-comment-not-editable`
+
+## When it happens
+
+A request edits a comment that an agent wrote. Only the author of a user comment can edit it.
+
+## Response
+
+| Member   | Value                        |
+| -------- | ---------------------------- |
+| `status` | 409                          |
+| `title`  | Task comment is not editable |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-comment-not-editable",
+  "title": "Task comment is not editable",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Post a new comment instead. See [Tasks](/content/tasks#comments).

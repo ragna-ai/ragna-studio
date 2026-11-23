@@ -38,7 +38,7 @@ import {
 import { passkey } from './passkey.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
-import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
+import { task, taskAttachment, taskComment, taskLabel, taskToTaskLabel } from './task.schema';
 import { invitation, organization, organizationMember } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
@@ -87,6 +87,7 @@ const schema = {
   notification,
   task,
   taskAttachment,
+  taskComment,
   taskLabel,
   taskToTaskLabel,
   workspace,
@@ -906,6 +907,22 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.taskLabel.id.through(r.taskToTaskLabel.taskLabelId),
     }),
     attachments: r.many.taskAttachment(),
+    comments: r.many.taskComment(),
+  },
+  taskComment: {
+    task: r.one.task({
+      from: [r.taskComment.workspaceId, r.taskComment.taskId],
+      to: [r.task.workspaceId, r.task.id],
+      optional: false,
+    }),
+    authorUser: r.one.user({
+      from: r.taskComment.authorUserId,
+      to: r.user.id,
+    }),
+    authorAgent: r.one.agent({
+      from: [r.taskComment.workspaceId, r.taskComment.authorAgentId],
+      to: [r.agent.workspaceId, r.agent.id],
+    }),
   },
   taskAttachment: {
     task: r.one.task({
