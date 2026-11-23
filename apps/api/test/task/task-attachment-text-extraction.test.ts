@@ -1,7 +1,6 @@
 import { getMediaById } from '@repo/database';
 import {
-  enqueuedJobs,
-  queueAddMock,
+  queueAddBulkMock,
   resetProviderMocks,
   seedAuthenticatedUser,
   truncateAllTables,
@@ -11,7 +10,6 @@ import { StatusCodes } from 'http-status-codes';
 import * as z from 'zod';
 import { app } from '../../src/app';
 
-const EXTRACT_JOB = 'extract-media-text';
 const EXPECTED_ATTEMPTS = 3;
 
 const ONE_PX_PNG_BASE64 =
@@ -42,24 +40,34 @@ async function seedTask() {
   return { workspaceId, cookieHeader, taskId: task.id };
 }
 
-async function uploadFile(
+async function uploadFiles(
   fixture: { workspaceId: string; cookieHeader: string; taskId: string },
-  file: File,
+  files: File[],
 ) {
   const formData = new FormData();
-  formData.append('files', file);
+  for (const file of files) {
+    formData.append('files', file);
+  }
   const response = await app.request(
     `/workspace/${fixture.workspaceId}/task/${fixture.taskId}/attachments`,
     { method: 'POST', headers: { cookie: fixture.cookieHeader }, body: formData },
   );
   expect(response.status).toBe(StatusCodes.CREATED);
-  const [attachment] = uploadResponseSchema.parse(await response.json()).attachments;
+  return uploadResponseSchema.parse(await response.json()).attachments;
+}
+
+async function uploadFile(
+  fixture: { workspaceId: string; cookieHeader: string; taskId: string },
+  file: File,
+) {
+  const [attachment] = await uploadFiles(fixture, [file]);
   if (!attachment) {
     throw new Error('Upload returned no attachment');
   }
   return attachment;
 }
 
+const pdfFile = () => new File(['%PDF-1.4\n%%EOF\n'], 'doc.pdf', { type: 'application/pdf' });
 const csvFile = () => new File(['name,age\nAda,36\n'], 'data.csv', { type: 'text/csv' });
 const pngFile = () =>
   new File([Buffer.from(ONE_PX_PNG_BASE64, 'base64')], 'pixel.png', { type: 'image/png' });
@@ -70,32 +78,34 @@ describe('task attachment text extraction on upload', () => {
     resetProviderMocks();
   });
 
-  test('a csv is stored pending and queued once under its media id', async () => {
+  test('a pdf and a png in one upload queue one job, for the pdf only', async () => {
     const fixture = await seedTask();
 
-    const attachment = await uploadFile(fixture, csvFile());
+    const [pdf, png] = await uploadFiles(fixture, [pdfFile(), pngFile()]);
 
-    const mediaRow = await getMediaById({ id: attachment.mediaId });
-    expect(mediaRow?.textExtractionStatus).toBe('pending');
-    const jobs = enqueuedJobs(EXTRACT_JOB);
+    expect((await getMediaById({ id: pdf?.mediaId ?? '' }))?.textExtractionStatus).toBe('pending');
+    expect((await getMediaById({ id: png?.mediaId ?? '' }))?.textExtractionStatus).toBeNull();
+    expect(queueAddBulkMock).toHaveBeenCalledTimes(1);
+    const jobs = queueAddBulkMock.mock.calls[0]?.[0] ?? [];
     expect(jobs).toHaveLength(1);
-    expect(jobs[0]?.[1]).toEqual({ mediaId: attachment.mediaId });
-    expect(jobs[0]?.[2]).toMatchObject({ jobId: attachment.mediaId, attempts: EXPECTED_ATTEMPTS });
+    expect(jobs[0]).toMatchObject({
+      name: 'extract-media-text',
+      data: { mediaId: pdf?.mediaId },
+      opts: { jobId: pdf?.mediaId, attempts: EXPECTED_ATTEMPTS },
+    });
   });
 
-  test('an image gets no status and no job', async () => {
+  test('an image alone makes no queue call', async () => {
     const fixture = await seedTask();
 
-    const attachment = await uploadFile(fixture, pngFile());
+    await uploadFile(fixture, pngFile());
 
-    const mediaRow = await getMediaById({ id: attachment.mediaId });
-    expect(mediaRow?.textExtractionStatus).toBeNull();
-    expect(enqueuedJobs(EXTRACT_JOB)).toHaveLength(0);
+    expect(queueAddBulkMock).not.toHaveBeenCalled();
   });
 
   test('a failed enqueue still returns the upload and leaves the row pending', async () => {
     const fixture = await seedTask();
-    queueAddMock.mockImplementationOnce(() => Promise.reject(new Error('redis down')));
+    queueAddBulkMock.mockImplementationOnce(() => Promise.reject(new Error('redis down')));
 
     const attachment = await uploadFile(fixture, csvFile());
 

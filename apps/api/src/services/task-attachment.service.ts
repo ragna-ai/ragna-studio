@@ -108,17 +108,25 @@ async function storeTaskAttachmentFile({
   });
 }
 
-/** Queues text extraction for a stored file. A failure is only logged: the worker sweep retries pending rows. */
-async function enqueueMediaTextExtraction(mediaRow: Media): Promise<void> {
-  if (mediaRow.textExtractionStatus !== 'pending') {
+/** Queues text extraction for the pending files in one bulk add. A failure is only logged: the worker sweep retries pending rows. */
+async function enqueueMediaTextExtractions(mediaRows: Media[]): Promise<void> {
+  const pendingMediaIds = mediaRows
+    .filter((mediaRow) => mediaRow.textExtractionStatus === 'pending')
+    .map((mediaRow) => mediaRow.id);
+
+  if (pendingMediaIds.length === 0) {
     return;
   }
 
-  const { name, data, opts } = buildExtractMediaTextJob(mediaRow.id);
-  const { error } = await tryCatch(() => queue.mediaTextExtraction().add(name, data, opts));
+  const { error } = await tryCatch(() =>
+    queue.mediaTextExtraction().addBulk(pendingMediaIds.map(buildExtractMediaTextJob)),
+  );
 
   if (error !== null) {
-    logger.error(`Failed to enqueue text extraction for media ${mediaRow.id}`, error);
+    logger.error(
+      `Failed to enqueue text extraction for media ${pendingMediaIds.join(', ')}`,
+      error,
+    );
   }
 }
 
@@ -257,7 +265,7 @@ export async function uploadTaskAttachments({
     throw new InternalServerErrorException('Failed to save attachments');
   }
 
-  await Promise.all(created.map(({ mediaRow }) => enqueueMediaTextExtraction(mediaRow)));
+  await enqueueMediaTextExtractions(created.map(({ mediaRow }) => mediaRow));
 
   return {
     attachments: created.map(({ mediaRow, attachmentRow }) =>
