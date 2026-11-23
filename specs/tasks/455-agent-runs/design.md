@@ -182,7 +182,9 @@ Both run tools are tool definitions (`ToolDefinition`) in `packages/ai/src/tools
 like every other agent tool. `taskRunToolDefinitions({ agentId, taskId, taskRunId })` returns
 `addTaskComment` bound to the run and `finishTaskRun`. It sits next to `taskToolDefinitions`, and
 the runner turns its result into AI SDK tools with `toAgentTools`, the same adapter as chat. No
-tool is written in the worker.
+tool is written in the worker. The seam is the one #473 left: `addTaskCommentDefinition` gets an
+optional `run: { taskId, taskRunId }` option, and `createTaskComment` an optional `taskRunId`.
+Chat passes no `run`, so its path stays unchanged.
 
 `finishTaskRun` has a flat `z.object` input, as AGENTS.md requires:
 
