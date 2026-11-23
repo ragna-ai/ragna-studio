@@ -3,6 +3,7 @@ import {
   approveAgent,
   cancelActiveTaskRunsInWorkspace,
   createTask,
+  createTaskComment,
   createTaskRun,
   db,
   failStaleTaskRuns,
@@ -256,6 +257,23 @@ describe('task lock while a run is active', () => {
     expect(result).toMatchObject({ status: 'task_run_active' });
   });
 
+  test('an agent tool cannot stop a run by reassigning the task', async () => {
+    const fixture = await seedFixture();
+    const run = await startRun(fixture);
+    const other = await insertApprovedAgent(fixture.workspaceId, fixture.userId, 'Other');
+    const updateTaskTool = taskToolDefinitions({ agentId: other.agentId }).find(
+      ({ name }) => name === 'updateTask',
+    );
+
+    const result = await updateTaskTool?.execute(
+      { id: fixture.taskId, assignedAgentId: other.agentId },
+      { userId: fixture.userId, workspaceId: fixture.workspaceId, origin: 'agent' },
+    );
+
+    expect(result).toMatchObject({ status: 'task_run_active' });
+    expect(await runStatus(run.id)).toBe('queued');
+  });
+
   test('user comments stay open', async () => {
     const fixture = await seedFixture();
     await startRun(fixture);
@@ -374,6 +392,51 @@ async function markRunning(run: TaskRun) {
   });
   expect(started).toBe(true);
 }
+
+describe('comments of a run on a full task', () => {
+  async function fillTaskWithComments(fixture: Fixture) {
+    await db.insert(taskComment).values(
+      Array.from({ length: 100 }, (_, index) => ({
+        workspaceId: fixture.workspaceId,
+        taskId: fixture.taskId,
+        authorKind: 'user' as const,
+        authorUserId: fixture.userId,
+        body: `Comment ${index}`,
+      })),
+    );
+  }
+
+  function agentComment(fixture: Fixture, run: TaskRun, skipTaskCommentCap: boolean) {
+    return createTaskComment({
+      workspaceId: fixture.workspaceId,
+      taskId: fixture.taskId,
+      author: { kind: 'agent', agentId: fixture.agentId },
+      body: 'Result',
+      taskRunId: run.id,
+      skipTaskCommentCap,
+    });
+  }
+
+  test('the runner can still post its result', async () => {
+    const fixture = await seedFixture();
+    const run = await startRun(fixture);
+    await fillTaskWithComments(fixture);
+
+    const result = await agentComment(fixture, run, true);
+
+    expect(result.status).toBe('created');
+  });
+
+  test('a note without the skip is refused', async () => {
+    const fixture = await seedFixture();
+    const run = await startRun(fixture);
+    await fillTaskWithComments(fixture);
+
+    const result = await agentComment(fixture, run, false);
+
+    expect(result).toEqual({ status: 'limit-reached' });
+  });
+});
 
 describe('task run tools', () => {
   function runTools(fixture: Fixture, run: TaskRun) {
@@ -495,6 +558,7 @@ describe('POST /task/:taskId/runs', () => {
       startedBy: { id: fixture.userId },
     });
     expect(enqueuedJobs(RUN_TASK_JOB).map(([, data]) => data)).toEqual([{ taskRunId: run.id }]);
+    expect(enqueuedJobs(RUN_TASK_JOB).map(([, , options]) => options)).toEqual([{ jobId: run.id }]);
     expect(await taskStatus(fixture.taskId)).toBe('in_progress');
   });
 
@@ -838,6 +902,29 @@ describe('comments of a run', () => {
         ['Hi', null],
       ]),
     );
+  });
+});
+
+describe('revoking the approval of an agent with active runs', () => {
+  test('cancels its running and queued runs and restores their tasks', async () => {
+    const fixture = await seedFixture();
+    const secondTask = await createTask({
+      workspaceId: fixture.workspaceId,
+      title: 'Second',
+      assignedAgentId: fixture.agentId,
+    });
+    const running = await startRun(fixture);
+    await markRunning(running);
+    const queued = await startRun(fixture, secondTask.id);
+    const routes = agentRoutes({ workspaceId: fixture.workspaceId, agentId: fixture.agentId });
+
+    const response = await routes.revoke(fixture.org.owner);
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(await runStatus(running.id)).toBe('canceled');
+    expect(await runStatus(queued.id)).toBe('canceled');
+    expect(await taskStatus(fixture.taskId)).toBe('todo');
+    expect(await taskStatus(secondTask.id)).toBe('todo');
   });
 });
 

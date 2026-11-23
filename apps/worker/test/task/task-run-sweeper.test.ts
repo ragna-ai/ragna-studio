@@ -1,7 +1,7 @@
 import { config } from '@repo/config';
 import { db, saveTaskRunProgress, sql, startTaskRun } from '@repo/database';
 import { taskRun } from '@repo/database/schema';
-import { resetProviderMocks, truncateAllTables } from '@repo/testing';
+import { queueGetJobStateMock, resetProviderMocks, truncateAllTables } from '@repo/testing';
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { staleTaskRunsProcessor } from '../../src/crons/stale-runs.cron';
 import { hoursAgo } from '../support/crons-fixtures';
@@ -18,12 +18,17 @@ describe('stale task run sweeper', () => {
     resetProviderMocks();
   });
 
-  test('fails a run still queued after an hour, tells the user and restores the task', async () => {
+  async function seedOldQueuedRun() {
     const seeded = await seedQueuedTaskRun();
     await db
       .update(taskRun)
       .set({ createdAt: hoursAgo(2) })
       .where(sql`${taskRun.id} = ${seeded.runId}`);
+    return seeded;
+  }
+
+  test('fails a queued run whose job is gone, tells the user and restores the task', async () => {
+    const seeded = await seedOldQueuedRun();
 
     await staleTaskRunsProcessor();
 
@@ -31,6 +36,30 @@ describe('stale task run sweeper', () => {
     expect((await loadCommentsOfTask(seeded.taskId))[0]?.body).toContain('did not finish in time');
     expect((await loadTask(seeded.taskId))?.status).toBe('todo');
   });
+
+  test('fails a queued run whose job failed', async () => {
+    const seeded = await seedOldQueuedRun();
+    queueGetJobStateMock.mockImplementation(() => Promise.resolve('failed'));
+
+    await staleTaskRunsProcessor();
+
+    expect((await loadRun(seeded)).status).toBe('failed');
+  });
+
+  test.each(['waiting', 'delayed', 'active', 'prioritized', 'waiting-children'] as const)(
+    'keeps a queued run whose job is %s, however long it has waited',
+    async (state) => {
+      const seeded = await seedOldQueuedRun();
+      queueGetJobStateMock.mockImplementation((jobId: string) =>
+        Promise.resolve(jobId === seeded.runId ? state : 'unknown'),
+      );
+
+      await staleTaskRunsProcessor();
+
+      expect((await loadRun(seeded)).status).toBe('queued');
+      expect(await loadCommentsOfTask(seeded.taskId)).toHaveLength(0);
+    },
+  );
 
   test('fails a run that has been running past its time limit plus the grace period', async () => {
     const seeded = await seedQueuedTaskRun();

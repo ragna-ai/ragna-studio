@@ -97,7 +97,7 @@ The agent must be approved for unattended runs. See [Lock and approve](/agents#l
 - On a task with an assigned agent, choose **Start** in the side panel.
 - On a task without one, choose **Assign and start** and pick the agent.
 
-The task moves to **In Progress**. The card on the board and the row in the list show **{agent} is working** with the agent's mark, for every user of the workspace.
+The task moves to **In Progress**. The card on the board and the row in the list show the agent's mark and name with **is working**, for every user of the workspace.
 
 ### What the agent gets
 
@@ -135,15 +135,17 @@ A failed run is not retried once the agent has taken an action, such as posting 
 - **Stop** in the side panel stops the run of that task. The agent takes no further action, and work it already did stays.
 - **Stop all runs** on the tasks page stops every run in the workspace. Only workspace managers see it.
 - An agent with active task runs can't be unlocked. The unlock dialog offers **Stop runs and unlock**.
+- Revoking the agent's approval for unattended runs stops its task runs too.
 
 ### Limits
 
-| Limit                                   | Default     | Setting                             |
-| --------------------------------------- | ----------- | ----------------------------------- |
-| Runs in progress per workspace          | 3           | `TASK_RUN_MAX_ACTIVE_PER_WORKSPACE` |
-| Time per run                            | 30 minutes  | `TASK_RUN_TIME_LIMIT_MINUTES`       |
-| Steps per run                           | 30          | `TASK_RUN_MAX_STEPS`                |
-| Balance needed to start                 | 100 credits | `TASK_RUN_MIN_CREDITS`              |
-| How far a run may go below zero credits | 50 credits  | `TASK_RUN_MAX_OVERSHOOT_CREDITS`    |
+| Limit                                                    | Default     | Setting                             |
+| -------------------------------------------------------- | ----------- | ----------------------------------- |
+| Runs in progress per workspace                           | 3           | `TASK_RUN_MAX_ACTIVE_PER_WORKSPACE` |
+| Runs the worker processes at once, across all workspaces | 3           | `TASK_RUN_WORKER_CONCURRENCY`       |
+| Time per run                                             | 30 minutes  | `TASK_RUN_TIME_LIMIT_MINUTES`       |
+| Steps per run                                            | 30          | `TASK_RUN_MAX_STEPS`                |
+| Balance needed to start                                  | 100 credits | `TASK_RUN_MIN_CREDITS`              |
+| How far a run may go below zero credits                  | 50 credits  | `TASK_RUN_MAX_OVERSHOOT_CREDITS`    |
 
-A run that hits the time or step limit fails. A run that calls the same tool with the same input three times in a row stops as stuck. A run whose workspace runs out of credits stops before its next step, and the credits it used are still charged. The credit limits apply only when credits are turned on. The operator of a self-hosted instance changes the limits with the settings above, and turns task runs off with `TASK_RUNS_ENABLED=false`.
+A run waits in the queue while the worker is busy. A run that hits the time or step limit fails, and retries share the run's time limit. A run that calls the same tool with the same input three times in a row stops as stuck. A run whose workspace runs out of credits stops before its next step, and the credits it used are still charged. The credit limits apply only when credits are turned on. The operator of a self-hosted instance changes the limits with the settings above, and turns task runs off with `TASK_RUNS_ENABLED=false`.

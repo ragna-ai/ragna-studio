@@ -198,8 +198,7 @@ third-party framework like Mastra). Supports scheduled triggers and a
 ### Tasks / Kanban board
 
 Linear-style kanban board, one per workspace. Humans manage it via
-drag-and-drop; agents get CRUD tools and can be assigned to tasks
-(assignment is metadata only, no autonomous execution yet).
+drag-and-drop; agents get CRUD tools and can be assigned to tasks.
 → [specs/tasks/prd.md](./tasks/prd.md)
 Task comments: users discuss a task in markdown, up to 100 comments per task;
 agent comments are a read-only record.
@@ -210,6 +209,9 @@ and cap for every comment author.
 Agent tool `readTaskAttachment`: the worker extracts a task attachment's text after
 upload; agents list attachments in `readTask` and read the stored text.
 → [specs/tasks/471-read-attachments/prd.md](./tasks/471-read-attachments/prd.md)
+Task runs: a user starts the assigned, approved agent on a task; it works in the
+background, posts notes and its result as comments and hands the task back for review.
+→ [specs/tasks/455-agent-runs/prd.md](./tasks/455-agent-runs/prd.md)
 
 ## Content & generation
 

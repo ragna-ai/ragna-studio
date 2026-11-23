@@ -5,6 +5,7 @@ import {
 } from '@repo/ai';
 import { config } from '@repo/config';
 import type {
+  AgentVersion,
   AgentVersionConfig,
   TaskRun,
   TaskRunOutcome,
@@ -20,6 +21,7 @@ import {
   listAgentVersionsByIds,
   listRecentFinishedTaskRuns,
   listTaskCommentsByTaskId,
+  MAX_TASK_COMMENT_BODY_LENGTH,
   saveTaskRunProgress,
   startTaskRun,
   succeedTaskRun,
@@ -40,6 +42,7 @@ import {
 import type { PreviousRunForPrompt } from './task-run-prompt';
 import { buildTaskRunPrompt, summarizeActions } from './task-run-prompt';
 
+const ELLIPSIS = '...';
 const MICRO_CREDITS_PER_CREDIT = 1_000_000;
 const STALE_MESSAGE = 'The run did not finish in time.';
 const DELETED_AGENT_MESSAGE = 'The agent was deleted.';
@@ -61,10 +64,27 @@ interface FailureDescription {
   retryable: boolean;
 }
 
+function timeLimitMessage(): string {
+  return `The run hit its time limit of ${config.taskRunTimeLimitMinutes} minutes.`;
+}
+
+/** The time limit covers the whole run, so a retry only gets what earlier attempts left. */
+function remainingTimeBudgetMs(run: TaskRun): number {
+  const budgetMs = config.taskRunTimeLimitMinutes * 60_000;
+  const elapsedMs = run.startedAt ? Date.now() - run.startedAt.getTime() : 0;
+  return budgetMs - elapsedMs;
+}
+
+function assertVersionStillApproved(version: Pick<AgentVersion, 'approvedAt' | 'revokedAt'>): void {
+  if (!version.approvedAt || version.revokedAt) {
+    throw new PermanentTaskRunError("The agent's approval was revoked.");
+  }
+}
+
 function describeFailure(error: unknown, timeLimitReached: boolean): FailureDescription {
   if (timeLimitReached) {
     return {
-      message: `The run hit its time limit of ${config.taskRunTimeLimitMinutes} minutes.`,
+      message: timeLimitMessage(),
       retryable: false,
     };
   }
@@ -83,11 +103,13 @@ function describeFailure(error: unknown, timeLimitReached: boolean): FailureDesc
   return { message: UNEXPECTED_FAILURE_MESSAGE, retryable: true };
 }
 
-function toUsage(progress: UnattendedAgentProgress | null): TaskRunUsage {
+/** The usage of earlier attempts plus this attempt's progress. Each attempt is charged on its own. */
+function addUsage(earlier: TaskRunUsage, progress: UnattendedAgentProgress | null): TaskRunUsage {
   return {
-    inputTokens: progress?.usage.inputTokens ?? 0,
-    outputTokens: progress?.usage.outputTokens ?? 0,
-    credits: Number(progress?.usage.microCredits ?? 0n) / MICRO_CREDITS_PER_CREDIT,
+    inputTokens: earlier.inputTokens + (progress?.usage.inputTokens ?? 0),
+    outputTokens: earlier.outputTokens + (progress?.usage.outputTokens ?? 0),
+    credits:
+      earlier.credits + Number(progress?.usage.microCredits ?? 0n) / MICRO_CREDITS_PER_CREDIT,
   };
 }
 
@@ -156,6 +178,12 @@ export async function commentOnStaleTaskRuns(staleRuns: TaskRun[]): Promise<void
   }
 }
 
+function fitCommentBody(body: string): string {
+  if (body.length <= MAX_TASK_COMMENT_BODY_LENGTH) return body;
+  return `${body.slice(0, MAX_TASK_COMMENT_BODY_LENGTH - ELLIPSIS.length)}${ELLIPSIS}`;
+}
+
+/** Writes the run's result or failure on the task. These comments are never refused for the task's comment cap. */
 async function postAgentComment({
   run,
   body,
@@ -172,8 +200,9 @@ async function postAgentComment({
       workspaceId: run.workspaceId,
       taskId: run.taskId,
       author: { kind: 'agent', agentId: run.agentId },
-      body,
+      body: fitCommentBody(body),
       taskRunId: run.id,
+      skipTaskCommentCap: true,
     });
     if (result.status !== 'created') {
       logger.warn(`Task run ${run.id} comment not written: ${result.status}`);
@@ -311,6 +340,12 @@ async function runAgent({
       taskRunId: run.id,
     }),
     writeToolNames,
+    onBeforeWrite: () =>
+      saveTaskRunProgress({
+        workspaceId: run.workspaceId,
+        taskRunId: run.id,
+        firstWriteAt: new Date(),
+      }),
     refuseApprovalTools: true,
     inTaskRun: true,
     logLabel: `task run ${run.id}`,
@@ -321,8 +356,7 @@ async function runAgent({
         workspaceId: run.workspaceId,
         taskRunId: run.id,
         trace: progress.trace,
-        usage: toUsage(progress),
-        firstWriteAt: progress.stepWroteData ? new Date() : undefined,
+        usage: addUsage(run.usage, progress),
       });
     },
   });
@@ -338,14 +372,16 @@ async function finishRun({
   progress: UnattendedAgentProgress | null;
 }): Promise<void> {
   const work = readFinishedWork(result);
-  await postAgentComment({ run, body: work.summary });
-  await succeedTaskRun({
+  const succeeded = await succeedTaskRun({
     workspaceId: run.workspaceId,
     taskRunId: run.id,
     outcome: work.outcome,
     trace: result.trace,
-    usage: toUsage(progress),
+    usage: addUsage(run.usage, progress),
   });
+  if (succeeded) {
+    await postAgentComment({ run, body: work.summary });
+  }
 }
 
 /**
@@ -388,10 +424,22 @@ export async function executeTaskRunAttempt({
     return 'skipped';
   }
 
-  const timeLimit = AbortSignal.timeout(config.taskRunTimeLimitMinutes * 60_000);
+  const remainingMs = remainingTimeBudgetMs(run);
+  if (remainingMs <= 0) {
+    await failTaskRunWithComment({
+      run,
+      message: timeLimitMessage(),
+      trace: run.trace,
+      usage: run.usage,
+      writeToolNames,
+    });
+    throw new TaskRunFailed(timeLimitMessage());
+  }
+  const timeLimit = AbortSignal.timeout(remainingMs);
   let latestProgress: UnattendedAgentProgress | null = null;
 
   try {
+    assertVersionStillApproved(run.agentVersion);
     const userId = await assertStarterHasWorkspaceAccess(run);
     await assertApprovedConfigIsRunnable({ versionConfig: run.agentVersion.config, userId });
 
@@ -469,7 +517,7 @@ async function handleAttemptFailure({
     run: current,
     message: failure.message,
     trace: progress?.trace ?? current.trace,
-    usage: progress ? toUsage(progress) : current.usage,
+    usage: progress ? addUsage(run.usage, progress) : current.usage,
     writeToolNames,
   });
   throw new TaskRunFailed(failure.message);

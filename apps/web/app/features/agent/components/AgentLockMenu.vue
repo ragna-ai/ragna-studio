@@ -32,7 +32,22 @@ const { mutate: lockAgent, isPending: isLocking } = useLockAgent();
 const { mutate: revokeApproval, isPending: isRevoking } =
   useRevokeAgentApproval();
 const { t } = useI18n();
+const { confirm } = useConfirmDialog();
 const lockSummary = useAgentLockSummary(() => props.lock);
+
+// Functions
+async function confirmRevoke() {
+  const confirmed = await confirm({
+    title: t('agent.lock.revokeDialog.title'),
+    message: t('agent.lock.revokeDialog.message'),
+    confirmLabel: t('agent.lock.revokeDialog.confirm'),
+    cancelLabel: t('common.cancel'),
+    variant: 'destructive',
+  });
+  if (confirmed) {
+    revokeApproval(props.agentId);
+  }
+}
 
 // Computed
 const isLocked = computed(() => !!props.lock);
@@ -86,7 +101,7 @@ const tooltipText = computed(() =>
               <DropdownMenuItem
                 v-if="props.lockActions?.canRevoke"
                 :disabled="isRevoking"
-                @click="revokeApproval(props.agentId)"
+                @click="confirmRevoke"
               >
                 <Icon name="hugeicons:cloud-off" class="shrink-0" />
                 {{ t('agent.lock.actions.revoke') }}

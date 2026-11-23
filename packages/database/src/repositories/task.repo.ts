@@ -306,17 +306,21 @@ async function lockTaskForWrite(
  * replaced (delete + insert) in the same transaction.
  *
  * A task with an active run is locked: the result is `run-active`. Giving the task another agent
- * is the exception, it cancels the run in the same transaction.
+ * is the exception for users, it cancels the run in the same transaction. Agent tools pass
+ * `onReassignWithActiveRun: 'refuse'`.
  */
 export async function updateTask({
   id,
   workspaceId,
   labelIds,
+  onReassignWithActiveRun = 'cancel',
   ...fields
 }: {
   id: string;
   workspaceId: string;
   labelIds?: string[];
+  /** What a reassignment does to an active run: users stop it, agents are refused. */
+  onReassignWithActiveRun?: 'cancel' | 'refuse';
 } & UpdateTaskFields): Promise<TaskWriteResult> {
   return db.transaction(async (tx): Promise<TaskWriteResult> => {
     const locked = await lockTaskForWrite(tx, { id, workspaceId });
@@ -325,7 +329,9 @@ export async function updateTask({
     if (locked.activeRunId) {
       const isReassignment =
         fields.assignedAgentId !== undefined && fields.assignedAgentId !== locked.assignedAgentId;
-      if (!isReassignment) return { status: 'run-active' };
+      if (!isReassignment || onReassignWithActiveRun === 'refuse') {
+        return { status: 'run-active' };
+      }
       await cancelActiveTaskRunOfTask(tx, { workspaceId, taskId: id });
     }
 

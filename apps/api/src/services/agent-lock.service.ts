@@ -351,6 +351,8 @@ export async function revokeAgentApprovalForWorkspace(
   if (error !== null) throwInternalError(error, 'Failed to revoke approval');
   if (!revokedVersion) throw new AgentNotApprovedException();
 
+  await cancelActiveTaskRunsOfAgent({ workspaceId, agentId });
+
   return respondWithCurrentLock({ workspaceId, agentId });
 }
 

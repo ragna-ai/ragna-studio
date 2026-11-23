@@ -173,7 +173,9 @@ export async function startTaskRunForUser({
   try {
     await queue
       .taskRun()
-      .add(RUN_TASK_JOB, taskRunJobSchema.parse({ taskRunId: target.taskRunId }));
+      .add(RUN_TASK_JOB, taskRunJobSchema.parse({ taskRunId: target.taskRunId }), {
+        jobId: target.taskRunId,
+      });
   } catch (error) {
     await failRunAfterEnqueueError(target, error);
     throw error;

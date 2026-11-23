@@ -115,7 +115,7 @@ processor reloads everything, so a stale payload can't act on old data.
 
 Processor options:
 
-- `concurrency: 3`, like the other agent processors.
+- `concurrency` from `TASK_RUN_WORKER_CONCURRENCY` (default 3), across all workspaces.
 - `lockDuration`: the run time limit plus 5 minutes, so a slow run is never seen as stalled.
 - `maxStalledCount: 0`. BullMQ re-runs a stalled job once by default. For a run with side effects
   that would repeat them. A stalled job fails instead and the sweeper marks the run `failed`.
@@ -204,11 +204,13 @@ stops without calling it, the final text becomes the summary with outcome `compl
   (US-2.4). This is stricter than workflows, which write without approval by design (cloud drive
   PRD, US-5). A workflow is configured ahead of time by a user; a task's text is written ad hoc and
   may hold pasted content. #281 decides the policy for all unattended runs.
-- The task tools refuse to change status or assignee of the task under run. The runner owns both.
+- The task tools refuse to change status or assignee of a task with an active run, this one or
+  another. An agent never stops a run by reassigning its task; only users do.
 - In a run, `createTask` returns a tool failure that tells the agent to list its steps in the
   summary instead (US-2.5). Phase 2 replaces this with proposed subtasks.
-- `first_write_at` is set when the first call of a tool with `access: 'write'` finishes. Writes
-  to our own data count too: a repeated dataset append duplicates rows.
+- `first_write_at` is set before the first call of a tool with `access: 'write'` runs. If that
+  write to the run fails, the tool doesn't run and the attempt ends. Writes to our own data count
+  too: a repeated dataset append duplicates rows.
   Tool definitions already carry their access level.
 - `addTaskComment` is always in a run, whatever the agent's grants: the run adds it through
   `taskRunToolDefinitions`, bound to the task under run and to `task_run_id`. Chat gets the same
@@ -229,7 +231,13 @@ stops without calling it, the final text becomes the summary with outcome `compl
 | Canceled             | Status became `canceled`                                           | Abort, no comment from the agent                                |
 
 The processor catches, classifies, then rethrows a plain error (retry) or an `UnrecoverableError`
-(final). On the last attempt it writes the failure comment and restores the task status.
+(final). On the last attempt it writes the failure comment and restores the task status. The time
+limit counts from the run's start, not the attempt's, so a retry gets only the time left. Usage
+adds up over all attempts.
+
+The runner moves the run to its end state first and writes the result or failure comment only if
+that move won, so a stopped run gets no comment. Runner comments skip the 100-per-task cap: a
+result is never lost to a full task. Notes from `addTaskComment` keep both caps.
 
 ### Cancellation
 
@@ -240,8 +248,10 @@ active run in the same transaction.
 
 ### Sweeper
 
-`stale-runs.cron.ts` also fails `task_runs` rows `queued` for over 1 hour or `running` for longer
-than the time limit plus 15 minutes, writes the failure comment and restores the task status.
+`stale-runs.cron.ts` also fails `task_runs` rows `running` for longer than the time limit plus 15
+minutes, and rows `queued` for over 1 hour whose job (job id = run id) is gone or failed. A run
+that only waits behind a busy worker is never failed. It writes the failure comment and restores
+the task status.
 
 ### Visibility
 
@@ -323,7 +333,8 @@ or accepted, and caps the runs it starts per workflow run.
   stopping the run. The lock comes from the active run, not a flag, so a crashed run can't leave it
   behind: the sweeper ends the run and the lock with it.
 - **Unlocking during a run.** Refused with `409` while the agent has active task runs (#462). The
-  unlock dialog offers "Stop runs and unlock" (US-3.6). Retries load the run's version, never the
+  unlock dialog offers "Stop runs and unlock" (US-3.6). Revoking the approval stops the agent's
+  runs, and the worker checks the version's approval again at pickup. Retries load the run's version, never the
   live agent.
 - **Agent deleted.** A locked agent can't be deleted (#462), so an approved agent can't disappear
   under a run. `agent_versions.agent_id` is set null if the agent goes later; past runs keep their

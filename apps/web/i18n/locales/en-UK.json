@@ -572,6 +572,11 @@
         "approveFailed": "Failed to approve agent",
         "revoked": "Approval revoked",
         "revokeFailed": "Failed to revoke approval"
+      },
+      "revokeDialog": {
+        "title": "Revoke approval",
+        "message": "The agent can no longer run unattended. Its active task runs stop. Work it already did stays.",
+        "confirm": "Revoke approval"
       }
     }
   },

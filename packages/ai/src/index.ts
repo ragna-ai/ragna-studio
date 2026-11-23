@@ -48,4 +48,5 @@ export * from './factories';
 export * from './services';
 export * from './tools';
 export * from './types';
+export * from './untrusted-content';
 export * from './usage';

@@ -112,6 +112,8 @@ export interface CreateTaskCommentInput {
   taskRunId?: string;
   /** Refuses the comment once the run has written this many. Unset means no cap. */
   maxCommentsOfRun?: number;
+  /** For the run's own result and failure comments: they are never refused by the per-task cap. */
+  skipTaskCommentCap?: boolean;
 }
 
 function toNewTaskComment({
@@ -145,6 +147,7 @@ export async function createTaskComment({
   body,
   taskRunId,
   maxCommentsOfRun,
+  skipTaskCommentCap,
 }: CreateTaskCommentInput): Promise<CreateTaskCommentResult> {
   return db.transaction(async (tx) => {
     const [lockedTask] = await tx
@@ -154,11 +157,13 @@ export async function createTaskComment({
       .for('update');
     if (!lockedTask) return { status: 'task-not-found' };
 
-    const [existing] = await tx
-      .select({ total: count() })
-      .from(taskComment)
-      .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskId, taskId)));
-    if ((existing?.total ?? 0) >= MAX_COMMENTS_PER_TASK) return { status: 'limit-reached' };
+    if (!skipTaskCommentCap) {
+      const [existing] = await tx
+        .select({ total: count() })
+        .from(taskComment)
+        .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskId, taskId)));
+      if ((existing?.total ?? 0) >= MAX_COMMENTS_PER_TASK) return { status: 'limit-reached' };
+    }
 
     if (taskRunId && maxCommentsOfRun !== undefined) {
       const [ofRun] = await tx

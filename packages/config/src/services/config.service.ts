@@ -250,6 +250,7 @@ const ConfigSchema = z.object({
   TASK_RUN_MAX_ACTIVE_PER_WORKSPACE: taskRunLimit(3),
   TASK_RUN_TIME_LIMIT_MINUTES: taskRunLimit(30),
   TASK_RUN_MAX_STEPS: taskRunLimit(30),
+  TASK_RUN_WORKER_CONCURRENCY: taskRunLimit(3),
   TASK_RUN_MIN_CREDITS: taskRunLimit(100),
   TASK_RUN_MAX_OVERSHOOT_CREDITS: taskRunLimit(50),
 
@@ -563,6 +564,10 @@ export class ConfigService {
 
   get taskRunMaxSteps(): number {
     return this._config.TASK_RUN_MAX_STEPS;
+  }
+
+  get taskRunWorkerConcurrency(): number {
+    return this._config.TASK_RUN_WORKER_CONCURRENCY;
   }
 
   get taskRunMinMicroCredits(): bigint {

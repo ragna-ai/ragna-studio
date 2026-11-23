@@ -47,7 +47,7 @@ const expectedWorkers: ExpectedWorker[] = [
   {
     queue: TASK_RUNS_QUEUE,
     opts: {
-      concurrency: 3,
+      concurrency: config.taskRunWorkerConcurrency,
       lockDuration: config.taskRunTimeLimitMinutes * 60 * 1000 + FIVE_MINUTES_MS,
       maxStalledCount: 0,
     },

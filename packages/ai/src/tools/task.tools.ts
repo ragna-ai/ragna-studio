@@ -654,7 +654,13 @@ const updateTaskDefinition: ToolDefinition<
         labelIds = resolvedLabels.labelIds;
       }
 
-      const result = await updateTask({ id: input.id, workspaceId, labelIds, ...fields });
+      const result = await updateTask({
+        id: input.id,
+        workspaceId,
+        labelIds,
+        onReassignWithActiveRun: 'refuse',
+        ...fields,
+      });
       if (result.status === 'not-found') {
         return TASK_NOT_FOUND;
       }
@@ -837,6 +843,7 @@ export const finishTaskRunInputSchema = z.object({
   summary: z
     .string()
     .min(1)
+    .max(MAX_TASK_COMMENT_BODY_LENGTH)
     .describe('What you did, what you found and what is left. Markdown. Shown on the task.'),
 });
 

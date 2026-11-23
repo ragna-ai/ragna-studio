@@ -10,7 +10,6 @@ import {
   stepCountIs,
   toAgentTools,
   toModelSettings,
-  toolFailureSchema,
   withCachedInstructions,
   withDefaultProviderOptions,
 } from '@repo/ai';
@@ -18,12 +17,7 @@ import type { AgentVersionConfig, AiModelPricing } from '@repo/database';
 import { computeCharge, getAiModelById } from '@repo/database';
 import type { WorkflowAgentTraceStep, WorkflowTokenUsage } from '@repo/workflow';
 import type { GenerateTextStep, GenerateTextSteps } from './agent-trace';
-import {
-  collectStepToolCalls,
-  collectTrace,
-  logTraceStepDebug,
-  toWorkflowUsage,
-} from './agent-trace';
+import { collectTrace, logTraceStepDebug, toWorkflowUsage } from './agent-trace';
 import type { UsageCharge } from './credit-gate';
 import { gateCreditSpend, settleUsageCharge } from './credit-gate';
 
@@ -31,8 +25,6 @@ import { gateCreditSpend, settleUsageCharge } from './credit-gate';
 export interface UnattendedAgentProgress {
   trace: WorkflowAgentTraceStep[];
   usage: UnattendedAgentUsage;
-  /** The step that just finished called a writing tool. Always false in `beforeStep`. */
-  stepWroteData: boolean;
 }
 
 export interface UnattendedAgentUsage {
@@ -59,8 +51,13 @@ export interface UnattendedAgentRun {
   extraToolDefinitions?: readonly AnyToolDefinition[];
   /** Tools that chat gates behind a user approval answer with a failure instead of running. */
   refuseApprovalTools?: boolean;
-  /** Names of the tools that change data. `onStep` reports a step that called one. */
+  /** Names of the tools that change data. */
   writeToolNames?: ReadonlySet<string>;
+  /**
+   * Runs before each call of a write tool, and the tool only runs once it has finished. When it
+   * throws, the tool does not run and the run ends before its next step with that error.
+   */
+  onBeforeWrite?: () => Promise<void>;
   /** Task tools refuse to create tasks. */
   inTaskRun?: boolean;
   /** Names the run in the debug log. */
@@ -94,12 +91,30 @@ function toApprovalRefusals(tools: ToolSet): ToolSet {
   return { ...tools, ...Object.fromEntries(refusals) };
 }
 
-function callsWritingTool(step: GenerateTextStep, writeToolNames: ReadonlySet<string>): boolean {
-  return collectStepToolCalls(step, undefined).some(
-    (call) =>
-      writeToolNames.has(call.toolName) &&
-      (call.error !== undefined || !toolFailureSchema.safeParse(call.output).success),
-  );
+function withWriteMarker({
+  tools,
+  writeToolNames,
+  onBeforeWrite,
+}: {
+  tools: ToolSet;
+  writeToolNames: ReadonlySet<string>;
+  onBeforeWrite: () => Promise<void>;
+}): ToolSet {
+  const entries = Object.entries(tools).map(([name, definition]): [string, ToolSet[string]] => {
+    const execute = definition.execute;
+    if (!writeToolNames.has(name) || !execute) return [name, definition];
+    return [
+      name,
+      {
+        ...definition,
+        execute: async (...args: Parameters<typeof execute>) => {
+          await onBeforeWrite();
+          return execute(...args);
+        },
+      },
+    ];
+  });
+  return Object.fromEntries(entries);
 }
 
 function sumUsage({
@@ -158,18 +173,29 @@ export async function runAgentUnattended(
     toolContext: { userId, workspaceId, origin: 'agent' },
     logFields: { agentId },
   });
-  const allTools = { ...grantedTools, ...extraTools };
-  const tools = input.refuseApprovalTools ? toApprovalRefusals(allTools) : allTools;
-
   const writeToolNames = input.writeToolNames ?? new Set<string>();
+  const writeMarker: { failed: boolean; error?: unknown } = { failed: false };
+  const { onBeforeWrite } = input;
+  const markedTools = onBeforeWrite
+    ? withWriteMarker({
+        tools: { ...grantedTools, ...extraTools },
+        writeToolNames,
+        onBeforeWrite: async () => {
+          try {
+            await onBeforeWrite();
+          } catch (error) {
+            writeMarker.failed = true;
+            writeMarker.error = error;
+            throw error;
+          }
+        },
+      })
+    : { ...grantedTools, ...extraTools };
+  const tools = input.refuseApprovalTools ? toApprovalRefusals(markedTools) : markedTools;
 
-  const progressOf = (
-    steps: GenerateTextSteps,
-    stepWroteData: boolean,
-  ): UnattendedAgentProgress => ({
+  const progressOf = (steps: GenerateTextSteps): UnattendedAgentProgress => ({
     trace: collectTrace(steps),
     usage: sumUsage({ model: aiModel, steps }),
-    stepWroteData,
   });
 
   const finishedSteps: GenerateTextStep[] = [];
@@ -193,15 +219,18 @@ export async function runAgentUnattended(
         ...(input.stopAfterToolName ? [hasToolCall(input.stopAfterToolName)] : []),
       ],
       prepareStep: async ({ steps }) => {
-        await input.beforeStep?.(progressOf(steps, false));
+        if (writeMarker.failed) throw writeMarker.error;
+        await input.beforeStep?.(progressOf(steps));
         return undefined;
       },
       onStepFinish: async (step) => {
         logStep(step);
         finishedSteps.push(step);
-        await input.onStep?.(progressOf(finishedSteps, callsWritingTool(step, writeToolNames)));
+        await input.onStep?.(progressOf(finishedSteps));
       },
     });
+
+    if (writeMarker.failed) throw writeMarker.error;
 
     return {
       text: result.text,

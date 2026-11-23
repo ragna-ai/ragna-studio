@@ -13,7 +13,6 @@ import { executeTaskRunAttempt } from '../task-runs/task-run.service';
 
 const LOCK_BUFFER_MS = 5 * 60_000;
 const DEFAULT_ATTEMPTS = 1;
-const TASK_RUN_CONCURRENCY = 3;
 
 export async function processTaskRunJob(job: ProcessorJob): Promise<ProcessorSuccess> {
   logger.info(`Processing task run jobId: ${job.id} name: ${job.name}`);
@@ -48,7 +47,7 @@ export function registerTaskRunJobProcessor(): Worker<any, any, string> {
   const taskRunWorker = createWorker({
     name: TASK_RUNS_QUEUE,
     opts: {
-      concurrency: TASK_RUN_CONCURRENCY,
+      concurrency: config.taskRunWorkerConcurrency,
       // A run may take up to its time limit between lock renewals' worth of silence.
       lockDuration: config.taskRunTimeLimitMinutes * 60_000 + LOCK_BUFFER_MS,
       // A stalled run would repeat its side effects, so it fails instead and the sweeper ends it.

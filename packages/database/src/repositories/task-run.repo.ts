@@ -464,22 +464,52 @@ export async function failTaskRun({
 export const STALE_TASK_RUN_ERROR = 'The run did not finish in time.';
 
 /**
- * Fails runs stuck `queued` since `queuedBefore` or `running` since `runningBefore`. Returns them
- * so the caller can write the failure comment.
+ * Fails runs stuck `running` since `runningBefore`, and `queued` since `queuedBefore` when given.
+ * Returns them so the caller can write the failure comment.
  */
 export async function failStaleTaskRuns({
   queuedBefore,
   runningBefore,
 }: {
-  queuedBefore: Date;
+  queuedBefore?: Date;
   runningBefore: Date;
 }): Promise<TaskRun[]> {
   const stale = or(
-    and(eq(taskRun.status, 'queued'), lt(taskRun.createdAt, queuedBefore)),
+    queuedBefore
+      ? and(eq(taskRun.status, 'queued'), lt(taskRun.createdAt, queuedBefore))
+      : undefined,
     and(
       eq(taskRun.status, 'running'),
       lt(sql`coalesce(${taskRun.startedAt}, ${taskRun.createdAt})`, runningBefore),
     ),
   );
   return transitionAndSettle(stale, { to: 'failed', error: STALE_TASK_RUN_ERROR });
+}
+
+/** The oldest runs still `queued` since `queuedBefore`, at most `limit`. */
+export async function listStaleQueuedTaskRuns({
+  queuedBefore,
+  limit,
+}: {
+  queuedBefore: Date;
+  limit: number;
+}): Promise<TaskRun[]> {
+  return db
+    .select()
+    .from(taskRun)
+    .where(and(eq(taskRun.status, 'queued'), lt(taskRun.createdAt, queuedBefore)))
+    .orderBy(taskRun.createdAt)
+    .limit(limit);
+}
+
+/** Fails the given runs if they are still `queued` or `running`. Returns the ones that failed. */
+export async function failTaskRunsByIds({
+  taskRunIds,
+  error,
+}: {
+  taskRunIds: string[];
+  error: string;
+}): Promise<TaskRun[]> {
+  if (taskRunIds.length === 0) return [];
+  return transitionAndSettle(inArray(taskRun.id, taskRunIds), { to: 'failed', error });
 }

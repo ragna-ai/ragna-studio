@@ -572,6 +572,11 @@
         "approveFailed": "Agent konnte nicht freigegeben werden",
         "revoked": "Freigabe widerrufen",
         "revokeFailed": "Freigabe konnte nicht widerrufen werden"
+      },
+      "revokeDialog": {
+        "title": "Freigabe widerrufen",
+        "message": "Der Agent kann nicht mehr unbeaufsichtigt laufen. Seine aktiven Aufgabenläufe werden gestoppt. Bereits erledigte Arbeit bleibt bestehen.",
+        "confirm": "Freigabe widerrufen"
       }
     }
   },

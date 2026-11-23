@@ -75,7 +75,7 @@ Locking freezes the agent's configuration as a numbered version. Approving that 
 | --------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | **Lock**                                | Freezes the current configuration as the next version.                                         | Workspace editors and above.                                 |
 | **Approve for unattended runs**         | Locks the agent if needed and approves the locked version. The approver is responsible for it. | Workspace managers and above.                                |
-| **Revoke approval for unattended runs** | Removes the approval and keeps the lock.                                                       | The approver, or a user of the same rank or above.           |
+| **Revoke approval for unattended runs** | Removes the approval and keeps the lock. The agent's active task runs stop.                    | The approver, or a user of the same rank or above.           |
 | **Unlock**                              | Opens the configuration for edits again.                                                       | The user who locked it, or a user of the same rank or above. |
 
 An approved version can only be unlocked by a user who may also revoke the approval. The lock actions are in the lock menu in the top bar, behind the lock icon. Hovering the icon shows the lock state. **Versions** is in the **⋯** menu next to it. The lock menu items only show when the signed-in user may use them.
@@ -86,7 +86,7 @@ An agent can only be locked when all its knowledge files are ready. A file that 
 
 Before approving, a dialog lists the tools the agent can use, with the access level of tools that have one. Knowledge files and data the agent reads can change without a new approval. The approver is responsible for the agent's actions in unattended runs.
 
-Before unlocking, a dialog shows how many workflows use the agent and how many open tasks are assigned to it. For an agent approved for unattended runs, the dialog warns that unlocking also revokes the approval.
+Before unlocking, a dialog shows how many workflows use the agent and how many open tasks are assigned to it. For an agent approved for unattended runs, the dialog warns that unlocking also revokes the approval. Before revoking an approval, a dialog says that the agent's active task runs stop. Work the agent already did stays.
 
 Locking again after an unlock creates a new version that is not approved. Approving again after a revoke creates a new version with the same configuration. **Versions** opens the full history, newest first: who locked, approved, revoked and unlocked each version, and when.
 

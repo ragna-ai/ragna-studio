@@ -1,5 +1,5 @@
 import type { Task, TaskAttachmentWithMediaSummary, TaskLabel, TaskRun } from '@repo/database';
-import { FINISH_TASK_RUN_TOOL_NAME } from '@repo/ai';
+import { FINISH_TASK_RUN_TOOL_NAME, wrapUntrustedContent } from '@repo/ai';
 import { listToolCalls } from './task-run-guards';
 
 export interface PreviousRunForPrompt {
@@ -22,11 +22,6 @@ const TASK_RUN_INSTRUCTIONS = [
   `When you are done, or blocked and need an answer from a person, call ${FINISH_TASK_RUN_TOOL_NAME} exactly once with an outcome and a summary.`,
   'Your summary is posted on the task as your comment.',
 ].join(' ');
-
-/** Stops task text from closing one of our tags early. */
-function escapeTags(text: string): string {
-  return text.replaceAll(/<\/?(task|previous_runs)\b/gi, (tag) => tag.replace('<', '&lt;'));
-}
 
 function formatList(title: string, lines: string[]): string {
   return lines.length === 0 ? '' : `${title}:\n${lines.map((line) => `- ${line}`).join('\n')}\n`;
@@ -88,11 +83,11 @@ export function buildTaskRunPrompt(input: TaskRunPromptInput): string {
   );
   const previousRunsBlock =
     previousRuns.length > 0
-      ? `\n\n<previous_runs>\n${escapeTags(previousRuns.join('\n\n'))}\n</previous_runs>`
+      ? `\n\n${wrapUntrustedContent('previous_runs', previousRuns.join('\n\n'))}`
       : '';
 
   return [
     `${TASK_RUN_INSTRUCTIONS} Today is ${input.now.toISOString().slice(0, 10)} (UTC).`,
-    `\n<task>\n${escapeTags(formatTask(input))}\n</task>${previousRunsBlock}`,
+    `\n${wrapUntrustedContent('task', formatTask(input))}${previousRunsBlock}`,
   ].join('\n');
 }
