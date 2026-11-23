@@ -32,6 +32,7 @@ work first, shipped reference and dead/historical docs last.
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
+| [Agent tools: comment on a task (PRD)](./tasks/473-comment-tool/prd.md) | proposed (2026-11-23) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
 | [Workflows: human in the loop (approval node)](./workflow/workflows-human-in-the-loop.md) | proposed |
 
