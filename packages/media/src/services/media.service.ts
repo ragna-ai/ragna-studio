@@ -14,6 +14,7 @@ import {
   getMediaByWorkspaceId,
   type Media,
   type MediaOrigin,
+  type MediaTextExtractionStatus,
   type UnreferencedMedia,
 } from '@repo/database';
 import { logger } from '@repo/logger';
@@ -51,6 +52,8 @@ export interface StoreMediaInput {
   // Tier-2 docs only, capped by the caller before it gets here (e.g. chat's
   // 50,000 char cap). Null for images, pdf, and anything not extracted.
   extractedText?: string | null;
+  // Set to 'pending' when the caller enqueues worker extraction afterwards.
+  textExtractionStatus?: MediaTextExtractionStatus | null;
 }
 
 /**
@@ -67,6 +70,7 @@ export async function storeMedia({
   kind,
   origin,
   extractedText,
+  textExtractionStatus,
 }: StoreMediaInput): Promise<Media> {
   const mediaId = createPrimaryId();
   const id = ownerId(owner);
@@ -87,6 +91,7 @@ export async function storeMedia({
       size: buffer.byteLength,
       origin,
       extractedText: extractedText ?? null,
+      textExtractionStatus: textExtractionStatus ?? null,
     });
   } catch (createError) {
     await deleteMediaObjects([{ bucket, storageKey }]);

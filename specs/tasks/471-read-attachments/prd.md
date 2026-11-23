@@ -1,6 +1,6 @@
 # Agent tools: read task attachments (PRD)
 
-> **Status: proposed** (2026-11-23). Issue #471. Prerequisite for #455.
+> **Status: implemented** (2026-11-23, PR #475). Issue #471. Prerequisite for #455.
 
 Agents can't read task attachments. `readTask` doesn't list them, and no tool returns a file's
 content, so an agent sees nothing of "contract.pdf" on a task. This PRD has the worker extract
@@ -118,7 +118,7 @@ is faked with `downloadObjectBufferMock` from `@repo/testing`.
 ### Upload (`apps/api`, `task-attachment.service.ts`)
 
 - An extractable kind is stored with status `'pending'`. After the attachment row is created,
-  the service enqueues `extract-media-text` with `{ mediaId }`, job id `extract-media-text:<mediaId>`.
+  the service enqueues `extract-media-text` with `{ mediaId }`, the media id as job id.
 - An enqueue failure is logged, not returned to the user. The sweep retries it.
 
 ### Job (`@repo/queue`, `apps/worker`)

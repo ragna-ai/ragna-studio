@@ -1,11 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { chat } from './chat.schema';
 import { primaryIdColumn } from './common.schema';
 import { user } from './user.schema';
 import { workspace } from './workspace.schema';
 
 export type MediaOrigin = 'uploaded' | 'generated';
+export type MediaTextExtractionStatus = 'pending' | 'ready' | 'failed';
 
 // MEDIA
 // Central record of every file in R2. Ownership
@@ -35,6 +36,9 @@ export const media = pgTable(
     // Tier-2 docs only (docx/xlsx/txt/md/csv), capped at 50,000 chars with a
     // trailing "[truncated]" marker. Null for images, pdf, and 'generated' media.
     extractedText: text('extracted_text'),
+    // Null when no worker extraction was asked for (images, chat attachments, generated media).
+    textExtractionStatus: text('text_extraction_status').$type<MediaTextExtractionStatus>(),
+    extractedTextTruncated: boolean('extracted_text_truncated').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [

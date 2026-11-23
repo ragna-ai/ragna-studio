@@ -171,6 +171,11 @@ export type NewTaskAttachment = typeof taskAttachment.$inferInsert;
 
 export type TaskAttachmentWithMedia = TaskAttachment & { media: Media };
 
+/** Media row without the extracted text, which can be 100,000 characters per file. */
+export type TaskAttachmentWithMediaSummary = TaskAttachment & {
+  media: Omit<Media, 'extractedText'>;
+};
+
 // TASK COMMENT
 // A markdown note on a task, written by a user or an agent. `authorKind` outlives the author:
 // purge and agent deletion null the id, and the kind still says "deleted user" vs "deleted agent".

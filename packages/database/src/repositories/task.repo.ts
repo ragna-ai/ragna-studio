@@ -8,6 +8,7 @@ import type {
   Task,
   TaskAttachment,
   TaskAttachmentWithMedia,
+  TaskAttachmentWithMediaSummary,
   TaskLabel,
   TaskPriority,
   TaskStatus,
@@ -29,6 +30,7 @@ export type {
   Task,
   TaskAttachment,
   TaskAttachmentWithMedia,
+  TaskAttachmentWithMediaSummary,
   TaskPriority,
   TaskStatus,
 } from '../schema';
@@ -527,10 +529,10 @@ export async function getTaskAttachmentsByTaskId({
   taskId,
 }: {
   taskId: string;
-}): Promise<TaskAttachmentWithMedia[]> {
+}): Promise<TaskAttachmentWithMediaSummary[]> {
   return db.query.taskAttachment.findMany({
     where: { taskId },
-    with: { media: true },
+    with: { media: { columns: { extractedText: false } } },
     orderBy: (t, { asc: ascOrder }) => ascOrder(t.createdAt),
   });
 }

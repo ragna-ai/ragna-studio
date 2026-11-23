@@ -24,6 +24,7 @@ export type {
   ChatAttachmentWithMedia,
   Media,
   MediaOrigin,
+  MediaTextExtractionStatus,
   NewChatAttachment,
   NewMedia,
 } from '../schema';
@@ -44,6 +45,41 @@ export async function getMediaById({ id }: { id: string }): Promise<Media | null
   const found = await db.query.media.findFirst({ where: { id } });
 
   return found ?? null;
+}
+
+export interface MediaTextExtractionResult {
+  id: string;
+  extractedText: string;
+  extractedTextTruncated: boolean;
+}
+
+export async function markMediaTextExtractionReady({
+  id,
+  extractedText,
+  extractedTextTruncated,
+}: MediaTextExtractionResult): Promise<void> {
+  await db
+    .update(media)
+    .set({ extractedText, extractedTextTruncated, textExtractionStatus: 'ready' })
+    .where(eq(media.id, id));
+}
+
+export async function markMediaTextExtractionFailed({ id }: { id: string }): Promise<void> {
+  await db.update(media).set({ textExtractionStatus: 'failed' }).where(eq(media.id, id));
+}
+
+/** Ids of media still waiting for text extraction since before `createdBefore`, in one query. */
+export async function getMediaIdsPendingTextExtraction({
+  createdBefore,
+}: {
+  createdBefore: Date;
+}): Promise<string[]> {
+  const rows = await db
+    .select({ id: media.id })
+    .from(media)
+    .where(and(eq(media.textExtractionStatus, 'pending'), lt(media.createdAt, createdBefore)));
+
+  return rows.map((row) => row.id);
 }
 
 /** Loads the given media in one query, keeping only rows owned by the user's private workspace. */

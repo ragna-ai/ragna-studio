@@ -1,0 +1,1 @@
+export const AGENT_FILE_READ_MAX_CHARACTERS = 100_000;

@@ -1,5 +1,6 @@
 import type {
   Task,
+  TaskAttachmentWithMediaSummary,
   TaskPriority,
   TaskStatus,
   TaskWithBoardInfo,
@@ -8,6 +9,8 @@ import type {
 import {
   createTask,
   createTaskComment,
+  getTaskAttachmentById,
+  getTaskAttachmentsByTaskId,
   getTaskById,
   listTasks,
   listTaskLabels,
@@ -97,6 +100,13 @@ const subtaskSummarySchema = z.strictObject({
   status: taskStatusSchema,
 });
 
+const taskAttachmentSummarySchema = z.strictObject({
+  id: z.string(),
+  filename: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.number(),
+});
+
 const taskDetailSchema = z.strictObject({
   id: z.string(),
   displayId: z.string(),
@@ -110,12 +120,14 @@ const taskDetailSchema = z.strictObject({
   parentTaskId: z.string().nullable(),
   assignedAgent: z.string().nullable(),
   subtasks: z.array(subtaskSummarySchema),
+  attachments: z.array(taskAttachmentSummarySchema),
 });
 
 type TaskBrief = z.infer<typeof taskBriefSchema>;
 type TaskSummary = z.infer<typeof taskSummarySchema>;
 type SubtaskSummary = z.infer<typeof subtaskSummarySchema>;
 type TaskDetail = z.infer<typeof taskDetailSchema>;
+type TaskAttachmentSummary = z.infer<typeof taskAttachmentSummarySchema>;
 
 function toTaskSummary(taskRecord: TaskWithBoardInfo): TaskSummary {
   return {
@@ -142,7 +154,21 @@ function toSubtaskSummary(subtask: Task): SubtaskSummary {
   };
 }
 
-function toTaskDetail(taskRecord: TaskWithDetails): TaskDetail {
+function toTaskAttachmentSummary(
+  attachment: TaskAttachmentWithMediaSummary,
+): TaskAttachmentSummary {
+  return {
+    id: attachment.id,
+    filename: attachment.media.filename,
+    mimeType: attachment.media.mimeType,
+    sizeBytes: attachment.media.size,
+  };
+}
+
+function toTaskDetail(
+  taskRecord: TaskWithDetails,
+  attachments: TaskAttachmentWithMediaSummary[],
+): TaskDetail {
   return {
     id: taskRecord.id,
     displayId: toTaskDisplayId(taskRecord.number),
@@ -156,6 +182,7 @@ function toTaskDetail(taskRecord: TaskWithDetails): TaskDetail {
     parentTaskId: taskRecord.parentTaskId,
     assignedAgent: taskRecord.assignedAgent?.name ?? null,
     subtasks: taskRecord.subtasks.map(toSubtaskSummary),
+    attachments: attachments.map(toTaskAttachmentSummary),
   };
 }
 
@@ -288,7 +315,69 @@ const readTaskDefinition: ToolDefinition<
     if (!taskRecord) {
       return TASK_NOT_FOUND;
     }
-    return { task: toTaskDetail(taskRecord) };
+    const attachments = await getTaskAttachmentsByTaskId({ taskId: taskRecord.id });
+    return { task: toTaskDetail(taskRecord, attachments) };
+  },
+};
+
+// readTaskAttachment
+
+const readTaskAttachmentInputSchema = z.object({
+  taskId: z.string().describe('The id of the task the file is attached to.'),
+  attachmentId: z.string().describe("The attachment id from the task's attachments list."),
+});
+
+const readTaskAttachmentOutputSchema = z.strictObject({
+  filename: z.string(),
+  mimeType: z.string(),
+  text: z.string(),
+  truncated: z.boolean(),
+});
+
+type ReadTaskAttachmentFailureStatus = 'not_found' | 'not_ready' | 'not_readable';
+
+const readTaskAttachmentDefinition: ToolDefinition<
+  typeof readTaskAttachmentInputSchema,
+  typeof readTaskAttachmentOutputSchema,
+  ReadTaskAttachmentFailureStatus
+> = {
+  name: 'readTaskAttachment',
+  description:
+    "Read the text of a file attached to a task. Works for PDF, Word, PowerPoint, Excel, CSV, text and Markdown files. Images can't be read. Long files are cut off and marked truncated. Get the attachment id from readTask.",
+  inputSchema: readTaskAttachmentInputSchema,
+  outputSchema: readTaskAttachmentOutputSchema,
+  access: 'read',
+  execute: async ({ taskId, attachmentId }, { workspaceId }) => {
+    const taskRecord = await getTaskById({ id: taskId, workspaceId });
+    if (!taskRecord) {
+      return TASK_NOT_FOUND;
+    }
+
+    const attachment = await getTaskAttachmentById({ id: attachmentId });
+    if (!attachment || attachment.taskId !== taskId) {
+      return { status: 'not_found', message: 'Attachment not found on this task.' };
+    }
+
+    const { media } = attachment;
+    if (media.textExtractionStatus === 'pending') {
+      return {
+        status: 'not_ready',
+        message: `The text of "${media.filename}" is still being extracted. Try again later.`,
+      };
+    }
+    if (media.textExtractionStatus !== 'ready' || !media.extractedText) {
+      return {
+        status: 'not_readable',
+        message: `The text of "${media.filename}" can't be read.`,
+      };
+    }
+
+    return {
+      filename: media.filename,
+      mimeType: media.mimeType,
+      text: media.extractedText,
+      truncated: media.extractedTextTruncated,
+    };
   },
 };
 
@@ -648,6 +737,7 @@ export function taskToolDefinitions(options: TaskToolDefinitionsOptions): AnyToo
   return [
     listTasksDefinition,
     readTaskDefinition,
+    readTaskAttachmentDefinition,
     createTaskDefinition(options),
     updateTaskDefinition,
     moveTaskDefinition,
