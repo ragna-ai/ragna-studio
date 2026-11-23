@@ -1,7 +1,7 @@
 # Tasks: agents work assigned tasks (PRD)
 
-> **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md). Blocked by
-> #462 (agent lock).
+> **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md). Builds on
+> #462 (agent lock and approval, merged in PR #463).
 
 Today a user can assign a task to an agent, but nothing happens. The assignment is a label on the
 card. This PRD lets a user start the assigned agent on the task. The agent works in the background
@@ -101,6 +101,9 @@ As a user, I want the agent's result on the task, so that I can review it where 
   agent is told to list the steps in its result instead.
 - **US-2.6** Given a task whose earlier run failed after taking actions, when a user starts it
   again, then the agent is told which actions already happened.
+- **US-2.7** Given an approved agent whose model, a granted tool or a tool's connection is no
+  longer available, when its run starts, then it fails before taking any action and asks for the
+  agent to be approved again.
 
 ### US-3 Follow and stop a run (P1)
 
@@ -116,6 +119,9 @@ As a user, I want to see and stop a running agent, so that I stay in control of 
   tool calls, duration, credits used and the agent version it ran with.
 - **US-3.5** Given a running task, when a user tries to change it other than deleting it or
   assigning another agent, then nothing changes and they are told to stop the run first.
+- **US-3.6** Given an agent with active task runs, when a user unlocks it, then it is refused with
+  `409` and the user can choose to stop those runs and unlock. That stops every run of the agent
+  as in US-3.2, then unlocks it.
 
 ### US-5 Limits (P1)
 
@@ -143,9 +149,9 @@ hang.
 | US-1.1, US-1.3, US-1.4, US-1.8 | API              | `apps/api/test/task/`                           |
 | US-1.2                         | e2e (Playwright) | `apps/web/e2e/`                                 |
 | US-1.5, US-1.6, US-1.7         | worker           | `apps/worker/test/task/`                        |
-| US-2.1 to US-2.6               | worker           | `apps/worker/test/task/`                        |
+| US-2.1 to US-2.7               | worker           | `apps/worker/test/task/`                        |
 | US-3.1                         | e2e (Playwright) | `apps/web/e2e/`                                 |
-| US-3.2 to US-3.5               | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
+| US-3.2 to US-3.6               | API and worker   | `apps/api/test/task/`, `apps/worker/test/task/` |
 | US-5.1                         | API              | `apps/api/test/task/`                           |
 | US-5.2, US-5.3, US-5.6         | worker           | `apps/worker/test/task/`                        |
 | US-5.4, US-5.5                 | API              | `apps/api/test/task/`                           |
@@ -177,7 +183,8 @@ can't always be undone.
 **Unattended runs need an approved agent.** A workspace manager or org owner or admin locks the
 agent and approves it for unattended runs (#462, shipped before this PR). Locking creates an
 immutable agent version and the approval belongs to that version, so a changed agent must be
-approved again. A run records the version. This answers "which configuration produced this
+approved again. A run records the version and runs on the version's configuration, not the live
+agent, checked against today's models, tools and connections at start. This answers "which configuration produced this
 result" and "who allowed it to run on its own" without copying the agent into every run. The task
 itself is locked while its run is active; stopping the run unlocks it. Lost: a per-run snapshot of
 task and agent. A full audit trail comes with the audit log standard (#171).

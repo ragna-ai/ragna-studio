@@ -20,23 +20,23 @@ web ── POST /task/:id/runs ──▶ api: checks, insert task_run (queued), 
 
 `task_run`, one row per run. Registered in `relations.ts`.
 
-| Column                                    | Type                      | Notes                                                                 |
-| ----------------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `id`                                      | text                      | PK                                                                    |
-| `workspace_id`                            | text                      | FK, composite FK with `task_id` like other task children              |
-| `task_id`                                 | text                      | FK → `task.id`, cascade                                               |
-| `agent_id`                                | text                      | FK → `agent.id`, set null (past runs survive agent deletion)          |
-| `started_by_user_id`                      | text                      | FK → `user.id`, set null. The user the run acts as                    |
-| `status`                                  | pg enum `task_run_status` | See lifecycle                                                         |
-| `outcome`                                 | text?                     | `completed`, `needs_input`, null until finished                       |
-| `previous_task_status`                    | text                      | Restored on failure or stop (US-2.3, US-3.2)                          |
-| `agent_version_id`                        | text                      | FK → `agent_version.id` (#462). The locked configuration the run used |
-| `trace`                                   | jsonb                     | Steps and tool calls, same shape as `WorkflowAgentTraceStep[]`        |
-| `first_write_at`                          | timestamp?                | When the first writing tool call finished. Null means a retry is safe |
-| `usage`                                   | jsonb                     | Tokens and credits                                                    |
-| `error`                                   | text?                     | Problem text for the user                                             |
-| `attempt`                                 | integer                   | BullMQ attempt that last ran                                          |
-| `created_at`, `started_at`, `finished_at` | timestamp                 |                                                                       |
+| Column                                    | Type                      | Notes                                                                    |
+| ----------------------------------------- | ------------------------- | ------------------------------------------------------------------------ |
+| `id`                                      | text                      | PK                                                                       |
+| `workspace_id`                            | text                      | FK, composite FK with `task_id` like other task children                 |
+| `task_id`                                 | text                      | FK → `task.id`, cascade                                                  |
+| `agent_id`                                | text                      | FK → `agent.id`, set null (past runs survive agent deletion)             |
+| `started_by_user_id`                      | text                      | FK → `user.id`, set null. The user the run acts as                       |
+| `status`                                  | pg enum `task_run_status` | See lifecycle                                                            |
+| `outcome`                                 | text?                     | `completed`, `needs_input`, null until finished                          |
+| `previous_task_status`                    | text                      | Restored on failure or stop (US-2.3, US-3.2)                             |
+| `agent_version_id`                        | text                      | FK → `agent_versions.id` (#462). The approved configuration the run used |
+| `trace`                                   | jsonb                     | Steps and tool calls, same shape as `WorkflowAgentTraceStep[]`           |
+| `first_write_at`                          | timestamp?                | When the first writing tool call finished. Null means a retry is safe    |
+| `usage`                                   | jsonb                     | Tokens and credits                                                       |
+| `error`                                   | text?                     | Problem text for the user                                                |
+| `attempt`                                 | integer                   | BullMQ attempt that last ran                                             |
+| `created_at`, `started_at`, `finished_at` | timestamp                 |                                                                          |
 
 - Partial unique index on `(task_id)` where `status in ('queued', 'running')`: one active run per
   task (US-1.3), enforced by the database, not a read-then-write check.
@@ -78,6 +78,7 @@ their status wins: the run only changes the task status if it is still `in_progr
 | `POST /task/:id/runs`                                                       | Start. Body `{ agentId? }` assigns and starts (US-1.2)          |
 | `POST /task/:id/runs/:runId/cancel`                                         | Stop (US-3.2)                                                   |
 | `POST /task-runs/cancel-all`                                                | Stop all runs in the workspace, workspace manager only (US-5.4) |
+| `DELETE /agent/:id/lock?stopRuns=true`                                      | Stop the agent's active runs, then unlock (US-3.6)              |
 | `GET /task/:id/runs`                                                        | Runs with status, outcome, usage, trace (US-3.4)                |
 | `GET/POST /task/:id/comments`, `PATCH/DELETE /task/:id/comments/:commentId` | Comments                                                        |
 
@@ -86,7 +87,8 @@ Start checks, in this order, each with an RFC 9457 problem:
 1. User can edit tasks in the workspace (editor or manager), else `403`.
 2. Task has an assigned agent in the same workspace, else `409 task-has-no-agent`.
 3. The agent's current version is approved for unattended runs, else
-   `409 agent-not-approved` (US-1.8). The run records that `agent_version_id`.
+   `409 agent-not-approved` (US-1.8), using `getApprovedAgentVersion` from `@repo/database`. The
+   run records that `agent_version_id`.
 4. Balance at least `taskRunMinCredits`, else `402 insufficient-credits` (US-1.4).
 5. Fewer than `taskRunMaxActivePerWorkspace` active runs, else `429 task-run-limit` (US-5.1).
 6. Insert `task_run`. A unique-index violation maps to `409 task-run-active` (US-1.3).
@@ -124,7 +126,7 @@ Extract `runAgentUnattended` in `apps/worker/src/agents/`:
 
 ```ts
 interface UnattendedAgentRun {
-  agentId: string;
+  agentVersion: AgentVersion; // from #462, never the live agent row
   workspaceId: string;
   userId: string;
   prompt: string;
@@ -136,7 +138,16 @@ interface UnattendedAgentRun {
 }
 ```
 
-`runReferencedAgent` becomes a thin caller with the workflow charge. `creditUsageFeatures` gains
+**Pinned configuration, current policy.** The runner builds the agent from `version.config`, not
+the live `agent` row: system cleanup (a deleted dataset, say) can change the live row while it is
+locked. Before the first model call it checks today's state: the model exists and the organization
+allows it, every tool in `config.toolGrants` is still in the catalog, and each tool's connection
+exists. Any miss fails the run permanently with "approve the agent again" (US-2.7). It never runs
+silently with fewer tools. Knowledge retrieval searches only the chunks of
+`version.knowledgeDocumentIds`. Memory stays writable: it is how the agent learns.
+
+`runReferencedAgent` keeps loading the live agent until workflows pin versions too (#466). It
+becomes a thin caller with the workflow charge. `creditUsageFeatures` gains
 `'task'`, refType `'taskRun'`, key `task:${runId}:${attempt}`.
 
 Charging moves to `finally`: usage is summed in `onStep`, so an attempt that throws midway still
@@ -292,10 +303,12 @@ or accepted, and caps the runs it starts per workflow run.
 - **Edits during a run.** The task is locked while its run is active (US-3.5). Unlocking means
   stopping the run. The lock comes from the active run, not a flag, so a crashed run can't leave it
   behind: the sweeper ends the run and the lock with it.
-- **Agent unlocked during a run.** The run keeps its agent version. New starts are refused until
-  the agent is locked again (#462). Retries load the same version.
-- **Agent deleted.** The agent delete path cancels the agent's active runs in its transaction. A
-  foreign key clears data but can't stop a worker.
+- **Unlocking during a run.** Refused with `409` while the agent has active task runs (#462). The
+  unlock dialog offers "Stop runs and unlock" (US-3.6). Retries load the run's version, never the
+  live agent.
+- **Agent deleted.** A locked agent can't be deleted (#462), so an approved agent can't disappear
+  under a run. `agent_versions.agent_id` is set null if the agent goes later; past runs keep their
+  version and show "Deleted agent".
 - **Starter loses workspace access.** The processor checks access at pickup. Without access the
   run fails permanently.
 - **Attachments.** Listed by name and id in the prompt. The agent reads them with its tools, so
