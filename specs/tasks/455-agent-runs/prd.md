@@ -1,7 +1,8 @@
 # Tasks: agents work assigned tasks (PRD)
 
 > **Status: proposed** (2026-11-20). Issue #455. Extends the [tasks PRD](../prd.md). Builds on
-> #462 (agent lock and approval, merged in PR #463) and #470 (task comments, ships first).
+> #462 (agent lock and approval, merged in PR #463). Needs #470 (task comments) and #471 (reading
+> task attachments), which both ship first.
 
 Today a user can assign a task to an agent, but nothing happens. The assignment is a label on the
 card. This PRD lets a user start the assigned agent on the task. The agent works in the background

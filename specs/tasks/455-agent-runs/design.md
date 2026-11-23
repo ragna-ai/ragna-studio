@@ -140,8 +140,8 @@ interface UnattendedAgentRun {
 
 **Pinned configuration, current policy.** The runner builds the agent from `version.config`, not
 the live `agent` row: system cleanup (a deleted dataset, say) can change the live row while it is
-locked. Before the first model call it checks today's state: the model exists and the organization
-allows it, every tool in `config.toolGrants` is still in the catalog, and each tool's connection
+locked. Before the first model call it checks today's state: the model exists and is enabled (and, once an organization model allowlist exists, that it is
+allowed), every tool in `config.toolGrants` is still in the catalog, and each tool's connection
 exists. Any miss fails the run permanently with "approve the agent again" (US-2.7). It never runs
 silently with fewer tools. Knowledge retrieval searches only the chunks of
 `version.knowledgeDocumentIds`. Memory stays writable: it is how the agent learns.
@@ -311,8 +311,9 @@ or accepted, and caps the runs it starts per workflow run.
   version and show "Deleted agent".
 - **Starter loses workspace access.** The processor checks access at pickup. Without access the
   run fails permanently.
-- **Attachments.** Listed by name and id in the prompt. The agent reads them with its tools, so
-  large files never sit in the prompt.
+- **Attachments.** Listed by name and id in the prompt. The agent reads them with
+  `readTaskAttachment` (#471, ships first), so large files never sit in the prompt. The run needs
+  the `tasks` agent tool for that; without it the agent only sees the file names.
 - **Agents creating tasks.** In chat, as today: the user is present. In a run, refused (US-2.5).
   Agents never start runs (US-1.5).
 
