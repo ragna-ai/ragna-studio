@@ -1,3 +1,5 @@
+import { db } from '@repo/database';
+import { media } from '@repo/database/schema';
 import { EXTRACT_MEDIA_TEXT_JOB } from '@repo/queue';
 import {
   queueAddBulkMock,
@@ -41,6 +43,29 @@ describe('media text extraction sweep cron', () => {
     expect(new Set(jobs.map((job) => (job.opts as { jobId: string }).jobId))).toEqual(
       new Set([stale.id, alsoStale.id]),
     );
+  });
+
+  test('queues at most 500 rows, oldest first', async () => {
+    const { workspaceId } = await seedAuthenticatedUser();
+    const rows = Array.from({ length: 501 }, (_, index) => ({
+      ownerWorkspaceId: workspaceId,
+      bucket: 'documents',
+      storageKey: `media/${crypto.randomUUID()}`,
+      filename: 'notes.txt',
+      mimeType: 'text/plain',
+      size: 1,
+      origin: 'uploaded' as const,
+      textExtractionStatus: 'pending' as const,
+      createdAt: minutesAgo(1000 - index),
+    }));
+    const inserted = await db.insert(media).values(rows).returning({ id: media.id });
+    const newestId = inserted[500]?.id;
+
+    await mediaTextExtractionSweepProcessor();
+
+    const jobs = queueAddBulkMock.mock.calls[0]?.[0] ?? [];
+    expect(jobs).toHaveLength(500);
+    expect(jobs.map((job) => (job.opts as { jobId: string }).jobId)).not.toContain(newestId);
   });
 
   test('queues nothing when no row is waiting', async () => {

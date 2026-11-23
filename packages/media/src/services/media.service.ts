@@ -49,8 +49,8 @@ export interface StoreMediaInput {
   filename: string;
   kind: MediaKind;
   origin: MediaOrigin;
-  // Tier-2 docs only, capped by the caller before it gets here (e.g. chat's
-  // 50,000 char cap). Null for images, pdf, and anything not extracted.
+  // Chat stores up to 50,000 chars inline, capped by the caller. Null for images, generated media
+  // and task attachments (the worker extracts those).
   extractedText?: string | null;
   // Set to 'pending' when the caller enqueues worker extraction afterwards.
   textExtractionStatus?: MediaTextExtractionStatus | null;

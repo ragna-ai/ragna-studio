@@ -33,16 +33,22 @@ export const media = pgTable(
     mimeType: text('mime_type').notNull(),
     size: integer('size').notNull(),
     origin: text('origin').notNull().$type<MediaOrigin>(),
-    // Tier-2 docs only (docx/xlsx/txt/md/csv), capped at 50,000 chars with a
-    // trailing "[truncated]" marker. Null for images, pdf, and 'generated' media.
+    // Chat fills it inline (docx/xlsx/txt/md/csv, up to 50,000 chars with a trailing
+    // "[truncated]" marker). Task attachments get up to 100,000 chars from the worker.
+    // Null for images, generated media and anything not extracted.
     extractedText: text('extracted_text'),
     // Null when no worker extraction was asked for (images, chat attachments, generated media).
     textExtractionStatus: text('text_extraction_status').$type<MediaTextExtractionStatus>(),
     extractedTextTruncated: boolean('extracted_text_truncated').default(false).notNull(),
+    // Extraction starts so far; a file that keeps crashing the worker is failed instead of retried forever.
+    textExtractionAttempts: integer('text_extraction_attempts').default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
     index('media_ownerWorkspaceId_idx').on(table.ownerWorkspaceId),
+    index('media_pendingTextExtraction_idx')
+      .on(table.createdAt)
+      .where(sql`${table.textExtractionStatus} = 'pending'`),
     check(
       'media_exactly_one_owner_check',
       sql`num_nonnulls(${table.ownerUserId}, ${table.ownerWorkspaceId}) = 1`,

@@ -7,6 +7,7 @@ export interface SeedMediaParams {
   textExtractionStatus?: MediaTextExtractionStatus | null;
   mimeType?: string;
   createdAt?: Date;
+  textExtractionAttempts?: number;
 }
 
 export async function seedMedia({
@@ -14,6 +15,7 @@ export async function seedMedia({
   textExtractionStatus = 'pending',
   mimeType = 'text/plain',
   createdAt,
+  textExtractionAttempts,
 }: SeedMediaParams): Promise<Media> {
   const created = await createMedia({
     ownerWorkspaceId: workspaceId,
@@ -24,6 +26,7 @@ export async function seedMedia({
     size: 100,
     origin: 'uploaded',
     textExtractionStatus,
+    textExtractionAttempts,
   });
 
   if (!createdAt) {

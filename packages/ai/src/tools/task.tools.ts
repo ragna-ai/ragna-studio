@@ -1,4 +1,5 @@
 import type {
+  MediaTextExtractionStatus,
   Task,
   TaskAttachmentWithMediaSummary,
   TaskPriority,
@@ -19,6 +20,7 @@ import {
   moveTask,
   updateTask,
 } from '@repo/database';
+import { getMediaKindByMimeType, isExtractableKind } from '@repo/media';
 import * as z from 'zod';
 import { failOnForeignReference } from './foreign-reference-failure';
 import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
@@ -336,6 +338,46 @@ const readTaskAttachmentOutputSchema = z.strictObject({
 
 type ReadTaskAttachmentFailureStatus = 'not_found' | 'not_ready' | 'not_readable';
 
+interface ReadableAttachmentMedia {
+  filename: string;
+  mimeType: string;
+  textExtractionStatus: MediaTextExtractionStatus | null;
+  extractedText: string | null;
+}
+
+/** Why an attachment's text can't be returned right now, or null when it can. */
+function describeUnreadableAttachment(
+  media: ReadableAttachmentMedia,
+): ToolFailure<ReadTaskAttachmentFailureStatus> | null {
+  const { filename } = media;
+  const kind = getMediaKindByMimeType(media.mimeType);
+
+  switch (media.textExtractionStatus) {
+    case 'pending':
+      return {
+        status: 'not_ready',
+        message: `The text of "${filename}" is still being extracted. Try again later.`,
+      };
+    case 'failed':
+      return { status: 'not_readable', message: `Text extraction failed for "${filename}".` };
+    case 'ready':
+      return media.extractedText
+        ? null
+        : {
+            status: 'not_readable',
+            message: `"${filename}" contains no readable text (it may be a scanned document).`,
+          };
+    case null:
+      return {
+        status: 'not_readable',
+        message:
+          kind && isExtractableKind(kind)
+            ? `"${filename}" has no extracted text.`
+            : `"${filename}" is an image; its text can't be read.`,
+      };
+  }
+}
+
 const readTaskAttachmentDefinition: ToolDefinition<
   typeof readTaskAttachmentInputSchema,
   typeof readTaskAttachmentOutputSchema,
@@ -359,23 +401,15 @@ const readTaskAttachmentDefinition: ToolDefinition<
     }
 
     const { media } = attachment;
-    if (media.textExtractionStatus === 'pending') {
-      return {
-        status: 'not_ready',
-        message: `The text of "${media.filename}" is still being extracted. Try again later.`,
-      };
-    }
-    if (media.textExtractionStatus !== 'ready' || !media.extractedText) {
-      return {
-        status: 'not_readable',
-        message: `The text of "${media.filename}" can't be read.`,
-      };
+    const failure = describeUnreadableAttachment(media);
+    if (failure) {
+      return failure;
     }
 
     return {
       filename: media.filename,
       mimeType: media.mimeType,
-      text: media.extractedText,
+      text: media.extractedText ?? '',
       truncated: media.extractedTextTruncated,
     };
   },

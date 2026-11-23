@@ -72,16 +72,18 @@ and agents read without waiting for a parse.
   extraction is queued again.
 - **US-3.4** Given a document attached before this release, when the release is deployed, then
   its text is extracted without user action.
+- **US-3.5** Given a file whose extraction crashes the worker or runs past 2 minutes, when it is
+  processed, then it is marked failed and other attachments keep being extracted.
 
 ## Testing
 
-| Criterion        | Level  | Folder                                         |
-| ---------------- | ------ | ---------------------------------------------- |
-| US-1.1, US-1.2   | API    | `apps/api/test/task/`                          |
-| US-2.1 to US-2.5 | API    | `apps/api/test/task/`                          |
-| US-3.1           | API    | `apps/api/test/task/` (job enqueued)           |
-| US-3.2, US-3.3   | worker | `apps/worker/test/`                            |
-| US-3.4           | API    | `apps/api/test/database/` (migration backfill) |
+| Criterion              | Level  | Folder                                         |
+| ---------------------- | ------ | ---------------------------------------------- |
+| US-1.1, US-1.2         | API    | `apps/api/test/task/`                          |
+| US-2.1 to US-2.5       | API    | `apps/api/test/task/`                          |
+| US-3.1                 | API    | `apps/api/test/task/` (job enqueued)           |
+| US-3.2, US-3.3, US-3.5 | worker | `apps/worker/test/`                            |
+| US-3.4                 | API    | `apps/api/test/database/` (migration backfill) |
 
 Tool tests call the tools through `buildAgentToolset`, like the other task tool tests. Storage
 is faked with `downloadObjectBufferMock` from `@repo/testing`.
@@ -112,8 +114,13 @@ is faked with `downloadObjectBufferMock` from `@repo/testing`.
 - `text_extraction_status`: nullable text, `'pending' | 'ready' | 'failed'`. Null means no
   extraction was asked for: images, chat attachments (extracted inline) and generated media.
 - `extracted_text_truncated`: boolean, not null, default false.
+- `text_extraction_attempts`: integer, not null, default 0. Counts job starts, so a file that
+  crashes the worker gives up instead of being queued forever.
+- A partial index on `created_at` for pending rows keeps the sweep cheap.
 - Migration (`db:generate`, then hand-added SQL): set `'pending'` on the media rows of existing
-  task attachments whose kind is extractable. The sweep picks them up (US-3.4).
+  task attachments whose kind is extractable. The sweep picks them up (US-3.4). A document
+  uploaded through an old API pod during the rollout keeps a null status. That is accepted
+  while there is no production use.
 
 ### Upload (`apps/api`, `task-attachment.service.ts`)
 
@@ -123,12 +130,14 @@ is faked with `downloadObjectBufferMock` from `@repo/testing`.
 
 ### Job (`@repo/queue`, `apps/worker`)
 
-- New queue and DTO `{ mediaId }`. The processor skips rows that aren't `'pending'`. It downloads
-  the object, runs `extractText`, then stores the text capped at `AGENT_FILE_READ_MAX_CHARACTERS`,
-  the truncated flag and `'ready'`. Three attempts with backoff; after the last it sets
-  `'failed'`.
-- A sweep cron (every 10 minutes) re-enqueues rows that have been `'pending'` for more than 10
-  minutes. The job id keeps a running job from being queued twice.
+- New queue and DTO `{ mediaId }`. The processor claims the row: one update increments the
+  attempts of a `'pending'` row. No row means skip. Past 5 starts it sets `'failed'`.
+- It downloads the object, runs `extractText` with a 2-minute timeout, then stores the text
+  capped at `AGENT_FILE_READ_MAX_CHARACTERS`, the truncated flag and `'ready'`.
+- A download error is retried (three attempts with backoff, then `'failed'`). An unknown kind,
+  an extraction error or the timeout can't succeed on retry: `'failed'` at once.
+- A sweep cron (every 10 minutes) re-enqueues up to 500 rows that have been `'pending'` for more
+  than 10 minutes, oldest first. The job id keeps a running job from being queued twice.
 
 ### Tools (`@repo/ai`, `task.tools.ts`)
 
@@ -137,5 +146,6 @@ is faked with `downloadObjectBufferMock` from `@repo/testing`.
 - `readTask` adds `attachments: [{ id, filename, mimeType, sizeBytes }]`, loaded with one query
   for the task. `getTaskById` and the REST task detail stay unchanged.
 - `readTaskAttachment`, `access: 'read'`. Input (flat `z.object`): `taskId`, `attachmentId`.
-  Output: `{ filename, mimeType, text, truncated }`. Failures: `not_found`, `not_ready`,
-  `not_readable`.
+  Output: `{ filename, mimeType, text, truncated }`. Failures: `not_found`, `not_ready`
+  (pending) and `not_readable`, with its own message for an image, a failed extraction, a file
+  without text and a document that was never extracted.

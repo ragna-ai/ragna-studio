@@ -81,7 +81,7 @@ async function attach(fixture: Fixture, seed: AttachmentSeed = {}, taskId = fixt
       mimeType: seed.mimeType ?? 'application/pdf',
       size: seed.size ?? 1234,
       origin: 'uploaded',
-      textExtractionStatus: seed.textExtractionStatus ?? 'ready',
+      textExtractionStatus: 'textExtractionStatus' in seed ? seed.textExtractionStatus : 'ready',
       extractedText: seed.extractedText === undefined ? 'Contract text' : seed.extractedText,
       extractedTextTruncated: seed.extractedTextTruncated ?? false,
     })
@@ -199,17 +199,42 @@ describe('readTaskAttachment', () => {
   });
 
   test.each([
-    ['an image', { textExtractionStatus: null, extractedText: null, filename: 'photo.png' }],
-    ['a failed extraction', { textExtractionStatus: 'failed' as const, extractedText: null }],
-    ['a file without text', { textExtractionStatus: 'ready' as const, extractedText: '' }],
-  ])('fails with not_readable naming the file for %s', async (_label, seed: AttachmentSeed) => {
+    [
+      'a pdf that has no status',
+      { textExtractionStatus: null, extractedText: null },
+      'not_readable',
+      '"contract.pdf" has no extracted text.',
+    ],
+    [
+      'an image',
+      {
+        textExtractionStatus: null,
+        extractedText: null,
+        filename: 'photo.png',
+        mimeType: 'image/png',
+      },
+      'not_readable',
+      '"photo.png" is an image; its text can\'t be read.',
+    ],
+    [
+      'a failed extraction',
+      { textExtractionStatus: 'failed' as const, extractedText: null },
+      'not_readable',
+      'Text extraction failed for "contract.pdf".',
+    ],
+    [
+      'a file without text',
+      { textExtractionStatus: 'ready' as const, extractedText: '' },
+      'not_readable',
+      '"contract.pdf" contains no readable text (it may be a scanned document).',
+    ],
+  ])('explains %s', async (_label, seed: AttachmentSeed, status, message) => {
     const fixture = await seedFixture();
     const attachmentId = await attach(fixture, seed);
 
     const result = failureSchema.parse(await readAttachment(fixture, fixture.taskId, attachmentId));
 
-    expect(result.status).toBe('not_readable');
-    expect(result.message).toContain(seed.filename ?? 'contract.pdf');
+    expect(result).toEqual({ status, message });
   });
 
   test('fails with not_found for an attachment of another task', async () => {

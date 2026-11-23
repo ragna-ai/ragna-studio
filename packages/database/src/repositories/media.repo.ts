@@ -68,16 +68,34 @@ export async function markMediaTextExtractionFailed({ id }: { id: string }): Pro
   await db.update(media).set({ textExtractionStatus: 'failed' }).where(eq(media.id, id));
 }
 
-/** Ids of media still waiting for text extraction since before `createdBefore`, in one query. */
+/**
+ * Counts one extraction start and returns the row, or null when it isn't pending
+ * (done, failed, gone or claimed meanwhile). One UPDATE, so it is atomic.
+ */
+export async function claimMediaTextExtraction({ id }: { id: string }): Promise<Media | null> {
+  const [claimed] = await db
+    .update(media)
+    .set({ textExtractionAttempts: sql`${media.textExtractionAttempts} + 1` })
+    .where(and(eq(media.id, id), eq(media.textExtractionStatus, 'pending')))
+    .returning();
+
+  return claimed ?? null;
+}
+
+/** Oldest media waiting for text extraction since before `createdBefore`, in one query. */
 export async function getMediaIdsPendingTextExtraction({
   createdBefore,
+  limit,
 }: {
   createdBefore: Date;
+  limit: number;
 }): Promise<string[]> {
   const rows = await db
     .select({ id: media.id })
     .from(media)
-    .where(and(eq(media.textExtractionStatus, 'pending'), lt(media.createdAt, createdBefore)));
+    .where(and(eq(media.textExtractionStatus, 'pending'), lt(media.createdAt, createdBefore)))
+    .orderBy(asc(media.createdAt))
+    .limit(limit);
 
   return rows.map((row) => row.id);
 }

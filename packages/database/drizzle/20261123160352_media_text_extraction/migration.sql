@@ -1,6 +1,7 @@
 ALTER TABLE "media" ADD COLUMN "text_extraction_status" text;--> statement-breakpoint
-ALTER TABLE "media" ADD COLUMN "extracted_text_truncated" boolean DEFAULT false NOT NULL;
---> statement-breakpoint
+ALTER TABLE "media" ADD COLUMN "extracted_text_truncated" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "media" ADD COLUMN "text_extraction_attempts" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+CREATE INDEX "media_pendingTextExtraction_idx" ON "media" ("created_at") WHERE "text_extraction_status" = 'pending';--> statement-breakpoint
 -- Existing task attachments of an extractable type start as pending. The worker sweep queues them.
 UPDATE "media"
 SET "text_extraction_status" = 'pending'

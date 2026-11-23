@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 const MIGRATION_SQL = readFileSync(
   join(
     import.meta.dir,
-    '../../../../packages/database/drizzle/20261123152245_media_text_extraction/migration.sql',
+    '../../../../packages/database/drizzle/20261123160352_media_text_extraction/migration.sql',
   ),
   'utf8',
 );
