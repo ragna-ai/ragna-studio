@@ -204,6 +204,9 @@ drag-and-drop; agents get CRUD tools and can be assigned to tasks
 Task comments: users discuss a task in markdown, up to 100 comments per task;
 agent comments are a read-only record.
 → [specs/tasks/470-comments/prd.md](./tasks/470-comments/prd.md)
+Agent tool `addTaskComment`: agents comment on a task from chat; one write path
+and cap for every comment author.
+→ [specs/tasks/473-comment-tool/prd.md](./tasks/473-comment-tool/prd.md)
 
 ## Content & generation
 

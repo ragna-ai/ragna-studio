@@ -22,6 +22,9 @@ export interface TaskCommentWithAuthor {
   authorAgentTone: string | null;
 }
 
+export const MAX_COMMENTS_PER_TASK = 100;
+export const MAX_TASK_COMMENT_BODY_LENGTH = 10_000;
+
 export type CreateTaskCommentResult =
   | { status: 'created'; commentId: string }
   | { status: 'task-not-found' }
@@ -92,23 +95,40 @@ export async function getTaskCommentById({
   return row;
 }
 
-/**
- * Inserts a user comment unless the task already holds `maxComments`. The task row is locked first,
- * so parallel posts on one task are counted one after the other.
- */
-export async function createUserTaskComment({
-  workspaceId,
-  taskId,
-  userId,
-  body,
-  maxComments,
-}: {
+/** Who wrote a comment: a user, or an agent. */
+export type TaskCommentAuthor =
+  | { kind: 'user'; userId: string }
+  | { kind: 'agent'; agentId: string };
+
+export interface CreateTaskCommentInput {
   workspaceId: string;
   taskId: string;
-  userId: string;
+  author: TaskCommentAuthor;
   body: string;
-  maxComments: number;
-}): Promise<CreateTaskCommentResult> {
+}
+
+function toNewTaskComment({
+  workspaceId,
+  taskId,
+  author,
+  body,
+}: CreateTaskCommentInput): NewTaskComment {
+  if (author.kind === 'agent') {
+    return { workspaceId, taskId, body, authorKind: 'agent', authorAgentId: author.agentId };
+  }
+  return { workspaceId, taskId, body, authorKind: 'user', authorUserId: author.userId };
+}
+
+/**
+ * Inserts a comment unless the task already holds `MAX_COMMENTS_PER_TASK`. The task row is locked
+ * first, so parallel posts on one task are counted one after the other.
+ */
+export async function createTaskComment({
+  workspaceId,
+  taskId,
+  author,
+  body,
+}: CreateTaskCommentInput): Promise<CreateTaskCommentResult> {
   return db.transaction(async (tx) => {
     const [lockedTask] = await tx
       .select({ id: task.id })
@@ -121,15 +141,9 @@ export async function createUserTaskComment({
       .select({ total: count() })
       .from(taskComment)
       .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskId, taskId)));
-    if ((existing?.total ?? 0) >= maxComments) return { status: 'limit-reached' };
+    if ((existing?.total ?? 0) >= MAX_COMMENTS_PER_TASK) return { status: 'limit-reached' };
 
-    const values: NewTaskComment = {
-      workspaceId,
-      taskId,
-      authorKind: 'user',
-      authorUserId: userId,
-      body,
-    };
+    const values = toNewTaskComment({ workspaceId, taskId, author, body });
     const [created] = await tx.insert(taskComment).values(values).returning({ id: taskComment.id });
     if (!created) throw new Error('Failed to insert task comment');
     return { status: 'created', commentId: created.id };

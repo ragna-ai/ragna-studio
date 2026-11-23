@@ -1,6 +1,6 @@
 # Agent tools: comment on a task (PRD)
 
-> **Status: proposed** (2026-11-23). Issue #473. Extends #470. Prerequisite for #455.
+> **Status: implemented** (2026-11-23, PR #474). Issue #473. Extends #470. Prerequisite for #455.
 
 Agents can create, update and move tasks, but they can't comment on one. Task comments (#470)
 allow agent authors, yet nothing writes them. This PRD adds the agent tool `addTaskComment` and

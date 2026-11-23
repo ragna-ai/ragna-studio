@@ -9,7 +9,7 @@ import {
   uploadTaskAttachments,
 } from '../services/task-attachment.service';
 import {
-  createTaskComment,
+  createTaskCommentForUser,
   editTaskComment,
   listTaskComments,
   removeTaskComment,
@@ -223,7 +223,7 @@ export const taskController = new Hono()
     const param = c.req.valid('param');
     const body = c.req.valid('json');
 
-    const comment = await createTaskComment({
+    const comment = await createTaskCommentForUser({
       workspaceId: workspace.id,
       taskId: param.taskId,
       viewer: { userId: user.id, workspaceRole: c.get('workspaceRole') },

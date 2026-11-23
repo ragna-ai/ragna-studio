@@ -1,6 +1,6 @@
 import type { TaskCommentWithAuthor, WorkspaceRole } from '@repo/database';
 import {
-  createUserTaskComment,
+  createTaskComment,
   deleteTaskCommentById,
   getTaskById,
   getTaskCommentById,
@@ -14,8 +14,6 @@ import {
   TaskCommentLimitReachedException,
   TaskCommentNotEditableException,
 } from '../exceptions';
-
-export const MAX_COMMENTS_PER_TASK = 100;
 
 interface TaskCommentScope {
   workspaceId: string;
@@ -121,16 +119,15 @@ export async function listTaskComments({
   return comments.map((comment) => toCommentResponse(comment, viewer));
 }
 
-export async function createTaskComment({
+export async function createTaskCommentForUser({
   viewer,
   body,
   ...scope
 }: TaskCommentScope & { viewer: TaskCommentViewer; body: string }): Promise<TaskCommentResponse> {
-  const result = await createUserTaskComment({
+  const result = await createTaskComment({
     ...scope,
-    userId: viewer.userId,
+    author: { kind: 'user', userId: viewer.userId },
     body,
-    maxComments: MAX_COMMENTS_PER_TASK,
   });
   if (result.status === 'task-not-found') throw new NotFoundException('Task not found');
   if (result.status === 'limit-reached') throw new TaskCommentLimitReachedException();
