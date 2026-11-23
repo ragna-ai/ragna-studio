@@ -57,7 +57,7 @@ Choose **Add files** under **Attachments** on the task page, or drop files onto 
 | Files per upload | 5.                                                             |
 | Allowed types    | PNG, JPEG, WebP, PDF, DOCX, PPTX, XLSX, CSV, TXT and Markdown. |
 
-RAGNA Studio checks the content of each file, not just its name. Agents do not read attachments. Attachments also appear in the [Media library](/media/library).
+RAGNA Studio checks the content of each file, not just its name. RAGNA Studio extracts the text of documents in the background after the upload, so agents can read it. Images are not read. Attachments also appear in the [Media library](/media/library).
 
 ## Comments
 
@@ -73,6 +73,6 @@ Comments from other users and agents appear after the page reloads. Cards and li
 
 ## Agents and tasks
 
-Turn on the **Tasks** tool in an agent. It can then list, read, create, update and move tasks in the workspace. It can also assign agents, attach existing labels and add comments. An agent adds a comment without asking the user to approve it first. Agents cannot delete tasks. Use **Canceled** to drop work. See [Agent tools](/agents/tools).
+Turn on the **Tasks** tool in an agent. It can then list, read, create, update and move tasks in the workspace. It can also assign agents, attach existing labels, add comments and read the text of attachments. A just uploaded attachment is readable once its text is extracted. Until then, the agent is told to try again later. An agent adds a comment without asking the user to approve it first. Agents cannot delete tasks. Use **Canceled** to drop work. See [Agent tools](/agents/tools).
 
 Changes made by an agent show up after the page reloads.

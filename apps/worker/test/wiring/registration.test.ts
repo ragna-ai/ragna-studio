@@ -8,6 +8,7 @@ import {
   EMAILS_QUEUE,
   GEN_IMAGES_QUEUE,
   GEN_VIDEOS_QUEUE,
+  MEDIA_TEXT_EXTRACTION_QUEUE,
   NOTIFICATIONS_QUEUE,
   PURGE_QUEUE,
   VISIBLE_WATERMARK_QUEUE,
@@ -41,6 +42,7 @@ const expectedWorkers: ExpectedWorker[] = [
   { queue: EMAIL_DRAFT_QUEUE, opts: { concurrency: 3, lockDuration: TEN_MINUTES_MS } },
   { queue: PURGE_QUEUE, opts: undefined },
   { queue: VISIBLE_WATERMARK_QUEUE, opts: { concurrency: 2, lockDuration: TEN_MINUTES_MS } },
+  { queue: MEDIA_TEXT_EXTRACTION_QUEUE, opts: undefined },
 ];
 
 const expectedCrons = [
@@ -48,6 +50,7 @@ const expectedCrons = [
   { name: 'stale-workflow-runs', schedule: { pattern: '*/15 * * * *' } },
   { name: 'task-reminder', schedule: { pattern: '* * * * *' } },
   { name: 'media-sweep', schedule: { pattern: '0 * * * *' } },
+  { name: 'media-text-extraction-sweep', schedule: { pattern: '*/10 * * * *' } },
   { name: 'email-sync', schedule: { every: config.emailSyncInterval } },
   { name: 'purge', schedule: { pattern: '0 3 * * *' } },
 ];

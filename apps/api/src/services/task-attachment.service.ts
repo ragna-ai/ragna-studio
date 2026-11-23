@@ -11,11 +11,13 @@ import {
   deleteMediaIfUnreferenced,
   DOCUMENT_KINDS,
   IMAGE_KINDS,
+  isExtractableKind,
   sniffMediaKind,
   storeMedia,
   type MediaKind,
   type SniffedMedia,
 } from '@repo/media';
+import { buildExtractMediaTextJob, queue } from '@repo/queue';
 import { tryCatch } from '@repo/utils';
 import {
   BadRequestException,
@@ -31,9 +33,8 @@ import {
 // TASK ATTACHMENTS
 //
 // Straight port of media.service.ts's chat-attachment orchestration onto
-// tasks. Files only: no text extraction, no agent visibility into contents
-// (PRD decision "Scope"), so unlike chat this never calls @repo/media's
-// `extractText`.
+// tasks. Text is not extracted inline: extractable files are stored as
+// 'pending' and the worker fills in their text after upload.
 
 // Task attachments accept every media kind the platform knows, same as chat.
 const TASK_ATTACHMENT_ACCEPTED_KINDS: readonly MediaKind[] = [...IMAGE_KINDS, ...DOCUMENT_KINDS];
@@ -83,8 +84,8 @@ interface ValidatedTaskAttachmentFile {
 
 /**
  * Stores one validated file via @repo/media's `storeMedia`, which uploads it
- * to the right bucket/key for its kind and creates its media row. No
- * extraction: task attachments never populate `extractedText`.
+ * to the right bucket/key for its kind and creates its media row. Extractable
+ * kinds start as 'pending' for the worker.
  */
 async function storeTaskAttachmentFile({
   workspaceId,
@@ -103,7 +104,30 @@ async function storeTaskAttachmentFile({
     filename: file.name,
     kind: sniffed.kind,
     origin: 'uploaded',
+    textExtractionStatus: isExtractableKind(sniffed.kind) ? 'pending' : null,
   });
+}
+
+/** Queues text extraction for the pending files in one bulk add. A failure is only logged: the worker sweep retries pending rows. */
+async function enqueueMediaTextExtractions(mediaRows: Media[]): Promise<void> {
+  const pendingMediaIds = mediaRows
+    .filter((mediaRow) => mediaRow.textExtractionStatus === 'pending')
+    .map((mediaRow) => mediaRow.id);
+
+  if (pendingMediaIds.length === 0) {
+    return;
+  }
+
+  const { error } = await tryCatch(() =>
+    queue.mediaTextExtraction().addBulk(pendingMediaIds.map(buildExtractMediaTextJob)),
+  );
+
+  if (error !== null) {
+    logger.error(
+      `Failed to enqueue text extraction for media ${pendingMediaIds.join(', ')}`,
+      error,
+    );
+  }
 }
 
 function buildTaskAttachmentDownloadUrl({
@@ -131,7 +155,7 @@ function toTaskAttachmentResponse({
   attachmentRow,
 }: {
   workspaceId: string;
-  mediaRow: Media;
+  mediaRow: Pick<Media, 'id' | 'filename' | 'mimeType' | 'size'>;
   attachmentRow: TaskAttachment;
 }): TaskAttachmentResponse {
   return {
@@ -240,6 +264,8 @@ export async function uploadTaskAttachments({
     logger.error('Failed to save task attachments', createError);
     throw new InternalServerErrorException('Failed to save attachments');
   }
+
+  await enqueueMediaTextExtractions(created.map(({ mediaRow }) => mediaRow));
 
   return {
     attachments: created.map(({ mediaRow, attachmentRow }) =>

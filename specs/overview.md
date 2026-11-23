@@ -207,6 +207,9 @@ agent comments are a read-only record.
 Agent tool `addTaskComment`: agents comment on a task from chat; one write path
 and cap for every comment author.
 → [specs/tasks/473-comment-tool/prd.md](./tasks/473-comment-tool/prd.md)
+Agent tool `readTaskAttachment`: the worker extracts a task attachment's text after
+upload; agents list attachments in `readTask` and read the stored text.
+→ [specs/tasks/471-read-attachments/prd.md](./tasks/471-read-attachments/prd.md)
 
 ## Content & generation
 

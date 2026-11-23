@@ -199,6 +199,20 @@ export function getMediaKindDefinition(kind: MediaKind): MediaKindDefinition {
   return REGISTRY[kind];
 }
 
+/** True for kinds whose text `extractText` can read (all documents, no images). */
+export function isExtractableKind(kind: MediaKind): boolean {
+  return REGISTRY[kind].extractable;
+}
+
+const MEDIA_KIND_BY_MIME_TYPE = new Map<string, MediaKind>(
+  Object.entries(MIME_TYPE_BY_MEDIA_KIND).map(([kind, mimeType]) => [mimeType, kind as MediaKind]),
+);
+
+/** Reverse of `MIME_TYPE_BY_MEDIA_KIND`; null for a mime type the platform doesn't store. */
+export function getMediaKindByMimeType(mimeType: string): MediaKind | null {
+  return MEDIA_KIND_BY_MIME_TYPE.get(mimeType) ?? null;
+}
+
 /**
  * Identifies a media kind from file content (see the SECURITY note above).
  * `accept` scopes which kinds are considered, named after the HTML file

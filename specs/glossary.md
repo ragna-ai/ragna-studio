@@ -50,11 +50,12 @@ Role names are always qualified. The full table, with storage and code identifie
 
 ## Tasks and tones
 
-| Term         | Meaning                                                                                                                    | _Avoid_                                                |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| tone         | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
-| task label   | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
-| task comment | A markdown note on a task, written by a user or an agent. Agent comments can't be edited.                                  | note, reply, message                                   |
+| Term            | Meaning                                                                                                                    | _Avoid_                                                |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| tone            | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
+| task label      | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+| task comment    | A markdown note on a task, written by a user or an agent. Agent comments can't be edited.                                  | note, reply, message                                   |
+| task attachment | A file a user attached to a task. Agents read its extracted text.                                                          | file (for the link), document, upload                  |
 
 ## Users and emails
 

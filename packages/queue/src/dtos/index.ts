@@ -7,6 +7,7 @@ export * from './email-sync-job.dto';
 export * from './gen-images-job.dto';
 export * from './gen-video-job.dto';
 export * from './get-social-profile.dto';
+export * from './media-text-extraction-job.dto';
 export * from './notify-user.dto';
 export * from './onboard-user.dto';
 export * from './purge-organization-job.dto';
