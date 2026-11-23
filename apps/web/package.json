@@ -15,7 +15,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@ai-sdk/vue": "^4.0.173",
+    "@ai-sdk/vue": "^4.0.177",
     "@internationalized/date": "^3.12.4",
     "@lucide/vue": "^1.74.0",
     "@nuxt/fonts": "1.2.0",
