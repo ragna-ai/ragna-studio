@@ -212,3 +212,23 @@ export class KnowledgeFilesNotReadyException extends ProblemException {
     });
   }
 }
+
+// Conflict (409) when a task already holds the maximum number of comments
+export class TaskCommentLimitReachedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'task-comment-limit-reached',
+      message: 'This task has reached its limit of comments.',
+    });
+  }
+}
+
+// Conflict (409) when an agent comment is edited
+export class TaskCommentNotEditableException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'task-comment-not-editable',
+      message: 'Agent comments cannot be edited.',
+    });
+  }
+}

@@ -27,6 +27,7 @@ export * from './organization.repo';
 export * from './overview.repo';
 export * from './session.repo';
 export * from './social-post.repo';
+export * from './task-comment.repo';
 export * from './task-label.repo';
 export * from './task.repo';
 export * from './user.repo';

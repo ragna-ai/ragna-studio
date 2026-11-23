@@ -138,3 +138,38 @@ export type CreateTaskLabelRequest = {
 };
 
 export type UpdateTaskLabelRequest = Partial<CreateTaskLabelRequest>;
+
+export interface TaskCommentUserAuthor {
+  kind: 'user';
+  id: string | null;
+  name: string | null;
+}
+
+export interface TaskCommentAgentAuthor {
+  kind: 'agent';
+  id: string | null;
+  name: string | null;
+  icon: string | null;
+  tone: string | null;
+}
+
+export type TaskCommentAuthor = TaskCommentUserAuthor | TaskCommentAgentAuthor;
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  body: string;
+  editedAt: string | null;
+  createdAt: string;
+  author: TaskCommentAuthor;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export interface TaskCommentManyResponse {
+  comments: TaskComment[];
+}
+
+export interface TaskCommentResponse {
+  comment: TaskComment;
+}

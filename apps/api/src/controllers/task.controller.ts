@@ -9,6 +9,12 @@ import {
   uploadTaskAttachments,
 } from '../services/task-attachment.service';
 import {
+  createTaskComment,
+  editTaskComment,
+  listTaskComments,
+  removeTaskComment,
+} from '../services/task-comment.service';
+import {
   createTaskForUser,
   deleteTaskForUser,
   getTask,
@@ -20,6 +26,8 @@ import {
   validCreateTaskBody,
   validMoveTaskBody,
   validTaskAttachmentParams,
+  validTaskCommentBody,
+  validTaskCommentParams,
   validTaskIdParam,
   validTaskListQuery,
   validUpdateTaskBody,
@@ -187,4 +195,83 @@ export const taskController = new Hono()
     });
 
     return c.json({ message: 'Attachment deleted successfully' });
+  })
+  /**
+   * [GET] /workspace/:workspaceId/task/:taskId/comments
+   * Every comment of the task, oldest first. Not paginated: a task holds at most 100.
+   */
+  .get('/:taskId/comments', validTaskIdParam, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const comments = await listTaskComments({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      viewer: { userId: user.id, workspaceRole: c.get('workspaceRole') },
+    });
+
+    return c.json({ comments });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/task/:taskId/comments
+   * 409 task-comment-limit-reached once the task holds 100 comments.
+   */
+  .post('/:taskId/comments', validTaskIdParam, validTaskCommentBody, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const body = c.req.valid('json');
+
+    const comment = await createTaskComment({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      viewer: { userId: user.id, workspaceRole: c.get('workspaceRole') },
+      body: body.body,
+    });
+
+    return c.json({ comment }, StatusCodes.CREATED);
+  })
+  /**
+   * [PATCH] /workspace/:workspaceId/task/:taskId/comments/:commentId
+   * Own user comments only. Agent comments answer 409 task-comment-not-editable.
+   */
+  .patch(
+    '/:taskId/comments/:commentId',
+    validTaskCommentParams,
+    validTaskCommentBody,
+    async (c) => {
+      const user = c.get('user');
+      const workspace = c.get('workspace');
+      const param = c.req.valid('param');
+      const body = c.req.valid('json');
+
+      const comment = await editTaskComment({
+        workspaceId: workspace.id,
+        taskId: param.taskId,
+        commentId: param.commentId,
+        viewer: { userId: user.id, workspaceRole: c.get('workspaceRole') },
+        body: body.body,
+      });
+
+      return c.json({ comment });
+    },
+  )
+  /**
+   * [DELETE] /workspace/:workspaceId/task/:taskId/comments/:commentId
+   * Own comment, or any comment as workspace manager.
+   */
+  .delete('/:taskId/comments/:commentId', validTaskCommentParams, async (c) => {
+    const user = c.get('user');
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    await removeTaskComment({
+      workspaceId: workspace.id,
+      taskId: param.taskId,
+      commentId: param.commentId,
+      viewer: { userId: user.id, workspaceRole: c.get('workspaceRole') },
+    });
+
+    return c.json({ message: 'Comment deleted successfully' });
   });

@@ -14,6 +14,8 @@ export const problemTypeSchema = z.enum([
   'agent-already-approved',
   'agent-not-approved',
   'knowledge-files-not-ready',
+  'task-comment-limit-reached',
+  'task-comment-not-editable',
 ]);
 
 export type ProblemType = z.infer<typeof problemTypeSchema>;
@@ -32,6 +34,8 @@ export const PROBLEM_TITLES: Record<ProblemType, string> = {
   'agent-already-approved': 'Agent is already approved',
   'agent-not-approved': 'Agent is not approved',
   'knowledge-files-not-ready': 'Knowledge files are not ready',
+  'task-comment-limit-reached': 'Task comment limit reached',
+  'task-comment-not-editable': 'Task comment is not editable',
 };
 
 export const ABOUT_BLANK = 'about:blank';

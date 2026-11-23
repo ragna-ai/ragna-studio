@@ -21,6 +21,21 @@ export const validTaskAttachmentParams = myzValidator(
   }),
 );
 
+export const validTaskCommentParams = myzValidator(
+  'param',
+  z.object({
+    taskId: primaryId,
+    commentId: primaryId,
+  }),
+);
+
+export const validTaskCommentBody = myzValidator(
+  'json',
+  z.object({
+    body: z.string().min(1).max(10_000),
+  }),
+);
+
 // List is unpaginated: a board needs every card.
 // Only optional filters, no page/limit/sort.
 export const validTaskListQuery = myzValidator(
