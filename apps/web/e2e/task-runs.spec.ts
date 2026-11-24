@@ -94,8 +94,12 @@ test('assigns an agent and starts a run from the task page', async ({
   await expect(
     page.getByText('Stop the run to edit this task.').first(),
   ).toBeVisible();
-  await expect(page.getByTestId('task-run')).toContainText('Queued');
   await expect(page.getByRole('combobox').first()).toContainText('In Progress');
+
+  await page.getByRole('button', { name: 'Runs (1)' }).click();
+  await expect(
+    page.getByRole('dialog', { name: 'Runs' }).getByTestId('task-run'),
+  ).toContainText('Queued');
 });
 
 test('shows on the board that an agent is working on a task', async ({
