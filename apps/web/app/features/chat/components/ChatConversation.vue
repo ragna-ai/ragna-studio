@@ -356,7 +356,7 @@ async function handleSubmit(text: string) {
     </MessageScrollerProvider>
 
     <!-- input -->
-    <div class="px-page" :class="{ 'pb-4': !isNewChatEmpty }">
+    <div class="px-page" :class="{ 'pt-2 pb-4': !isNewChatEmpty }">
       <div class="mx-auto w-full max-w-3xl">
         <ChatInput
           ref="chatInputRef"
