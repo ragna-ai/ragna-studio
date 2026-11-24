@@ -53,7 +53,3 @@ export function formatRunDuration(
   const seconds = totalSeconds % SECONDS_PER_MINUTE;
   return minutes > 0 ? `${minutes} min ${seconds} s` : `${seconds} s`;
 }
-
-export function taskRunElementId(runId: string): string {
-  return `task-run-${runId}`;
-}

@@ -7,8 +7,9 @@ import StatusSaveButton, {
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskComments from '~/features/task/components/TaskComments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
-import TaskRunHistory from '~/features/task/components/TaskRunHistory.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
+import TaskRunsButton from '~/features/task/components/TaskRunsButton.vue';
+import TaskRunsSheet from '~/features/task/components/TaskRunsSheet.vue';
 import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
 import {
   useDeleteTask,
@@ -32,6 +33,7 @@ const taskId = computed(() => route.params.taskId as string);
 // Refs
 const title = ref('');
 const isTitleDirty = ref(false);
+const isRunsSheetOpen = ref(false);
 const hasTitleSaveFailed = ref(false);
 const descriptionSaveStatus = ref<SaveStatus>('saved');
 const descriptionEditorRef = useTemplateRef('descriptionEditorRef');
@@ -187,7 +189,10 @@ async function handleDelete() {
     <template #header>
       <NavTopBar :crumbs="crumbs">
         <template #right>
-          <StatusSaveButton v-if="task" :status="saveStatus" @save="saveAll" />
+          <template v-if="task">
+            <TaskRunsButton :task-id="task.id" @open="isRunsSheetOpen = true" />
+            <StatusSaveButton :status="saveStatus" @save="saveAll" />
+          </template>
         </template>
       </NavTopBar>
     </template>
@@ -238,8 +243,6 @@ async function handleDelete() {
                 :subtasks="task.subtasks"
               />
 
-              <TaskRunHistory :task-id="task.id" />
-
               <TaskComments :task-id="task.id" />
             </div>
           </div>
@@ -251,6 +254,7 @@ async function handleDelete() {
           @delete="handleDelete"
         />
       </div>
+      <TaskRunsSheet v-model:open="isRunsSheetOpen" :task-id="task.id" />
     </div>
     <div v-else-if="taskError" class="flex h-full items-center justify-center">
       <p class="text-sm text-muted-foreground">
