@@ -4,7 +4,6 @@ import { useTaskRunHighlight } from '~/features/task/composables/useTaskRunHighl
 import {
   formatRunDuration,
   TASK_RUN_STATUS_TONE,
-  taskRunElementId,
 } from '~/features/task/lib/task-run-display';
 import type { TaskRun } from '~/features/task/types';
 import WorkflowTraceTimeline from '~/features/workflow/components/WorkflowTraceTimeline.vue';
@@ -17,6 +16,9 @@ interface TaskRunItemProps {
 // Props
 const props = defineProps<TaskRunItemProps>();
 
+// Refs
+const runElement = useTemplateRef('runElement');
+
 // Composables
 const { t } = useI18n();
 const { formatRelative } = useDateTimeFormat();
@@ -28,14 +30,26 @@ const duration = computed(() => formatRunDuration(props.run));
 const agentName = computed(
   () => props.run.agent?.name ?? t('task.run.deletedAgent'),
 );
+
+// Hooks
+watch(
+  isHighlighted,
+  (highlighted) => {
+    if (!highlighted) {
+      return;
+    }
+    runElement.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  },
+  { immediate: true, flush: 'post' },
+);
 </script>
 
 <template>
   <li
-    :id="taskRunElementId(run.id)"
+    ref="runElement"
     :class="
       cn(
-        'flex scroll-mt-24 flex-col gap-2 rounded-md border p-3 transition-colors',
+        'flex flex-col gap-2 rounded-md border p-3 transition-colors',
         isHighlighted && 'border-ring bg-surface-subtle',
       )
     "

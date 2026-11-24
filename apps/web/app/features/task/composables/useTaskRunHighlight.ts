@@ -1,8 +1,6 @@
-import { taskRunElementId } from '~/features/task/lib/task-run-display';
-
 const HIGHLIGHT_DURATION_MS = 2000;
 
-/** Scrolls a run in the history into view and marks it for a moment. */
+/** Marks a run in the history for a moment; the run item scrolls itself into view. */
 export function useTaskRunHighlight() {
   const highlightedRunId = useState<string | null>(
     'task-run-highlight',
@@ -17,9 +15,6 @@ export function useTaskRunHighlight() {
   );
 
   function highlightRun(runId: string) {
-    document
-      .getElementById(taskRunElementId(runId))
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     highlightedRunId.value = runId;
     scheduleClear();
   }

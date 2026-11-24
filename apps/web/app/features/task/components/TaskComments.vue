@@ -15,25 +15,30 @@ const { t } = useI18n();
 const { data, isError } = useGetTaskComments(() => props.taskId);
 
 // Computed
-const comments = computed(() => data.value?.comments ?? []);
+const newestFirstComments = computed(() =>
+  (data.value?.comments ?? []).toReversed(),
+);
 </script>
 
 <template>
   <section class="space-y-3" :aria-label="t('task.comment.title')">
     <p class="text-sm font-semibold">{{ t('task.comment.title') }}</p>
+    <TaskCommentComposer :task-id="taskId" />
     <p v-if="isError" class="text-sm text-muted-foreground">
       {{ t('task.comment.loadError') }}
     </p>
-    <p v-else-if="comments.length === 0" class="text-sm text-muted-foreground">
+    <p
+      v-else-if="newestFirstComments.length === 0"
+      class="text-sm text-muted-foreground"
+    >
       {{ t('task.comment.empty') }}
     </p>
     <ul v-else class="flex flex-col gap-4">
       <TaskCommentItem
-        v-for="comment in comments"
+        v-for="comment in newestFirstComments"
         :key="comment.id"
         :comment="comment"
       />
     </ul>
-    <TaskCommentComposer :task-id="taskId" />
   </section>
 </template>

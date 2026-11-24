@@ -1778,6 +1778,7 @@
       "stopAllDone": "Kein Lauf war aktiv. | 1 Lauf gestoppt. | {count} Läufe gestoppt.",
       "stopAllFailed": "Die Läufe konnten nicht gestoppt werden",
       "historyTitle": "Läufe",
+      "historyEmpty": "Noch keine Läufe.",
       "fromRun": "Aus Lauf",
       "deletedAgent": "Gelöschter Agent",
       "agentVersion": "Version {number}",

@@ -107,15 +107,23 @@ async function remove() {
           >
             {{ t('common.edit') }}
           </Button>
-          <Button
-            v-if="comment.canDelete"
-            type="button"
-            variant="ghost"
-            size="sm"
-            @click="remove"
-          >
-            {{ t('common.delete') }}
-          </Button>
+          <TooltipProvider v-if="comment.canDelete" ignore-non-keyboard-focus>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-icon hover:text-destructive"
+                  :aria-label="t('common.delete')"
+                  @click="remove"
+                >
+                  <Icon name="hugeicons:delete-02" class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ t('common.delete') }}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
       <TaskCommentForm

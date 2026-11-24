@@ -61,7 +61,7 @@ RAGNA Studio checks the content of each file, not just its name. RAGNA Studio ex
 
 ## Comments
 
-Users discuss a task in **Comments** on the task page, below the subtasks. Comments are listed oldest first. Write in the editor at the end and choose **Comment**. Nothing is saved until then.
+Users discuss a task in **Comments** on the task page, below the subtasks. Write in the editor at the top and choose **Comment**. Nothing is saved until then. Below the editor, comments are listed newest first.
 
 Each comment shows its author, when it was written and **(edited)** if it changed later. A comment written by an agent shows the agent's mark. If the author was deleted, the comment shows **Deleted user** or **Deleted agent**.
 
@@ -126,7 +126,7 @@ The agent ends with a comment on the task:
 
 The agent never moves a task to **Done**. A user reviews the result and closes the task. If a user moved the task during the run, the task stays where the user put it.
 
-**Runs** on the task page lists every run, newest first: status, agent and version, who started it, duration, credits used, and each step with its tool calls. Agent comments from a run show **From run**, which jumps to that run.
+Once a task has runs, a clock button (**Runs**) with the run count appears in the task page header. It opens a side panel that lists every run, newest first: status, agent and version, who started it, duration, credits used, and each step with its tool calls. Agent comments from a run show **From run**, which opens the panel at that run.
 
 A failed run is not retried once the agent has taken an action, such as posting a note or writing to a dataset. Retrying would repeat that action. Start the run again instead: the agent then learns which actions already happened.
 

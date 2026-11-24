@@ -1775,6 +1775,7 @@
       "stopAllDone": "No run was active. | 1 run stopped. | {count} runs stopped.",
       "stopAllFailed": "Failed to stop the runs",
       "historyTitle": "Runs",
+      "historyEmpty": "No runs yet.",
       "fromRun": "From run",
       "deletedAgent": "Deleted agent",
       "agentVersion": "Version {number}",
