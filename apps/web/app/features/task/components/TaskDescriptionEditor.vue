@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SaveStatus } from '~/components/SaveStatusButton.vue';
+import type { SaveStatus } from '~/components/status/StatusSaveButton.vue';
 import RichTextEditor from '~/components/editor/RichTextEditor.vue';
 import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
 import { useUpdateTask } from '~/features/task/composables/useTaskApi';

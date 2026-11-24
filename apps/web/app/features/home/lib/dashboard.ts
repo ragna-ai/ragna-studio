@@ -1,5 +1,5 @@
 import type { WorkflowRunStatus } from '@repo/workflow';
-import type { StatusPillTone } from '~/components/StatusPill.vue';
+import type { StatusPillTone } from '~/components/status/StatusPill.vue';
 import type {
   HomeOverviewCalendarTaskItem,
   HomeOverviewTaskItem,

@@ -1,5 +1,5 @@
 import type { ToolUIPart } from 'ai';
-import type { StatusPillTone } from '~/components/StatusPill.vue';
+import type { StatusPillTone } from '~/components/status/StatusPill.vue';
 
 export type ToolState = ToolUIPart['state'];
 

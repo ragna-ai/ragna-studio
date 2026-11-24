@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { CornerUpLeftIcon } from '@lucide/vue';
 import { useQueryClient } from '@tanstack/vue-query';
-import SaveStatusButton, {
+import StatusSaveButton, {
   type SaveStatus,
-} from '~/components/SaveStatusButton.vue';
+} from '~/components/status/StatusSaveButton.vue';
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskComments from '~/features/task/components/TaskComments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
@@ -187,7 +187,7 @@ async function handleDelete() {
     <template #header>
       <NavTopBar :crumbs="crumbs">
         <template #right>
-          <SaveStatusButton v-if="task" :status="saveStatus" @save="saveAll" />
+          <StatusSaveButton v-if="task" :status="saveStatus" @save="saveAll" />
         </template>
       </NavTopBar>
     </template>
