@@ -121,6 +121,15 @@ Split a conversation into a new chat at any message, preserving history
 up to that point. Reachable via a hover-revealed menu on each message.
 → [specs/chat/branching.md](./chat/branching.md)
 
+### Agent lock and approval
+
+Users who can edit an agent lock its configuration as an immutable,
+numbered version. Workspace managers and up approve a locked version for
+unattended runs and take responsibility for it. Revoke keeps the lock,
+unlock reopens the editor, and every step stays in the version history.
+Task runs (#455) only start on an approved version.
+→ [specs/agent/462-agent-lock/prd.md](./agent/462-agent-lock/prd.md)
+
 ### Agent selection
 
 Every chat, email auto-draft and workflow node runs on an agent the user
@@ -189,9 +198,20 @@ third-party framework like Mastra). Supports scheduled triggers and a
 ### Tasks / Kanban board
 
 Linear-style kanban board, one per workspace. Humans manage it via
-drag-and-drop; agents get CRUD tools and can be assigned to tasks
-(assignment is metadata only, no autonomous execution yet).
+drag-and-drop; agents get CRUD tools and can be assigned to tasks.
 → [specs/tasks/prd.md](./tasks/prd.md)
+Task comments: users discuss a task in markdown, up to 100 comments per task;
+agent comments are a read-only record.
+→ [specs/tasks/470-comments/prd.md](./tasks/470-comments/prd.md)
+Agent tool `addTaskComment`: agents comment on a task from chat; one write path
+and cap for every comment author.
+→ [specs/tasks/473-comment-tool/prd.md](./tasks/473-comment-tool/prd.md)
+Agent tool `readTaskAttachment`: the worker extracts a task attachment's text after
+upload; agents list attachments in `readTask` and read the stored text.
+→ [specs/tasks/471-read-attachments/prd.md](./tasks/471-read-attachments/prd.md)
+Task runs: a user starts the assigned, approved agent on a task; it works in the
+background, posts notes and its result as comments and hands the task back for review.
+→ [specs/tasks/455-agent-runs/prd.md](./tasks/455-agent-runs/prd.md)
 
 ## Content & generation
 

@@ -50,6 +50,7 @@ const agentListItemSchema = z.strictObject({
   createdAt: z.string(),
   updatedAt: z.string(),
   aiModel: z.strictObject({ provider: z.string(), model: z.string(), displayName: z.string() }),
+  lock: z.null(),
 });
 
 const agentListResponseSchema = z.object({
@@ -59,7 +60,16 @@ const agentListResponseSchema = z.object({
 const agentResponseSchema = z.object({ agent: agentSchema });
 // GET returns the agent with its AI model relation attached.
 const agentWithModelResponseSchema = z.object({
-  agent: agentSchema.extend({ aiModel: z.record(z.string(), z.unknown()) }),
+  agent: agentSchema.extend({
+    aiModel: z.record(z.string(), z.unknown()),
+    lock: z.null(),
+    lockActions: z.strictObject({
+      canLock: z.boolean(),
+      canUnlock: z.boolean(),
+      canApprove: z.boolean(),
+      canRevoke: z.boolean(),
+    }),
+  }),
 });
 const agentMemoryResponseSchema = z.object({ memory: z.object({ content: z.string() }) });
 
@@ -467,16 +477,17 @@ describe('agent tool grants', () => {
     expect(agent.toolGrants).toEqual([]);
   });
 
-  test('stores tool grants on create and returns them on get', async () => {
+  test('stores tool grants sorted by id on create and returns them on get', async () => {
     const grants = [{ id: 'webSearch' }, { id: 'google-drive', access: 'read' }];
+    const sortedGrants = [{ id: 'google-drive', access: 'read' }, { id: 'webSearch' }];
     const { workspaceId, cookieHeader, agent: created } = await seedAgent(grants);
 
-    expect(created.toolGrants).toEqual(grants);
+    expect(created.toolGrants).toEqual(sortedGrants);
     const response = await app.request(`/workspace/${workspaceId}/agent/${created.id}`, {
       headers: { cookie: cookieHeader },
     });
     expect(agentWithModelResponseSchema.parse(await response.json()).agent.toolGrants).toEqual(
-      grants,
+      sortedGrants,
     );
   });
 
@@ -508,7 +519,9 @@ describe('agent tool grants', () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     const { agents } = agentListResponseSchema.parse(await response.json());
-    expect(agents.map((agent) => agent.toolGrants)).toEqual([grants]);
+    expect(agents.map((agent) => agent.toolGrants)).toEqual([
+      [{ id: 'google-drive', access: 'write' }, { id: 'think' }],
+    ]);
   });
 
   test.each([

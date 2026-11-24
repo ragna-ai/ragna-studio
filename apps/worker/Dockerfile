@@ -59,7 +59,7 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
 FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS ffmpeg
 
 # renovate: datasource=github-tags depName=FFmpeg/FFmpeg extractVersion=^n(?<version>.+)$
-ARG FFMPEG_VERSION=9.0.2
+ARG FFMPEG_VERSION=9.1
 # renovate: datasource=git-refs depName=https://code.videolan.org/videolan/x264.git currentValue=stable
 ARG X264_COMMIT=b35605ace3ddf7c1a5d67a2eb553f034aef41d55
 ARG FFMPEG_RELEASE_FINGERPRINT=FCF986EA15E6E293A5644F10B4322F04D67658D8
@@ -132,7 +132,7 @@ RUN apt-get update \
 # spawned via plain PATH lookup. Numeric UID: distroless has no user
 # 1000, but prod runs as 1000.
 # ============================================================
-FROM oven/bun:1.4.4-distroless@sha256:153a951ae40106e125898103e6e990ee0f38e6aee7f561029e26cf9fbed23470 AS runner
+FROM oven/bun:1.4.5-distroless@sha256:3a210956422ad81cf7532e1fc1f2eb9275d6ef4c2337a9d25d530f798e80726a AS runner
 
 WORKDIR /app
 

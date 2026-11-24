@@ -19,6 +19,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  TaskRunActiveException,
 } from '../exceptions';
 import { throwIfForeignReference } from '../utils/foreign-reference';
 
@@ -261,7 +262,7 @@ export async function updateTaskForUser({
   await assertReminderHasDueDate({ workspaceId, taskId, fields });
   await assertParentTaskChangeIsValid({ workspaceId, taskId, fields });
 
-  const { error, data: updatedTask } = await tryCatch(() =>
+  const { error, data: result } = await tryCatch(() =>
     updateTask({ id: taskId, workspaceId, labelIds, ...fields }),
   );
 
@@ -271,11 +272,14 @@ export async function updateTaskForUser({
     throw new InternalServerErrorException('Failed to update task');
   }
 
-  if (!updatedTask) {
+  if (!result || result.status === 'not-found') {
     throw new NotFoundException('Task not found');
   }
+  if (result.status === 'run-active') {
+    throw new TaskRunActiveException();
+  }
 
-  return updatedTask;
+  return result.task;
 }
 
 // The repo throws a plain Error (no typed error class) when `afterTaskId`
@@ -300,7 +304,7 @@ export async function moveTaskForUser({
   status: TaskStatus;
   afterTaskId?: string | null;
 }): Promise<Task> {
-  const { error, data: movedTask } = await tryCatch(() =>
+  const { error, data: result } = await tryCatch(() =>
     moveTask({ id: taskId, workspaceId, status, afterTaskId }),
   );
 
@@ -313,11 +317,14 @@ export async function moveTaskForUser({
     throw new InternalServerErrorException('Failed to move task');
   }
 
-  if (!movedTask) {
+  if (!result || result.status === 'not-found') {
     throw new NotFoundException('Task not found');
   }
+  if (result.status === 'run-active') {
+    throw new TaskRunActiveException();
+  }
 
-  return movedTask;
+  return result.task;
 }
 
 /**

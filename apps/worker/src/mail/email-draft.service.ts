@@ -21,6 +21,7 @@ import {
   toModelSettings,
   withCachedInstructions,
   withDefaultProviderOptions,
+  wrapUntrustedContent,
 } from '@repo/ai';
 import type { Agent, EmailAccount, EmailMessageWithBody, EmailParticipant } from '@repo/database';
 import {
@@ -175,7 +176,7 @@ async function runDraftAgent({
   const result = await generateText({
     model: getLanguageModel({ provider: agent.aiModel.provider, model: agent.aiModel.model }),
     instructions: withCachedInstructions(instructions),
-    prompt: `${DRAFT_TASK_INSTRUCTIONS}\n\n<thread>\n${threadContext}\n</thread>`,
+    prompt: `${DRAFT_TASK_INSTRUCTIONS}\n\n${wrapUntrustedContent('thread', threadContext)}`,
     providerOptions: withDefaultProviderOptions(),
     temperature: modelSettings.temperature,
     maxOutputTokens: modelSettings.maxOutputTokens,

@@ -1,8 +1,18 @@
+import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { StatusCodes } from 'http-status-codes';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { singleUploadBodyLimit } from '../middlewares/bodyLimit';
-import { workspaceGuard } from '../middlewares/workspaceGuard';
+import { workspaceGuard, type WorkspaceGuardEnv } from '../middlewares/workspaceGuard';
+import {
+  approveAgentForWorkspace,
+  getAgentUsageForWorkspace,
+  listAgentVersionsForWorkspace,
+  lockAgentForWorkspace,
+  revokeAgentApprovalForWorkspace,
+  unlockAgentForWorkspace,
+  type AgentLockViewer,
+} from '../services/agent-lock.service';
 import { uploadAgentImage } from '../services/agent-image.service';
 import { BadRequestException } from '../exceptions';
 import {
@@ -21,10 +31,19 @@ import {
   validAgentMemoryBody,
   validCreateAgentBody,
   validAgentListQuery,
+  validUnlockAgentQuery,
   validUpdateAgentBody,
 } from '../validation';
 
-export const agentController = new Hono()
+function getLockViewer(c: Context<WorkspaceGuardEnv>): AgentLockViewer {
+  return {
+    userId: c.get('user').id,
+    workspaceRole: c.get('workspaceRole'),
+    organizationRole: c.get('organizationRole'),
+  };
+}
+
+export const agentController = new Hono<WorkspaceGuardEnv>()
   .basePath('/workspace/:workspaceId/agent')
   .use(authMiddleware)
   .use(workspaceGuard)
@@ -119,6 +138,7 @@ export const agentController = new Hono()
     const agent = await getAgentForWorkspace({
       workspaceId: workspace.id,
       agentId: param.agentId,
+      viewer: getLockViewer(c),
     });
 
     return c.json({ agent });
@@ -164,6 +184,101 @@ export const agentController = new Hono()
     await deleteAgentForWorkspace({ workspaceId: workspace.id, agentId: param.agentId });
 
     return c.json({ message: 'Agent deleted successfully' });
+  })
+  /**
+   * [POST] /workspace/:workspaceId/agent/:agentId/lock
+   * Freezes the agent's configuration as a new version.
+   */
+  .post('/:agentId/lock', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const result = await lockAgentForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+      viewer: getLockViewer(c),
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/agent/:agentId/lock
+   * 409 agent-has-active-task-runs while the agent has active task runs, unless ?stopRuns=true
+   * cancels them first.
+   */
+  .delete('/:agentId/lock', validAgentIdParam, validUnlockAgentQuery, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+    const query = c.req.valid('query');
+
+    const result = await unlockAgentForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+      viewer: getLockViewer(c),
+      stopRuns: query.stopRuns ?? false,
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [POST] /workspace/:workspaceId/agent/:agentId/unattended-approval
+   * Approves the locked configuration for unattended runs, locking first when needed.
+   */
+  .post('/:agentId/unattended-approval', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const result = await approveAgentForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+      viewer: getLockViewer(c),
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [DELETE] /workspace/:workspaceId/agent/:agentId/unattended-approval
+   */
+  .delete('/:agentId/unattended-approval', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const result = await revokeAgentApprovalForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+      viewer: getLockViewer(c),
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [GET] /workspace/:workspaceId/agent/:agentId/versions
+   */
+  .get('/:agentId/versions', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const result = await listAgentVersionsForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+    });
+
+    return c.json(result);
+  })
+  /**
+   * [GET] /workspace/:workspaceId/agent/:agentId/usage
+   * What an unlock touches: published workflows and open tasks that use the agent.
+   */
+  .get('/:agentId/usage', validAgentIdParam, async (c) => {
+    const workspace = c.get('workspace');
+    const param = c.req.valid('param');
+
+    const usage = await getAgentUsageForWorkspace({
+      workspaceId: workspace.id,
+      agentId: param.agentId,
+    });
+
+    return c.json(usage);
   })
   /**
    * [GET] /workspace/:workspaceId/agent/:agentId/memory

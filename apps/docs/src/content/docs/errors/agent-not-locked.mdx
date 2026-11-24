@@ -1,0 +1,29 @@
+---
+title: agent-not-locked
+description: The agent is not locked.
+---
+
+`https://docs.ragna.io/errors/agent-not-locked`
+
+## When it happens
+
+A request unlocks an agent that is not locked.
+
+## Response
+
+| Member   | Value               |
+| -------- | ------------------- |
+| `status` | 409                 |
+| `title`  | Agent is not locked |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-not-locked",
+  "title": "Agent is not locked",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Reload the agent. It is already unlocked.

@@ -39,6 +39,9 @@ Role names are always qualified. The full table, with storage and code identifie
 | agent tool       | A capability an agent's editor switches on. One agent tool can give the model several AI SDK tools (`datasets` gives seven).             | tool (where AI SDK tools are near) |
 | agent tool grant | One agent tool switched on for an agent, with its access level (`read` or `write`) when the tool has levels. Stored in `tool_grants`.    | integration tool, enabled tool     |
 | agent mark       | An agent's small square sign: its icon on its tone, or its uploaded image. Without either, the robotic icon on a tone from the agent id. | avatar, logo                       |
+| agent version    | An immutable snapshot of an agent's configuration, written when it is locked or approved. Numbered 1, 2, 3 per agent (`agent_versions`). | revision, snapshot                 |
+| agent lock       | An agent users can't change: it points at its current agent version. Only the agent itself still writes its memory.                      | freeze, read-only                  |
+| unattended run   | A run of an agent with nobody watching: task runs, later workflows. Needs an agent version approved for unattended runs.                 | background run, autonomous run     |
 | AI SDK tool      | One function the model can call, an entry in the AI SDK `ToolSet`.                                                                       | agent tool                         |
 | tool definition  | One AI SDK tool written once for every consumer: name, description, input schema, access and `execute` (`ToolDefinition`).               | tool spec, tool config             |
 | tool failure     | An expected tool outcome returned to the model as `{ status, message }` (`ToolFailure`), such as not connected or too large.             | tool error (for returned outcomes) |
@@ -47,10 +50,14 @@ Role names are always qualified. The full table, with storage and code identifie
 
 ## Tasks and tones
 
-| Term       | Meaning                                                                                                                    | _Avoid_                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| tone       | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
-| task label | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+| Term            | Meaning                                                                                                                    | _Avoid_                                                |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| tone            | One of the eight identity colours (sea, sage, ochre, clay, dusk, plum, rose, stone) shared by agent marks and task labels. | colour (for the stored value), palette                 |
+| task label      | A workspace-wide category on tasks, shown as a tag with its tone's dot.                                                    | tag (for the domain object; `Tag` is only the UI chip) |
+| task comment    | A markdown note on a task, written by a user or an agent. Agent comments can't be edited.                                  | note, reply, message                                   |
+| task attachment | A file a user attached to a task. Agents read its extracted text.                                                          | file (for the link), document, upload                  |
+| task run        | One time the assigned agent works a task in the background, started by a user. Table `task_runs`.                          | job (that is the BullMQ job), execution, workflow run  |
+| proposed task   | A subtask an agent created during a task run. Locked until a user accepts it: nobody can move, assign or start it.         | draft task, suggestion, pending task                   |
 
 ## Users and emails
 

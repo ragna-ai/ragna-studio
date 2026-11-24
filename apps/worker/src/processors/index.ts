@@ -7,8 +7,10 @@ import { registerEmailDraftJobProcessor } from './email-draft.processor';
 import { registerEmailSyncJobProcessor } from './email-sync.processor';
 import { registerGenImagesJobProcessor } from './gen-images.processor';
 import { registerGenVideoJobProcessor } from './gen-video.processor';
+import { registerMediaTextExtractionJobProcessor } from './media-text-extraction.processor';
 import { registerNotificationJobProcessor } from './notification.processor';
 import { registerPurgeJobProcessor } from './purge.processor';
+import { registerTaskRunJobProcessor } from './task-run.processor';
 import { registerVisibleWatermarkJobProcessor } from './visible-watermark.processor';
 import { registerWorkflowScheduleJobProcessor } from './workflow-schedule.processor';
 import { registerWorkflowJobProcessor } from './workflow.processor';
@@ -29,4 +31,6 @@ export function registerJobProcessors() {
   registerEmailDraftJobProcessor();
   registerPurgeJobProcessor();
   registerVisibleWatermarkJobProcessor();
+  registerMediaTextExtractionJobProcessor();
+  registerTaskRunJobProcessor();
 }

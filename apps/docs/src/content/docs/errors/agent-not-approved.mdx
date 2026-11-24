@@ -1,0 +1,31 @@
+---
+title: agent-not-approved
+description: The agent is not approved for unattended runs.
+---
+
+`https://docs.ragna.io/errors/agent-not-approved`
+
+## When it happens
+
+- A request revokes an approval, but the current version has no live approval.
+- A request starts a task run, but the assigned agent is not approved for unattended runs.
+
+## Response
+
+| Member   | Value                 |
+| -------- | --------------------- |
+| `status` | 409                   |
+| `title`  | Agent is not approved |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-not-approved",
+  "title": "Agent is not approved",
+  "status": 409
+}
+```
+
+## What the client can do
+
+- **Revoke:** reload the agent. There is nothing to revoke.
+- **Task run:** a workspace manager, or an organization owner or admin, approves the agent for unattended runs, then the run can start. See [Tasks](/content/tasks#agents-working-on-tasks).

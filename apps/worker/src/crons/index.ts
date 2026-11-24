@@ -5,8 +5,9 @@ import { addCronJob } from '@repo/queue';
 import { cleanupProcessor } from './cleanup.cron';
 import { emailSyncCronProcessor } from './email-sync.cron';
 import { mediaSweepProcessor } from './media-sweep.cron';
+import { mediaTextExtractionSweepProcessor } from './media-text-extraction-sweep.cron';
 import { purgeProcessor } from './purge.cron';
-import { staleRunsProcessor } from './stale-runs.cron';
+import { staleRunsProcessor, staleTaskRunsProcessor } from './stale-runs.cron';
 import { taskReminderProcessor } from './task-reminder.cron';
 
 export function registerCronJobs() {
@@ -25,6 +26,12 @@ export function registerCronJobs() {
   });
 
   addCronJob({
+    name: 'stale-task-runs',
+    processor: staleTaskRunsProcessor,
+    schedule: { pattern: '*/15 * * * *' }, // Every 15 minutes
+  });
+
+  addCronJob({
     name: 'task-reminder',
     processor: taskReminderProcessor,
     schedule: { pattern: '* * * * *' }, // Every minute
@@ -34,6 +41,12 @@ export function registerCronJobs() {
     name: 'media-sweep',
     processor: mediaSweepProcessor,
     schedule: { pattern: '0 * * * *' }, // Hourly
+  });
+
+  addCronJob({
+    name: 'media-text-extraction-sweep',
+    processor: mediaTextExtractionSweepProcessor,
+    schedule: { pattern: '*/10 * * * *' }, // Every 10 minutes
   });
 
   addCronJob({

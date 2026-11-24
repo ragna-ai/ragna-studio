@@ -1,3 +1,4 @@
+import { MAX_TASK_COMMENT_BODY_LENGTH } from '@repo/database';
 import * as z from 'zod';
 import { myzValidator } from '../utils/validator-wrapper';
 
@@ -18,6 +19,36 @@ export const validTaskAttachmentParams = myzValidator(
   z.object({
     taskId: primaryId,
     attachmentId: primaryId,
+  }),
+);
+
+export const validTaskCommentParams = myzValidator(
+  'param',
+  z.object({
+    taskId: primaryId,
+    commentId: primaryId,
+  }),
+);
+
+export const validTaskRunParams = myzValidator(
+  'param',
+  z.object({
+    taskId: primaryId,
+    taskRunId: primaryId,
+  }),
+);
+
+export const validStartTaskRunBody = myzValidator(
+  'json',
+  z.object({
+    agentId: primaryId.optional(),
+  }),
+);
+
+export const validTaskCommentBody = myzValidator(
+  'json',
+  z.object({
+    body: z.string().min(1).max(MAX_TASK_COMMENT_BODY_LENGTH),
   }),
 );
 

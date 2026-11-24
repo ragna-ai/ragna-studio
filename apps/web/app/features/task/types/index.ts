@@ -58,10 +58,26 @@ export interface Task {
   updatedAt: string;
 }
 
+export type TaskRunStatus =
+  | 'queued'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'canceled';
+
+export type TaskRunOutcome = 'completed' | 'needs_input';
+
+/** The queued or running run of a task, if any. */
+export interface TaskActiveRun {
+  id: string;
+  status: 'queued' | 'running';
+}
+
 /** Board/list row: what GET /task returns. */
 export interface TaskWithBoardInfo extends Task {
   labels: TaskLabel[];
   assignedAgent: TaskAssignedAgent | null;
+  activeRun: TaskActiveRun | null;
   subtaskCount: number;
   // Subtasks with status 'done', for the board card's "2/5" progress.
   subtaskDoneCount: number;
@@ -71,6 +87,7 @@ export interface TaskWithBoardInfo extends Task {
 export interface TaskWithDetails extends Task {
   labels: TaskLabel[];
   assignedAgent: TaskAssignedAgent | null;
+  activeRun: TaskActiveRun | null;
   subtasks: Task[];
 }
 
@@ -138,3 +155,99 @@ export type CreateTaskLabelRequest = {
 };
 
 export type UpdateTaskLabelRequest = Partial<CreateTaskLabelRequest>;
+
+export interface TaskCommentUserAuthor {
+  kind: 'user';
+  id: string | null;
+  name: string | null;
+}
+
+export interface TaskCommentAgentAuthor {
+  kind: 'agent';
+  id: string | null;
+  name: string | null;
+  icon: string | null;
+  tone: string | null;
+}
+
+export type TaskCommentAuthor = TaskCommentUserAuthor | TaskCommentAgentAuthor;
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  body: string;
+  taskRunId: string | null;
+  editedAt: string | null;
+  createdAt: string;
+  author: TaskCommentAuthor;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export interface TaskCommentManyResponse {
+  comments: TaskComment[];
+}
+
+export interface TaskCommentResponse {
+  comment: TaskComment;
+}
+
+export interface TaskRunAgent {
+  id: string;
+  name: string;
+  icon: string | null;
+  tone: string | null;
+}
+
+export interface TaskRunTokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+export interface TaskRunToolCall {
+  toolName: string;
+  input: unknown;
+  output: unknown;
+  error?: string;
+}
+
+export interface TaskRunTraceStep {
+  text?: string;
+  usage: TaskRunTokenUsage;
+  toolCalls: TaskRunToolCall[];
+}
+
+export interface TaskRunUsage {
+  inputTokens: number;
+  outputTokens: number;
+  credits: number;
+}
+
+export interface TaskRun {
+  id: string;
+  taskId: string;
+  status: TaskRunStatus;
+  outcome: TaskRunOutcome | null;
+  error: string | null;
+  agent: TaskRunAgent | null;
+  agentVersion: { id: string; versionNumber: number } | null;
+  startedBy: { id: string; name: string } | null;
+  trace: TaskRunTraceStep[];
+  usage: TaskRunUsage | null;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface TaskRunResponse {
+  run: TaskRun;
+}
+
+export interface TaskRunManyResponse {
+  runs: TaskRun[];
+}
+
+export interface CancelAllTaskRunsResponse {
+  canceledCount: number;
+}

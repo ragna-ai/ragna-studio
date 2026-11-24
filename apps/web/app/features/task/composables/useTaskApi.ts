@@ -58,7 +58,7 @@ function taskBasePath(workspaceId: WorkspaceId): string {
  * `undefined`s for the filter slots, which only partial-matches a list
  * query whose filters are ALSO all `undefined` — not the filtered ones.
  */
-function invalidateTaskLists(
+export function invalidateTaskLists(
   queryClient: QueryClient,
   workspaceId: WorkspaceId,
 ): Promise<void> {

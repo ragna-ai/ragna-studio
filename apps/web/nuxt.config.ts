@@ -156,6 +156,9 @@ export default defineNuxtConfig({
         'hugeicons:web-design-01',
         'hugeicons:linkedin-01',
         'hugeicons:google-drive',
+        // Agent lock state icons live in `useAgentLockSummary.ts`.
+        'hugeicons:square-lock-02',
+        'hugeicons:ai-cloud',
         // Agent mark icons (AGENT_MARK_ICONS in @repo/ai) are picked at runtime.
         'hugeicons:robotic',
         'hugeicons:invoice-01',

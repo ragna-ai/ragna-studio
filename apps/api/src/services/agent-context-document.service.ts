@@ -2,6 +2,7 @@ import { AGENT_CONTEXT_INJECTION_THRESHOLD } from '@repo/ai';
 import { config } from '@repo/config';
 import type { Agent, AgentContextDocument, AgentContextDocumentStatus } from '@repo/database';
 import {
+  AgentLockedError,
   createAgentContextDocuments,
   deleteAgentContextDocumentById,
   deleteAgentContextDocumentChunksByDocumentId,
@@ -9,6 +10,7 @@ import {
   getAgentContextDocumentByIdAndAgentId,
   getAgentContextDocumentsByAgentId,
   updateAgentContextDocument,
+  updateAgentContextDocumentWhileUnlocked,
 } from '@repo/database';
 import { logger } from '@repo/logger';
 import {
@@ -26,6 +28,7 @@ import { deleteObjects, uploadObjectBuffer } from '@repo/storage';
 import { createPrimaryId, tryCatch } from '@repo/utils';
 import { randomUUID } from 'node:crypto';
 import {
+  AgentLockedException,
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
@@ -191,6 +194,20 @@ async function loadOwnedAgent({
   return agent;
 }
 
+/** Knowledge files are part of a locked agent's configuration: refuse writes to them. */
+function assertAgentUnlocked(agent: Agent): void {
+  if (agent.lockedVersionId) {
+    throw new AgentLockedException();
+  }
+}
+
+/** The write lost a race with a lock: answer like the pre-check does. */
+function throwIfAgentLocked(error: unknown): void {
+  if (error instanceof AgentLockedError) {
+    throw new AgentLockedException();
+  }
+}
+
 /** Loads a document scoped to its owning agent, throwing if it doesn't
  * exist. Callers must already have resolved the agent via
  * `loadOwnedAgent()` first. */
@@ -353,6 +370,7 @@ export async function uploadAgentContextDocuments({
   files: File[];
 }): Promise<AgentContextDocumentResponse[]> {
   const agent = await loadOwnedAgent({ agentId, workspaceId });
+  assertAgentUnlocked(agent);
 
   if (files.length === 0) {
     throw new BadRequestException('At least one file is required');
@@ -430,6 +448,8 @@ export async function uploadAgentContextDocuments({
     ),
   );
 
+  throwIfAgentLocked(createError);
+
   if (createError !== null || !createdDocuments) {
     logger.error('Failed to save agent documents', createError);
     throw new InternalServerErrorException('Failed to save documents');
@@ -461,6 +481,7 @@ export async function replaceAgentContextDocumentFile({
   file: File;
 }): Promise<AgentContextDocumentResponse> {
   const agent = await loadOwnedAgent({ agentId, workspaceId });
+  assertAgentUnlocked(agent);
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -489,7 +510,7 @@ export async function replaceAgentContextDocumentFile({
   }
 
   const { error: updateError, data: updated } = await tryCatch(() =>
-    updateAgentContextDocument({
+    updateAgentContextDocumentWhileUnlocked({
       id: document.id,
       agentId: agent.id,
       storageKey,
@@ -498,6 +519,8 @@ export async function replaceAgentContextDocumentFile({
       status: 'pending',
     }),
   );
+
+  throwIfAgentLocked(updateError);
 
   if (updateError !== null || !updated) {
     logger.error('Failed to save replaced agent document', updateError);
@@ -539,9 +562,10 @@ export async function renameAgentContextDocument({
   await loadOwnedDocument({ agentId: agent.id, documentId });
 
   const { error, data: updated } = await tryCatch(() =>
-    updateAgentContextDocument({ id: documentId, agentId: agent.id, name }),
+    updateAgentContextDocumentWhileUnlocked({ id: documentId, agentId: agent.id, name }),
   );
 
+  throwIfAgentLocked(error);
   if (error !== null || !updated) {
     logger.error('Failed to rename agent document', error);
     throw new InternalServerErrorException('Failed to rename document');
@@ -566,6 +590,7 @@ export async function retryAgentContextDocument({
   documentId: string;
 }): Promise<AgentContextDocumentResponse> {
   const agent = await loadOwnedAgent({ agentId, workspaceId });
+  assertAgentUnlocked(agent);
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
   if (document.status !== 'failed') {
@@ -573,13 +598,15 @@ export async function retryAgentContextDocument({
   }
 
   const { error, data: updated } = await tryCatch(() =>
-    updateAgentContextDocument({
+    updateAgentContextDocumentWhileUnlocked({
       id: document.id,
       agentId: agent.id,
       status: 'pending',
       errorMessage: null,
     }),
   );
+
+  throwIfAgentLocked(error);
 
   if (error !== null || !updated) {
     logger.error('Failed to reset agent document for retry', error);
@@ -605,8 +632,17 @@ export async function deleteAgentContextDocument({
   documentId: string;
 }): Promise<void> {
   const agent = await loadOwnedAgent({ agentId, workspaceId });
+  assertAgentUnlocked(agent);
   const document = await loadOwnedDocument({ agentId: agent.id, documentId });
 
+  const { error } = await tryCatch(() =>
+    deleteAgentContextDocumentById({ id: document.id, agentId: agent.id }),
+  );
+  throwIfAgentLocked(error);
+  if (error !== null) {
+    logger.error('Failed to delete agent document', error);
+    throw new InternalServerErrorException('Failed to delete document');
+  }
+
   await deleteAgentContextDocumentObjects([document.storageKey]);
-  await deleteAgentContextDocumentById({ id: document.id, agentId: agent.id });
 }

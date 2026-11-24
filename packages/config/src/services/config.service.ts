@@ -13,6 +13,15 @@ const PortSchema = z
   .transform(Number)
   .pipe(z.number().int().min(1).max(65535));
 
+const MICRO_CREDITS_PER_CREDIT = 1_000_000n;
+
+function taskRunLimit(defaultValue: number) {
+  return z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.coerce.number().int().positive().default(defaultValue),
+  );
+}
+
 const DURATION_UNIT_MS: Record<string, number> = {
   m: 60_000,
   h: 60 * 60_000,
@@ -230,6 +239,20 @@ const ConfigSchema = z.object({
     .optional()
     .transform((val) => val === 'true')
     .default(false),
+
+  // Agent task runs. Credit limits are whole credits here; the getters return micro-credits.
+  // An unset or empty var takes the default, anything else must be a valid number or startup fails.
+  TASK_RUNS_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val !== 'false')
+    .default(true),
+  TASK_RUN_MAX_ACTIVE_PER_WORKSPACE: taskRunLimit(3),
+  TASK_RUN_TIME_LIMIT_MINUTES: taskRunLimit(30),
+  TASK_RUN_MAX_STEPS: taskRunLimit(30),
+  TASK_RUN_WORKER_CONCURRENCY: taskRunLimit(3),
+  TASK_RUN_MIN_CREDITS: taskRunLimit(100),
+  TASK_RUN_MAX_OVERSHOOT_CREDITS: taskRunLimit(50),
 
   // Payment URLs - validate as URLs if provided
   PAYMENT_SUCCESS_URL: z.string().optional().default(''),
@@ -525,6 +548,34 @@ export class ConfigService {
 
   get creditsEnabled(): boolean {
     return this._config.CREDITS_ENABLED;
+  }
+
+  get taskRunsEnabled(): boolean {
+    return this._config.TASK_RUNS_ENABLED;
+  }
+
+  get taskRunMaxActivePerWorkspace(): number {
+    return this._config.TASK_RUN_MAX_ACTIVE_PER_WORKSPACE;
+  }
+
+  get taskRunTimeLimitMinutes(): number {
+    return this._config.TASK_RUN_TIME_LIMIT_MINUTES;
+  }
+
+  get taskRunMaxSteps(): number {
+    return this._config.TASK_RUN_MAX_STEPS;
+  }
+
+  get taskRunWorkerConcurrency(): number {
+    return this._config.TASK_RUN_WORKER_CONCURRENCY;
+  }
+
+  get taskRunMinMicroCredits(): bigint {
+    return BigInt(this._config.TASK_RUN_MIN_CREDITS) * MICRO_CREDITS_PER_CREDIT;
+  }
+
+  get taskRunMaxOvershootMicroCredits(): bigint {
+    return BigInt(this._config.TASK_RUN_MAX_OVERSHOOT_CREDITS) * MICRO_CREDITS_PER_CREDIT;
   }
 
   get paymentSuccessUrl(): string {

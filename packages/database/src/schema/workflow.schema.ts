@@ -5,6 +5,7 @@ import type {
   WorkflowRunTrigger,
   WorkflowStepStatus,
 } from '@repo/workflow';
+import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { user } from './user.schema';
@@ -35,11 +36,18 @@ export const workflow = pgTable(
     // `published_definition` stays the semantic source of truth.
     scheduleCron: text('schedule_cron'),
     scheduleTimezone: text('schedule_timezone'),
+    // Ids of the agents in `publishedDefinition`, written on publish. Lets "which workflows use
+    // this agent" be an indexed lookup instead of a JSON walk.
+    agentIds: text('agent_ids')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (table) => [
     index('workflow_userId_idx').on(table.userId),
     index('workflow_workspaceId_idx').on(table.workspaceId),
+    index('workflow_agentIds_idx').using('gin', table.agentIds),
   ],
 );
 

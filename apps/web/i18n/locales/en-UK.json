@@ -504,6 +504,80 @@
         "ready": "Indexed",
         "failed": "Failed"
       }
+    },
+    "lock": {
+      "unknownUser": "a removed user",
+      "actions": {
+        "versions": "Versions",
+        "lock": "Lock",
+        "approve": "Approve for unattended runs",
+        "revoke": "Revoke approval for unattended runs",
+        "unlock": "Unlock"
+      },
+      "deleteHint": "Unlock the agent first",
+      "state": {
+        "unlocked": "Unlocked",
+        "ariaLocked": "Agent locked",
+        "ariaUnlocked": "Agent unlocked"
+      },
+      "banner": {
+        "locked": "Locked by {user}",
+        "approved": "Approved for unattended runs by {approver}",
+        "description": "Version {version}. Nothing can be changed until the agent is unlocked."
+      },
+      "approveDialog": {
+        "title": "Approve for unattended runs",
+        "description": "The agent is locked in its current configuration. It may then work without anyone watching.",
+        "noTools": "The agent has no tools.",
+        "knowledgeChanges": "Knowledge files and data the agent reads can change without a new approval.",
+        "responsibility": "You are responsible for its actions in unattended runs.",
+        "confirm": "Approve",
+        "canUse": "This agent can use:",
+        "accessRead": "read only",
+        "accessWrite": "read and write"
+      },
+      "unlockDialog": {
+        "approvedTitle": "Approved for unattended runs",
+        "approvedText": "This also revokes the approval for unattended runs.",
+        "title": "Unlock agent",
+        "description": "After unlocking, the agent can be edited again. Every change then applies to all workflows and tasks that use this agent.",
+        "workflowCount": "No workflow uses this agent. | 1 workflow uses this agent. | {count} workflows use this agent.",
+        "assignedTaskCount": "No open task is assigned to this agent. | 1 open task is assigned to this agent. | {count} open tasks are assigned to this agent.",
+        "usageFailed": "The usage of this agent couldn't be loaded.",
+        "confirmApproved": "Unlock and revoke approval",
+        "confirm": "Unlock",
+        "activeRunsTitle": "This agent is working on tasks",
+        "activeRunsText": "Stop its task runs to unlock it. Work the agent already did stays.",
+        "stopRunsAndUnlock": "Stop runs and unlock"
+      },
+      "versions": {
+        "title": "Versions",
+        "description": "Every time the agent was locked, newest first.",
+        "empty": "This agent was never locked.",
+        "loadFailed": "The versions couldn't be loaded.",
+        "version": "Version {number}",
+        "event": {
+          "locked": "Locked by {user} on {date}",
+          "approved": "Approved for unattended runs by {user} on {date}",
+          "revoked": "Approval revoked by {user} on {date}",
+          "unlocked": "Unlocked by {user} on {date}"
+        }
+      },
+      "toast": {
+        "locked": "Agent locked",
+        "lockFailed": "Failed to lock agent",
+        "unlocked": "Agent unlocked",
+        "unlockFailed": "Failed to unlock agent",
+        "approved": "Agent approved for unattended runs",
+        "approveFailed": "Failed to approve agent",
+        "revoked": "Approval revoked",
+        "revokeFailed": "Failed to revoke approval"
+      },
+      "revokeDialog": {
+        "title": "Revoke approval",
+        "message": "The agent can no longer run unattended. Its active task runs stop. Work it already did stays.",
+        "confirm": "Revoke approval"
+      }
     }
   },
   "chat": {
@@ -1563,7 +1637,8 @@
       "noResults": {
         "title": "No tasks match these filters",
         "clearFilters": "Clear filters"
-      }
+      },
+      "moreActions": "More actions"
     },
     "view": {
       "board": "Board",
@@ -1631,6 +1706,21 @@
       "deleteConfirmTitle": "Delete task",
       "deleteConfirmMessage": "Are you sure you want to delete this task? Its subtasks become top-level tasks."
     },
+    "comment": {
+      "title": "Comments",
+      "placeholder": "Write a comment...",
+      "post": "Comment",
+      "empty": "No comments yet.",
+      "edited": "(edited)",
+      "deletedUser": "Deleted user",
+      "deletedAgent": "Deleted agent",
+      "loadError": "Failed to load comments.",
+      "postFailed": "Failed to post the comment",
+      "saveFailed": "Failed to save the comment",
+      "deleteFailed": "Failed to delete the comment",
+      "deleteConfirmTitle": "Delete comment",
+      "deleteConfirmMessage": "Are you sure you want to delete this comment?"
+    },
     "attachment": {
       "title": "Attachments",
       "add": "Add files",
@@ -1670,6 +1760,38 @@
       "custom": "Custom",
       "needsDueDateHint": "Set a due date to enable reminders.",
       "daysBeforeSuffix": "days before"
+    },
+    "run": {
+      "start": "Start",
+      "stop": "Stop",
+      "assignAndStart": "Assign and start",
+      "working": "{agent} is working",
+      "lockedHint": "Stop the run to edit this task.",
+      "startFailed": "Failed to start the run",
+      "stopFailed": "Failed to stop the run",
+      "stopAll": "Stop all runs",
+      "stopAllConfirmTitle": "Stop all runs",
+      "stopAllConfirmMessage": "Every task run in this workspace stops. Work an agent already did stays.",
+      "stopAllDone": "No run was active. | 1 run stopped. | {count} runs stopped.",
+      "stopAllFailed": "Failed to stop the runs",
+      "historyTitle": "Runs",
+      "historyEmpty": "No runs yet.",
+      "fromRun": "From run",
+      "deletedAgent": "Deleted agent",
+      "agentVersion": "Version {number}",
+      "startedBy": "Started by {user}",
+      "credits": "{count} credits",
+      "steps": "Steps ({count})",
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "canceled": "Canceled"
+      },
+      "outcome": {
+        "needs_input": "Needs input"
+      }
     }
   },
   "email": {
@@ -2223,7 +2345,20 @@
       "validation": "Please check your input and try again.",
       "organizationDeleted": "Your organization is scheduled for deletion. Restore it to continue.",
       "workflowInvalid": "The workflow is invalid. Please check it and try again.",
-      "emailDraftExists": "This thread already has a draft."
+      "emailDraftExists": "This thread already has a draft.",
+      "agentLocked": "This agent is locked. Unlock it to change its configuration.",
+      "agentAlreadyLocked": "This agent is already locked.",
+      "agentNotLocked": "This agent is not locked.",
+      "agentAlreadyApproved": "This agent is already approved for unattended runs.",
+      "agentNotApproved": "This agent is not approved for unattended runs.",
+      "knowledgeFilesNotReady": "A knowledge file is still processing or failed. Wait for it, or remove it, and try again.",
+      "taskCommentLimitReached": "This task has reached the limit of 100 comments.",
+      "taskCommentNotEditable": "This comment can't be edited.",
+      "taskHasNoAgent": "Assign an agent to this task first.",
+      "taskRunActive": "An agent is working on this task. Stop the run to edit it.",
+      "taskRunLimitReached": "This workspace has reached its limit of active task runs. Wait for one to finish.",
+      "taskRunsDisabled": "Task runs are turned off on this platform.",
+      "agentHasActiveTaskRuns": "This agent is working on tasks. Stop the runs to unlock it."
     },
     "workflowRule": {
       "triggerCount": "A workflow needs exactly one trigger.",

@@ -504,6 +504,80 @@
         "ready": "Indexiert",
         "failed": "Fehlgeschlagen"
       }
+    },
+    "lock": {
+      "unknownUser": "einem entfernten Benutzer",
+      "actions": {
+        "versions": "Versionen",
+        "lock": "Sperren",
+        "approve": "Für unbeaufsichtigte Läufe freigeben",
+        "revoke": "Freigabe für unbeaufsichtigte Läufe widerrufen",
+        "unlock": "Entsperren"
+      },
+      "deleteHint": "Entsperre den Agenten zuerst",
+      "state": {
+        "unlocked": "Entsperrt",
+        "ariaLocked": "Agent gesperrt",
+        "ariaUnlocked": "Agent entsperrt"
+      },
+      "banner": {
+        "locked": "Gesperrt von {user}",
+        "approved": "Für unbeaufsichtigte Läufe freigegeben von {approver}",
+        "description": "Version {version}. Bis der Agent entsperrt ist, lässt sich nichts ändern."
+      },
+      "approveDialog": {
+        "title": "Für unbeaufsichtigte Läufe freigeben",
+        "description": "Der Agent wird in seiner aktuellen Konfiguration gesperrt. Danach darf er arbeiten, ohne dass jemand zusieht.",
+        "noTools": "Der Agent hat keine Tools.",
+        "knowledgeChanges": "Wissensdateien und Daten, die der Agent liest, können sich ohne neue Freigabe ändern.",
+        "responsibility": "Du bist für seine Aktionen in unbeaufsichtigten Läufen verantwortlich.",
+        "confirm": "Freigeben",
+        "canUse": "Dieser Agent kann nutzen:",
+        "accessRead": "nur lesen",
+        "accessWrite": "lesen und schreiben"
+      },
+      "unlockDialog": {
+        "approvedTitle": "Für unbeaufsichtigte Läufe freigegeben",
+        "approvedText": "Dadurch wird auch die Freigabe für unbeaufsichtigte Läufe widerrufen.",
+        "title": "Agent entsperren",
+        "description": "Nach dem Entsperren lässt sich der Agent wieder bearbeiten. Jede Änderung gilt dann für alle Workflows und Aufgaben, die diesen Agenten verwenden.",
+        "workflowCount": "Kein Workflow nutzt diesen Agenten. | 1 Workflow nutzt diesen Agenten. | {count} Workflows nutzen diesen Agenten.",
+        "assignedTaskCount": "Keine offene Aufgabe ist diesem Agenten zugewiesen. | 1 offene Aufgabe ist diesem Agenten zugewiesen. | {count} offene Aufgaben sind diesem Agenten zugewiesen.",
+        "usageFailed": "Die Nutzung dieses Agents konnte nicht geladen werden.",
+        "confirmApproved": "Entsperren und Freigabe widerrufen",
+        "confirm": "Entsperren",
+        "activeRunsTitle": "Dieser Agent arbeitet an Aufgaben",
+        "activeRunsText": "Stoppe seine Aufgabenläufe, um ihn zu entsperren. Bereits erledigte Arbeit bleibt bestehen.",
+        "stopRunsAndUnlock": "Läufe stoppen und entsperren"
+      },
+      "versions": {
+        "title": "Versionen",
+        "description": "Jede Sperrung des Agenten, die neueste zuerst.",
+        "empty": "Dieser Agent wurde nie gesperrt.",
+        "loadFailed": "Die Versionen konnten nicht geladen werden.",
+        "version": "Version {number}",
+        "event": {
+          "locked": "Gesperrt von {user} am {date}",
+          "approved": "Für unbeaufsichtigte Läufe freigegeben von {user} am {date}",
+          "revoked": "Freigabe widerrufen von {user} am {date}",
+          "unlocked": "Entsperrt von {user} am {date}"
+        }
+      },
+      "toast": {
+        "locked": "Agent gesperrt",
+        "lockFailed": "Agent konnte nicht gesperrt werden",
+        "unlocked": "Agent entsperrt",
+        "unlockFailed": "Agent konnte nicht entsperrt werden",
+        "approved": "Agent für unbeaufsichtigte Läufe freigegeben",
+        "approveFailed": "Agent konnte nicht freigegeben werden",
+        "revoked": "Freigabe widerrufen",
+        "revokeFailed": "Freigabe konnte nicht widerrufen werden"
+      },
+      "revokeDialog": {
+        "title": "Freigabe widerrufen",
+        "message": "Der Agent kann nicht mehr unbeaufsichtigt laufen. Seine aktiven Aufgabenläufe werden gestoppt. Bereits erledigte Arbeit bleibt bestehen.",
+        "confirm": "Freigabe widerrufen"
+      }
     }
   },
   "chat": {
@@ -1566,7 +1640,8 @@
       "noResults": {
         "title": "Keine Aufgaben passen zu diesen Filtern",
         "clearFilters": "Filter zurücksetzen"
-      }
+      },
+      "moreActions": "Weitere Aktionen"
     },
     "view": {
       "board": "Board",
@@ -1634,6 +1709,21 @@
       "deleteConfirmTitle": "Aufgabe löschen",
       "deleteConfirmMessage": "Möchtest du diese Aufgabe wirklich löschen? Ihre Unteraufgaben werden zu eigenständigen Aufgaben."
     },
+    "comment": {
+      "title": "Kommentare",
+      "placeholder": "Kommentar schreiben...",
+      "post": "Kommentieren",
+      "empty": "Noch keine Kommentare.",
+      "edited": "(bearbeitet)",
+      "deletedUser": "Gelöschter Benutzer",
+      "deletedAgent": "Gelöschter Agent",
+      "loadError": "Kommentare konnten nicht geladen werden.",
+      "postFailed": "Kommentar konnte nicht gesendet werden",
+      "saveFailed": "Kommentar konnte nicht gespeichert werden",
+      "deleteFailed": "Kommentar konnte nicht gelöscht werden",
+      "deleteConfirmTitle": "Kommentar löschen",
+      "deleteConfirmMessage": "Soll dieser Kommentar wirklich gelöscht werden?"
+    },
     "attachment": {
       "title": "Anhänge",
       "add": "Dateien hinzufügen",
@@ -1673,6 +1763,38 @@
       "custom": "Benutzerdefiniert",
       "needsDueDateHint": "Lege ein Fälligkeitsdatum fest, um Erinnerungen zu aktivieren.",
       "daysBeforeSuffix": "Tage vorher"
+    },
+    "run": {
+      "start": "Starten",
+      "stop": "Stoppen",
+      "assignAndStart": "Zuweisen und starten",
+      "working": "{agent} arbeitet",
+      "lockedHint": "Stoppe den Lauf, um diese Aufgabe zu bearbeiten.",
+      "startFailed": "Der Lauf konnte nicht gestartet werden",
+      "stopFailed": "Der Lauf konnte nicht gestoppt werden",
+      "stopAll": "Alle Läufe stoppen",
+      "stopAllConfirmTitle": "Alle Läufe stoppen",
+      "stopAllConfirmMessage": "Alle Aufgabenläufe in diesem Workspace werden gestoppt. Bereits erledigte Arbeit bleibt bestehen.",
+      "stopAllDone": "Kein Lauf war aktiv. | 1 Lauf gestoppt. | {count} Läufe gestoppt.",
+      "stopAllFailed": "Die Läufe konnten nicht gestoppt werden",
+      "historyTitle": "Läufe",
+      "historyEmpty": "Noch keine Läufe.",
+      "fromRun": "Aus Lauf",
+      "deletedAgent": "Gelöschter Agent",
+      "agentVersion": "Version {number}",
+      "startedBy": "Gestartet von {user}",
+      "credits": "{count} Credits",
+      "steps": "Schritte ({count})",
+      "status": {
+        "queued": "In Warteschlange",
+        "running": "Läuft",
+        "succeeded": "Erfolgreich",
+        "failed": "Fehlgeschlagen",
+        "canceled": "Abgebrochen"
+      },
+      "outcome": {
+        "needs_input": "Eingabe nötig"
+      }
     }
   },
   "email": {
@@ -2226,7 +2348,20 @@
       "validation": "Bitte prüfe deine Eingabe und versuche es erneut.",
       "organizationDeleted": "Deine Organisation ist zur Löschung vorgemerkt. Stelle sie wieder her, um fortzufahren.",
       "workflowInvalid": "Der Workflow ist ungültig. Bitte prüfe ihn und versuche es erneut.",
-      "emailDraftExists": "Für diese Unterhaltung gibt es bereits einen Entwurf."
+      "emailDraftExists": "Für diese Unterhaltung gibt es bereits einen Entwurf.",
+      "agentLocked": "Dieser Agent ist gesperrt. Entsperre ihn, um die Konfiguration zu ändern.",
+      "agentAlreadyLocked": "Dieser Agent ist bereits gesperrt.",
+      "agentNotLocked": "Dieser Agent ist nicht gesperrt.",
+      "agentAlreadyApproved": "Dieser Agent ist bereits für unbeaufsichtigte Läufe freigegeben.",
+      "agentNotApproved": "Dieser Agent ist nicht für unbeaufsichtigte Läufe freigegeben.",
+      "knowledgeFilesNotReady": "Eine Wissensdatei wird noch verarbeitet oder ist fehlgeschlagen. Warte oder entferne sie und versuche es erneut.",
+      "taskCommentLimitReached": "Diese Aufgabe hat das Limit von 100 Kommentaren erreicht.",
+      "taskCommentNotEditable": "Dieser Kommentar kann nicht bearbeitet werden.",
+      "taskHasNoAgent": "Weise dieser Aufgabe zuerst einen Agenten zu.",
+      "taskRunActive": "Ein Agent arbeitet an dieser Aufgabe. Stoppe den Lauf, um sie zu bearbeiten.",
+      "taskRunLimitReached": "Dieser Workspace hat sein Limit aktiver Aufgabenläufe erreicht. Warte, bis einer fertig ist.",
+      "taskRunsDisabled": "Aufgabenläufe sind auf dieser Plattform ausgeschaltet.",
+      "agentHasActiveTaskRuns": "Dieser Agent arbeitet an Aufgaben. Stoppe die Läufe, um ihn zu entsperren."
     },
     "workflowRule": {
       "triggerCount": "Ein Workflow braucht genau einen Trigger.",

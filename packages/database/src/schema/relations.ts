@@ -2,7 +2,7 @@ import { defineRelations } from 'drizzle-orm';
 import { account } from './account.schema';
 import { agentContextDocumentChunk } from './agent-context-document-chunk.schema';
 import { agentContextDocument } from './agent-context-document.schema';
-import { agent, agentTemplate } from './agent.schema';
+import { agent, agentTemplate, agentVersion } from './agent.schema';
 import { aiModel } from './aimodel.schema';
 import { chat, chatMessage } from './chat.schema';
 import { creditAccount, creditLedger, creditUsageEvent } from './credit.schema';
@@ -38,7 +38,14 @@ import {
 import { passkey } from './passkey.schema';
 import { session } from './session.schema';
 import { socialPost, socialPostMedia } from './social-post.schema';
-import { task, taskAttachment, taskLabel, taskToTaskLabel } from './task.schema';
+import {
+  task,
+  taskAttachment,
+  taskComment,
+  taskLabel,
+  taskRun,
+  taskToTaskLabel,
+} from './task.schema';
 import { invitation, organization, organizationMember } from './organization.schema';
 import { user } from './user.schema';
 import { verification } from './verification.schema';
@@ -54,6 +61,7 @@ const schema = {
   aiModel,
   agent,
   agentTemplate,
+  agentVersion,
   agentMemory,
   agentContextDocument,
   agentContextDocumentChunk,
@@ -86,7 +94,9 @@ const schema = {
   notification,
   task,
   taskAttachment,
+  taskComment,
   taskLabel,
+  taskRun,
   taskToTaskLabel,
   workspace,
   workspaceMember,
@@ -381,6 +391,14 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.media.id,
       optional: true,
     }),
+    // Two FKs run between agents and agent_versions, one each way: each side needs an alias.
+    lockedVersion: r.one.agentVersion({
+      from: r.agent.lockedVersionId,
+      to: r.agentVersion.id,
+      optional: true,
+      alias: 'agentLockedVersion',
+    }),
+    versions: r.many.agentVersion({ alias: 'agentVersions' }),
     chats: r.many.chat(),
     memory: r.one.agentMemory(),
     contextDocuments: r.many.agentContextDocument(),
@@ -456,6 +474,39 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.chatMessage.id,
       optional: true,
       alias: 'chatForkedFromMessage',
+    }),
+  },
+  agentVersion: {
+    workspace: r.one.workspace({
+      from: r.agentVersion.workspaceId,
+      to: r.workspace.id,
+      optional: false,
+    }),
+    agent: r.one.agent({
+      from: r.agentVersion.agentId,
+      to: r.agent.id,
+      optional: true,
+      alias: 'agentVersions',
+    }),
+    lockedBy: r.one.user({
+      from: r.agentVersion.lockedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    approvedBy: r.one.user({
+      from: r.agentVersion.approvedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    revokedBy: r.one.user({
+      from: r.agentVersion.revokedByUserId,
+      to: r.user.id,
+      optional: true,
+    }),
+    unlockedBy: r.one.user({
+      from: r.agentVersion.unlockedByUserId,
+      to: r.user.id,
+      optional: true,
     }),
   },
   chatMessage: {
@@ -864,6 +915,47 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.taskLabel.id.through(r.taskToTaskLabel.taskLabelId),
     }),
     attachments: r.many.taskAttachment(),
+    comments: r.many.taskComment(),
+    runs: r.many.taskRun(),
+  },
+  taskRun: {
+    task: r.one.task({
+      from: [r.taskRun.workspaceId, r.taskRun.taskId],
+      to: [r.task.workspaceId, r.task.id],
+      optional: false,
+    }),
+    agent: r.one.agent({
+      from: [r.taskRun.workspaceId, r.taskRun.agentId],
+      to: [r.agent.workspaceId, r.agent.id],
+    }),
+    agentVersion: r.one.agentVersion({
+      from: [r.taskRun.workspaceId, r.taskRun.agentVersionId],
+      to: [r.agentVersion.workspaceId, r.agentVersion.id],
+      optional: false,
+    }),
+    startedByUser: r.one.user({
+      from: r.taskRun.startedByUserId,
+      to: r.user.id,
+    }),
+  },
+  taskComment: {
+    task: r.one.task({
+      from: [r.taskComment.workspaceId, r.taskComment.taskId],
+      to: [r.task.workspaceId, r.task.id],
+      optional: false,
+    }),
+    authorUser: r.one.user({
+      from: r.taskComment.authorUserId,
+      to: r.user.id,
+    }),
+    authorAgent: r.one.agent({
+      from: [r.taskComment.workspaceId, r.taskComment.authorAgentId],
+      to: [r.agent.workspaceId, r.agent.id],
+    }),
+    taskRun: r.one.taskRun({
+      from: r.taskComment.taskRunId,
+      to: r.taskRun.id,
+    }),
   },
   taskAttachment: {
     task: r.one.task({

@@ -21,11 +21,14 @@ import type {
 
 interface AgentMarkFieldProps {
   agentId?: string;
+  disabled?: boolean;
 }
 
 const DEFAULT_ICON = agentMarkIconSchema.enum.robotic;
 
-const props = defineProps<AgentMarkFieldProps>();
+const props = withDefaults(defineProps<AgentMarkFieldProps>(), {
+  disabled: false,
+});
 
 // Models
 const mark = defineModel<AgentMarkValue>({ required: true });
@@ -99,7 +102,12 @@ onScopeDispose(revokePendingPreview);
     />
     <Popover v-model:open="isOpen">
       <PopoverTrigger as-child>
-        <Button type="button" variant="outline" size="sm">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          :disabled="props.disabled"
+        >
           {{ $t('agent.mark.change') }}
         </Button>
       </PopoverTrigger>

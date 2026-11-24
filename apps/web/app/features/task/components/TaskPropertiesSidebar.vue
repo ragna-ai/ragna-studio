@@ -4,6 +4,7 @@ import {
   useMoveTask,
   useUpdateTask,
 } from '~/features/task/composables/useTaskApi';
+import TaskRunControls from '~/features/task/components/TaskRunControls.vue';
 import { labelTone } from '~/features/task/lib/label-tone';
 import { TONE_DOT_CLASS } from '~/lib/tone';
 import { cn } from '~/lib/utils';
@@ -37,6 +38,7 @@ const { mutate: moveTask } = useMoveTask();
 
 // Computed
 const agents = computed(() => agentsData.value?.agents ?? []);
+const isLocked = computed(() => props.task.activeRun !== null);
 const selectedLabelIds = computed(
   () => new Set(props.task.labels.map((label) => label.id)),
 );
@@ -117,11 +119,17 @@ function commitCustomDays() {
 
 <template>
   <aside class="flex w-72 shrink-0 flex-col gap-5 border-l p-4">
+    <TaskRunControls :task="task" />
+
     <div class="space-y-1.5">
       <Label class="text-xs text-muted-foreground">{{
         t('common.status')
       }}</Label>
-      <Select :model-value="task.status" @update:model-value="updateStatus">
+      <Select
+        :model-value="task.status"
+        :disabled="isLocked"
+        @update:model-value="updateStatus"
+      >
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
@@ -141,7 +149,11 @@ function commitCustomDays() {
       <Label class="text-xs text-muted-foreground">{{
         t('task.property.priority')
       }}</Label>
-      <Select :model-value="task.priority" @update:model-value="updatePriority">
+      <Select
+        :model-value="task.priority"
+        :disabled="isLocked"
+        @update:model-value="updatePriority"
+      >
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
@@ -163,6 +175,7 @@ function commitCustomDays() {
       }}</Label>
       <DatePicker
         :model-value="task.dueDate"
+        :disabled="isLocked"
         :placeholder="t('task.property.pickDueDate')"
         :clear-label="t('task.property.clearDueDate')"
         :locale="locale"
@@ -200,7 +213,11 @@ function commitCustomDays() {
       }}</Label>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="w-full justify-start font-normal">
+          <Button
+            variant="outline"
+            class="w-full justify-start font-normal"
+            :disabled="isLocked"
+          >
             <span v-if="task.labels.length === 0" class="text-muted-foreground">
               {{ t('task.property.noLabels') }}
             </span>
@@ -245,7 +262,7 @@ function commitCustomDays() {
       }}</Label>
       <Select
         :model-value="reminderSelectValue"
-        :disabled="!task.dueDate"
+        :disabled="!task.dueDate || isLocked"
         @update:model-value="(v) => updateReminder(String(v))"
       >
         <SelectTrigger class="w-full">
@@ -279,6 +296,7 @@ function commitCustomDays() {
           min="0"
           class="w-20"
           :model-value="customDays"
+          :disabled="isLocked"
           @update:model-value="(v) => (customDays = Number(v))"
           @change="commitCustomDays"
         />

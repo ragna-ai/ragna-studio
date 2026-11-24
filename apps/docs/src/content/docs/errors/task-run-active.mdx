@@ -1,0 +1,29 @@
+---
+title: task-run-active
+description: The task has a task run in progress.
+---
+
+`https://docs.ragna.io/errors/task-run-active`
+
+## When it happens
+
+A request starts a task run while one is queued or running, or changes a task while its run is active. Deleting the task and assigning another agent stay possible: both stop the run.
+
+## Response
+
+| Member   | Value              |
+| -------- | ------------------ |
+| `status` | 409                |
+| `title`  | Task run is active |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-run-active",
+  "title": "Task run is active",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Wait for the run to finish, or stop it, then try again. See [Tasks](/content/tasks#agents-working-on-tasks).

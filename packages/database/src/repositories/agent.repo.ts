@@ -1,8 +1,10 @@
 import type { SQL } from 'drizzle-orm';
-import { and, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, eq, ilike, isNull, or, sql } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { db } from '../db';
-import type { Agent } from '../schema';
-import { agent, task } from '../schema';
+import { AgentLockedError } from '../errors';
+import type { Agent, StoredAgentToolGrant } from '../schema';
+import { agent, task, taskComment, taskRun } from '../schema';
 import type { ICreateAgent } from '../zod';
 
 export type { Agent, AgentReasoningEffort, AgentSettings, StoredAgentToolGrant } from '../schema';
@@ -37,6 +39,60 @@ export interface AgentMarkMedia {
   imageMedia: { storageKey: string } | null;
 }
 
+/**
+ * Relation to load wherever an agent's lock is shown: the locked version and who locked and
+ * approved it. Names only, no other user columns.
+ */
+export const agentLockedVersionWith = {
+  lockedVersion: {
+    columns: {
+      id: true,
+      versionNumber: true,
+      lockedAt: true,
+      approvedAt: true,
+      revokedAt: true,
+    },
+    with: {
+      lockedBy: { columns: { id: true, name: true } },
+      approvedBy: { columns: { id: true, name: true } },
+    },
+  },
+} as const;
+
+/** Sorted by id so equal grants always serialize to equal jsonb. */
+export function sortToolGrantsById(toolGrants: StoredAgentToolGrant[]): StoredAgentToolGrant[] {
+  return toolGrants.toSorted((first, second) => first.id.localeCompare(second.id, 'en'));
+}
+
+function unchangedValue(column: AnyPgColumn, value: unknown): SQL | undefined {
+  return value === undefined ? undefined : sql`${column} is not distinct from ${value}`;
+}
+
+function unchangedJson(column: AnyPgColumn, value: unknown): SQL | undefined {
+  return value === undefined
+    ? undefined
+    : sql`${column} is not distinct from ${JSON.stringify(value)}::jsonb`;
+}
+
+/** True when every field in `fields` already holds that value in the row. */
+function fieldsUnchanged(fields: UpdateAgentFields): SQL | undefined {
+  const comparisons = {
+    name: unchangedValue(agent.name, fields.name),
+    description: unchangedValue(agent.description, fields.description),
+    icon: unchangedValue(agent.icon, fields.icon),
+    tone: unchangedValue(agent.tone, fields.tone),
+    imageMediaId: unchangedValue(agent.imageMediaId, fields.imageMediaId),
+    aiModelId: unchangedValue(agent.aiModelId, fields.aiModelId),
+    systemPrompt: unchangedValue(agent.systemPrompt, fields.systemPrompt),
+    context: unchangedValue(agent.context, fields.context),
+    toolGrants: unchangedJson(agent.toolGrants, fields.toolGrants),
+    defaultDatasetId: unchangedValue(agent.defaultDatasetId, fields.defaultDatasetId),
+    settings: unchangedJson(agent.settings, fields.settings),
+  } satisfies Record<keyof UpdateAgentFields, SQL | undefined>;
+
+  return and(...Object.values(comparisons));
+}
+
 export async function createAgent(values: ICreateAgent): Promise<Agent> {
   const {
     userId,
@@ -64,7 +120,7 @@ export async function createAgent(values: ICreateAgent): Promise<Agent> {
       description,
       systemPrompt,
       context,
-      toolGrants,
+      toolGrants: toolGrants && sortToolGrantsById(toolGrants),
       defaultDatasetId,
       icon,
       tone,
@@ -124,6 +180,7 @@ export async function getAgentByIdAndWorkspaceId({
     with: {
       aiModel: true,
       ...agentImageMediaWith,
+      ...agentLockedVersionWith,
     },
   });
 
@@ -209,6 +266,7 @@ export async function getAgentsByWorkspaceId({
     where: { RAW: (table) => agentListFilter(table, { workspaceId, searchQuery }) ?? sql`true` },
     with: {
       ...agentImageMediaWith,
+      ...agentLockedVersionWith,
       aiModel: {
         columns: {
           provider: true,
@@ -230,6 +288,8 @@ export async function getAgentsByWorkspaceId({
 // `getAgentByIdAndWorkspaceId()` to check ownership, so a mismatched id can
 // never update a row outside the caller's workspace. Fields left out of
 // `fields` are left untouched (partial update).
+// On a locked agent the same WHERE clause also requires every field in `fields` to equal
+// the stored value, so a save that repeats the locked values passes and a change throws.
 export async function updateAgent({
   agentId,
   workspaceId,
@@ -238,16 +298,35 @@ export async function updateAgent({
   agentId: string;
   workspaceId: string;
 } & UpdateAgentFields): Promise<Agent | null> {
+  const sortedFields = {
+    ...fields,
+    toolGrants: fields.toolGrants && sortToolGrantsById(fields.toolGrants),
+  };
+  const lockGuard = fieldsUnchanged(sortedFields);
   const [updatedAgent] = await db
     .update(agent)
-    .set(fields)
-    .where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)))
+    .set(sortedFields)
+    .where(
+      and(
+        eq(agent.id, agentId),
+        eq(agent.workspaceId, workspaceId),
+        lockGuard && or(isNull(agent.lockedVersionId), lockGuard),
+      ),
+    )
     .returning();
 
-  return updatedAgent ?? null;
+  if (updatedAgent) return updatedAgent;
+
+  const existingAgent = await db.query.agent.findFirst({
+    where: { id: agentId, workspaceId },
+    columns: { id: true },
+  });
+  if (existingAgent) throw new AgentLockedError();
+  return null;
 }
 
-// DELETE an agent by ID, scoped to its workspace.
+// DELETE an agent by ID, scoped to its workspace. Refuses a locked agent. Its versions stay
+// behind with no agent.
 export async function deleteAgentById({
   agentId,
   workspaceId,
@@ -256,10 +335,25 @@ export async function deleteAgentById({
   workspaceId: string;
 }): Promise<void> {
   await db.transaction(async (tx) => {
+    const [lockedRow] = await tx
+      .select({ lockedVersionId: agent.lockedVersionId })
+      .from(agent)
+      .where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)))
+      .for('update');
+    if (lockedRow?.lockedVersionId) throw new AgentLockedError();
+
     await tx
       .update(task)
       .set({ assignedAgentId: null })
       .where(and(eq(task.assignedAgentId, agentId), eq(task.workspaceId, workspaceId)));
+    await tx
+      .update(taskComment)
+      .set({ authorAgentId: null })
+      .where(and(eq(taskComment.authorAgentId, agentId), eq(taskComment.workspaceId, workspaceId)));
+    await tx
+      .update(taskRun)
+      .set({ agentId: null })
+      .where(and(eq(taskRun.agentId, agentId), eq(taskRun.workspaceId, workspaceId)));
     await tx.delete(agent).where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)));
   });
 }

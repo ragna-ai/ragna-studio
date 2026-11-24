@@ -1,6 +1,7 @@
 export * from './agent-context-document-chunk.repo';
 export * from './agent-context-document.repo';
 export * from './agent-template.repo';
+export * from './agent-version.repo';
 export * from './agent.repo';
 export * from './ai-model.repo';
 export * from './chat.repo';
@@ -26,7 +27,9 @@ export * from './organization.repo';
 export * from './overview.repo';
 export * from './session.repo';
 export * from './social-post.repo';
+export * from './task-comment.repo';
 export * from './task-label.repo';
+export * from './task-run.repo';
 export * from './task.repo';
 export * from './user.repo';
 export * from './verification.repo';

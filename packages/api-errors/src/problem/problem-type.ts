@@ -8,6 +8,19 @@ export const problemTypeSchema = z.enum([
   'workflow-invalid',
   'email-draft-exists',
   'social-post-publishing',
+  'agent-locked',
+  'agent-already-locked',
+  'agent-not-locked',
+  'agent-already-approved',
+  'agent-not-approved',
+  'knowledge-files-not-ready',
+  'task-comment-limit-reached',
+  'task-comment-not-editable',
+  'task-has-no-agent',
+  'task-run-active',
+  'task-run-limit-reached',
+  'task-runs-disabled',
+  'agent-has-active-task-runs',
 ]);
 
 export type ProblemType = z.infer<typeof problemTypeSchema>;
@@ -20,6 +33,19 @@ export const PROBLEM_TITLES: Record<ProblemType, string> = {
   'workflow-invalid': 'Workflow is invalid',
   'email-draft-exists': 'Email draft already exists',
   'social-post-publishing': 'Social post is being published',
+  'agent-locked': 'Agent is locked',
+  'agent-already-locked': 'Agent is already locked',
+  'agent-not-locked': 'Agent is not locked',
+  'agent-already-approved': 'Agent is already approved',
+  'agent-not-approved': 'Agent is not approved',
+  'knowledge-files-not-ready': 'Knowledge files are not ready',
+  'task-comment-limit-reached': 'Task comment limit reached',
+  'task-comment-not-editable': 'Task comment is not editable',
+  'task-has-no-agent': 'Task has no agent',
+  'task-run-active': 'Task run is active',
+  'task-run-limit-reached': 'Task run limit reached',
+  'task-runs-disabled': 'Task runs are disabled',
+  'agent-has-active-task-runs': 'Agent has active task runs',
 };
 
 export const ABOUT_BLANK = 'about:blank';

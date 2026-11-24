@@ -1,7 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
+import { AgentLockedError } from '../errors';
 import type { AgentContextDocument, NewAgentContextDocument } from '../schema';
-import { agentContextDocument } from '../schema';
+import { agent, agentContextDocument } from '../schema';
 
 export type {
   AgentContextDocument,
@@ -9,14 +10,39 @@ export type {
   NewAgentContextDocument,
 } from '../schema';
 
+type DocumentTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Runs a knowledge file write while the agent is unlocked. The shared row lock conflicts with the
+ * exclusive one a lock takes, so a write can't slip in after a lock read the file list.
+ */
+async function withUnlockedAgent<Result>(
+  agentId: string,
+  write: (tx: DocumentTransaction) => Promise<Result>,
+): Promise<Result> {
+  return db.transaction(async (tx) => {
+    const [agentRow] = await tx
+      .select({ lockedVersionId: agent.lockedVersionId })
+      .from(agent)
+      .where(eq(agent.id, agentId))
+      .for('share');
+    if (agentRow?.lockedVersionId) throw new AgentLockedError();
+    return write(tx);
+  });
+}
+
+// Every record of one batch belongs to the same agent: they come from one upload.
 export async function createAgentContextDocuments(
   records: NewAgentContextDocument[],
 ): Promise<AgentContextDocument[]> {
-  if (records.length === 0) {
+  const [firstRecord] = records;
+  if (!firstRecord) {
     return [];
   }
 
-  return db.insert(agentContextDocument).values(records).returning();
+  return withUnlockedAgent(firstRecord.agentId, (tx) =>
+    tx.insert(agentContextDocument).values(records).returning(),
+  );
 }
 
 export async function getAgentContextDocumentsByAgentId({
@@ -76,6 +102,7 @@ type UpdateAgentContextDocumentFields = Partial<
 // `agentId` is always required in the WHERE clause, even though every caller
 // has already loaded the row once to check ownership, so a mistaken id from
 // one agent can never overwrite a document belonging to another.
+// Not guarded by the agent lock: the extraction worker writes status through it.
 export async function updateAgentContextDocument({
   id,
   agentId,
@@ -93,6 +120,26 @@ export async function updateAgentContextDocument({
   return updated ?? null;
 }
 
+/** Same as `updateAgentContextDocument`, for a user's replace or retry: refused on a locked agent. */
+export async function updateAgentContextDocumentWhileUnlocked({
+  id,
+  agentId,
+  ...fields
+}: {
+  id: string;
+  agentId: string;
+} & UpdateAgentContextDocumentFields): Promise<AgentContextDocument | null> {
+  return withUnlockedAgent(agentId, async (tx) => {
+    const [updated] = await tx
+      .update(agentContextDocument)
+      .set(fields)
+      .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)))
+      .returning();
+
+    return updated ?? null;
+  });
+}
+
 export async function deleteAgentContextDocumentById({
   id,
   agentId,
@@ -100,9 +147,11 @@ export async function deleteAgentContextDocumentById({
   id: string;
   agentId: string;
 }): Promise<void> {
-  await db
-    .delete(agentContextDocument)
-    .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)));
+  await withUnlockedAgent(agentId, async (tx) => {
+    await tx
+      .delete(agentContextDocument)
+      .where(and(eq(agentContextDocument.id, id), eq(agentContextDocument.agentId, agentId)));
+  });
 }
 
 // Every non-`pending` document across all agents, for the chunk backfill

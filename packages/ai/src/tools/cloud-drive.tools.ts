@@ -12,10 +12,10 @@ import { logger } from '@repo/logger';
 import { extractText, MIME_TYPE_BY_MEDIA_KIND, type MediaKind } from '@repo/media';
 import type { ToolSet } from 'ai';
 import * as z from 'zod';
+import { AGENT_FILE_READ_MAX_CHARACTERS } from '../agent-file-read';
 import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
 
-export const CLOUD_DRIVE_READ_MAX_BYTES = 20 * 1024 * 1024;
-export const CLOUD_DRIVE_READ_MAX_CHARACTERS = 100_000;
+const CLOUD_DRIVE_READ_MAX_BYTES = 20 * 1024 * 1024;
 
 const DRIVE_DISPLAY_NAMES: Record<CloudDriveIntegrationId, string> = {
   'google-drive': 'Google Drive',
@@ -219,8 +219,8 @@ async function readFile(
     name: content.item.name,
     mimeType: content.mimeType,
     webUrl: content.item.webUrl,
-    text: text.slice(0, CLOUD_DRIVE_READ_MAX_CHARACTERS),
-    truncated: text.length > CLOUD_DRIVE_READ_MAX_CHARACTERS,
+    text: text.slice(0, AGENT_FILE_READ_MAX_CHARACTERS),
+    truncated: text.length > AGENT_FILE_READ_MAX_CHARACTERS,
   };
 }
 

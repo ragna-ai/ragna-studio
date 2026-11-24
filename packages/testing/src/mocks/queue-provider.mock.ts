@@ -51,8 +51,18 @@ export const queueAddBulkMock = mock((jobs: FakeBulkJob[]) =>
   Promise.all(jobs.map((job) => defaultQueueAddImpl(job.name))),
 );
 
+/** BullMQ's answer for a job id it doesn't know. Tests set other states per job id. */
+const UNKNOWN_JOB_STATE = 'unknown';
+
+export const queueGetJobStateMock = mock((_jobId: string) => Promise.resolve(UNKNOWN_JOB_STATE));
+
 function fakeQueue(name: string) {
-  return { name, add: queueAddMock, addBulk: queueAddBulkMock };
+  return {
+    name,
+    add: queueAddMock,
+    addBulk: queueAddBulkMock,
+    getJobState: queueGetJobStateMock,
+  };
 }
 
 export const upsertQueueJobSchedulerMock = mock(() => Promise.resolve({} as any));
@@ -90,6 +100,8 @@ export function resetQueueMock(): void {
   queueAddMock.mockReset();
   queueAddMock.mockImplementation(defaultQueueAddImpl);
   queueAddBulkMock.mockClear();
+  queueGetJobStateMock.mockReset();
+  queueGetJobStateMock.mockImplementation(() => Promise.resolve(UNKNOWN_JOB_STATE));
   upsertQueueJobSchedulerMock.mockClear();
   removeQueueJobSchedulerMock.mockClear();
   getQueueJobSchedulersMock.mockClear();
@@ -117,6 +129,8 @@ type QueueMockOverrides = {
     emailClassify: () => ReturnType<typeof fakeQueue>;
     emailDraft: () => ReturnType<typeof fakeQueue>;
     purge: () => ReturnType<typeof fakeQueue>;
+    mediaTextExtraction: () => ReturnType<typeof fakeQueue>;
+    taskRun: () => ReturnType<typeof fakeQueue>;
     visibleWatermark: () => ReturnType<typeof fakeQueue>;
   };
   upsertQueueJobScheduler: typeof upsertQueueJobSchedulerMock;
@@ -147,7 +161,9 @@ export const queueModuleMock: Omit<typeof queuePackage, keyof QueueMockOverrides
     emailClassify: () => fakeQueue(queuePackage.EMAIL_CLASSIFY_QUEUE),
     emailDraft: () => fakeQueue(queuePackage.EMAIL_DRAFT_QUEUE),
     purge: () => fakeQueue(queuePackage.PURGE_QUEUE),
+    mediaTextExtraction: () => fakeQueue(queuePackage.MEDIA_TEXT_EXTRACTION_QUEUE),
     visibleWatermark: () => fakeQueue(queuePackage.VISIBLE_WATERMARK_QUEUE),
+    taskRun: () => fakeQueue(queuePackage.TASK_RUNS_QUEUE),
   },
   upsertQueueJobScheduler: upsertQueueJobSchedulerMock,
   removeQueueJobScheduler: removeQueueJobSchedulerMock,

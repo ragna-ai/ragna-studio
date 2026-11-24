@@ -1,0 +1,29 @@
+---
+title: agent-already-locked
+description: The agent is already locked.
+---
+
+`https://docs.ragna.io/errors/agent-already-locked`
+
+## When it happens
+
+A request locks an agent that is already locked.
+
+## Response
+
+| Member   | Value                   |
+| -------- | ----------------------- |
+| `status` | 409                     |
+| `title`  | Agent is already locked |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-already-locked",
+  "title": "Agent is already locked",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Reload the agent. It is locked, so nothing more is needed.

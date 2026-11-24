@@ -27,6 +27,7 @@ export {
   generateImage,
   // generateObject, // generateObject is deprecated in favor of generateText with a structured output schema
   generateText,
+  hasToolCall,
   isToolUIPart,
   Output,
   safeValidateUIMessages,
@@ -41,9 +42,11 @@ export type { ModelMessage, SystemModelMessage, ToolSet } from 'ai';
 // the same zod this package's own tool schemas use, without a direct zod
 // dependency of their own.
 export * as z from 'zod';
+export * from './agent-file-read';
 export * from './client';
 export * from './factories';
 export * from './services';
 export * from './tools';
 export * from './types';
+export * from './untrusted-content';
 export * from './usage';

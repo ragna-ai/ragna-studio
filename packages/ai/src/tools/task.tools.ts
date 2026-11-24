@@ -1,5 +1,7 @@
 import type {
+  MediaTextExtractionStatus,
   Task,
+  TaskAttachmentWithMediaSummary,
   TaskPriority,
   TaskStatus,
   TaskWithBoardInfo,
@@ -7,12 +9,19 @@ import type {
 } from '@repo/database';
 import {
   createTask,
+  createTaskComment,
+  getTaskAttachmentById,
+  getTaskAttachmentsByTaskId,
   getTaskById,
   listTasks,
   listTaskLabels,
+  MAX_COMMENTS_PER_TASK,
+  MAX_TASK_COMMENT_BODY_LENGTH,
   moveTask,
+  taskRunOutcomes,
   updateTask,
 } from '@repo/database';
+import { getMediaKindByMimeType, isExtractableKind } from '@repo/media';
 import * as z from 'zod';
 import { failOnForeignReference } from './foreign-reference-failure';
 import type { AnyToolDefinition, ToolDefinition, ToolFailure } from './tool-definition';
@@ -55,11 +64,19 @@ function toTaskDisplayId(taskNumber: number): string {
 export interface TaskToolDefinitionsOptions {
   /** Marks the tasks the create tool makes as agent-created. */
   agentId: string;
+  /** True while the agent works a task run: the create tool then refuses. */
+  inTaskRun?: boolean;
 }
 
 const TASK_NOT_FOUND: ToolFailure<'not_found'> = {
   status: 'not_found',
   message: 'Task not found.',
+};
+
+const TASK_RUN_ACTIVE: ToolFailure<'task_run_active'> = {
+  status: 'task_run_active',
+  message:
+    'An agent run is working on this task, so it cannot be changed. Stop the run first. Nothing was changed.',
 };
 
 const taskStatusSchema = z.enum(TASK_STATUSES);
@@ -94,6 +111,13 @@ const subtaskSummarySchema = z.strictObject({
   status: taskStatusSchema,
 });
 
+const taskAttachmentSummarySchema = z.strictObject({
+  id: z.string(),
+  filename: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.number(),
+});
+
 const taskDetailSchema = z.strictObject({
   id: z.string(),
   displayId: z.string(),
@@ -107,12 +131,14 @@ const taskDetailSchema = z.strictObject({
   parentTaskId: z.string().nullable(),
   assignedAgent: z.string().nullable(),
   subtasks: z.array(subtaskSummarySchema),
+  attachments: z.array(taskAttachmentSummarySchema),
 });
 
 type TaskBrief = z.infer<typeof taskBriefSchema>;
 type TaskSummary = z.infer<typeof taskSummarySchema>;
 type SubtaskSummary = z.infer<typeof subtaskSummarySchema>;
 type TaskDetail = z.infer<typeof taskDetailSchema>;
+type TaskAttachmentSummary = z.infer<typeof taskAttachmentSummarySchema>;
 
 function toTaskSummary(taskRecord: TaskWithBoardInfo): TaskSummary {
   return {
@@ -139,7 +165,21 @@ function toSubtaskSummary(subtask: Task): SubtaskSummary {
   };
 }
 
-function toTaskDetail(taskRecord: TaskWithDetails): TaskDetail {
+function toTaskAttachmentSummary(
+  attachment: TaskAttachmentWithMediaSummary,
+): TaskAttachmentSummary {
+  return {
+    id: attachment.id,
+    filename: attachment.media.filename,
+    mimeType: attachment.media.mimeType,
+    sizeBytes: attachment.media.size,
+  };
+}
+
+function toTaskDetail(
+  taskRecord: TaskWithDetails,
+  attachments: TaskAttachmentWithMediaSummary[],
+): TaskDetail {
   return {
     id: taskRecord.id,
     displayId: toTaskDisplayId(taskRecord.number),
@@ -153,6 +193,7 @@ function toTaskDetail(taskRecord: TaskWithDetails): TaskDetail {
     parentTaskId: taskRecord.parentTaskId,
     assignedAgent: taskRecord.assignedAgent?.name ?? null,
     subtasks: taskRecord.subtasks.map(toSubtaskSummary),
+    attachments: attachments.map(toTaskAttachmentSummary),
   };
 }
 
@@ -285,7 +326,101 @@ const readTaskDefinition: ToolDefinition<
     if (!taskRecord) {
       return TASK_NOT_FOUND;
     }
-    return { task: toTaskDetail(taskRecord) };
+    const attachments = await getTaskAttachmentsByTaskId({ taskId: taskRecord.id });
+    return { task: toTaskDetail(taskRecord, attachments) };
+  },
+};
+
+// readTaskAttachment
+
+const readTaskAttachmentInputSchema = z.object({
+  taskId: z.string().describe('The id of the task the file is attached to.'),
+  attachmentId: z.string().describe("The attachment id from the task's attachments list."),
+});
+
+const readTaskAttachmentOutputSchema = z.strictObject({
+  filename: z.string(),
+  mimeType: z.string(),
+  text: z.string(),
+  truncated: z.boolean(),
+});
+
+type ReadTaskAttachmentFailureStatus = 'not_found' | 'not_ready' | 'not_readable';
+
+interface ReadableAttachmentMedia {
+  filename: string;
+  mimeType: string;
+  textExtractionStatus: MediaTextExtractionStatus | null;
+  extractedText: string | null;
+}
+
+/** Why an attachment's text can't be returned right now, or null when it can. */
+function describeUnreadableAttachment(
+  media: ReadableAttachmentMedia,
+): ToolFailure<ReadTaskAttachmentFailureStatus> | null {
+  const { filename } = media;
+  const kind = getMediaKindByMimeType(media.mimeType);
+
+  switch (media.textExtractionStatus) {
+    case 'pending':
+      return {
+        status: 'not_ready',
+        message: `The text of "${filename}" is still being extracted. Try again later.`,
+      };
+    case 'failed':
+      return { status: 'not_readable', message: `Text extraction failed for "${filename}".` };
+    case 'ready':
+      return media.extractedText
+        ? null
+        : {
+            status: 'not_readable',
+            message: `"${filename}" contains no readable text (it may be a scanned document).`,
+          };
+    case null:
+      return {
+        status: 'not_readable',
+        message:
+          kind && isExtractableKind(kind)
+            ? `"${filename}" has no extracted text.`
+            : `"${filename}" is an image; its text can't be read.`,
+      };
+  }
+}
+
+const readTaskAttachmentDefinition: ToolDefinition<
+  typeof readTaskAttachmentInputSchema,
+  typeof readTaskAttachmentOutputSchema,
+  ReadTaskAttachmentFailureStatus
+> = {
+  name: 'readTaskAttachment',
+  description:
+    "Read the text of a file attached to a task. Works for PDF, Word, PowerPoint, Excel, CSV, text and Markdown files. Images can't be read. Long files are cut off and marked truncated. Get the attachment id from readTask.",
+  inputSchema: readTaskAttachmentInputSchema,
+  outputSchema: readTaskAttachmentOutputSchema,
+  access: 'read',
+  execute: async ({ taskId, attachmentId }, { workspaceId }) => {
+    const taskRecord = await getTaskById({ id: taskId, workspaceId });
+    if (!taskRecord) {
+      return TASK_NOT_FOUND;
+    }
+
+    const attachment = await getTaskAttachmentById({ id: attachmentId });
+    if (!attachment || attachment.taskId !== taskId) {
+      return { status: 'not_found', message: 'Attachment not found on this task.' };
+    }
+
+    const { media } = attachment;
+    const failure = describeUnreadableAttachment(media);
+    if (failure) {
+      return failure;
+    }
+
+    return {
+      filename: media.filename,
+      mimeType: media.mimeType,
+      text: media.extractedText ?? '',
+      truncated: media.extractedTextTruncated,
+    };
   },
 };
 
@@ -319,14 +454,22 @@ const createTaskInputSchema = z.object({
 const taskBriefOutputSchema = z.strictObject({ task: taskBriefSchema });
 
 type TaskBriefOutput = z.infer<typeof taskBriefOutputSchema>;
-type TaskWriteFailure = ToolFailure<'not_found' | 'invalid_input'>;
+type TaskInputFailure = ToolFailure<'not_found' | 'invalid_input'>;
+type TaskWriteFailure = TaskInputFailure | ToolFailure<'task_run_active'>;
+
+const CREATE_TASK_REFUSED_IN_RUN: ToolFailure<'not_allowed_in_run'> = {
+  status: 'not_allowed_in_run',
+  message:
+    'You cannot create tasks while working on a task. List the steps in your summary instead.',
+};
 
 function createTaskDefinition({
   agentId,
+  inTaskRun,
 }: TaskToolDefinitionsOptions): ToolDefinition<
   typeof createTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found' | 'invalid_input'
+  'not_found' | 'invalid_input' | 'not_allowed_in_run'
 > {
   return {
     name: 'createTask',
@@ -335,8 +478,9 @@ function createTaskDefinition({
     inputSchema: createTaskInputSchema,
     outputSchema: taskBriefOutputSchema,
     access: 'write',
-    execute: (input, { workspaceId }) =>
-      failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
+    execute: async (input, { workspaceId }) => {
+      if (inTaskRun) return CREATE_TASK_REFUSED_IN_RUN;
+      return failOnForeignReference<TaskBriefOutput | TaskInputFailure>(async () => {
         // Ignore a reminder offset without a real due date instead of erroring.
         const remindDaysBeforeDue = input.dueDate ? input.remindDaysBeforeDue : undefined;
 
@@ -376,7 +520,8 @@ function createTaskDefinition({
         });
 
         return { task: toTaskBrief(createdTask) };
-      }),
+      });
+    },
   };
 }
 
@@ -438,7 +583,7 @@ const updateTaskInputSchema = z.object({
 const updateTaskDefinition: ToolDefinition<
   typeof updateTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found' | 'invalid_input'
+  'not_found' | 'invalid_input' | 'task_run_active'
 > = {
   name: 'updateTask',
   description:
@@ -509,11 +654,20 @@ const updateTaskDefinition: ToolDefinition<
         labelIds = resolvedLabels.labelIds;
       }
 
-      const updatedTask = await updateTask({ id: input.id, workspaceId, labelIds, ...fields });
-      if (!updatedTask) {
+      const result = await updateTask({
+        id: input.id,
+        workspaceId,
+        labelIds,
+        onReassignWithActiveRun: 'refuse',
+        ...fields,
+      });
+      if (result.status === 'not-found') {
         return TASK_NOT_FOUND;
       }
-      return { task: toTaskBrief(updatedTask) };
+      if (result.status === 'run-active') {
+        return TASK_RUN_ACTIVE;
+      }
+      return { task: toTaskBrief(result.task) };
     }),
 };
 
@@ -556,7 +710,7 @@ async function resolveAfterTaskId({
 const moveTaskDefinition: ToolDefinition<
   typeof moveTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found'
+  'not_found' | 'task_run_active'
 > = {
   name: 'moveTask',
   description: 'Move a task to a different status column, at the top or bottom of it.',
@@ -565,21 +719,180 @@ const moveTaskDefinition: ToolDefinition<
   access: 'write',
   execute: async ({ id, status, position }, { workspaceId }) => {
     const afterTaskId = await resolveAfterTaskId({ taskId: id, workspaceId, status, position });
-    const movedTask = await moveTask({ id, workspaceId, status, afterTaskId });
-    if (!movedTask) {
+    const result = await moveTask({ id, workspaceId, status, afterTaskId });
+    if (result.status === 'not-found') {
       return TASK_NOT_FOUND;
     }
-    return { task: toTaskBrief(movedTask) };
+    if (result.status === 'run-active') {
+      return TASK_RUN_ACTIVE;
+    }
+    return { task: toTaskBrief(result.task) };
   },
 };
+
+// addTaskComment
+
+const addTaskCommentInputSchema = z.object({
+  taskId: z.string().describe('The id of the task to comment on.'),
+  body: z
+    .string()
+    .min(1)
+    .max(MAX_TASK_COMMENT_BODY_LENGTH)
+    .describe('The comment text in markdown.'),
+});
+
+const addTaskCommentOutputSchema = z.strictObject({
+  comment: z.strictObject({ id: z.string(), taskId: z.string(), displayId: z.string() }),
+});
+
+type AddTaskCommentOutput = z.infer<typeof addTaskCommentOutputSchema>;
+type AddTaskCommentFailureStatus = 'not_found' | 'limit_reached' | 'other_task' | 'notes_exhausted';
+type AddTaskCommentFailure = ToolFailure<AddTaskCommentFailureStatus>;
+
+const TASK_COMMENT_LIMIT_REACHED: ToolFailure<'limit_reached'> = {
+  status: 'limit_reached',
+  message: `The task already holds the maximum of ${MAX_COMMENTS_PER_TASK} comments. No comment was added.`,
+};
+
+/** The task run an `addTaskComment` call belongs to. */
+export interface TaskRunBinding {
+  taskId: string;
+  taskRunId: string;
+}
+
+export const MAX_NOTES_PER_TASK_RUN = 5;
+
+const OTHER_TASK_FAILURE: ToolFailure<'other_task'> = {
+  status: 'other_task',
+  message: 'You can only comment on the task you are working on. No comment was added.',
+};
+
+const NOTES_EXHAUSTED_FAILURE: ToolFailure<'notes_exhausted'> = {
+  status: 'notes_exhausted',
+  message: `You already added ${MAX_NOTES_PER_TASK_RUN} notes in this run. Put the rest in your summary when you finish. No comment was added.`,
+};
+
+interface AddTaskCommentOptions {
+  agentId: string;
+  /** Set for a task run: comments go to that task only, are tagged with the run and are capped. */
+  run?: TaskRunBinding;
+}
+
+function addTaskCommentDefinition({
+  agentId,
+  run,
+}: AddTaskCommentOptions): ToolDefinition<
+  typeof addTaskCommentInputSchema,
+  typeof addTaskCommentOutputSchema,
+  AddTaskCommentFailureStatus
+> {
+  return {
+    name: 'addTaskComment',
+    description: `Add a comment to a task. The comment is shown under your name, appears last on the task and cannot be edited by users. A task holds at most ${MAX_COMMENTS_PER_TASK} comments.`,
+    inputSchema: addTaskCommentInputSchema,
+    outputSchema: addTaskCommentOutputSchema,
+    access: 'write',
+    execute: ({ taskId, body }, { workspaceId }) =>
+      failOnForeignReference<AddTaskCommentOutput | AddTaskCommentFailure>(async () => {
+        if (run && taskId !== run.taskId) return OTHER_TASK_FAILURE;
+
+        const taskRecord = await getTaskById({ id: taskId, workspaceId });
+        if (!taskRecord) {
+          return TASK_NOT_FOUND;
+        }
+
+        const result = await createTaskComment({
+          workspaceId,
+          taskId,
+          author: { kind: 'agent', agentId },
+          body,
+          taskRunId: run?.taskRunId,
+          maxCommentsOfRun: run ? MAX_NOTES_PER_TASK_RUN : undefined,
+        });
+        if (result.status === 'task-not-found') {
+          return TASK_NOT_FOUND;
+        }
+        if (result.status === 'limit-reached') {
+          return TASK_COMMENT_LIMIT_REACHED;
+        }
+        if (result.status === 'run-note-limit-reached') {
+          return NOTES_EXHAUSTED_FAILURE;
+        }
+
+        return {
+          comment: {
+            id: result.commentId,
+            taskId,
+            displayId: toTaskDisplayId(taskRecord.number),
+          },
+        };
+      }),
+  };
+}
+
+// finishTaskRun
+
+export const FINISH_TASK_RUN_TOOL_NAME = 'finishTaskRun';
+
+export const finishTaskRunInputSchema = z.object({
+  outcome: z
+    .enum(taskRunOutcomes)
+    .describe(
+      '"completed" when the work is done, "needs_input" when you are blocked and need an answer from a person.',
+    ),
+  summary: z
+    .string()
+    .min(1)
+    .max(MAX_TASK_COMMENT_BODY_LENGTH)
+    .describe('What you did, what you found and what is left. Markdown. Shown on the task.'),
+});
+
+export type FinishTaskRunInput = z.infer<typeof finishTaskRunInputSchema>;
+
+const finishTaskRunOutputSchema = z.strictObject({
+  outcome: z.enum(taskRunOutcomes),
+  summary: z.string(),
+});
+
+/** Ends the run. The runner reads the call, writes the result comment and moves the task. */
+const finishTaskRunDefinition: ToolDefinition<
+  typeof finishTaskRunInputSchema,
+  typeof finishTaskRunOutputSchema
+> = {
+  name: FINISH_TASK_RUN_TOOL_NAME,
+  description:
+    'Call this exactly once, as your last action, to end your work on the task. Give the outcome and a summary of what you did. Nothing happens after this call.',
+  inputSchema: finishTaskRunInputSchema,
+  outputSchema: finishTaskRunOutputSchema,
+  access: 'read',
+  execute: async ({ outcome, summary }) => ({ outcome, summary }),
+};
+
+export interface TaskRunToolDefinitionsOptions extends TaskRunBinding {
+  agentId: string;
+}
+
+/** The tools only a task run has: comments bound to the run, and the call that ends it. */
+export function taskRunToolDefinitions({
+  agentId,
+  taskId,
+  taskRunId,
+}: TaskRunToolDefinitionsOptions): AnyToolDefinition[] {
+  return [
+    addTaskCommentDefinition({ agentId, run: { taskId, taskRunId } }),
+    finishTaskRunDefinition,
+  ];
+}
 
 /** The task tools of one agent. */
 export function taskToolDefinitions(options: TaskToolDefinitionsOptions): AnyToolDefinition[] {
   return [
     listTasksDefinition,
     readTaskDefinition,
+    readTaskAttachmentDefinition,
     createTaskDefinition(options),
     updateTaskDefinition,
     moveTaskDefinition,
+    addTaskCommentDefinition(options),
   ];
 }

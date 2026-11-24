@@ -31,7 +31,18 @@ describe('AI SDK tool names per agent tool grant', () => {
       ],
     ],
     [{ id: 'documents' }, ['createDocument', 'editDocument', 'listDocuments', 'readDocument']],
-    [{ id: 'tasks' }, ['createTask', 'listTasks', 'moveTask', 'readTask', 'updateTask']],
+    [
+      { id: 'tasks' },
+      [
+        'addTaskComment',
+        'createTask',
+        'listTasks',
+        'moveTask',
+        'readTask',
+        'readTaskAttachment',
+        'updateTask',
+      ],
+    ],
     [
       { id: 'google-drive', access: 'read' },
       ['googleDriveListFolder', 'googleDriveReadFile', 'googleDriveSearch'],
