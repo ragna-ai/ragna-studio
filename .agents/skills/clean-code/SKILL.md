@@ -68,6 +68,7 @@ Applies to every name another file or person sees: exported functions, types and
 14. **Layout in CSS, not JS.** Size and scroll areas with flex or grid and a `min-h-0` / `min-w-0` chain down to the scroll container. Never measure elements in JS to set a height or width with `:style`.
 15. **Translations.** In components and composables, take `const { t } = useI18n()` at the top level and use `t` in callbacks through the closure. Never call `useI18n()` inside a callback, a watcher, after an `await`, or in a plain function: it throws at runtime. Code without a setup context (lib functions, classes, plugins, middleware) uses `useNuxtApp().$i18n`, or better, takes `t` or the finished message as a parameter.
 16. **A composable returns what it names.** One composable, one reactive thing, returned directly, e.g. one `useQuery`/`useMutation` per composable. No composable that returns factories for more composables. Logic that needs no setup context (requests, parsing, mapping) stays a plain function, so middleware, plugins and tests can use it too.
+17. **Shared component folders.** In `app/components/`, two or more components with the same prefix share a folder named after it, and keep the full name: `status/StatusPill.vue`. A standalone component stays at the root. Feature-only components live in `app/features/<feature>/components/`.
 
 ## shadcn-vue
 

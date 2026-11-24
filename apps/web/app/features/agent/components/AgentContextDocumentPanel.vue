@@ -16,7 +16,7 @@ import type {
   AgentContextDocument,
   AgentContextDocumentStatus,
 } from '~/features/agent/types';
-import Status, { type StatusTone } from '~/components/Status.vue';
+import Status, { type StatusTone } from '~/components/status/Status.vue';
 
 const STATUS_TONE: Record<AgentContextDocumentStatus, StatusTone> = {
   ready: 'ok',

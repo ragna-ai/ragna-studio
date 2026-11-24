@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ToolUIPart } from 'ai';
 import * as z from 'zod';
-import StatusPill from '~/components/StatusPill.vue';
+import StatusPill from '~/components/status/StatusPill.vue';
 import { Button } from '~/components/ui/button';
 import { TOOL_STATE_TONE } from '~/features/chat/lib/tool-status';
 import type { ToolApprovalDecision } from '~/features/chat/types';

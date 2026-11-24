@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import SaveStatusButton, {
+import StatusSaveButton, {
   type SaveStatus,
-} from '~/components/SaveStatusButton.vue';
+} from '~/components/status/StatusSaveButton.vue';
 import RichTextEditor from '~/components/editor/RichTextEditor.vue';
 import { useRichTextEditor } from '~/components/editor/useRichTextEditor';
 import DocumentActionsMenu from '~/features/document/components/DocumentActionsMenu.vue';
@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
     <template #header>
       <NavTopBar :crumbs="crumbs">
         <template #right>
-          <SaveStatusButton :status="saveStatus" @save="saveNow" />
+          <StatusSaveButton :status="saveStatus" @save="saveNow" />
           <DocumentActionsMenu
             :folder-id="document.folderId"
             :folders="folders"
