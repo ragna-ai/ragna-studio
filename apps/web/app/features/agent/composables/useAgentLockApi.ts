@@ -3,6 +3,7 @@ import {
   agentBasePath,
   agentKeys,
 } from '~/features/agent/composables/useAgentApi';
+import { taskKeys } from '~/features/task/composables/useTaskApi';
 import type {
   AgentUsage,
   AgentVersionManyResponse,
@@ -15,6 +16,9 @@ type LockPath = 'lock' | 'unattended-approval';
 interface LockMutationOptions {
   path: LockPath;
   method: 'POST' | 'DELETE';
+  query?: Record<string, string>;
+  /** Also refresh the workspace's tasks: the action stops their agent runs. */
+  refreshesTasks?: boolean;
   successMessage: string;
   failureMessage: string;
 }
@@ -26,13 +30,17 @@ function useAgentLockMutation(options: LockMutationOptions) {
   const queryClient = useQueryClient();
   return useMutation<void, unknown, string>({
     mutationFn: (agentId) => {
-      const { path, method } = options;
+      const { path, method, query } = options;
       return $api<void>(`${agentBasePath(workspaceId)}/${agentId}/${path}`, {
         method,
+        query,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentKeys.all(workspaceId) });
+      if (options.refreshesTasks) {
+        queryClient.invalidateQueries({ queryKey: taskKeys.all(workspaceId) });
+      }
       toast.success(options.successMessage);
     },
     onError: (error) => {
@@ -61,6 +69,19 @@ export function useUnlockAgent() {
   });
 }
 
+/** Cancels the agent's active task runs, then unlocks it. */
+export function useUnlockAgentStoppingRuns() {
+  const { t } = useI18n();
+  return useAgentLockMutation({
+    path: 'lock',
+    method: 'DELETE',
+    query: { stopRuns: 'true' },
+    refreshesTasks: true,
+    successMessage: t('agent.lock.toast.unlocked'),
+    failureMessage: t('agent.lock.toast.unlockFailed'),
+  });
+}
+
 export function useApproveAgent() {
   const { t } = useI18n();
   return useAgentLockMutation({
@@ -76,6 +97,7 @@ export function useRevokeAgentApproval() {
   return useAgentLockMutation({
     path: 'unattended-approval',
     method: 'DELETE',
+    refreshesTasks: true,
     successMessage: t('agent.lock.toast.revoked'),
     failureMessage: t('agent.lock.toast.revokeFailed'),
   });

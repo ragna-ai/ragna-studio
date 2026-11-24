@@ -15,6 +15,7 @@ import { toErrorMessage } from '~/lib/api-error';
 // Props
 interface Props {
   taskId: string;
+  readonly?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -37,7 +38,7 @@ const { open: openFilePicker, onChange: onFilesPicked } = useFileDialog({
 const { isOverDropZone } = useDropZone(dropZoneRef, {
   multiple: true,
   onDrop: (files) => {
-    if (files) handleFiles(files);
+    if (files && !props.readonly) handleFiles(files);
   },
 });
 
@@ -82,11 +83,16 @@ onFilesPicked((fileList) => {
         variant="outline"
         size="sm"
         leading-icon="hugeicons:attachment-01"
+        :disabled="readonly"
         @click="openFilePicker()"
       >
         {{ t('task.attachment.add') }}
       </Button>
     </div>
+
+    <p v-if="readonly" class="text-xs text-muted-foreground">
+      {{ t('task.run.lockedHint') }}
+    </p>
 
     <div
       class="relative rounded-md"
@@ -100,12 +106,14 @@ onFilesPicked((fileList) => {
           v-for="attachment in persistedAttachments"
           :key="attachment.id"
           :attachment="attachment"
+          :readonly="readonly"
           @remove="removePersisted"
         />
         <TaskPendingAttachment
           v-for="item in items"
           :key="item.id"
           :item="item"
+          :readonly="readonly"
           @retry="retry"
           @remove="remove"
         />

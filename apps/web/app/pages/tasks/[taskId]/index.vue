@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { CornerUpLeftIcon } from '@lucide/vue';
+import { useQueryClient } from '@tanstack/vue-query';
 import SaveStatusButton, {
   type SaveStatus,
 } from '~/components/SaveStatusButton.vue';
 import TaskAttachments from '~/features/task/components/TaskAttachments.vue';
 import TaskComments from '~/features/task/components/TaskComments.vue';
 import TaskDescriptionEditor from '~/features/task/components/TaskDescriptionEditor.vue';
+import TaskRunHistory from '~/features/task/components/TaskRunHistory.vue';
 import TaskPropertiesSidebar from '~/features/task/components/TaskPropertiesSidebar.vue';
 import TaskSubtaskList from '~/features/task/components/TaskSubtaskList.vue';
 import {
@@ -14,7 +16,11 @@ import {
   useUpdateTask,
 } from '~/features/task/composables/useTaskApi';
 import { useGetTaskLabels } from '~/features/task/composables/useTaskLabelApi';
+import { taskCommentKeys } from '~/features/task/composables/useTaskCommentApi';
+import { taskRunKeys } from '~/features/task/composables/useTaskRunApi';
+import { taskRunPollInterval } from '~/features/task/lib/task-run-display';
 import { formatTaskDisplayId } from '~/features/task/lib/task-display';
+import type { TaskDetailResponse } from '~/features/task/types';
 
 definePageMeta({
   validate: (route) => hasValidTaskId(route.params),
@@ -34,7 +40,12 @@ const descriptionEditorRef = useTemplateRef('descriptionEditorRef');
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
 
-const { data: taskData, error: taskError } = useGetTask(taskId);
+const queryClient = useQueryClient();
+const workspaceId = useActiveWorkspaceId();
+const { data: taskData, error: taskError } = useGetTask(taskId, {
+  refetchInterval: (query: { state: { data?: TaskDetailResponse } }) =>
+    taskRunPollInterval(!!query.state.data?.task.activeRun),
+});
 const { data: labelsData } = useGetTaskLabels();
 const { mutate: updateTask } = useUpdateTask();
 const { mutateAsync: deleteTask } = useDeleteTask();
@@ -55,6 +66,7 @@ const saveStatus = computed<SaveStatus>(() => {
   return statuses.includes('saving') ? 'saving' : 'saved';
 });
 const labels = computed(() => labelsData.value?.taskLabels ?? []);
+const isLocked = computed(() => !!task.value?.activeRun);
 
 // Reads from the `title` ref (not `task.value.title`) so the trail stays live
 // with the h1 while a debounced save is still pending.
@@ -75,6 +87,22 @@ watch(
     }
   },
   { immediate: true },
+);
+
+// A run that just ended posted a comment and wrote a history entry.
+watch(
+  () => task.value?.activeRun?.id ?? null,
+  (activeRunId, previousRunId) => {
+    if (activeRunId !== null || previousRunId === null) {
+      return;
+    }
+    queryClient.invalidateQueries({
+      queryKey: taskCommentKeys.list(workspaceId, taskId),
+    });
+    queryClient.invalidateQueries({
+      queryKey: taskRunKeys.list(workspaceId, taskId),
+    });
+  },
 );
 
 useHead({
@@ -183,6 +211,7 @@ async function handleDelete() {
             <h1 class="text-2xl font-semibold">
               <input
                 :value="title"
+                :readonly="isLocked"
                 :placeholder="t('task.detail.titlePlaceholder')"
                 :aria-label="t('task.detail.rename')"
                 class="w-full truncate rounded-sm border-none bg-transparent p-0 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -198,15 +227,18 @@ async function handleDelete() {
                 v-model:save-status="descriptionSaveStatus"
                 :task-id="task.id"
                 :description="task.description"
+                :readonly="isLocked"
               />
 
-              <TaskAttachments :task-id="task.id" />
+              <TaskAttachments :task-id="task.id" :readonly="isLocked" />
 
               <TaskSubtaskList
                 v-if="!task.parentTaskId"
                 :parent-task-id="task.id"
                 :subtasks="task.subtasks"
               />
+
+              <TaskRunHistory :task-id="task.id" />
 
               <TaskComments :task-id="task.id" />
             </div>

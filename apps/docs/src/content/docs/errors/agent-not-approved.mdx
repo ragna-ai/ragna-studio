@@ -7,7 +7,8 @@ description: The agent is not approved for unattended runs.
 
 ## When it happens
 
-A request revokes an approval, but the current version has no live approval.
+- A request revokes an approval, but the current version has no live approval.
+- A request starts a task run, but the assigned agent is not approved for unattended runs.
 
 ## Response
 
@@ -26,4 +27,5 @@ A request revokes an approval, but the current version has no live approval.
 
 ## What the client can do
 
-Reload the agent. There is nothing to revoke.
+- **Revoke:** reload the agent. There is nothing to revoke.
+- **Task run:** a workspace manager, or an organization owner or admin, approves the agent for unattended runs, then the run can start. See [Tasks](/content/tasks#agents-working-on-tasks).

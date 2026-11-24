@@ -11,6 +11,7 @@ import {
   NOTIFICATIONS_QUEUE,
   ONBOARDINGS_QUEUE,
   PURGE_QUEUE,
+  TASK_RUNS_QUEUE,
   VISIBLE_WATERMARK_QUEUE,
   WORKFLOWS_QUEUE,
 } from '../constants';
@@ -21,6 +22,11 @@ import { getOrCreateQueue } from '../services/bullmq.service';
 // still exists in Redis, complete or failed, is a no-op, so a kept failed job wedges every retry.
 const dedupedJobQueueOpts: Omit<QueueOptions, 'connection'> = {
   defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+};
+
+// A retry repeats the whole run, so the worker only lets BullMQ retry one that has not written yet.
+const taskRunQueueOpts: Omit<QueueOptions, 'connection'> = {
+  defaultJobOptions: { attempts: 3, backoff: { type: 'exponential', delay: 30_000 } },
 };
 
 /**
@@ -43,4 +49,5 @@ export const queue = {
   mediaTextExtraction: () =>
     getOrCreateQueue({ name: MEDIA_TEXT_EXTRACTION_QUEUE, opts: dedupedJobQueueOpts }),
   visibleWatermark: () => getOrCreateQueue({ name: VISIBLE_WATERMARK_QUEUE }),
+  taskRun: () => getOrCreateQueue({ name: TASK_RUNS_QUEUE, opts: taskRunQueueOpts }),
 } as const;

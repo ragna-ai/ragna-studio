@@ -34,6 +34,11 @@ export const PROBLEM_MESSAGE_KEYS: Record<ProblemType, MessageKey> = {
   'knowledge-files-not-ready': 'problem.type.knowledgeFilesNotReady',
   'task-comment-limit-reached': 'problem.type.taskCommentLimitReached',
   'task-comment-not-editable': 'problem.type.taskCommentNotEditable',
+  'task-has-no-agent': 'problem.type.taskHasNoAgent',
+  'task-run-active': 'problem.type.taskRunActive',
+  'task-run-limit-reached': 'problem.type.taskRunLimitReached',
+  'task-runs-disabled': 'problem.type.taskRunsDisabled',
+  'agent-has-active-task-runs': 'problem.type.agentHasActiveTaskRuns',
 };
 
 export const WORKFLOW_RULE_MESSAGE_KEYS: Record<WorkflowRule, MessageKey> = {

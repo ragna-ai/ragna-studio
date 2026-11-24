@@ -15,13 +15,14 @@ import type { AiModelPricing } from '@repo/database';
 import { getAgentByIdAndWorkspaceId } from '@repo/database';
 import type { TeamConfig } from '@repo/workflow';
 import { resolveTemplate } from '@repo/workflow';
-import type { DelegateCallMeta } from './run-referenced-agent';
+import type { DelegateCallMeta } from '../../agents/agent-trace';
+import { collectTrace, logTraceStepDebug } from '../../agents/agent-trace';
 import {
-  collectTrace,
   gateCreditSpend,
   InsufficientCreditsError,
-  logTraceStepDebug,
   ModelNotChargeableError,
+} from '../../agents/credit-gate';
+import {
   requireAgentId,
   runReferencedAgent,
   settleWorkflowUsage,

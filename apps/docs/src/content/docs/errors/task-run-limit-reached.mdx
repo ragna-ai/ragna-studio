@@ -1,0 +1,29 @@
+---
+title: task-run-limit-reached
+description: The workspace has reached its limit of task runs in progress.
+---
+
+`https://docs.ragna.io/errors/task-run-limit-reached`
+
+## When it happens
+
+A request starts a task run while the workspace already has the maximum number of runs in progress. The default is 3.
+
+## Response
+
+| Member   | Value                  |
+| -------- | ---------------------- |
+| `status` | 429                    |
+| `title`  | Task run limit reached |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/task-run-limit-reached",
+  "title": "Task run limit reached",
+  "status": 429
+}
+```
+
+## What the client can do
+
+Wait for a run to finish, or stop one, then try again. See [Tasks](/content/tasks#limits).

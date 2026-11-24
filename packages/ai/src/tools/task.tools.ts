@@ -18,6 +18,7 @@ import {
   MAX_COMMENTS_PER_TASK,
   MAX_TASK_COMMENT_BODY_LENGTH,
   moveTask,
+  taskRunOutcomes,
   updateTask,
 } from '@repo/database';
 import { getMediaKindByMimeType, isExtractableKind } from '@repo/media';
@@ -63,11 +64,19 @@ function toTaskDisplayId(taskNumber: number): string {
 export interface TaskToolDefinitionsOptions {
   /** Marks the tasks the create tool makes as agent-created. */
   agentId: string;
+  /** True while the agent works a task run: the create tool then refuses. */
+  inTaskRun?: boolean;
 }
 
 const TASK_NOT_FOUND: ToolFailure<'not_found'> = {
   status: 'not_found',
   message: 'Task not found.',
+};
+
+const TASK_RUN_ACTIVE: ToolFailure<'task_run_active'> = {
+  status: 'task_run_active',
+  message:
+    'An agent run is working on this task, so it cannot be changed. Stop the run first. Nothing was changed.',
 };
 
 const taskStatusSchema = z.enum(TASK_STATUSES);
@@ -445,14 +454,22 @@ const createTaskInputSchema = z.object({
 const taskBriefOutputSchema = z.strictObject({ task: taskBriefSchema });
 
 type TaskBriefOutput = z.infer<typeof taskBriefOutputSchema>;
-type TaskWriteFailure = ToolFailure<'not_found' | 'invalid_input'>;
+type TaskInputFailure = ToolFailure<'not_found' | 'invalid_input'>;
+type TaskWriteFailure = TaskInputFailure | ToolFailure<'task_run_active'>;
+
+const CREATE_TASK_REFUSED_IN_RUN: ToolFailure<'not_allowed_in_run'> = {
+  status: 'not_allowed_in_run',
+  message:
+    'You cannot create tasks while working on a task. List the steps in your summary instead.',
+};
 
 function createTaskDefinition({
   agentId,
+  inTaskRun,
 }: TaskToolDefinitionsOptions): ToolDefinition<
   typeof createTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found' | 'invalid_input'
+  'not_found' | 'invalid_input' | 'not_allowed_in_run'
 > {
   return {
     name: 'createTask',
@@ -461,8 +478,9 @@ function createTaskDefinition({
     inputSchema: createTaskInputSchema,
     outputSchema: taskBriefOutputSchema,
     access: 'write',
-    execute: (input, { workspaceId }) =>
-      failOnForeignReference<TaskBriefOutput | TaskWriteFailure>(async () => {
+    execute: async (input, { workspaceId }) => {
+      if (inTaskRun) return CREATE_TASK_REFUSED_IN_RUN;
+      return failOnForeignReference<TaskBriefOutput | TaskInputFailure>(async () => {
         // Ignore a reminder offset without a real due date instead of erroring.
         const remindDaysBeforeDue = input.dueDate ? input.remindDaysBeforeDue : undefined;
 
@@ -502,7 +520,8 @@ function createTaskDefinition({
         });
 
         return { task: toTaskBrief(createdTask) };
-      }),
+      });
+    },
   };
 }
 
@@ -564,7 +583,7 @@ const updateTaskInputSchema = z.object({
 const updateTaskDefinition: ToolDefinition<
   typeof updateTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found' | 'invalid_input'
+  'not_found' | 'invalid_input' | 'task_run_active'
 > = {
   name: 'updateTask',
   description:
@@ -635,11 +654,20 @@ const updateTaskDefinition: ToolDefinition<
         labelIds = resolvedLabels.labelIds;
       }
 
-      const updatedTask = await updateTask({ id: input.id, workspaceId, labelIds, ...fields });
-      if (!updatedTask) {
+      const result = await updateTask({
+        id: input.id,
+        workspaceId,
+        labelIds,
+        onReassignWithActiveRun: 'refuse',
+        ...fields,
+      });
+      if (result.status === 'not-found') {
         return TASK_NOT_FOUND;
       }
-      return { task: toTaskBrief(updatedTask) };
+      if (result.status === 'run-active') {
+        return TASK_RUN_ACTIVE;
+      }
+      return { task: toTaskBrief(result.task) };
     }),
 };
 
@@ -682,7 +710,7 @@ async function resolveAfterTaskId({
 const moveTaskDefinition: ToolDefinition<
   typeof moveTaskInputSchema,
   typeof taskBriefOutputSchema,
-  'not_found'
+  'not_found' | 'task_run_active'
 > = {
   name: 'moveTask',
   description: 'Move a task to a different status column, at the top or bottom of it.',
@@ -691,11 +719,14 @@ const moveTaskDefinition: ToolDefinition<
   access: 'write',
   execute: async ({ id, status, position }, { workspaceId }) => {
     const afterTaskId = await resolveAfterTaskId({ taskId: id, workspaceId, status, position });
-    const movedTask = await moveTask({ id, workspaceId, status, afterTaskId });
-    if (!movedTask) {
+    const result = await moveTask({ id, workspaceId, status, afterTaskId });
+    if (result.status === 'not-found') {
       return TASK_NOT_FOUND;
     }
-    return { task: toTaskBrief(movedTask) };
+    if (result.status === 'run-active') {
+      return TASK_RUN_ACTIVE;
+    }
+    return { task: toTaskBrief(result.task) };
   },
 };
 
@@ -715,19 +746,45 @@ const addTaskCommentOutputSchema = z.strictObject({
 });
 
 type AddTaskCommentOutput = z.infer<typeof addTaskCommentOutputSchema>;
-type AddTaskCommentFailure = ToolFailure<'not_found' | 'limit_reached'>;
+type AddTaskCommentFailureStatus = 'not_found' | 'limit_reached' | 'other_task' | 'notes_exhausted';
+type AddTaskCommentFailure = ToolFailure<AddTaskCommentFailureStatus>;
 
 const TASK_COMMENT_LIMIT_REACHED: ToolFailure<'limit_reached'> = {
   status: 'limit_reached',
   message: `The task already holds the maximum of ${MAX_COMMENTS_PER_TASK} comments. No comment was added.`,
 };
 
+/** The task run an `addTaskComment` call belongs to. */
+export interface TaskRunBinding {
+  taskId: string;
+  taskRunId: string;
+}
+
+export const MAX_NOTES_PER_TASK_RUN = 5;
+
+const OTHER_TASK_FAILURE: ToolFailure<'other_task'> = {
+  status: 'other_task',
+  message: 'You can only comment on the task you are working on. No comment was added.',
+};
+
+const NOTES_EXHAUSTED_FAILURE: ToolFailure<'notes_exhausted'> = {
+  status: 'notes_exhausted',
+  message: `You already added ${MAX_NOTES_PER_TASK_RUN} notes in this run. Put the rest in your summary when you finish. No comment was added.`,
+};
+
+interface AddTaskCommentOptions {
+  agentId: string;
+  /** Set for a task run: comments go to that task only, are tagged with the run and are capped. */
+  run?: TaskRunBinding;
+}
+
 function addTaskCommentDefinition({
   agentId,
-}: TaskToolDefinitionsOptions): ToolDefinition<
+  run,
+}: AddTaskCommentOptions): ToolDefinition<
   typeof addTaskCommentInputSchema,
   typeof addTaskCommentOutputSchema,
-  'not_found' | 'limit_reached'
+  AddTaskCommentFailureStatus
 > {
   return {
     name: 'addTaskComment',
@@ -737,6 +794,8 @@ function addTaskCommentDefinition({
     access: 'write',
     execute: ({ taskId, body }, { workspaceId }) =>
       failOnForeignReference<AddTaskCommentOutput | AddTaskCommentFailure>(async () => {
+        if (run && taskId !== run.taskId) return OTHER_TASK_FAILURE;
+
         const taskRecord = await getTaskById({ id: taskId, workspaceId });
         if (!taskRecord) {
           return TASK_NOT_FOUND;
@@ -747,12 +806,17 @@ function addTaskCommentDefinition({
           taskId,
           author: { kind: 'agent', agentId },
           body,
+          taskRunId: run?.taskRunId,
+          maxCommentsOfRun: run ? MAX_NOTES_PER_TASK_RUN : undefined,
         });
         if (result.status === 'task-not-found') {
           return TASK_NOT_FOUND;
         }
         if (result.status === 'limit-reached') {
           return TASK_COMMENT_LIMIT_REACHED;
+        }
+        if (result.status === 'run-note-limit-reached') {
+          return NOTES_EXHAUSTED_FAILURE;
         }
 
         return {
@@ -764,6 +828,60 @@ function addTaskCommentDefinition({
         };
       }),
   };
+}
+
+// finishTaskRun
+
+export const FINISH_TASK_RUN_TOOL_NAME = 'finishTaskRun';
+
+export const finishTaskRunInputSchema = z.object({
+  outcome: z
+    .enum(taskRunOutcomes)
+    .describe(
+      '"completed" when the work is done, "needs_input" when you are blocked and need an answer from a person.',
+    ),
+  summary: z
+    .string()
+    .min(1)
+    .max(MAX_TASK_COMMENT_BODY_LENGTH)
+    .describe('What you did, what you found and what is left. Markdown. Shown on the task.'),
+});
+
+export type FinishTaskRunInput = z.infer<typeof finishTaskRunInputSchema>;
+
+const finishTaskRunOutputSchema = z.strictObject({
+  outcome: z.enum(taskRunOutcomes),
+  summary: z.string(),
+});
+
+/** Ends the run. The runner reads the call, writes the result comment and moves the task. */
+const finishTaskRunDefinition: ToolDefinition<
+  typeof finishTaskRunInputSchema,
+  typeof finishTaskRunOutputSchema
+> = {
+  name: FINISH_TASK_RUN_TOOL_NAME,
+  description:
+    'Call this exactly once, as your last action, to end your work on the task. Give the outcome and a summary of what you did. Nothing happens after this call.',
+  inputSchema: finishTaskRunInputSchema,
+  outputSchema: finishTaskRunOutputSchema,
+  access: 'read',
+  execute: async ({ outcome, summary }) => ({ outcome, summary }),
+};
+
+export interface TaskRunToolDefinitionsOptions extends TaskRunBinding {
+  agentId: string;
+}
+
+/** The tools only a task run has: comments bound to the run, and the call that ends it. */
+export function taskRunToolDefinitions({
+  agentId,
+  taskId,
+  taskRunId,
+}: TaskRunToolDefinitionsOptions): AnyToolDefinition[] {
+  return [
+    addTaskCommentDefinition({ agentId, run: { taskId, taskRunId } }),
+    finishTaskRunDefinition,
+  ];
 }
 
 /** The task tools of one agent. */

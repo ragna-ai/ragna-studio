@@ -11,6 +11,7 @@ import type {
   TaskAttachmentWithMediaSummary,
   TaskLabel,
   TaskPriority,
+  TaskRunStatus,
   TaskStatus,
 } from '../schema';
 import {
@@ -18,11 +19,14 @@ import {
   organization,
   task,
   taskAttachment,
+  taskRunActiveStatuses,
   taskToTaskLabel,
   workspace,
 } from '../schema';
 import { ORGANIZATION_OWNER_ROLE, organizationRoleMatches } from './organization.repo';
-import { byteOrderAsc, byteOrderDesc } from '../utils/sort-order';
+import { byteOrderAsc } from '../utils/sort-order';
+import { sortOrderAtBottomOfColumn, type TaskTransaction } from './task-column';
+import { cancelActiveTaskRunOfTask, findActiveTaskRunId } from './task-run.repo';
 
 export type {
   NewTask,
@@ -35,10 +39,15 @@ export type {
   TaskStatus,
 } from '../schema';
 
-type TaskTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** The agent run in progress on a task, as the board shows it. */
+export interface ActiveTaskRunSummary {
+  id: string;
+  status: TaskRunStatus;
+}
 
 export type TaskWithBoardInfo = Task & {
   labels: TaskLabel[];
+  activeRun: ActiveTaskRunSummary | null;
   assignedAgent: { id: string; name: string } | null;
   // Board progress badge ("2/5"): subtaskDoneCount / subtaskCount.
   subtaskCount: number;
@@ -47,6 +56,7 @@ export type TaskWithBoardInfo = Task & {
 
 export type TaskWithDetails = Task & {
   labels: TaskLabel[];
+  activeRun: ActiveTaskRunSummary | null;
   assignedAgent: { id: string; name: string } | null;
   subtasks: Task[];
 };
@@ -81,16 +91,22 @@ export async function listTasks({
     with: {
       labels: true,
       assignedAgent: assignedAgentColumns,
+      runs: {
+        columns: { id: true, status: true },
+        where: { status: { in: [...taskRunActiveStatuses] } },
+        limit: 1,
+      },
     },
     orderBy: (t) => byteOrderAsc(t.sortOrder),
   });
 
   const subtaskCounts = await getSubtaskCounts({ parentTaskIds: tasks.map((t) => t.id) });
 
-  return tasks.map((taskRecord) => {
+  return tasks.map(({ runs, ...taskRecord }) => {
     const counts = subtaskCounts.get(taskRecord.id);
     return {
       ...taskRecord,
+      activeRun: runs[0] ?? null,
       subtaskCount: counts?.total ?? 0,
       subtaskDoneCount: counts?.done ?? 0,
     };
@@ -154,10 +170,17 @@ export async function getTaskById({
       labels: true,
       assignedAgent: assignedAgentColumns,
       subtasks: { orderBy: (t) => byteOrderAsc(t.sortOrder) },
+      runs: {
+        columns: { id: true, status: true },
+        where: { status: { in: [...taskRunActiveStatuses] } },
+        limit: 1,
+      },
     },
   });
+  if (!found) return null;
 
-  return found ?? null;
+  const { runs, ...taskRecord } = found;
+  return { ...taskRecord, activeRun: runs[0] ?? null };
 }
 
 export async function createTask({
@@ -238,22 +261,6 @@ async function nextTaskNumber(
   return (row?.maxNumber ?? 0) + 1;
 }
 
-// Appends to the bottom of the target status column: one key past the
-// column's current last row.
-async function sortOrderAtBottomOfColumn(
-  tx: TaskTransaction,
-  { workspaceId, status }: { workspaceId: string; status: TaskStatus },
-): Promise<string> {
-  const [lastTask] = await tx
-    .select({ sortOrder: task.sortOrder })
-    .from(task)
-    .where(and(eq(task.workspaceId, workspaceId), eq(task.status, status)))
-    .orderBy(byteOrderDesc(task.sortOrder))
-    .limit(1);
-
-  return generateKeyBetween(lastTask?.sortOrder ?? null, null);
-}
-
 type UpdateTaskFields = Partial<
   Pick<
     NewTask,
@@ -267,23 +274,67 @@ type UpdateTaskFields = Partial<
   >
 >;
 
+/** Why a task write came back with no task: it is missing, or an agent run holds it. */
+export type TaskWriteResult =
+  | { status: 'written'; task: Task }
+  | { status: 'not-found' }
+  | { status: 'run-active' };
+
+/**
+ * Locks the task row and answers whether a run may block the write. Returns the task's current
+ * agent so the caller can tell a reassignment from a plain edit.
+ */
+async function lockTaskForWrite(
+  tx: TaskTransaction,
+  { id, workspaceId }: { id: string; workspaceId: string },
+): Promise<{ assignedAgentId: string | null; activeRunId: string | null } | null> {
+  const [locked] = await tx
+    .select({ assignedAgentId: task.assignedAgentId })
+    .from(task)
+    .where(and(eq(task.id, id), eq(task.workspaceId, workspaceId)))
+    .for('update');
+  if (!locked) return null;
+
+  const activeRunId = await findActiveTaskRunId(tx, { workspaceId, taskId: id });
+  return { assignedAgentId: locked.assignedAgentId, activeRunId };
+}
+
 /**
  * Partial update, shared by the API's PATCH endpoint and the agent's
  * updateTask tool. `status`/`sortOrder` are intentionally excluded, moving a
  * task is `moveTask` below. If `labelIds` is given, the task's label set is
  * replaced (delete + insert) in the same transaction.
+ *
+ * A task with an active run is locked: the result is `run-active`. Giving the task another agent
+ * is the exception for users, it cancels the run in the same transaction. Agent tools pass
+ * `onReassignWithActiveRun: 'refuse'`.
  */
 export async function updateTask({
   id,
   workspaceId,
   labelIds,
+  onReassignWithActiveRun = 'cancel',
   ...fields
 }: {
   id: string;
   workspaceId: string;
   labelIds?: string[];
-} & UpdateTaskFields): Promise<Task | null> {
-  return db.transaction(async (tx) => {
+  /** What a reassignment does to an active run: users stop it, agents are refused. */
+  onReassignWithActiveRun?: 'cancel' | 'refuse';
+} & UpdateTaskFields): Promise<TaskWriteResult> {
+  return db.transaction(async (tx): Promise<TaskWriteResult> => {
+    const locked = await lockTaskForWrite(tx, { id, workspaceId });
+    if (!locked) return { status: 'not-found' };
+
+    if (locked.activeRunId) {
+      const isReassignment =
+        fields.assignedAgentId !== undefined && fields.assignedAgentId !== locked.assignedAgentId;
+      if (!isReassignment || onReassignWithActiveRun === 'refuse') {
+        return { status: 'run-active' };
+      }
+      await cancelActiveTaskRunOfTask(tx, { workspaceId, taskId: id });
+    }
+
     const updateValues = { ...fields, ...reminderRearmFields(fields) };
     const hasScalarChanges = Object.keys(updateValues).length > 0;
 
@@ -292,7 +343,7 @@ export async function updateTask({
     // running an update at all.
     if (!hasScalarChanges && labelIds === undefined) {
       const currentTask = await tx.query.task.findFirst({ where: { id, workspaceId } });
-      return currentTask ?? null;
+      return currentTask ? { status: 'written', task: currentTask } : { status: 'not-found' };
     }
 
     // A label-only PATCH has no scalar fields, and `set({})` throws ("No
@@ -305,14 +356,14 @@ export async function updateTask({
       .returning();
 
     if (!updatedTask) {
-      return null;
+      return { status: 'not-found' };
     }
 
     if (labelIds !== undefined) {
       await replaceTaskLabels(tx, { taskId: id, workspaceId, labelIds });
     }
 
-    return updatedTask;
+    return { status: 'written', task: updatedTask };
   });
 }
 
@@ -355,7 +406,8 @@ function reminderRearmFields(
  * Server-side rank computation for a drag or an agent move:
  * loads the target
  * column's neighbors and slots the task in right after `afterTaskId`
- * (omitted = top of column), then writes status + sortOrder in one call.
+ * (omitted = top of column), then writes status + sortOrder in one call. A task with an active
+ * run is locked: the result is `run-active`.
  */
 export async function moveTask({
   id,
@@ -367,8 +419,8 @@ export async function moveTask({
   workspaceId: string;
   status: TaskStatus;
   afterTaskId?: string | null;
-}): Promise<Task | null> {
-  return db.transaction(async (tx) => {
+}): Promise<TaskWriteResult> {
+  return db.transaction(async (tx): Promise<TaskWriteResult> => {
     // Locks the workspace row for the duration of the transaction, the same
     // pattern `moveDatasetRow` uses on its parent dataset row, so concurrent
     // moves (and `createTask`'s append, see `sortOrderAtBottomOfColumn`) in
@@ -383,6 +435,10 @@ export async function moveTask({
     if (!lockedWorkspace) {
       throw new Error('Workspace not found');
     }
+
+    const locked = await lockTaskForWrite(tx, { id, workspaceId });
+    if (!locked) return { status: 'not-found' };
+    if (locked.activeRunId) return { status: 'run-active' };
 
     const columnTasks = await tx
       .select({ id: task.id, sortOrder: task.sortOrder })
@@ -417,7 +473,7 @@ export async function moveTask({
       .where(and(eq(task.id, id), eq(task.workspaceId, workspaceId)))
       .returning();
 
-    return movedTask ?? null;
+    return movedTask ? { status: 'written', task: movedTask } : { status: 'not-found' };
   });
 }
 

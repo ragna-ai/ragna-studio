@@ -232,3 +232,53 @@ export class TaskCommentNotEditableException extends ProblemException {
     });
   }
 }
+
+// Conflict (409) when a run starts on a task that has no agent assigned
+export class TaskHasNoAgentException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'task-has-no-agent',
+      message: 'Assign an agent to this task first.',
+    });
+  }
+}
+
+// Conflict (409) when a task is edited, moved or started while an agent run is active
+export class TaskRunActiveException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'task-run-active',
+      message: 'An agent run is working on this task. Stop the run first.',
+    });
+  }
+}
+
+// Too Many Requests (429) when the workspace already runs its maximum of agent runs
+export class TaskRunLimitReachedException extends ProblemException {
+  constructor() {
+    super(StatusCodes.TOO_MANY_REQUESTS, {
+      type: 'task-run-limit-reached',
+      message: 'This workspace is already running the maximum number of agent runs.',
+    });
+  }
+}
+
+// Service Unavailable (503) when the operator has switched agent task runs off
+export class TaskRunsDisabledException extends ProblemException {
+  constructor() {
+    super(StatusCodes.SERVICE_UNAVAILABLE, {
+      type: 'task-runs-disabled',
+      message: 'Agent task runs are switched off.',
+    });
+  }
+}
+
+// Conflict (409) when an agent is unlocked while it has active task runs and no stop request
+export class AgentHasActiveTaskRunsException extends ProblemException {
+  constructor() {
+    super(StatusCodes.CONFLICT, {
+      type: 'agent-has-active-task-runs',
+      message: 'This agent has active task runs. Stop them to unlock.',
+    });
+  }
+}

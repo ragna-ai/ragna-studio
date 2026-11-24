@@ -4,7 +4,7 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { db } from '../db';
 import { AgentLockedError } from '../errors';
 import type { Agent, StoredAgentToolGrant } from '../schema';
-import { agent, task, taskComment } from '../schema';
+import { agent, task, taskComment, taskRun } from '../schema';
 import type { ICreateAgent } from '../zod';
 
 export type { Agent, AgentReasoningEffort, AgentSettings, StoredAgentToolGrant } from '../schema';
@@ -350,6 +350,10 @@ export async function deleteAgentById({
       .update(taskComment)
       .set({ authorAgentId: null })
       .where(and(eq(taskComment.authorAgentId, agentId), eq(taskComment.workspaceId, workspaceId)));
+    await tx
+      .update(taskRun)
+      .set({ agentId: null })
+      .where(and(eq(taskRun.agentId, agentId), eq(taskRun.workspaceId, workspaceId)));
     await tx.delete(agent).where(and(eq(agent.id, agentId), eq(agent.workspaceId, workspaceId)));
   });
 }

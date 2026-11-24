@@ -25,7 +25,7 @@ async function seed(): Promise<SeedResult> {
   await truncateAllTables();
   const { userId, workspaceId, cookieHeader } = await seedAuthenticatedUser();
   await seedTokenPricedAiModel({ displayName: 'E2E Model' });
-  await seedCreditAccount({ userId, balanceMicroCredits: 5_000_000n });
+  await seedCreditAccount({ userId, balanceMicroCredits: 200_000_000n });
   const organizationId = await getOrganizationIdByUserId({ userId });
   if (!organizationId) throw new Error('Seeded user has no organization.');
   const member = await seedOrganizationMember({ organizationId, role: 'member' });

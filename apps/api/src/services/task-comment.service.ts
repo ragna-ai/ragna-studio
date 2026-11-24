@@ -42,6 +42,7 @@ interface TaskCommentAgentAuthor {
 export interface TaskCommentResponse {
   id: string;
   taskId: string;
+  taskRunId: string | null;
   body: string;
   editedAt: Date | null;
   createdAt: Date;
@@ -86,6 +87,7 @@ function toCommentResponse(
   return {
     id: comment.id,
     taskId: comment.taskId,
+    taskRunId: comment.taskRunId,
     body: comment.body,
     editedAt: comment.editedAt,
     createdAt: comment.createdAt,
@@ -131,6 +133,9 @@ export async function createTaskCommentForUser({
   });
   if (result.status === 'task-not-found') throw new NotFoundException('Task not found');
   if (result.status === 'limit-reached') throw new TaskCommentLimitReachedException();
+  if (result.status === 'run-note-limit-reached') {
+    throw new Error('A user comment has no run note cap');
+  }
 
   const created = await getCommentOrThrow({ ...scope, commentId: result.commentId });
   return toCommentResponse(created, viewer);

@@ -16,6 +16,11 @@ export const problemTypeSchema = z.enum([
   'knowledge-files-not-ready',
   'task-comment-limit-reached',
   'task-comment-not-editable',
+  'task-has-no-agent',
+  'task-run-active',
+  'task-run-limit-reached',
+  'task-runs-disabled',
+  'agent-has-active-task-runs',
 ]);
 
 export type ProblemType = z.infer<typeof problemTypeSchema>;
@@ -36,6 +41,11 @@ export const PROBLEM_TITLES: Record<ProblemType, string> = {
   'knowledge-files-not-ready': 'Knowledge files are not ready',
   'task-comment-limit-reached': 'Task comment limit reached',
   'task-comment-not-editable': 'Task comment is not editable',
+  'task-has-no-agent': 'Task has no agent',
+  'task-run-active': 'Task run is active',
+  'task-run-limit-reached': 'Task run limit reached',
+  'task-runs-disabled': 'Task runs are disabled',
+  'agent-has-active-task-runs': 'Agent has active task runs',
 };
 
 export const ABOUT_BLANK = 'about:blank';

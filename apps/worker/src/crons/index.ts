@@ -7,7 +7,7 @@ import { emailSyncCronProcessor } from './email-sync.cron';
 import { mediaSweepProcessor } from './media-sweep.cron';
 import { mediaTextExtractionSweepProcessor } from './media-text-extraction-sweep.cron';
 import { purgeProcessor } from './purge.cron';
-import { staleRunsProcessor } from './stale-runs.cron';
+import { staleRunsProcessor, staleTaskRunsProcessor } from './stale-runs.cron';
 import { taskReminderProcessor } from './task-reminder.cron';
 
 export function registerCronJobs() {
@@ -22,6 +22,12 @@ export function registerCronJobs() {
   addCronJob({
     name: 'stale-workflow-runs',
     processor: staleRunsProcessor,
+    schedule: { pattern: '*/15 * * * *' }, // Every 15 minutes
+  });
+
+  addCronJob({
+    name: 'stale-task-runs',
+    processor: staleTaskRunsProcessor,
     schedule: { pattern: '*/15 * * * *' }, // Every 15 minutes
   });
 

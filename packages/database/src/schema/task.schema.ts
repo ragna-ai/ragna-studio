@@ -1,3 +1,4 @@
+import type { WorkflowAgentTraceStep } from '@repo/workflow';
 import { sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
@@ -5,6 +6,7 @@ import {
   foreignKey,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -13,7 +15,7 @@ import {
   unique,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { agent } from './agent.schema';
+import { agent, agentVersion } from './agent.schema';
 import { primaryIdColumn, timestamps } from './common.schema';
 import { media, type Media } from './media.schema';
 import { user } from './user.schema';
@@ -176,6 +178,86 @@ export type TaskAttachmentWithMediaSummary = TaskAttachment & {
   media: Omit<Media, 'extractedText'>;
 };
 
+// TASK RUN
+// One attempt of an agent to work a task. At most one run per task is active (queued or running),
+// enforced by a partial unique index. agentId has no onDelete action: set null on a composite FK
+// would null workspaceId too, so deleteAgentById clears it explicitly. A run outlives its agent
+// and keeps the version it ran.
+export const taskRunStatuses = ['queued', 'running', 'succeeded', 'failed', 'canceled'] as const;
+export type TaskRunStatus = (typeof taskRunStatuses)[number];
+export const taskRunStatusEnum = pgEnum('task_run_status', taskRunStatuses);
+
+export const taskRunActiveStatuses = [
+  'queued',
+  'running',
+] as const satisfies readonly TaskRunStatus[];
+
+export const taskRunOutcomes = ['completed', 'needs_input'] as const;
+export type TaskRunOutcome = (typeof taskRunOutcomes)[number];
+
+export interface TaskRunUsage {
+  inputTokens: number;
+  outputTokens: number;
+  credits: number;
+}
+
+export const taskRun = pgTable(
+  'task_runs',
+  {
+    id: primaryIdColumn,
+    workspaceId: text('workspace_id').notNull(),
+    taskId: text('task_id').notNull(),
+    agentId: text('agent_id'),
+    startedByUserId: text('started_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    status: taskRunStatusEnum('status').notNull().default('queued'),
+    outcome: text('outcome').$type<TaskRunOutcome>(),
+    // Restored on failure or stop. Only applied while the task is still in progress.
+    previousTaskStatus: text('previous_task_status').notNull().$type<TaskStatus>(),
+    agentVersionId: text('agent_version_id').notNull(),
+    trace: jsonb('trace').notNull().$type<WorkflowAgentTraceStep[]>().default([]),
+    // Null means no tool call has written anything yet, so a retry is safe.
+    firstWriteAt: timestamp('first_write_at', { precision: 3 }),
+    usage: jsonb('usage').notNull().$type<TaskRunUsage>().default({
+      inputTokens: 0,
+      outputTokens: 0,
+      credits: 0,
+    }),
+    error: text('error'),
+    attempt: integer('attempt').notNull().default(0),
+    createdAt: timestamps.createdAt,
+    startedAt: timestamp('started_at', { precision: 3 }),
+    finishedAt: timestamp('finished_at', { precision: 3 }),
+  },
+  (table) => [
+    uniqueIndex('taskRun_taskId_active_idx')
+      .on(table.taskId)
+      .where(sql`${table.status} in ('queued', 'running')`),
+    index('taskRun_workspaceId_status_idx').on(table.workspaceId, table.status),
+    index('taskRun_taskId_createdAt_idx').on(table.taskId, table.createdAt),
+    unique('task_runs_workspace_id_unique').on(table.workspaceId, table.id),
+    foreignKey({
+      columns: [table.workspaceId, table.taskId],
+      foreignColumns: [task.workspaceId, task.id],
+      name: 'task_runs_task_workspace_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [table.workspaceId, table.agentId],
+      foreignColumns: [agent.workspaceId, agent.id],
+      name: 'task_runs_agent_workspace_fk',
+    }),
+    foreignKey({
+      columns: [table.workspaceId, table.agentVersionId],
+      foreignColumns: [agentVersion.workspaceId, agentVersion.id],
+      name: 'task_runs_agent_version_workspace_fk',
+    }),
+  ],
+);
+
+export type TaskRun = typeof taskRun.$inferSelect;
+export type NewTaskRun = typeof taskRun.$inferInsert;
+
 // TASK COMMENT
 // A markdown note on a task, written by a user or an agent. `authorKind` outlives the author:
 // purge and agent deletion null the id, and the kind still says "deleted user" vs "deleted agent".
@@ -194,12 +276,15 @@ export const taskComment = pgTable(
     authorKind: taskCommentAuthorKindEnum('author_kind').notNull(),
     authorUserId: text('author_user_id').references(() => user.id, { onDelete: 'set null' }),
     authorAgentId: text('author_agent_id'),
+    // The run that wrote the comment. Null for chat and user comments.
+    taskRunId: text('task_run_id').references(() => taskRun.id, { onDelete: 'set null' }),
     body: text('body').notNull(),
     editedAt: timestamp('edited_at', { precision: 3 }),
     ...timestamps,
   },
   (table) => [
     index('taskComment_taskId_createdAt_idx').on(table.taskId, table.createdAt),
+    index('taskComment_taskRunId_idx').on(table.taskRunId),
     foreignKey({
       columns: [table.workspaceId, table.taskId],
       foreignColumns: [task.workspaceId, task.id],

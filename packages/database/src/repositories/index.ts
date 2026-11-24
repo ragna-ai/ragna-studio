@@ -29,6 +29,7 @@ export * from './session.repo';
 export * from './social-post.repo';
 export * from './task-comment.repo';
 export * from './task-label.repo';
+export * from './task-run.repo';
 export * from './task.repo';
 export * from './user.repo';
 export * from './verification.repo';

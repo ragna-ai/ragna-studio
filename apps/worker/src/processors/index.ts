@@ -10,6 +10,7 @@ import { registerGenVideoJobProcessor } from './gen-video.processor';
 import { registerMediaTextExtractionJobProcessor } from './media-text-extraction.processor';
 import { registerNotificationJobProcessor } from './notification.processor';
 import { registerPurgeJobProcessor } from './purge.processor';
+import { registerTaskRunJobProcessor } from './task-run.processor';
 import { registerVisibleWatermarkJobProcessor } from './visible-watermark.processor';
 import { registerWorkflowScheduleJobProcessor } from './workflow-schedule.processor';
 import { registerWorkflowJobProcessor } from './workflow.processor';
@@ -31,4 +32,5 @@ export function registerJobProcessors() {
   registerPurgeJobProcessor();
   registerVisibleWatermarkJobProcessor();
   registerMediaTextExtractionJobProcessor();
+  registerTaskRunJobProcessor();
 }

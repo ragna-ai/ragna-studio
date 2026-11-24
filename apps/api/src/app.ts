@@ -26,6 +26,7 @@ import { organizationController } from './controllers/organization.controller';
 import { overviewController } from './controllers/overview.controller';
 import { socialPostController } from './controllers/social-post.controller';
 import { taskLabelController } from './controllers/task-label.controller';
+import { taskRunController } from './controllers/task-run.controller';
 import { taskController } from './controllers/task.controller';
 import { userController } from './controllers/user.controller';
 import { genVideoController } from './controllers/videogen.controller';
@@ -82,6 +83,7 @@ export const app = new Hono()
   .route('/', integrationController)
   .route('/', folderController)
   .route('/', taskController)
+  .route('/', taskRunController)
   .route('/', taskLabelController)
   .route('/', mcpController)
   .route('/', mcpSettingsController)

@@ -26,11 +26,13 @@ export interface AgentToolContext {
   // Set when buildAgentInstructions decides the context needs retrieval.
   // Not part of the agent's own tool grants.
   retrievalMode?: boolean;
+  /** True while the agent works a task run: task tools then refuse to create tasks. */
+  inTaskRun?: boolean;
   /** The chat stream. Absent in workflows, which have no chat UI. */
   writer?: UIMessageStreamWriter;
 }
 
-type AgentToolDefinitions = (ctx: AgentToolContext) => readonly AnyToolDefinition[];
+type AgentToolDefinitions = (ctx: Omit<AgentToolContext, 'userId'>) => readonly AnyToolDefinition[];
 
 /** The tool definitions behind each agent tool id. Only granted ones are built. */
 const agentToolDefinitions = {
@@ -42,7 +44,7 @@ const agentToolDefinitions = {
   linkedinDraft: () => [linkedinDraftToolDefinition],
   'google-drive': () => cloudDriveToolDefinitions('google-drive'),
   documents: (ctx) => documentToolDefinitions({ agentId: ctx.agentId }),
-  tasks: (ctx) => taskToolDefinitions({ agentId: ctx.agentId }),
+  tasks: (ctx) => taskToolDefinitions({ agentId: ctx.agentId, inTaskRun: ctx.inTaskRun }),
   imageGen: (ctx) => [imageGenToolDefinition({ runsInWorker: ctx.runsInWorker ?? false })],
   videoGen: (ctx) => [videoGenToolDefinition({ runsInWorker: ctx.runsInWorker ?? false })],
 } satisfies Record<AgentToolId, AgentToolDefinitions>;
@@ -62,11 +64,19 @@ function parseStoredGrants(storedGrants: readonly StoredAgentToolGrant[]): Agent
 /** The definitions a grant gives, limited to its access level when the tool has levels. */
 function grantedDefinitions(
   grant: AgentToolGrant,
-  ctx: AgentToolContext,
+  ctx: Omit<AgentToolContext, 'userId'>,
 ): readonly AnyToolDefinition[] {
   const buildDefinitions: AgentToolDefinitions = agentToolDefinitions[grant.id];
   const definitions = buildDefinitions(ctx);
   return 'access' in grant ? filterByAccess(definitions, grant.access) : definitions;
+}
+
+/** The tool definitions the stored grants give, without the retrieval tool. Invalid grants are skipped. */
+export function listGrantedToolDefinitions(
+  storedGrants: readonly StoredAgentToolGrant[],
+  ctx: Omit<AgentToolContext, 'userId'>,
+): AnyToolDefinition[] {
+  return parseStoredGrants(storedGrants).flatMap((grant) => grantedDefinitions(grant, ctx));
 }
 
 /**
@@ -77,9 +87,7 @@ export function buildAgentToolset(
   storedGrants: readonly StoredAgentToolGrant[],
   ctx: AgentToolContext,
 ): ToolSet {
-  const definitions = parseStoredGrants(storedGrants).flatMap((grant) =>
-    grantedDefinitions(grant, ctx),
-  );
+  const definitions = listGrantedToolDefinitions(storedGrants, ctx);
   const retrievalDefinitions = ctx.retrievalMode
     ? [searchContextDocumentsToolDefinition({ agentId: ctx.agentId })]
     : [];

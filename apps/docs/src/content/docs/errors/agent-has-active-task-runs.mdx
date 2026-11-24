@@ -1,0 +1,29 @@
+---
+title: agent-has-active-task-runs
+description: The agent is working on tasks.
+---
+
+`https://docs.ragna.io/errors/agent-has-active-task-runs`
+
+## When it happens
+
+A request unlocks an agent that has task runs in progress.
+
+## Response
+
+| Member   | Value                      |
+| -------- | -------------------------- |
+| `status` | 409                        |
+| `title`  | Agent has active task runs |
+
+```json
+{
+  "type": "https://docs.ragna.io/errors/agent-has-active-task-runs",
+  "title": "Agent has active task runs",
+  "status": 409
+}
+```
+
+## What the client can do
+
+Stop the runs and unlock in one step with `?stopRuns=true`, or wait until the runs finish. See [Tasks](/content/tasks#agents-working-on-tasks).

@@ -32,6 +32,7 @@ work first, shipped reference and dead/historical docs last.
 | [Release tooling](./ci-cd/release-tooling.md) | proposed (2026-09-27) |
 | [Notifications over WebSocket (PRD)](./notifications/ws-push-prd.md) | proposed (2026-07-23) |
 | [Deletion and retention standard](./standards/deletion-and-retention/prd.md) | proposed (2026-10-24) |
+| [Tasks: agent runs phase 2, feedback, notifications, proposed subtasks (PRD)](./tasks/456-agent-run-follow-ups/prd.md) | proposed (2026-11-20) |
 | [Workflows: email trigger](./workflow/workflows-email-trigger.md) | proposed |
 | [Workflows: human in the loop (approval node)](./workflow/workflows-human-in-the-loop.md) | proposed |
 
@@ -115,6 +116,7 @@ work first, shipped reference and dead/historical docs last.
 | [Self-hosting: run ragna-studio outside ragna.io](./self-hosting/prd.md) | implemented (2026-10-06, PR #64) |
 | [Settings area and expandable sidebar: one settings section with its own nav (PRD)](./settings/246-settings-area/prd.md) | implemented (2026-10-31, PR #247) |
 | [API errors standard: RFC 9457 problem details (PRD)](./standards/api-errors/prd.md) | implemented (2026-11-06, PR #296) |
+| [Tasks: agents work assigned tasks (PRD)](./tasks/455-agent-runs/prd.md) | implemented (2026-11-23, PR #457) |
 | [Tasks: comments (PRD)](./tasks/470-comments/prd.md) | implemented (2026-11-23, PR #472) |
 | [Agent tools: read task attachments (PRD)](./tasks/471-read-attachments/prd.md) | implemented (2026-11-23, PR #475) |
 | [Agent tools: comment on a task (PRD)](./tasks/473-comment-tool/prd.md) | implemented (2026-11-23, PR #474) |

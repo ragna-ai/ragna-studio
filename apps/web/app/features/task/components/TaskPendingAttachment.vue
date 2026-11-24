@@ -12,6 +12,7 @@ import type { PendingTaskAttachment } from '~/features/task/composables/useTaskA
 // Props
 interface Props {
   item: PendingTaskAttachment;
+  readonly?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -91,6 +92,7 @@ function onRemove() {
     </div>
 
     <Button
+      v-if="!readonly"
       type="button"
       size="icon-2xs"
       variant="outline"

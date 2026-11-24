@@ -7,6 +7,7 @@ import {
   useDeleteTaskComment,
   useUpdateTaskComment,
 } from '~/features/task/composables/useTaskCommentApi';
+import { useTaskRunHighlight } from '~/features/task/composables/useTaskRunHighlight';
 import type { TaskComment } from '~/features/task/types';
 
 // Props
@@ -23,6 +24,7 @@ const isEditing = ref(false);
 const { t } = useI18n();
 const { confirm } = useConfirmDialog();
 const { formatRelative } = useDateTimeFormat();
+const { highlightRun } = useTaskRunHighlight();
 const { mutate: updateComment, isPending: isSaving } = useUpdateTaskComment(
   () => props.comment.taskId,
 );
@@ -83,6 +85,15 @@ async function remove() {
         <time class="text-muted-foreground" :datetime="comment.createdAt">
           {{ formatRelative(comment.createdAt) }}
         </time>
+        <Button
+          v-if="comment.taskRunId"
+          type="button"
+          variant="link"
+          class="h-auto p-0 text-xs text-muted-foreground"
+          @click="highlightRun(comment.taskRunId)"
+        >
+          {{ t('task.run.fromRun') }}
+        </Button>
         <span v-if="comment.editedAt" class="text-muted-foreground">
           {{ t('task.comment.edited') }}
         </span>

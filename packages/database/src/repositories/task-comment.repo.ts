@@ -10,6 +10,7 @@ export interface TaskCommentWithAuthor {
   id: string;
   workspaceId: string;
   taskId: string;
+  taskRunId: string | null;
   body: string;
   editedAt: Date | null;
   createdAt: Date;
@@ -28,12 +29,14 @@ export const MAX_TASK_COMMENT_BODY_LENGTH = 10_000;
 export type CreateTaskCommentResult =
   | { status: 'created'; commentId: string }
   | { status: 'task-not-found' }
-  | { status: 'limit-reached' };
+  | { status: 'limit-reached' }
+  | { status: 'run-note-limit-reached' };
 
 const taskCommentWithAuthorColumns = {
   id: taskComment.id,
   workspaceId: taskComment.workspaceId,
   taskId: taskComment.taskId,
+  taskRunId: taskComment.taskRunId,
   body: taskComment.body,
   editedAt: taskComment.editedAt,
   createdAt: taskComment.createdAt,
@@ -105,6 +108,12 @@ export interface CreateTaskCommentInput {
   taskId: string;
   author: TaskCommentAuthor;
   body: string;
+  /** The agent run that wrote the comment, if any. */
+  taskRunId?: string;
+  /** Refuses the comment once the run has written this many. Unset means no cap. */
+  maxCommentsOfRun?: number;
+  /** For the run's own result and failure comments: they are never refused by the per-task cap. */
+  skipTaskCommentCap?: boolean;
 }
 
 function toNewTaskComment({
@@ -112,11 +121,19 @@ function toNewTaskComment({
   taskId,
   author,
   body,
+  taskRunId,
 }: CreateTaskCommentInput): NewTaskComment {
   if (author.kind === 'agent') {
-    return { workspaceId, taskId, body, authorKind: 'agent', authorAgentId: author.agentId };
+    return {
+      workspaceId,
+      taskId,
+      body,
+      taskRunId,
+      authorKind: 'agent',
+      authorAgentId: author.agentId,
+    };
   }
-  return { workspaceId, taskId, body, authorKind: 'user', authorUserId: author.userId };
+  return { workspaceId, taskId, body, taskRunId, authorKind: 'user', authorUserId: author.userId };
 }
 
 /**
@@ -128,6 +145,9 @@ export async function createTaskComment({
   taskId,
   author,
   body,
+  taskRunId,
+  maxCommentsOfRun,
+  skipTaskCommentCap,
 }: CreateTaskCommentInput): Promise<CreateTaskCommentResult> {
   return db.transaction(async (tx) => {
     const [lockedTask] = await tx
@@ -137,13 +157,23 @@ export async function createTaskComment({
       .for('update');
     if (!lockedTask) return { status: 'task-not-found' };
 
-    const [existing] = await tx
-      .select({ total: count() })
-      .from(taskComment)
-      .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskId, taskId)));
-    if ((existing?.total ?? 0) >= MAX_COMMENTS_PER_TASK) return { status: 'limit-reached' };
+    if (!skipTaskCommentCap) {
+      const [existing] = await tx
+        .select({ total: count() })
+        .from(taskComment)
+        .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskId, taskId)));
+      if ((existing?.total ?? 0) >= MAX_COMMENTS_PER_TASK) return { status: 'limit-reached' };
+    }
 
-    const values = toNewTaskComment({ workspaceId, taskId, author, body });
+    if (taskRunId && maxCommentsOfRun !== undefined) {
+      const [ofRun] = await tx
+        .select({ total: count() })
+        .from(taskComment)
+        .where(and(eq(taskComment.workspaceId, workspaceId), eq(taskComment.taskRunId, taskRunId)));
+      if ((ofRun?.total ?? 0) >= maxCommentsOfRun) return { status: 'run-note-limit-reached' };
+    }
+
+    const values = toNewTaskComment({ workspaceId, taskId, author, body, taskRunId });
     const [created] = await tx.insert(taskComment).values(values).returning({ id: taskComment.id });
     if (!created) throw new Error('Failed to insert task comment');
     return { status: 'created', commentId: created.id };

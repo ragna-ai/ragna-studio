@@ -545,7 +545,10 @@
         "assignedTaskCount": "Keine offene Aufgabe ist diesem Agenten zugewiesen. | 1 offene Aufgabe ist diesem Agenten zugewiesen. | {count} offene Aufgaben sind diesem Agenten zugewiesen.",
         "usageFailed": "Die Nutzung dieses Agents konnte nicht geladen werden.",
         "confirmApproved": "Entsperren und Freigabe widerrufen",
-        "confirm": "Entsperren"
+        "confirm": "Entsperren",
+        "activeRunsTitle": "Dieser Agent arbeitet an Aufgaben",
+        "activeRunsText": "Stoppe seine Aufgabenläufe, um ihn zu entsperren. Bereits erledigte Arbeit bleibt bestehen.",
+        "stopRunsAndUnlock": "Läufe stoppen und entsperren"
       },
       "versions": {
         "title": "Versionen",
@@ -569,6 +572,11 @@
         "approveFailed": "Agent konnte nicht freigegeben werden",
         "revoked": "Freigabe widerrufen",
         "revokeFailed": "Freigabe konnte nicht widerrufen werden"
+      },
+      "revokeDialog": {
+        "title": "Freigabe widerrufen",
+        "message": "Der Agent kann nicht mehr unbeaufsichtigt laufen. Seine aktiven Aufgabenläufe werden gestoppt. Bereits erledigte Arbeit bleibt bestehen.",
+        "confirm": "Freigabe widerrufen"
       }
     }
   },
@@ -1632,7 +1640,8 @@
       "noResults": {
         "title": "Keine Aufgaben passen zu diesen Filtern",
         "clearFilters": "Filter zurücksetzen"
-      }
+      },
+      "moreActions": "Weitere Aktionen"
     },
     "view": {
       "board": "Board",
@@ -1754,6 +1763,37 @@
       "custom": "Benutzerdefiniert",
       "needsDueDateHint": "Lege ein Fälligkeitsdatum fest, um Erinnerungen zu aktivieren.",
       "daysBeforeSuffix": "Tage vorher"
+    },
+    "run": {
+      "start": "Starten",
+      "stop": "Stoppen",
+      "assignAndStart": "Zuweisen und starten",
+      "working": "{agent} arbeitet",
+      "lockedHint": "Stoppe den Lauf, um diese Aufgabe zu bearbeiten.",
+      "startFailed": "Der Lauf konnte nicht gestartet werden",
+      "stopFailed": "Der Lauf konnte nicht gestoppt werden",
+      "stopAll": "Alle Läufe stoppen",
+      "stopAllConfirmTitle": "Alle Läufe stoppen",
+      "stopAllConfirmMessage": "Alle Aufgabenläufe in diesem Workspace werden gestoppt. Bereits erledigte Arbeit bleibt bestehen.",
+      "stopAllDone": "Kein Lauf war aktiv. | 1 Lauf gestoppt. | {count} Läufe gestoppt.",
+      "stopAllFailed": "Die Läufe konnten nicht gestoppt werden",
+      "historyTitle": "Läufe",
+      "fromRun": "Aus Lauf",
+      "deletedAgent": "Gelöschter Agent",
+      "agentVersion": "Version {number}",
+      "startedBy": "Gestartet von {user}",
+      "credits": "{count} Credits",
+      "steps": "Schritte ({count})",
+      "status": {
+        "queued": "In Warteschlange",
+        "running": "Läuft",
+        "succeeded": "Erfolgreich",
+        "failed": "Fehlgeschlagen",
+        "canceled": "Abgebrochen"
+      },
+      "outcome": {
+        "needs_input": "Eingabe nötig"
+      }
     }
   },
   "email": {
@@ -2315,7 +2355,12 @@
       "agentNotApproved": "Dieser Agent ist nicht für unbeaufsichtigte Läufe freigegeben.",
       "knowledgeFilesNotReady": "Eine Wissensdatei wird noch verarbeitet oder ist fehlgeschlagen. Warte oder entferne sie und versuche es erneut.",
       "taskCommentLimitReached": "Diese Aufgabe hat das Limit von 100 Kommentaren erreicht.",
-      "taskCommentNotEditable": "Dieser Kommentar kann nicht bearbeitet werden."
+      "taskCommentNotEditable": "Dieser Kommentar kann nicht bearbeitet werden.",
+      "taskHasNoAgent": "Weise dieser Aufgabe zuerst einen Agenten zu.",
+      "taskRunActive": "Ein Agent arbeitet an dieser Aufgabe. Stoppe den Lauf, um sie zu bearbeiten.",
+      "taskRunLimitReached": "Dieser Workspace hat sein Limit aktiver Aufgabenläufe erreicht. Warte, bis einer fertig ist.",
+      "taskRunsDisabled": "Aufgabenläufe sind auf dieser Plattform ausgeschaltet.",
+      "agentHasActiveTaskRuns": "Dieser Agent arbeitet an Aufgaben. Stoppe die Läufe, um ihn zu entsperren."
     },
     "workflowRule": {
       "triggerCount": "Ein Workflow braucht genau einen Trigger.",

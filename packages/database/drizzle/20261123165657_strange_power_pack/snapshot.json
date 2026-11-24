@@ -1,0 +1,724 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "7e3cf7b4-8861-4e47-af53-68a5963b2b42",
+  "prevIds": ["cb9bc94e-7669-40dd-a30d-679ae81e1ebd"],
+  "footprints": [
+    {
+      "statementType": "create_enum",
+      "statementTarget": ["enum", "public", "task_run_status"],
+      "writes": [
+        "s|enum|public.task_run_status",
+        "n|enum|public.task_run_status",
+        "e|enum|public.task_run_status",
+        "n|type|public.task_run_status"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "task_runs"],
+      "writes": [
+        "s|tbl|public.task_runs",
+        "n|tbl|public.task_runs",
+        "e|tbl|public.task_runs",
+        "n|rel|public.task_runs",
+        "n|type|public.task_runs",
+        "n|rel|public.task_runs_pkey",
+        "n|rel|public.task_runs_workspace_id_unique"
+      ],
+      "reads": ["n|sch|public", "n|enum|public.task_run_status"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "task_comments", "task_run_id"],
+      "writes": [
+        "s|col|public.task_comments.task_run_id",
+        "n|col|public.task_comments.task_run_id",
+        "e|col|public.task_comments.task_run_id"
+      ],
+      "reads": ["n|tbl|public.task_comments", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "task_comments", "taskComment_taskRunId_idx"],
+      "writes": [
+        "s|idx|public.taskComment_taskRunId_idx",
+        "n|idx|public.taskComment_taskRunId_idx",
+        "e|idx|public.taskComment_taskRunId_idx",
+        "n|rel|public.taskComment_taskRunId_idx"
+      ],
+      "reads": [
+        "n|tbl|public.task_comments",
+        "n|sch|public",
+        "n|col|public.task_comments.task_run_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "task_runs", "taskRun_taskId_active_idx"],
+      "writes": [
+        "s|idx|public.taskRun_taskId_active_idx",
+        "n|idx|public.taskRun_taskId_active_idx",
+        "e|idx|public.taskRun_taskId_active_idx",
+        "n|rel|public.taskRun_taskId_active_idx"
+      ],
+      "reads": ["n|tbl|public.task_runs", "n|sch|public", "n|col|public.task_runs.task_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "task_runs", "taskRun_workspaceId_status_idx"],
+      "writes": [
+        "s|idx|public.taskRun_workspaceId_status_idx",
+        "n|idx|public.taskRun_workspaceId_status_idx",
+        "e|idx|public.taskRun_workspaceId_status_idx",
+        "n|rel|public.taskRun_workspaceId_status_idx"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|col|public.task_runs.workspace_id",
+        "n|col|public.task_runs.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "task_runs", "taskRun_taskId_createdAt_idx"],
+      "writes": [
+        "s|idx|public.taskRun_taskId_createdAt_idx",
+        "n|idx|public.taskRun_taskId_createdAt_idx",
+        "e|idx|public.taskRun_taskId_createdAt_idx",
+        "n|rel|public.taskRun_taskId_createdAt_idx"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|col|public.task_runs.task_id",
+        "n|col|public.task_runs.created_at"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "task_comments"],
+      "writes": [
+        "s|fk|public.task_comments.task_comments_task_run_id_task_runs_id_fkey",
+        "n|fk|public.task_comments.task_comments_task_run_id_task_runs_id_fkey",
+        "e|fk|public.task_comments.task_comments_task_run_id_task_runs_id_fkey",
+        "n|con|public.task_comments.task_comments_task_run_id_task_runs_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.task_comments",
+        "n|sch|public",
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|col|public.task_comments.task_run_id",
+        "n|col|public.task_runs.id",
+        "e|uniqueness|public.task_runs.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "task_runs"],
+      "writes": [
+        "s|fk|public.task_runs.task_runs_started_by_user_id_users_id_fkey",
+        "n|fk|public.task_runs.task_runs_started_by_user_id_users_id_fkey",
+        "e|fk|public.task_runs.task_runs_started_by_user_id_users_id_fkey",
+        "n|con|public.task_runs.task_runs_started_by_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.task_runs.started_by_user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "task_runs"],
+      "writes": [
+        "s|fk|public.task_runs.task_runs_task_workspace_fk",
+        "n|fk|public.task_runs.task_runs_task_workspace_fk",
+        "e|fk|public.task_runs.task_runs_task_workspace_fk",
+        "n|con|public.task_runs.task_runs_task_workspace_fk"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|tbl|public.tasks",
+        "n|sch|public",
+        "n|col|public.task_runs.workspace_id",
+        "n|col|public.task_runs.task_id",
+        "n|col|public.tasks.workspace_id",
+        "n|col|public.tasks.id",
+        "e|uniqueness|public.tasks.id.workspace_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "task_runs"],
+      "writes": [
+        "s|fk|public.task_runs.task_runs_agent_workspace_fk",
+        "n|fk|public.task_runs.task_runs_agent_workspace_fk",
+        "e|fk|public.task_runs.task_runs_agent_workspace_fk",
+        "n|con|public.task_runs.task_runs_agent_workspace_fk"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|tbl|public.agents",
+        "n|sch|public",
+        "n|col|public.task_runs.workspace_id",
+        "n|col|public.task_runs.agent_id",
+        "n|col|public.agents.workspace_id",
+        "n|col|public.agents.id",
+        "e|uniqueness|public.agents.id.workspace_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "task_runs"],
+      "writes": [
+        "s|fk|public.task_runs.task_runs_agent_version_workspace_fk",
+        "n|fk|public.task_runs.task_runs_agent_version_workspace_fk",
+        "e|fk|public.task_runs.task_runs_agent_version_workspace_fk",
+        "n|con|public.task_runs.task_runs_agent_version_workspace_fk"
+      ],
+      "reads": [
+        "n|tbl|public.task_runs",
+        "n|sch|public",
+        "n|tbl|public.agent_versions",
+        "n|sch|public",
+        "n|col|public.task_runs.workspace_id",
+        "n|col|public.task_runs.agent_version_id",
+        "n|col|public.agent_versions.workspace_id",
+        "n|col|public.agent_versions.id",
+        "e|uniqueness|public.agent_versions.id.workspace_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "task_runs",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "task_run_status",
+        "values": ["queued", "running", "succeeded", "failed", "canceled"],
+        "entityType": "enums"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_comments",
+        "name": "task_run_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "workspace_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "agent_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "started_by_user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "status",
+        "type": "task_run_status",
+        "typeSchema": "public",
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'queued'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "outcome",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "previous_task_status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "agent_version_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "trace",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'[]'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "first_write_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "usage",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'{\"inputTokens\":0,\"outputTokens\":0,\"credits\":0}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "error",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "attempt",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "created_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "started_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "finished_at",
+        "type": "timestamp(3)",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_comments",
+        "name": "taskComment_taskRunId_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "task_run_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "taskRun_taskId_active_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "task_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" in ('queued', 'running')",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "taskRun_workspaceId_status_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "workspace_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "status",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "taskRun_taskId_createdAt_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "task_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_comments",
+        "name": "task_comments_task_run_id_task_runs_id_fkey",
+        "nameExplicit": false,
+        "columns": ["task_run_id"],
+        "schemaTo": "public",
+        "tableTo": "task_runs",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_started_by_user_id_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["started_by_user_id"],
+        "schemaTo": "public",
+        "tableTo": "users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_task_workspace_fk",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "task_id"],
+        "schemaTo": "public",
+        "tableTo": "tasks",
+        "columnsTo": ["workspace_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_agent_workspace_fk",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "agent_id"],
+        "schemaTo": "public",
+        "tableTo": "agents",
+        "columnsTo": ["workspace_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_agent_version_workspace_fk",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "agent_version_id"],
+        "schemaTo": "public",
+        "tableTo": "agent_versions",
+        "columnsTo": ["workspace_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "task_runs",
+        "name": "task_runs_workspace_id_unique",
+        "nameExplicit": true,
+        "columns": ["workspace_id", "id"],
+        "nullsNotDistinct": false,
+        "entityType": "uniques"
+      }
+    }
+  ]
+}
