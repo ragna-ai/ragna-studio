@@ -3,7 +3,7 @@
 # ============================================================
 # Base — node + pnpm + turbo
 # ============================================================
-FROM node:26.13.1-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS base
+FROM node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -56,7 +56,7 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
 # libraries (X11, GL, audio stacks) the worker never calls.
 # x264 makes the binary GPL, as Debian's is; it runs as its own process.
 # ============================================================
-FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS ffmpeg
+FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0 AS ffmpeg
 
 # renovate: datasource=github-tags depName=FFmpeg/FFmpeg extractVersion=^n(?<version>.+)$
 ARG FFMPEG_VERSION=9.1
@@ -115,7 +115,7 @@ RUN cd "ffmpeg-${FFMPEG_VERSION}" \
 # 13 package files plus their dpkg status entries, so image scanners
 # still track them.
 # ============================================================
-FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS runtime-libs
+FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0 AS runtime-libs
 
 # Install, not just copy: picks up Debian security updates newer than the base image.
 RUN apt-get update \
